@@ -185,6 +185,12 @@ portable DDLはCompany contextの`infrastructure/schema/company.sql`を正本と
 
 `company-context.manifest.json`の`sourcePaths`はCompanyの全sourceを列挙し、`company-context.lock.json`はその全pathとhashを固定する。本リポジトリと共有先はDomain、Application、Infrastructure、Interface、testを含むCompanyディレクトリ全体を同一内容に保ち、CIは欠落、余分なpath、内容差を拒否する。製品差はCompanyの外側にあるAPI compositionだけで吸収する。
 
+## 組織の参照と編集
+
+既存の組織一覧と組織詳細は、表示する組織と同じsnapshotの`organization_revision`と`as_of`を返す。組織の更新・削除は`expected_organization_revision`、`expected_as_of`と`Idempotency-Key`を必須とする。
+
+Webの編集・削除フォームは表示時の版と営業日を保持し、CLIも確認した値を送る。参照後の組織変更や営業日の変更は409で拒否し、履歴と再送記録を保存しない。成功済みの同じ操作は、現在の権限を再検査して元の結果を返す。競合時に最新版へ自動再送しない。
+
 ## 氏名と本人連絡先の変更
 
 従業員詳細と本人profileの参照は、表示するPersonと同じsnapshotから`profile`を返す。`employeeId`、`organizationRevision`、`personRevision`、`effectiveOn`が編集対象を固定する。`personRevision`は予約された変更を含む最新の人物版であり、表示する値は会社営業日に有効な版から読む。
