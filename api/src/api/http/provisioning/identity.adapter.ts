@@ -1,3 +1,4 @@
+import { ReadCompanyAccountDisplayNamesAdapter } from "@/contexts/company/infrastructure/adapters/account-profile/read-company-account-display-names.adapter"
 import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
@@ -52,16 +53,19 @@ export class IdentityAdapter {
     if (identity === null || identity instanceof Error) return identity
 
     try {
+      const now = this.c.env.NOW ?? new Date().toISOString()
       const employees = await new CompanyEmployeeDirectoryReadAdapter({
-        env: this.c.env,
+        env: { ...this.c.env, NOW: now },
       }).findForAccountIds([login.account.id])
       if (employees instanceof Error) return employees
       const employee = employees[0]?.employee
-      const profileDisplayName = await this.c.env.DB.prepare(
-        "SELECT display_name FROM company_account_profiles WHERE organization_id = 'organization:default' AND account_id = ?1",
-      )
-        .bind(login.account.id)
-        .first<string>("display_name")
+      const displayNames = await new ReadCompanyAccountDisplayNamesAdapter({
+        database: this.c.env.DB,
+        organizationIds: ["organization:default"],
+        accountIds: [login.account.id],
+        now,
+        timeZone: this.c.env.COMPANY_TIME_ZONE,
+      }).readCompanyAccountDisplayNames()
 
       return {
         identityId: login.identity.id,
@@ -71,7 +75,7 @@ export class IdentityAdapter {
         employeeId: employee?.id ?? null,
         email: identity.email,
         employeeName: employee?.officialName ?? null,
-        profileDisplayName: profileDisplayName,
+        profileDisplayName: displayNames.get(login.account.id) ?? null,
       }
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to compose Company Identity")

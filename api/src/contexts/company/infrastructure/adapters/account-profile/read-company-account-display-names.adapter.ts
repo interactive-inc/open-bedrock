@@ -1,74 +1,57 @@
-type CompanyAccountDisplayNameRow = Readonly<{
-  organization_id: string
-  account_id: string
-  display_name: string
-}>
+import { CompanyAccountDisplayNameProjectionAdapter } from "@/contexts/company/infrastructure/adapters/account-profile/company-account-display-name-projection.adapter"
+import { companyAccountProfiles } from "@/contexts/company/infrastructure/schema/company"
+import { and, asc, inArray, sql } from "drizzle-orm"
+import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1"
+import { z } from "zod"
 
-function chunks<T>(values: ReadonlyArray<T>, size: number): ReadonlyArray<ReadonlyArray<T>> {
-  const result: T[][] = []
-  for (let index = 0; index < values.length; index += size) {
-    result.push(values.slice(index, index + size))
-  }
-  return result
-}
-
-/**
- * Company が所有する表示名を、呼び出し元がアクセスできる organization の範囲だけで解決する。
- * 同一 Account が複数 organization に属する場合は organization ID の昇順で決定的に選ぶ。
- */
-async function readCompanyAccountDisplayNames(
-  props: Readonly<{
-    database: D1Database
-    organizationIds: ReadonlyArray<string>
-    accountIds: ReadonlyArray<string>
-  }>,
-): Promise<ReadonlyMap<string, string>> {
-  const accountIds = [...new Set(props.accountIds)].sort()
-  if (accountIds.length === 0 || props.organizationIds.length === 0) return new Map()
-
-  const unrestricted = props.organizationIds.includes("*")
-  const organizationIds = unrestricted ? [] : [...new Set(props.organizationIds)].sort()
-  const result = new Map<string, string>()
-  const organizationChunks = unrestricted ? [[]] : chunks(organizationIds, 40)
-
-  for (const organizationChunk of organizationChunks) {
-    const accountChunkSize = Math.max(1, 90 - organizationChunk.length)
-    for (const accountChunk of chunks(accountIds, accountChunkSize)) {
-      const accountPlaceholders = accountChunk.map(() => "?").join(", ")
-      const organizationPredicate = unrestricted
-        ? ""
-        : ` AND organization_id IN (${organizationChunk.map(() => "?").join(", ")})`
-      const rows = await props.database
-        .prepare(
-          `SELECT organization_id, account_id, display_name
-             FROM company_account_profiles
-            WHERE account_id IN (${accountPlaceholders})${organizationPredicate}
-            ORDER BY organization_id, account_id`,
-        )
-        .bind(...accountChunk, ...organizationChunk)
-        .all<CompanyAccountDisplayNameRow>()
-
-      for (const row of rows.results) {
-        if (!result.has(row.account_id)) result.set(row.account_id, row.display_name)
-      }
-    }
-  }
-
-  return result
-}
-type ReadCompanyAccountDisplayNamesAdapterContext = Readonly<{
-  database: D1Database
+type Context = Readonly<{
+  database: D1Database | Pick<DrizzleD1Database, "select">
   organizationIds: ReadonlyArray<string>
   accountIds: ReadonlyArray<string>
+  now: string
+  timeZone: string | undefined
 }>
-type Context = ReadCompanyAccountDisplayNamesAdapterContext
 
+/** 参照可能な会社の表示名を同一時点で読み、複数会社ではorganization ID順に選ぶ。 */
 export class ReadCompanyAccountDisplayNamesAdapter {
   constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 
   async readCompanyAccountDisplayNames(): Promise<ReadonlyMap<string, string>> {
-    return readCompanyAccountDisplayNames(this.c)
+    if (this.c.accountIds.length === 0 || this.c.organizationIds.length === 0) return new Map()
+    const database = "prepare" in this.c.database ? drizzle(this.c.database) : this.c.database
+    const names = await database
+      .select({
+        accountId: companyAccountProfiles.accountId,
+        displayName: new CompanyAccountDisplayNameProjectionAdapter({
+          now: new Date(this.c.now),
+          timeZone: this.c.timeZone,
+        }).project(companyAccountProfiles),
+      })
+      .from(companyAccountProfiles)
+      .where(
+        and(
+          inArray(
+            companyAccountProfiles.accountId,
+            sql`(SELECT value FROM json_each(${JSON.stringify([...new Set(this.c.accountIds)])}))`,
+          ),
+          this.c.organizationIds.includes("*")
+            ? undefined
+            : inArray(
+                companyAccountProfiles.organizationId,
+                sql`(SELECT value FROM json_each(${JSON.stringify([...new Set(this.c.organizationIds)])}))`,
+              ),
+        ),
+      )
+      .orderBy(asc(companyAccountProfiles.organizationId), asc(companyAccountProfiles.accountId))
+    const result = new Map<string, string>()
+    for (const name of z
+      .array(z.object({ accountId: z.string().min(1), displayName: z.string().min(1).nullable() }))
+      .parse(names)) {
+      if (name.displayName !== null && !result.has(name.accountId))
+        result.set(name.accountId, name.displayName)
+    }
+    return result
   }
 }
