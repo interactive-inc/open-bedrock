@@ -97,6 +97,7 @@ import * as companyEmployeeEventsRoute from "@/contexts/company/interface/routes
 import * as companyEmployeeGradesRoute from "@/contexts/company/interface/routes/company.employee-grades"
 import * as companyEmployeeLifecycleCodeEventsRoute from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.events"
 import * as companyEmployeeLifecycleCodeStateRoute from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.state"
+import * as companyEmployeeResourceAdoptionBatchesRoute from "@/contexts/company/interface/routes/company.employee-resource-adoption-batches"
 import * as companyEmployeeResourceAdoptionsRoute from "@/contexts/company/interface/routes/company.employee-resource-adoptions"
 import * as companyEmployeesRoute from "@/contexts/company/interface/routes/company.employees"
 import * as companyEmploymentsRoute from "@/contexts/company/interface/routes/company.employments"
@@ -608,6 +609,10 @@ const routePart25 = createRouteApp()
   .get("/company/employee-lifecycle/:code/events", ...companyEmployeeLifecycleCodeEventsRoute.GET)
   .get("/company/employee-lifecycle/:code/state", ...companyEmployeeLifecycleCodeStateRoute.GET)
   .post("/company/employee-registrations", ...companyEmployeeRegistrationsRoute.POST)
+  .post(
+    "/company/employee-resource-adoption-batches",
+    ...companyEmployeeResourceAdoptionBatchesRoute.POST,
+  )
   .get("/company/employee-resource-adoptions", ...companyEmployeeResourceAdoptionsRoute.GET)
   .post("/company/employee-resource-adoptions", ...companyEmployeeResourceAdoptionsRoute.POST)
   .get("/company/employees", ...companyEmployeesRoute.GET)
@@ -635,9 +640,9 @@ const routePart25 = createRouteApp()
     "/company/organization-resource-adoptions",
     ...companyOrganizationResourceAdoptionsRoute.POST,
   )
-  .get("/company/organization-snapshots", ...companyOrganizationSnapshotsRoute.GET)
 
 const routePart26 = createRouteApp()
+  .get("/company/organization-snapshots", ...companyOrganizationSnapshotsRoute.GET)
   .get("/company/organization-tree", ...companyOrganizationTreeRoute.GET)
   .get("/company/organization-units", ...companyOrganizationUnitsRoute.GET)
   .post("/company/organization-units", ...companyOrganizationUnitsRoute.POST)
