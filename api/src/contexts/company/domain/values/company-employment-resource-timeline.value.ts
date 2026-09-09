@@ -1,6 +1,7 @@
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import type { EmploymentType } from "@/contexts/company/domain/definitions/employment-type.definition"
-import type { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
+import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
+import { CompanyResourceEffectiveHistoryValue } from "@/contexts/company/domain/values/company-resource-effective-history.value"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 
 type StatusPeriod = Readonly<{
@@ -37,35 +38,39 @@ export class CompanyEmploymentResourceTimelineValue {
   }
 
   static create(
-    history: ReadonlyArray<CompanyResourceEntity>,
+    history: ReadonlyArray<CompanyResourceProps>,
   ): CompanyEmploymentResourceTimelineValue | CompanyResourceValidationError {
     const revisions = history.toSorted((left, right) => left.revision - right.revision)
     const first = revisions[0]
     if (first === undefined) return new CompanyResourceValidationError("invalid_resource")
-    const employeeId = first.readText("employeeId")
-    const employmentType = revisions.at(-1)?.readText("employmentType")
-    if (employeeId === null || (employmentType !== "FULL_TIME" && employmentType !== "PART_TIME")) {
+    const employeeId = first.attributes["employeeId"]
+    const employmentType = revisions.at(-1)?.attributes["employmentType"]
+    if (
+      typeof employeeId !== "string" ||
+      (employmentType !== "FULL_TIME" && employmentType !== "PART_TIME")
+    ) {
       return new CompanyResourceValidationError("invalid_resource")
     }
 
-    const latestAtStart = new Map<CalendarDate, CompanyResourceEntity>()
     for (const entry of revisions.entries()) {
       const resource = entry[1]
       if (
         resource.type !== "employment" ||
         resource.organizationId !== first.organizationId ||
         resource.id !== first.id ||
-        resource.readText("employeeId") !== employeeId ||
-        !["FULL_TIME", "PART_TIME"].includes(resource.readText("employmentType") ?? "")
+        resource.attributes["employeeId"] !== employeeId ||
+        (resource.attributes["employmentType"] !== "FULL_TIME" &&
+          resource.attributes["employmentType"] !== "PART_TIME")
       ) {
         return new CompanyResourceValidationError("invalid_resource")
       }
       if (resource.revision !== entry[0] + 1)
         return new CompanyResourceValidationError("invalid_revision")
-      latestAtStart.set(resource.effectiveFrom, resource)
     }
 
-    const effective = [...latestAtStart.values()].toSorted((left, right) =>
+    const confirmed = CompanyResourceEffectiveHistoryValue.create(revisions)
+    if (confirmed instanceof Error) return confirmed
+    const effective = confirmed.resources.toSorted((left, right) =>
       left.effectiveFrom.localeCompare(right.effectiveFrom),
     )
     const periods: StatusPeriod[] = []
@@ -84,11 +89,12 @@ export class CompanyEmploymentResourceTimelineValue {
       if (previous !== undefined && previous.endsOn !== resource.effectiveFrom) {
         return new CompanyResourceValidationError("invalid_period")
       }
-      periods.push({
-        startsOn: resource.effectiveFrom,
-        endsOn,
-        status: status === "ACTIVE" ? "active" : "leave",
-      })
+      const currentStatus = status === "ACTIVE" ? "active" : "leave"
+      if (previous !== undefined && previous.status === currentStatus) {
+        periods[periods.length - 1] = { ...previous, endsOn }
+        continue
+      }
+      periods.push({ startsOn: resource.effectiveFrom, endsOn, status: currentStatus })
     }
 
     return new CompanyEmploymentResourceTimelineValue({

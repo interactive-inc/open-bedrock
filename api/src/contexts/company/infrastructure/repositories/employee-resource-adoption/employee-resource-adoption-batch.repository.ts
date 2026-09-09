@@ -1,5 +1,7 @@
 import type { EmployeeResourceAdoptionBatchEntity } from "@/contexts/company/domain/entities/employee-resource-adoption-batch.entity"
-import type { EmployeeResourceAdoptionEntity } from "@/contexts/company/domain/entities/employee-resource-adoption.entity"
+import type { EmployeeResourceAdoptionConfirmation } from "@/contexts/company/domain/values/employee-resource-adoption-correction.value"
+import { EmployeeResourceAdoptionTerminationAdapter } from "@/contexts/company/infrastructure/adapters/employee-resource-adoption/employee-resource-adoption-termination.adapter"
+import { EmployeeResourceAdoptionCorrectionAdapter } from "@/contexts/company/infrastructure/adapters/employee-resource-adoption/employee-resource-adoption-correction.adapter"
 import type { EmployeeResourceAdoptionSnapshotValue } from "@/contexts/company/domain/values/employee-resource-adoption-snapshot.value"
 import {
   CompanyConflictError,
@@ -20,10 +22,8 @@ export type EmployeeResourceAdoptionBatchResult = Readonly<{
   organizationRevision: number
   replayed: boolean
 }>
-type Confirmed = Readonly<{
-  command: EmployeeResourceAdoptionEntity
-  snapshot: EmployeeResourceAdoptionSnapshotValue
-}>
+type Confirmed = EmployeeResourceAdoptionConfirmation &
+  Readonly<{ snapshot: EmployeeResourceAdoptionSnapshotValue }>
 
 /** 全員の照合・接続・証跡を同じtransactionで保存し、会社版を一度だけ進める。 */
 export class EmployeeResourceAdoptionBatchRepository {
@@ -66,13 +66,33 @@ export class EmployeeResourceAdoptionBatchRepository {
           snapshot,
           `employee-adoption-batch:${fingerprint}:${index}`,
         )
-        if (employee instanceof Error) return employee
-        confirmed.push({ command: employee, snapshot })
+        if (employee instanceof CompanyValidationError || employee instanceof CompanyConflictError)
+          return employee
+        if (employee instanceof Error) return this.unavailable(employee)
+        confirmed.push({ ...employee, snapshot })
       }
-      const payloads = this.preparePayloads(confirmed, fingerprint)
+      const payloads = this.preparePayloads(
+        confirmed,
+        fingerprint,
+        command.props.expectedRevision + command.revisionCount,
+      )
       if (payloads instanceof Error) return payloads
-      const organizationRevision = command.props.expectedRevision + 1
-      await this.c.env.DB.batch([
+      const organizationRevision = command.props.expectedRevision + command.revisionCount
+      const correctionStatements = new EmployeeResourceAdoptionCorrectionAdapter(
+        this.c.env.DB,
+      ).prepare({
+        confirmed,
+        commandId: `employee-adoption-batch:${command.props.commandId}`,
+        partCommandPrefix: `employee-adoption-batch-part:${fingerprint}`,
+        organizationRevision: command.props.expectedRevision + 1,
+      })
+      if (correctionStatements instanceof Error) return correctionStatements
+      const terminationStatements = confirmed.some((entry) => entry.termination !== null)
+        ? payloads.flatMap((payload) =>
+            new EmployeeResourceAdoptionTerminationAdapter(this.c.env.DB).prepare(payload),
+          )
+        : []
+      const statements: D1PreparedStatement[] = [
         ...payloads.map((payload) => snapshots.prepareBatchGuard(payload)),
         this.c.env.DB.prepare(`INSERT INTO company_command_receipts
           (organization_id, command_id, fingerprint, expected_revision, organization_revision, recorded_at)
@@ -80,21 +100,17 @@ export class EmployeeResourceAdoptionBatchRepository {
           `employee-adoption-batch:${command.props.commandId}`,
           fingerprint,
           command.props.expectedRevision,
-          organizationRevision,
+          command.props.expectedRevision + 1,
           command.props.recordedAt,
         ),
+        ...terminationStatements,
+        ...correctionStatements,
         ...payloads.map((payload) => this.prepareBindings(payload)),
-        this.c.env.DB.prepare(`UPDATE company_organizations SET revision = ?1, updated_at = ?2
-          WHERE id = 'organization:default' AND revision = ?3`).bind(
-          organizationRevision,
-          command.props.recordedAt,
-          command.props.expectedRevision,
-        ),
-        this.c.env.DB.prepare(
-          "SELECT CASE WHEN changes() = 1 THEN 1 ELSE json_extract('', '$') END",
-        ),
+        ...this.prepareRevisions(command, fingerprint),
         ...payloads.map((payload) => this.prepareReceipts(payload)),
-      ])
+      ]
+      if (statements.length > 100) return this.tooLarge()
+      await this.c.env.DB.batch(statements)
       return { employeeIds, organizationRevision, replayed: false }
     } catch (cause) {
       try {
@@ -122,12 +138,13 @@ export class EmployeeResourceAdoptionBatchRepository {
   private preparePayloads(
     confirmed: ReadonlyArray<Confirmed>,
     fingerprint: string,
+    organizationRevision: number,
   ): ReadonlyArray<string> | CompanyValidationError {
     const chunks: Array<{ rows: string[]; bytes: number }> = [{ rows: [], bytes: 2 }]
     const size = { total: 0 }
     for (const entry of confirmed) {
-      const latest = new Map<string, (typeof entry.command.props.resources)[number]>()
-      for (const resource of entry.command.props.resources) {
+      const latest = new Map<string, (typeof entry.heads)[number]>()
+      for (const resource of entry.heads) {
         if (resource.type !== "person") latest.set(`${resource.type}:${resource.id}`, resource)
       }
       const row = JSON.stringify({
@@ -137,12 +154,29 @@ export class EmployeeResourceAdoptionBatchRepository {
         actorAccountId: entry.command.props.actorAccountId,
         reason: entry.command.props.reason,
         expectedRevision: entry.command.props.expectedRevision,
-        organizationRevision: entry.command.props.expectedRevision + 1,
+        organizationRevision,
         observedOn: entry.command.props.observedOn,
         snapshotDigest: entry.snapshot.props.digest,
         sourceJson: entry.snapshot.props.sourceJson,
         recordedAt: entry.command.props.recordedAt,
-        lifecycleRevision: entry.snapshot.props.value.lifecycleRevision,
+        lifecycleRevision:
+          entry.termination?.props.source.lifecycleRevision ??
+          entry.snapshot.props.value.lifecycleRevision,
+        termination:
+          entry.termination === null
+            ? null
+            : {
+                employment: entry.termination.props.employment,
+                status: entry.termination.props.status,
+                previousActionId: entry.termination.props.previousActionId,
+                actionId: crypto.randomUUID(),
+                resource: entry.heads.find(
+                  (resource) =>
+                    resource.type === "employment" &&
+                    resource.id === entry.termination?.props.employment.periodId,
+                ),
+              },
+        corrections: entry.corrections,
         bindings: [...latest.values()].map((resource) => ({
           type: resource.type,
           id: resource.id,
@@ -168,12 +202,47 @@ export class EmployeeResourceAdoptionBatchRepository {
     return payloads
   }
 
+  private prepareRevisions(
+    command: EmployeeResourceAdoptionBatchEntity,
+    fingerprint: string,
+  ): ReadonlyArray<D1PreparedStatement> {
+    const statements: D1PreparedStatement[] = []
+    for (const index of Array.from({ length: command.revisionCount }, (_, offset) => offset)) {
+      const expectedRevision = command.props.expectedRevision + index
+      if (index > 0)
+        statements.push(
+          this.c.env.DB.prepare(`INSERT INTO company_command_receipts
+          (organization_id, command_id, fingerprint, expected_revision, organization_revision, recorded_at)
+          VALUES ('organization:default', ?1, ?2, ?3, ?4, ?5)`).bind(
+            `employee-adoption-batch-part:${fingerprint}:${index}`,
+            fingerprint,
+            expectedRevision,
+            expectedRevision + 1,
+            command.props.recordedAt,
+          ),
+        )
+      statements.push(
+        this.c.env.DB.prepare(`UPDATE company_organizations SET revision = ?1, updated_at = ?2
+          WHERE id = 'organization:default' AND revision = ?3`).bind(
+          expectedRevision + 1,
+          command.props.recordedAt,
+          expectedRevision,
+        ),
+        this.c.env.DB.prepare(
+          "SELECT CASE WHEN changes() = 1 THEN 1 ELSE json_extract('', '$') END",
+        ),
+      )
+    }
+    return statements
+  }
+
   private prepareBindings(payload: string): D1PreparedStatement {
     return this.c.env.DB.prepare(`INSERT INTO company_workforce_resource_bindings
       (resource_type, resource_id, organization_id, employee_id, resource_revision, lifecycle_revision, last_action_id)
       SELECT json_extract(binding.value, '$.type'), json_extract(binding.value, '$.id'),
         'organization:default', json_extract(employee.value, '$.employeeId'),
-        json_extract(binding.value, '$.revision'), json_extract(employee.value, '$.lifecycleRevision'), NULL
+        json_extract(binding.value, '$.revision'), json_extract(employee.value, '$.lifecycleRevision'),
+        json_extract(employee.value, '$.termination.actionId')
       FROM json_each(?1) AS employee, json_each(employee.value, '$.bindings') AS binding
       ORDER BY json_extract(binding.value, '$.type'), json_extract(binding.value, '$.id')`).bind(
       payload,
@@ -212,7 +281,7 @@ export class EmployeeResourceAdoptionBatchRepository {
       return this.conflict()
     return {
       employeeIds: command.props.employees.map((employee) => employee.employeeId),
-      organizationRevision: receipt.organization_revision,
+      organizationRevision: command.props.expectedRevision + command.revisionCount,
       replayed: true,
     }
   }

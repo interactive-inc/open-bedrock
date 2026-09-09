@@ -9,7 +9,8 @@ export const help = `bedrock employees adoption-batch --data <confirmed-employee
 
 employees adoption --employee-id <id>で各従業員の公開履歴を確認してから一括接続します。
 dataには共通のexpectedRevision・observedOn・reasonと、employeeId・snapshotDigestのemployees一覧を指定します。
-全員の既存履歴を照合し、接続と監査を一度に保存します。氏名や過去の期間は補完・上書きしません。
+必要な従業員には確認済みのcorrectionsを指定でき、元の版を残して訂正版を追記します。
+全員の履歴を照合し、訂正・接続・監査を一度に保存します。氏名や過去の期間は自動補完しません。
 再送は同じJSONとキーを使い、競合時は台帳を確認し直してください。`
 
 export default factory.createHandlers(
@@ -41,6 +42,31 @@ export default factory.createHandlers(
               .object({
                 employeeId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/),
                 snapshotDigest: z.string().regex(/^[a-f0-9]{64}$/),
+                terminationBoundaryCorrection: z
+                  .object({
+                    employmentId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/),
+                    endsOn: z.string().date(),
+                  })
+                  .strict()
+                  .optional(),
+                corrections: z
+                  .array(
+                    z
+                      .object({
+                        organizationId: z.literal("organization:default"),
+                        type: z.enum(["person", "employee", "employment"]),
+                        id: z.string().regex(/^\S{1,255}$/),
+                        revision: z.number().int().positive().max(100),
+                        state: z.enum(["active", "void"]),
+                        effectiveFrom: z.string().date(),
+                        effectiveTo: z.string().date().nullable(),
+                        attributes: z.record(z.string(), z.string().nullable()),
+                      })
+                      .strict(),
+                  )
+                  .min(1)
+                  .max(20)
+                  .optional(),
               })
               .strict(),
           )

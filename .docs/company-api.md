@@ -231,9 +231,13 @@ CLIの `employees adoption --employee-id <id>` で照合対象を参照し、`em
 
 `POST /company/employee-resource-adoption-batches` は、確認済みの既存公開履歴を持つ従業員を一括接続する。共通の `expectedRevision`、`observedOn`、`reason` と、1〜250人の `employeeId`・`snapshotDigest` を持つ `employees` を受け取り、`idempotency-key` headerを要求する。対象の重複や任意の履歴・主体の入力は拒否する。各従業員には単独接続と同じ照合条件を適用し、履歴の欠落や氏名・雇用期間の不一致を補完しない。
 
-対象全員のsnapshotを保存直前に再照合し、全員の接続、会社版の一度の更新、認証された主体・理由・元のsnapshotを持つ各従業員の移行記録を一つのtransactionで保存する。会社の公開Account対応が未接続のまま残る場合や、一つでも保存が失敗した場合は全員分を取り消す。人数を分けて部分確定することはない。個々のsnapshotは750,000 byte以内、照合と証跡に使うデータの合計は8,000,000 byte以内とし、超過時は保存しない。
+保存済みの公開履歴に訂正が必要な場合は、その従業員に `corrections` を明示する。対象は既存のPerson・Employee・Employmentだけで、各resourceの現在の版に続く1〜20件を指定する。元の全履歴と訂正版を合わせて100件以内とし、既存版の上書き、版の欠落、新しいIDへの名寄せを拒否する。訂正後の全発効区間が人物・雇用・在籍の台帳と一致する場合だけ接続する。同じ発効日の新しい版で置き換えられた旧形式の属性も原履歴として残し、現在の期間には訂正版を使う。入社日の遡及訂正で隣接する同じ在籍状態は、一つの連続期間として照合する。過去の事実やAccount表示名を自動で補完する機能ではない。
 
-成功時は `employeeIds`、確定した `organizationRevision`、再送を表す `replayed` を返す。同じ対象集合なら順序を変えた翌日以降の再送も元の結果を返す。対象、確認値、理由、主体を変えた同じキーは409になり、再送にも現在の会社管理資格を要求する。CLIの `employees adoption-batch --data <confirmed-employees.json> --idempotency-key <uuid>` も同じAPIを使用する。
+初期取り込みの退職期間だけが1日短い場合は、`terminationBoundaryCorrection` に `employmentId` と確認した終了日 `endsOn` を指定できる。未接続でライフサイクル版が1、雇用・状態期間が初期版だけであること、台帳の退職日、既存公開履歴の終了日がすべて同じ補正を裏付ける場合に限る。終了日は退職日の翌日でなければならず、対応する公開雇用の訂正版も必須になる。元の退職日と期間版は残し、操作主体・理由・訂正元を持つ人事記録、雇用・状態の新しい期間版、ライフサイクル版を接続と同じtransactionへ追記する。変更済みの期間や根拠が不足する履歴は補正しない。
+
+対象全員のsnapshotを保存直前に再照合し、訂正版の追記、全員の接続、会社版、認証された主体・理由・元のsnapshotを持つ各従業員の移行記録を一つのtransactionで保存する。訂正がなければ会社版を一度だけ進め、複数版の追記があれば必要な会社版と各操作記録を同じtransaction内で進める。会社の公開Account対応が未接続のまま残る場合や、一つでも保存が失敗した場合は全員分を取り消す。人数を分けて部分確定することはない。個々のsnapshotは750,000 byte以内、照合と証跡に使うデータの合計は8,000,000 byte以内とし、超過時は保存しない。
+
+成功時は `employeeIds`、確定した `organizationRevision`、再送を表す `replayed` を返す。同じ対象集合なら順序を変えた翌日以降の再送も元の結果を返す。対象、確認値、訂正内容、理由、主体を変えた同じキーは409になり、再送にも現在の会社管理資格を要求する。CLIの `employees adoption-batch --data <confirmed-employees.json> --idempotency-key <uuid>` も同じAPIを使用する。
 
 ## 既存組織の公開履歴への接続
 
