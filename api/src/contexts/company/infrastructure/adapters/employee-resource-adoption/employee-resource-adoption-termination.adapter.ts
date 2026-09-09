@@ -57,12 +57,14 @@ export class EmployeeResourceAdoptionTerminationAdapter {
         FROM json_each(?1) WHERE json_type(value, '$.termination') = 'object'`)
         .bind(payload),
       this.c
-        .prepare(`UPDATE company_employee_lifecycle_revisions SET revision = 2,
+        .prepare(`UPDATE company_employee_lifecycle_revisions SET revision = revision + 1,
         updated_at = (SELECT CAST(json_extract(value, '$.recordedAt') / 1000 AS INTEGER)
           FROM json_each(?1) WHERE json_extract(value, '$.employeeId') = employee_id)
-        WHERE revision = 1 AND employee_id IN (
-          SELECT json_extract(value, '$.employeeId') FROM json_each(?1)
+        WHERE EXISTS (
+          SELECT 1 FROM json_each(?1)
           WHERE json_type(value, '$.termination') = 'object'
+            AND json_extract(value, '$.employeeId') = employee_id
+            AND json_extract(value, '$.lifecycleRevision') = revision + 1
         )`)
         .bind(payload),
       this.c

@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { createEmployeeAdoptionBatchFixture } from "@/contexts/company/test/employee-resource-adoption-batch.test-support"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 
-async function fixture(hasInitialAction = true) {
+async function fixture(hasInitialAction = true, lifecycleRevision = 1) {
   const context = await createEmployeeAdoptionBatchFixture(1)
   const employeeId = restoreWorkforceId("employee", "employee:ended")
   await context.database.exec(`
@@ -11,7 +11,7 @@ async function fixture(hasInitialAction = true) {
     INSERT INTO company_employments (id, employee_id, contract_name, employment_type, hire_date, termination_date, status, created_at, updated_at)
       VALUES ('employment:ended', 'employee:ended', 'Former Employee', 'FULL_TIME', '2020-01-01', '2026-08-16', 'TERMINATED', 0, 0);
     INSERT INTO company_employee_lifecycle_revisions (employee_id, revision, updated_at)
-      VALUES ('employee:ended', 1, 0);
+      VALUES ('employee:ended', ${lifecycleRevision}, 0);
     INSERT INTO company_personnel_actions
       (id, employee_id, kind, event_on, recorded_at, recorded_by_account_id, requested_by_employee_id,
        source_type, source_application_id, corrects_action_id, operation_id, payload_fingerprint, summary_json)
@@ -111,53 +111,65 @@ async function fixture(hasInitialAction = true) {
   return { ...context, correctedInput }
 }
 
-test("退職日と公開終了日が裏付ける初期期間だけを追記補正し、元の退職日と全履歴を保全する", async () => {
-  const context = await fixture()
+test.each([0, 1])(
+  "初期の人事版%dから退職期間だけを追記補正し、元の退職日と全履歴を保全する",
+  async (lifecycleRevision) => {
+    const context = await fixture(true, lifecycleRevision)
+    const before = await context.legacy()
+    const response = await context.post(context.correctedInput)
+    expect(await response.json()).toMatchObject({ organizationRevision: 3, replayed: false })
+    expect(response.status).toBe(200)
+    const after = await context.legacy()
+    expect(after[0]).toEqual(before[0])
+    expect(after[1]).toEqual(before[1])
+    for (const index of [2, 3, 4])
+      expect(after[index]).toEqual(expect.arrayContaining(before[index] ?? []))
+    expect(after[3]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          period_id: "employment:ended",
+          revision: 2,
+          ends_on: "2026-08-17",
+        }),
+      ]),
+    )
+    expect(after[4]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({ period_id: "status:ended", revision: 2, ends_on: "2026-08-17" }),
+      ]),
+    )
+    expect(after[2]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          kind: "employment_revised",
+          recorded_by_account_id: context.actor.accountId,
+          corrects_action_id: "initial:ended",
+        }),
+      ]),
+    )
+    const state = await context.state()
+    expect(state[1]).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          resource_id: "employment:ended",
+          resource_revision: 2,
+          lifecycle_revision: lifecycleRevision + 1,
+          last_action_id: expect.any(String),
+        }),
+      ]),
+    )
+    expect((await context.post(context.correctedInput)).status).toBe(200)
+    expect(await context.legacy()).toEqual(after)
+    expect(await context.state()).toEqual(state)
+  },
+)
+
+test("初期取り込み後に人事版が進んだ従業員の期間を初期補正しない", async () => {
+  const context = await fixture(true, 2)
   const before = await context.legacy()
-  const response = await context.post(context.correctedInput)
-  expect(await response.json()).toMatchObject({ organizationRevision: 3, replayed: false })
-  expect(response.status).toBe(200)
-  const after = await context.legacy()
-  expect(after[0]).toEqual(before[0])
-  expect(after[1]).toEqual(before[1])
-  for (const index of [2, 3, 4])
-    expect(after[index]).toEqual(expect.arrayContaining(before[index] ?? []))
-  expect(after[3]).toEqual(
-    expect.arrayContaining([
-      expect.objectContaining({
-        period_id: "employment:ended",
-        revision: 2,
-        ends_on: "2026-08-17",
-      }),
-    ]),
-  )
-  expect(after[4]).toEqual(
-    expect.arrayContaining([
-      expect.objectContaining({ period_id: "status:ended", revision: 2, ends_on: "2026-08-17" }),
-    ]),
-  )
-  expect(after[2]).toEqual(
-    expect.arrayContaining([
-      expect.objectContaining({
-        kind: "employment_revised",
-        recorded_by_account_id: context.actor.accountId,
-        corrects_action_id: "initial:ended",
-      }),
-    ]),
-  )
   const state = await context.state()
-  expect(state[1]).toEqual(
-    expect.arrayContaining([
-      expect.objectContaining({
-        resource_id: "employment:ended",
-        resource_revision: 2,
-        lifecycle_revision: 2,
-        last_action_id: expect.any(String),
-      }),
-    ]),
-  )
-  expect((await context.post(context.correctedInput)).status).toBe(200)
-  expect(await context.legacy()).toEqual(after)
+  expect((await context.post(context.correctedInput)).status).toBe(422)
+  expect(await context.legacy()).toEqual(before)
   expect(await context.state()).toEqual(state)
 })
 

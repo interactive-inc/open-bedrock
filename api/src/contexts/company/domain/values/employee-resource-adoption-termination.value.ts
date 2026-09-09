@@ -32,7 +32,7 @@ export class EmployeeResourceAdoptionTerminationValue {
     const status = statuses[0]
     if (
       source.bindings.length !== 0 ||
-      source.lifecycleRevision !== 1 ||
+      (source.lifecycleRevision !== 0 && source.lifecycleRevision !== 1) ||
       contract === undefined ||
       contract.terminationDate === null ||
       contract.status !== "TERMINATED" ||
@@ -73,7 +73,7 @@ export class EmployeeResourceAdoptionTerminationValue {
       Object.freeze({
         source: Object.freeze({
           ...source,
-          lifecycleRevision: 2,
+          lifecycleRevision: source.lifecycleRevision + 1,
           employmentPeriods: Object.freeze([...source.employmentPeriods, employment]),
           statusPeriods: Object.freeze([...source.statusPeriods, correctedStatus]),
         }),
