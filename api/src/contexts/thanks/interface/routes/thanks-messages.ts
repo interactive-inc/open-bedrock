@@ -12,14 +12,13 @@ import {
 import { toEmployeeNameMap } from "@/api/http/company-employees/to-employee-name-map"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zAppThanks, zAppThanksList } from "@/contexts/thanks/interface/http/response-schemas"
-import { ApplicationError } from "@/lib/errors"
+import { ApplicationError, UnexpectedError } from "@/lib/errors"
 import { factory } from "@/api/http/factory"
 import { thanks as thanksTable } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { zValidator } from "@hono/zod-validator"
 import { count, desc } from "drizzle-orm"
 import { z } from "zod"
 import { codeSchema } from "@/lib/validation/code.schema"
-import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /thanks-messages — 全従業員が閲覧する感謝のタイムライン（新着順・ページング） */
@@ -60,6 +59,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     c,
     thanksList.flatMap((thanks) => [thanks.senderEmployeeId, thanks.recipientEmployeeId]),
   )
+  if (nameById instanceof Error)
+    throw toHttpException(new UnexpectedError("failed to read employee names", { cause: nameById }))
 
   const responseBody = zAppThanksList.parse({
     data: thanksList.map((thanks) => ({
@@ -116,14 +117,9 @@ export const POST = factory.createHandlers(
       throw toHttpException(result)
     }
 
-    let nameById: Map<EmployeeId, string>
-
-    try {
-      nameById = await toEmployeeNameMap(c, [result.senderEmployeeId, result.recipientEmployeeId])
-    } catch {
-      // names 取得失敗でも thanks は保存済みなので 201 を返す
-      nameById = new Map()
-    }
+    const names = await toEmployeeNameMap(c, [result.senderEmployeeId, result.recipientEmployeeId])
+    // 氏名の参照に失敗しても保存済みの感謝を再送させない。
+    const nameById = names instanceof Error ? new Map() : names
 
     const responseBody = zAppThanks.parse({
       id: result.id,

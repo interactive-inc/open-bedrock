@@ -1,3 +1,6 @@
+import { sql } from "drizzle-orm"
+import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1"
+import { companyEmploymentStateSql } from "@/contexts/company/infrastructure/adapters/employee/lib/company-employment-state-sql"
 import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
@@ -42,6 +45,44 @@ type Context = Readonly<{ env: CompanyContext["env"]; asOf?: CalendarDate }>
 export class CompanyEmployeeDirectoryReadAdapter {
   constructor(private readonly c: Context) {
     Object.freeze(this)
+  }
+
+  /** 従業員名だけが必要な製品の参照も、同じ人物履歴へ揃える。 */
+  static async findNames(
+    c: Readonly<{
+      database: D1Database | Pick<DrizzleD1Database, "select">
+      now: string
+      timeZone: string | undefined
+      employeeIds: ReadonlyArray<EmployeeId>
+    }>,
+  ): Promise<ReadonlyMap<EmployeeId, string> | Error> {
+    const employeeIds = c.employeeIds
+    if (employeeIds.length === 0) return new Map()
+    const asOf = resolveCompanyBusinessDate({ now: c.now, timeZone: c.timeZone })
+    if (asOf instanceof Error) return asOf
+    try {
+      const database = "prepare" in c.database ? drizzle(c.database) : c.database
+      const history = sql.join(companyEmploymentStateSql().split("?1").map(sql.raw), sql`${asOf}`)
+      const rows = await database.select({
+        id: sql<string>`id`,
+        official_name: sql<string>`official_name`,
+      }).from(sql`(${history}
+        SELECT id, official_name FROM current_employees
+        WHERE id IN (SELECT value FROM json_each(${JSON.stringify([...new Set(employeeIds)])}))
+        ORDER BY id) employee_names`)
+      const names = z
+        .array(z.object({ id: z.string(), official_name: z.string().min(1) }))
+        .parse(rows)
+      const nameById = new Map<EmployeeId, string>()
+      for (const row of names) {
+        const employeeId = restoreWorkforceId("employee", row.id)
+        if (nameById.has(employeeId)) return new Error("Company employee identity is ambiguous")
+        nameById.set(employeeId, row.official_name)
+      }
+      return nameById
+    } catch (cause) {
+      return cause instanceof Error ? cause : new Error("failed to read Company employee names")
+    }
   }
 
   findById(employeeId: EmployeeId): Promise<CompanyEmployeeDirectoryEntry | null | Error> {

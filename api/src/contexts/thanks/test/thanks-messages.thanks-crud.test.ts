@@ -10,6 +10,9 @@ import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { describe, expect, test } from "bun:test"
 import { z } from "zod"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
+import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 
 const thanksResponseSchema = z.object({
   id: z.number(),
@@ -87,6 +90,105 @@ async function request(props: {
 }
 
 describe("POST /thanks-messages", () => {
+  test("全体と本人の一覧は将来の改名を発効日に表示し、感謝と人物履歴を変更しない", async () => {
+    const db = await createTestDb()
+    const repository = new D1CompanyResourceRepository(db)
+    const initial = CompanyResourceChangeEntity.create({
+      commandId: "thanks-name-initial",
+      expectedRevision: 0,
+      actorAccountId: "4",
+      reason: "Confirmed person",
+      recordedAt: 0,
+      resources: [
+        {
+          organizationId: "organization:default",
+          type: "person",
+          id: "person:thanks-name",
+          revision: 1,
+          state: "active",
+          effectiveFrom: restoreCalendarDate("2026-01-01"),
+          effectiveTo: null,
+          attributes: { officialName: "Current Person" },
+        },
+        {
+          organizationId: "organization:default",
+          type: "employee",
+          id: "employee:thanks-name",
+          revision: 1,
+          state: "active",
+          effectiveFrom: restoreCalendarDate("2026-01-01"),
+          effectiveTo: null,
+          attributes: { personId: "person:thanks-name" },
+        },
+        {
+          organizationId: "organization:default",
+          type: "employment",
+          id: "employment:thanks-name",
+          revision: 1,
+          state: "active",
+          effectiveFrom: restoreCalendarDate("2026-01-01"),
+          effectiveTo: null,
+          attributes: {
+            employeeId: "employee:thanks-name",
+            status: "ACTIVE",
+            employmentType: "FULL_TIME",
+          },
+        },
+      ],
+    })
+    if (initial instanceof Error) throw initial
+    expect(await repository.write(initial)).toMatchObject({ kind: "applied" })
+    const future = CompanyResourceChangeEntity.create({
+      commandId: "thanks-name-future",
+      expectedRevision: 1,
+      actorAccountId: "4",
+      reason: "Confirmed future name",
+      recordedAt: 1,
+      resources: [
+        {
+          organizationId: "organization:default",
+          type: "person",
+          id: "person:thanks-name",
+          revision: 2,
+          state: "active",
+          effectiveFrom: restoreCalendarDate("2026-07-01"),
+          effectiveTo: null,
+          attributes: { officialName: "Future Person" },
+        },
+      ],
+    })
+    if (future instanceof Error) throw future
+    expect(await repository.write(future)).toMatchObject({ kind: "applied" })
+    await db
+      .prepare(
+        "INSERT INTO thanks_messages (sender_employee_id, recipient_employee_id, message, points, created_at) VALUES ('4', 'employee:thanks-name', 'Thank you', 0, '2026-06-01T00:00:00Z')",
+      )
+      .run()
+    const before = await db
+      .prepare("SELECT * FROM company_resource_revisions ORDER BY 1, 2, 3, 4")
+      .all()
+    const token = await senderToken()
+    for (const now of ["2026-06-30T14:59:59Z", "2026-06-30T15:00:00Z"]) {
+      for (const path of ["/thanks/thanks-messages", "/thanks/thanks-messages/me"]) {
+        const response = await request({ db, token, path, now })
+        expect(response.status).toBe(200)
+        expect(await response.json()).toMatchObject({
+          data: [
+            { recipient_name: now.endsWith("14:59:59Z") ? "Current Person" : "Future Person" },
+          ],
+          total: 1,
+        })
+      }
+    }
+    expect(
+      (await db.prepare("SELECT * FROM company_resource_revisions ORDER BY 1, 2, 3, 4").all())
+        .results,
+    ).toEqual(before.results)
+    expect(
+      await db.prepare("SELECT count(*) AS total FROM thanks_messages").first<number>("total"),
+    ).toBe(1)
+  })
+
   test("creates a thanks and returns it with names", async () => {
     const db = await createTestDb()
 
