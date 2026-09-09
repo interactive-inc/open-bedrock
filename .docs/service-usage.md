@@ -46,6 +46,22 @@ API rootからの相対パスを次に示す。
 
 `SOFTWARE_LICENSE_ENABLED=false` を設定すると全ての台帳APIを404で停止する。未設定または `true` の場合に有効とし、その他の設定値でも停止する。製品側の機能無効化がある場合は、その制限も適用する。
 
+## CLI
+
+`bedrock software-licenses` は契約・プランと利用者台帳を操作する。
+
+- `list --limit <件数> --offset <開始位置>`: 契約一覧。`--status`で状態を絞る。
+- `get <id>`: 契約と現在の`revision`を参照する。
+- `history <id> --offset <開始位置>`: 契約の変更履歴を参照する。
+- `create --name <サービス名> --plan-name <プラン名> --idempotency-key <キー>`: 契約を記録する。再送には同じキーと内容を指定する。
+- `update <id> --name <サービス名> --expected-revision <確認版> --plan-name <プラン名>`: 確認した版に対して契約を更新する。プラン名の省略は保持、`--clear-plan`は未設定への変更となり、両方の同時指定は拒否する。
+- `cancel <id> --expected-revision <確認版>`: 契約の解約状態を記録する。
+- `assignments --license-id <id> --employee-id <従業員ID> --state assigned|released --limit <件数> --offset <開始位置>`: 利用者と解除履歴を参照する。各絞り込みは省略でき、`has_more`で続きを判定する。
+- `assign <id> --assignment-id <UUID> --employee-id <従業員ID> --reason <理由>`: 利用者を割り当てる。外部アカウント参照は`--account-reference`で指定する。
+- `release <割当UUID> --reason <理由>`: 割当を解除する。
+
+CLIの契約登録には再送キー、更新・解約には`get`で確認した版を必須とする。競合後に最新版を取得して自動送信しない。割当IDは呼出元が固定し、再送のたびに生成し直さない。CLIもAPIと同じHuman・在籍・操作権限の検査を受ける。
+
 ## 未接続の機能
 
-サービス定義の独立した名寄せ、外部サービスからの利用実績の取得、契約更新通知、導入前の相談・承認、外部稟議との対応、AIへの記録委任は未実装である。利用者割当のWeb画面とCLI専用コマンドも未実装で、割当と解除はAPIを利用する。
+サービス定義の独立した名寄せ、外部サービスからの利用実績の取得、契約更新通知、導入前の相談・承認、外部稟議との対応、AIへの記録委任は未実装である。利用者割当のWeb画面は未実装で、割当と解除はAPIまたはCLIを利用する。

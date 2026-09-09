@@ -323,10 +323,15 @@ commands:
   headcount-plans list                        人員計画一覧 (--fiscal-year) ※実在籍数つき・read:all
   headcount-plans create                      人員計画を作成 (--fiscal-year --planned-count [--department-code --note])
   headcount-plans update <id> 人員計画を更新 (--planned-count [--note])
-  software-licenses list                      ライセンス・SaaS 台帳一覧 (--status) ※read:all
-  software-licenses create                    ライセンスを登録 (--name [--vendor --category --seats --renewal-deadline --owner-employee-id --note])
-  software-licenses update <id>               ライセンスを更新 (--name [--vendor --category --seats --renewal-deadline --owner-employee-id --note])
-  software-licenses cancel <id>               ライセンスを解約
+  software-licenses list                      契約・プラン一覧 (--status --limit --offset)
+  software-licenses get <id>                   契約と確認版を参照
+  software-licenses history <id>               契約変更履歴 (--offset)
+  software-licenses create                    契約を登録 (--name --idempotency-key [--plan-name ほか])
+  software-licenses update <id>                契約を更新 (--name --expected-revision [--plan-name | --clear-plan ほか])
+  software-licenses cancel <id>                契約の解約状態を記録 (--expected-revision)
+  software-licenses assignments               利用者・解除履歴 (--license-id --employee-id --state --limit --offset)
+  software-licenses assign <id>                利用者を割当 (--assignment-id --employee-id --reason [--account-reference])
+  software-licenses release <assignment-id>    割当を解除 (--reason)
   it-incidents list                           インシデント記録一覧 (--status) ※read:all
   it-incidents create                         インシデントを記録 (--occurred-at --title --summary [--severity])
   it-incidents resolve <id>                   インシデントを解消済みにする

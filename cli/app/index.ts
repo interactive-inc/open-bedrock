@@ -463,6 +463,11 @@ import licensesListHandler from "@/app/software-licenses/list/route"
 import licensesCreateHandler from "@/app/software-licenses/create/route"
 import licensesUpdateHandler from "@/app/software-licenses/update/[license_id]/route"
 import licensesCancelHandler from "@/app/software-licenses/cancel/[license_id]/route"
+import licensesGetHandler from "@/app/software-licenses/get/[license_id]/route"
+import licensesHistoryHandler from "@/app/software-licenses/history/[license_id]/route"
+import licensesAssignHandler from "@/app/software-licenses/assign/[license_id]/route"
+import licensesAssignmentsHandler from "@/app/software-licenses/assignments/route"
+import licensesReleaseHandler from "@/app/software-licenses/release/[assignment_id]/route"
 import itIncidentsHandler from "@/app/it-incidents/route"
 import itIncidentsListHandler from "@/app/it-incidents/list/route"
 import itIncidentsCreateHandler from "@/app/it-incidents/create/route"
@@ -1012,6 +1017,11 @@ routes.post("/software-licenses/list", ...licensesListHandler)
 routes.post("/software-licenses/create", ...licensesCreateHandler)
 routes.post("/software-licenses/update/:license_id?", ...licensesUpdateHandler)
 routes.post("/software-licenses/cancel/:license_id?", ...licensesCancelHandler)
+routes.post("/software-licenses/get/:license_id?", ...licensesGetHandler)
+routes.post("/software-licenses/history/:license_id?", ...licensesHistoryHandler)
+routes.post("/software-licenses/assign/:license_id?", ...licensesAssignHandler)
+routes.post("/software-licenses/assignments", ...licensesAssignmentsHandler)
+routes.post("/software-licenses/release/:assignment_id?", ...licensesReleaseHandler)
 routes.post("/it-incidents", ...itIncidentsHandler)
 routes.post("/it-incidents/list", ...itIncidentsListHandler)
 routes.post("/it-incidents/create", ...itIncidentsCreateHandler)

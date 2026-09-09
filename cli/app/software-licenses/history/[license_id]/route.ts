@@ -4,19 +4,21 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `bedrock software-licenses cancel <id> --expected-revision <revision>`
+export const help = `bedrock software-licenses history <id> [--offset 0..100000]`
 
 export default factory.createHandlers(
   zValidator(
     "json",
-    z.object({
-      help: z.string().optional(),
-      "expected-revision": z
-        .string()
-        .regex(/^\d+$/)
-        .refine((value) => Number.isSafeInteger(Number(value)))
-        .optional(),
-    }),
+    z
+      .object({
+        help: z.string().optional(),
+        offset: z
+          .string()
+          .regex(/^\d+$/)
+          .refine((value) => Number(value) <= 100000)
+          .optional(),
+      })
+      .strict(),
   ),
   zValidator(
     "param",
@@ -30,23 +32,14 @@ export default factory.createHandlers(
   ),
   async (c) => {
     const query = c.req.valid("json")
-
     if (query.help) return c.text(help)
-
     const licenseId = c.req.valid("param").license_id
-
     if (!licenseId) throw new UsageError("引数 <id> が必要です")
-
-    if (query["expected-revision"] === undefined)
-      throw new UsageError("getで確認した --expected-revision が必要です")
-
     const client = await createClient()
-
-    const response = await client["software-license"]["software-licenses"][":id"].cancel.$post({
+    const response = await client["software-license"]["software-licenses"][":id"].history.$get({
       param: { id: licenseId },
-      header: { "if-match": query["expected-revision"] },
+      query: { offset: query.offset },
     })
-
     return c.json(await response.json())
   },
 )

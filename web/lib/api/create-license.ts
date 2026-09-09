@@ -15,7 +15,10 @@ export type LicenseCreateRequest = {
 export async function createLicense(request: LicenseCreateRequest) {
   const client = await createClient()
 
-  const response = await client["software-license"]["software-licenses"].$post({ json: request })
+  const response = await client["software-license"]["software-licenses"].$post({
+    header: {},
+    json: request,
+  })
 
   if (response.status >= 400) {
     return toResponseError(response, { fallback: "ライセンスの登録に失敗しました" })
