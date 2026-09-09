@@ -107,11 +107,12 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
 
     try {
       const binds: unknown[] = []
-      const conditions = [`resource_type IN (${placeholders(query.types)})`]
-      binds.push(...query.types)
+      // ID と種別の上限をそれぞれ許容し、時点・会社の条件を足しても D1 の bind 上限を超えない。
+      const conditions = ["resource_type IN (SELECT value FROM json_each(?))"]
+      binds.push(JSON.stringify(query.types))
       if (query.ids !== undefined && query.ids.length > 0) {
-        conditions.push(`resource_id IN (${placeholders(query.ids)})`)
-        binds.push(...query.ids)
+        conditions.push("resource_id IN (SELECT value FROM json_each(?))")
+        binds.push(JSON.stringify(query.ids))
       }
 
       const resourceStatement =

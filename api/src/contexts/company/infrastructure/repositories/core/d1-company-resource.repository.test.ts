@@ -632,3 +632,56 @@ describe("Company workforce resourceの参照整合性", () => {
     })
   })
 })
+
+test.each([false, true])(
+  "100件のIDを時点指定=%sで照会してもD1のbind上限を超えない",
+  async (dated) => {
+    const f = fixture()
+    const records: CompanyResourceProps[] = Array.from({ length: 100 }, (_, index) => ({
+      ...person,
+      id: `person:bulk:${String(index).padStart(3, "0")}`,
+      attributes: { officialName: `Person ${index}` },
+    }))
+    expect(await f.repository.write(command(records))).toMatchObject({ kind: "applied" })
+    expect(
+      await f.repository.write(command([{ ...person, id: "person:excluded" }], 1)),
+    ).toMatchObject({ kind: "applied" })
+    const prepare = f.database.prepare.bind(f.database)
+    f.database.prepare = (query) => {
+      const statement = prepare(query)
+      const bind = statement.bind.bind(statement)
+      statement.bind = (...values: unknown[]) => {
+        if (values.length > 100) throw new Error(`D1 bind limit exceeded: ${values.length}`)
+        return bind(...values)
+      }
+      return statement
+    }
+    const result = await f.repository.findMany({
+      organizationId: person.organizationId,
+      types: ["person"],
+      ids: records.map((record) => record.id),
+      ...(dated ? { effectiveOn: effectiveFrom } : {}),
+    })
+    expect(result.ok).toBe(true)
+    if (!result.ok) throw result.cause
+    expect(result.organizationRevision).toBe(2)
+    expect(result.resources.map((resource) => resource.id)).toEqual(
+      records.map((record) => record.id),
+    )
+  },
+)
+
+test("IDの引用符とバックスラッシュを照会条件として保持する", async () => {
+  const f = fixture()
+  const quoted = { ...person, id: `person:"quoted"\\suffix` }
+  expect(await f.repository.write(command([person, quoted]))).toMatchObject({ kind: "applied" })
+  const result = await f.repository.findMany({
+    organizationId: person.organizationId,
+    types: ["person"],
+    ids: [quoted.id],
+    effectiveOn: effectiveFrom,
+  })
+  expect(result.ok).toBe(true)
+  if (!result.ok) throw result.cause
+  expect(result.resources.map((resource) => resource.id)).toEqual([quoted.id])
+})
