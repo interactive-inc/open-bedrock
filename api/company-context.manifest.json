@@ -277,6 +277,7 @@
     "src/contexts/company/domain/values/workforce-state.value.test.ts",
     "src/contexts/company/domain/values/workforce-state.value.ts",
     "src/contexts/company/infrastructure/adapters/account-profile/align-account-display-name-to-employee.adapter.ts",
+    "src/contexts/company/infrastructure/adapters/account-profile/company-account-display-name-projection.adapter.ts",
     "src/contexts/company/infrastructure/adapters/account-profile/company-account-profile-rename-guard.adapter.test.ts",
     "src/contexts/company/infrastructure/adapters/account-profile/company-account-profile-rename-guard.adapter.ts",
     "src/contexts/company/infrastructure/adapters/account-profile/read-company-account-display-names.adapter.ts",

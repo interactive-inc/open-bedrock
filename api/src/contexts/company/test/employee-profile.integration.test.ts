@@ -9,6 +9,7 @@ import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/
 import { employeeProfileVersionSchema } from "@/contexts/company/domain/definitions/employee-profile-version.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
+import { ReadCompanyAccountDisplayNamesAdapter } from "@/contexts/company/infrastructure/adapters/account-profile/read-company-account-display-names.adapter"
 import {
   GET as GET_NAME,
   PUT as PUT_NAME,
@@ -157,6 +158,170 @@ async function fixture() {
       .first<{ official_name: string; email: string | null; phone: string | null }>()
   return { database, clock, actors, actor, read, version, write, counts, rows, app, environment }
 }
+
+test("Account表示名も会社営業日の人物履歴を使い、将来の改名を先に表示しない", async () => {
+  const context = await fixture()
+  const change = CompanyResourceChangeEntity.create({
+    commandId: "future-name",
+    expectedRevision: 1,
+    actorAccountId: context.actor.accountId,
+    reason: "Confirmed future name",
+    recordedAt: context.clock.now.getTime(),
+    resources: [
+      {
+        organizationId: "organization:default",
+        type: "person",
+        id: "person:profile",
+        revision: 2,
+        state: "active",
+        effectiveFrom: restoreCalendarDate("2026-07-01"),
+        effectiveTo: null,
+        attributes: {
+          officialName: "Future Person",
+          email: "you@example.com",
+          phone: "010-1000-1000",
+        },
+      },
+    ],
+  })
+  if (change instanceof Error) throw change
+  expect(await new D1CompanyResourceRepository(context.database).write(change)).toMatchObject({
+    kind: "applied",
+  })
+  for (const instant of ["2026-06-30T14:59:59Z", "2026-06-30T15:00:00Z"]) {
+    const names = await new ReadCompanyAccountDisplayNamesAdapter({
+      database: context.database,
+      organizationIds: ["organization:default"],
+      accountIds: ["account:profile", "account:unlinked"],
+      now: instant,
+      timeZone: "Asia/Tokyo",
+    }).readCompanyAccountDisplayNames()
+    if (names instanceof Error) throw names
+    expect(names.get("account:profile")).toBe(
+      instant.endsWith("14:59:59Z") ? "Example Person" : "Future Person",
+    )
+    expect(names.get("account:unlinked")).toBe("Unlinked Person")
+  }
+})
+
+test("人物履歴の開始前は接続済みAccountの古いprofileを表示せず、未接続profileだけを返す", async () => {
+  const context = await fixture()
+  const names = await new ReadCompanyAccountDisplayNamesAdapter({
+    database: context.database,
+    organizationIds: ["organization:default"],
+    accountIds: ["account:profile", "account:unlinked"],
+    now: "2025-12-31T14:59:59Z",
+    timeZone: "Asia/Tokyo",
+  }).readCompanyAccountDisplayNames()
+  expect([...names]).toEqual([["account:unlinked", "Unlinked Person"]])
+})
+
+test("Account表示名の参照範囲と複数会社の優先順を守り、大量のIDも一つの参照で扱う", async () => {
+  const context = await fixture()
+  await context.database.exec(`INSERT INTO company_organizations
+    (id, revision, name, representative_name, created_at, updated_at)
+    VALUES ('organization:aaa', 0, 'Other', 'Other', 0, 0);
+    INSERT INTO company_account_profiles VALUES ('organization:aaa', 'account:profile', 'Other organization name', 0, 0)`)
+  const accountIds = Array.from({ length: 150 }, (_, index) => `account:bulk:${index}`)
+  for (const id of accountIds) {
+    await context.database.batch([
+      context.database
+        .prepare(
+          "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES (?1, 'active', 0, 0, 0)",
+        )
+        .bind(id),
+      context.database
+        .prepare(
+          "INSERT INTO company_account_profiles VALUES ('organization:default', ?1, ?1, 0, 0)",
+        )
+        .bind(id),
+    ])
+  }
+  for (const organizationIds of [
+    ["organization:default"],
+    ["organization:default", "organization:aaa"],
+    ["*"],
+    ["organization:denied"],
+    [],
+  ]) {
+    const names = await new ReadCompanyAccountDisplayNamesAdapter({
+      database: context.database,
+      organizationIds,
+      accountIds: ["account:profile", ...accountIds, "account:profile"],
+      now: "2026-06-01T00:00:00Z",
+      timeZone: "Asia/Tokyo",
+    }).readCompanyAccountDisplayNames()
+    if (organizationIds.length === 0 || organizationIds.includes("organization:denied")) {
+      expect(names.size).toBe(0)
+    } else {
+      expect(names.size).toBe(151)
+      expect(names.get("account:profile")).toBe(
+        organizationIds.length === 1 && organizationIds[0] === "organization:default"
+          ? "Example Person"
+          : "Other organization name",
+      )
+      expect(names.get(accountIds[149]!)).toBe(accountIds[149])
+    }
+  }
+})
+
+test("会社timezoneが不明なAccount名を推測して返さない", async () => {
+  const context = await fixture()
+  for (const timeZone of [undefined, "invalid/timezone"]) {
+    const rejected = await new ReadCompanyAccountDisplayNamesAdapter({
+      database: context.database,
+      organizationIds: ["organization:default"],
+      accountIds: ["account:profile"],
+      now: "2026-06-01T00:00:00Z",
+      timeZone,
+    })
+      .readCompanyAccountDisplayNames()
+      .catch((error: unknown) => error)
+    expect(rejected).toBeInstanceOf(Error)
+  }
+})
+
+test("Account対応の終了日には古いprofile名へ戻らず、会社上の表示を閉じる", async () => {
+  const context = await fixture()
+  const link = CompanyResourceChangeEntity.create({
+    commandId: "confirmed-account-period",
+    expectedRevision: 1,
+    actorAccountId: context.actor.accountId,
+    reason: "Confirmed correspondence period",
+    recordedAt: 1,
+    resources: [
+      {
+        organizationId: "organization:default",
+        type: "account-employee-link",
+        id: "link:profile",
+        revision: 1,
+        state: "active",
+        effectiveFrom: restoreCalendarDate("2026-01-01"),
+        effectiveTo: restoreCalendarDate("2026-07-01"),
+        attributes: { accountId: "account:profile", employeeId },
+      },
+    ],
+  })
+  if (link instanceof Error) throw link
+  expect(await new D1CompanyResourceRepository(context.database).write(link)).toMatchObject({
+    kind: "applied",
+  })
+  const names = await new ReadCompanyAccountDisplayNamesAdapter({
+    database: context.database,
+    organizationIds: ["organization:default"],
+    accountIds: ["account:profile"],
+    now: "2026-06-30T15:00:00Z",
+    timeZone: "Asia/Tokyo",
+  }).readCompanyAccountDisplayNames()
+  expect(names.size).toBe(0)
+  expect(
+    await context.database
+      .prepare(
+        "SELECT display_name FROM company_account_profiles WHERE account_id = 'account:profile'",
+      )
+      .first<string>("display_name"),
+  ).toBe("Example Person")
+})
 
 describe("employee profile writes share the public Person history", () => {
   test("氏名の成功応答、名簿、人物履歴、Account表示名が一致し、過去の氏名を保全する", async () => {
