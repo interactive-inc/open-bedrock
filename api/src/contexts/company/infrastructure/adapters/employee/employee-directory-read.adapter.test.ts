@@ -1,4 +1,6 @@
 import { drizzle } from "drizzle-orm/d1"
+import { employments } from "@/contexts/company/infrastructure/schema/employment"
+import { alias } from "drizzle-orm/sqlite-core"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { describe, expect, test, spyOn } from "bun:test"
@@ -19,6 +21,98 @@ const page = {
   limit: 10,
   offset: 0,
 }
+
+function employmentStatuses(database: D1Database, now: string) {
+  const selected = alias(employments, "selected_employment")
+  return drizzle(database)
+    .select({
+      id: selected.id,
+      status: CompanyEmployeeDirectoryReadAdapter.employmentStatus({
+        now,
+        timeZone: "Asia/Tokyo",
+        employmentId: selected.id,
+        employeeId: selected.employeeId,
+      }),
+    })
+    .from(selected)
+    .orderBy(selected.id)
+}
+
+describe("雇用IDごとの有効な在籍状態", () => {
+  test("退職予約を現在値から読まず、退職日の翌日に状態を切り替える", async () => {
+    const database = createEmployeeEmploymentTestDatabase()
+    expect(await employmentStatuses(database, "2026-09-30T14:59:59Z")).toEqual([
+      { id: "employment:1", status: "ACTIVE" },
+    ])
+    expect(await employmentStatuses(database, "2026-09-30T15:00:00Z")).toEqual([
+      { id: "employment:1", status: "TERMINATED" },
+    ])
+    expect(await employmentStatuses(database, "2025-12-31T00:00:00Z")).toEqual([
+      { id: "employment:1", status: null },
+    ])
+  })
+
+  test("将来の休職も開始日に切り替え、訂正された状態期間を優先する", async () => {
+    const database = createEmployeeEmploymentTestDatabase(`
+      UPDATE company_employments SET status = 'ON_LEAVE';
+      INSERT INTO company_employee_status_period_versions VALUES
+        ('status:1', 2, 'employment:1', 'employee:1', 'active', '2026-01-01', '2026-09-01', 0),
+        ('status:leave', 1, 'employment:1', 'employee:1', 'leave', '2026-09-01', '2026-10-01', 0);
+    `)
+    expect(await employmentStatuses(database, "2026-08-31T14:59:59Z")).toEqual([
+      { id: "employment:1", status: "ACTIVE" },
+    ])
+    expect(await employmentStatuses(database, "2026-08-31T15:00:00Z")).toEqual([
+      { id: "employment:1", status: "ON_LEAVE" },
+    ])
+  })
+
+  test("再入社予約と終了済み契約を取り違えず、別従業員の雇用も混ぜない", async () => {
+    const database = createEmployeeEmploymentTestDatabase(`
+      INSERT INTO company_employees VALUES ('employee:2', 'Another Person', 'E002', NULL, NULL);
+      INSERT INTO company_employments VALUES ('employment:2', 'employee:2', 'ACTIVE', '2026-01-01', NULL), ('employment:rehire', 'employee:1', 'ACTIVE', '2026-12-01', NULL);
+      INSERT INTO company_employment_period_versions VALUES ('employment:2', 1, 'employee:2', '2026-01-01', NULL, 0), ('employment:rehire', 1, 'employee:1', '2026-12-01', NULL, 0);
+      INSERT INTO company_employee_status_period_versions VALUES ('status:2', 1, 'employment:2', 'employee:2', 'leave', '2026-01-01', NULL, 0), ('status:rehire', 1, 'employment:rehire', 'employee:1', 'active', '2026-12-01', NULL, 0);
+    `)
+    expect(await employmentStatuses(database, "2026-11-01T00:00:00Z")).toEqual([
+      { id: "employment:1", status: "TERMINATED" },
+      { id: "employment:2", status: "ON_LEAVE" },
+      { id: "employment:rehire", status: null },
+    ])
+    expect(await employmentStatuses(database, "2026-12-01T00:00:00Z")).toEqual([
+      { id: "employment:1", status: "TERMINATED" },
+      { id: "employment:2", status: "ON_LEAVE" },
+      { id: "employment:rehire", status: "ACTIVE" },
+    ])
+  })
+
+  test("履歴欠落・状態重複・期間外・取消は表示用statusで補わない", async () => {
+    for (const additional of [
+      "DELETE FROM company_employment_period_versions;",
+      "DELETE FROM company_employee_status_period_versions;",
+      "INSERT INTO company_employee_status_period_versions VALUES ('status:overlap', 1, 'employment:1', 'employee:1', 'active', '2026-01-01', '2026-10-01', 0);",
+      "UPDATE company_employee_status_period_versions SET starts_on = '2025-01-01';",
+      "INSERT INTO company_employment_period_versions VALUES ('employment:1', 2, 'employee:1', '2026-01-01', '2026-10-01', 1);",
+    ]) {
+      const database = createEmployeeEmploymentTestDatabase(additional)
+      expect(await employmentStatuses(database, "2026-08-01T00:00:00Z")).toEqual([
+        { id: "employment:1", status: null },
+      ])
+    }
+  })
+
+  test("雇用期間の重複では対象の契約を任意に選ばない", async () => {
+    const database = createEmployeeEmploymentTestDatabase(`
+      INSERT INTO company_employments VALUES ('employment:other', 'employee:1', 'ACTIVE', '2026-01-01', NULL);
+      INSERT INTO company_employment_period_versions VALUES ('employment:other', 1, 'employee:1', '2026-01-01', NULL, 0);
+      INSERT INTO company_employee_status_period_versions VALUES ('status:other', 1, 'employment:other', 'employee:1', 'active', '2026-01-01', NULL, 0);
+    `)
+    expect(await employmentStatuses(database, "2026-08-01T00:00:00Z")).toEqual([
+      { id: "employment:1", status: null },
+      { id: "employment:other", status: null },
+    ])
+  })
+})
 
 describe("Company directoryの在籍時点", () => {
   test("Employee IDの一括参照は重複を除き、100件を超えても指定した基準日を使う", async () => {
