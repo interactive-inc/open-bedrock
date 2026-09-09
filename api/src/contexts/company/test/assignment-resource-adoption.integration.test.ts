@@ -349,7 +349,7 @@ describe("既存の所属・上長履歴の公開正本への接続", () => {
     expect(Number((await f.adopt("assignment:adopt", body)).status)).toBe(201)
   })
 
-  test("履歴の欠落と公開上長との重複を拒否し、将来予約の前の空白を埋めない", async () => {
+  test("既存の所属履歴に改訂の欠落がある場合は接続を拒否する", async () => {
     const broken = await fixture()
     await broken.database.exec(
       "DROP TRIGGER company_organization_assignment_period_versions_immutable_delete",
@@ -370,6 +370,9 @@ describe("既存の所属・上長履歴の公開正本への接続", () => {
         ).status,
       ),
     ).toBe(422)
+  })
+
+  test("公開上長と重複する既存の所属履歴を接続せず、保存済みの情報を変更しない", async () => {
     const overlapping = await fixture()
     expect(
       Number(
@@ -411,6 +414,9 @@ describe("既存の所属・上長履歴の公開正本への接続", () => {
       ),
     ).toBe(422)
     expect(await overlapping.persisted()).toEqual(before)
+  })
+
+  test("既存の所属履歴を接続しても将来予約の前の空白を埋めない", async () => {
     const future = await fixture("2030-07-01")
     expect(Number((await future.adopt()).status)).toBe(201)
     expect(await future.publicAssignments("2030-06-01")).toEqual([])

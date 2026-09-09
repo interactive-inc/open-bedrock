@@ -478,7 +478,7 @@
     "src/contexts/company/test/account-employee-link-history.integration.test.ts": "94cd56ef30184d8e328add591975dfb000dc1d898cf24cea54376ae54ce675a3",
     "src/contexts/company/test/account-employee-link-migration.contract.test.ts": "35caf5bc1a240f828dc7a9e86193811f615affae658604d746bb3b2268956f42",
     "src/contexts/company/test/assignment-resource-adoption-migration.contract.test.ts": "83c63e2a9700c9a973513291bd43f6df6d5e9168fae5ec052099648b5a268342",
-    "src/contexts/company/test/assignment-resource-adoption.integration.test.ts": "8d9557b9faab495cf61cb37e6f8bfa13c2dcb8cc25770459a223498158f58b79",
+    "src/contexts/company/test/assignment-resource-adoption.integration.test.ts": "23fafbbfba1736cfb9df76c007bc9b75b3997a525b058a90cf173c55ea9f5dfa",
     "src/contexts/company/test/company-account-profile.integration.test.ts": "a12132b29d3b88270676a439c36d2c7c898235d895a91bd35746fe6bcbe5d23c",
     "src/contexts/company/test/company-api.integration.test.ts": "e632c6b28d118e81da87d247f8eadbb8fcbf3471afc070bfb3d907adde815e52",
     "src/contexts/company/test/company-assignment-resource-projection.integration.test.ts": "f94d2d3dacfcf567dc14349dfc669b08bc16e55a2f49699d5f05bba4586218b2",
