@@ -53,6 +53,28 @@ function changes(
 }
 
 describe("期間訂正から公開雇用の追記を作る", () => {
+  test("旧形式を訂正した後も退職を追記でき、退職日を含む期間を保つ", () => {
+    const history = [
+      { ...initial().toProps(), attributes: { ...attributes, status: "RETIRED" } },
+      { ...initial().toProps(), revision: 2 },
+    ]
+    const result = changes({
+      history,
+      employment: { ...employment, endsOn: "2026-08-17" },
+      statuses: [{ ...status, endsOn: "2026-08-17" }],
+    })
+    if (result instanceof Error) throw result
+    expect(result.resources[0]?.revision).toBe(3)
+    expect(
+      CompanyEmploymentResourceTimelineValue.create([...history, ...result.resources]),
+    ).toMatchObject({
+      startsOn: "2026-01-01",
+      endsOn: "2026-08-17",
+      periods: [{ startsOn: "2026-01-01", endsOn: "2026-08-17", status: "active" }],
+    })
+    expect(changes({ history: history.slice(0, 1) })).toBeInstanceOf(Error)
+  })
+
   test("変更がない場合はrevisionを増やさない", () => {
     expect(changes()).toMatchObject({ resources: [] })
   })

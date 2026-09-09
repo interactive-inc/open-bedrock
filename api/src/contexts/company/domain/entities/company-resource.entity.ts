@@ -94,6 +94,19 @@ export class CompanyResourceEntity {
     return isCompanyIdentifier(value)
   }
 
+  toProps(): CompanyResourceProps {
+    return Object.freeze({
+      organizationId: this.organizationId,
+      type: this.type,
+      id: this.id,
+      revision: this.revision,
+      state: this.state,
+      effectiveFrom: this.effectiveFrom,
+      effectiveTo: this.effectiveTo,
+      attributes: this.attributes,
+    })
+  }
+
   contains(date: CalendarDate): boolean {
     return this.effectiveFrom <= date && (this.effectiveTo === null || date < this.effectiveTo)
   }
