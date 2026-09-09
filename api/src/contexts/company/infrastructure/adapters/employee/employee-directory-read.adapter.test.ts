@@ -38,6 +38,124 @@ function employmentStatuses(database: D1Database, now: string) {
     .orderBy(selected.id)
 }
 
+function employmentAttributes(database: D1Database, now: string, timeZone = "Asia/Tokyo") {
+  const selected = alias(employments, "listed_employment")
+  return drizzle(database)
+    .select({
+      id: selected.id,
+      name: CompanyEmployeeDirectoryReadAdapter.employeeName({
+        now,
+        timeZone,
+        employeeId: selected.employeeId,
+      }),
+      type: CompanyEmployeeDirectoryReadAdapter.employmentType({
+        now,
+        timeZone,
+        employmentId: selected.id,
+        employeeId: selected.employeeId,
+      }),
+    })
+    .from(selected)
+    .orderBy(selected.id)
+}
+
+function attributeDatabase(additionalSql = "") {
+  return createEmployeeEmploymentTestDatabase(`
+    ALTER TABLE company_employments ADD COLUMN employment_type TEXT DEFAULT 'PART_TIME';
+    INSERT INTO company_workforce_resource_bindings VALUES
+      ('employment', 'employment:1', 'organization:1', 'employee:1'),
+      ('employee', 'employee:1', 'organization:1', 'employee:1');
+    INSERT INTO company_resource_revisions VALUES
+      ('organization:1', 'person', 'person:1', 1, 'active', '2026-01-01', NULL, '{"officialName":"Before Person"}'),
+      ('organization:1', 'person', 'person:1', 2, 'active', '2026-09-01', NULL, '{"officialName":"After Person"}'),
+      ('organization:1', 'employee', 'employee:1', 1, 'active', '2026-01-01', NULL, '{"personId":"person:1"}'),
+      ('organization:1', 'employment', 'employment:1', 1, 'active', '2026-01-01', '2026-10-01', '{"employeeId":"employee:1","employmentType":"FULL_TIME"}'),
+      ('organization:1', 'employment', 'employment:1', 2, 'active', '2026-09-01', '2026-10-01', '{"employeeId":"employee:1","employmentType":"PART_TIME"}');
+    ${additionalSql}
+  `)
+}
+
+describe("氏名・雇用区分の時点参照", () => {
+  test("会社営業日で名前と雇用区分が切り替わり、退職後は最終在籍日の区分を保つ", async () => {
+    const database = attributeDatabase(`
+      INSERT INTO company_resource_revisions VALUES
+        ('organization:1', 'employment', 'employment:1', 3, 'void', '2026-11-01', NULL, '{"employeeId":"employee:1","employmentType":"FULL_TIME"}');
+    `)
+    expect(await employmentAttributes(database, "2026-08-31T14:59:59Z")).toEqual([
+      { id: "employment:1", name: "Before Person", type: "FULL_TIME" },
+    ])
+    expect(await employmentAttributes(database, "2026-08-31T15:00:00Z")).toEqual([
+      { id: "employment:1", name: "After Person", type: "PART_TIME" },
+    ])
+    expect(await employmentAttributes(database, "2026-12-01T00:00:00Z")).toEqual([
+      { id: "employment:1", name: "After Person", type: "PART_TIME" },
+    ])
+    expect(
+      await employmentAttributes(database, "2026-08-31T15:00:00Z", "America/Los_Angeles"),
+    ).toEqual([{ id: "employment:1", name: "Before Person", type: "FULL_TIME" }])
+  })
+
+  test("同じ有効日の訂正を優先し、遡及した版の番号だけで将来の区分を上書きしない", async () => {
+    const database = attributeDatabase(`
+      INSERT INTO company_resource_revisions VALUES
+        ('organization:1', 'employment', 'employment:1', 3, 'active', '2026-01-01', '2026-10-01', '{"employeeId":"employee:1","employmentType":"FULL_TIME"}');
+    `)
+    expect((await employmentAttributes(database, "2026-09-01T00:00:00Z"))[0]?.type).toBe(
+      "PART_TIME",
+    )
+    await database.exec(`INSERT INTO company_resource_revisions VALUES
+      ('organization:1', 'employment', 'employment:1', 4, 'active', '2026-09-01', '2026-10-01', '{"employeeId":"employee:1","employmentType":"FULL_TIME"}');`)
+    expect((await employmentAttributes(database, "2026-09-01T00:00:00Z"))[0]?.type).toBe(
+      "FULL_TIME",
+    )
+  })
+
+  test("接続済み雇用の欠落・取消・期間外・不正区分・所有者不一致を旧台帳で補わない", async () => {
+    for (const mutation of [
+      "DELETE FROM company_resource_revisions WHERE resource_type = 'employment';",
+      "UPDATE company_resource_revisions SET state = 'void' WHERE resource_type = 'employment';",
+      "UPDATE company_resource_revisions SET effective_to = '2026-06-01' WHERE resource_type = 'employment';",
+      'UPDATE company_resource_revisions SET attributes_json = \'{"employeeId":"employee:1","employmentType":"UNKNOWN"}\' WHERE resource_type = \'employment\';',
+      'UPDATE company_resource_revisions SET attributes_json = \'{"employeeId":"employee:other","employmentType":"FULL_TIME"}\' WHERE resource_type = \'employment\';',
+      "UPDATE company_resource_revisions SET organization_id = 'organization:other' WHERE resource_type = 'employment';",
+      "UPDATE company_workforce_resource_bindings SET employee_id = 'employee:other' WHERE resource_type = 'employment';",
+      "INSERT INTO company_workforce_resource_bindings VALUES ('employment', 'employment:1', 'organization:other', 'employee:1');",
+      "DELETE FROM company_employment_period_versions;",
+      "INSERT INTO company_employment_period_versions VALUES ('employment:1', 2, 'employee:1', '2026-01-01', '2026-10-01', 1);",
+    ]) {
+      expect(
+        (await employmentAttributes(attributeDatabase(mutation), "2026-08-01T00:00:00Z"))[0]?.type,
+      ).toBeNull()
+    }
+    expect(
+      (await employmentAttributes(attributeDatabase(), "2025-12-01T00:00:00Z"))[0]?.type,
+    ).toBeNull()
+  })
+
+  test("人物履歴の欠落・取消・終了・重複・空の氏名を旧氏名で補わない", async () => {
+    for (const mutation of [
+      "DELETE FROM company_resource_revisions WHERE resource_type = 'person';",
+      "UPDATE company_resource_revisions SET state = 'void' WHERE resource_type = 'person';",
+      "UPDATE company_resource_revisions SET effective_to = '2026-06-01' WHERE resource_type = 'person';",
+      "INSERT INTO company_workforce_resource_bindings VALUES ('employee', 'employee:1', 'organization:1', 'employee:1');",
+      "UPDATE company_resource_revisions SET attributes_json = '{\"officialName\":\" \"}' WHERE resource_type = 'person';",
+    ]) {
+      expect(
+        (await employmentAttributes(attributeDatabase(mutation), "2026-08-01T00:00:00Z"))[0]?.name,
+      ).toBeNull()
+    }
+  })
+
+  test("未接続の雇用区分は旧台帳を使い、未知の区分を常勤に書き換えない", async () => {
+    const database = attributeDatabase("DELETE FROM company_workforce_resource_bindings;")
+    expect(await employmentAttributes(database, "2026-08-01T00:00:00Z")).toEqual([
+      { id: "employment:1", name: "Example Person", type: "PART_TIME" },
+    ])
+    await database.exec("UPDATE company_employments SET employment_type = 'UNKNOWN';")
+    expect((await employmentAttributes(database, "2026-08-01T00:00:00Z"))[0]?.type).toBeNull()
+  })
+})
+
 describe("雇用IDごとの有効な在籍状態", () => {
   test("退職予約を現在値から読まず、退職日の翌日に状態を切り替える", async () => {
     const database = createEmployeeEmploymentTestDatabase()

@@ -1,6 +1,7 @@
 import { getTableName, sql, type SQL } from "drizzle-orm"
 import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
 import type { PersistedEmploymentStatus } from "@/contexts/company/domain/definitions/employment-status.definition"
+import type { EmploymentType } from "@/contexts/company/domain/definitions/employment-type.definition"
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1"
 import { companyEmploymentStateSql } from "@/contexts/company/infrastructure/adapters/employee/lib/company-employment-state-sql"
 import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
@@ -47,6 +48,72 @@ type Context = Readonly<{ env: CompanyContext["env"]; asOf?: CalendarDate }>
 export class CompanyEmployeeDirectoryReadAdapter {
   constructor(private readonly c: Context) {
     Object.freeze(this)
+  }
+
+  /** 検索・並べ替え・表示で同じ会社営業日の人物名を使う。 */
+  static employeeName(
+    c: Readonly<{
+      now: string
+      timeZone: string | undefined
+      employeeId: SQLiteColumn
+    }>,
+  ): SQL<string | null> {
+    const asOf = resolveCompanyBusinessDate({ now: c.now, timeZone: c.timeZone })
+    if (asOf instanceof Error) throw asOf
+    const employeeId = sql`${sql.identifier(getTableName(c.employeeId.table))}.${sql.identifier(c.employeeId.name)}`
+    const history = sql.join(companyEmploymentStateSql().split("?1").map(sql.raw), sql`${asOf}`)
+    return sql<string | null>`(${history}
+      SELECT CASE WHEN count(*) = 1 AND typeof(min(official_name)) = 'text'
+        AND length(trim(min(official_name))) > 0 THEN min(official_name) END
+      FROM current_employees WHERE id = ${employeeId})`
+  }
+
+  /** 有効な版の雇用区分を読み、終了した契約には最終在籍日の区分を使う。 */
+  static employmentType(
+    c: Readonly<{
+      now: string
+      timeZone: string | undefined
+      employmentId: SQLiteColumn
+      employeeId: SQLiteColumn
+    }>,
+  ): SQL<EmploymentType | null> {
+    const asOf = resolveCompanyBusinessDate({ now: c.now, timeZone: c.timeZone })
+    if (asOf instanceof Error) throw asOf
+    const employeeId = sql`${sql.identifier(getTableName(c.employeeId.table))}.${sql.identifier(c.employeeId.name)}`
+    const employmentId = sql`${sql.identifier(getTableName(c.employmentId.table))}.${sql.identifier(c.employmentId.name)}`
+    return sql<EmploymentType | null>`(WITH resolved_employment_period AS (
+      SELECT period.*, CASE WHEN period.ends_on <= ${asOf}
+        THEN date(period.ends_on, '-1 day') ELSE ${asOf} END AS read_on
+      FROM company_employment_period_versions AS period
+      WHERE period.period_id = ${employmentId} AND period.employee_id = ${employeeId}
+        AND period.is_void = 0 AND period.starts_on <= ${asOf}
+        AND NOT EXISTS (SELECT 1 FROM company_employment_period_versions AS newer
+          WHERE newer.period_id = period.period_id AND newer.revision > period.revision)
+    ), ranked_employment_attributes AS (
+      SELECT resource.*, period.read_on,
+        row_number() OVER (PARTITION BY resource.organization_id, resource.resource_id
+          ORDER BY resource.effective_from DESC, resource.revision DESC) AS effective_rank
+      FROM resolved_employment_period AS period
+      JOIN company_workforce_resource_bindings AS binding ON binding.resource_type = 'employment'
+        AND binding.resource_id = period.period_id AND binding.employee_id = period.employee_id
+      JOIN company_resource_revisions AS resource ON resource.organization_id = binding.organization_id
+        AND resource.resource_type = 'employment' AND resource.resource_id = binding.resource_id
+        AND resource.effective_from <= period.read_on
+    ) SELECT CASE
+      WHEN (SELECT count(*) FROM resolved_employment_period) != 1 THEN NULL
+      WHEN NOT EXISTS (SELECT 1 FROM company_workforce_resource_bindings
+        WHERE resource_type = 'employment' AND resource_id = ${employmentId}) THEN (
+        SELECT CASE WHEN employment_type IN ('FULL_TIME', 'PART_TIME') THEN employment_type END
+        FROM company_employments AS legacy_employment
+        WHERE legacy_employment.id = ${employmentId} AND legacy_employment.employee_id = ${employeeId})
+      WHEN (SELECT count(*) FROM company_workforce_resource_bindings
+        WHERE resource_type = 'employment' AND resource_id = ${employmentId}) != 1 THEN NULL
+      ELSE (SELECT CASE WHEN count(*) = 1 THEN min(json_extract(attributes_json, '$.employmentType')) END
+        FROM ranked_employment_attributes WHERE effective_rank = 1 AND state = 'active'
+          AND (effective_to IS NULL OR read_on < effective_to)
+          AND json_extract(attributes_json, '$.employeeId') = ${employeeId}
+          AND json_extract(attributes_json, '$.employmentType') IN ('FULL_TIME', 'PART_TIME'))
+      END)`
   }
 
   /** 雇用IDごとの在籍状態を期間で判定し、開始前や曖昧な履歴を表示用statusで補わない。 */
