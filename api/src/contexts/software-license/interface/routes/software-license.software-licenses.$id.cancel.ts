@@ -17,13 +17,14 @@ export const POST = softwareLicenseFactory.createHandlers(
   ensureLicenseEnabled,
   authenticateSystemAccessToken,
   resolveLicenseSession,
+  zValidator("header", z.object({ "if-match": z.string().optional() })),
   zValidator("param", z.object({ id: licenseIdSchema })),
   async (c) => {
     const session = c.var.licenseSession
     if (session === null) throw new SoftwareLicenseForbiddenError()
     const updated = await new CancelLicense(c).run({
       session,
-      expectedRevision: parseLicenseRevision(c.req.header("if-match")),
+      expectedRevision: parseLicenseRevision(c.req.valid("header")["if-match"]),
       id: c.req.valid("param").id,
     })
     if (updated instanceof LicenseError) throw toLicenseHttpException(updated)

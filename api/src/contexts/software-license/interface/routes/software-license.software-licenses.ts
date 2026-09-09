@@ -14,6 +14,7 @@ import {
 } from "@/contexts/software-license/interface/http/license-input-schemas"
 import { licenseListResponseSchema } from "@/contexts/software-license/interface/http/response-schemas"
 import { zValidator } from "@hono/zod-validator"
+import { z } from "zod"
 import {
   SoftwareLicenseForbiddenError,
   SoftwareLicenseUnavailableError,
@@ -50,6 +51,7 @@ export const POST = softwareLicenseFactory.createHandlers(
   ensureLicenseEnabled,
   authenticateSystemAccessToken,
   resolveLicenseSession,
+  zValidator("header", z.object({ "idempotency-key": z.string().optional() })),
   zValidator("json", licenseInputSchema),
   async (c) => {
     const session = c.var.licenseSession
@@ -57,7 +59,7 @@ export const POST = softwareLicenseFactory.createHandlers(
     const json = c.req.valid("json")
     const created = await new CreateLicense(c).run({
       session,
-      commandId: parseLicenseCommandId(c.req.header("idempotency-key")),
+      commandId: parseLicenseCommandId(c.req.valid("header")["idempotency-key"]),
       license: {
         name: json.name,
         planName: json.plan_name ?? null,

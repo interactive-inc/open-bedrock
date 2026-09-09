@@ -6,6 +6,7 @@ export async function cancelLicense(id: number) {
   const client = await createClient()
 
   const response = await client["software-license"]["software-licenses"][":id"].cancel.$post({
+    header: {},
     param: { id: String(id) },
   })
 

@@ -41,6 +41,7 @@ export const PUT = softwareLicenseFactory.createHandlers(
   ensureLicenseEnabled,
   authenticateSystemAccessToken,
   resolveLicenseSession,
+  zValidator("header", z.object({ "if-match": z.string().optional() })),
   zValidator("param", z.object({ id: licenseIdSchema })),
   zValidator("json", licenseInputSchema),
   async (c) => {
@@ -49,7 +50,7 @@ export const PUT = softwareLicenseFactory.createHandlers(
     const json = c.req.valid("json")
     const updated = await new UpdateLicense(c).run({
       session,
-      expectedRevision: parseLicenseRevision(c.req.header("if-match")),
+      expectedRevision: parseLicenseRevision(c.req.valid("header")["if-match"]),
       id: c.req.valid("param").id,
       details: {
         name: json.name,
