@@ -76,6 +76,36 @@ function attributeDatabase(additionalSql = "") {
 }
 
 describe("氏名・雇用区分の時点参照", () => {
+  test("業務が指定した暦日では実行時刻や会社タイムゾーンを要求しない", async () => {
+    const database = attributeDatabase()
+    const selected = alias(employments, "scheduled_employment")
+    for (const scenario of [
+      { date: "2026-08-31", name: "Before Person", type: "FULL_TIME", status: "ACTIVE" },
+      { date: "2026-09-01", name: "After Person", type: "PART_TIME", status: "ACTIVE" },
+      { date: "2026-10-01", name: "After Person", type: "PART_TIME", status: "TERMINATED" },
+    ] satisfies ReadonlyArray<{
+      date: string
+      name: string
+      type: "FULL_TIME" | "PART_TIME"
+      status: "ACTIVE" | "TERMINATED"
+    }>) {
+      const query = {
+        asOf: restoreCalendarDate(scenario.date),
+        employmentId: selected.id,
+        employeeId: selected.employeeId,
+      }
+      expect(
+        await drizzle(database)
+          .select({
+            name: CompanyEmployeeDirectoryReadAdapter.employeeName(query),
+            type: CompanyEmployeeDirectoryReadAdapter.employmentType(query),
+            status: CompanyEmployeeDirectoryReadAdapter.employmentStatus(query),
+          })
+          .from(selected),
+      ).toEqual([{ name: scenario.name, type: scenario.type, status: scenario.status }])
+    }
+  })
+
   test("会社営業日で名前と雇用区分が切り替わり、退職後は最終在籍日の区分を保つ", async () => {
     const database = attributeDatabase(`
       INSERT INTO company_resource_revisions VALUES
