@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "332a589b601c256f7128b1cdc0564b3af7465fec247fa9c74c71bb0181c398e5",
+    "company-context.manifest.json": "1a6aca112d2a8512c1732330ae84ca20940e3a7cc5d81a0858d23e4f5490934b",
     "src/contexts/company/CLAUDE.md": "80247089a24770a7dbfcbaf9151ac962b21b8dc36d6ef6244dc4eb50bb866412",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -372,8 +372,8 @@
     "src/contexts/company/infrastructure/adapters/workforce/read-workforce-baseline-states.adapter.ts": "48ad9d02ab4d60c916a19bdc569de9d630f9568e07f9e3eb76edde6eb90a3aa8",
     "src/contexts/company/infrastructure/adapters/workforce/resolve-canonical-organization-authority.adapter.ts": "938228e1957dba0ec74fac00f2fb7dabb53b4bb70f2514d2c23a350e9890cbfc",
     "src/contexts/company/infrastructure/repositories/account-profile/d1-company-account-profile.repository.ts": "99cf6a686b4e32a2b52649badb30e8fed45d4d9c8d8e74359d8bb6ea2ca5108b",
-    "src/contexts/company/infrastructure/repositories/core/d1-company-resource.repository.test.ts": "170ad721835879c5bbbe54f0c6608e2a6f568ef04aaad39c4d321079647c5bd3",
-    "src/contexts/company/infrastructure/repositories/core/d1-company-resource.repository.ts": "e2ed0bc5b40b787b3ce530e68eb3a946bb7dde9ea91f7654bcc7aca049421fcf",
+    "src/contexts/company/infrastructure/repositories/core/d1-company-resource.repository.test.ts": "803c63e79c89f13c225c3b86dbe7e7e7e3aebcdd7e314d32b7030b82bad2dd97",
+    "src/contexts/company/infrastructure/repositories/core/d1-company-resource.repository.ts": "820a4be13ed650b40b5541a026bd3dc8791e56d0179cf5f5dc78358eabdd1c55",
     "src/contexts/company/infrastructure/repositories/definitions/grade.repository.ts": "d6a480c7b7c5e02b1081e218eaf9340e7d78c2487436e28c6ea912825a5a3f05",
     "src/contexts/company/infrastructure/repositories/definitions/position.repository.ts": "039300c133f4260dd43a7786506e446d6e2d4797f0174c6c3f3dacb89b8e2f0e",
     "src/contexts/company/infrastructure/repositories/employee-history/employee-event.repository.ts": "939b6506d272e9062abad1407b7d78da7f6167956c389e9b0c1a55fdb2a84bcb",
@@ -501,6 +501,7 @@
     "src/contexts/company/test/company-reporting-reference-migration.contract.test.ts": "e1eb058dbc4927d06f101de49f695527774daa58179d930f0dda449f28fd0339",
     "src/contexts/company/test/company-reporting-reference-periods.integration.test.ts": "ed238cdac332e8aaed4ca301fc682e24a2f174fc55511f64efd2a588c9f9da80",
     "src/contexts/company/test/company-reporting-reference.test-support.ts": "2f9b277e3b4af7f4da868746f9af3da2b1ee7a0349a89c5c88b06226ef78c424",
+    "src/contexts/company/test/company-resource-read-limits.integration.test.ts": "b2a2e914081d6b490d56372cd9a477079c8e1f0c761df5c4e9779d129983c2ee",
     "src/contexts/company/test/company-workforce-account-batch.integration.test.ts": "60a38e98271e15d13a9df2c43fad86ad5d0233057641c50efec82aa1c1200158",
     "src/contexts/company/test/company-workforce-organization-command.integration.test.ts": "66f844d57142f962fed1411b7208306803bdd994ed53bcf45fcc1093a264612a",
     "src/contexts/company/test/company-workforce-resource-projection.integration.test.ts": "70c0ec3b388826bb4fceb9d441c1dc95ced28d2ffc028efa4e71cda1a3dc3ff4",
