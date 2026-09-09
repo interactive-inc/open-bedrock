@@ -10,6 +10,7 @@ bedrock employees adoption --data <confirmed-history.json> --idempotency-key <uu
 
 employee-idで既存の全雇用・在籍履歴とsnapshotDigest・expectedRevision・observedOnを確認します。
 dataにはemployeeIdとこの参照、reason、確認済みのPerson・Employee・全Employmentのresourcesを指定します。
+既存の公開履歴を接続する場合はreuseExistingHistory: trueを指定し、全revisionと現在の公開版を照合します。
 現在の氏名を過去へ推測して補わず、原資料で確認した有効期間だけを送ってください。
 再送は同じJSONとキーを使い、競合時は台帳を確認し直してください。`
 
@@ -44,6 +45,7 @@ export default factory.createHandlers(
         snapshotDigest: z.string().regex(/^[a-f0-9]{64}$/),
         observedOn: z.string().date(),
         reason: z.string().trim().min(1).max(1500),
+        reuseExistingHistory: z.literal(true).optional(),
         resources: z
           .array(
             z

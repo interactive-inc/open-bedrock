@@ -13,6 +13,16 @@ const period = z.object({
   recordedByActionId: z.string(),
   recordedAt: z.number().int(),
 })
+const publicResource = z.object({
+  organizationId: z.string(),
+  type: z.enum(["person", "employee", "employment"]),
+  id: z.string(),
+  revision: z.number().int().positive(),
+  state: z.enum(["active", "void"]),
+  effectiveFrom: z.string().date(),
+  effectiveTo: z.string().date().nullable(),
+  attributes: z.record(z.string(), z.string().nullable()),
+})
 const schema = z
   .object({
     organizationRevision: z.number().int().nonnegative().nullable(),
@@ -75,6 +85,18 @@ const schema = z
           .readonly(),
       )
       .readonly(),
+    publicResources: z
+      .array(
+        publicResource.extend({
+          organizationRevision: z.number().int().positive(),
+          commandId: z.string(),
+          actorAccountId: z.string(),
+          reason: z.string(),
+          recordedAt: z.number().int(),
+        }),
+      )
+      .readonly(),
+    publicHeads: z.array(publicResource).readonly(),
   })
   .readonly()
 export type EmployeeResourceAdoptionSnapshot = z.infer<typeof schema>

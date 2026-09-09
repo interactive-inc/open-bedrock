@@ -207,15 +207,17 @@ Employeeとの同一性を持つAccountの表示名はPerson側で管理する�
 
 ## 既存従業員の公開履歴への接続
 
-`GET /company/employee-resource-adoptions?employee_id=<id>` は従業員台帳、全雇用・在籍期間revision、接続状態、照合用digest、会社版、会社営業日を返す。既定organizationへのアクセスと `company:admin` が必要になる。
+`GET /company/employee-resource-adoptions?employee_id=<id>` は従業員台帳、全雇用・在籍期間revision、接続状態、照合用digest、会社版、会社営業日を返す。同じ従業員・雇用IDに公開履歴がある場合は、その全revisionと現在の公開版、対応するPersonの公開履歴も返し、digestに含める。各revisionには元の操作ID・主体・理由・記録日時を含める。既定organizationへのアクセスと `company:admin` が必要になる。
 
 `POST /company/employee-resource-adoptions` は同じ参照の `employeeId`、`snapshotDigest`、`expectedRevision`、`observedOn` と、確認理由 `reason`、確認済みの `resources` を受け取る。`idempotency-key` headerは必須で、別内容による同じキーの使用は409になる。
 
 resourcesには、一人のPerson、そのPersonに対応する既存IDのEmployee、保存済みの全契約と同じIDのEmploymentを指定する。それぞれのrevisionは1から連続させ、全体を100件以内とする。人物と従業員の有効期間は保存済みの雇用期間全体を覆い、現在の氏名・連絡先・従業員番号は台帳と一致する必要がある。雇用の所有者、契約名・区分、雇用期間と在籍状態の各区間を照合する。対応するAccountの会社表示名も現在の氏名と一致する必要があり、表示名の欠落・不一致は移行で上書きせず拒否する。
 
-過去の氏名や従業員番号は管理者が確認した事実だけを入力し、現在値から推測して補完しない。期間履歴のない契約、部分接続、所有者の不一致、公開IDの衝突は接続しない。既定organization以外への移行や、既存の公開Personへの自動名寄せは行わない。
+過去の氏名や従業員番号は管理者が確認した事実だけを入力し、現在値から推測して補完しない。期間履歴のない契約、部分接続、所有者の不一致は接続しない。既定organization以外への移行や、既存の公開Personへの自動名寄せは行わない。
 
-確認後の台帳・期間・会社版の変更は保存直前にも検査する。新規依頼が会社営業日を越えた場合も409になる。人物・従業員・雇用の公開履歴、既存台帳との接続、操作主体・理由・元のsnapshotを持つ変更不能な移行記録を一つのtransactionで保存する。元の台帳と期間履歴は変更しない。保存済みの同じ依頼は翌日以降も元の結果を返す。
+公開履歴が既に存在する場合は `reuseExistingHistory: true` を明示する。確認したresourcesが保存済みの全revisionと一致し、各最終revisionが現在の公開版と一致する場合だけ接続する。既存IDを変更せず、公開履歴とその来歴も変更・再作成しない。指定がなければ従来どおり公開IDの衝突を409で拒否する。確認内容と履歴の不一致は422で拒否し、異なる従業員・雇用IDを対応付ける機能は持たない。
+
+確認後の台帳・期間・公開履歴・会社版の変更は保存直前にも検査する。新規依頼が会社営業日を越えた場合も409になる。公開履歴の新規作成または既存履歴の接続、会社版、操作主体・理由・元のsnapshotを持つ変更不能な移行記録を一つのtransactionで保存する。元の台帳と期間履歴は変更しない。保存済みの同じ依頼は翌日以降も元の結果を返す。
 
 CLIの `employees adoption --employee-id <id>` で照合対象を参照し、`employees adoption --data <confirmed-history.json> --idempotency-key <uuid>` で確認済みの履歴を送信できる。競合時に最新版への自動再送は行わない。
 

@@ -33,6 +33,34 @@ export function employeeResourceAdoptionSnapshotSql(): string {
     'bindings', json((SELECT json_group_array(json(row_json)) FROM (
       SELECT json_object('resourceType', resource_type, 'resourceId', resource_id, 'organizationId', organization_id,
         'resourceRevision', resource_revision, 'lifecycleRevision', lifecycle_revision, 'lastActionId', last_action_id) AS row_json
-      FROM company_workforce_resource_bindings WHERE employee_id = employee.id ORDER BY resource_type, resource_id)))
+      FROM company_workforce_resource_bindings WHERE employee_id = employee.id ORDER BY resource_type, resource_id))),
+    'publicResources', json((SELECT json_group_array(json(row_json)) FROM (
+      SELECT json_object('organizationId', resource.organization_id, 'type', resource.resource_type,
+        'id', resource.resource_id, 'revision', resource.revision, 'state', resource.state,
+        'effectiveFrom', resource.effective_from, 'effectiveTo', resource.effective_to,
+        'attributes', json(resource.attributes_json), 'organizationRevision', resource.organization_revision,
+        'commandId', resource.command_id, 'actorAccountId', resource.actor_account_id,
+        'reason', resource.reason, 'recordedAt', resource.recorded_at) AS row_json
+      FROM company_resource_revisions resource WHERE resource.organization_id = 'organization:default' AND (
+        (resource.resource_type = 'employee' AND resource.resource_id = employee.id)
+        OR (resource.resource_type = 'employment' AND resource.resource_id IN (
+          SELECT id FROM company_employments WHERE employee_id = employee.id))
+        OR (resource.resource_type = 'person' AND resource.resource_id IN (
+          SELECT json_extract(attributes_json, '$.personId') FROM company_resource_revisions
+          WHERE organization_id = 'organization:default' AND resource_type = 'employee' AND resource_id = employee.id))
+      ) ORDER BY resource.resource_type, resource.resource_id, resource.revision))),
+    'publicHeads', json((SELECT json_group_array(json(row_json)) FROM (
+      SELECT json_object('organizationId', resource.organization_id, 'type', resource.resource_type,
+        'id', resource.resource_id, 'revision', resource.revision, 'state', resource.state,
+        'effectiveFrom', resource.effective_from, 'effectiveTo', resource.effective_to,
+        'attributes', json(resource.attributes_json)) AS row_json
+      FROM company_resource_heads resource WHERE resource.organization_id = 'organization:default' AND (
+        (resource.resource_type = 'employee' AND resource.resource_id = employee.id)
+        OR (resource.resource_type = 'employment' AND resource.resource_id IN (
+          SELECT id FROM company_employments WHERE employee_id = employee.id))
+        OR (resource.resource_type = 'person' AND resource.resource_id IN (
+          SELECT json_extract(attributes_json, '$.personId') FROM company_resource_revisions
+          WHERE organization_id = 'organization:default' AND resource_type = 'employee' AND resource_id = employee.id))
+      ) ORDER BY resource.resource_type, resource.resource_id)))
   ) AS snapshot_json FROM company_employees AS employee WHERE employee.id = ?1`
 }

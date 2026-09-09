@@ -508,6 +508,7 @@
     "src/contexts/company/test/employee-profile.integration.test.ts",
     "src/contexts/company/test/employee-resource-adoption.integration.test.ts",
     "src/contexts/company/test/employee-resource-adoption.test-support.ts",
+    "src/contexts/company/test/existing-employee-resource-adoption.integration.test.ts",
     "src/contexts/company/test/external-identity-import.integration.test.ts",
     "src/contexts/company/test/external-identity-import.test-support.ts",
     "src/contexts/company/test/governance-task.integration.test.ts",
