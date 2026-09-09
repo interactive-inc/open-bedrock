@@ -4,7 +4,10 @@ import {
 } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { CompanyConflictError, CompanyValidationError } from "@/contexts/company/domain/errors"
-import type { EmployeeResourceAdoptionSnapshotValue } from "@/contexts/company/domain/values/employee-resource-adoption-snapshot.value"
+import type {
+  EmployeeResourceAdoptionSnapshot,
+  EmployeeResourceAdoptionSnapshotValue,
+} from "@/contexts/company/domain/values/employee-resource-adoption-snapshot.value"
 import { CompanyEmploymentResourceTimelineValue } from "@/contexts/company/domain/values/company-employment-resource-timeline.value"
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
@@ -91,6 +94,16 @@ export class EmployeeResourceAdoptionEntity {
   validate(
     snapshot: EmployeeResourceAdoptionSnapshotValue,
   ): null | CompanyConflictError | CompanyValidationError {
+    const identity = this.validateSnapshotIdentity(snapshot)
+    if (identity !== null) return identity
+    if (this.props.reuseExistingHistory && !this.matchesExistingHistory(snapshot))
+      return EmployeeResourceAdoptionEntity.invalid()
+    return this.validateFacts(snapshot.props.value)
+  }
+
+  validateSnapshotIdentity(
+    snapshot: EmployeeResourceAdoptionSnapshotValue,
+  ): CompanyConflictError | null {
     const source = snapshot.props.value
     if (
       snapshot.props.digest !== this.props.snapshotDigest ||
@@ -102,9 +115,11 @@ export class EmployeeResourceAdoptionEntity {
         "移行対象が変更されています。再確認してください",
         "employee_resource_adoption_conflict",
       )
+    return null
+  }
+
+  validateFacts(source: EmployeeResourceAdoptionSnapshot): CompanyValidationError | null {
     if (source.lifecycleRevision === null) return EmployeeResourceAdoptionEntity.invalid()
-    if (this.props.reuseExistingHistory && !this.matchesExistingHistory(snapshot))
-      return EmployeeResourceAdoptionEntity.invalid()
     if (source.accounts.some((account) => account.displayName !== source.employee.officialName))
       return EmployeeResourceAdoptionEntity.invalid()
     const employee = this.effective("employee", this.props.employeeId, this.props.observedOn)

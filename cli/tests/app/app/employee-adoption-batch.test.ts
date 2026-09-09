@@ -22,7 +22,24 @@ test("一括確認した一覧とキーをそのまま送り、競合を自動�
     expectedRevision: 4,
     observedOn: "2026-09-07",
     reason: "Confirmed history",
-    employees: [{ employeeId: "employee:example", snapshotDigest: "a".repeat(64) }],
+    employees: [
+      {
+        employeeId: "employee:example",
+        snapshotDigest: "a".repeat(64),
+        corrections: [
+          {
+            organizationId: "organization:default",
+            type: "person",
+            id: "person:example",
+            revision: 2,
+            state: "active",
+            effectiveFrom: "2020-01-01",
+            effectiveTo: null,
+            attributes: { officialName: "Example Person" },
+          },
+        ],
+      },
+    ],
   }
   await Bun.write(path, JSON.stringify(confirmed))
   const requests: Request[] = []

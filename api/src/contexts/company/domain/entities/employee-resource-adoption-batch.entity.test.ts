@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { EmployeeResourceAdoptionBatchEntity } from "@/contexts/company/domain/entities/employee-resource-adoption-batch.entity"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CompanyValidationError } from "@/contexts/company/domain/errors"
+import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
 
 const input = {
   commandId: "confirmed-batch",
@@ -41,4 +42,44 @@ test("HTTPを通らない呼出しでも重複・不正な確認値・版のover
     expect(EmployeeResourceAdoptionBatchEntity.create({ ...input, ...change })).toBeInstanceOf(
       CompanyValidationError,
     )
+})
+
+test("確認した訂正内容と終了日の補正値を呼出元の変更から保護する", () => {
+  const attributes = { officialName: "Confirmed Person" }
+  const correction: CompanyResourceProps = {
+    organizationId: "organization:default",
+    type: "person",
+    id: "person:first",
+    revision: 2,
+    state: "active",
+    effectiveFrom: restoreCalendarDate("2020-01-01"),
+    effectiveTo: null,
+    attributes,
+  }
+  const termination = { employmentId: "employment:first", endsOn: "2026-08-17" }
+  const command = EmployeeResourceAdoptionBatchEntity.create({
+    ...input,
+    employees: [
+      {
+        ...input.employees[1]!,
+        corrections: [correction],
+        terminationBoundaryCorrection: termination,
+      },
+    ],
+  })
+  if (command instanceof Error) throw command
+  attributes.officialName = "Changed Person"
+  termination.endsOn = "2026-09-01"
+  expect(command.props.employees[0]?.corrections?.[0]?.attributes["officialName"]).toBe(
+    "Confirmed Person",
+  )
+  expect(command.props.employees[0]?.terminationBoundaryCorrection?.endsOn).toBe("2026-08-17")
+  expect(Object.isFrozen(command.props.employees[0]?.corrections?.[0]?.attributes)).toBe(true)
+  for (const corrections of [[], Array.from({ length: 21 }, () => correction)])
+    expect(
+      EmployeeResourceAdoptionBatchEntity.create({
+        ...input,
+        employees: [{ ...input.employees[1]!, corrections }],
+      }),
+    ).toBeInstanceOf(CompanyValidationError)
 })

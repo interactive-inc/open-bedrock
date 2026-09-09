@@ -42,6 +42,31 @@ export const POST = factory.createHandlers(
               .object({
                 employeeId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/),
                 snapshotDigest: z.string().regex(/^[a-f0-9]{64}$/),
+                terminationBoundaryCorrection: z
+                  .object({
+                    employmentId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/),
+                    endsOn: z.string().date(),
+                  })
+                  .strict()
+                  .optional(),
+                corrections: z
+                  .array(
+                    z
+                      .object({
+                        organizationId: z.literal("organization:default"),
+                        type: z.enum(["person", "employee", "employment"]),
+                        id: z.string().regex(/^\S{1,255}$/),
+                        revision: z.number().int().positive().max(100),
+                        state: z.enum(["active", "void"]),
+                        effectiveFrom: z.string().date(),
+                        effectiveTo: z.string().date().nullable(),
+                        attributes: z.record(z.string(), z.string().nullable()),
+                      })
+                      .strict(),
+                  )
+                  .min(1)
+                  .max(20)
+                  .optional(),
               })
               .strict(),
           )
@@ -72,6 +97,15 @@ export const POST = factory.createHandlers(
       ...body,
       commandId: context.req.valid("header")["idempotency-key"],
       observedOn: restoreCalendarDate(body.observedOn),
+      employees: body.employees.map((employee) => ({
+        ...employee,
+        corrections: employee.corrections?.map((resource) => ({
+          ...resource,
+          effectiveFrom: restoreCalendarDate(resource.effectiveFrom),
+          effectiveTo:
+            resource.effectiveTo === null ? null : restoreCalendarDate(resource.effectiveTo),
+        })),
+      })),
     })
     if (result instanceof CompanyOperationError) throw toHttpException(result)
     return context.json(

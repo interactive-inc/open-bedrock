@@ -7,7 +7,11 @@ import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restor
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 
 /** 公開Account対応だけが先に存在し、全員の接続を同時に必要とする会社を用意する。 */
-export async function createEmployeeAdoptionBatchFixture(count = 2, extraPersonRevisions = 0) {
+export async function createEmployeeAdoptionBatchFixture(
+  count = 2,
+  extraPersonRevisions = 0,
+  transformHistory: (resource: AdoptionResource) => AdoptionResource = (resource) => resource,
+) {
   const context = await createEmployeeAdoptionFixture()
   const resources: AdoptionResource[] = [...context.resources]
   const employees = [{ employeeId: "employee:adoption", accountId: "account:adoption" }]
@@ -142,7 +146,7 @@ export async function createEmployeeAdoptionBatchFixture(count = 2, extraPersonR
         ),
     ])
   }
-  for (const resource of resources) await seedResource(resource)
+  for (const resource of resources) await seedResource(transformHistory(resource))
   await context.database.batch(
     Array.from({ length: 2 + extraPersonRevisions }, (_, index) =>
       context.database.prepare("UPDATE company_organizations SET revision = ?1").bind(index + 1),

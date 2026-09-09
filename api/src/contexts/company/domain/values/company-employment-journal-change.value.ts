@@ -1,7 +1,9 @@
 import {
   CompanyResourceEntity,
   type CompanyJsonObject,
+  type CompanyResourceProps,
 } from "@/contexts/company/domain/entities/company-resource.entity"
+import { CompanyResourceEffectiveHistoryValue } from "@/contexts/company/domain/values/company-resource-effective-history.value"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import type {
   EmploymentPeriod,
@@ -13,7 +15,7 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 
 type Props = Readonly<{
   organizationId: string
-  history: ReadonlyArray<CompanyResourceEntity>
+  history: ReadonlyArray<CompanyResourceProps>
   employment: EmploymentPeriod
   statuses: ReadonlyArray<EmployeeStatusPeriod>
   initialAttributes: CompanyJsonObject
@@ -52,10 +54,12 @@ export class CompanyEmploymentJournalChangeValue {
           resource.organizationId !== props.organizationId ||
           resource.type !== "employment" ||
           resource.id !== employment.employmentId ||
-          resource.readText("employeeId") !== employment.employeeId,
+          resource.attributes["employeeId"] !== employment.employeeId,
       )
     )
       return new CompanyResourceValidationError("invalid_resource")
+    const effective = CompanyResourceEffectiveHistoryValue.create(history)
+    if (effective instanceof Error) return effective
     const statuses = props.statuses.filter(
       (period) => !period.isVoid && period.employmentPeriodId === employment.employmentId,
     )

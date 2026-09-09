@@ -1,4 +1,4 @@
-import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
+import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
 import { z } from "zod"
 
@@ -13,7 +13,7 @@ export class CompanyEmploymentResourceHistoryAdapter {
 
   async read(
     resource: Readonly<{ organizationId: string; id: string }>,
-  ): Promise<ReadonlyArray<CompanyResourceEntity> | Error> {
+  ): Promise<ReadonlyArray<CompanyResourceProps> | Error> {
     const rows = await this.c
       .prepare(`SELECT revision, state, effective_from, effective_to, attributes_json
       FROM company_resource_revisions WHERE organization_id = ?1 AND resource_type = 'employment' AND resource_id = ?2
@@ -33,11 +33,11 @@ export class CompanyEmploymentResourceHistoryAdapter {
       )
       .safeParse(rows.results)
     if (!parsed.success) return parsed.error
-    const history: CompanyResourceEntity[] = []
+    const history: CompanyResourceProps[] = []
     for (const row of parsed.data) {
       const attributes = z.record(z.string(), z.json()).safeParse(JSON.parse(row.attributes_json))
       if (!attributes.success) return attributes.error
-      const entity = CompanyResourceEntity.create({
+      const resourceProps: CompanyResourceProps = {
         organizationId: resource.organizationId,
         type: "employment",
         id: resource.id,
@@ -46,9 +46,8 @@ export class CompanyEmploymentResourceHistoryAdapter {
         effectiveFrom: row.effective_from,
         effectiveTo: row.effective_to,
         attributes: attributes.data,
-      })
-      if (entity instanceof Error) return entity
-      history.push(entity)
+      }
+      history.push(resourceProps)
     }
     return history
   }

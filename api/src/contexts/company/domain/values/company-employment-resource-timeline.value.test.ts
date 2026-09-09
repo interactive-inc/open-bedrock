@@ -27,6 +27,39 @@ function resource(
 }
 
 describe("版付き雇用と業務の期間履歴", () => {
+  test("訂正された旧形式を履歴へ残し、同じ発効日の訂正版だけを現在の期間へ使う", () => {
+    const old = {
+      ...resource(1, "2026-01-01").toProps(),
+      attributes: { employeeId: "employee:1", employmentType: "FULL_TIME", status: "RETIRED" },
+    }
+    expect(CompanyEmploymentResourceTimelineValue.create([old])).toBeInstanceOf(Error)
+    expect(
+      CompanyEmploymentResourceTimelineValue.create([
+        old,
+        resource(2, "2026-01-01", { effectiveTo: restoreCalendarDate("2026-08-17") }),
+      ]),
+    ).toMatchObject({
+      revision: 2,
+      periods: [{ startsOn: "2026-01-01", endsOn: "2026-08-17", status: "active" }],
+    })
+    expect(
+      CompanyEmploymentResourceTimelineValue.create([old, resource(2, "2026-02-01")]),
+    ).toBeInstanceOf(Error)
+    expect(old.attributes.status).toBe("RETIRED")
+  })
+
+  test("入社日の遡及訂正は隣接する同じ在籍状態を一つの期間として参照する", () => {
+    expect(
+      CompanyEmploymentResourceTimelineValue.create([
+        resource(1, "2026-07-01"),
+        resource(2, "2020-01-01"),
+      ]),
+    ).toMatchObject({
+      revision: 2,
+      periods: [{ startsOn: "2020-01-01", endsOn: null, status: "active" }],
+    })
+  })
+
   test("休職・復職・退職を発効日で区切り、現在時刻に依存せず予約を保持する", () => {
     const timeline = CompanyEmploymentResourceTimelineValue.create([
       resource(1, "2026-01-01"),
