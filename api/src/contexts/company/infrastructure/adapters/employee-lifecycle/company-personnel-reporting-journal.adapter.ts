@@ -64,6 +64,7 @@ export class CompanyPersonnelReportingJournalAdapter {
           : props.command.input
       const replacements = props.projection.mutations.flatMap((mutation) =>
         mutation.periodType === "assignment" &&
+        mutation.after.employeeId === props.action.employeeId &&
         mutation.before === null &&
         !mutation.after.isVoid &&
         periodIds.has(mutation.after.periodId) &&

@@ -50,9 +50,9 @@ export class CompanyAssignmentJournalAdapter {
     props: PersonnelActionPersistenceProps,
   ): Promise<PreparedAssignments | CompanyOperationError> {
     try {
-      const mutations = props.projection.mutations.filter(
-        (mutation) => mutation.periodType === "assignment",
-      )
+      const mutations = props.projection.mutations
+        .filter((mutation) => mutation.periodType === "assignment")
+        .filter((mutation) => mutation.after.employeeId === props.action.employeeId)
       if (mutations.length === 0) return { resources: [], bindings: [], periodIds: new Set() }
       const selected = await this.c
         .prepare(`SELECT period.*, binding.resource_id, binding.period_revision,
