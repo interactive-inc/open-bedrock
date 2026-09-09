@@ -84,6 +84,7 @@ export const POST = factory.createHandlers(
         snapshotDigest: z.string().regex(/^[a-f0-9]{64}$/),
         observedOn: z.string().date(),
         reason: z.string().trim().min(1).max(1500),
+        reuseExistingHistory: z.literal(true).optional(),
         resources: z
           .array(
             z

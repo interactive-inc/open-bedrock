@@ -8,6 +8,7 @@ import type { EmployeeResourceAdoptionSnapshotValue } from "@/contexts/company/d
 import { CompanyEmploymentResourceTimelineValue } from "@/contexts/company/domain/values/company-employment-resource-timeline.value"
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
+import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 
 export type EmployeeResourceAdoptionInput = Readonly<{
   commandId: string
@@ -17,7 +18,10 @@ export type EmployeeResourceAdoptionInput = Readonly<{
   observedOn: CalendarDate
   reason: string
   resources: ReadonlyArray<CompanyResourceProps>
+  reuseExistingHistory?: true
 }>
+type ComparableResource = Omit<CompanyResourceProps, "effectiveFrom" | "effectiveTo" | "type"> &
+  Readonly<{ type: string; effectiveFrom: string; effectiveTo: string | null }>
 type Props = Omit<EmployeeResourceAdoptionInput, "resources"> &
   Readonly<{
     actorAccountId: string
@@ -99,6 +103,8 @@ export class EmployeeResourceAdoptionEntity {
         "employee_resource_adoption_conflict",
       )
     if (source.lifecycleRevision === null) return EmployeeResourceAdoptionEntity.invalid()
+    if (this.props.reuseExistingHistory && !this.matchesExistingHistory(snapshot))
+      return EmployeeResourceAdoptionEntity.invalid()
     if (source.accounts.some((account) => account.displayName !== source.employee.officialName))
       return EmployeeResourceAdoptionEntity.invalid()
     const employee = this.effective("employee", this.props.employeeId, this.props.observedOn)
@@ -222,6 +228,51 @@ export class EmployeeResourceAdoptionEntity {
       changes.push(change)
     }
     return changes
+  }
+
+  private matchesExistingHistory(snapshot: EmployeeResourceAdoptionSnapshotValue): boolean {
+    const resources = this.props.resources
+    const heads = resources.filter(
+      (resource) =>
+        !resources.some(
+          (newer) =>
+            newer.type === resource.type &&
+            newer.id === resource.id &&
+            newer.revision > resource.revision,
+        ),
+    )
+    const confirmedHistory = this.canonicalResources(resources)
+    const storedHistory = this.canonicalResources(snapshot.props.value.publicResources)
+    const confirmedHeads = this.canonicalResources(heads)
+    const storedHeads = this.canonicalResources(snapshot.props.value.publicHeads)
+    return (
+      !(confirmedHistory instanceof Error) &&
+      !(storedHistory instanceof Error) &&
+      !(confirmedHeads instanceof Error) &&
+      !(storedHeads instanceof Error) &&
+      confirmedHistory.toString() === storedHistory.toString() &&
+      confirmedHeads.toString() === storedHeads.toString()
+    )
+  }
+
+  private canonicalResources(resources: ReadonlyArray<ComparableResource>) {
+    return CanonicalSystemJsonValue.create(
+      resources
+        .toSorted(
+          (a, b) =>
+            a.type.localeCompare(b.type) || a.id.localeCompare(b.id) || a.revision - b.revision,
+        )
+        .map((resource) => ({
+          organizationId: resource.organizationId,
+          type: resource.type,
+          id: resource.id,
+          revision: resource.revision,
+          state: resource.state,
+          effectiveFrom: resource.effectiveFrom,
+          effectiveTo: resource.effectiveTo,
+          attributes: resource.attributes,
+        })),
+    )
   }
 
   private effective(

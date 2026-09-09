@@ -1,3 +1,4 @@
+import type { EmployeeResourceAdoptionSnapshotValue } from "@/contexts/company/domain/values/employee-resource-adoption-snapshot.value"
 import type { EmployeeResourceAdoptionEntity } from "@/contexts/company/domain/entities/employee-resource-adoption.entity"
 import {
   CompanyConflictError,
@@ -74,6 +75,8 @@ export class EmployeeResourceAdoptionRepository {
         return new CompanyNotFoundError("従業員が見つかりません", "employee_not_found")
       const validation = command.validate(snapshot)
       if (validation !== null) return validation
+      if (command.props.reuseExistingHistory)
+        return await this.connectExisting(command, snapshot, fingerprint)
       if (await this.hasResources(command)) return this.conflict()
       const changes = command.toChanges()
       if (changes instanceof Error) return this.unavailable(changes)
@@ -86,48 +89,12 @@ export class EmployeeResourceAdoptionRepository {
         const prepared = await journal.prepare(change)
         if (prepared instanceof Error) return this.unavailable(prepared)
         statements.push(...prepared.statements)
-        if (index === changes.length - 1) {
-          for (const resource of command.props.resources.filter(
-            (r) =>
-              r.type !== "person" &&
-              !command.props.resources.some(
-                (next) => next.type === r.type && next.id === r.id && next.revision > r.revision,
-              ),
-          )) {
-            statements.push(
-              this.c.env.DB.prepare(`INSERT INTO company_workforce_resource_bindings
-              (resource_type, resource_id, organization_id, employee_id, resource_revision, lifecycle_revision, last_action_id)
-              VALUES (?1, ?2, 'organization:default', ?3, ?4, ?5, NULL)`).bind(
-                resource.type,
-                resource.id,
-                command.props.employeeId,
-                resource.revision,
-                snapshot.props.value.lifecycleRevision,
-              ),
-            )
-          }
-        }
+        if (index === changes.length - 1)
+          statements.push(...this.prepareBindings(command, snapshot))
         statements.push(prepared.commit)
       }
       const organizationRevision = command.props.expectedRevision + changes.length
-      statements.push(
-        this.c.env.DB.prepare(`INSERT INTO company_employee_resource_adoptions
-        (command_id, employee_id, fingerprint, actor_account_id, reason, expected_revision, organization_revision,
-         observed_on, snapshot_digest, source_json, recorded_at)
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)`).bind(
-          command.props.commandId,
-          command.props.employeeId,
-          fingerprint,
-          command.props.actorAccountId,
-          command.props.reason,
-          command.props.expectedRevision,
-          organizationRevision,
-          command.props.observedOn,
-          snapshot.props.digest,
-          snapshot.props.sourceJson,
-          command.props.recordedAt,
-        ),
-      )
+      statements.push(this.prepareReceipt({ command, snapshot, fingerprint, organizationRevision }))
       await this.c.env.DB.batch(statements)
       return { employeeId: command.props.employeeId, organizationRevision, replayed: false }
     } catch (cause) {
@@ -138,7 +105,7 @@ export class EmployeeResourceAdoptionRepository {
         if (
           current === null ||
           (!(current instanceof Error) && current.props.digest !== command.props.snapshotDigest) ||
-          (await this.hasResources(command))
+          (!command.props.reuseExistingHistory && (await this.hasResources(command)))
         )
           return this.conflict()
       } catch {
@@ -146,6 +113,90 @@ export class EmployeeResourceAdoptionRepository {
       }
       return this.unavailable(cause)
     }
+  }
+
+  private async connectExisting(
+    command: EmployeeResourceAdoptionEntity,
+    snapshot: EmployeeResourceAdoptionSnapshotValue,
+    fingerprint: string,
+  ): Promise<EmployeeResourceAdoptionResult> {
+    const organizationRevision = command.props.expectedRevision + 1
+    await this.c.env.DB.batch([
+      new EmployeeResourceAdoptionSnapshotAdapter(this.c.env.DB).prepareGuard(snapshot),
+      this.c.env.DB.prepare(`INSERT INTO company_command_receipts
+        (organization_id, command_id, fingerprint, expected_revision, organization_revision, recorded_at)
+        VALUES ('organization:default', ?1, ?2, ?3, ?4, ?5)`).bind(
+        `employee-connection:${fingerprint}`,
+        fingerprint,
+        command.props.expectedRevision,
+        organizationRevision,
+        command.props.recordedAt,
+      ),
+      ...this.prepareBindings(command, snapshot),
+      this.c.env.DB.prepare(`UPDATE company_organizations SET revision = ?1, updated_at = ?2
+        WHERE id = 'organization:default' AND revision = ?3`).bind(
+        organizationRevision,
+        command.props.recordedAt,
+        command.props.expectedRevision,
+      ),
+      this.c.env.DB.prepare("SELECT CASE WHEN changes() = 1 THEN 1 ELSE json_extract('', '$') END"),
+      this.prepareReceipt({ command, snapshot, fingerprint, organizationRevision }),
+    ])
+    return { employeeId: command.props.employeeId, organizationRevision, replayed: false }
+  }
+
+  private prepareBindings(
+    command: EmployeeResourceAdoptionEntity,
+    snapshot: EmployeeResourceAdoptionSnapshotValue,
+  ): ReadonlyArray<D1PreparedStatement> {
+    return command.props.resources
+      .filter(
+        (resource) =>
+          resource.type !== "person" &&
+          !command.props.resources.some(
+            (newer) =>
+              newer.type === resource.type &&
+              newer.id === resource.id &&
+              newer.revision > resource.revision,
+          ),
+      )
+      .map((resource) =>
+        this.c.env.DB.prepare(`INSERT INTO company_workforce_resource_bindings
+      (resource_type, resource_id, organization_id, employee_id, resource_revision, lifecycle_revision, last_action_id)
+      VALUES (?1, ?2, 'organization:default', ?3, ?4, ?5, NULL)`).bind(
+          resource.type,
+          resource.id,
+          command.props.employeeId,
+          resource.revision,
+          snapshot.props.value.lifecycleRevision,
+        ),
+      )
+  }
+
+  private prepareReceipt(
+    props: Readonly<{
+      command: EmployeeResourceAdoptionEntity
+      snapshot: EmployeeResourceAdoptionSnapshotValue
+      fingerprint: string
+      organizationRevision: number
+    }>,
+  ): D1PreparedStatement {
+    return this.c.env.DB.prepare(`INSERT INTO company_employee_resource_adoptions
+      (command_id, employee_id, fingerprint, actor_account_id, reason, expected_revision, organization_revision,
+       observed_on, snapshot_digest, source_json, recorded_at)
+      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)`).bind(
+      props.command.props.commandId,
+      props.command.props.employeeId,
+      props.fingerprint,
+      props.command.props.actorAccountId,
+      props.command.props.reason,
+      props.command.props.expectedRevision,
+      props.organizationRevision,
+      props.command.props.observedOn,
+      props.snapshot.props.digest,
+      props.snapshot.props.sourceJson,
+      props.command.props.recordedAt,
+    )
   }
 
   private async replay(

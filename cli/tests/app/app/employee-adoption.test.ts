@@ -85,22 +85,26 @@ describe("CLI employee adoption", () => {
       captured.interception.mockRestore()
     }
   })
-  test("確認済みJSONとキーをそのまま送り、競合を自動再送しない", async () => {
-    const path = join(directory, "confirmed.json")
-    await Bun.write(path, JSON.stringify(body))
-    const captured = capture(409)
-    try {
-      expect(
-        (await request("/employees/adoption", { data: path, "idempotency-key": key })).status,
-      ).toBe(409)
-      expect(captured.requests).toHaveLength(1)
-      expect(captured.requests[0]?.method).toBe("POST")
-      expect(captured.requests[0]?.headers.get("idempotency-key")).toBe(key)
-      expect(await captured.requests[0]?.json()).toEqual(body)
-    } finally {
-      captured.interception.mockRestore()
-    }
-  })
+  test.each([undefined, true])(
+    "確認済みJSONとキーをそのまま送り、競合を自動再送しない: %s",
+    async (reuseExistingHistory) => {
+      const path = join(directory, "confirmed.json")
+      const confirmed = reuseExistingHistory ? { ...body, reuseExistingHistory } : body
+      await Bun.write(path, JSON.stringify(confirmed))
+      const captured = capture(409)
+      try {
+        expect(
+          (await request("/employees/adoption", { data: path, "idempotency-key": key })).status,
+        ).toBe(409)
+        expect(captured.requests).toHaveLength(1)
+        expect(captured.requests[0]?.method).toBe("POST")
+        expect(captured.requests[0]?.headers.get("idempotency-key")).toBe(key)
+        expect(await captured.requests[0]?.json()).toEqual(confirmed)
+      } finally {
+        captured.interception.mockRestore()
+      }
+    },
+  )
   test("確認参照のないJSONや冪等キーのない保存ではAPIを呼ばない", async () => {
     const path = join(directory, "missing.json")
     await Bun.write(path, JSON.stringify({ ...body, snapshotDigest: undefined }))
