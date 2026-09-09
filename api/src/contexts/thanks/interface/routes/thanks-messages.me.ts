@@ -78,6 +78,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       thanksItem.recipientEmployeeId,
     ]),
   )
+  if (nameById instanceof Error)
+    throw toHttpException(new UnexpectedError("failed to read employee names", { cause: nameById }))
 
   const responseBody = zAppThanksList.parse({
     data: thanksList.map((thanksItem) => ({

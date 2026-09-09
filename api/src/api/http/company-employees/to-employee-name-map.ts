@@ -1,23 +1,16 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { inArray } from "drizzle-orm"
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 
 /** 社員 id の配列から id→氏名 の Map を作る。 */
 export async function toEmployeeNameMap(
   c: Context,
   employeeIds: ReadonlyArray<EmployeeId>,
-): Promise<Map<EmployeeId, string>> {
-  const uniqueIds = Array.from(new Set(employeeIds))
-
-  if (uniqueIds.length === 0) {
-    return new Map()
-  }
-
-  const rows = await c.var.database
-    .select({ id: employees.id, name: employees.officialName })
-    .from(employees)
-    .where(inArray(employees.id, uniqueIds))
-
-  return new Map(rows.map((row) => [row.id, row.name]))
+): Promise<ReadonlyMap<EmployeeId, string> | Error> {
+  return CompanyEmployeeDirectoryReadAdapter.findNames({
+    database: c.var.database,
+    now: c.env.NOW ?? new Date().toISOString(),
+    timeZone: c.env.COMPANY_TIME_ZONE,
+    employeeIds,
+  })
 }

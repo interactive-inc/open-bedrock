@@ -1,3 +1,4 @@
+import { drizzle } from "drizzle-orm/d1"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { describe, expect, test, spyOn } from "bun:test"
@@ -211,5 +212,149 @@ describe("Company directoryの在籍時点", () => {
     const reader = directory(database, "2026-09-01T00:00:00Z")
     expect(await reader.findByCode("E001")).toBeInstanceOf(Error)
     expect(await reader.list(page)).toBeInstanceOf(Error)
+  })
+})
+
+function employeeNamesReader(
+  props: Omit<Parameters<typeof CompanyEmployeeDirectoryReadAdapter.findNames>[0], "employeeIds">,
+) {
+  return {
+    findForEmployeeIds: (
+      employeeIds: ReadonlyArray<ReturnType<typeof restoreWorkforceId<"employee">>>,
+    ) => CompanyEmployeeDirectoryReadAdapter.findNames({ ...props, employeeIds }),
+  }
+}
+
+const employeeId = restoreWorkforceId("employee", "employee:1")
+const history = `
+  UPDATE company_employees SET official_name = 'Future Person';
+  INSERT INTO company_workforce_resource_bindings VALUES
+    ('employee', 'employee:1', 'organization:default', 'employee:1');
+  INSERT INTO company_resource_revisions VALUES
+    ('organization:default', 'employee', 'employee:1', 1, 'active', '2026-01-01', NULL, '{"personId":"person:1"}'),
+    ('organization:default', 'person', 'person:1', 1, 'active', '2026-01-01', NULL, '{"officialName":"Current Person"}'),
+    ('organization:default', 'person', 'person:1', 2, 'active', '2026-07-01', NULL, '{"officialName":"Future Person"}');
+`
+
+describe("Company従業員名の期間参照", () => {
+  test("D1とDrizzleで同じ会社営業日に切り替え、同日の訂正を優先する", async () => {
+    const database = createEmployeeEmploymentTestDatabase(
+      history +
+        `
+      INSERT INTO company_resource_revisions VALUES
+        ('organization:default', 'person', 'person:1', 3, 'active', '2026-07-01', NULL, '{"officialName":"Corrected Person"}');
+    `,
+    )
+    for (const source of [database, drizzle(database)]) {
+      for (const instant of ["2026-06-30T14:59:59Z", "2026-06-30T15:00:00Z"]) {
+        const names = await employeeNamesReader({
+          database: source,
+          now: instant,
+          timeZone: "Asia/Tokyo",
+        }).findForEmployeeIds([employeeId, employeeId])
+        if (names instanceof Error) throw names
+        expect(names.size).toBe(1)
+        expect(names.get(employeeId)).toBe(
+          instant.endsWith("14:59:59Z") ? "Current Person" : "Corrected Person",
+        )
+      }
+    }
+    expect(
+      await database
+        .prepare("SELECT official_name FROM company_employees")
+        .first<string>("official_name"),
+    ).toBe("Future Person")
+    expect(
+      await database
+        .prepare("SELECT count(*) AS total FROM company_resource_revisions")
+        .first<number>("total"),
+    ).toBe(4)
+  })
+
+  test("接続済みの開始前・期間終了・人物取消では旧氏名へ戻さない", async () => {
+    for (const suffix of [
+      "UPDATE company_resource_revisions SET effective_to = '2026-07-01' WHERE resource_type = 'employee';",
+      "UPDATE company_resource_revisions SET state = 'cancelled' WHERE resource_type = 'person' AND revision = 2;",
+      "DELETE FROM company_resource_revisions WHERE resource_type = 'person';",
+    ]) {
+      const database = createEmployeeEmploymentTestDatabase(history + suffix)
+      for (const now of ["2025-12-31T00:00:00Z", "2026-07-01T00:00:00Z"]) {
+        const names = await employeeNamesReader({
+          database,
+          now,
+          timeZone: "Asia/Tokyo",
+        }).findForEmployeeIds([employeeId])
+        expect(names).toEqual(new Map())
+      }
+    }
+  })
+
+  test("未接続の従業員名を保ち、201件・重複・存在しないIDを一括参照する", async () => {
+    const database = createEmployeeEmploymentTestDatabase()
+    const ids = Array.from({ length: 201 }, (_, index) =>
+      restoreWorkforceId("employee", `employee:${index}`),
+    )
+    const names = await employeeNamesReader({
+      database,
+      now: "2026-07-01T00:00:00Z",
+      timeZone: "Asia/Tokyo",
+    }).findForEmployeeIds([...ids, employeeId])
+    expect(names).toEqual(new Map([[employeeId, "Example Person"]]))
+  })
+
+  test("空の参照はDB・時計を使用せず、非空なら不明なtimezoneを拒否する", async () => {
+    const database = createEmployeeEmploymentTestDatabase()
+    const prepare = spyOn(database, "prepare")
+    try {
+      for (const timeZone of [undefined, "Invalid/Zone"]) {
+        const repository = employeeNamesReader({
+          database,
+          now: "2026-07-01T00:00:00Z",
+          timeZone,
+        })
+        expect(await repository.findForEmployeeIds([])).toEqual(new Map())
+        expect(await repository.findForEmployeeIds([employeeId])).toBeInstanceOf(Error)
+      }
+      expect(prepare).not.toHaveBeenCalled()
+    } finally {
+      prepare.mockRestore()
+    }
+  })
+
+  test("同じ従業員への重複した公開対応は一つを選ばず拒否する", async () => {
+    const database = createEmployeeEmploymentTestDatabase(
+      history +
+        `
+      INSERT INTO company_workforce_resource_bindings VALUES
+        ('employee', 'employee:1', 'organization:default', 'employee:1');
+    `,
+    )
+    expect(
+      await employeeNamesReader({
+        database,
+        now: "2026-07-01T00:00:00Z",
+        timeZone: "Asia/Tokyo",
+      }).findForEmployeeIds([employeeId]),
+    ).toBeInstanceOf(Error)
+  })
+
+  test("壊れた氏名とDB障害では部分結果を返さない", async () => {
+    const database = createEmployeeEmploymentTestDatabase(
+      "UPDATE company_employees SET official_name = '';",
+    )
+    const repository = employeeNamesReader({
+      database,
+      now: "2026-07-01T00:00:00Z",
+      timeZone: "Asia/Tokyo",
+    })
+    expect(await repository.findForEmployeeIds([employeeId])).toBeInstanceOf(Error)
+    const outage = spyOn(database, "prepare").mockImplementation(() => {
+      throw new Error("Database unavailable")
+    })
+    try {
+      expect(await repository.findForEmployeeIds([employeeId])).toBeInstanceOf(Error)
+    } finally {
+      outage.mockRestore()
+    }
   })
 })
