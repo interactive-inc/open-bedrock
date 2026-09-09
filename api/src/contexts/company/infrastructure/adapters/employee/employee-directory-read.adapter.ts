@@ -1,4 +1,6 @@
-import { sql } from "drizzle-orm"
+import { getTableName, sql, type SQL } from "drizzle-orm"
+import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
+import type { PersistedEmploymentStatus } from "@/contexts/company/domain/definitions/employment-status.definition"
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1"
 import { companyEmploymentStateSql } from "@/contexts/company/infrastructure/adapters/employee/lib/company-employment-state-sql"
 import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
@@ -45,6 +47,37 @@ type Context = Readonly<{ env: CompanyContext["env"]; asOf?: CalendarDate }>
 export class CompanyEmployeeDirectoryReadAdapter {
   constructor(private readonly c: Context) {
     Object.freeze(this)
+  }
+
+  /** 雇用IDごとの在籍状態を期間で判定し、開始前や曖昧な履歴を表示用statusで補わない。 */
+  static employmentStatus(
+    c: Readonly<{
+      now: string
+      timeZone: string | undefined
+      employmentId: SQLiteColumn
+      employeeId: SQLiteColumn
+    }>,
+  ): SQL<PersistedEmploymentStatus | null> {
+    const asOf = resolveCompanyBusinessDate({ now: c.now, timeZone: c.timeZone })
+    if (asOf instanceof Error) throw asOf
+    const employeeId = sql`${sql.identifier(getTableName(c.employeeId.table))}.${sql.identifier(c.employeeId.name)}`
+    const employmentId = sql`${sql.identifier(getTableName(c.employmentId.table))}.${sql.identifier(c.employmentId.name)}`
+    const history = sql.join(companyEmploymentStateSql().split("?1").map(sql.raw), sql`${asOf}`)
+    return sql<PersistedEmploymentStatus | null>`(${history}
+      SELECT CASE
+        WHEN (SELECT count(*) FROM current_employees WHERE id = ${employeeId}) != 1 THEN NULL
+        WHEN EXISTS (SELECT 1 FROM current_employment_states
+          WHERE employee_id = ${employeeId} AND employment_id = ${employmentId}) THEN (
+          SELECT CASE WHEN count(*) = 1 AND count(status_period_id) = 1
+            AND min(status_starts_on >= employment_starts_on
+              AND (employment_ends_on IS NULL OR (status_ends_on IS NOT NULL AND status_ends_on <= employment_ends_on)))
+            THEN CASE min(status) WHEN 'active' THEN 'ACTIVE' WHEN 'leave' THEN 'ON_LEAVE' END
+            ELSE NULL END
+          FROM current_employment_states WHERE employee_id = ${employeeId})
+        WHEN EXISTS (SELECT 1 FROM latest_employment_periods
+          WHERE employee_id = ${employeeId} AND period_id = ${employmentId}
+            AND is_void = 0 AND ends_on <= ${asOf}) THEN 'TERMINATED'
+        ELSE NULL END)`
   }
 
   /** 従業員名だけが必要な製品の参照も、同じ人物履歴へ揃える。 */
