@@ -229,6 +229,12 @@ resourcesには、一人のPerson、そのPersonに対応する既存IDのEmploy
 
 CLIの `employees adoption --employee-id <id>` で照合対象を参照し、`employees adoption --data <confirmed-history.json> --idempotency-key <uuid>` で確認済みの履歴を送信できる。競合時に最新版への自動再送は行わない。
 
+`POST /company/employee-resource-adoption-batches` は、確認済みの既存公開履歴を持つ従業員を一括接続する。共通の `expectedRevision`、`observedOn`、`reason` と、1〜250人の `employeeId`・`snapshotDigest` を持つ `employees` を受け取り、`idempotency-key` headerを要求する。対象の重複や任意の履歴・主体の入力は拒否する。各従業員には単独接続と同じ照合条件を適用し、履歴の欠落や氏名・雇用期間の不一致を補完しない。
+
+対象全員のsnapshotを保存直前に再照合し、全員の接続、会社版の一度の更新、認証された主体・理由・元のsnapshotを持つ各従業員の移行記録を一つのtransactionで保存する。会社の公開Account対応が未接続のまま残る場合や、一つでも保存が失敗した場合は全員分を取り消す。人数を分けて部分確定することはない。個々のsnapshotは750,000 byte以内、照合と証跡に使うデータの合計は8,000,000 byte以内とし、超過時は保存しない。
+
+成功時は `employeeIds`、確定した `organizationRevision`、再送を表す `replayed` を返す。同じ対象集合なら順序を変えた翌日以降の再送も元の結果を返す。対象、確認値、理由、主体を変えた同じキーは409になり、再送にも現在の会社管理資格を要求する。CLIの `employees adoption-batch --data <confirmed-employees.json> --idempotency-key <uuid>` も同じAPIを使用する。
+
 ## 既存組織の公開履歴への接続
 
 `GET /company/organization-resource-adoptions?organization_unit_id=<id>` は組織の同一性、保存済みの全期間revision、元の操作主体・理由・証拠・digest、接続状態、照合用digest、会社版、会社営業日を返す。既定organizationへのアクセスと `company:admin` が必要になる。

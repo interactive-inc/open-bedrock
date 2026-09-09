@@ -12,6 +12,7 @@ import * as employeeEvents from "@/contexts/company/interface/routes/company.emp
 import * as employeeGrades from "@/contexts/company/interface/routes/company.employee-grades"
 import * as employeeLifecycleCodeEvents from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.events"
 import * as employeeLifecycleCodeState from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.state"
+import * as employeeResourceAdoptionBatches from "@/contexts/company/interface/routes/company.employee-resource-adoption-batches"
 import * as employeeResourceAdoptions from "@/contexts/company/interface/routes/company.employee-resource-adoptions"
 import * as employees from "@/contexts/company/interface/routes/company.employees"
 import * as employments from "@/contexts/company/interface/routes/company.employments"
@@ -88,6 +89,7 @@ export const companyAuditedRoutes = new Hono<CompanyHttpEnvironment>()
   .put("/employee-directory/:code", ...employeeDirectoryCode.PUT)
   .post("/employee-events", ...employeeEvents.POST)
   .post("/employee-grades", ...employeeGrades.POST)
+  .post("/employee-resource-adoption-batches", ...employeeResourceAdoptionBatches.POST)
   .post("/employee-resource-adoptions", ...employeeResourceAdoptions.POST)
   .post("/employees", ...employees.POST)
   .post("/employments", ...employments.POST)

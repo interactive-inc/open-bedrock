@@ -1,5 +1,12 @@
 /** 移行の参照と保存直前の照合で、同じ行・列・順序を使用する。 */
-export function employeeResourceAdoptionSnapshotSql(): string {
+export function employeeResourceAdoptionSnapshotSql(
+  scope: "one" | "batch" | "guard" = "one",
+): string {
+  const filters = {
+    one: "employee.id = ?1",
+    batch: "employee.id IN (SELECT value FROM json_each(?1)) ORDER BY employee.id",
+    guard: "employee.id = json_extract(expected.value, '$.employeeId')",
+  }
   return `SELECT json_object(
     'organizationRevision', (SELECT revision FROM company_organizations WHERE id = 'organization:default'),
     'employee', json_object('id', employee.id, 'officialName', employee.official_name,
@@ -62,5 +69,5 @@ export function employeeResourceAdoptionSnapshotSql(): string {
           SELECT json_extract(attributes_json, '$.personId') FROM company_resource_revisions
           WHERE organization_id = 'organization:default' AND resource_type = 'employee' AND resource_id = employee.id))
       ) ORDER BY resource.resource_type, resource.resource_id)))
-  ) AS snapshot_json FROM company_employees AS employee WHERE employee.id = ?1`
+  ) AS snapshot_json FROM company_employees AS employee WHERE ${filters[scope]}`
 }
