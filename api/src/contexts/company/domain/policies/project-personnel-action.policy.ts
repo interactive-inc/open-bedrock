@@ -32,6 +32,7 @@ import type {
 } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import type { EmploymentType } from "@/contexts/company/domain/definitions/employment-type.definition"
+import { splitAssignmentManagerPeriod } from "@/contexts/company/domain/policies/split-assignment-manager-period.policy"
 
 export type PersonnelActionProjection = {
   newEmploymentType: EmploymentType | null
@@ -88,7 +89,15 @@ function newPeriodId(
 
 function recordMutation(context: ProjectionContext, mutation: LifecycleVersionMutation): void {
   context.mutations.push(mutation)
-  context.schedule = applyLifecycleMutations(context.schedule, [mutation])
+  if (mutation.after.employeeId === context.command.employeeId) {
+    context.schedule = applyLifecycleMutations(context.schedule, [mutation])
+    return
+  }
+  context.organizationSchedules = context.organizationSchedules.map((schedule) =>
+    schedule.employments.some((period) => period.employeeId === mutation.after.employeeId)
+      ? applyLifecycleMutations(schedule, [mutation])
+      : schedule,
+  )
 }
 
 function revisedPeriod<T extends { revision: number }>(
@@ -617,11 +626,49 @@ function projectRetirement(
     }
   }
 
+  endDependentManagerPeriods(context, employment, endsOn)
+
   return personnelActionSummarySchema.parse({
     kind: input.kind,
     eventOn: input.retirementOn,
     status: "retired",
   })
+}
+
+function endDependentManagerPeriods(
+  context: ProjectionContext,
+  employment: EmploymentPeriod,
+  startsOn: string,
+): void {
+  for (const schedule of context.organizationSchedules) {
+    for (const assignment of schedule.assignments) {
+      if (
+        assignment.isVoid ||
+        assignment.employeeId === context.command.employeeId ||
+        assignment.managerEmployeeId !== context.command.employeeId
+      )
+        continue
+      const periods = splitAssignmentManagerPeriod({
+        assignment,
+        startsOn,
+        endsOn: employment.endsOn,
+      })
+      for (const entry of periods.entries()) {
+        const index = entry[0]
+        const period = entry[1]
+        const after = revisedPeriod(context, assignment, period)
+        if (index === 0) {
+          recordMutation(context, { periodType: "assignment", before: assignment, after })
+          continue
+        }
+        recordMutation(context, {
+          periodType: "assignment",
+          before: null,
+          after: { ...after, periodId: newPeriodId(context, "assignment"), revision: 1 },
+        })
+      }
+    }
+  }
 }
 
 function reverseCorrectionMutations(context: ProjectionContext): CompanyOperationError | undefined {
@@ -639,14 +686,16 @@ function reverseCorrectionMutations(context: ProjectionContext): CompanyOperatio
   }
 
   for (const mutation of [...correction.mutations].reverse()) {
-    const collection =
-      mutation.periodType === "employment"
-        ? context.schedule.employments
-        : mutation.periodType === "status"
-          ? context.schedule.statuses
-          : mutation.periodType === "assignment"
-            ? context.schedule.assignments
-            : context.schedule.responsibilities
+    const collection = organizationWithTarget(context).flatMap<LifecycleVersionMutation["after"]>(
+      (schedule) =>
+        mutation.periodType === "employment"
+          ? schedule.employments
+          : mutation.periodType === "status"
+            ? schedule.statuses
+            : mutation.periodType === "assignment"
+              ? schedule.assignments
+              : schedule.responsibilities,
+    )
     // void期間は表示用scheduleから除かれるが、訂正時には元の版を使って復元する。
     // その後に別の版が保存されていれば、追記時のrevision制約が復元を拒否する。
     const current =
