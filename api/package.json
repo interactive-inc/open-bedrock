@@ -28,12 +28,13 @@
     "cf-typegen": "wrangler types --env-interface CloudflareBindings",
     "test": "bun test",
     "db:migrate:local": "wrangler d1 migrations apply bedrock --local",
-    "db:migrate": "wrangler d1 migrations apply bedrock --remote",
+    "db:migrate": "bun run db:check:remote && wrangler d1 migrations apply bedrock --remote",
     "deploy": "bun run db:migrate && wrangler deploy",
     "deploy:preview": "wrangler versions upload",
     "db:seed:local": "bash scripts/seed.sh --local",
     "db:seed": "bash scripts/seed.sh --remote",
-    "build:types:bundle": "tsc -p tsconfig.build.json && dts-bundle-generator -o dist/app.bundle.d.ts dist/api/app.d.ts --project tsconfig.dts.json --no-check --external-inlines drizzle-orm --external-inlines zod"
+    "build:types:bundle": "tsc -p tsconfig.build.json && dts-bundle-generator -o dist/app.bundle.d.ts dist/api/app.d.ts --project tsconfig.dts.json --no-check --external-inlines drizzle-orm --external-inlines zod",
+    "db:check:remote": "bun scripts/check-remote-migration-journal.ts --config wrangler.jsonc"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.6",
