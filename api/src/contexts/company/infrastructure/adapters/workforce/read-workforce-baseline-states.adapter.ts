@@ -24,10 +24,15 @@ async function readWorkforceBaselineStates(
   for (const row of rows.results) {
     const employeeId = row.employee_id
     if (states.has(employeeId)) throw new Error("employee has duplicate lifecycle baselines")
-    if (row.status !== "active" && row.status !== "leave" && row.status !== "retired") {
+    if (
+      row.status !== "active" &&
+      row.status !== "leave" &&
+      row.status !== "retired" &&
+      row.status !== "terminated"
+    ) {
       throw new Error("employee lifecycle baseline status is invalid")
     }
-    if (row.status === "retired") {
+    if (row.status === "retired" || row.status === "terminated") {
       states.set(employeeId, {
         asOf: restoreCalendarDate(row.event_on),
         status: "TERMINATED",
