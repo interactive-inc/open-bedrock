@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "7c4419e28883f0b4f967cffb9482f54f6308b902c52a2eedc121ed59c357bdd5",
+    "company-context.manifest.json": "9c7c901b395edc55d5753689b404bfb6a27c94a7b0487d4e20bd154f76175b98",
     "src/contexts/company/CLAUDE.md": "80247089a24770a7dbfcbaf9151ac962b21b8dc36d6ef6244dc4eb50bb866412",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -377,7 +377,8 @@
     "src/contexts/company/infrastructure/adapters/workforce/organization-unit-read.adapter.test.ts": "9c105e74d05793604726e957cac3269de893d84f1688f5e4d6953d6dcbcca8c4",
     "src/contexts/company/infrastructure/adapters/workforce/organization-unit-read.adapter.ts": "d97228693605ffda5acafb76b91f48d0e5f90f1983b4e6af2044aa61ac712ec3",
     "src/contexts/company/infrastructure/adapters/workforce/organization-workforce-snapshot.adapter.ts": "cec2392166835461d0e14d99c94be97a20b6176c1d3c70490c805f542e1b742c",
-    "src/contexts/company/infrastructure/adapters/workforce/read-workforce-baseline-states.adapter.ts": "48ad9d02ab4d60c916a19bdc569de9d630f9568e07f9e3eb76edde6eb90a3aa8",
+    "src/contexts/company/infrastructure/adapters/workforce/read-workforce-baseline-states.adapter.test.ts": "36af328462841928488fcc028cf1783fa7d1965158172f6bb4d0c38a5afc9213",
+    "src/contexts/company/infrastructure/adapters/workforce/read-workforce-baseline-states.adapter.ts": "859875fbc87c4e1f1a5bd0d906070d6d9ccb44b8f0d26d38813eb81a644069ce",
     "src/contexts/company/infrastructure/adapters/workforce/resolve-canonical-organization-authority.adapter.ts": "938228e1957dba0ec74fac00f2fb7dabb53b4bb70f2514d2c23a350e9890cbfc",
     "src/contexts/company/infrastructure/repositories/account-profile/d1-company-account-profile.repository.ts": "99cf6a686b4e32a2b52649badb30e8fed45d4d9c8d8e74359d8bb6ea2ca5108b",
     "src/contexts/company/infrastructure/repositories/core/d1-company-resource.repository.test.ts": "803c63e79c89f13c225c3b86dbe7e7e7e3aebcdd7e314d32b7030b82bad2dd97",
