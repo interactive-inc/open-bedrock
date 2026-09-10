@@ -27,7 +27,9 @@ migration は `NNNN_<対象>_<操作>.sql` の形とし、4 桁の連番を前�
 
 連番は依存順序を名前で保証するために必要である。`wrangler d1 migrations apply` は連番を持つファイルを持たないファイルより先に適用し（`compareSegments` が数値前置を優先する）、テストの replay も同じ順序を使う。連番を持たないファイルが混在すると、新しい連番ファイルが依存先より先に走る。
 
-`d1_migrations` は適用済みかどうかをファイル名で判定する。したがって適用済みの migration を改名すると、その migration は未適用と見なされて再実行される。改名する場合は `d1_migrations` の名前も同時に書き換える。`api/scripts/repair-migration-history.sql` がこの書き換えを行い、`db:migrate` と `db:migrate:local` が `migrations apply` の前に実行する。
+`d1_migrations` は適用済みかどうかをファイル名で判定する。適用済みの migration を改名したり、journal の名前を書き換えて適用済みに見せたりしない。`bun run db:check:remote` は Wrangler 設定の全 D1 と各 migration ディレクトリを読み取り専用で照合し、適用済みファイルの欠落、番号の使い回し、適用済み番号より古い未適用ファイルを拒否する。journal が無いか空の場合は利用者テーブルも無い新規 DB に限って許可する。照会失敗を新規 DB とみなさない。`db:migrate` と `deploy` はこの検査の成功後にだけリモート DDL へ進む。
+
+この検査はファイル名と適用順の照合であり、適用済み SQL 本文の変更や会社データの移行漏れを証明するものではない。履歴が一致しない既存環境は個別に移行計画を検証し、journal の書き換えで検査を通さない。
 
 ## Deployment と法人
 
