@@ -1,3 +1,4 @@
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
 import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
 import { ResolveCompanyGovernanceTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-governance-task.adapter"
@@ -791,4 +792,88 @@ describe("Company公開責務による人事発令", () => {
         .first<number>("total"),
     ).toBe(0)
   })
+})
+
+test("人事申請の一覧は改名と従業員番号の発効日を公開Company履歴から読む", async () => {
+  const c = await createFixture()
+  expect((await c.submit()).status).toBe(201)
+  const repository = new D1CompanyResourceRepository(c.database)
+  const resources = await repository.findMany({
+    organizationId: "organization:default",
+    types: ["person", "employee"],
+  })
+  if (!resources.ok) throw new Error("resources missing")
+  const employee = resources.resources.find(
+    (resource) => resource.type === "employee" && resource.id === c.target.employeeId,
+  )
+  const requester = resources.resources.find(
+    (resource) => resource.type === "employee" && resource.id === c.creator.employeeId,
+  )
+  const targetPerson = resources.resources.find(
+    (resource) => resource.type === "person" && resource.id === employee?.attributes.personId,
+  )
+  const requesterPerson = resources.resources.find(
+    (resource) => resource.type === "person" && resource.id === requester?.attributes.personId,
+  )
+  if (employee === undefined || targetPerson === undefined || requesterPerson === undefined)
+    throw new Error("people missing")
+  const future = new Date(c.at.getTime() + 86_400_000)
+  const effectiveFrom = restoreCalendarDate(
+    new Intl.DateTimeFormat("en-CA", { timeZone: "Asia/Tokyo" }).format(future),
+  )
+  await c.write([
+    {
+      ...targetPerson.toProps(),
+      revision: targetPerson.revision + 1,
+      effectiveFrom,
+      attributes: { ...targetPerson.attributes, officialName: "Future Target" },
+    },
+    {
+      ...requesterPerson.toProps(),
+      revision: requesterPerson.revision + 1,
+      effectiveFrom,
+      attributes: { ...requesterPerson.attributes, officialName: "Future Requester" },
+    },
+    {
+      ...employee.toProps(),
+      revision: employee.revision + 1,
+      effectiveFrom,
+      attributes: { ...employee.attributes, employeeCode: "FUTURE-CODE" },
+    },
+  ])
+  const token = await createTestToken("personnel-governance-test", {
+    employeeId: c.creator.employeeId,
+    accountId: c.creator.accountId,
+  })
+  const read = async (now: Date, code: string) => {
+    const response = await requestWithContext({
+      db: c.database,
+      jwtSecret: "personnel-governance-test",
+      token,
+      now: now.toISOString(),
+      path: "/company/personnel-action-requests?target_employee_code=" + code,
+    })
+    expect(response.status).toBe(200)
+    return response.json()
+  }
+  expect(await read(c.at, "MEMBER-1")).toMatchObject({
+    requests: [
+      {
+        target_employee_code: "MEMBER-1",
+        target_employee_name: targetPerson.attributes.officialName,
+        requested_by_employee_name: requesterPerson.attributes.officialName,
+      },
+    ],
+  })
+  expect(await read(c.at, "FUTURE-CODE")).toEqual({ requests: [] })
+  expect(await read(future, "FUTURE-CODE")).toMatchObject({
+    requests: [
+      {
+        target_employee_code: "FUTURE-CODE",
+        target_employee_name: "Future Target",
+        requested_by_employee_name: "Future Requester",
+      },
+    ],
+  })
+  expect(await read(future, "MEMBER-1")).toEqual({ requests: [] })
 })

@@ -1,3 +1,4 @@
+import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import type {
   PersonnelActionRequestRecord,
   PersonnelActionRequestStatus,
@@ -29,47 +30,34 @@ export class ListPersonnelActionRequests {
       const rows = await this.c.env.DB.prepare(
         `SELECT request.id, request.application_id, request.system_proposal_series_id,
                 request.target_employee_id, request.target_department_code,
-                COALESCE(target.employee_code,
-                  json_extract(request.subject_snapshot_json, '$.employeeCode'))
+                json_extract(request.subject_snapshot_json, '$.employeeCode')
                   AS target_employee_code,
-                COALESCE(target.official_name,
-                  json_extract(request.subject_snapshot_json, '$.employeeName'))
+                json_extract(request.subject_snapshot_json, '$.employeeName')
                   AS target_employee_name,
                 request.kind, request.payload_json, request.payload_fingerprint,
                 request.requested_by_employee_id,
-                requester.employee_code AS requested_by_employee_code,
-                requester.official_name AS requested_by_employee_name,
                 request.base_employee_revision, request.base_organization_revision,
                 request.created_at, request.applied_action_id, request.withdrawn_at
          FROM company_personnel_action_requests AS request
-         LEFT JOIN company_employees AS target ON target.id = request.target_employee_id
-         JOIN company_employees AS requester ON requester.id = request.requested_by_employee_id
-         WHERE ?1 IS NULL
-            OR target.employee_code = ?1
-            OR json_extract(request.subject_snapshot_json, '$.employeeCode') = ?1
          ORDER BY request.created_at DESC, request.id DESC`,
-      )
-        .bind(filters.targetEmployeeCode ?? null)
-        .all<{
-          id: string
-          application_id: number
-          system_proposal_series_id: string | null
-          target_employee_id: EmployeeId | null
-          target_department_code: string | null
-          target_employee_code: string | null
-          target_employee_name: string | null
-          kind: string
-          payload_json: string
-          payload_fingerprint: string | null
-          requested_by_employee_id: EmployeeId
-          requested_by_employee_code: string | null
-          requested_by_employee_name: string
-          base_employee_revision: number | null
-          base_organization_revision: number | null
-          created_at: number
-          applied_action_id: string | null
-          withdrawn_at: number | null
-        }>()
+      ).all<{
+        id: string
+        application_id: number
+        system_proposal_series_id: string | null
+        target_employee_id: EmployeeId | null
+        target_department_code: string | null
+        target_employee_code: string | null
+        target_employee_name: string | null
+        kind: string
+        payload_json: string
+        payload_fingerprint: string | null
+        requested_by_employee_id: EmployeeId
+        base_employee_revision: number | null
+        base_organization_revision: number | null
+        created_at: number
+        applied_action_id: string | null
+        withdrawn_at: number | null
+      }>()
       const workflows = await new ReadSystemWorkflowReferencesAdapter({
         env: { DB: this.c.env.DB },
       }).readSystemWorkflowReferences({
@@ -82,19 +70,40 @@ export class ListPersonnelActionRequests {
         return new UnexpectedError("人事変更申請の一覧を取得できません", { cause: workflows })
       }
       const workflowByNumber = new Map(workflows.map((workflow) => [workflow.number, workflow]))
+      const visibleRows = rows.results.filter((row) => workflowByNumber.has(row.application_id))
+      const employees = await new CompanyEmployeeDirectoryReadAdapter({
+        env: this.c.env,
+      }).findForEmployeeIds(
+        visibleRows.flatMap((row) =>
+          row.target_employee_id === null
+            ? [row.requested_by_employee_id]
+            : [row.target_employee_id, row.requested_by_employee_id],
+        ),
+      )
+      if (employees instanceof Error)
+        return new UnexpectedError("人事変更申請の人物情報を取得できません", { cause: employees })
+      const employeeById = new Map(employees.map((employee) => [employee.id, employee]))
       const requests: PersonnelActionRequestRecord[] = []
-      for (const row of rows.results) {
+      for (const row of visibleRows) {
         const workflow = workflowByNumber.get(row.application_id)
         if (workflow === undefined) continue
+        const target =
+          row.target_employee_id === null ? null : employeeById.get(row.target_employee_id)
+        const requester = employeeById.get(row.requested_by_employee_id)
+        const targetCode =
+          row.target_employee_id === null ? row.target_employee_code : target?.employeeCode
+        const targetName =
+          row.target_employee_id === null ? row.target_employee_name : target?.officialName
+        if (targetCode == null || targetName == null || requester?.employeeCode == null)
+          return new UnexpectedError("人事変更申請の人物情報を取得できません")
+        if (filters.targetEmployeeCode !== undefined && targetCode !== filters.targetEmployeeCode)
+          continue
         const action = personnelActionInputSchema.safeParse(JSON.parse(row.payload_json))
         if (
           !action.success ||
           row.system_proposal_series_id === null ||
           row.system_proposal_series_id !== workflow.seriesId ||
           row.payload_fingerprint === null ||
-          row.target_employee_code === null ||
-          row.target_employee_name === null ||
-          row.requested_by_employee_code === null ||
           row.base_employee_revision === null
         ) {
           return new UnexpectedError("人事変更申請の保存データが不正です")
@@ -115,15 +124,15 @@ export class ListPersonnelActionRequests {
           systemCaseId: workflow.caseId,
           proposalDigest: workflow.proposalDigest,
           targetEmployeeId: row.target_employee_id,
-          targetEmployeeCode: row.target_employee_code,
-          targetEmployeeName: row.target_employee_name,
+          targetEmployeeCode: targetCode,
+          targetEmployeeName: targetName,
           targetDepartmentCode: row.target_department_code,
           kind: row.kind,
           action: action.data,
           payloadFingerprint: row.payload_fingerprint,
           requestedByEmployeeId: row.requested_by_employee_id,
-          requestedByEmployeeCode: row.requested_by_employee_code,
-          requestedByEmployeeName: row.requested_by_employee_name,
+          requestedByEmployeeCode: requester.employeeCode,
+          requestedByEmployeeName: requester.officialName,
           baseEmployeeRevision: row.base_employee_revision,
           baseOrganizationRevision: row.base_organization_revision,
           status,
