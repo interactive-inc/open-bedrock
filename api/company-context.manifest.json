@@ -377,6 +377,7 @@
     "src/contexts/company/infrastructure/adapters/workforce/organization-unit-read.adapter.test.ts",
     "src/contexts/company/infrastructure/adapters/workforce/organization-unit-read.adapter.ts",
     "src/contexts/company/infrastructure/adapters/workforce/organization-workforce-snapshot.adapter.ts",
+    "src/contexts/company/infrastructure/adapters/workforce/read-workforce-baseline-states.adapter.test.ts",
     "src/contexts/company/infrastructure/adapters/workforce/read-workforce-baseline-states.adapter.ts",
     "src/contexts/company/infrastructure/adapters/workforce/resolve-canonical-organization-authority.adapter.ts",
     "src/contexts/company/infrastructure/repositories/account-profile/d1-company-account-profile.repository.ts",
