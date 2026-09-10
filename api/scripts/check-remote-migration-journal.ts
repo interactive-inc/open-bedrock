@@ -5,6 +5,7 @@ import { parseConfigFileTextToJson } from "typescript"
 import { z } from "zod"
 import { fetchRemoteD1Rows } from "./fetch-remote-d1-rows"
 import { MigrationJournal } from "./migration-journal"
+import { CompanyAccountLinkMigrationPreflight } from "./company-account-link-migration-preflight"
 
 /** Read every configured D1 journal before allowing any remote DDL. */
 export async function checkRemoteMigrationJournal(configPath: string): Promise<void> {
@@ -60,13 +61,22 @@ export async function checkRemoteMigrationJournal(configPath: string): Promise<v
         (failure) => `${database.binding}: ${failure}`,
       ),
     )
+    if (appliedNames.length > 0) {
+      const readiness = await new CompanyAccountLinkMigrationPreflight({
+        appliedNames,
+        localNames,
+        migrationsDirectory: directory,
+        query: (query) => fetchRemoteD1Rows({ binding: database.binding, configPath, query }),
+      }).check()
+      if (readiness instanceof Error) failures.push(`${database.binding}: ${readiness.message}`)
+    }
   }
   if (failures.length > 0) {
     throw new Error(
-      `Migration preflight failed before applying DDL. Reconcile history without renaming applied files or rewriting the journal.\n${failures.join("\n")}`,
+      `Migration preflight failed before applying DDL. Resolve the reported history conflicts and Company data preparation errors without rewriting the journal.\n${failures.join("\n")}`,
     )
   }
-  console.log("Remote migration journals match; pending migrations follow applied history")
+  console.log("Remote migration history and Company account-link preparation checks passed")
 }
 
 if (import.meta.main) {
