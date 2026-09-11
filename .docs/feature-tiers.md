@@ -93,7 +93,7 @@ dashboard、inbox、directory、search は複数コンテキストの read model
 
 ## 有効化
 
-System と Company は常に有効とする。App は `default` または `opt-in` の有効化設定を持ち、無効な App の route は認証より前に 404 で拒否する。Web は API が返す有効化状態に従い、無効な App の導線を表示しない。
+System と Company は常に有効とする。App は `default` または `opt-in` の有効化設定を持ち、無効な App の route は認証より前に 404 で拒否する。Web は API が返す有効化状態に従い、無効な App の導線を表示しない。機能設定の取得失敗や不正な応答を全機能有効へ読み替えない。設定を確認できない場合は業務画面と受信箱の表示を止め、再読み込みを案内する。
 
 `ENABLED_OPT_IN_APPS` は opt-in App、`DISABLED_DEFAULT_APPS` は default App の有効状態を制御する。どちらも配備時の有効状態だけを表し、所有境界は表さない。
 
