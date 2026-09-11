@@ -152,7 +152,7 @@ describe("WorkflowEditor", () => {
     expect(new Set(submitted.steps.map((step) => step.key)).size).toBe(submitted.steps.length)
   })
 
-  test("edits an explicit Company responsibility selector without an Account role", () => {
+  test("保存済みの旧責務と範囲を自動変換せず表示する", () => {
     const responsibilityWorkflow: ApplicationWorkflow = {
       ...initialWorkflow,
       steps: [
@@ -172,12 +172,11 @@ describe("WorkflowEditor", () => {
       <WorkflowEditor code="personnel" initial={responsibilityWorkflow} revision={3} />,
     )
 
-    fireEvent.change(screen.getByLabelText("責務タイプ"), {
-      target: { value: "SECURITY_REVIEW" },
-    })
-    fireEvent.change(screen.getByLabelText("組織コード（任意）"), {
-      target: { value: "headquarters" },
-    })
+    expect(screen.getByText("責務: PEOPLE_OPERATIONS / 組織: 全組織")).toBeDefined()
+    expect(screen.queryByLabelText("責務タイプ")).toBeNull()
+    expect(
+      (screen.getByRole("button", { name: "承認フローを保存" }) as HTMLButtonElement).disabled,
+    ).toBe(true)
 
     const workflowInput = container.querySelector<HTMLInputElement>('input[name="workflow_json"]')
     if (workflowInput === null) throw new Error("workflow_json input not found")
@@ -185,8 +184,8 @@ describe("WorkflowEditor", () => {
     expect(submitted.steps[0]?.approvers).toEqual([
       {
         type: "responsibility",
-        responsibility_type: "SECURITY_REVIEW",
-        organization_unit_code: "headquarters",
+        responsibility_type: "PEOPLE_OPERATIONS",
+        organization_unit_code: null,
       },
     ])
   })
@@ -256,4 +255,31 @@ test("空欄から公開責務のステップを追加して入力を完了で�
       },
     ],
   })
+})
+
+test.each(["approvers", "escalation_approvers"])("旧責務を表示して保存を止める: %s", (field) => {
+  const workflow: ApplicationWorkflow = {
+    ...initialWorkflow,
+    steps: [
+      {
+        ...initialWorkflow.steps[0],
+        [field]: [
+          { type: "responsibility", responsibility_type: "REVIEWER", organization_unit_code: null },
+        ],
+      },
+    ],
+  }
+  render(<WorkflowEditor code="review" initial={workflow} revision={2} />)
+  expect(
+    (screen.getByRole("button", { name: "承認フローを保存" }) as HTMLButtonElement).disabled,
+  ).toBe(true)
+  expect(screen.getByRole("alert").textContent).toContain("適用範囲を確認")
+  expect(screen.queryByRole("option", { name: "IAMロール" })).toBeNull()
+  expect(screen.queryByRole("option", { name: "組織責務" })).toBeNull()
+  fireEvent.change(screen.getByLabelText("ワークフロー定義"), {
+    target: { value: JSON.stringify(initialWorkflow) },
+  })
+  expect(
+    (screen.getByRole("button", { name: "承認フローを保存" }) as HTMLButtonElement).disabled,
+  ).toBe(false)
 })

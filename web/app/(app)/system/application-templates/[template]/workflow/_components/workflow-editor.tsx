@@ -59,6 +59,14 @@ export function WorkflowEditor(props: {
   const advanced = draft.json
   const definition = parseWorkflowDefinitionJson(advanced)
   const workflow = draft.workflow
+  const hasLegacySelectors = workflow.steps.some((step) =>
+    [...step.approvers, ...step.escalation_approvers].some(
+      (selector) => selector.type === "role" || selector.type === "responsibility",
+    ),
+  )
+  const migrationError = hasLegacySelectors
+    ? "旧形式の組織責務・IAMロールが含まれています。「会社の責務でステップを追加」から責務と適用範囲を確認して設定し、旧ステップを削除してください。期限後の承認者指定も詳細設定で見直してください。自動変換は行いません。"
+    : null
   const definitionError = definition.success ? null : definition.error
   const [state, action, pending] = useActionState(
     async (previous: WorkflowFormState, data: FormData) => {
@@ -174,9 +182,13 @@ export function WorkflowEditor(props: {
       </details>
 
       <div aria-live="polite">
+        {migrationError === null ? null : <FieldError>{migrationError}</FieldError>}
         {state.error === null ? null : <FieldError>{state.error}</FieldError>}
       </div>
-      <Button type="submit" disabled={pending || definitionError !== null}>
+      <Button
+        type="submit"
+        disabled={pending || definitionError !== null || migrationError !== null}
+      >
         {pending ? "保存中…" : "承認フローを保存"}
       </Button>
     </form>
