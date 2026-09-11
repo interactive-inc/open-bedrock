@@ -17,7 +17,12 @@ export async function validateApplicationWorkflowReferences(
     for (const selector of [...step.approvers, ...step.escalation_approvers]) {
       if (selector.type === "role") {
         throw new UnprocessableEntityError(
-          "Account role selectors are not Company authority; use a responsibility selector",
+          "Account role selectors are not Company authority; use governance_authority",
+        )
+      }
+      if (selector.type === "responsibility") {
+        throw new UnprocessableEntityError(
+          "Legacy responsibility selectors cannot be published; use governance_authority",
         )
       }
       if (selector.type === "employee" && !employeeCodes.has(selector.employee_code)) {
