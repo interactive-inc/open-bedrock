@@ -1,10 +1,4 @@
-import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/repositories/knowledge-article.repository"
-import {
-  ForbiddenError,
-  NotFoundError as ApplicationNotFoundError,
-  UnexpectedError,
-} from "@/lib/errors"
-
+import { WithdrawKnowledgeArticle } from "@/contexts/knowledge/application/withdraw-knowledge-article"
 import { UpdateKnowledgeArticle } from "@/contexts/knowledge/application/update-knowledge-article"
 import { factory } from "@/api/http/factory"
 import { knowledgeArticles } from "@/contexts/knowledge/infrastructure/schema/knowledge"
@@ -43,6 +37,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const responseBody = zAppKnowledge.parse({
     id: row.id,
+    revision: row.revision,
+    status: row.status,
     title: row.title,
     category: row.category,
     tags: row.tags,
@@ -51,6 +47,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     created_at: row.createdAt,
   })
 
+  c.header("ETag", `"${row.revision}"`)
   return c.json(responseBody, 200)
 })
 
@@ -59,8 +56,20 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 export const PUT = factory.createHandlers(
   verifyBearer,
   zValidator(
+    "header",
+    z.object({
+      "if-match": z
+        .string()
+        .regex(/^"[1-9][0-9]*"$/)
+        .transform((value) => Number(value.slice(1, -1)))
+        .pipe(z.number().int().positive().max(Number.MAX_SAFE_INTEGER)),
+      "idempotency-key": z.string().trim().min(1).max(200),
+    }),
+  ),
+  zValidator(
     "json",
     z.object({
+      reason: z.string().trim().min(1).max(2000),
       title: z.string().min(1).max(500),
       category: z.string().min(1).max(200),
       tags: z.string().max(500).nullable().optional(),
@@ -80,6 +89,9 @@ export const PUT = factory.createHandlers(
 
     const article = await new UpdateKnowledgeArticle(c).run({
       articleId,
+      expectedRevision: c.req.valid("header")["if-match"],
+      commandId: c.req.valid("header")["idempotency-key"],
+      reason: json.reason,
       authorId: viewer.employeeId,
       title: json.title,
       category: json.category,
@@ -93,6 +105,8 @@ export const PUT = factory.createHandlers(
 
     const responseBody = zAppKnowledgeWritten.parse({
       id: article.id,
+      revision: article.revision,
+      status: article.status,
       title: article.title,
       category: article.category,
       tags: article.tags,
@@ -104,50 +118,32 @@ export const PUT = factory.createHandlers(
 )
 
 // @authorization owner - 本人のリソースに限定する
-/** DELETE /knowledge-articles/:id — ナレッジ記事を削除（作成者のみ） */
-export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
-  const viewer = c.var.session
-
-  if (viewer === null) {
-    throw new UnauthorizedError()
-  }
-
-  const articleId = validateIntParam(c.req.param("id"), "knowledge")
-
-  const result = await (async () => {
-    const command = {
-      articleId,
+/** 確認した版を取下げる。本文・履歴は保持する。 */
+export const DELETE = factory.createHandlers(
+  verifyBearer,
+  zValidator(
+    "header",
+    z.object({
+      "if-match": z
+        .string()
+        .regex(/^"[1-9][0-9]*"$/)
+        .transform((value) => Number(value.slice(1, -1)))
+        .pipe(z.number().int().positive().max(Number.MAX_SAFE_INTEGER)),
+      "idempotency-key": z.string().trim().min(1).max(200),
+    }),
+  ),
+  zValidator("json", z.object({ reason: z.string().trim().min(1).max(2000) })),
+  async (c) => {
+    const viewer = c.var.session
+    if (viewer === null) throw new UnauthorizedError()
+    const result = await new WithdrawKnowledgeArticle(c).run({
+      articleId: validateIntParam(c.req.param("id"), "knowledge"),
       authorId: viewer.employeeId,
-    }
-
-    const articleRepository = new KnowledgeArticleRepository(c)
-
-    const current = await articleRepository.findById(command.articleId)
-
-    if (current instanceof Error) {
-      return new UnexpectedError("failed to find knowledge article", { cause: current })
-    }
-
-    if (current === null) {
-      return new ApplicationNotFoundError("knowledge article not found", "article_not_found")
-    }
-
-    if (current.authorId !== command.authorId) {
-      return new ForbiddenError("not the author", "not_author")
-    }
-
-    const deleted = await articleRepository.delete(command.articleId)
-
-    if (deleted instanceof Error) {
-      return new UnexpectedError("failed to delete knowledge article", { cause: deleted })
-    }
-
-    return { reason: "deleted" }
-  })()
-
-  if (result instanceof ApplicationError) {
-    throw toHttpException(result)
-  }
-
-  return c.body(null, 204)
-})
+      expectedRevision: c.req.valid("header")["if-match"],
+      commandId: c.req.valid("header")["idempotency-key"],
+      reason: c.req.valid("json").reason,
+    })
+    if (result instanceof ApplicationError) throw toHttpException(result)
+    return c.body(null, 204)
+  },
+)

@@ -1,5 +1,6 @@
 "use client"
 
+import { useRef } from "react"
 import { useRouter } from "next/navigation"
 import { createKnowledgeAction } from "@/app/(app)/knowledge/knowledge-articles/actions"
 import type { KnowledgeActionState } from "@/app/(app)/knowledge/knowledge-articles/actions"
@@ -16,6 +17,7 @@ const initialState: KnowledgeActionState = { ok: false, error: null }
  */
 export function KnowledgeNewForm() {
   const router = useRouter()
+  const commandId = useRef<string | null>(null)
 
   const action = useFormAction(createKnowledgeAction, initialState, "ナレッジを作成しました", {
     onSuccess: () => router.push("/knowledge/knowledge-articles"),
@@ -28,30 +30,44 @@ export function KnowledgeNewForm() {
   const pending = action[2]
 
   return (
-    <form action={formAction} className="flex flex-col gap-4">
+    <form
+      action={(data) => {
+        commandId.current ??= crypto.randomUUID()
+        data.set("command_id", commandId.current)
+        formAction(data)
+      }}
+      onChange={() => {
+        commandId.current = null
+      }}
+      className="flex flex-col gap-4"
+    >
       <FieldGroup>
+        <Field>
+          <FieldLabel htmlFor="create_reason">記録理由</FieldLabel>
+          <Input disabled={pending} id="create_reason" name="reason" required maxLength={2000} />
+        </Field>
         <Field>
           <FieldLabel htmlFor="create_title">タイトル</FieldLabel>
 
-          <Input id="create_title" name="title" />
+          <Input disabled={pending} id="create_title" name="title" />
         </Field>
 
         <Field>
           <FieldLabel htmlFor="create_category">カテゴリ</FieldLabel>
 
-          <Input id="create_category" name="category" />
+          <Input disabled={pending} id="create_category" name="category" />
         </Field>
 
         <Field>
           <FieldLabel htmlFor="create_tags">タグ（カンマ区切り）</FieldLabel>
 
-          <Input id="create_tags" name="tags" />
+          <Input disabled={pending} id="create_tags" name="tags" />
         </Field>
 
         <Field>
           <FieldLabel htmlFor="create_body">本文（Markdown）</FieldLabel>
 
-          <Textarea id="create_body" name="body_md" rows={12} />
+          <Textarea disabled={pending} id="create_body" name="body_md" rows={12} />
         </Field>
       </FieldGroup>
 

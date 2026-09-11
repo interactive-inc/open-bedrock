@@ -11,6 +11,10 @@ export const knowledgeArticles = sqliteTable("knowledge_articles", {
   bodyMd: text("body_md").notNull(),
   authorId: text("author_id").$type<EmployeeId>().notNull(),
   createdAt: text("created_at").notNull(),
+  revision: integer("revision").notNull().default(1),
+  status: text("status", { enum: ["active", "withdrawn"] })
+    .notNull()
+    .default("active"),
 })
 
 export type KnowledgeArticleRow = InferSelectModel<typeof knowledgeArticles>

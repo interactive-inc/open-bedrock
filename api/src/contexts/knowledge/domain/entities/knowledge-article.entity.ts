@@ -11,6 +11,8 @@ const zProps = z.object({
   bodyMd: z.string(),
   authorId: zEmployeeId,
   createdAt: z.string(),
+  revision: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+  status: z.enum(["active", "withdrawn"]),
 })
 
 type Props = z.infer<typeof zProps>
@@ -31,10 +33,14 @@ export class KnowledgeArticle implements Props {
 
   readonly createdAt!: Props["createdAt"]
 
-  constructor(private readonly props: Props) {
-    zProps.parse(props)
+  readonly revision!: Props["revision"]
 
-    Object.assign(this, props)
+  readonly status!: Props["status"]
+
+  constructor(private readonly props: Props) {
+    this.props = Object.freeze(zProps.parse(props))
+
+    Object.assign(this, this.props)
 
     Object.freeze(this)
   }
@@ -50,6 +56,8 @@ export class KnowledgeArticle implements Props {
   }): KnowledgeArticle {
     return new KnowledgeArticle({
       id: null,
+      revision: 1,
+      status: "active",
       title: props.title,
       category: props.category,
       tags: props.tags,
@@ -62,6 +70,8 @@ export class KnowledgeArticle implements Props {
   static fromRow(row: KnowledgeArticleRow): KnowledgeArticle {
     return new KnowledgeArticle({
       id: row.id,
+      revision: row.revision,
+      status: row.status,
       title: row.title,
       category: row.category,
       tags: row.tags,
@@ -78,12 +88,28 @@ export class KnowledgeArticle implements Props {
     tags: string | null
     bodyMd: string
   }): KnowledgeArticle {
+    if (this.status !== "active") throw new Error("withdrawn knowledge cannot be edited")
     return new KnowledgeArticle({
       ...this.props,
+      revision: this.revision + 1,
       title: props.title,
       category: props.category,
       tags: props.tags,
       bodyMd: props.bodyMd,
     })
+  }
+
+  /** 本文を消去せず、通常の参照対象から取り下げる。 */
+  withdraw(): KnowledgeArticle {
+    if (this.status !== "active") throw new Error("knowledge is already withdrawn")
+    return new KnowledgeArticle({ ...this.props, revision: this.revision + 1, status: "withdrawn" })
+  }
+
+  static restore(snapshot: unknown): KnowledgeArticle {
+    return new KnowledgeArticle(zProps.parse(snapshot))
+  }
+
+  toJSON(): Props {
+    return this.props
   }
 }

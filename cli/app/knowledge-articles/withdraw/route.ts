@@ -1,10 +1,10 @@
-import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { zValidator } from "@hono/zod-validator"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `bedrock knowledge-articles edit --id <id> --title <t> --category <c> --body <md> [--tags <a,b>] --reason <text> --idempotency-key <uuid> --revision <n>`
+export const help = `bedrock knowledge-articles withdraw --id <id> --revision <n> --reason <text> --idempotency-key <uuid>`
 
 export default factory.createHandlers(
   zValidator(
@@ -21,10 +21,6 @@ export default factory.createHandlers(
         .optional(),
 
       id: z.string().optional(),
-      title: z.string().optional(),
-      category: z.string().optional(),
-      body: z.string().optional(),
-      tags: z.string().optional(),
     }),
   ),
   async (c) => {
@@ -32,28 +28,23 @@ export default factory.createHandlers(
 
     if (query.help) return c.text(help)
 
-    if (!query.id || !query.title || !query.category || !query.body)
-      throw new UsageError("--id, --title, --category, --body が必要です")
+    if (!query.id) throw new UsageError("--id が必要です")
 
     if (!query.reason || !query["idempotency-key"] || query.revision === undefined)
       return c.json({ error: "--reason, --idempotency-key, --revision が必要です" }, 400)
 
     const client = await createClient()
 
-    const response = await client["knowledge"]["knowledge-articles"][":id"].$put({
+    const response = await client["knowledge"]["knowledge-articles"][":id"].$delete({
       param: { id: query.id },
       header: { "idempotency-key": query["idempotency-key"], "if-match": `"${query.revision}"` },
-      json: {
-        reason: query.reason,
-        title: query.title,
-        category: query.category,
-        body_md: query.body,
-        tags: query.tags ?? null,
-      },
+      json: { reason: query.reason },
     })
 
-    const article = await response.json()
+    if (response.status !== 204) {
+      throw new UsageError("記事の取下げに失敗しました")
+    }
 
-    return c.json(article)
+    return c.json({ id: query.id, status: "withdrawn" })
   },
 )

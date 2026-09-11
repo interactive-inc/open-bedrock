@@ -13,16 +13,12 @@ export type Command = {
   reason: string
   articleId: number
   authorId: EmployeeId
-  title: string
-  category: string
-  tags: string | null
-  bodyMd: string
 }
 
 /**
- * ナレッジ記事の表題・カテゴリ・タグ・本文を更新する。作成者以外の更新を拒否する。
+ * ナレッジ記事を取下げ、本文と改訂履歴を保存する。作成者以外の取下げを拒否する。
  */
-export class UpdateKnowledgeArticle {
+export class WithdrawKnowledgeArticle {
   constructor(private readonly c: Context) {
     Object.freeze(this)
   }
@@ -35,12 +31,9 @@ export class UpdateKnowledgeArticle {
     )
     if (authorization instanceof Error) return authorization
     const requestJson = JSON.stringify({
+      operation: "withdraw",
       articleId: command.articleId,
       expectedRevision: command.expectedRevision,
-      title: command.title,
-      category: command.category,
-      tags: command.tags,
-      bodyMd: command.bodyMd,
       reason: command.reason,
     })
     const recorded = await articleRepository.readRecordedCommand({
@@ -73,12 +66,7 @@ export class UpdateKnowledgeArticle {
 
     if (current.revision !== command.expectedRevision || current.status !== "active")
       return new ConflictError("knowledge article changed", "knowledge_revision_conflict")
-    const updated = current.withContent({
-      title: command.title,
-      category: command.category,
-      tags: command.tags,
-      bodyMd: command.bodyMd,
-    })
+    const updated = current.withdraw()
 
     const result = await articleRepository.appendRevision(updated, {
       ...authorization,

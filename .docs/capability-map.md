@@ -180,7 +180,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 ### 社内情報
 
 - `announcement`: 掲示、公開期間、対象
-- `knowledge`: 社内 knowledge article
+- `knowledge`: [社内知識](knowledge.md)。本文の改訂履歴、理由、記録者、版の競合検出、冪等な作成・更新・取下げを持つ。人間の承認や規程の施行を代替しない
 - `meeting`: 会議と議事録
 - `regulation`: 規程、版、施行、確認
 - `governance-document`: 統制文書、review、公開

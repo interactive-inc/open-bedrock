@@ -39,9 +39,10 @@ commands:
   application-requests withdraw <id>          申請を取り下げ
   knowledge-articles search [q]               ナレッジ検索 (--category)
   knowledge-articles get <id>                 ナレッジ詳細
+  knowledge-articles history --id <id>       ナレッジ改訂履歴 (--limit, --offset)
   knowledge-articles add                      ナレッジを作成
   knowledge-articles edit <id>                ナレッジを更新
-  knowledge-articles delete <id>              ナレッジを削除
+  knowledge-articles withdraw <id>              ナレッジを取下げ
   announcements list                          社内アナウンス一覧 (--status)
   announcements show <id>                     アナウンス詳細
   announcements create                        アナウンスを下書き作成 (--title --body)

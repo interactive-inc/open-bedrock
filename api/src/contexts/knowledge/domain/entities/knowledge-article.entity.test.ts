@@ -45,3 +45,39 @@ describe("KnowledgeArticle.withContent", () => {
     expect(updated.authorId).toBe(toWorkforceEmployeeId(5))
   })
 })
+
+test("改訂と取下げは以前の本文・著者・作成日を保全し、版を進める", () => {
+  const original = KnowledgeArticle.create({
+    title: "Procedure",
+    category: "Operations",
+    tags: null,
+    bodyMd: "Original text",
+    authorId: toWorkforceEmployeeId(5),
+    createdAt: "2026-01-01T00:00:00Z",
+  })
+  const updated = original.withContent({
+    title: "Updated procedure",
+    category: "Operations",
+    tags: null,
+    bodyMd: "Reviewed text",
+  })
+  expect(original.revision).toBe(1)
+  expect(original.bodyMd).toBe("Original text")
+  expect(updated.revision).toBe(2)
+  expect(updated.authorId).toBe(original.authorId)
+  expect(updated.createdAt).toBe(original.createdAt)
+  const withdrawn = updated.withdraw()
+  expect(withdrawn.revision).toBe(3)
+  expect(withdrawn.status).toBe("withdrawn")
+  expect(withdrawn.bodyMd).toBe("Reviewed text")
+  expect(updated.status).toBe("active")
+  expect(() =>
+    withdrawn.withContent({
+      title: "Hidden change",
+      category: "Operations",
+      tags: null,
+      bodyMd: "Replacement",
+    }),
+  ).toThrow()
+  expect(() => withdrawn.withdraw()).toThrow()
+})

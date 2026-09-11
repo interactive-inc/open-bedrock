@@ -226,7 +226,7 @@ describe("POST /knowledge-articles", () => {
   test("persists created_at from the injected NOW", async () => {
     const db = await createTestDb()
 
-    const now = "2026-03-15T12:00:00.000Z"
+    const now = new Date(Date.now() + 1000).toISOString()
 
     const response = await requestWithContext({
       db,
@@ -234,7 +234,13 @@ describe("POST /knowledge-articles", () => {
       path: "/knowledge/knowledge-articles",
       token: await memberToken(),
       method: "POST",
-      body: { title: "New Article", category: "Policy", body_md: "hello body" },
+      headers: { "idempotency-key": "knowledge:injected-clock" },
+      body: {
+        title: "New Article",
+        category: "Policy",
+        body_md: "hello body",
+        reason: "Initial policy",
+      },
       now,
     })
 
