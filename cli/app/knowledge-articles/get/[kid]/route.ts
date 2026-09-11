@@ -27,6 +27,7 @@ export default factory.createHandlers(
     return c.text(
       [
         `== ${article.title} ==`,
+        `revision=${article.revision} status=${article.status}`,
         `category=${article.category} tags=${article.tags ?? ""}`,
         "",
         article.body_md,

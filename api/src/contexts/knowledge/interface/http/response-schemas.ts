@@ -4,6 +4,8 @@ import { z } from "zod"
 /** ナレッジ記事一覧の 1 件（本文は snippet に短縮）。 */
 export const zAppKnowledgeListItem = z.object({
   id: z.number(),
+  revision: z.number().int().positive(),
+  status: z.enum(["active", "withdrawn"]),
   category: z.string(),
   title: z.string(),
   snippet: z.string(),
@@ -20,6 +22,8 @@ export const zAppKnowledgeList = z.object({
 /** ナレッジ記事 1 件の詳細レスポンス（GET /knowledge-articles/:id）。 */
 export const zAppKnowledge = z.object({
   id: z.number(),
+  revision: z.number().int().positive(),
+  status: z.enum(["active", "withdrawn"]),
   title: z.string(),
   category: z.string(),
   tags: z.string().nullable(),
@@ -31,6 +35,8 @@ export const zAppKnowledge = z.object({
 /** ナレッジ記事の作成・更新レスポンス（POST /knowledge-articles, PUT /knowledge-articles/:id）。 */
 export const zAppKnowledgeWritten = z.object({
   id: z.number(),
+  revision: z.number().int().positive(),
+  status: z.enum(["active", "withdrawn"]),
   title: z.string(),
   category: z.string(),
   tags: z.string().nullable(),

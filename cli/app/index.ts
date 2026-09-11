@@ -108,6 +108,7 @@ import employeeEventsHandler from "@/app/employee-events/route"
 import employeeEventsListHandler from "@/app/employee-events/list/route"
 import employeeEventsRecordHandler from "@/app/employee-events/record/route"
 import kbGetHandler from "@/app/knowledge-articles/get/[kid]/route"
+import kbHistoryHandler from "@/app/knowledge-articles/history/route"
 import kbHandler from "@/app/knowledge-articles/route"
 import kbSearchHandler from "@/app/knowledge-articles/search/route"
 import leaveApproveHandler from "@/app/leave-requests/approve/[leave_id]/route"
@@ -369,7 +370,7 @@ import evalSheetCreateHandler from "@/app/evaluation-sheets/create/route"
 import evalSheetTransitionHandler from "@/app/evaluation-sheets/transition/route"
 import evalSheetEvaluatorsHandler from "@/app/evaluation-sheets/evaluators/route"
 import kbAddHandler from "@/app/knowledge-articles/add/route"
-import kbDeleteHandler from "@/app/knowledge-articles/delete/route"
+import kbWithdrawHandler from "@/app/knowledge-articles/withdraw/route"
 import kbEditHandler from "@/app/knowledge-articles/edit/route"
 import announcementsHandler from "@/app/announcements/route"
 import announcementsListHandler from "@/app/announcements/list/route"
@@ -546,6 +547,7 @@ routes.post("/application-requests/show/:app_id?", ...appShowHandler)
 routes.post("/application-requests/approve/:app_id?", ...appApproveHandler)
 routes.post("/application-requests/reject/:app_id?", ...appRejectHandler)
 
+routes.post("/knowledge-articles/history", ...kbHistoryHandler)
 routes.post("/knowledge-articles", ...kbHandler)
 routes.post("/knowledge-articles/search", ...kbSearchHandler)
 routes.post("/knowledge-articles/search/:q", ...kbSearchHandler)
@@ -922,7 +924,7 @@ routes.post("/evaluation-sheets/create", ...evalSheetCreateHandler)
 routes.post("/evaluation-sheets/transition", ...evalSheetTransitionHandler)
 routes.post("/evaluation-sheets/evaluators", ...evalSheetEvaluatorsHandler)
 routes.post("/knowledge-articles/add", ...kbAddHandler)
-routes.post("/knowledge-articles/delete", ...kbDeleteHandler)
+routes.post("/knowledge-articles/withdraw", ...kbWithdrawHandler)
 routes.post("/knowledge-articles/edit", ...kbEditHandler)
 routes.post("/announcements", ...announcementsHandler)
 routes.post("/announcements/list", ...announcementsListHandler)
