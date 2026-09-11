@@ -89,6 +89,14 @@ access tokenは受理しない。署名鍵は`IDENTITY_JWKS`、未設定ならac
 OpenID Connect discoveryにある`jwks_uri`から取得する。identityログインとAPI access tokenの
 issuerは別々に設定でき、従来のSystem sessionは同時に利用できる。
 
+外部access tokenとSystem sessionの認証はSystemが所有し、System APIとCompany APIで
+同じ検証処理を使う。外部tokenの利用にも現在のAccountとtechnical permissionを要求し、
+Company上の資格はCompanyまたは業務の認可で追加検査する。外部の人間向けtokenを
+機械credentialとして扱わず、機械専用APIへの接続にはSystemの機械tokenを要求する。
+
+作業の保存と未紐づけ添付の開示では、tokenの期限と外部Identityの有効状態を
+transaction内でも再検査する。認証後にIdentityが失効した場合は、保存や開示を拒否する。
+
 ## APIトークンからWebセッションへの引き継ぎ
 
 認証済みCLIは`POST /system/browser-login-codes`へAPI access tokenを送り、60秒だけ有効な

@@ -66,19 +66,21 @@ async function discoverRemoteKey(issuer: URL): Promise<JWTVerifyGetKey | Error> 
 }
 
 /** 設定済みの外部IdPからaccess token検証鍵を解決する。 */
-export async function externalAccessTokenVerificationKey(props: {
-  issuer: string
-  jwks: string | undefined
-}): Promise<JWTVerifyGetKey | Error> {
-  const issuer = secureOrigin(props.issuer)
-  if (issuer instanceof Error) return issuer
+type Context = Readonly<{ issuer: string; jwks: string | undefined }>
+export class ExternalAccessTokenVerificationKeyAdapter {
+  constructor(private readonly c: Context) {}
+  async resolve(): Promise<JWTVerifyGetKey | Error> {
+    const props = this.c
+    const issuer = secureOrigin(props.issuer)
+    if (issuer instanceof Error) return issuer
 
-  if (props.jwks !== undefined) {
-    return new SystemIdentityVerificationKeyAdapter({
-      issuer: issuer.origin,
-      jwks: props.jwks,
-    }).resolve()
+    if (props.jwks !== undefined) {
+      return new SystemIdentityVerificationKeyAdapter({
+        issuer: issuer.origin,
+        jwks: props.jwks,
+      }).resolve()
+    }
+
+    return await discoverRemoteKey(issuer)
   }
-
-  return await discoverRemoteKey(issuer)
 }
