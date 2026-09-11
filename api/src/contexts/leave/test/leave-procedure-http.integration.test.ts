@@ -17,7 +17,7 @@ async function fixture() {
   const secret = "leave-procedure-flow-http-test-secret"
   await c.database.exec(`INSERT INTO system_iam_roles
 (id, key, kind, name, created_at, updated_at) VALUES ('leave-flow', 'test:leave-flow', 'custom', 'Leave flow', 0, 0);
-INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('leave-flow', 'leave:submit'), ('leave-flow', 'leave:approve');`)
+INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('leave-flow', 'leave:submit'), ('leave-flow', 'leave:approve'), ('leave-flow', 'leave:read:all'), ('leave-flow', 'management_dashboard:view');`)
   for (const actor of c.people) {
     await c.database
       .prepare(
@@ -59,6 +59,33 @@ INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('leave
   return { ...c, request }
 }
 
+/** 表示と検索がページング前の同じ状態を参照することを検証する。 */
+async function expectListedStatus(c: Awaited<ReturnType<typeof fixture>>, status: string) {
+  for (const endpoint of ["me", "admin", "?scope=all"]) {
+    const path = `/leave/leave-requests${endpoint.startsWith("?") ? endpoint : "/" + endpoint}`
+    const separator = path.includes("?") ? "&" : "?"
+    const listed = await c.request(c.creator, `${path}${separator}status=${status}&limit=1`)
+    expect(listed.status).toBe(200)
+    expect(await listed.json()).toMatchObject({ total: 1, data: [{ id: c.requestId, status }] })
+    if (status !== "pending") {
+      expect(
+        await (await c.request(c.creator, `${path}${separator}status=pending`)).json(),
+      ).toMatchObject({ total: 0, data: [] })
+    }
+    expect(
+      await (
+        await c.request(c.creator, `${path}${separator}status=${status}&limit=1&offset=1`)
+      ).json(),
+    ).toMatchObject({ total: 1, data: [] })
+  }
+  expect(await (await c.request(c.creator, "")).json()).toMatchObject({ status })
+  const dashboard = await c.request(c.creator, "/company/dashboard/management")
+  expect(dashboard.status).toBe(200)
+  expect(await dashboard.json()).toMatchObject({
+    leave_pending_count: status === "pending" ? 1 : 0,
+  })
+}
+
 test.each(["approve", "reject"] as const)(
   "実認証で休暇の確認・提出・二名判断・確定と再送を通す: %s",
   async (action) => {
@@ -70,6 +97,7 @@ test.each(["approve", "reject"] as const)(
       .object({ confirmed_content_digest: z.string(), can_submit: z.boolean() })
       .parse(await preview.json())
     expect(confirmed.can_submit).toBe(true)
+    await expectListedStatus(c, "draft")
     expect(await (await request(c.creator, "/leave/leave-requests/me")).json()).toMatchObject({
       data: [{ id: c.requestId, status: "draft" }],
     })
@@ -88,6 +116,7 @@ test.each(["approve", "reject"] as const)(
     ).toBe(409)
     expect((await request(c.creator, "/submit", submission)).status).toBe(201)
     expect((await request(c.creator, "/submit", submission)).status).toBe(200)
+    await expectListedStatus(c, "pending")
     const first = c.people[1]
     const second = c.people[2]
     if (first === undefined || second === undefined) throw new Error("decision candidates missing")
@@ -143,6 +172,7 @@ test.each(["approve", "reject"] as const)(
     })
     const secondDecision = await request(second, "/procedure/decisions", decision)
     expect(secondDecision.status).toBe(200)
+    await expectListedStatus(c, action === "approve" ? "approved" : "rejected")
     expect(await secondDecision.json()).toMatchObject({
       status: action === "approve" ? "approved" : "rejected",
     })
@@ -221,6 +251,7 @@ test("本人の取消は履歴を残し、同じ期間の再申請を妨げな�
   expect(await (await c.request(c.creator, "/leave/leave-requests/me")).json()).toMatchObject({
     data: [{ id: c.requestId, status: "cancelled" }],
   })
+  await expectListedStatus(c, "cancelled")
   const repository = new LeaveRequestRepository(createTestContextForDatabase(c.database))
   expect(
     await repository.findOverlapping({
@@ -294,6 +325,7 @@ test("差戻し後に修正した休暇を別番号で再提出し、元の内�
   })
   expect(returned.status).toBe(200)
   expect(await returned.json()).toMatchObject({ status: "returned" })
+  await expectListedStatus(c, "returned")
   const draft = await c.request(c.creator, "/leave/leave-requests", {
     previous_leave_request_id: c.requestId,
     leave_type: "annual",
@@ -566,6 +598,7 @@ test("委任による判断は本人と代理先を記録し、確定前の委�
     comment: "代理で確認",
   })
   expect(decision.status).toBeGreaterThanOrEqual(400)
+  await expectListedStatus(c, "awaiting_execution")
   const approved = zLeaveProcedureView.parse(await (await c.request(delegate, "/procedure")).json())
   expect(approved).toMatchObject({
     status: "awaiting_execution",

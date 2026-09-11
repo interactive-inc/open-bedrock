@@ -174,7 +174,7 @@ async function createTestDb(): Promise<D1Database> {
     { id: 3, employee_id: "2", work_date: "2026-05-30", status: "closed" },
   ])
 
-  // 休暇: 当月 2 件(うち pending 1)、前月 pending 1(件数は当月外だが pending は全期間)。
+  // 休暇: 当月2件、前月1件。案件のないpendingは未提出なので判断待ち件数に含めない。
   await seedD1(db, "leave_requests", [
     {
       id: 1,
@@ -351,7 +351,7 @@ describe("GET /dashboard/management", () => {
       expect(summary.recent_retire_count).toBe(1)
       expect(summary.attendance_record_count).toBe(2)
       expect(summary.leave_request_count).toBe(2)
-      expect(summary.leave_pending_count).toBe(2)
+      expect(summary.leave_pending_count).toBe(0)
       expect(summary.expense_count).toBe(2)
       expect(summary.expense_pending_count).toBe(2)
       expect(summary.open_review_cycle_count).toBe(2)

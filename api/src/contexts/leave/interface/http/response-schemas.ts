@@ -1,3 +1,4 @@
+import { leaveProcedureStatusSchema } from "@/contexts/leave/domain/definitions/leave-procedure.definition"
 import { leaveProcedureDecisionTargetSchema } from "@/contexts/leave/domain/definitions/leave-procedure-decision-target.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import {
@@ -17,7 +18,7 @@ export const zAppLeaveRequest = z.object({
   unit: leaveUnitSchema,
   hours: z.number().nullable(),
   reason: z.string().nullable(),
-  status: z.enum(["pending", "approved", "rejected"]),
+  status: leaveProcedureStatusSchema,
   approver_id: zEmployeeId.nullable(),
   decided_comment: z.string().nullable(),
   created_at: z.string(),
@@ -35,7 +36,7 @@ export const zAppLeaveRequestDetail = z.object({
   unit: leaveUnitSchema,
   hours: z.number().nullable(),
   reason: z.string().nullable(),
-  status: z.enum(["pending", "approved", "rejected"]),
+  status: leaveProcedureStatusSchema,
   created_at: z.string(),
 })
 
@@ -48,15 +49,7 @@ export const zAppLeaveRequestSummary = z.object({
   days: z.number(),
   unit: leaveUnitSchema,
   hours: z.number().nullable(),
-  status: z.enum([
-    "draft",
-    "pending",
-    "approved",
-    "rejected",
-    "returned",
-    "cancelled",
-    "awaiting_execution",
-  ]),
+  status: leaveProcedureStatusSchema,
   created_at: z.string(),
 })
 
@@ -79,7 +72,7 @@ export const zAppLeaveRequestAdminItem = z.object({
   unit: leaveUnitSchema,
   hours: z.number().nullable(),
   reason: z.string().nullable(),
-  status: z.enum(["pending", "approved", "rejected"]),
+  status: leaveProcedureStatusSchema,
   created_at: z.string(),
 })
 

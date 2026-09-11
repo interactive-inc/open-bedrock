@@ -1,3 +1,4 @@
+import { leaveProcedureStatusLabel } from "@/lib/leave/leave-procedure-status-label"
 import { Badge } from "@/components/ui/badge"
 import type { LeaveStatus } from "@/lib/api/types/leave-types"
 
@@ -15,5 +16,5 @@ export function LeaveStatusBadge(props: Props) {
     return <Badge variant="destructive">却下</Badge>
   }
 
-  return <Badge variant="secondary">承認待ち</Badge>
+  return <Badge variant="secondary">{leaveProcedureStatusLabel(props.status, false)}</Badge>
 }

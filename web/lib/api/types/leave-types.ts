@@ -10,7 +10,7 @@ export type LeaveRequestCreated = InferResponseType<
 /** 共通サブ型。レスポンス型から導出する。 */
 export type LeaveType = LeaveRequestCreated["leave_type"]
 
-export type LeaveStatus = LeaveRequestCreated["status"]
+export type LeaveStatus = LeaveRequestMineResponse["status"]
 
 /** GET /leave-balances/me のレスポンス要素。 */
 export type LeaveBalanceResponse = InferResponseType<

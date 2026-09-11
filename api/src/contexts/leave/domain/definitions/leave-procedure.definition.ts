@@ -11,3 +11,15 @@ export const leaveProcedureBindingSchema = z.strictObject({
   createdAt: z.number().int().nonnegative().safe(),
 })
 export type LeaveProcedureBinding = z.infer<typeof leaveProcedureBindingSchema>
+
+/** 利用者に表示する、提出前と判断後の確定待ちを含む休暇の状態。 */
+export const leaveProcedureStatusSchema = z.enum([
+  "draft",
+  "pending",
+  "approved",
+  "rejected",
+  "returned",
+  "cancelled",
+  "awaiting_execution",
+])
+export type LeaveProcedureStatus = z.infer<typeof leaveProcedureStatusSchema>
