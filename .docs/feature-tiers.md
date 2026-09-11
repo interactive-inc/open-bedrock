@@ -111,4 +111,4 @@ App を削除するときは対象 context のディレクトリ、route module 
 
 `/dashboard`、`/inbox/counts`、認証、通知、監査、Account管理など、SystemとCompanyまたは複数業務contextを合成するrouteは `api/src/api/routes` が所有する。route総数とURLは生成検査で固定し、単一所有routeは `api/context-ownership.json` の所有者と実配置を一致させる。
 
-受信箱の集約タブは App の無効化に完全には追従しない。無効な App の tab が残る場合も API は 404 で拒否するが、分離完了条件は UI の導線も有効化状態へ追従することである。
+受信箱の集約タブ、種類別カード、サイドバーの合計件数は、技術権限とAPIが返す有効化状態の両方に従う。無効なAppの受信箱URLを直接開いた場合も、業務画面の代わりに無効状態を表示する。Systemが所有する汎用申請はAppの無効化に影響されない。

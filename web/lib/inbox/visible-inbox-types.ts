@@ -8,6 +8,7 @@ import type { PermissionKey } from "@/lib/api/types/permission-key"
  */
 export type InboxType = {
   key: string
+  featureKey: string | null
   label: string
   href: string
   requiredPermission?: PermissionKey
@@ -17,12 +18,14 @@ export type InboxType = {
 export const inboxTypes: ReadonlyArray<InboxType> = [
   {
     key: "applications",
+    featureKey: null,
     label: "申請",
     href: "/inbox/applications",
     countKey: "applications",
   },
   {
     key: "expenses",
+    featureKey: "expenses",
     label: "経費",
     href: "/inbox/expenses",
     requiredPermission: "expense:approve",
@@ -30,6 +33,7 @@ export const inboxTypes: ReadonlyArray<InboxType> = [
   },
   {
     key: "leaves",
+    featureKey: "leave",
     label: "休暇",
     href: "/inbox/leaves",
     requiredPermission: "leave:approve",
@@ -37,6 +41,7 @@ export const inboxTypes: ReadonlyArray<InboxType> = [
   },
   {
     key: "shift-swaps",
+    featureKey: "shifts",
     label: "シフト交代",
     href: "/inbox/shift-swaps",
     requiredPermission: "shift_swap:approve",
@@ -44,6 +49,7 @@ export const inboxTypes: ReadonlyArray<InboxType> = [
   },
   {
     key: "thanks-redemptions",
+    featureKey: "thanks",
     label: "サンクス交換",
     href: "/inbox/thanks-redemptions",
     requiredPermission: "thanks_redemption:approve",
@@ -51,11 +57,13 @@ export const inboxTypes: ReadonlyArray<InboxType> = [
   },
   {
     key: "ringis",
+    featureKey: "ringi",
     label: "稟議",
     href: "/inbox/ringis",
   },
   {
     key: "antisocial-checks",
+    featureKey: "antisocial-checks",
     label: "反社チェック判定",
     href: "/inbox/antisocial-checks",
     requiredPermission: "antisocial_check:manage",
@@ -63,11 +71,17 @@ export const inboxTypes: ReadonlyArray<InboxType> = [
 ]
 
 /** 本人の permission で表示可能な受信箱の種類だけに絞り込む。 */
-export function visibleInboxTypes(permissions: ReadonlyArray<string>): ReadonlyArray<InboxType> {
+export function visibleInboxTypes(
+  permissions: ReadonlyArray<string>,
+  disabledFeatures: ReadonlyArray<string>,
+): ReadonlyArray<InboxType> {
   const permissionSet = new Set(permissions)
+  const disabled = new Set(disabledFeatures)
 
   return inboxTypes.filter(
     (inboxType) =>
-      inboxType.requiredPermission === undefined || permissionSet.has(inboxType.requiredPermission),
+      (inboxType.featureKey === null || !disabled.has(inboxType.featureKey)) &&
+      (inboxType.requiredPermission === undefined ||
+        permissionSet.has(inboxType.requiredPermission)),
   )
 }

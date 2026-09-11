@@ -447,7 +447,7 @@ describe("SidebarNav my space", () => {
 
     expect(myTab.getAttribute("aria-description")).toBeNull()
     expect(within(myTab).queryByText("7")).toBeNull()
-    expect(screen.getByRole("link", { name: /受信箱/ }).textContent).toContain("3")
+    expect(screen.getByRole("link", { name: /受信箱/ }).textContent).toContain("2")
     expect(screen.getByRole("link", { name: /通知/ }).textContent).toContain("4")
   })
 })

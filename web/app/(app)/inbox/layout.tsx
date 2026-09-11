@@ -1,3 +1,4 @@
+import { getFeatureAvailability } from "@/lib/api/get-feature-availability"
 import { PageHeader } from "@/components/page-header"
 import { PageTabs } from "@/components/page-tabs"
 import { getInboxCounts } from "@/lib/api/get-inbox-counts"
@@ -14,7 +15,11 @@ type Props = {
  * permission の無い種類のタブは出さず、件数バッジは既存の /inbox/counts を使う。
  */
 export default async function InboxLayout(props: Props) {
-  const [currentUser, countsResult] = await Promise.all([getMe(), getInboxCounts()])
+  const [currentUser, countsResult, disabledFeatures] = await Promise.all([
+    getMe(),
+    getInboxCounts(),
+    getFeatureAvailability(),
+  ])
 
   const permissions = currentUser instanceof Error ? [] : currentUser.permissions
 
@@ -23,7 +28,7 @@ export default async function InboxLayout(props: Props) {
       ? { applications: 0, expenses: 0, leaves: 0, shifts: 0, thanks: 0 }
       : countsResult
 
-  const tabs = visibleInboxTypes(permissions).map((inboxType) => {
+  const tabs = visibleInboxTypes(permissions, disabledFeatures).map((inboxType) => {
     const count = inboxCountFor(inboxType, counts)
 
     return {
