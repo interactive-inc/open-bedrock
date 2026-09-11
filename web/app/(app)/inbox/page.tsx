@@ -1,3 +1,4 @@
+import { FetchError } from "@/components/fetch-error"
 import { getFeatureAvailability } from "@/lib/api/get-feature-availability"
 import { CardLink } from "@/components/card-link"
 import { EmptyState } from "@/components/empty-state"
@@ -20,6 +21,10 @@ export default async function InboxPage() {
     getInboxCounts(),
     getFeatureAvailability(),
   ])
+
+  if (disabledFeatures instanceof Error) {
+    return <FetchError message={disabledFeatures.message} />
+  }
 
   const permissions = currentUser instanceof Error ? [] : currentUser.permissions
 
