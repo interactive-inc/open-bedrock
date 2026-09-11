@@ -21,14 +21,6 @@ export type Command = {
 
 type Context = Readonly<{
   context: HonoContext
-  notifyApprovalResult?: (command: {
-    recipientEmployeeId: EmployeeId
-    action: "approve" | "reject"
-    subjectLabel: string
-    sourceDomain: string
-    sourceId: number | null
-    createdAt: string
-  }) => Promise<unknown>
 }>
 
 /** 休暇申請を却下する。 */
@@ -65,20 +57,6 @@ export class RejectLeaveRequest {
     const decided = await new LeaveDecisionRepository(this.c.context).commit(prepared)
     if (decided instanceof Error) return decided
 
-    try {
-      await this.c.notifyApprovalResult?.({
-        recipientEmployeeId: existing.employeeId,
-        action: "reject",
-        subjectLabel: "休暇申請",
-        sourceDomain: "leave",
-        sourceId: command.leaveRequestId,
-        createdAt: this.c.context.env.NOW ?? new Date().toISOString(),
-      })
-    } catch {
-      console.error("leave decision notification failed", {
-        requestId: this.c.context.var.auditContext.requestId,
-      })
-    }
     return decided
   }
 }

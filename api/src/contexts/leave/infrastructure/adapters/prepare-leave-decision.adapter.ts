@@ -15,6 +15,8 @@ import { ConflictError, ForbiddenError, UnexpectedError, ValidationError } from 
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
+import { LeaveDecisionNotificationValue } from "@/contexts/leave/domain/values/leave-decision-notification.value"
+import { PrepareLeaveDecisionNotificationAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-decision-notification.adapter"
 
 export type PreparedLeaveDecision = Readonly<{
   existing: LeaveRequest
@@ -24,6 +26,7 @@ export type PreparedLeaveDecision = Readonly<{
   fiscalYear: string | null
   assertions: ReadonlyArray<D1PreparedStatement>
   audit: ReadonlyArray<D1PreparedStatement>
+  notification: ReadonlyArray<D1PreparedStatement>
 }>
 
 /** 人の操作権限と現在の会社資格を確認し、判断と監査を一緒に保存する文を準備する。 */
@@ -131,6 +134,22 @@ export class PrepareLeaveDecisionAdapter {
     if (audit instanceof Error)
       return new UnexpectedError("cannot prepare leave decision audit", { cause: audit })
 
+    const notification = LeaveDecisionNotificationValue.create({
+      decisionAuditId: audit.eventId,
+      leaveRequestId: input.existing.id,
+      recipientEmployeeId: input.existing.employeeId,
+      outcome: input.status,
+      decidedAt: now.getTime(),
+    })
+    if (notification instanceof Error)
+      return new UnexpectedError("cannot prepare leave notification", { cause: notification })
+    const queued = await new PrepareLeaveDecisionNotificationAdapter(this.c).prepare(
+      notification,
+      input.session.accountId,
+    )
+    if (queued instanceof Error)
+      return new UnexpectedError("cannot prepare leave notification job", { cause: queued })
+
     return {
       existing: input.existing,
       status: input.status,
@@ -142,6 +161,7 @@ export class PrepareLeaveDecisionAdapter {
           : null,
       assertions: [...human.assertions, authority.guard],
       audit: new SystemAuditEventRepository(this.c).prepareAppend(audit),
+      notification: queued,
     } satisfies PreparedLeaveDecision
   }
 }
