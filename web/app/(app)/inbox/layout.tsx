@@ -1,3 +1,4 @@
+import { FetchError } from "@/components/fetch-error"
 import { getFeatureAvailability } from "@/lib/api/get-feature-availability"
 import { PageHeader } from "@/components/page-header"
 import { PageTabs } from "@/components/page-tabs"
@@ -20,6 +21,10 @@ export default async function InboxLayout(props: Props) {
     getInboxCounts(),
     getFeatureAvailability(),
   ])
+
+  if (disabledFeatures instanceof Error) {
+    return <FetchError message={disabledFeatures.message} />
+  }
 
   const permissions = currentUser instanceof Error ? [] : currentUser.permissions
 

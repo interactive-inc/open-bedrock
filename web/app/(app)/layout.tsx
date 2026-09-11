@@ -1,3 +1,4 @@
+import { FetchError } from "@/components/fetch-error"
 import { logoutAction } from "@/app/(app)/actions/logout"
 import { AppShell } from "@/components/app-shell"
 import { AuthProvider } from "@/components/auth-provider"
@@ -51,6 +52,10 @@ export default async function AppLayout(props: Props) {
     getOrgTree(),
     getFeatureAvailability(),
   ])
+
+  if (disabledFeatures instanceof Error) {
+    return <FetchError message={disabledFeatures.message} />
+  }
 
   const unreadNotificationCount = unreadCount instanceof Error ? 0 : unreadCount.count
 
