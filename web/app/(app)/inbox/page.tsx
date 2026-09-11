@@ -1,3 +1,4 @@
+import { getFeatureAvailability } from "@/lib/api/get-feature-availability"
 import { CardLink } from "@/components/card-link"
 import { EmptyState } from "@/components/empty-state"
 import { CardDescription, CardTitle } from "@/components/ui/card"
@@ -14,7 +15,11 @@ export const metadata = { title: "受信箱" }
  * 持たない種類は導線カードとして表示する。件数を持つ種類がすべて 0 なら空状態を出す。
  */
 export default async function InboxPage() {
-  const [currentUser, countsResult] = await Promise.all([getMe(), getInboxCounts()])
+  const [currentUser, countsResult, disabledFeatures] = await Promise.all([
+    getMe(),
+    getInboxCounts(),
+    getFeatureAvailability(),
+  ])
 
   const permissions = currentUser instanceof Error ? [] : currentUser.permissions
 
@@ -23,7 +28,7 @@ export default async function InboxPage() {
       ? { applications: 0, expenses: 0, leaves: 0, shifts: 0, thanks: 0 }
       : countsResult
 
-  const types = visibleInboxTypes(permissions)
+  const types = visibleInboxTypes(permissions, disabledFeatures)
 
   const cards = types.map((inboxType) => ({
     inboxType,
