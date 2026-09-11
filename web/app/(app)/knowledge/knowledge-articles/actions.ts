@@ -2,7 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { createKnowledge } from "@/lib/api/create-knowledge"
-import { deleteKnowledge } from "@/lib/api/delete-knowledge"
+import { withdrawKnowledge } from "@/lib/api/withdraw-knowledge"
 import { updateKnowledge } from "@/lib/api/update-knowledge"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { requireAuth } from "@/lib/auth/require-auth"
@@ -22,6 +22,10 @@ export async function createKnowledgeAction(
   formData: FormData,
 ): Promise<KnowledgeActionState> {
   await requireAuth()
+  const commandId = toText(formData.get("command_id"))
+  const reason = toText(formData.get("reason"))
+  if (commandId === null || reason === null)
+    return { ok: false, error: "記録理由を入力し、内容を確認して送信してください" }
 
   const title = toText(formData.get("title"))
 
@@ -33,12 +37,16 @@ export async function createKnowledgeAction(
     return { ok: false, error: "タイトル・カテゴリ・本文を入力してください" }
   }
 
-  const created = await createKnowledge({
-    title: title,
-    category: category,
-    tags: toText(formData.get("tags")),
-    body_md: bodyMd,
-  })
+  const created = await createKnowledge(
+    {
+      reason,
+      title: title,
+      category: category,
+      tags: toText(formData.get("tags")),
+      body_md: bodyMd,
+    },
+    commandId,
+  )
 
   if (created instanceof Error) {
     return { ok: false, error: created.message }
@@ -55,6 +63,10 @@ export async function updateKnowledgeAction(
   formData: FormData,
 ): Promise<KnowledgeActionState> {
   await requireAuth()
+  const commandId = toText(formData.get("command_id"))
+  const reason = toText(formData.get("reason"))
+  if (commandId === null || reason === null)
+    return { ok: false, error: "記録理由を入力し、内容を確認して送信してください" }
 
   const articleId = toPositiveIntId(formData.get("article_id"))
 
@@ -72,15 +84,23 @@ export async function updateKnowledgeAction(
     return { ok: false, error: "タイトル・カテゴリ・本文を入力してください" }
   }
 
-  const updated = await updateKnowledge(articleId, {
-    title: title,
-    category: category,
-    tags: toText(formData.get("tags")),
-    body_md: bodyMd,
-  })
+  const revision = toPositiveIntId(formData.get("revision"))
+  if (revision === null)
+    return { ok: false, error: "確認した版がありません。記事を開き直してください" }
+  const updated = await updateKnowledge(
+    articleId,
+    {
+      reason,
+      title: title,
+      category: category,
+      tags: toText(formData.get("tags")),
+      body_md: bodyMd,
+    },
+    { revision, commandId },
+  )
 
   if (updated instanceof Error) {
-    return { ok: false, error: "記事の変更に失敗しました（作成者のみ変更できます）" }
+    return { ok: false, error: updated.message }
   }
 
   revalidatePath("/knowledge/knowledge-articles")
@@ -90,12 +110,16 @@ export async function updateKnowledgeAction(
   return { ok: true, error: null }
 }
 
-/** ナレッジ記事削除 Server Action。article_id 必須。作成者以外は api がエラーを返す。 */
-export async function deleteKnowledgeAction(
+/** ナレッジ記事取下げ Server Action。article_id 必須。作成者以外は api がエラーを返す。 */
+export async function withdrawKnowledgeAction(
   previousState: KnowledgeActionState,
   formData: FormData,
 ): Promise<KnowledgeActionState> {
   await requireAuth()
+  const commandId = toText(formData.get("command_id"))
+  const reason = toText(formData.get("reason"))
+  if (commandId === null || reason === null)
+    return { ok: false, error: "記録理由を入力し、内容を確認して送信してください" }
 
   const articleId = toPositiveIntId(formData.get("article_id"))
 
@@ -103,10 +127,13 @@ export async function deleteKnowledgeAction(
     return { ok: false, error: "記事を特定できませんでした" }
   }
 
-  const deleted = await deleteKnowledge(articleId)
+  const revision = toPositiveIntId(formData.get("revision"))
+  if (revision === null)
+    return { ok: false, error: "確認した版がありません。記事を開き直してください" }
+  const deleted = await withdrawKnowledge(articleId, { revision, commandId, reason })
 
   if (deleted instanceof Error) {
-    return { ok: false, error: "記事の削除に失敗しました（作成者のみ削除できます）" }
+    return { ok: false, error: deleted.message }
   }
 
   revalidatePath("/knowledge/knowledge-articles")
