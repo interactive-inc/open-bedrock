@@ -12,11 +12,11 @@ export type LicenseCreateRequest = {
 }
 
 /** POST /software-licenses。ライセンス台帳を新規登録する。失敗時は Error。 */
-export async function createLicense(request: LicenseCreateRequest) {
+export async function createLicense(request: LicenseCreateRequest, commandId: string) {
   const client = await createClient()
 
   const response = await client["software-license"]["software-licenses"].$post({
-    header: {},
+    header: { "idempotency-key": commandId },
     json: request,
   })
 

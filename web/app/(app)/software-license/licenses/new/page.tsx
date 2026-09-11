@@ -16,6 +16,8 @@ export default async function LicenseNewPage() {
     notFound()
   }
 
+  const commandId = crypto.randomUUID()
+
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="ライセンスを登録">
@@ -24,7 +26,7 @@ export default async function LicenseNewPage() {
 
       <Card className="gap-0">
         <div className="p-8">
-          <LicenseCreateForm />
+          <LicenseCreateForm commandId={commandId} />
         </div>
       </Card>
     </div>

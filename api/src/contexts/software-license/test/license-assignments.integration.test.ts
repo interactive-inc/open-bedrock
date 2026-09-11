@@ -11,6 +11,7 @@ describe("software license usage ledger", () => {
     f.settings.hiddenBindings = true
     const created = await f.request("/software-licenses", {
       method: "POST",
+      headers: { "idempotency-key": "registration:additional" },
       body: { name: "Additional Service", seats: 1 },
     })
     expect(created.status).toBe(201)
@@ -122,7 +123,12 @@ describe("software license usage ledger", () => {
       ).status,
     ).toBe(200)
     expect(
-      (await f.request(`/software-licenses/${f.license.id}/cancel`, { method: "POST" })).status,
+      (
+        await f.request(`/software-licenses/${f.license.id}/cancel`, {
+          method: "POST",
+          headers: { "if-match": String(f.license.revision) },
+        })
+      ).status,
     ).toBe(200)
   })
 
@@ -210,9 +216,15 @@ describe("software license usage ledger", () => {
     await f.database.exec(
       `CREATE TRIGGER fail_license_history BEFORE INSERT ON software_license_changes BEGIN SELECT RAISE(ABORT,'history unavailable'); END;`,
     )
-    expect((await f.request(path, { method: "PUT", body: { name: "Failed edit" } })).status).toBe(
-      503,
-    )
+    expect(
+      (
+        await f.request(path, {
+          method: "PUT",
+          headers: { "if-match": String(f.license.revision) },
+          body: { name: "Failed edit" },
+        })
+      ).status,
+    ).toBe(503)
     expect(
       await f.database
         .prepare("SELECT name FROM software_licenses WHERE id=?1")
@@ -317,10 +329,22 @@ describe("software license usage ledger", () => {
         })
       ).status,
     ).toBe(409)
-    expect((await f.request(`${path}/cancel`, { method: "POST" })).status).toBe(409)
     expect(
-      (await f.request(path, { method: "PUT", body: { name: "Example Service", seats: 0 } }))
-        .status,
+      (
+        await f.request(`${path}/cancel`, {
+          method: "POST",
+          headers: { "if-match": String(f.license.revision) },
+        })
+      ).status,
+    ).toBe(409)
+    expect(
+      (
+        await f.request(path, {
+          method: "PUT",
+          headers: { "if-match": String(f.license.revision) },
+          body: { name: "Example Service", seats: 0 },
+        })
+      ).status,
     ).toBe(409)
     expect(
       await f.database
@@ -414,6 +438,7 @@ describe("software license usage ledger", () => {
       (
         await f.request(path, {
           method: "PUT",
+          headers: { "if-match": String(f.license.revision) },
           body: { name: "Renamed Service", plan_name: "Business", seats: 2 },
         })
       ).status,

@@ -10,6 +10,7 @@ const initialState: LicenseActionState = { ok: false, error: null }
 type Props = {
   id: number
   name: string
+  expectedRevision: number
 }
 
 /**
@@ -28,6 +29,7 @@ export function LicenseCancelButton(props: Props) {
   return (
     <form action={formAction} className="flex flex-col gap-2">
       <input type="hidden" name="id" value={props.id} />
+      <input type="hidden" name="expected_revision" value={props.expectedRevision} />
 
       <Button type="submit" variant="secondary" size="sm" disabled={pending}>
         {pending ? "解約中..." : "解約"}

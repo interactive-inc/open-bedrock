@@ -9,7 +9,7 @@ import type { SoftwareLicenseContext as Context } from "@/contexts/software-lice
 import { LicenseRepository } from "@/contexts/software-license/infrastructure/repositories/license/license.repository"
 
 export type Command = {
-  commandId?: string
+  commandId: string
   session: CompanySessionValue
   license: {
     name: string
@@ -57,20 +57,18 @@ export class CreateLicense {
     if (canonical instanceof Error)
       return new LicenseError("invalid_license", "invalid license registration")
     const requestJson = canonical.toString()
-    if (command.commandId !== undefined) {
-      const recorded = await new LicenseCommandReadAdapter(this.c).read({
-        accountId: authorization.accountId,
-        commandId: command.commandId,
-        assertions: authorization.assertions,
+    const recorded = await new LicenseCommandReadAdapter(this.c).read({
+      accountId: authorization.accountId,
+      commandId: command.commandId,
+      assertions: authorization.assertions,
+    })
+    if (recorded instanceof Error)
+      return new LicenseError("license_unavailable", "license command is unavailable", {
+        cause: recorded,
       })
-      if (recorded instanceof Error)
-        return new LicenseError("license_unavailable", "license command is unavailable", {
-          cause: recorded,
-        })
-      if (recorded !== null) {
-        if (recorded.requestJson === requestJson) return recorded.license
-        return new LicenseError("license_conflict", "registration key belongs to another command")
-      }
+    if (recorded !== null) {
+      if (recorded.requestJson === requestJson) return recorded.license
+      return new LicenseError("license_conflict", "registration key belongs to another command")
     }
     if (
       command.license.ownerEmployeeId !== null &&
@@ -98,14 +96,14 @@ export class CreateLicense {
     const created = await new LicenseRepository(this.c).write(license, {
       previous: null,
       commandId: command.commandId,
-      requestJson: command.commandId === undefined ? undefined : requestJson,
+      requestJson,
       accountId: authorization.accountId,
       recordedAt: authorization.now.getTime(),
       assertions: authorization.assertions,
     })
 
     if (created instanceof LicenseError) {
-      if (created.code === "license_conflict" && command.commandId !== undefined) {
+      if (created.code === "license_conflict") {
         const recorded = await new LicenseCommandReadAdapter(this.c).read({
           accountId: authorization.accountId,
           commandId: command.commandId,

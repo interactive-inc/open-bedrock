@@ -147,6 +147,7 @@ export async function createLicenseFixture() {
   }
   const created = await request("/software-licenses", {
     method: "POST",
+    headers: { "idempotency-key": "fixture:initial" },
     body: {
       name: "Example Service",
       plan_name: "Team",

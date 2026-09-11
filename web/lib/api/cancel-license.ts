@@ -2,11 +2,11 @@ import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** POST /software-licenses/:id/cancel。ライセンスを解約済みに倒す。失敗時は Error。 */
-export async function cancelLicense(id: number) {
+export async function cancelLicense(id: number, expectedRevision: number) {
   const client = await createClient()
 
   const response = await client["software-license"]["software-licenses"][":id"].cancel.$post({
-    header: {},
+    header: { "if-match": String(expectedRevision) },
     param: { id: String(id) },
   })
 
