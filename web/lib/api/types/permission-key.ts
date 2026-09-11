@@ -83,6 +83,7 @@ export const permissionKeys = [
   "leave:read:all",
   "leave:read:department",
   "leave:read:reports",
+  "leave:submit",
   "license:manage",
   "license:read:all",
   "life_event:manage",
