@@ -1,5 +1,5 @@
 import type { HonoEnv } from "@/env"
-import { resolveBearerAccount } from "@/api/http/resolve-bearer-account"
+import { ResolveBearerAccountAdapter } from "@system/infrastructure/adapters/auth/resolve-bearer-account.adapter"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { SystemD1AuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-authorization.adapter"
 import { readBearerAuthorization } from "@system/interface/authorization/lib/bearer-authorization"
@@ -15,9 +15,8 @@ export async function authenticateSystemBearer(c: Context<HonoEnv>): Promise<voi
   const authorization = readBearerAuthorization(c.req.header("authorization"))
   if (authorization.kind !== "token") throw new UnauthorizedError("invalid token")
 
-  const bearerAccount = await resolveBearerAccount({
+  const bearerAccount = await new ResolveBearerAccountAdapter({ env: c.env }).resolve({
     token: authorization.token,
-    env: c.env,
     now,
   })
   if (bearerAccount.kind === "unavailable") {

@@ -1,6 +1,6 @@
 import { authenticateSystemBearer } from "@/api/http/authenticate-system-bearer"
 import { factory } from "@/api/http/factory"
-import { hasExternalAccessTokenHeader } from "@/api/http/resolve-external-access-token-account"
+import { hasExternalAccessTokenHeader } from "@system/lib/auth/has-external-access-token-header"
 import { CreateSystemBrowserLoginCode } from "@system/application/auth/create-system-browser-login-code"
 import { SystemBrowserLoginCodeUnavailableError } from "@system/interface/errors"
 import { readBearerAuthorization } from "@system/interface/authorization/lib/bearer-authorization"
