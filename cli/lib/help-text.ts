@@ -76,6 +76,8 @@ commands:
   leave-requests inbox                        承認待ちの休暇申請一覧
   leave-requests approve <id>                 休暇申請を承認
   leave-requests reject <id>                  休暇申請を却下
+  leave-procedures                            休暇規程の参照・設定 ([--definition --expected-revision])
+  leave-requests procedure                    内容・判断履歴の確認と提出・判断 (--id [--operation])
   leave-balances list                         休暇残数
   expenses submit                             経費申請 (--request-key --category --amount --spent-at [--note --attachment-id])
   expenses mine                               自分の経費申請一覧

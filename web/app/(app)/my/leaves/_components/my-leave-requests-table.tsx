@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { formatDateTime } from "@/lib/format-date-time"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
@@ -42,7 +43,9 @@ export async function MyLeaveRequestsTable() {
           {leaveRequests.map((leaveRequest) => (
             <TableRow key={leaveRequest.id}>
               <TableCell>
-                <LeaveTypeLabel leaveType={leaveRequest.leave_type} />
+                <Link href={`/my/leaves/${leaveRequest.id}`}>
+                  <LeaveTypeLabel leaveType={leaveRequest.leave_type} />
+                </Link>
               </TableCell>
 
               <TableCell>

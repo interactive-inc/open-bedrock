@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { redirect } from "next/navigation"
 import { cancelLeaveRequest } from "@/lib/api/cancel-leave-request"
 import { createLeaveRequest } from "@/lib/api/create-leave-request"
 import { updateLeaveRequest } from "@/lib/api/update-leave-request"
@@ -39,6 +40,12 @@ export async function createLeaveRequestAction(
   formData: FormData,
 ): Promise<LeaveActionState> {
   await requireAuth()
+
+  const previousValue = formData.get("previous_leave_request_id")
+  const previousId =
+    previousValue === null || previousValue === "" ? null : toPositiveIntId(previousValue)
+  if (previousValue !== null && previousValue !== "" && previousId === null)
+    return { ok: false, error: "差戻し元の休暇番号が不正です" }
 
   const leaveType = toLeaveType(formData.get("leave_type"))
 
@@ -86,7 +93,7 @@ export async function createLeaveRequestAction(
 
   revalidatePath("/my/leaves")
 
-  return { ok: true, error: null }
+  redirect(`/my/leaves/${created.id}${previousId === null ? "" : `?previous=${previousId}`}`)
 }
 
 /**

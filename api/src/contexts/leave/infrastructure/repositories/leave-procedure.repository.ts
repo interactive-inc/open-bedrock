@@ -24,6 +24,42 @@ export class LeaveProcedureRepository {
     Object.freeze(this)
   }
 
+  async cancelProcedure(
+    input: Readonly<{
+      binding: LeaveProcedureBinding
+      actorAccountId: AccountId
+      taskKey: string
+      taskRound: number
+      cancelledAt: Date
+      guards: ReadonlyArray<D1PreparedStatement>
+      audit: SystemAuditEventEntity
+    }>,
+  ) {
+    return new SystemD1WorkflowAdapter({
+      ...this.c,
+      cancelGuards: [
+        ...input.guards,
+        this.c.env.DB.prepare(`SELECT CASE WHEN EXISTS (
+        SELECT 1 FROM leave_procedure_bindings binding
+        JOIN system_decision_tasks task ON task.case_id = binding.case_id
+        WHERE binding.leave_request_id = ?1 AND binding.case_id = ?2 AND binding.proposal_digest = ?3
+          AND task.task_key = ?4 AND task.round = ?5 AND task.outcome IS NULL
+      ) THEN 1 ELSE abs(-9223372036854775808) END`).bind(
+          input.binding.leaveRequestId,
+          input.binding.caseId,
+          input.binding.proposalDigest,
+          input.taskKey,
+          input.taskRound,
+        ),
+      ],
+      cancelEffects: new SystemAuditEventRepository(this.c).prepareAppend(input.audit),
+    }).cancel({
+      number: input.binding.applicationId,
+      createdByAccountId: input.actorAccountId,
+      cancelledAt: input.cancelledAt,
+    })
+  }
+
   async findForRequest(leaveRequestId: number): Promise<LeaveProcedureBinding | null | Error> {
     try {
       const row = await this.c.env.DB.prepare(`SELECT request_key AS requestKey,

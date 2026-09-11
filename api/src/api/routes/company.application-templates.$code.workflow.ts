@@ -63,11 +63,11 @@ export const PUT = factory.createHandlers(
     if (definition instanceof Error) throw new InternalError("failed to load template")
     if (definition === null) throw new NotFoundError("template not found")
     if (
-      ["ringi.request.authorize", "expense.request.authorize"].includes(
+      ["ringi.request.authorize", "expense.request.authorize", "leave.request.authorize"].includes(
         definition.completionOperationKey ?? "",
       )
     )
-      throw new ForbiddenError("稟議専用の規程設定を使用してください")
+      throw new ForbiddenError("対象業務の規程設定を使用してください")
     const currentPolicy = parseSystemProcedurePolicy(definition)
     const schema = parseSystemProcedureInputSchema(definition)
     if (currentPolicy instanceof Error || schema instanceof Error) {
