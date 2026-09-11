@@ -123,3 +123,24 @@ test("休暇規程の書き込みには確認した版が必要", async () => {
     workflow: { version: 1, steps: [] },
   })
 })
+
+test.each([
+  "broken",
+  "null",
+  "{}",
+  JSON.stringify({ request_id: 42, request_digest: "a".repeat(64) }),
+  JSON.stringify({ ...target, proposal_version: 0 }),
+  JSON.stringify({ ...target, task_round: 0 }),
+  JSON.stringify({ ...target, proposal_digest: "bad" }),
+])("不正・旧形式の判断対象ではAPIを呼ばない: %s", async (value) => {
+  expect(
+    (
+      await command("/leave-requests/procedure", {
+        id: "42",
+        operation: "approve",
+        "decision-target": value,
+      })
+    ).status,
+  ).toBe(400)
+  expect(requests).toHaveLength(0)
+})

@@ -1,4 +1,5 @@
 const labels: Readonly<Record<string, string>> = {
+  draft: "未提出",
   approved: "承認済み",
   rejected: "却下",
   returned: "差戻し",

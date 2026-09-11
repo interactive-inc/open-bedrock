@@ -1,7 +1,7 @@
 "use client"
 
 import { useActionState, useState } from "react"
-import { createLeaveRequestAction } from "@/app/(app)/my/leaves/actions"
+import { createLeaveRequestAction, updateLeaveRequestAction } from "@/app/(app)/my/leaves/actions"
 import type { LeaveActionState } from "@/app/(app)/my/leaves/actions"
 import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldLabel } from "@/components/ui/field"
@@ -15,6 +15,7 @@ const initialState: LeaveActionState = { ok: false, error: null }
  * 休暇の下書きを保存し、提出前の内容確認へ進む。
  */
 export function LeaveRequestCreateForm(props: {
+  requestId?: number
   previousId?: number
   initial?: {
     leave_type: string
@@ -46,7 +47,10 @@ export function LeaveRequestCreateForm(props: {
     leaveType === "annual" &&
     (unit === "half_day_am" || unit === "half_day_pm" || unit === "hourly")
 
-  const action = useActionState(createLeaveRequestAction, initialState)
+  const action = useActionState(
+    props.requestId === undefined ? createLeaveRequestAction : updateLeaveRequestAction,
+    initialState,
+  )
 
   const state = action[0]
 
@@ -56,6 +60,7 @@ export function LeaveRequestCreateForm(props: {
 
   return (
     <form action={formAction} className="flex flex-col gap-4 rounded-2xl bg-card border p-4">
+      <input type="hidden" name="leave_request_id" value={props.requestId ?? ""} />
       <input type="hidden" name="previous_leave_request_id" value={props.previousId ?? ""} />
       <h3 className="text-lg font-medium">休暇の内容を入力</h3>
 

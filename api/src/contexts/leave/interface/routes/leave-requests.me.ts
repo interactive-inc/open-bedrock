@@ -1,3 +1,4 @@
+import { LeaveProcedureStatusReadAdapter } from "@/contexts/leave/infrastructure/adapters/leave-procedure-status-read.adapter"
 import { factory } from "@/api/http/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -8,7 +9,7 @@ import {
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zAppLeaveRequestSummaryList } from "@/contexts/leave/interface/http/response-schemas"
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
-import { UnauthorizedError } from "@/lib/http/errors"
+import { InternalError, UnauthorizedError } from "@/lib/http/errors"
 import { zValidator } from "@hono/zod-validator"
 import { and, count, desc, eq } from "drizzle-orm"
 import { z } from "zod"
@@ -67,6 +68,9 @@ export const GET = factory.createHandlers(
       .from(leaveRequests)
       .where(and(...conditions))
 
+    const statuses = await new LeaveProcedureStatusReadAdapter(c).find(rows.map((row) => row.id))
+    if (statuses instanceof Error) throw new InternalError("failed to read leave procedure status")
+
     const responseBody = zAppLeaveRequestSummaryList.parse({
       data: rows.map((row) => ({
         id: row.id,
@@ -76,7 +80,7 @@ export const GET = factory.createHandlers(
         days: row.days,
         unit: row.unit,
         hours: row.hours,
-        status: row.status,
+        status: statuses.get(row.id) ?? row.status,
         created_at: row.createdAt,
       })),
       total: totalRows.at(0)?.total ?? 0,

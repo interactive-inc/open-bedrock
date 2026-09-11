@@ -1,19 +1,19 @@
 import { expect, test } from "bun:test"
-import { createLeaveDecisionTestContext } from "@/contexts/leave/test/leave-decision.test-support"
+import { createLeaveProcedureDecisionTestContext } from "@/contexts/leave/test/leave-procedure-decision.test-support"
 import { LeaveDecisionNotificationValue } from "@/contexts/leave/domain/values/leave-decision-notification.value"
 import { PrepareLeaveDecisionNotificationAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-decision-notification.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
 
 test("通知内容を監査と一緒に保存し、重複・変更・削除を拒否する", async () => {
-  const fixture = await createLeaveDecisionTestContext()
+  const fixture = await createLeaveProcedureDecisionTestContext()
   const context = fixture.context
-  const actor = fixture.command.session.accountId
+  const actor = fixture.command(1).session.accountId
   const audit = SystemAuditEventEntity.create({
     actorAccountId: actor,
     action: "leave.approved",
     targetType: "leave.request",
-    targetId: String(fixture.request.id),
+    targetId: String(fixture.requestId),
     outcome: "succeeded",
     reasonCode: null,
     authorizationJson: null,
@@ -26,8 +26,8 @@ test("通知内容を監査と一緒に保存し、重複・変更・削除を�
   if (audit instanceof Error) return
   const notification = LeaveDecisionNotificationValue.create({
     decisionAuditId: audit.eventId,
-    leaveRequestId: fixture.request.id,
-    recipientEmployeeId: fixture.request.employeeId,
+    leaveRequestId: fixture.requestId,
+    recipientEmployeeId: fixture.creator.employeeId,
     outcome: "approved",
     decidedAt: new Date(context.env.NOW).getTime(),
   })

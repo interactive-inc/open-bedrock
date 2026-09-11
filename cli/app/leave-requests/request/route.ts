@@ -17,13 +17,14 @@ const LEAVE_TYPES = [
 
 const LEAVE_UNITS = ["full_day", "half_day_am", "half_day_pm", "hourly"] as const
 
-export const help = `bedrock leave-requests request --type ${LEAVE_TYPES.join("|")} --start <date> --end <date> [--unit ${LEAVE_UNITS.join("|")}] [--hours <number>] [--reason <text>]`
+export const help = `bedrock leave-requests request --type ${LEAVE_TYPES.join("|")} --start <date> --end <date> [--unit ${LEAVE_UNITS.join("|")}] [--hours <number>] [--reason <text>] [--previous-leave-request-id <差戻し元>]`
 
 export default factory.createHandlers(
   zValidator(
     "json",
     z.object({
       help: z.string().optional(),
+      "previous-leave-request-id": z.coerce.number().int().positive().safe().optional(),
       type: z.enum(LEAVE_TYPES).optional(),
       start: z.string().optional(),
       end: z.string().optional(),
@@ -45,6 +46,7 @@ export default factory.createHandlers(
 
     const response = await client["leave"]["leave-requests"].$post({
       json: {
+        previous_leave_request_id: query["previous-leave-request-id"] ?? null,
         leave_type: query.type,
         start_date: query.start,
         end_date: query.end,

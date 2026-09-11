@@ -173,12 +173,10 @@ import * as leaveBalancesMeRoute from "@/contexts/leave/interface/routes/leave-b
 import * as leaveProceduresRoute from "@/contexts/leave/interface/routes/leave-procedures"
 import * as leaveRequestsRoute from "@/contexts/leave/interface/routes/leave-requests"
 import * as leaveRequestsIdRoute from "@/contexts/leave/interface/routes/leave-requests.$id"
-import * as leaveRequestsIdApproveRoute from "@/contexts/leave/interface/routes/leave-requests.$id.approve"
 import * as leaveRequestsIdProcedureRoute from "@/contexts/leave/interface/routes/leave-requests.$id.procedure"
 import * as leaveRequestsIdProcedureCancelRoute from "@/contexts/leave/interface/routes/leave-requests.$id.procedure.cancel"
 import * as leaveRequestsIdProcedureCompleteRoute from "@/contexts/leave/interface/routes/leave-requests.$id.procedure.complete"
 import * as leaveRequestsIdProcedureDecisionsRoute from "@/contexts/leave/interface/routes/leave-requests.$id.procedure.decisions"
-import * as leaveRequestsIdRejectRoute from "@/contexts/leave/interface/routes/leave-requests.$id.reject"
 import * as leaveRequestsIdSubmitRoute from "@/contexts/leave/interface/routes/leave-requests.$id.submit"
 import * as leaveRequestsAdminRoute from "@/contexts/leave/interface/routes/leave-requests.admin"
 import * as leaveRequestsInboxRoute from "@/contexts/leave/interface/routes/leave-requests.inbox"
@@ -788,7 +786,6 @@ const routePart30 = createRouteApp()
   .get("/leave/leave-requests/:id", ...leaveRequestsIdRoute.GET)
   .put("/leave/leave-requests/:id", ...leaveRequestsIdRoute.PUT)
   .delete("/leave/leave-requests/:id", ...leaveRequestsIdRoute.DELETE)
-  .post("/leave/leave-requests/:id/approve", ...leaveRequestsIdApproveRoute.POST)
   .get("/leave/leave-requests/:id/procedure", ...leaveRequestsIdProcedureRoute.GET)
   .post("/leave/leave-requests/:id/procedure/cancel", ...leaveRequestsIdProcedureCancelRoute.POST)
   .post(
@@ -799,15 +796,14 @@ const routePart30 = createRouteApp()
     "/leave/leave-requests/:id/procedure/decisions",
     ...leaveRequestsIdProcedureDecisionsRoute.POST,
   )
-  .post("/leave/leave-requests/:id/reject", ...leaveRequestsIdRejectRoute.POST)
   .post("/leave/leave-requests/:id/submit", ...leaveRequestsIdSubmitRoute.POST)
   .post("/life-event/life-events", ...lifeEventsRoute.POST)
   .get("/life-event/life-events/admin", ...lifeEventsAdminRoute.GET)
   .get("/life-event/life-events/me", ...lifeEventsMeRoute.GET)
-
-const routePart31 = createRouteApp()
   .get("/life-event/life-events/:id", ...lifeEventsIdRoute.GET)
   .put("/life-event/life-events/:id", ...lifeEventsIdRoute.PUT)
+
+const routePart31 = createRouteApp()
   .delete("/life-event/life-events/:id", ...lifeEventsIdRoute.DELETE)
   .post("/life-event/life-events/:id/approve", ...lifeEventsIdApproveRoute.POST)
   .post("/life-event/life-events/:id/reject", ...lifeEventsIdRejectRoute.POST)
@@ -866,10 +862,10 @@ const routePart31 = createRouteApp()
   .get("/partner/partners", ...partnersRoute.GET)
   .post("/partner/partners", ...partnersRoute.POST)
   .get("/partner/partners/:code", ...partnersCodeRoute.GET)
-
-const routePart32 = createRouteApp()
   .put("/partner/partners/:id", ...partnersIdRoute.PUT)
   .post("/partner/partners/:id/archive", ...partnersIdArchiveRoute.POST)
+
+const routePart32 = createRouteApp()
   .get("/performance-review/evaluation-sheets", ...evaluationSheetsRoute.GET)
   .post("/performance-review/evaluation-sheets", ...evaluationSheetsRoute.POST)
   .get("/performance-review/evaluation-sheets/me", ...evaluationSheetsMeRoute.GET)
@@ -955,10 +951,10 @@ const routePart32 = createRouteApp()
   .get("/regulation/regulations", ...regulationsRoute.GET)
   .post("/regulation/regulations", ...regulationsRoute.POST)
   .get("/regulation/regulations/:code", ...regulationsCodeRoute.GET)
-
-const routePart33 = createRouteApp()
   .post("/regulation/regulations/:code/archive", ...regulationsCodeArchiveRoute.POST)
   .post("/regulation/regulations/:code/versions", ...regulationsCodeVersionsRoute.POST)
+
+const routePart33 = createRouteApp()
   .post("/rental/rental-reservations", ...rentalReservationsRoute.POST)
   .get("/rental/rental-reservations/admin", ...rentalReservationsAdminRoute.GET)
   .get("/rental/rental-reservations/me", ...rentalReservationsMeRoute.GET)
@@ -1005,10 +1001,10 @@ const routePart33 = createRouteApp()
   .delete("/shift/shift-assignments/:id", ...shiftAssignmentsIdRoute.DELETE)
   .post("/shift/shift-assignments/:id/publish", ...shiftAssignmentsIdPublishRoute.POST)
   .get("/shift/shift-patterns", ...shiftPatternsRoute.GET)
-
-const routePart34 = createRouteApp()
   .post("/shift/shift-patterns", ...shiftPatternsRoute.POST)
   .get("/shift/shift-patterns/:id", ...shiftPatternsIdRoute.GET)
+
+const routePart34 = createRouteApp()
   .put("/shift/shift-patterns/:id", ...shiftPatternsIdRoute.PUT)
   .delete("/shift/shift-patterns/:id", ...shiftPatternsIdRoute.DELETE)
   .get("/shift/shift-swap-requests", ...shiftSwapRequestsRoute.GET)
@@ -1085,10 +1081,10 @@ const routePart34 = createRouteApp()
     "/system/accounts/:accountId/role-bindings/:bindingId",
     ...systemAccountsAccountIdRoleBindingsBindingIdRoute.DELETE,
   )
-
-const routePart35 = createRouteApp()
   .post("/system/attachments", ...systemAttachmentsRoute.POST)
   .post("/system/attachments/purge-unlinked", ...systemAttachmentsPurgeUnlinkedRoute.POST)
+
+const routePart35 = createRouteApp()
   .get("/system/attachments/:attachmentId", ...systemAttachmentsAttachmentIdRoute.GET)
   .get(
     "/system/attachments/:attachmentId/preservations",
@@ -1162,10 +1158,10 @@ const routePart35 = createRouteApp()
   .post("/system/oauth/authorizations", ...systemOauthAuthorizationsRoute.POST)
   .post("/system/oauth/mcp-grants", ...systemOauthMcpGrantsRoute.POST)
   .post("/system/oauth/token", ...systemOauthTokenRoute.POST)
-
-const routePart36 = createRouteApp()
   .get("/system/oauth/userinfo", ...systemOauthUserinfoRoute.GET)
   .get("/system/permission-definitions", ...systemPermissionDefinitionsRoute.GET)
+
+const routePart36 = createRouteApp()
   .get("/system/principals", ...systemPrincipalsRoute.GET)
   .post("/system/principals", ...systemPrincipalsRoute.POST)
   .get("/system/principals/:principalId", ...systemPrincipalsPrincipalIdRoute.GET)
@@ -1221,10 +1217,10 @@ const routePart36 = createRouteApp()
   .get("/training/training-courses", ...trainingCoursesRoute.GET)
   .post("/training/training-courses", ...trainingCoursesRoute.POST)
   .get("/training/training-courses/:code", ...trainingCoursesCodeRoute.GET)
-
-const routePart37 = createRouteApp()
   .put("/training/training-courses/:code", ...trainingCoursesCodeRoute.PUT)
   .delete("/training/training-courses/:code", ...trainingCoursesCodeRoute.DELETE)
+
+const routePart37 = createRouteApp()
   .get("/training/training-enrollments", ...trainingEnrollmentsRoute.GET)
   .post("/training/training-enrollments", ...trainingEnrollmentsRoute.POST)
   .get("/training/training-enrollments/me", ...trainingEnrollmentsMeRoute.GET)

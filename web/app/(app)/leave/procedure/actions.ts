@@ -11,7 +11,10 @@ export async function saveLeaveProcedureAction(
   formData: FormData,
 ): Promise<WorkflowFormState> {
   const definition = formData.get("workflow_json")
-  const revision = Number(formData.get("expected_revision"))
+  const rawRevision = formData.get("expected_revision")
+  if (typeof rawRevision !== "string" || !/^(0|[1-9]\d*)$/.test(rawRevision))
+    return { ...previous, ok: false, error: "確認した規程の版を指定してください" }
+  const revision = Number(rawRevision)
   if (typeof definition !== "string" || !Number.isSafeInteger(revision) || revision < 0)
     return { ...previous, ok: false, error: "承認規程の入力が不正です" }
   const parsed = parseWorkflowDefinitionJson(definition)

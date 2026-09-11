@@ -35,12 +35,6 @@ export type LeaveRequestCreateRequest = InferRequestType<
   ApiClient["leave"]["leave-requests"]["$post"]
 >["json"]
 
-/** POST /leave-requests/:id/approve | reject のレスポンス。 */
-export type LeaveDecisionResponse = InferResponseType<
-  ApiClient["leave"]["leave-requests"][":id"]["approve"]["$post"],
-  200
->
-
 /** PUT /leave-requests/:id のリクエストボディ。 */
 export type LeaveRequestUpdateRequest = InferRequestType<
   ApiClient["leave"]["leave-requests"][":id"]["$put"]
@@ -49,5 +43,11 @@ export type LeaveRequestUpdateRequest = InferRequestType<
 /** GET /leave-requests/:id と PUT /leave-requests/:id のレスポンス。 */
 export type LeaveRequestDetailResponse = InferResponseType<
   ApiClient["leave"]["leave-requests"][":id"]["$get"],
+  200
+>
+
+/** System案件に接続した休暇の内容、判断対象と履歴。 */
+export type LeaveProcedureRequestResponse = InferResponseType<
+  ApiClient["leave"]["leave-requests"][":id"]["procedure"]["$get"],
   200
 >

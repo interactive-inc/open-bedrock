@@ -146,7 +146,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - CollectiveBody、構成員、定足数、決議方式
 - 委任可能性と継続責任主体
 
-現行実装には Job、Position、Grade、OrganizationalOffice、OfficeAssignment、汎用 Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody と期間付き構成員がある。版付きresourceを参照するCompany resolverは、在籍、System Account、対象本人の除外、scope、合議規則を同一revisionと時点で評価する。汎用申請、人事変更申請、稟議、経費では、Companyの公開責務・役職・合議体をSystem DecisionTaskへ接続している。休暇などの独自承認経路には接続が残り、技術的権限と会社上の判断資格の合成を全業務では保証していない。
+現行実装には Job、Position、Grade、OrganizationalOffice、OfficeAssignment、汎用 Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody と期間付き構成員がある。版付きresourceを参照するCompany resolverは、在籍、System Account、対象本人の除外、scope、合議規則を同一revisionと時点で評価する。汎用申請、人事変更申請、稟議、経費、休暇では、Companyの公開責務・役職・合議体をSystem DecisionTaskへ接続している。その他の独自承認経路には接続が残り、技術的権限と会社上の判断資格の合成を全業務では保証していない。
 
 職務・役職・責務・合議体・決裁資格の定義と任用は、[過去から将来までの参照期間](company-organizational-authority.md#公開責務と期間台帳)をDBでも検査する。定義の短縮や将来取消によって、期間外の任用を残す変更は確定しない。
 
@@ -210,11 +210,11 @@ template に基づく汎用手続きは App ではなく System の ProcedureDef
 
 法定付与、残業適法性、労務判断は外部専門製品と専門家が担う。
 
-休暇の承認・却下は、現在のHuman、失効していないAccountとトークン、`leave:approve`、本人の従業員対応、在籍中の上長または部門責任者という会社資格を要求する。`org:manage`で判断資格を補わない。処理開始後に変わった申請内容・権限・会社履歴は保存時にも検査し、判断・残数消費・資格証拠を含む監査を同じtransactionで確定する。監査を保存できなければ判断も残数消費も取り消す。通知予約も判断と同時に保存し、配送失敗は確定した判断を取り消さず再送する。[休暇判断の通知](leave-decision-notifications.md)はServiceと配信時点の受信資格を検査する。詳細と承認待ち一覧は申請ID・内容digestを`decision_target`として返し、承認・却下では同じ値を必須とする。確認後に変わった内容は409で拒否し、再確認を要求する。Webは確認画面を開いた時点の内容を保持し、CLIは確認済みの対象を明示指定する。どちらも送信時に最新の対象へ自動で差し替えない。
+休暇の判断は現在のHuman、失効していないAccountとトークン、`leave:approve`とSystem案件に固定されたCompany判断資格を要求する。管理者や技術roleで会社資格を補わない。確認したProposal版・digest・task・roundが変わった場合は409で拒否し、再確認を要求する。WebとCLIは送信時に最新の対象へ自動で差し替えない。[休暇判断の通知](leave-decision-notifications.md)はServiceと配信時点の受信資格を検査する。
 
 休暇には、内容digestを固定してSystem Proposal・Case・DecisionTaskへ提出するapplication処理がある。判断は現在のCompany資格で記録し、合議の途中では残数を消費しない。承認確定は全段階の現在の資格を再検査し、System実行許可、残数消費、休暇状態、監査、通知予約を同じtransactionへ保存する。却下確定は、却下を記録した在籍中の本人が確定済みの結果を休暇状態・監査・通知予約へ反映し、残数を変更しない。提出済みの内容とSystem案件の対応は変更できず、同じ確定処理の再送で残数消費や通知を重複させない。
 
-System接続の休暇操作はHTTP・Web・CLIから使用できる。`/leave-procedures`は現在のHumanと`leave:procedure:manage`、確認済みの規程版を検査して規程を公開する。本人は内容digestを確認して提出し、判断者は表示されたProposal版・digest・task・roundを指定する。承認待ち一覧と件数は現在のCompany判断資格で絞り込む。本人の取消は案件履歴を保持する。差戻し後は別の休暇番号で修正内容を提出し、元の内容と前後関係を保持する。旧直接承認経路の廃止、複数段階と委任を含む全操作の検証は未完了であり、休暇機能全体を完成済みとは扱わない。
+System接続の休暇操作はHTTP・Web・CLIから使用できる。`/leave-procedures`は現在のHumanと`leave:procedure:manage`、確認済みの規程版を検査して規程を公開する。本人は内容digestを確認して提出し、判断者は表示されたProposal版・digest・task・roundを指定する。承認待ち一覧と件数は現在のCompany判断資格で絞り込む。本人の取消は案件履歴を保持する。差戻し後は別の休暇番号で修正内容を提出する。修正下書きの作成時から元番号をDBへ固定し、画面を閉じたり編集したりしても元の内容と前後関係を保持する。提出時は保存済みの元番号も照合する。直接承認・却下の旧APIとCLIは廃止し、既存の未決定休暇も内容確認とSystem提出を必要とする。DBは案件のない休暇の判断への更新を拒否し、既存の確定履歴は変更しない。段階承認と委任に対応し、代理の判断では実際の判断者と委任元を記録する。最終反映前に委任が失効した場合は残数を消費せず確定待ちに留める。規程と実際の会社資格、通知Serviceの設定がない環境では該当操作を実行しない。
 
 ### 社内の金銭手続き
 
