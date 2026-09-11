@@ -1,5 +1,7 @@
 "use client"
 
+import { toVisibleInboxSummary } from "@/lib/inbox/to-visible-inbox-summary"
+
 import { Blocks, Building2, CircleUser, type LucideIcon, Wrench } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"
@@ -156,16 +158,14 @@ export function SidebarNav(props: Props) {
 
   const permissionSet = new Set(props.permissions)
 
-  // 受信箱バッジは件数 API を持つ 5 種の合計。0 のときは表示しない。
-  const inboxTotal =
-    props.inboxCounts.applications +
-    props.inboxCounts.expenses +
-    props.inboxCounts.leaves +
-    props.inboxCounts.shifts +
-    props.inboxCounts.thanks
+  const inboxSummary = toVisibleInboxSummary(
+    props.inboxCounts,
+    props.permissions,
+    props.disabledFeatures,
+  )
 
   const badgeMap: Record<string, number> = {
-    "/inbox": inboxTotal,
+    "/inbox": inboxSummary.total,
     "/notifications": props.unreadNotificationCount,
   }
 
@@ -290,14 +290,13 @@ export function SidebarNav(props: Props) {
           <span className="truncate">{item.label}</span>
 
           {badgeMap[item.href] != null &&
-          (badgeMap[item.href] > 0 ||
-            (item.href === "/inbox" && props.inboxCounts.expenses_has_more)) ? (
+          (badgeMap[item.href] > 0 || (item.href === "/inbox" && inboxSummary.hasMore)) ? (
             <Badge
               className="ml-auto"
-              aria-label={`未処理 ${badgeMap[item.href]}${item.href === "/inbox" && props.inboxCounts.expenses_has_more ? "+" : ""} 件`}
+              aria-label={`未処理 ${badgeMap[item.href]}${item.href === "/inbox" && inboxSummary.hasMore ? "+" : ""} 件`}
             >
               {badgeMap[item.href]}
-              {item.href === "/inbox" && props.inboxCounts.expenses_has_more ? "+" : ""}
+              {item.href === "/inbox" && inboxSummary.hasMore ? "+" : ""}
             </Badge>
           ) : null}
         </SidebarMenuButton>

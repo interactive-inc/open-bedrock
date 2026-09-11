@@ -1,3 +1,4 @@
+import { inboxTypes } from "@/lib/inbox/visible-inbox-types"
 import { featureRegistry } from "@/lib/feature/feature-registry"
 
 /**
@@ -14,6 +15,15 @@ export function isPathOfDisabledFeature(
   }
 
   const disabledSlugSet = new Set(disabledFeatureSlugs)
+
+  for (const inboxType of inboxTypes) {
+    if (
+      inboxType.featureKey !== null &&
+      disabledSlugSet.has(inboxType.featureKey) &&
+      (path === inboxType.href || path.startsWith(`${inboxType.href}/`))
+    )
+      return true
+  }
 
   for (const feature of featureRegistry) {
     if (disabledSlugSet.has(feature.slug) === false) {
