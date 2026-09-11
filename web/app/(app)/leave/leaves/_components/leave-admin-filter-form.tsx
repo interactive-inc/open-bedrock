@@ -1,3 +1,4 @@
+import type { LeaveStatus } from "@/lib/api/types/leave-types"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Field, FieldGroup, FieldLabel, FieldSet } from "@/components/ui/field"
@@ -16,7 +17,7 @@ type LeaveTypeFilterValue =
   | ""
 
 type Props = {
-  statusValue: "pending" | "approved" | "rejected" | ""
+  statusValue: LeaveStatus | ""
   leaveTypeValue: LeaveTypeFilterValue
   applicantIdValue: string
   fromValue: string
@@ -25,7 +26,11 @@ type Props = {
 
 const statusOptions = [
   { value: "", label: "すべて" },
-  { value: "pending", label: "承認待ち" },
+  { value: "draft", label: "未提出" },
+  { value: "pending", label: "判断待ち" },
+  { value: "returned", label: "差戻し" },
+  { value: "cancelled", label: "取消済み" },
+  { value: "awaiting_execution", label: "判断済み・確定待ち" },
   { value: "approved", label: "承認済み" },
   { value: "rejected", label: "却下" },
 ]

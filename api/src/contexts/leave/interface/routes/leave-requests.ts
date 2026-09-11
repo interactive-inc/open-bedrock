@@ -1,3 +1,5 @@
+import { leaveProcedureStatusSql } from "@/contexts/leave/infrastructure/adapters/leave-procedure-status.sql"
+import { leaveProcedureStatusSchema } from "@/contexts/leave/domain/definitions/leave-procedure.definition"
 import { CreateLeaveRequest } from "@/contexts/leave/application/create-leave-request"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
@@ -52,7 +54,7 @@ export const GET = factory.createHandlers(
       employee_id: zEmployeeId.optional(),
       scope: z.enum(["reports", "all", "department"]).optional(),
       department_code: z.string().optional(),
-      status: z.enum(["pending", "approved", "rejected"]).optional(),
+      status: leaveProcedureStatusSchema.optional(),
       limit: z.string().optional(),
       offset: z.string().optional(),
     }),
@@ -147,7 +149,7 @@ export const GET = factory.createHandlers(
     }
 
     if (query.status !== undefined) {
-      conditions.push(eq(leaveRequests.status, query.status))
+      conditions.push(eq(leaveProcedureStatusSql, query.status))
     }
 
     const limit = toBoundedInt({
@@ -178,7 +180,7 @@ export const GET = factory.createHandlers(
         unit: leaveRequests.unit,
         hours: leaveRequests.hours,
         reason: leaveRequests.reason,
-        status: leaveRequests.status,
+        status: leaveProcedureStatusSql,
         createdAt: leaveRequests.createdAt,
       })
       .from(leaveRequests)
@@ -280,7 +282,7 @@ export const POST = factory.createHandlers(
       unit: created.unit,
       hours: created.hours,
       reason: created.reason,
-      status: created.status,
+      status: "draft",
       approver_id: created.approverId,
       decided_comment: created.decidedComment,
       created_at: created.createdAt,

@@ -26,7 +26,15 @@ const leaveRequestCreateResponseSchema = z.object({
   end_date: z.string(),
   days: z.number(),
   reason: z.string().nullable(),
-  status: z.enum(["pending", "approved", "rejected"]),
+  status: z.enum([
+    "draft",
+    "pending",
+    "approved",
+    "rejected",
+    "returned",
+    "cancelled",
+    "awaiting_execution",
+  ]),
   approver_id: zEmployeeId.nullable(),
   decided_comment: z.string().nullable(),
   created_at: z.string(),
@@ -116,7 +124,7 @@ async function request(props: {
 }
 
 describe("POST /leave-requests", () => {
-  test("creates a pending leave request and returns 201", async () => {
+  test("creates an unsubmitted draft and returns 201", async () => {
     const response = await request({
       path: "/leave/leave-requests",
       token: await tokenFor(5),
@@ -138,7 +146,7 @@ describe("POST /leave-requests", () => {
     if (parsed.success) {
       expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
       expect(parsed.data.days).toBe(5)
-      expect(parsed.data.status).toBe("pending")
+      expect(parsed.data.status).toBe("draft")
       expect(parsed.data.approver_id).toBeNull()
     }
   })
@@ -285,7 +293,15 @@ const leaveAdminItemSchema = z.object({
   end_date: z.string(),
   days: z.number(),
   reason: z.string().nullable(),
-  status: z.enum(["pending", "approved", "rejected"]),
+  status: z.enum([
+    "draft",
+    "pending",
+    "approved",
+    "rejected",
+    "returned",
+    "cancelled",
+    "awaiting_execution",
+  ]),
   created_at: z.string(),
 })
 

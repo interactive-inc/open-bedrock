@@ -1,3 +1,5 @@
+import { LeaveProcedureStatusReadAdapter } from "@/contexts/leave/infrastructure/adapters/leave-procedure-status-read.adapter"
+import type { LeaveProcedureStatus } from "@/contexts/leave/domain/definitions/leave-procedure.definition"
 import { ConflictError } from "@/lib/errors"
 import { ResolveOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter"
 import {
@@ -23,7 +25,7 @@ import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 /** 休暇申請を詳細レスポンス用に整形する。 */
-function toResponseBody(leaveRequest: LeaveRequest) {
+function toResponseBody(leaveRequest: LeaveRequest, status: LeaveProcedureStatus) {
   return zAppLeaveRequestDetail.parse({
     consumed_days: leaveRequest.consumedDays,
     id: leaveRequest.id,
@@ -35,7 +37,7 @@ function toResponseBody(leaveRequest: LeaveRequest) {
     unit: leaveRequest.unit,
     hours: leaveRequest.hours,
     reason: leaveRequest.reason,
-    status: leaveRequest.status,
+    status,
     created_at: leaveRequest.createdAt,
   })
 }
@@ -131,7 +133,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw toHttpException(result)
   }
 
-  return c.json(toResponseBody(result), 200)
+  const status = await new LeaveProcedureStatusReadAdapter(c).find(leaveRequestId)
+  if (status instanceof Error)
+    throw toHttpException(new UnexpectedError("failed to read leave status", { cause: status }))
+  return c.json(toResponseBody(result, status), 200)
 })
 
 // @authorization owner - 本人のリソースに限定する
@@ -184,7 +189,10 @@ export const PUT = factory.createHandlers(
       throw toHttpException(result)
     }
 
-    return c.json(toResponseBody(result), 200)
+    const status = await new LeaveProcedureStatusReadAdapter(c).find(leaveRequestId)
+    if (status instanceof Error)
+      throw toHttpException(new UnexpectedError("failed to read leave status", { cause: status }))
+    return c.json(toResponseBody(result, status), 200)
   },
 )
 
