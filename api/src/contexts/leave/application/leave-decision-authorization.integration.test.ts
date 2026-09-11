@@ -186,26 +186,19 @@ for (const mode of modes) {
       },
     )
 
-    test("通知が例外を返しても確定した判断を返す", async () => {
+    test("判断の確定時に通知を予約し、直接配送しない", async () => {
       const f = await fixture()
-      const notifyApprovalResult = async () => {
-        throw new Error("notification unavailable")
-      }
-      const application = () => {
-        if (mode === "reject")
-          return new RejectLeaveRequest({ context: f.context, notifyApprovalResult })
-        return new ApproveLeaveRequest({ context: f.context, notifyApprovalResult })
-      }
-      const logging = spyOn(console, "error").mockImplementation(() => {})
-      try {
-        expect(
-          await application().execute({ ...f.command, createdAt: "2000-01-01T00:00:00Z" }),
-        ).toBeInstanceOf(LeaveRequest)
-        expect(await f.persisted()).toMatchObject({ audits: 1 })
-        expect(logging).toHaveBeenCalledTimes(1)
-      } finally {
-        logging.mockRestore()
-      }
+      expect(await f.application().execute(f.command)).toBeInstanceOf(LeaveRequest)
+      expect(
+        await f.context.env.DB.prepare(
+          "SELECT count(*) AS count FROM leave_decision_notifications",
+        ).first<number>("count"),
+      ).toBe(1)
+      expect(
+        await f.context.env.DB.prepare(
+          "SELECT count(*) AS count FROM system_notification_messages WHERE id LIKE 'leave-decision:%'",
+        ).first<number>("count"),
+      ).toBe(0)
     })
   })
 }

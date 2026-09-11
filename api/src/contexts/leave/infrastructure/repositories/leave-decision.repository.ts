@@ -58,6 +58,7 @@ export class LeaveDecisionRepository {
         db.prepare(`SELECT CASE WHEN changes() = 1 THEN 1
         ELSE json_extract('{}', 'leave_request_changed') END AS ok`),
         ...input.audit,
+        ...input.notification,
       ]
       const committed = await db.batch(statements)
       if (committed.length !== statements.length || committed.some((entry) => !entry.success))

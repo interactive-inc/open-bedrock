@@ -1,6 +1,5 @@
 import { leaveDecisionTargetSchema } from "@/contexts/leave/domain/definitions/leave-decision-target.definition"
 import { ApproveLeaveRequest } from "@/contexts/leave/application/approve-leave-request"
-import { NotifyApprovalResult } from "@/api/http/notifications/notify-approval-result"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
@@ -39,7 +38,6 @@ export const POST = factory.createHandlers(
 
     const updated = await new ApproveLeaveRequest({
       context: c,
-      notifyApprovalResult: (command) => new NotifyApprovalResult(c).run(command),
     }).execute({
       session,
       tokenVersion: c.var.accountTokenVersion,
