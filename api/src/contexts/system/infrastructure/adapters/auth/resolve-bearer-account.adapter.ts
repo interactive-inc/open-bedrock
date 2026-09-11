@@ -5,13 +5,14 @@ import type {
   SystemJwtSecretContext,
 } from "@system/configuration/system-context"
 import type { AccessTokenClaims } from "@system/domain/schemas/auth/access-token-claims.schema"
-type Bindings = (SystemD1Context & SystemExternalIdentityContext & SystemJwtSecretContext)["env"]
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAccessTokenSecretValue } from "@system/domain/values/auth/system-access-token-secret.value"
 import { SystemAccessTokenStateAdapter } from "@system/infrastructure/adapters/auth/system-access-token-state.adapter"
 import { AccessTokenService } from "@system/lib/auth/access-token-service"
 import { SYSTEM_ACCESS_TOKEN_PROFILE } from "@system/lib/auth/system-access-token-profile"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
+
+type Bindings = (SystemD1Context & SystemExternalIdentityContext & SystemJwtSecretContext)["env"]
 
 export type BearerAccountResolution =
   | Readonly<{

@@ -3,12 +3,13 @@ import type {
   SystemD1Context,
   SystemExternalIdentityContext,
 } from "@system/configuration/system-context"
-type Bindings = (SystemD1Context & SystemExternalIdentityContext)["env"]
 import { ExternalAccessTokenVerificationKeyAdapter } from "@system/infrastructure/adapters/auth/external-access-token-verification-key.adapter"
 import { identitySubjectSchema } from "@system/domain/schemas/identity/identity-subject.schema"
 import { SystemIdentityLoginAdapter } from "@system/infrastructure/adapters/auth/system-identity-login.adapter"
 import { jwtVerify } from "jose"
 import { z } from "zod"
+
+type Bindings = (SystemD1Context & SystemExternalIdentityContext)["env"]
 
 const claimsSchema = z.object({
   sub: identitySubjectSchema,
