@@ -1,4 +1,4 @@
-import { leaveProcedureStatusSql } from "@/contexts/leave/infrastructure/adapters/leave-procedure-status.sql"
+import { leaveProcedureStatusSql } from "@/contexts/leave/infrastructure/adapters/lib/leave-procedure-status-sql"
 import type { Context } from "@/env"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"

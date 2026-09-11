@@ -1,7 +1,7 @@
 import type { Context } from "@/env"
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
 import { leaveProcedureStatusSchema } from "@/contexts/leave/domain/definitions/leave-procedure.definition"
-import { leaveProcedureStatusSql } from "@/contexts/leave/infrastructure/adapters/leave-procedure-status.sql"
+import { leaveProcedureStatusSql } from "@/contexts/leave/infrastructure/adapters/lib/leave-procedure-status-sql"
 import { eq } from "drizzle-orm"
 
 /** 参照権限を確認済みの休暇の案件状態を取得する。 */

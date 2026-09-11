@@ -1,4 +1,4 @@
-import { leaveProcedureStatusSql } from "@/contexts/leave/infrastructure/adapters/leave-procedure-status.sql"
+import { leaveProcedureStatusSql } from "@/contexts/leave/infrastructure/adapters/lib/leave-procedure-status-sql"
 import { leaveProcedureStatusSchema } from "@/contexts/leave/domain/definitions/leave-procedure.definition"
 import { CreateLeaveRequest } from "@/contexts/leave/application/create-leave-request"
 import { ApplicationError } from "@/lib/errors"
