@@ -1,10 +1,6 @@
+import { ResolveBearerAccountAdapter } from "@system/infrastructure/adapters/auth/resolve-bearer-account.adapter"
 import { SystemInvalidSessionError, SystemSessionUnavailableError } from "@system/interface/errors"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
-import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
-import { SystemAccessTokenSecretValue } from "@system/domain/values/auth/system-access-token-secret.value"
-import { AccessTokenService } from "@system/lib/auth/access-token-service"
-import { SYSTEM_ACCESS_TOKEN_PROFILE } from "@system/lib/auth/system-access-token-profile"
-import { SystemAccessTokenStateAdapter } from "@system/infrastructure/adapters/auth/system-access-token-state.adapter"
 import { SystemD1AuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-authorization.adapter"
 import { readBearerAuthorization } from "@system/interface/authorization/lib/bearer-authorization"
 
@@ -21,45 +17,16 @@ export const authenticateSystemAccessToken = systemFactory.createMiddleware(
       throw new SystemInvalidSessionError()
     }
 
-    const accessTokenSecret = SystemAccessTokenSecretValue.create(context.env.JWT_SECRET ?? "")
-    if (!(accessTokenSecret instanceof SystemAccessTokenSecretValue)) {
-      throw new SystemSessionUnavailableError()
-    }
-
-    const claims = await new AccessTokenService({
-      profile: SYSTEM_ACCESS_TOKEN_PROFILE,
-    }).verify(authorization.token, accessTokenSecret.toString(), new Date())
-    if (claims instanceof Error) {
-      throw new SystemInvalidSessionError()
-    }
-
-    const accountId = zAccountId.safeParse(claims.sub)
-    if (!accountId.success) {
-      throw new SystemInvalidSessionError()
-    }
-
-    const accountSession = await new SystemAccessTokenStateAdapter({
-      database: context.env.DB,
-    }).resolve({
-      accountId: accountId.data,
-      tokenVersion: claims.ver,
-      issuedAtMs: claims.issuedAtMs,
-      machineCredentialId: claims.machineCredentialId,
-      at: now,
+    const authentication = await new ResolveBearerAccountAdapter({ env: context.env }).resolve({
+      token: authorization.token,
+      now,
     })
-    if (accountSession instanceof Error) {
-      throw new SystemSessionUnavailableError()
-    }
-    if (accountSession.kind === "rejected") {
-      if (accountSession.reason === "invalid_account_token_version") {
-        throw new SystemSessionUnavailableError()
-      }
-      throw new SystemInvalidSessionError()
-    }
+    if (authentication.kind === "unavailable") throw new SystemSessionUnavailableError()
+    if (authentication.kind === "rejected") throw new SystemInvalidSessionError()
 
     const accountAuthorization = await new SystemD1AuthorizationAdapter({
       env: { DB: context.env.DB },
-    }).resolveForAccount({ accountId: accountId.data, resource: null, at: now })
+    }).resolveForAccount({ accountId: authentication.accountId, resource: null, at: now })
     if (accountAuthorization instanceof Error) {
       throw new SystemSessionUnavailableError()
     }
@@ -67,9 +34,10 @@ export const authenticateSystemAccessToken = systemFactory.createMiddleware(
       throw new SystemInvalidSessionError()
     }
 
-    context.set("userId", accountId.data)
-    context.set("systemAccessToken", claims)
-    context.set("accountTokenVersion", accountSession.account.tokenVersion)
+    context.set("userId", authentication.accountId)
+    context.set("systemAccessToken", authentication.systemAccessToken)
+    context.set("bearerReadAuthentication", authentication.readAuthentication)
+    context.set("accountTokenVersion", authentication.tokenVersion)
     context.set("permissions", accountAuthorization.permissionKeys)
     context.set("scopedPermissions", accountAuthorization.scopedPermissionKeys)
     context.set("role", accountAuthorization.roleKeys[0] ?? "authenticated")

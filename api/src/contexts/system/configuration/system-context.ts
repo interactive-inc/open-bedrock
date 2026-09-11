@@ -1,3 +1,4 @@
+import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
 import { systemWorkItemSchema } from "@system/infrastructure/schema/system-work-item"
 import type { OidcClientRegistryValue } from "@system/domain/values/oauth/oidc-client-registry.value"
 import type { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"
@@ -57,6 +58,7 @@ export type SystemAuthorizationContext = Readonly<{
     roleKeys?: ReadonlyArray<string>
     userId: string
     systemAccessToken?: AccessTokenClaims
+    bearerReadAuthentication?: SystemReadAuthentication
   }>
 }>
 
@@ -84,6 +86,8 @@ export type SystemExternalIdentityContext = Readonly<{
     IDENTITY_JWKS?: string
     IDENTITY_ISSUER?: string
     IDENTITY_AUDIENCE?: string
+    IDENTITY_ACCESS_TOKEN_ISSUER?: string
+    IDENTITY_ACCESS_TOKEN_AUDIENCE?: string
     IDENTITY_LOGIN_URL?: string
     API_ORIGIN?: string
   }>

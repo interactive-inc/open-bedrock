@@ -67,11 +67,15 @@ function externalToken(
     .sign(key.signingKey)
 }
 
-function externalRequest(props: { db: D1Database; token: string }): Promise<Response> {
+function externalRequest(props: {
+  db: D1Database
+  token: string
+  path?: string
+}): Promise<Response> {
   return requestWithContext({
     db: props.db,
     jwtSecret,
-    path: "/company/current-profile",
+    path: props.path ?? "/company/current-profile",
     token: props.token,
     now,
     identityIssuer,
@@ -218,3 +222,39 @@ describe("verifyBearer", () => {
     expect(response.status).toBe(401)
   })
 })
+
+test("同じ外部access tokenで会社とSystemのAPIへ認証できる", async () => {
+  const db = await createTestDb()
+  const token = await externalToken()
+  expect((await externalRequest({ db, token })).status).toBe(200)
+  expect(
+    (await externalRequest({ db, token, path: "/system/notifications/unread-count" })).status,
+  ).toBe(200)
+})
+
+for (const path of ["/company/current-profile", "/system/notifications/unread-count"]) {
+  test(`${path}は外部署名・宛先・本人確認を同じ規則で拒否する`, async () => {
+    const db = await createTestDb()
+    for (const overrides of [
+      { audience: "https://other-api.example.com" },
+      { type: "JWT" },
+      { untrustedKey: true },
+      { emailVerified: false },
+      { subject: "unknown-subject" },
+    ]) {
+      expect(
+        (await externalRequest({ db, token: await externalToken(overrides), path })).status,
+      ).toBe(401)
+    }
+  })
+  test(`${path}はIdentity失効後の外部tokenを拒否する`, async () => {
+    const db = await createTestDb()
+    const token = await externalToken()
+    expect((await externalRequest({ db, token, path })).status).toBe(200)
+    await db
+      .prepare("UPDATE system_identity_bindings SET revoked_at = ?1 WHERE id = 'oidc:employee-5'")
+      .bind(new Date(now).getTime())
+      .run()
+    expect((await externalRequest({ db, token, path })).status).toBe(401)
+  })
+}

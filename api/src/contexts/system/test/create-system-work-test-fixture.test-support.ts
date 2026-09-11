@@ -89,11 +89,18 @@ export async function createSystemWorkTestFixture() {
       ...(account === "worker" ? { machineCredentialId: "credential:worker" } : {}),
     })
   }
-  function adapter(account: string) {
+  function adapter(account: string, identityBindingId: string | null = null) {
     return new SystemWorkAuthorizationAdapter({
       env: { DB: db },
       var: { now: () => clock.now },
-      claims: claims(account),
+      authentication: {
+        accountId: claims(account).sub,
+        tokenVersion: claims(account).ver,
+        issuedAtMs: claims(account).issuedAtMs,
+        expiresAtMs: claims(account).exp * 1000,
+        machineCredentialId: claims(account).machineCredentialId ?? null,
+        identityBindingId,
+      },
     })
   }
   async function authorized(

@@ -1,3 +1,5 @@
+import { SignJWT } from "jose"
+import { createSystemIdentityTestKey } from "@system/test/create-system-identity-test-key.test-support"
 import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
@@ -29,9 +31,10 @@ type Fixture = Readonly<{
 
 async function createFixture(
   machineKind: "agent" | "service" | "connector" | null = null,
+  external = false,
 ): Promise<Fixture> {
   const db = createSystemAttachmentTestDatabase()
-  const clock = { current: machineKind === null ? now : new Date() }
+  const clock = { current: machineKind === null && !external ? now : new Date() }
 
   for (const accountId of ["account-owner", "account-other"]) {
     await db
@@ -70,6 +73,14 @@ async function createFixture(
       .run()
   }
 
+  const externalKey = external ? await createSystemIdentityTestKey("attachment-external-key") : null
+  if (external) {
+    await db
+      .prepare(`INSERT INTO system_identity_bindings
+      (id,account_id,provider,subject,created_at,activated_at,revoked_at)
+      VALUES ('external-owner','account-owner','oidc','external-owner',0,0,NULL)`)
+      .run()
+  }
   const bucket = new SystemAttachmentTestBucket()
   const readEffects: Array<() => Promise<void>> = []
   const getObject = bucket.get.bind(bucket)
@@ -121,10 +132,31 @@ async function createFixture(
       app.request(path, init, {
         DB: db,
         JWT_SECRET: jwtSecret,
+        IDENTITY_ACCESS_TOKEN_ISSUER: "https://identity.example.com",
+        IDENTITY_ACCESS_TOKEN_AUDIENCE: "https://api.example.com",
+        IDENTITY_JWKS: externalKey?.jwks,
         ATTACHMENTS: bucket as unknown as R2Bucket,
         ATTACHMENT_KEKS: createSystemAttachmentTestKekEnvironment(1),
       }),
     tokenOf: async (accountId) => {
+      if (externalKey !== null) {
+        const issuedAt = Math.floor(clock.current.getTime() / 1000)
+        return new SignJWT({
+          email: "you@example.com",
+          email_verified: true,
+          name: "Test owner",
+          client_id: "test-client",
+          scope: "openid",
+        })
+          .setProtectedHeader({ alg: "EdDSA", typ: "at+jwt", kid: externalKey.keyId })
+          .setIssuer("https://identity.example.com")
+          .setAudience("https://api.example.com")
+          .setSubject("external-owner")
+          .setJti(crypto.randomUUID())
+          .setIssuedAt(issuedAt)
+          .setExpirationTime(issuedAt + 300)
+          .sign(externalKey.signingKey)
+      }
       if (machineKind !== null && accountId === "account-owner") {
         const token = await new AccessTokenService({ profile: SYSTEM_ACCESS_TOKEN_PROFILE }).create(
           { accountId, tokenVersion: 0, machineCredentialId: "credential-owner" },
@@ -567,3 +599,32 @@ describe("GET /attachments/:attachmentId", () => {
     expect(response.status).toBe(404)
   })
 })
+
+for (const change of ["none", "revoked", "expired"] as const) {
+  test(`外部tokenの添付取得は認証の変化を開示直前に検査する: ${change}`, async () => {
+    const fixture = await createFixture(null, true)
+    const token = await fixture.tokenOf("account-owner")
+    const headers = { authorization: `Bearer ${token}` }
+    const created = await fixture.request("/attachments", {
+      method: "POST",
+      headers,
+      body: receiptForm(),
+    })
+    expect(created.status).toBe(201)
+    const body = await createdBody(created)
+    fixture.afterObjectRead(async () => {
+      if (change === "revoked")
+        await fixture.db
+          .prepare("UPDATE system_identity_bindings SET revoked_at=?1 WHERE id='external-owner'")
+          .bind(Date.now())
+          .run()
+      if (change === "expired") fixture.advanceClock(301_000)
+    })
+    const response = await fixture.request(`/attachments/${body.id}`, { headers })
+    expect(response.status).toBe(change === "none" ? 200 : 401)
+    expect(await fixture.auditActions(body.id)).toEqual(
+      change === "none" ? ["attachment.read"] : [],
+    )
+    if (change !== "none") expect(await response.text()).not.toContain("領収書")
+  })
+}
