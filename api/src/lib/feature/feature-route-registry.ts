@@ -25,7 +25,7 @@ export const optInAppRoutePrefixes: Readonly<Record<string, ReadonlyArray<string
 
 export const defaultAppRoutePrefixes: Readonly<Record<string, ReadonlyArray<string>>> = {
   attendance: ["/attendance/attendance-records"],
-  leave: ["/leave/leave-requests", "/leave/leave-balances"],
+  leave: ["/leave"],
   "family-care-leave": ["/family-care-leave/family-care-leaves"],
   shifts: ["/shift/shift-assignments", "/shift/shift-patterns", "/shift/shift-swap-requests"],
   "company-calendar": ["/company-calendar/company-calendar-days"],

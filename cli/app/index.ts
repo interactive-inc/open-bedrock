@@ -72,6 +72,8 @@ import expenseSubmitHandler from "@/app/expenses/submit/route"
 import ringiShowHandler from "@/app/ringi-requests/show/[ringi_id]/route"
 import ringiCancelHandler from "@/app/ringi-requests/cancel/[ringi_id]/route"
 import ringiExecuteHandler from "@/app/ringi-requests/execute/[ringi_id]/route"
+import leaveRequestProcedureHandler from "@/app/leave-requests/procedure/route"
+import leaveProcedureHandler from "@/app/leave-procedures/route"
 import ringiProcedureHandler from "@/app/ringi-procedures/route"
 import ringiHandler from "@/app/ringi-requests/route"
 import ringiAdminHandler from "@/app/ringi-requests/admin/route"
@@ -588,6 +590,8 @@ routes.post("/department-budgets/update/:budget_id?", ...budgetUpdateHandler)
 routes.post("/department-budgets/delete/:budget_id?", ...budgetDeleteHandler)
 
 routes.post("/work-items/:operation?/:id?", ...workItemHandler)
+routes.post("/leave-requests/procedure", ...leaveRequestProcedureHandler)
+routes.post("/leave-procedures", ...leaveProcedureHandler)
 routes.post("/ringi-procedures", ...ringiProcedureHandler)
 routes.post("/ringi-requests/show/:ringi_id?", ...ringiShowHandler)
 routes.post("/ringi-requests/cancel/:ringi_id?", ...ringiCancelHandler)

@@ -1,8 +1,6 @@
 "use client"
 
-import { useRouter } from "next/navigation"
 import { useActionState, useState } from "react"
-import { toast } from "sonner"
 import { createLeaveRequestAction } from "@/app/(app)/my/leaves/actions"
 import type { LeaveActionState } from "@/app/(app)/my/leaves/actions"
 import { Button } from "@/components/ui/button"
@@ -14,44 +12,41 @@ import { Spinner } from "@/components/ui/spinner"
 const initialState: LeaveActionState = { ok: false, error: null }
 
 /**
- * 休暇申請フォーム。native form + Server Action を useActionState で呼び、結果を sonner で通知する。
- * reducer 内で Server Action を 1 回だけ実行し、その結果で toast() する（useEffect は使わない）。
- * 成功時は自分の休暇一覧へ遷移し、残日数と申請ステータスを見せる。
+ * 休暇の下書きを保存し、提出前の内容確認へ進む。
  */
-export function LeaveRequestCreateForm() {
-  const router = useRouter()
+export function LeaveRequestCreateForm(props: {
+  previousId?: number
+  initial?: {
+    leave_type: string
+    unit: string
+    start_date: string
+    end_date: string
+    hours: number | null
+    reason: string | null
+  }
+}) {
+  const initial = props.initial ?? {
+    leave_type: "annual",
+    unit: "full_day",
+    start_date: "",
+    end_date: "",
+    hours: null,
+    reason: null,
+  }
 
-  const [leaveType, setLeaveType] = useState("annual")
+  const [leaveType, setLeaveType] = useState(initial.leave_type)
 
-  const [unit, setUnit] = useState("full_day")
+  const [unit, setUnit] = useState(initial.unit)
 
-  const [startDate, setStartDate] = useState("")
+  const [startDate, setStartDate] = useState(initial.start_date)
 
-  const [endDate, setEndDate] = useState("")
+  const [endDate, setEndDate] = useState(initial.end_date)
 
   const isSingleDateUnit =
     leaveType === "annual" &&
     (unit === "half_day_am" || unit === "half_day_pm" || unit === "hourly")
 
-  /** useActionState の reducer。Server Action を実行し結果をそのまま次の state にする。 */
-  async function reduce(
-    previousState: LeaveActionState,
-    formData: FormData,
-  ): Promise<LeaveActionState> {
-    const result = await createLeaveRequestAction(previousState, formData)
-
-    if (result.ok) {
-      toast.success("休暇申請を提出しました")
-
-      router.push("/my/leaves")
-    } else if (result.error !== null) {
-      toast.error(result.error)
-    }
-
-    return result
-  }
-
-  const action = useActionState(reduce, initialState)
+  const action = useActionState(createLeaveRequestAction, initialState)
 
   const state = action[0]
 
@@ -61,7 +56,8 @@ export function LeaveRequestCreateForm() {
 
   return (
     <form action={formAction} className="flex flex-col gap-4 rounded-2xl bg-card border p-4">
-      <h3 className="text-lg font-medium">休暇を申請</h3>
+      <input type="hidden" name="previous_leave_request_id" value={props.previousId ?? ""} />
+      <h3 className="text-lg font-medium">休暇の内容を入力</h3>
 
       <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
         <Field>
@@ -70,7 +66,7 @@ export function LeaveRequestCreateForm() {
           <NativeSelect
             id="leave-type"
             name="leave_type"
-            defaultValue="annual"
+            defaultValue={leaveType}
             className="w-full"
             onChange={(event) => setLeaveType(event.target.value)}
           >
@@ -99,7 +95,7 @@ export function LeaveRequestCreateForm() {
             <NativeSelect
               id="leave-unit"
               name="unit"
-              defaultValue="full_day"
+              defaultValue={unit}
               className="w-full"
               onChange={(event) => setUnit(event.target.value)}
             >
@@ -120,7 +116,15 @@ export function LeaveRequestCreateForm() {
           <Field>
             <FieldLabel htmlFor="leave-hours">時間数</FieldLabel>
 
-            <Input id="leave-hours" name="hours" type="number" min="1" step="1" required />
+            <Input
+              id="leave-hours"
+              name="hours"
+              defaultValue={initial.hours ?? undefined}
+              type="number"
+              min="1"
+              step="1"
+              required
+            />
           </Field>
         ) : null}
 
@@ -172,7 +176,12 @@ export function LeaveRequestCreateForm() {
         <Field>
           <FieldLabel htmlFor="leave-reason">理由</FieldLabel>
 
-          <Input id="leave-reason" name="reason" placeholder="任意" />
+          <Input
+            id="leave-reason"
+            name="reason"
+            defaultValue={initial.reason ?? ""}
+            placeholder="任意"
+          />
         </Field>
       </div>
 
@@ -195,7 +204,7 @@ export function LeaveRequestCreateForm() {
       <div>
         <Button type="submit" disabled={isPending}>
           {isPending ? <Spinner className="mr-2" /> : null}
-          {isPending ? "提出中..." : "申請する"}
+          {isPending ? "保存中..." : "内容の確認へ"}
         </Button>
       </div>
     </form>

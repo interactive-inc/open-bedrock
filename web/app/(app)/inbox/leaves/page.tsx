@@ -1,16 +1,9 @@
-import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
-import { Suspense } from "react"
-import { LeaveInboxDecisionForm } from "@/app/(app)/inbox/leaves/_components/leave-inbox-decision-form"
-import { EmptyState } from "@/components/empty-state"
-import { LeaveStatusBadge } from "@/components/leave-status-badge"
+import { getLeaveInbox } from "@/lib/api/get-leave-inbox"
+import { FetchError } from "@/components/fetch-error"
+import { PageHeader } from "@/components/page-header"
 import { LeaveTypeLabel } from "@/components/leave-type-label"
-import { ListSkeleton } from "@/components/list-skeleton"
-import { SubPageHeader } from "@/components/sub-page-header"
-import { SortableTableHead } from "@/components/sortable-table-head"
-import { TablePagination } from "@/components/table-pagination"
-import { PAGE_SIZE_OPTIONS, parsePageSize } from "@/lib/pagination/parse-page-size"
-import { Button } from "@/components/ui/button"
+import { requirePermission } from "@/lib/auth/require-permission"
 import {
   Table,
   TableBody,
@@ -19,143 +12,66 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { getLeaveInbox, type LeaveInboxSort } from "@/lib/api/get-leave-inbox"
-import { requirePermission } from "@/lib/auth/require-permission"
 
+type Props = { searchParams: Promise<{ offset?: string }> }
 export const metadata = { title: "承認待ちの休暇" }
 
-const SORT_VALUES: ReadonlyArray<LeaveInboxSort> = [
-  "created_at_desc",
-  "created_at_asc",
-  "start_date_desc",
-  "start_date_asc",
-]
-
-type SearchParams = Promise<{ page?: string; size?: string; sort?: string }>
-
-function toSort(raw: string | undefined): LeaveInboxSort {
-  if (raw !== undefined && (SORT_VALUES as ReadonlyArray<string>).includes(raw)) {
-    return raw as LeaveInboxSort
-  }
-
-  return "created_at_desc"
-}
-
-/** 休暇の承認 inbox 画面。RSC で承認待ち一覧を取得し、各行に承認/却下フォームを置く。 */
-export default async function LeaveInboxPage(props: { searchParams: SearchParams }) {
+/** 現在の判断資格がある休暇から、内容確認と判断へ進む。 */
+export default async function LeaveInboxPage(props: Props) {
   await requirePermission("leave:approve")
-
-  const searchParams = await props.searchParams
-
-  const pageSize = parsePageSize(searchParams.size)
-
-  const page = Math.max(1, Number.parseInt(searchParams.page ?? "1", 10) || 1)
-
-  const offset = (page - 1) * pageSize
-
-  const sort = toSort(searchParams.sort)
-
+  const params = await props.searchParams
+  const offset = Math.max(0, Number.parseInt(params.offset ?? "0", 10) || 0)
+  const result = await getLeaveInbox({ limit: 20, offset })
+  if (result instanceof Error) return <FetchError message={result.message} />
   return (
     <div className="flex flex-col gap-8">
-      <SubPageHeader
-        title="承認待ちの休暇"
-        actions={
-          <Button variant="secondary" nativeButton={false} render={<Link href="/my/leaves" />}>
-            休暇へ戻る
-          </Button>
-        }
-      />
-
-      <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-16 w-full" />}>
-        <LeaveInboxTable offset={offset} pageSize={pageSize} sort={sort} />
-      </Suspense>
-    </div>
-  )
-}
-
-/**
- * /leave/requests/inbox を認証付きで取得して承認待ちテーブルを描画する非同期 RSC。
- * 権限が無い場合は api が 403 を返すため Error として扱う。
- */
-async function LeaveInboxTable(props: { offset: number; pageSize: number; sort: LeaveInboxSort }) {
-  const result = await getLeaveInbox({
-    limit: props.pageSize,
-    offset: props.offset,
-    sort: props.sort,
-  })
-
-  if (result instanceof Error) {
-    return <FetchError message="inbox の取得に失敗しました (承認権限が必要です)" />
-  }
-
-  if (result.data.length === 0) {
-    return <EmptyState title="承認待ちの休暇申請はありません" />
-  }
-
-  return (
-    <div className="flex flex-col gap-4">
-      <div className="overflow-x-auto">
-        <Table aria-label={`承認待ちの休暇申請 ${result.total} 件`}>
+      <PageHeader title="承認待ちの休暇">
+        <Link href="/my/leaves">休暇へ戻る</Link>
+      </PageHeader>
+      {result.data.length === 0 ? (
+        <p>この範囲に判断・確定待ちの休暇はありません。</p>
+      ) : (
+        <Table aria-label="承認待ちの休暇">
           <TableHeader>
             <TableRow>
               <TableHead>申請者</TableHead>
               <TableHead>種別</TableHead>
-              <SortableTableHead
-                pathname="/inbox/leaves"
-                currentSort={props.sort}
-                ascValue="start_date_asc"
-                descValue="start_date_desc"
-                label="期間"
-                className="hidden md:table-cell"
-              />
-              <TableHead className="hidden sm:table-cell">日数</TableHead>
-              <TableHead className="hidden lg:table-cell">理由</TableHead>
-              <TableHead>ステータス</TableHead>
+              <TableHead>期間</TableHead>
+              <TableHead>承認人数</TableHead>
               <TableHead>操作</TableHead>
             </TableRow>
           </TableHeader>
-
           <TableBody>
-            {result.data.map((leaveRequest) => (
-              <TableRow key={leaveRequest.id}>
-                <TableCell>{leaveRequest.applicant_name}</TableCell>
-
+            {result.data.map((leave) => (
+              <TableRow key={leave.id}>
+                <TableCell>{leave.applicant_name}</TableCell>
                 <TableCell>
-                  <LeaveTypeLabel leaveType={leaveRequest.leave_type} />
+                  <LeaveTypeLabel leaveType={leave.leave_type} />
                 </TableCell>
-
-                <TableCell className="hidden md:table-cell">
-                  {leaveRequest.start_date} 〜 {leaveRequest.end_date}
-                </TableCell>
-
-                <TableCell className="hidden sm:table-cell">{leaveRequest.days} 日</TableCell>
-
-                <TableCell className="hidden lg:table-cell">{leaveRequest.reason ?? "-"}</TableCell>
-
                 <TableCell>
-                  <LeaveStatusBadge status={leaveRequest.status} />
+                  {leave.start_date} 〜 {leave.end_date}
                 </TableCell>
-
                 <TableCell>
-                  <LeaveInboxDecisionForm request={leaveRequest} />
+                  {leave.approvals} / {leave.required_approvals ?? "—"}
+                </TableCell>
+                <TableCell>
+                  <Link href={`/my/leaves/${leave.id}`}>
+                    {leave.can_execute ? "内容を確認して確定" : "内容を確認して判断"}
+                  </Link>
                 </TableCell>
               </TableRow>
             ))}
           </TableBody>
         </Table>
-      </div>
-
-      <TablePagination
-        pathname="/inbox/leaves"
-        total={result.total}
-        limit={props.pageSize}
-        offset={props.offset}
-        extraParams={{
-          sort: props.sort === "created_at_desc" ? undefined : props.sort,
-          size: String(props.pageSize),
-        }}
-        pageSizeOptions={PAGE_SIZE_OPTIONS}
-      />
+      )}
+      <nav aria-label="受信箱のページ" className="flex gap-4">
+        {offset > 0 ? (
+          <Link href={`/inbox/leaves?offset=${Math.max(0, offset - 20)}`}>前へ</Link>
+        ) : null}
+        {result.next_offset !== null ? (
+          <Link href={`/inbox/leaves?offset=${result.next_offset}`}>次へ</Link>
+        ) : null}
+      </nav>
     </div>
   )
 }

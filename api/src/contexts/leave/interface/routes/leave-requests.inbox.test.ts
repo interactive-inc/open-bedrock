@@ -14,19 +14,6 @@ import {
   initializeCompanyMembershipTestState,
   initializeStandardCompanyTestState,
 } from "@tests/api/support/initialize-standard-company-test-state"
-import { z } from "zod"
-
-const leaveInboxResponseSchema = z.object({
-  id: z.number(),
-  applicant_name: z.string(),
-  leave_type: z.string(),
-  start_date: z.string(),
-  end_date: z.string(),
-  days: z.number(),
-  reason: z.string().nullable(),
-  status: z.enum(["pending", "approved", "rejected"]),
-  created_at: z.string(),
-})
 
 const jwtSecret = "leave-requests-inbox-route-test-secret"
 
@@ -112,7 +99,7 @@ async function request(props: {
 }
 
 describe("GET /leave-requests/inbox", () => {
-  test("returns pending requests with applicant name for a manager", async () => {
+  test("does not treat an unsubmitted request as a System task merely because the viewer is a manager", async () => {
     const response = await request({
       path: "/leave/leave-requests/inbox",
       token: await tokenFor(4),
@@ -120,17 +107,7 @@ describe("GET /leave-requests/inbox", () => {
 
     expect(response.status).toBe(200)
 
-    const parsed = z
-      .object({ data: z.array(leaveInboxResponseSchema), total: z.number() })
-      .safeParse(await response.json())
-
-    expect(parsed.success).toBe(true)
-
-    if (parsed.success) {
-      expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0]?.id).toBe(1)
-      expect(parsed.data.data[0]?.applicant_name).toBe("Emery Lane")
-    }
+    expect(await response.json()).toEqual({ data: [], next_offset: null })
   })
 
   test("returns 403 for a member", async () => {

@@ -80,6 +80,7 @@ export const permissionKeys = [
   "it_incident:manage",
   "it_incident:read:all",
   "leave:approve",
+  "leave:procedure:manage",
   "leave:read:all",
   "leave:read:department",
   "leave:read:reports",

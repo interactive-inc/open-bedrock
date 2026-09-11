@@ -14,6 +14,12 @@ type PermissionEntry = {
  */
 export const LEAVE_PERMISSION_ENTRIES = [
   {
+    key: "leave:procedure:manage",
+    category: "leave",
+    featureKey: "leave",
+    description: "休暇の承認規程を設定する",
+  },
+  {
     key: "leave:submit",
     category: "leave",
     featureKey: "leave",

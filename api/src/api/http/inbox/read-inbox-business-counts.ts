@@ -2,7 +2,7 @@ import { ExpenseProcedureInboxAdapter } from "@/contexts/expense/infrastructure/
 import { resolveDisabledFeatureKeys } from "@/lib/feature/resolve-disabled-feature-keys"
 import { ApplicationError } from "@/lib/errors"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
-import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
+import { LeaveProcedureInboxAdapter } from "@/contexts/leave/infrastructure/adapters/leave-procedure-inbox.adapter"
 import { shiftSwapRequests } from "@/contexts/shift/infrastructure/schema/shift"
 import { thanksRedemptions } from "@/contexts/thanks/infrastructure/schema/thanks"
 import type { Context } from "@/env"
@@ -19,13 +19,7 @@ export async function readInboxBusinessCounts(
     canApproveThanksRedemptions: boolean
   }>,
 ) {
-  const [leaveRows, shiftRows, thanksRows] = await Promise.all([
-    input.canApproveLeaves
-      ? context.var.database
-          .select({ total: count() })
-          .from(leaveRequests)
-          .where(eq(leaveRequests.status, "pending"))
-      : Promise.resolve([]),
+  const [shiftRows, thanksRows] = await Promise.all([
     input.canApproveShiftSwaps
       ? context.var.database
           .select({ total: count() })
@@ -67,10 +61,26 @@ export async function readInboxBusinessCounts(
       : { data: [], next_offset: null }
   if (expensePage instanceof ApplicationError) return expensePage
 
+  const leaveEnabled = !resolveDisabledFeatureKeys({
+    enabledOptInApps: context.env.ENABLED_OPT_IN_APPS,
+    disabledDefaultApps: context.env.DISABLED_DEFAULT_APPS,
+  }).includes("leave")
+  const leavePage =
+    leaveEnabled && input.canApproveLeaves
+      ? await new LeaveProcedureInboxAdapter(context).list({
+          session: input.session,
+          tokenVersion: input.tokenVersion,
+          at: new Date(context.env.NOW ?? Date.now()),
+          limit: 20,
+          offset: 0,
+        })
+      : { data: [], next_offset: null }
+  if (leavePage instanceof ApplicationError) return leavePage
   return {
     expenses: expensePage.data.length,
     expenses_has_more: expensePage.next_offset !== null,
-    leaves: leaveRows.at(0)?.total ?? 0,
+    leaves: leavePage.data.length,
+    leaves_has_more: leavePage.next_offset !== null,
     shifts: shiftRows.at(0)?.total ?? 0,
     thanks: thanksRows.at(0)?.total ?? 0,
   }

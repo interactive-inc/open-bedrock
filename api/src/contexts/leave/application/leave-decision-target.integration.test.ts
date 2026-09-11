@@ -5,10 +5,7 @@ import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.ent
 import { createLeaveDecisionTestContext } from "@/contexts/leave/test/leave-decision.test-support"
 import { readLeaveDecisionTarget } from "@/contexts/leave/test/read-leave-decision-target.test-support"
 import { reviewLeaveRequest } from "@/contexts/leave/test/review-leave-request.test-support"
-import {
-  zAppLeaveRequestInboxList,
-  zAppLeaveRequestDetail,
-} from "@/contexts/leave/interface/http/response-schemas"
+import { zAppLeaveRequestDetail } from "@/contexts/leave/interface/http/response-schemas"
 import { ConflictError } from "@/lib/errors"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { requestWithContext } from "@tests/api/support/request-with-context"
@@ -47,18 +44,12 @@ for (const mode of ["approve-balanced", "approve-untracked", "reject"] as const)
   }
 
   describe(`確認した休暇内容: ${mode}`, () => {
-    test("詳細とinboxで同じ確認対象を返し、判断の監査にも固定する", async () => {
+    test("未提出の記録をSystem受信箱へ混ぜず、従来の確認内容を監査へ固定する", async () => {
       const f = await fixture()
       const target = await f.read()
       const inbox = await f.http("/leave/leave-requests/inbox")
       expect(inbox.status).toBe(200)
-      const body = zAppLeaveRequestInboxList.parse(await inbox.json())
-      expect(body.data).toHaveLength(1)
-      expect(body.data[0]).toMatchObject({
-        employee_id: f.request.employeeId,
-        consumed_days: 3,
-        decision_target: target,
-      })
+      expect(await inbox.json()).toEqual({ data: [], next_offset: null })
       expect(target).toEqual(f.command.decisionTarget)
       expect((await f.decide(target)).status).toBe(200)
       const audit = await f.db
