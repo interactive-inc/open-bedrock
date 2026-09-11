@@ -79,6 +79,14 @@ export class SubmitLeaveProcedure {
       return new UnexpectedError("休暇を取得できません", { cause: request })
     if (request === null || request.employeeId !== applicant.id)
       return new ForbiddenError("本人の休暇ではありません", "forbidden")
+    const source = await new LeaveProcedureRepository(this.c).findDraftSource(
+      command.leaveRequestId,
+    )
+    if (source !== command.previousLeaveRequestId)
+      return new ConflictError(
+        "差戻し元が確認した内容と一致しません",
+        "resubmission_source_changed",
+      )
     const content = CanonicalSystemJsonValue.create(request.toProposalBody())
     if (content instanceof Error)
       return new UnexpectedError("休暇の内容が不正です", { cause: content })

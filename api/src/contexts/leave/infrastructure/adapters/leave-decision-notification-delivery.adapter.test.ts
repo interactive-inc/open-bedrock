@@ -1,22 +1,20 @@
 import { runScheduledLeaveNotifications } from "@/api/scheduled/run-leave-notifications"
 import { expect, spyOn, test } from "bun:test"
-import { createLeaveDecisionTestContext } from "@/contexts/leave/test/leave-decision.test-support"
-import { ApproveLeaveRequest } from "@/contexts/leave/application/approve-leave-request"
-import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
+import { createLeaveProcedureDecisionTestContext } from "@/contexts/leave/test/leave-procedure-decision.test-support"
 import { LeaveDecisionNotificationDeliveryAdapter } from "@/contexts/leave/infrastructure/adapters/leave-decision-notification-delivery.adapter"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 async function fixture() {
-  const f = await createLeaveDecisionTestContext()
+  const prepared = await createLeaveProcedureDecisionTestContext()
+  const f = { ...prepared, db: prepared.database }
   await f.db
     .exec(`INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('notification-worker','active',0,0,0);
     INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at) VALUES ('notification-principal','notification-worker','service','Notification worker',1,0,0);
     INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES ('notification-role','notification-worker','custom','Notification worker',0,0);
     INSERT INTO system_iam_role_permissions VALUES ('notification-role','batch:execute'),('notification-role','employee:read'),('notification-role','leave:read:all');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('notification-binding','notification-worker','notification-role',0);`)
-  expect(await new ApproveLeaveRequest({ context: f.context }).execute(f.command)).toBeInstanceOf(
-    LeaveRequest,
-  )
+  await f.prepareCompletion()
+  expect(await f.complete()).toEqual({ status: "approved", replayed: false })
   const clock = { at: new Date(f.context.env.NOW) }
   const run = () =>
     new LeaveDecisionNotificationDeliveryAdapter({
@@ -43,7 +41,7 @@ test("並行配送と再実行でも通知を一度だけ保存する", async ()
     await f.context.env.DB.prepare(
       "SELECT recipient_account_id FROM system_notification_deliveries WHERE id LIKE 'leave-decision:%'",
     ).first<string>("recipient_account_id"),
-  ).toBe("5")
+  ).toBe(f.creator.accountId)
 })
 
 test("通知保存に失敗しても承認済みの判断を保持し、復旧後に配送する", async () => {
@@ -64,14 +62,14 @@ for (const status of ["suspended", "locked"]) {
   test(`受信者が${status}の場合は配信せず、再開後に再送する`, async () => {
     const f = await fixture()
     await f.context.env.DB.prepare(
-      "UPDATE system_accounts SET status = ?1, token_version = token_version + 1 WHERE id = '5'",
+      `UPDATE system_accounts SET status = ?1, token_version = token_version + 1 WHERE id = '${f.creator.accountId}'`,
     )
       .bind(status)
       .run()
     expect(await f.run()).toEqual([expect.objectContaining({ status: "queued" })])
     expect(await f.count()).toBe(0)
     await f.db.exec(
-      "UPDATE system_accounts SET status = 'active', token_version = token_version + 1 WHERE id = '5'",
+      `UPDATE system_accounts SET status = 'active', token_version = token_version + 1 WHERE id = '${f.creator.accountId}'`,
     )
     f.clock.at = new Date(f.clock.at.getTime() + 60000)
     expect(await f.run()).toEqual([expect.objectContaining({ status: "succeeded" })])
@@ -82,7 +80,7 @@ for (const status of ["suspended", "locked"]) {
 test("受信Accountが終了済みなら配信しない", async () => {
   const f = await fixture()
   await f.context.env.DB.prepare(
-    "UPDATE system_accounts SET closed_at = ?1, updated_at = ?1, status = 'suspended', token_version = token_version + 1 WHERE id = '5'",
+    `UPDATE system_accounts SET closed_at = ?1, updated_at = ?1, status = 'suspended', token_version = token_version + 1 WHERE id = '${f.creator.accountId}'`,
   )
     .bind(f.clock.at.getTime())
     .run()
@@ -145,7 +143,7 @@ for (const mutation of ["recipient", "permission"]) {
       const statements = await prepare(job, at)
       if (mutation === "recipient") {
         await f.db.exec(
-          "UPDATE system_accounts SET status = 'suspended', token_version = token_version + 1 WHERE id = '5'",
+          `UPDATE system_accounts SET status = 'suspended', token_version = token_version + 1 WHERE id = '${f.creator.accountId}'`,
         )
       } else {
         await f.db.exec(
@@ -167,7 +165,7 @@ for (const mutation of ["recipient", "permission"]) {
 test("配送不能が試行上限に達したらdead letterに残して自動再送を止める", async () => {
   const f = await fixture()
   await f.db.exec(
-    "UPDATE system_accounts SET status = 'suspended', token_version = token_version + 1 WHERE id = '5'",
+    `UPDATE system_accounts SET status = 'suspended', token_version = token_version + 1 WHERE id = '${f.creator.accountId}'`,
   )
   for (const attempt of Array.from({ length: 10 }, (_, index) => index + 1)) {
     expect(await f.run()).toEqual([

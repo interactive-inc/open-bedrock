@@ -60,6 +60,14 @@ export class LeaveProcedureRepository {
     })
   }
 
+  async findDraftSource(leaveRequestId: number): Promise<number | null> {
+    return this.c.env.DB.prepare(
+      "SELECT previous_leave_request_id FROM leave_requests WHERE id = ?1",
+    )
+      .bind(leaveRequestId)
+      .first<number>("previous_leave_request_id")
+  }
+
   async findForRequest(leaveRequestId: number): Promise<LeaveProcedureBinding | null | Error> {
     try {
       const row = await this.c.env.DB.prepare(`SELECT request_key AS requestKey,

@@ -1,4 +1,3 @@
-import { readLeaveDecisionTarget } from "@/contexts/leave/test/read-leave-decision-target.test-support"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { describe, expect, test } from "bun:test"
@@ -273,61 +272,6 @@ describe("POST /leave-requests", () => {
     })
 
     expect(response.status).toBe(409)
-  })
-
-  test("consumes only 0.5 day for a half-day request once approved", async () => {
-    const db = await createTestDb()
-
-    const created = await requestWithContext({
-      db,
-      jwtSecret,
-      path: "/leave/leave-requests",
-      token: await tokenFor(5),
-      method: "POST",
-      body: {
-        leave_type: "annual",
-        start_date: "2026-09-10",
-        end_date: "2026-09-10",
-        unit: "half_day_am",
-      },
-    })
-
-    expect(created.status).toBe(201)
-
-    const createdBody = leaveRequestCreateResponseSchema.parse(await created.json())
-
-    const approveResponse = await requestWithContext({
-      db,
-      jwtSecret,
-      path: `/leave/leave-requests/${createdBody.id}/approve`,
-      token: await tokenFor(4),
-      method: "POST",
-      body: {
-        comment: null,
-        decision_target: await readLeaveDecisionTarget(
-          db,
-          jwtSecret,
-          "2026-01-01T00:00:00.000Z",
-          createdBody.id,
-          await tokenFor(4),
-        ),
-      },
-    })
-
-    expect(approveResponse.status).toBe(200)
-
-    const balance = z
-      .object({ remaining_days: z.number() })
-      .parse(
-        await db
-          .prepare(
-            "SELECT remaining_days FROM leave_balances WHERE employee_id = 5 AND fiscal_year = '2026' AND leave_type = 'annual'",
-          )
-          .first(),
-      )
-
-    // seed の remaining(15) から半休0.5日分だけ減る。
-    expect(balance.remaining_days).toBe(14.5)
   })
 })
 

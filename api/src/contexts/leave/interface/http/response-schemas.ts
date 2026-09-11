@@ -1,5 +1,4 @@
 import { leaveProcedureDecisionTargetSchema } from "@/contexts/leave/domain/definitions/leave-procedure-decision-target.definition"
-import { leaveDecisionTargetSchema } from "@/contexts/leave/domain/definitions/leave-decision-target.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import {
   leaveTypeSchema,
@@ -27,7 +26,6 @@ export const zAppLeaveRequest = z.object({
 /** 休暇申請の詳細レスポンス（GET/PUT /requests/:id）。approver_id と decided_comment を含まない。 */
 export const zAppLeaveRequestDetail = z.object({
   consumed_days: z.number(),
-  decision_target: leaveDecisionTargetSchema.nullable(),
   id: z.number(),
   employee_id: zEmployeeId,
   leave_type: leaveTypeSchema,
@@ -50,7 +48,15 @@ export const zAppLeaveRequestSummary = z.object({
   days: z.number(),
   unit: leaveUnitSchema,
   hours: z.number().nullable(),
-  status: z.enum(["pending", "approved", "rejected"]),
+  status: z.enum([
+    "draft",
+    "pending",
+    "approved",
+    "rejected",
+    "returned",
+    "cancelled",
+    "awaiting_execution",
+  ]),
   created_at: z.string(),
 })
 
@@ -139,6 +145,10 @@ export const zLeaveProcedureView = z.object({
   approvals: z.number(),
   decisions: z.array(
     z.object({
+      actor_account_id: z.string(),
+      actor_name: z.string().nullable(),
+      represented_account_id: z.string(),
+      represented_name: z.string().nullable(),
       task_key: z.string(),
       task_round: z.number(),
       action: z.enum(["approve", "reject", "return"]),

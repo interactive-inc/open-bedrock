@@ -232,6 +232,7 @@ export const POST = factory.createHandlers(
     "json",
     z
       .object({
+        previous_leave_request_id: z.number().int().positive().safe().nullable().optional(),
         leave_type: leaveTypeSchema,
         start_date: isoDate,
         end_date: isoDate,
@@ -255,6 +256,7 @@ export const POST = factory.createHandlers(
 
     const created = await new CreateLeaveRequest(c).run({
       employeeId: session.employeeId,
+      previousLeaveRequestId: body.previous_leave_request_id ?? null,
       leaveType: body.leave_type,
       startDate: body.start_date,
       endDate: body.end_date,

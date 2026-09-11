@@ -14,6 +14,7 @@ import type {
 
 export type Command = {
   employeeId: EmployeeId
+  previousLeaveRequestId?: number | null
   leaveType: LeaveType
   startDate: string
   endDate: string
@@ -33,6 +34,15 @@ export class CreateLeaveRequest {
 
   async run(command: Command): Promise<LeaveRequest | ApplicationError> {
     const repository = new LeaveRequestRepository(this.c)
+
+    const previousId = command.previousLeaveRequestId ?? null
+    if (
+      previousId !== null &&
+      (!Number.isSafeInteger(previousId) ||
+        previousId <= 0 ||
+        !(await repository.isReturnedSource(command.employeeId, previousId)))
+    )
+      return new ConflictError("差戻し元の休暇を確認してください", "invalid_resubmission_source")
 
     const days = LeaveRequest.daysBetween(command.startDate, command.endDate)
 
@@ -95,7 +105,7 @@ export class CreateLeaveRequest {
       createdAt: command.createdAt,
     })
 
-    const created = await repository.create(leaveRequest)
+    const created = await repository.create(leaveRequest, previousId)
 
     // 条件付き INSERT が 0 行だった場合は並行リクエストによる重複
     if (created === null) {

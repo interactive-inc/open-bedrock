@@ -34,6 +34,9 @@ export class LeaveProcedureReadAdapter {
     const binding = await new LeaveProcedureRepository(this.c).findForRequest(input.leaveRequestId)
     if (binding instanceof Error)
       return new UnexpectedError("休暇の案件を取得できません", { cause: binding })
+    const draftSource = await new LeaveProcedureRepository(this.c).findDraftSource(
+      input.leaveRequestId,
+    )
     const nextLeaveRequestId =
       binding === null
         ? null
@@ -182,6 +185,11 @@ export class LeaveProcedureReadAdapter {
     ])
     if (people instanceof Error)
       return new UnexpectedError("休暇の関係者を取得できません", { cause: people })
+    const decisionPeople = await directory.findForAccountIds(
+      attestations.flatMap((witness) => [witness.actorAccountId, witness.representedAccountId]),
+    )
+    if (decisionPeople instanceof Error)
+      return new UnexpectedError("判断者を取得できません", { cause: decisionPeople })
     const currentTask = tasks.find(
       (task) => task.key === target?.task_key && task.round === target?.task_round,
     )
@@ -230,7 +238,7 @@ export class LeaveProcedureReadAdapter {
         request.status === "pending" &&
         input.session.hasPermission("leave:submit"),
       next_leave_request_id: nextLeaveRequestId,
-      previous_leave_request_id: binding?.previousLeaveRequestId ?? null,
+      previous_leave_request_id: binding?.previousLeaveRequestId ?? draftSource,
       decision_target: target,
       can_decide: canDecide,
       can_execute: canExecute,
@@ -244,6 +252,14 @@ export class LeaveProcedureReadAdapter {
       required_approvals: currentTask?.requiredApprovals ?? null,
       approvals: votes.filter((witness) => witness.action === "approve").length,
       decisions: attestations.map((witness) => ({
+        actor_account_id: witness.actorAccountId,
+        actor_name:
+          decisionPeople.find((person) => person.accountId === witness.actorAccountId)?.employee
+            .officialName ?? null,
+        represented_account_id: witness.representedAccountId,
+        represented_name:
+          decisionPeople.find((person) => person.accountId === witness.representedAccountId)
+            ?.employee.officialName ?? null,
         task_key: witness.taskKey,
         task_round: witness.round,
         action: witness.action,

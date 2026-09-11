@@ -8,9 +8,9 @@ usage:
                                                                         --type: annual|special|compensatory|summer|child_nursing_care|prenatal_checkup|menstrual|caregiving_leave
   bedrock leave-requests mine [--status <s>]                          自分の申請一覧
   bedrock leave-requests inbox                                        承認待ち一覧（承認者のみ）
-  bedrock leave-requests approve <id> --decision-target '<json>' [--comment <c>]                 承認
-  bedrock leave-requests reject <id> --decision-target '<json>' --comment <c>                    却下
 
---decision-target には show または inbox の decision_target をJSONで指定する。`
+  bedrock leave-requests procedure --id <id> [--operation submit|approve|reject|complete|cancel]
+
+判断対象は procedure または inbox で確認し、--decision-target に同じJSONを指定する。`
 
 export default factory.createHandlers((c) => c.text(help))

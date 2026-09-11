@@ -1,4 +1,3 @@
-import { LeaveDecisionTargetValue } from "@/contexts/leave/domain/values/leave-decision-target.value"
 import { ConflictError } from "@/lib/errors"
 import { ResolveOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter"
 import {
@@ -24,14 +23,8 @@ import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 /** 休暇申請を詳細レスポンス用に整形する。 */
-async function toResponseBody(leaveRequest: LeaveRequest) {
-  const target = await LeaveDecisionTargetValue.create(leaveRequest)
-  if (target instanceof Error)
-    throw toHttpException(
-      new UnexpectedError("cannot identify leave decision target", { cause: target }),
-    )
+function toResponseBody(leaveRequest: LeaveRequest) {
   return zAppLeaveRequestDetail.parse({
-    decision_target: target?.toJSON() ?? null,
     consumed_days: leaveRequest.consumedDays,
     id: leaveRequest.id,
     employee_id: leaveRequest.employeeId,
@@ -138,7 +131,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw toHttpException(result)
   }
 
-  return c.json(await toResponseBody(result), 200)
+  return c.json(toResponseBody(result), 200)
 })
 
 // @authorization owner - 本人のリソースに限定する
@@ -191,7 +184,7 @@ export const PUT = factory.createHandlers(
       throw toHttpException(result)
     }
 
-    return c.json(await toResponseBody(result), 200)
+    return c.json(toResponseBody(result), 200)
   },
 )
 
