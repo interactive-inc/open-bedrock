@@ -10,10 +10,12 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 
+type Props = { commandId: string }
+
 const initialState: LicenseActionState = { ok: false, error: null }
 
 /** ライセンス登録フォーム。名称必須、その他は任意。成功時は /licenses へ戻る。 */
-export function LicenseCreateForm() {
+export function LicenseCreateForm(props: Props) {
   const router = useRouter()
 
   async function reduce(
@@ -43,6 +45,7 @@ export function LicenseCreateForm() {
 
   return (
     <form action={formAction}>
+      <input type="hidden" name="command_id" value={props.commandId} />
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="license-name">名称</FieldLabel>

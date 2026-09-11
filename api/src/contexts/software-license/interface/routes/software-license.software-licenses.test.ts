@@ -81,7 +81,15 @@ async function request(
   method?: string,
   body?: unknown,
 ): Promise<Response> {
-  return requestWithContext({ db: await createTestDb(), jwtSecret, path, token, method, body })
+  return requestWithContext({
+    db: await createTestDb(),
+    jwtSecret,
+    path,
+    token,
+    method,
+    body,
+    headers: { "idempotency-key": "test:registration", "if-match": "0" },
+  })
 }
 
 describe("GET /software-licenses", () => {

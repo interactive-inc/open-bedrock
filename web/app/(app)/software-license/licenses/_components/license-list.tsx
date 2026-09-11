@@ -77,7 +77,11 @@ export async function LicenseList(props: Props) {
                 {props.canManage ? (
                   <TableCell>
                     {license.status === "active" ? (
-                      <LicenseCancelButton id={license.id} name={license.name} />
+                      <LicenseCancelButton
+                        id={license.id}
+                        name={license.name}
+                        expectedRevision={license.revision}
+                      />
                     ) : null}
                   </TableCell>
                 ) : null}

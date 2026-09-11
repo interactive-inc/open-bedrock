@@ -41,7 +41,7 @@ export const PUT = softwareLicenseFactory.createHandlers(
   ensureLicenseEnabled,
   authenticateSystemAccessToken,
   resolveLicenseSession,
-  zValidator("header", z.object({ "if-match": z.string().optional() })),
+  zValidator("header", z.object({ "if-match": z.string() })),
   zValidator("param", z.object({ id: licenseIdSchema })),
   zValidator("json", licenseInputSchema),
   async (c) => {

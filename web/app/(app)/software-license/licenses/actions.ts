@@ -15,21 +15,28 @@ export async function createLicenseAction(
   previousState: LicenseActionState,
   formData: FormData,
 ): Promise<LicenseActionState> {
+  const commandId = toText(formData.get("command_id"))
+
+  if (commandId === null) return { ok: false, error: "登録画面を開き直してください" }
+
   const name = toText(formData.get("name"))
 
   if (name === null) {
     return { ok: false, error: "名称を入力してください" }
   }
 
-  const created = await createLicense({
-    name: name,
-    vendor: toText(formData.get("vendor")),
-    category: toCategory(formData.get("category")),
-    seats: toInteger(formData.get("seats")),
-    renewal_deadline: toText(formData.get("renewal_deadline")),
-    owner_employee_id: toText(formData.get("owner_employee_id")),
-    note: toText(formData.get("note")),
-  })
+  const created = await createLicense(
+    {
+      name: name,
+      vendor: toText(formData.get("vendor")),
+      category: toCategory(formData.get("category")),
+      seats: toInteger(formData.get("seats")),
+      renewal_deadline: toText(formData.get("renewal_deadline")),
+      owner_employee_id: toText(formData.get("owner_employee_id")),
+      note: toText(formData.get("note")),
+    },
+    commandId,
+  )
 
   if (created instanceof Error) {
     return { ok: false, error: created.message }
@@ -51,7 +58,17 @@ export async function cancelLicenseAction(
     return { ok: false, error: "対象のライセンスが不明です" }
   }
 
-  const cancelled = await cancelLicense(id)
+  const expectedRevision = toInteger(formData.get("expected_revision"))
+
+  if (
+    expectedRevision === null ||
+    !Number.isSafeInteger(expectedRevision) ||
+    expectedRevision < 0
+  ) {
+    return { ok: false, error: "一覧を読み直して対象を確認してください" }
+  }
+
+  const cancelled = await cancelLicense(id, expectedRevision)
 
   if (cancelled instanceof Error) {
     return { ok: false, error: cancelled.message }
