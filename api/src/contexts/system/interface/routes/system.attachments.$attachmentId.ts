@@ -111,13 +111,13 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
     })
   }
 
-  const claims = context.var.systemAccessToken
+  const authentication = context.var.bearerReadAuthentication
   const at = context.var.now()
 
   if (
-    claims === undefined ||
-    claims.sub !== context.var.userId ||
-    claims.exp * 1000 <= Date.now()
+    authentication === undefined ||
+    authentication.accountId !== context.var.userId ||
+    authentication.expiresAtMs <= Date.now()
   ) {
     throw new SystemInvalidSessionError()
   }
@@ -131,9 +131,9 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
     reasonCode: null,
     authorizationJson: JSON.stringify({
       policy: "owner-unlinked",
-      accountId: claims.sub,
-      tokenVersion: claims.ver,
-      machineCredentialId: claims.machineCredentialId ?? null,
+      accountId: authentication.accountId,
+      tokenVersion: authentication.tokenVersion,
+      machineCredentialId: authentication.machineCredentialId ?? null,
     }),
     beforeJson: null,
     afterJson: null,
@@ -147,7 +147,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
 
   const assertions = new PrepareAttachmentReadGuardAdapter(context).prepare({
     attachment: row,
-    claims,
+    authentication,
     at,
   })
   const savedAudit = await new SystemAuditEventRepository(context).append(audit, [], assertions)

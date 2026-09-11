@@ -1,5 +1,5 @@
 import type { SystemClockContext, SystemD1Context } from "@system/configuration/system-context"
-import type { AccessTokenClaims } from "@system/domain/schemas/auth/access-token-claims.schema"
+import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
 import {
   systemWorkActorSchema,
   systemWorkAuthenticationSchema,
@@ -9,7 +9,9 @@ import {
 import { SystemWorkItemError } from "@system/domain/errors"
 import { SystemPrincipalSecretService } from "@system/lib/auth/system-principal-secret-service"
 
-type Context = SystemD1Context & SystemClockContext & Readonly<{ claims: AccessTokenClaims }>
+type Context = SystemD1Context &
+  SystemClockContext &
+  Readonly<{ authentication: SystemReadAuthentication }>
 export type SystemWorkAuthorization = Readonly<{
   actor: SystemWorkActor
   authentication: SystemWorkAuthentication
@@ -35,10 +37,12 @@ const authorized = `WITH evaluation AS (SELECT max(?3, CAST((julianday('now')-24
 SELECT principal.id AS principal_id, principal.kind, step_up.id AS step_up_id,
   EXISTS (SELECT 1 FROM grants WHERE permission_key='system:admin') AS is_admin,
   json_object('principal', principal.revision, 'account', account.updated_at,
+    'identity', json_array(identity.id, identity.provider, identity.subject, identity.created_at, identity.activated_at),
     'credential', credential.updated_at, 'stepUp', step_up.last_used_at,
     'grants', (SELECT json_group_array(json_object('id',id,'role',role_id,'created',created_at,
       'revoked',revoked_at,'updated',updated_at,'permission',permission_key)) FROM grants)) AS proof
 FROM system_accounts account JOIN system_principals principal ON principal.account_id=account.id
+LEFT JOIN system_identity_bindings identity ON identity.id=?9 AND identity.account_id=account.id
 LEFT JOIN system_machine_credentials credential ON credential.id=?4 AND credential.principal_id=principal.id
 LEFT JOIN system_step_up_grants step_up ON step_up.account_id=account.id AND step_up.token_hash=?6
   AND step_up.issued_at<=(SELECT at FROM evaluation) AND (SELECT at FROM evaluation)<step_up.expires_at AND step_up.revoked_at IS NULL
@@ -49,6 +53,9 @@ WHERE (SELECT at FROM evaluation)<?8 AND account.id=?1 AND account.status='activ
     AND credential.revoked_at IS NULL AND credential.created_at<=?5 AND ?5<=(SELECT at FROM evaluation)
     AND credential.last_used_at>=?5 AND credential.last_used_at<=(SELECT at FROM evaluation)
     AND (credential.expires_at IS NULL OR (SELECT at FROM evaluation)<credential.expires_at)))
+  AND (?9 IS NULL OR (identity.id IS NOT NULL AND identity.revoked_at IS NULL
+    AND identity.created_at<=(SELECT at FROM evaluation) AND identity.activated_at IS NOT NULL
+    AND identity.activated_at<=(SELECT at FROM evaluation)))
   AND (?6 IS NULL OR (principal.kind='human' AND step_up.id IS NOT NULL))
   AND (EXISTS (SELECT 1 FROM grants WHERE permission_key='system:admin')
     OR (EXISTS (SELECT 1 FROM grants WHERE permission_key='system:work:read')
@@ -71,22 +78,23 @@ export class SystemWorkAuthorizationAdapter {
         : await new SystemPrincipalSecretService().hashRawSecret(input.stepUpToken)
     if (hash instanceof Error) return new SystemWorkItemError("forbidden", hash)
     const parameters = (now: Date) => [
-      this.c.claims.sub,
-      this.c.claims.ver,
+      this.c.authentication.accountId,
+      this.c.authentication.tokenVersion,
       now.getTime(),
-      this.c.claims.machineCredentialId ?? null,
-      this.c.claims.issuedAtMs,
+      this.c.authentication.machineCredentialId ?? null,
+      this.c.authentication.issuedAtMs,
       hash,
       input.permission,
-      this.c.claims.exp * 1000,
+      this.c.authentication.expiresAtMs,
+      this.c.authentication.identityBindingId,
     ]
     const validTime = () => {
       const now = this.c.var.now().getTime()
       return (
         Number.isSafeInteger(now) &&
-        now >= this.c.claims.issuedAtMs &&
-        now < this.c.claims.exp * 1000 &&
-        Date.now() < this.c.claims.exp * 1000
+        now >= this.c.authentication.issuedAtMs &&
+        now < this.c.authentication.expiresAtMs &&
+        Date.now() < this.c.authentication.expiresAtMs
       )
     }
     if (!validTime()) return new SystemWorkItemError("forbidden")
@@ -96,13 +104,13 @@ export class SystemWorkAuthorizationAdapter {
         .first<Snapshot>()
       if (snapshot === null) return new SystemWorkItemError("forbidden")
       const actor = systemWorkActorSchema.safeParse({
-        accountId: this.c.claims.sub,
+        accountId: this.c.authentication.accountId,
         principalId: snapshot.principal_id,
         kind: snapshot.kind,
       })
       const authentication = systemWorkAuthenticationSchema.safeParse({
-        tokenVersion: this.c.claims.ver,
-        credentialId: this.c.claims.machineCredentialId ?? null,
+        tokenVersion: this.c.authentication.tokenVersion,
+        credentialId: this.c.authentication.machineCredentialId ?? null,
         stepUpGrantId: snapshot.step_up_id,
       })
       if (!actor.success || !authentication.success) return new SystemWorkItemError("unavailable")
@@ -115,8 +123,8 @@ export class SystemWorkAuthorizationAdapter {
           if (!validTime()) return new SystemWorkItemError("forbidden")
           return [
             this.c.env.DB.prepare(`SELECT CASE WHEN EXISTS (SELECT 1 FROM (${authorized}) current
-            WHERE current.principal_id=?9 AND current.kind=?10 AND current.step_up_id IS ?11
-              AND current.is_admin=?12 AND current.proof=?13)
+            WHERE current.principal_id=?10 AND current.kind=?11 AND current.step_up_id IS ?12
+              AND current.is_admin=?13 AND current.proof=?14)
             THEN 1 ELSE json_extract('{}','work_item_authorization_changed') END AS ok`).bind(
               ...parameters(this.c.var.now()),
               snapshot.principal_id,

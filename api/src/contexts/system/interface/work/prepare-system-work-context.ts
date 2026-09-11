@@ -9,12 +9,12 @@ export async function prepareSystemWorkContext(
   context: Context<SystemHonoEnv>,
   input: Readonly<{ permission: string; requiresStepUp: boolean }>,
 ) {
-  const claims = context.var.systemAccessToken
-  if (claims === undefined) return new SystemWorkItemError("forbidden")
+  const authentication = context.var.bearerReadAuthentication
+  if (authentication === undefined) return new SystemWorkItemError("forbidden")
   const identities = new SystemWorkAuthorizationAdapter({
     env: { DB: context.env.DB },
     var: { now: context.var.now },
-    claims,
+    authentication,
   })
   const authorization = await identities.prepare({
     permission: input.permission,

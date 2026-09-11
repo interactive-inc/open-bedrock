@@ -264,3 +264,35 @@ test("domainを迂回する直接SQLでも不正な遷移、主体の差替え�
   })
   f.sqlite.close()
 })
+
+test("外部Identityで準備した作業認可は保存直前のIdentity失効と差替えを拒否する", async () => {
+  const f = await createSystemWorkTestFixture()
+  f.sqlite
+    .query(`INSERT INTO system_identity_bindings
+    (id,account_id,provider,subject,created_at,activated_at,revoked_at)
+    VALUES ('identity:owner','owner','oidc','external-owner',0,0,NULL)`)
+    .run()
+  const adapter = f.adapter("owner", "identity:owner")
+  const authorization = await adapter.prepare({
+    permission: "system:work:create",
+    stepUpToken: null,
+  })
+  if (authorization instanceof Error) throw authorization
+  const assertions = authorization.assertions()
+  if (assertions instanceof Error) throw assertions
+  await f.db.batch([...assertions])
+  expect(() =>
+    f.sqlite
+      .query(
+        "UPDATE system_identity_bindings SET subject='replacement-owner' WHERE id='identity:owner'",
+      )
+      .run(),
+  ).toThrow("identity binding identity is immutable")
+  f.sqlite
+    .query("UPDATE system_identity_bindings SET revoked_at=?1 WHERE id='identity:owner'")
+    .run(f.clock.now.getTime())
+  await expect(f.db.batch([...assertions])).rejects.toThrow()
+  expect(
+    await adapter.prepare({ permission: "system:work:create", stepUpToken: null }),
+  ).toBeInstanceOf(SystemWorkItemError)
+})
