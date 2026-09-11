@@ -1,3 +1,4 @@
+import Link from "next/link"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
 import { TablePagination } from "@/components/table-pagination"
@@ -44,6 +45,7 @@ export async function LicenseList(props: Props) {
           <TableHeader>
             <TableRow>
               <TableHead>名称</TableHead>
+              <TableHead>プラン</TableHead>
               <TableHead>ベンダ</TableHead>
               <TableHead>区分</TableHead>
               <TableHead>座席</TableHead>
@@ -56,7 +58,10 @@ export async function LicenseList(props: Props) {
           <TableBody>
             {result.data.map((license) => (
               <TableRow key={license.id}>
-                <TableCell>{license.name}</TableCell>
+                <TableCell>
+                  <Link href={`/software-license/licenses/${license.id}`}>{license.name}</Link>
+                </TableCell>
+                <TableCell>{license.plan_name ?? "未設定"}</TableCell>
 
                 <TableCell>{license.vendor ?? "-"}</TableCell>
 

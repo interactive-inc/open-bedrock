@@ -3,6 +3,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
 
 export type LicenseCreateRequest = {
   name: string
+  plan_name?: string | null
   vendor?: string | null
   category?: "saas" | "software" | "other" | null
   seats?: number | null

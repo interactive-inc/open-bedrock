@@ -15,6 +15,7 @@ beforeEach(() => vi.resetAllMocks())
 test("a registration retry preserves the form's command key after a lost response", async () => {
   const form = new FormData()
   form.set("name", "Example Service")
+  form.set("plan_name", " Team plan ")
   form.set("command_id", "registration:confirmed")
   mocks.create.mockResolvedValueOnce(new Error("応答を確認できませんでした"))
   mocks.create.mockResolvedValueOnce({ id: 1 })
@@ -24,6 +25,7 @@ test("a registration retry preserves the form's command key after a lost respons
   expect(mocks.create).toHaveBeenCalledTimes(2)
   expect(mocks.create.mock.calls[0]).toEqual(mocks.create.mock.calls[1])
   expect(mocks.create.mock.calls[0]?.[1]).toBe("registration:confirmed")
+  expect(mocks.create.mock.calls[0]?.[0]).toMatchObject({ plan_name: "Team plan" })
 })
 
 test("a stale cancellation does not fetch or replace the reviewed revision", async () => {
