@@ -28,6 +28,7 @@ export async function createLicenseAction(
   const created = await createLicense(
     {
       name: name,
+      plan_name: toText(formData.get("plan_name")),
       vendor: toText(formData.get("vendor")),
       category: toCategory(formData.get("category")),
       seats: toInteger(formData.get("seats")),
