@@ -17,7 +17,7 @@ export const POST = softwareLicenseFactory.createHandlers(
   ensureLicenseEnabled,
   authenticateSystemAccessToken,
   resolveLicenseSession,
-  zValidator("header", z.object({ "if-match": z.string().optional() })),
+  zValidator("header", z.object({ "if-match": z.string() })),
   zValidator("param", z.object({ id: licenseIdSchema })),
   async (c) => {
     const session = c.var.licenseSession

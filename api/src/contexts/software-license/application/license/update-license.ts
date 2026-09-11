@@ -9,7 +9,7 @@ import { LicenseRepository } from "@/contexts/software-license/infrastructure/re
 export type Command = {
   session: CompanySessionValue
   id: number
-  expectedRevision?: number
+  expectedRevision: number
   details: {
     name: string
     planName?: string | null
@@ -71,7 +71,7 @@ export class UpdateLicense {
       return new LicenseError("license_not_found", "license not found")
     }
 
-    if (command.expectedRevision !== undefined && command.expectedRevision !== license.revision)
+    if (command.expectedRevision !== license.revision)
       return new LicenseError("license_conflict", "license revision changed")
 
     const updated = await repository.write(license.withDetails(command.details), {
