@@ -191,3 +191,69 @@ describe("WorkflowEditor", () => {
     ])
   })
 })
+
+test("公開責務の条件を編集し、会社が決める人数を上書きしない", () => {
+  const initial: ApplicationWorkflow = {
+    ...initialWorkflow,
+    steps: [
+      {
+        ...initialWorkflow.steps[0],
+        approvers: [],
+        governance_authority: {
+          organization_id: "organization:default",
+          responsibility_code: "REVIEWER",
+          scope: null,
+        },
+      },
+    ],
+  }
+  const rendered = render(<WorkflowEditor code="review" initial={initial} revision={1} />)
+  expect(screen.queryByLabelText("完了条件")).toBeNull()
+  expect(screen.queryByRole("button", { name: "承認者を追加" })).toBeNull()
+  fireEvent.change(screen.getByLabelText("会社の責務コード"), { target: { value: "" } })
+  expect(screen.getByLabelText("会社の責務コード").closest("fieldset")?.disabled).toBe(false)
+  fireEvent.change(screen.getByLabelText("会社の責務コード"), { target: { value: "BOARD_REVIEW" } })
+  fireEvent.change(screen.getByLabelText("責務の適用範囲"), { target: { value: "amount" } })
+  fireEvent.change(screen.getByLabelText("通貨コード"), { target: { value: "JPY" } })
+  fireEvent.change(screen.getByLabelText("申請内の金額項目"), { target: { value: "amount" } })
+  const field = rendered.container.querySelector<HTMLInputElement>('input[name="workflow_json"]')
+  if (field === null) throw new Error("workflow field missing")
+  expect(JSON.parse(field.value)).toMatchObject({
+    steps: [
+      {
+        approvers: [],
+        governance_authority: {
+          responsibility_code: "BOARD_REVIEW",
+          scope: { scope_type: "amount", currency_code: "JPY", amount_field: "amount" },
+        },
+        approval_mode: "any",
+      },
+    ],
+  })
+})
+
+test("空欄から公開責務のステップを追加して入力を完了できる", () => {
+  const rendered = render(<WorkflowEditor code="review" initial={initialWorkflow} revision={1} />)
+  fireEvent.click(screen.getByRole("button", { name: "会社の責務でステップを追加" }))
+  fireEvent.change(screen.getByLabelText("会社の責務コード"), { target: { value: "REVIEWER" } })
+  fireEvent.change(screen.getByLabelText("責務の適用範囲"), {
+    target: { value: "organization-unit" },
+  })
+  fireEvent.change(screen.getByLabelText("適用先ID"), { target: { value: "unit:review" } })
+  const field = rendered.container.querySelector<HTMLInputElement>('input[name="workflow_json"]')
+  if (field === null) throw new Error("workflow field missing")
+  expect(JSON.parse(field.value)).toMatchObject({
+    steps: [
+      initialWorkflow.steps[0],
+      {
+        governance_authority: {
+          responsibility_code: "REVIEWER",
+          scope: { scope_type: "organization-unit", scope_id: "unit:review" },
+        },
+        allow_delegation: false,
+        rejection_behavior: "reject",
+        approvers: [],
+      },
+    ],
+  })
+})
