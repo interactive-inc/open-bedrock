@@ -1,30 +1,10 @@
-import { zValidator } from "@hono/zod-validator"
-import { z } from "zod"
-import { createClient } from "@/lib/http/hc-client"
-import { factory } from "@/factory"
-import { UsageError } from "@/lib/errors"
+import { createCompanyDefinitionCommandHandlers } from "@/lib/company-definitions/create-company-definition-command-handlers"
 
-export const help = `bedrock grade-definitions delete --id <grade-id>`
+export const help = `bedrock grade-definitions delete --data <confirmed-definition.json> --idempotency-key <key>
 
-export default factory.createHandlers(
-  zValidator("json", z.object({ help: z.string().optional(), id: z.string().optional() })),
-  async (c) => {
-    const query = c.req.valid("json")
+JSONにはorganizationId、expectedRevision、reason、resourcesを指定します。
+resourcesは公開APIで確認したID・版・有効期間・属性を持つgradeです。
+createはrevision: 1、update/deleteは確認した資源版の次のrevisionを指定します。
+deleteはstate: voidで履歴を残して取り消します。同じ内容の再送には同じキーを使ってください。`
 
-    if (query.help) return c.text(help)
-
-    if (!query.id) throw new UsageError("--id が必要です")
-
-    const client = await createClient()
-
-    const response = await client.company["grade-definitions"][":id"].$delete({
-      param: { id: query.id },
-    })
-
-    if (response.status !== 204) {
-      throw new UsageError("等級の削除に失敗しました")
-    }
-
-    return c.json({ id: query.id, status: "deleted" })
-  },
-)
+export default createCompanyDefinitionCommandHandlers({ type: "grade", action: "delete", help })

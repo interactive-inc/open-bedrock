@@ -1,23 +1,8 @@
-import { zValidator } from "@hono/zod-validator"
-import { z } from "zod"
-import { createClient } from "@/lib/http/hc-client"
-import { factory } from "@/factory"
+import { createCompanyDefinitionListHandlers } from "@/lib/company-definitions/create-company-definition-list-handlers"
 
-export const help = `bedrock position-definitions list`
+export const help = `bedrock position-definitions list --organization-id <id> [--as-of <YYYY-MM-DD>]
 
-export default factory.createHandlers(
-  zValidator("json", z.object({ help: z.string().optional() })),
-  async (c) => {
-    const query = c.req.valid("json")
+公開履歴から会社版・資源ID・資源版・有効期間を返します。
+as-ofを省略すると将来予約を含む最新の資源版、指定するとその日に有効な定義を返します。`
 
-    if (query.help) return c.text(help)
-
-    const client = await createClient()
-
-    const response = await client.company["position-definitions"].$get({ query: {} })
-
-    const rows = await response.json()
-
-    return c.json(rows)
-  },
-)
+export default createCompanyDefinitionListHandlers({ type: "position", help })
