@@ -22,6 +22,7 @@ type Command = Readonly<{
   employeeId: CompanyPersonnelSession["employeeId"]
   input: PersonnelActionInput
   idempotencyKey: string
+  expectedCompanyRevision?: number
   expectedEmployeeRevision: number
   expectedOrganizationRevision: number | null
 }>

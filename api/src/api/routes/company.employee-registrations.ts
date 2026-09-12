@@ -14,6 +14,7 @@ import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 const bodySchema = z.strictObject({
+  expected_company_revision: z.number().int().nonnegative(),
   code: z.string().trim().min(1).max(64),
   name: z.string().trim().min(1).max(200),
   email: z.string().email().max(320),
@@ -46,11 +47,12 @@ export const POST = factory.createHandlers(
       positionCode: body.position_code ?? null,
       managerEmployeeCode: body.manager_employee_code ?? null,
     })
-    const action = await resolvePersonnelActionInput(context, wire)
+    const action = await resolvePersonnelActionInput(context, wire, body.expected_company_revision)
     if (action instanceof CompanyOperationError) throw toCompanyHttpException(action)
     if (action.kind !== "hire") throw new BadRequestError("hire action is required")
     const result = await new RegisterEmployee(context).execute({
       action,
+      expectedCompanyRevision: body.expected_company_revision,
       email: body.email,
       password: body.password,
       roleKey: body.role,

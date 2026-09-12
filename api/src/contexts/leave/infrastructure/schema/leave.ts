@@ -10,6 +10,8 @@ import { integer, primaryKey, real, sqliteTable, text } from "drizzle-orm/sqlite
 /** 休暇申請（本人の申請・承認/却下の記録）。id は自動採番。 */
 export const leaveRequests = sqliteTable("leave_requests", {
   id: integer("id").primaryKey({ autoIncrement: true }),
+  // 修正下書きの作成時から変更できない差戻し元。
+  previousLeaveRequestId: integer("previous_leave_request_id"),
   employeeId: text("employee_id").$type<EmployeeId>().notNull(),
   leaveType: text("leave_type").notNull().$type<LeaveType>(),
   startDate: text("start_date").notNull(),

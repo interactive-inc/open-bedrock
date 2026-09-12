@@ -74,6 +74,8 @@ JSON envelopeはCompany coreの版・期間・原子性を一つに揃えるた�
 
 resource参照用のGETは`id` queryを繰り返して最大100件へ絞れる。`effective_on`を指定したreadはappend-only revisionからその日に有効な最新訂正を選び、将来発効の変更を過去へ混ぜない。`void`が発効した後はresourceを返さない。日付を省略したreadはcurrent headだけを返す。
 
+`GET /company/profile`、`/company/people`、`/company/employees`、`/company/employments`、`/company/definitions`、`/company/organization-snapshots`、`/company/account-employee-links`、`/company/legacy-personnel-action-records`は`organization_revision`で会社版を固定できる。同じ会社版と有効日を各APIへ渡すことで、取得途中の更新を混ぜずに関連情報を参照できる。応答の`organizationRevision`とETagは指定版に一致する。指定版より後の遡及訂正は含めない。存在しない未来版や安全な非負整数でない値は400となり、最新版へ置き換えない。会社へのアクセス資格と読取能力がなければ、版の存在を照会せず403となる。
+
 resource更新用のPOSTはendpointが所有するresource種別以外を拒否する。例えば`/people`からEmployeeを書いたり、`/organization-changes`からPositionを書いたりできない。
 
 Account対応はSystem AccountとEmployeeの一対一の同一性を固定し、その対応が有効な期間を改訂する。同じresourceの相手の変更、別resourceによるAccountまたはEmployeeの重複所有、存在しないSystem Accountへの対応を拒否する。対応期間は公開Employeeの存在期間に収まる必要があり、Employee側の訂正でも参照を孤立させない。
@@ -117,6 +119,14 @@ ReportingRelationの本人・上司・組織は、同じorganizationの有効期
 `/company/organization-changes`は、不整合な組織訂正を422で拒否し、会社版、resource履歴、head、再送記録を取り消す。確認した上長関係の訂正と組織変更を同じcommandで送ることはできる。人の判断で確認した訂正だけを追記し、組織変更に合わせて上長関係の過去を自動で短縮しない。
 
 移行時に既存の期間不整合があれば、制約の追加前に移行を停止する。正常な履歴、rowid、記録者、理由とcommandの再送結果は変更しない。在籍・所属との連動は[組織上の判断資格](company-organizational-authority.md)の制約も満たす必要がある。
+
+## 雇用主法人の履歴
+
+Employmentの`employerLegalEntityId`は、同じorganizationのLegalEntityを参照する。省略またはnullは雇用主の未記録を表し、既存の履歴へ法人を推測して補わない。雇用主は公開Employmentの改訂に保存し、有効日と会社版を指定して取得する。将来の変更を現在値へ先に反映しない。
+
+在職中と休職中の雇用期間は、参照する法人の有効期間で切れ目なく覆われなければならない。法人の終了・期間短縮や雇用期間の訂正がこの条件を破る場合、会社版の確定時に変更全体を取り消す。関連する法人と雇用の変更は同一commandで確定できる。退職後の雇用記録は雇用主との対応を保持するが、法人が無期限に存続することを要求しない。
+
+休職・復職・退職とその訂正では、既存の雇用主と将来発効する変更を保持する。再入社は別のEmploymentであり、以前の雇用主を自動で引き継がない。変更履歴の保存に失敗した場合も法人・雇用・会社版を全て取り消し、同じ依頼を再試行できる。
 
 ## 人と雇用の参照整合性
 
@@ -293,6 +303,16 @@ CLIは`bedrock employees assignment-adoption --employee-id <id>`で確認し、`
 
 この一覧は現在の雇用に対する実行許可や消費済みの記録ではない。受領先は発令の重複を排除し、訂正と現在の雇用を保存直前に再検査する。Companyの配送元Repositoryは、この照合に使う履歴snapshotと保存時のDB guardを提供する。
 
+## 人事変更で確認した会社版
+
+`POST /company/personnel-action-executions`と`POST /company/employee-registrations`は`expected_company_revision`、`POST /company/personnel-action-requests`は`base_company_revision`を必須とする。従業員・組織のライフサイクル版とは別に、入力を確認したCompanyの版を送る。保存直前に会社版が変わっていれば409で拒否し、最新版への自動置換は行わない。
+
+役職コードは、指定した会社版と発令の有効日におけるCompanyのPositionから解決する。訂正では置換後の発令の有効日を使う。旧役職台帳や現在の名称へのフォールバックは行わず、該当なし・複数該当・存在しない会社版は拒否する。
+
+解決した役職のresource ID・resource revision・コード・会社版・有効日を`positionReference`として発令内容に保持する。同じ名称でも別の役職は異なる内容として扱う。承認申請はこの内容と確認した会社版を保存し、実行時に参照の整合性と会社版を再検査する。承認後の競合では既存の判断証跡を残し、発令と実行許可の消費を確定しない。
+
+同じ依頼の再送は確認した会社版も含めて照合する。過去の記録に会社版や役職参照が残っていない場合は、現在の情報から補完しない。
+
 ## 退職と組織責務
 
 人事発令の変更と申請の実行準備は、対象雇用の全種類の組織責務を読む。部署責任者の終了は`MANAGER`だけを対象とし、同じ部署の`PEOPLE_OPERATIONS`などの別の責務は保持する。
@@ -344,3 +364,71 @@ CLIの`employees responsibility-adoption`も同じ確認・保存APIを使う。
 成功済みの同一依頼は、現在の会社範囲と変更権限を再検査して保存済みの結果を返す。同じキーで確認した版・日付や変更内容を変えた依頼は拒否する。確認条件を省略する旧形式の更新・削除は400となり、新しい変更を実行しない。
 
 Webは表示内容と確認条件を同じ組織行に保持し、再読み込みで版が変わると開いている編集・削除ダイアログも更新する。CLIは `departments show` で確認した値を `--organization-revision` と `--as-of` に指定する。送信時に最新版を自動取得して入力内容と組み合わせない。
+
+## 等級と雇用への割当
+
+公開GradeとPositionは、code・officialNameに加え、rankとdescriptionを保持できる。rankは整数またはnull、descriptionは文字列またはnullであり、省略された値を推測で補わない。各変更はresourceの新しい版として記録し、将来の変更で過去の名称・並び順・説明を書き換えない。
+
+`POST /company/organization-changes`はGradeとGradeAssignmentを同じ会社版で作成・訂正・取消できる。GradeAssignmentのattributesはemployeeId・employmentId・gradeIdを必須とする。`GET /company/organization-snapshots`は指定した有効日の等級割当も返す。
+
+等級割当の有効期間は、同じ会社のEmployee、本人が所有するEmployment、Gradeの有効期間で覆われなければならない。一つの雇用への複数の割当が重なる変更と、同じ割当IDを別の従業員・雇用へ付け替える変更を拒否する。期間の終了と後続割当の開始が同日であれば重複としない。将来の定義変更や取消も含め、会社版の確定時にDBで検査する。
+
+一つの人事発令で同じ資源に複数の版を追加する場合も、会社版は一度だけ進む。途中の取消・訂正状態を別の会社版として確定しない。通常の公開commandでは同じ資源の重複入力を拒否し、発令内部の履歴batchだけが連続した資源版をまとめて保存する。
+
+退職発令は同じtransactionで雇用に結び付く等級割当を終了する。退職日の訂正は元の割当と後続変更を検査し、再入社では以前の雇用に結び付く等級を復活させない。保存失敗は会社版、履歴、発令、再送記録とともに取り消す。
+
+従来の等級・役職定義は、`GET /company/definition-resource-adoptions`で種類と旧IDを指定して確認し、`POST /company/definition-resource-adoptions`で公開履歴へ接続できる。確認した会社版・snapshot digest・確認日・公開ID・理由と再送キーが必要で、既定の会社範囲とCompany管理資格を再送時にも検査する。現在の定義を旧作成日へ遡及せず、確認日から有効にする。職務との対応が不明な旧役職にjobを推測で割り当てない。
+
+接続は元のcode・name・rank・description・createdAtを証跡として公開履歴と同じtransactionへ保存する。確認後の変更、同じ旧定義への競合、既存の公開ID・codeとの衝突は拒否する。接続済みの旧定義への上書き・削除・置換をDBが拒否し、元の記録を上書きして証跡を変えさせない。
+
+`GET /company/definition-resource-adoptions/:commandId`は確認主体・理由・会社版・確認日・記録時点と元の定義を返す。旧定義テーブルの撤去後も、この証跡と成功済みの再送結果は残る。証跡の更新と削除は拒否する。
+
+旧等級付与の保全原記録では、付与ID・定義ID・確認時の順位がJavaScriptの安全な整数範囲内ならJSON数値、範囲外なら正確な十進文字列になる。SQLiteの符号付き64ビット整数を丸めず保持し、既に保存したJSON原文と照合digestは書き換えない。保全後は元の等級テーブルを参照せずに原記録を取得・再送できる。
+
+旧`/company/grade-definitions`、`/company/position-definitions`、`/company/employee-grades`は参照・書込ともに提供しない。旧定義は接続時の証跡、旧等級付与は保全原記録として参照する。新しい定義は`/company/definitions`、等級割当は`/company/organization-changes`で会社版・理由・有効期間を伴う履歴として保存する。
+
+旧人事注記は`GET /company/personnel-annotations`で参照する。`employee_code`または原記録の`employee_id`の一方を指定し、本人または`employee:read`を持つ主体が既定会社の範囲で読む。対象が現在の従業員台帳に存在しなくても、対象IDと閲覧権限から原記録を参照できる。`kind`は元の文字列で絞り込める。
+
+元のIDは整数精度を失わない十進文字列で返す。適用日・記録日・部署コード・備考と対象IDは原文を保持し、空文字、未知の種別、不明な日付を補正しない。元のテーブルを注記の保存先へ改名して全列を保全し、更新・削除をDBで拒否する。注記を確定した雇用・所属変更へ推測変換しない。旧`/company/employee-events`と注記への書き込みAPIは提供しない。新しい人事変更は人事発令または承認申請を経由する。
+
+従業員等級の旧台帳の移行は未完了である。旧APIの撤去だけで全台帳が統一されたとは扱わない。元の記録を保全する前に旧台帳を削除しない。
+
+## 等級・役職CLIの公開履歴
+
+`grade-definitions`と`position-definitions`のlist・create・update・deleteは、`/company/definitions`だけを使用する。listはorganization-idを必須とし、会社版・資源版・有効期間を返す。as-ofを指定した場合はその日の有効な定義を取得し、省略した場合は将来予約を含む最新の資源版を取得する。
+
+保存にはdataで指定したJSONとidempotency-keyが必要である。JSONはorganizationId・expectedRevision・reason・resourcesを持ち、各資源には同じ会社ID、公開ID、種類、版、状態、有効期間、属性を含める。createはactiveの初版、updateはactiveの後続版、deleteはvoidの後続版を一つの公開commandで保存する。取消も履歴を残す。
+
+CLIは保存直前に最新版を取得して確認条件を置き換えず、指定された会社版・資源版・再送キーを保持する。競合を自動で上書き・再試行しない。旧形式の数値IDやcode・name・rankだけを指定する保存は拒否する。
+
+## 定義管理の限定権限
+
+`master:grade:write`は等級定義、`master:position:write`は役職定義の登録・訂正・取消を許可する。限定権限による`GET /company/definitions`には対応する`type=grade`または`type=position`が必要で、他の種類や種類未指定の一覧は許可しない。IDの指定だけでは種類の制限を代替できない。
+
+変更対象の全種類について資格を検査し、許可されていない種類を含む一括変更は全体を拒否する。会社範囲と現在の資格は再送時にも検査する。この限定権限だけでは人物情報の参照、人事上の等級割当、業務上の承認資格を得られない。
+
+## 定義の会社版指定
+
+`GET /company/definitions`のorganization_revisionは、参照する会社版を固定する。effective_onと併用すると、その会社版に記録されていた指定日の定義を返す。後日の改名、遡及訂正、取消を過去の会社版へ混入させない。日付未指定では、指定会社版までに記録された各資源の最終版を返す。
+
+応答のorganizationRevisionとETagは指定した会社版になる。負数、小数、存在しない将来の会社版は400で拒否し、現在の会社版へ置き換えない。会社範囲と閲覧資格の検査は過去の会社版でも必要である。会社版指定を省略した場合は現在の会社版を使う。
+
+等級・役職CLIのlistはorganization-revisionで同じ指定を渡せる。この指定は読み取りの条件であり、保存時のexpectedRevisionを書き換えない。
+
+## 入退社の集計
+
+経営集計は、在籍snapshotと同じ会社版までの公開Employment履歴を参照する。退職日は半開期間の終了境界の前日とする。会社営業日の30日前から当日までを両端込みで対象とし、将来の開始・終了を含めない。同じ従業員の連続した雇用期間を一つの在籍として数え、契約の重複・更新、休職・復職を入退社として加算しない。空白期間を挟む再入社は別の在籍開始になる。
+
+同じ発効日の訂正と取消を反映し、指定した会社版より後の変更は集計へ混ぜない。旧人事注記から入退社の事実を推測しない。既存契約に公開雇用履歴への未接続がある場合や履歴を復元できない場合は集計に失敗し、部分的な件数やゼロ件を返さない。未接続の契約は、確認済みの期間と出所を保全して公開履歴へ接続する必要がある。
+
+## 会社の変更取得
+
+GET /company/changesは、指定会社の公開資源履歴に保存された変更を会社版、資源種別、資源ID、資源改訂番号の順で返す。x-company-organization-idで会社を指定し、その会社へのアクセス範囲とcompany:read能力を要求する。等級・役職だけの管理権限では参照できない。
+
+応答には資源の識別子と改訂番号、会社版、command ID、状態、有効期間、記録時点を含める。属性本文と判断の実行許可は含めない。現在値だけでなく訂正・取消・将来発効の記録も取得できる。将来の有効日を迎えたときに同じ変更を再配信する契約ではない。公開履歴へ未接続の旧台帳は対象に含めず、過去の変更を推測しない。
+
+limitは1から100件、既定25件とする。next_cursorは加工せず次のcursorへ渡す。同じ会社版・同じ資源の複数改訂でもページ境界で欠落しない。取得範囲を固定する場合は応答のthrough_revisionを後続の同名queryへ渡す。has_moreがfalseになるまで取得してからその会社版の反映を完了する。途中のページだけを一つのcommandの全変更として扱わない。
+
+完了時のcursorはその会社版全体を読み終えた位置を表す。次の取得ではthrough_revisionを省略して新しい会社版まで取得できる。再送と独立したconsumerは同じ位置から再開でき、consumer側が保存する位置をサーバが共用・前進させることはない。資源の詳細は公開APIへ会社版を指定して取得する。
+
+別会社のcursor、不正なcursor、現在より未来の会社版、cursorより前の取得上限は拒否する。DBや保存データの異常を空の完了ページとして返さない。

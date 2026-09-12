@@ -1,6 +1,16 @@
 /** 公開routeの宣言的な正本。API rootの生成器だけが合成する。 */
 export const systemRouteManifest = [
   {
+    method: "GET",
+    path: "/system/proposals/:number/versions/:version",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.proposals.$number.versions.$version",
+      exportName: "GET",
+    },
+  },
+  {
     method: "POST",
     path: "/system/work-items/:id/accept",
     phase: "public",

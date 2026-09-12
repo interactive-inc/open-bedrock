@@ -9,7 +9,10 @@ import {
   CompanyResourceJournalAdapter,
   type PreparedCompanyResourceJournal,
 } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
-import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
+import {
+  CompanyResourceValidationError,
+  CompanySnapshotRevisionError,
+} from "@/contexts/company/domain/errors"
 import { CompanyWorkforceResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-workforce-resource-projection.adapter"
 import { drizzle } from "drizzle-orm/d1"
 
@@ -17,7 +20,9 @@ export type CompanyResourceQuery = Readonly<{
   organizationId: string
   types: ReadonlyArray<CompanyResourceType>
   ids?: ReadonlyArray<string>
+  codes?: ReadonlyArray<string>
   effectiveOn?: CalendarDate
+  organizationRevision?: number
 }>
 
 export type CompanyResourceReadResult =
@@ -101,8 +106,20 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
   constructor(private readonly c: Context) {}
 
   async findMany(query: CompanyResourceQuery): Promise<CompanyResourceReadResult> {
-    if (query.types.length < 1 || query.types.length > 100 || (query.ids?.length ?? 0) > 100) {
+    if (
+      query.types.length < 1 ||
+      query.types.length > 100 ||
+      (query.ids?.length ?? 0) > 100 ||
+      (query.codes?.length ?? 0) > 100
+    ) {
       return { ok: false, cause: new Error("Invalid Company resource query") }
+    }
+
+    if (
+      query.organizationRevision !== undefined &&
+      (!Number.isSafeInteger(query.organizationRevision) || query.organizationRevision < 0)
+    ) {
+      return { ok: false, cause: new CompanySnapshotRevisionError() }
     }
 
     try {
@@ -115,22 +132,66 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
         binds.push(JSON.stringify(query.ids))
       }
 
+      // code は版を選んだ後で絞る。先に絞ると改名済みの旧版が復活する。
+      const codeCondition =
+        query.codes === undefined
+          ? ""
+          : "AND json_extract(attributes_json, '$.code') IN (SELECT value FROM json_each(?))"
+      const codeBinds = query.codes === undefined ? [] : [JSON.stringify(query.codes)]
+
       const resourceStatement =
-        query.effectiveOn === undefined
+        query.organizationRevision !== undefined
           ? this.c
               .prepare(
-                `SELECT organization_id, resource_type, resource_id, revision, state,
+                `WITH ranked_resources AS (
+                 SELECT resource.*,
+                        row_number() OVER (
+                          PARTITION BY resource.resource_type, resource.resource_id
+                          ORDER BY CASE WHEN ? IS NULL OR resource.resource_type = 'organization-unit'
+                            THEN NULL ELSE resource.effective_from END DESC, resource.revision DESC
+                        ) AS effective_rank
+                   FROM company_resource_revisions resource
+                  WHERE resource.organization_id = ?
+                    AND resource.organization_revision <= ?
+                    AND (? IS NULL OR resource.resource_type = 'organization-unit' OR resource.effective_from <= ?)
+                    AND ${conditions.map((condition) => `resource.${condition}`).join(" AND ")}
+               )
+               SELECT organization_id, resource_type, resource_id, revision, state,
+                      effective_from, effective_to, attributes_json
+                 FROM ranked_resources
+                WHERE effective_rank = 1 AND state = 'active'
+                  AND (? IS NULL OR (effective_from <= ? AND (effective_to IS NULL OR effective_to > ?)))
+                ${codeCondition}
+                  ORDER BY resource_type, resource_id`,
+              )
+              .bind(
+                query.effectiveOn ?? null,
+                query.organizationId,
+                query.organizationRevision,
+                query.effectiveOn ?? null,
+                query.effectiveOn ?? null,
+                ...binds,
+                query.effectiveOn ?? null,
+                query.effectiveOn ?? null,
+                query.effectiveOn ?? null,
+                ...codeBinds,
+              )
+          : query.effectiveOn === undefined
+            ? this.c
+                .prepare(
+                  `SELECT organization_id, resource_type, resource_id, revision, state,
                         effective_from, effective_to, attributes_json
                    FROM company_resource_heads
                   WHERE organization_id = ?
                     AND state = 'active'
                     AND ${conditions.join(" AND ")}
+                  ${codeCondition}
                   ORDER BY resource_type, resource_id`,
-              )
-              .bind(query.organizationId, ...binds)
-          : this.c
-              .prepare(
-                `WITH snapshot AS (
+                )
+                .bind(query.organizationId, ...binds, ...codeBinds)
+            : this.c
+                .prepare(
+                  `WITH snapshot AS (
                    SELECT revision
                      FROM company_organizations
                     WHERE id = ?
@@ -162,16 +223,18 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                     AND state = 'active'
                     AND effective_from <= ?
                     AND (effective_to IS NULL OR effective_to > ?)
+                  ${codeCondition}
                   ORDER BY resource_type, resource_id`,
-              )
-              .bind(
-                query.organizationId,
-                query.organizationId,
-                query.effectiveOn,
-                ...binds,
-                query.effectiveOn,
-                query.effectiveOn,
-              )
+                )
+                .bind(
+                  query.organizationId,
+                  query.organizationId,
+                  query.effectiveOn,
+                  ...binds,
+                  query.effectiveOn,
+                  query.effectiveOn,
+                  ...codeBinds,
+                )
 
       const [revisionResult, resourceResult] = await this.c.batch([
         this.c
@@ -194,6 +257,13 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
         return { ok: false, cause: new Error("Invalid Company organization revision") }
       }
 
+      if (
+        query.organizationRevision !== undefined &&
+        (typeof revision !== "number" || query.organizationRevision > revision)
+      ) {
+        return { ok: false, cause: new CompanySnapshotRevisionError() }
+      }
+
       const resources: CompanyResourceEntity[] = []
       for (const row of resourceResult?.results ?? []) {
         const resource = toCompanyResource(row as CompanyResourceRow)
@@ -202,7 +272,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       }
       return {
         ok: true,
-        organizationRevision: revision === undefined ? 0 : revision,
+        organizationRevision: query.organizationRevision ?? (revision === undefined ? 0 : revision),
         resources,
       }
     } catch (cause) {
@@ -356,6 +426,8 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       "assignment",
       "reporting-relation",
       "position",
+      "grade",
+      "grade-assignment",
       "organizational-office",
       "office-assignment",
       "responsibility",
@@ -386,7 +458,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
     return this.findResourceHistory(organizationId, ["reporting-relation"], revision)
   }
 
-  async findEmploymentAuthorityHistory(
+  async findEmploymentDependentHistory(
     organizationId: string,
     revision: number,
   ): Promise<ReadonlyArray<CompanyResourceEntity> | Error> {
@@ -394,6 +466,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       organizationId,
       [
         "office-assignment",
+        "grade-assignment",
         "organizational-authority",
         "responsibility-assignment",
         "collective-body-membership",
@@ -412,7 +485,8 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                       effective_from, effective_to, attributes_json
                  FROM company_resource_revisions
                 WHERE organization_id = ? AND resource_type IN (${placeholders(types)})
-                  AND organization_revision <= ?`)
+                  AND organization_revision <= ?
+                ORDER BY resource_type, resource_id, revision`)
       .bind(organizationId, ...types, revision)
       .all<CompanyResourceRow>()
     if (!history.success) return new Error("Company resource history is unavailable")
@@ -430,6 +504,9 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
     while (cause instanceof Error && !visited.has(cause)) {
       visited.add(cause)
       if (
+        cause.message.includes("company_employment_employer_reference_invalid") ||
+        cause.message.includes("company_grade_assignment_invalid") ||
+        cause.message.includes("company_grade_assignment_owner_changed") ||
         cause.message.endsWith(
           "UNIQUE constraint failed: company_resource_heads.organization_id",
         ) ||

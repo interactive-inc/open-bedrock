@@ -19,7 +19,15 @@ const leaveRequestMineResponseSchema = z.object({
   start_date: z.string(),
   end_date: z.string(),
   days: z.number(),
-  status: z.enum(["pending", "approved", "rejected"]),
+  status: z.enum([
+    "draft",
+    "pending",
+    "approved",
+    "rejected",
+    "returned",
+    "cancelled",
+    "awaiting_execution",
+  ]),
   created_at: z.string(),
 })
 

@@ -1,3 +1,4 @@
+import { validatePersonnelPositionReference } from "@/contexts/company/domain/policies/validate-personnel-position-reference.policy"
 import type {
   LifecycleSchedule,
   LifecycleVersionMutation,
@@ -241,7 +242,12 @@ export class DirectPersonnelActionAdapter {
       .union([DirectPersonnelActionAdapter.revisionSchema, z.null()])
       .safeParse(command.expectedOrganizationRevision)
 
+    const companyRevisionResult = DirectPersonnelActionAdapter.revisionSchema
+      .optional()
+      .safeParse(command.expectedCompanyRevision)
+
     if (
+      !companyRevisionResult.success ||
       !operationResult.success ||
       !employeeRevisionResult.success ||
       !organizationRevisionResult.success
@@ -252,7 +258,13 @@ export class DirectPersonnelActionAdapter {
       )
     }
 
-    const fingerprint = await fingerprintPersonnelAction(command.employeeId, command.input)
+    const referenceError = validatePersonnelPositionReference(command)
+    if (referenceError !== null) return referenceError
+    const fingerprint = await fingerprintPersonnelAction(
+      command.employeeId,
+      command.input,
+      command.expectedCompanyRevision,
+    )
     const actionRepository = new PersonnelActionAdapter(this.c)
     const existing = await actionRepository.findByOperationId(command.idempotencyKey)
 

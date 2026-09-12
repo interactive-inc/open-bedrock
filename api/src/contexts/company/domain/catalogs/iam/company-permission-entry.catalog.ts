@@ -23,6 +23,22 @@ export const COMPANY_PERMISSION_ENTRIES = [
     description: "会社全体で使用する組織マスタを編集できます。",
   },
   {
+    key: "master:grade:write",
+    category: "org",
+    appliesTo: "org",
+    name: "等級定義管理",
+    description:
+      "会社の等級定義を参照し、作成・改訂・取消できます。他の会社情報の変更資格は含みません。",
+  },
+  {
+    key: "master:position:write",
+    category: "org",
+    appliesTo: "org",
+    name: "役職定義管理",
+    description:
+      "会社の役職定義を参照し、作成・改訂・取消できます。他の会社情報の変更資格は含みません。",
+  },
+  {
     key: "employee:read",
     category: "hr",
     appliesTo: "org",

@@ -111,6 +111,13 @@ export class CompanyNotFoundError extends CompanyOperationError {
   }
 }
 
+export class CompanySnapshotRevisionError extends DomainError {
+  constructor() {
+    super("Company snapshot revision is unavailable")
+    this.name = "CompanySnapshotRevisionError"
+  }
+}
+
 export class CompanyResourceValidationError extends DomainError {
   constructor(readonly code: CompanyResourceValidationCode) {
     super(code)

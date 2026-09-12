@@ -43,25 +43,4 @@ export class ResolveActiveSystemAccountIdAdapter {
     }
     return account?.status === "active"
   }
-
-  async findActiveSystemAccountIds(
-    accountIdInputs: ReadonlyArray<string>,
-  ): Promise<ReadonlySet<string> | Error> {
-    const accountIds: AccountId[] = []
-    for (const input of accountIdInputs) {
-      const accountId = zAccountId.safeParse(input)
-      if (!accountId.success) return new Error("canonical System Account ID is invalid")
-      accountIds.push(accountId.data)
-    }
-    const accounts = await new SystemAccountRepository({ database: this.c.env.DB }).findMany(
-      accountIds,
-    )
-    if (accounts instanceof Error)
-      return new Error("failed to resolve canonical System Accounts", { cause: accounts })
-    return new Set(
-      accounts
-        .filter((account) => account.status === "active")
-        .map((account) => String(account.id)),
-    )
-  }
 }

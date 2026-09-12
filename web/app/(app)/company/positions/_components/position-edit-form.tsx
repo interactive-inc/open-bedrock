@@ -1,5 +1,6 @@
 "use client"
 
+import { PositionRevisionFields } from "@/app/(app)/company/positions/_components/position-revision-fields"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 import { updatePositionAction } from "@/app/(app)/company/positions/actions"
@@ -66,7 +67,15 @@ export function PositionEditForm(props: Props) {
         </DialogHeader>
 
         <form action={formAction} className="flex flex-col gap-4">
-          <input type="hidden" name="positionId" value={props.position.id} />
+          <PositionRevisionFields
+            jobId={props.position.jobId}
+            id={props.position.id}
+            companyRevision={props.position.organizationRevision}
+            resourceRevision={props.position.revision}
+            commandId={props.position.commandId}
+            effectiveFrom={props.position.effectiveFrom}
+            effectiveTo={props.position.effectiveTo}
+          />
 
           <FieldGroup>
             <Field>
@@ -101,11 +110,10 @@ export function PositionEditForm(props: Props) {
                 name="rank"
                 type="number"
                 inputMode="numeric"
-                defaultValue={props.position.rank}
+                defaultValue={props.position.rank ?? ""}
                 min={FORM_CONSTRAINTS.position.rankMin}
                 max={FORM_CONSTRAINTS.position.rankMax}
                 step={1}
-                required
               />
             </Field>
 

@@ -30,7 +30,7 @@ async function findPersonnelActionRequest(
               request.requested_by_employee_id,
               requester.employee_code AS requested_by_employee_code,
               requester.official_name AS requested_by_employee_name,
-              request.base_employee_revision, request.base_organization_revision,
+              request.base_employee_revision, request.base_organization_revision, request.base_company_revision,
               request.created_at, request.applied_action_id, request.withdrawn_at
        FROM company_personnel_action_requests AS request
        LEFT JOIN company_employees AS target ON target.id = request.target_employee_id
@@ -54,6 +54,7 @@ async function findPersonnelActionRequest(
         requested_by_employee_name: string
         base_employee_revision: number | null
         base_organization_revision: number | null
+        base_company_revision: number | null
         created_at: number
         applied_action_id: string | null
         withdrawn_at: number | null
@@ -123,6 +124,7 @@ async function findPersonnelActionRequest(
       requestedByEmployeeName: row.requested_by_employee_name,
       baseEmployeeRevision: row.base_employee_revision,
       baseOrganizationRevision: row.base_organization_revision,
+      baseCompanyRevision: row.base_company_revision,
       status:
         row.withdrawn_at !== null
           ? "withdrawn"

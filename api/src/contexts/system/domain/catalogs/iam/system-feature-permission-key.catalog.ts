@@ -5,6 +5,8 @@ export const SYSTEM_FEATURE_PERMISSION_KEYS = [
   "audit:export",
   "notification:send",
   "batch:view",
+  "system:procedure:read",
+  "system:procedure:read:all",
   "system:work:read",
   "system:work:create",
   "system:work:perform",

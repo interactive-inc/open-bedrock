@@ -50,10 +50,6 @@ export const FORM_CONSTRAINTS = {
     baseSalaryMax: 100_000_000,
     reasonMax: 3_000,
   },
-  employeeEvent: {
-    departmentCodeMax: 200,
-    noteMax: 3_000,
-  },
   goal: {
     periodMax: 100,
     titleMax: 500,

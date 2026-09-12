@@ -33,6 +33,7 @@ describe("公開Assignmentと業務の所属期間", () => {
     const request = {
       json: {
         action: { kind: "retired", employeeCode: "MANAGER-001", retirementOn: "2030-06-30" },
+        expected_company_revision: await f.companyRevision(),
         expected_employee_revision: revisions.employeeRevision,
         expected_organization_revision: revisions.organizationRevision,
       },
@@ -265,6 +266,7 @@ describe("公開Assignmentと業務の所属期間", () => {
           (await f.write(batch, await f.companyRevision(), `reporting:many-start:${index}`)).status,
         ),
       ).toBe(201)
+    const companyRevision = await f.companyRevision()
     const retired = await f.personnel(
       {
         kind: "retired",
@@ -284,7 +286,8 @@ describe("公開Assignmentと業務の所属期間", () => {
         )
         .bind(`lifecycle:${retired.action.id}:`)
         .first<number>("total"),
-    ).toBe(2)
+    ).toBe(1)
+    expect(await f.companyRevision()).toBe(companyRevision + 1)
     expect(
       await f.database
         .prepare("SELECT count(*) AS total FROM company_reporting_employment_violations")

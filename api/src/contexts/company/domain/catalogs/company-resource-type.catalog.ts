@@ -12,6 +12,7 @@ export const companyResourceTypes = [
   "job",
   "position",
   "grade",
+  "grade-assignment",
   "organizational-office",
   "office-assignment",
   "responsibility",

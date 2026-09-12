@@ -1,3 +1,5 @@
+import { getGradeCreationContext } from "@/lib/api/get-grade-creation-context"
+import { FetchError } from "@/components/fetch-error"
 import { notFound } from "next/navigation"
 import { GradeCreateForm } from "@/app/(app)/company/grades/_components/grade-create-form"
 import { BackButton } from "@/components/back-button"
@@ -15,6 +17,9 @@ export default async function NewGradePage() {
     notFound()
   }
 
+  const snapshot = await getGradeCreationContext()
+  if (snapshot instanceof Error) return <FetchError message="会社情報を取得できませんでした" />
+
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="新規等級">
@@ -23,7 +28,11 @@ export default async function NewGradePage() {
 
       <Card>
         <CardContent>
-          <GradeCreateForm />
+          <GradeCreateForm
+            companyRevision={snapshot.companyRevision}
+            commandId={snapshot.commandId}
+            gradeId={snapshot.gradeId}
+          />
         </CardContent>
       </Card>
     </div>

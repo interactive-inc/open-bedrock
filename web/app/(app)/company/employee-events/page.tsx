@@ -31,7 +31,7 @@ export default async function CompanyEmployeeEventsPage(props: Props) {
     <div className="flex flex-col gap-8">
       <PageHeader title="雇用事実" />
 
-      <ReadOnlyNotice command="bedrock employee-events record" />
+      <ReadOnlyNotice command="bedrock personnel-actions request" />
 
       <CompanyEmployeeEventFilterForm employeeCode={employeeCode} kind={kind} />
 

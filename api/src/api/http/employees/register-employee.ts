@@ -33,6 +33,7 @@ export class RegisterEmployee {
 
   async execute(input: {
     action: Extract<PersonnelActionInput, { kind: "hire" }>
+    expectedCompanyRevision?: number
     email: string
     password: string
     roleKey: "member" | "manager" | "hr" | "root"
@@ -97,6 +98,7 @@ export class RegisterEmployee {
     const payloadFingerprint = await fingerprintPersonnelAction(
       `prospective:${input.action.employeeCode}`,
       input.action,
+      input.expectedCompanyRevision,
     )
     const registrationReplayInput = {
       idempotencyKey: input.idempotencyKey,
@@ -143,6 +145,7 @@ export class RegisterEmployee {
       sourceApplicationId: null,
       idempotencyKey: input.idempotencyKey,
       requestedByEmployeeId: session.employeeId,
+      expectedCompanyRevision: input.expectedCompanyRevision,
       expectedEmployeeRevision: 0,
       expectedOrganizationRevision: organizationRevision,
       expectedPayloadFingerprint: payloadFingerprint,

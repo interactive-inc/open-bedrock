@@ -256,6 +256,44 @@ test.each(["TERMINATED", "ACTIVE", "ON_LEAVE"] as const)(
   },
 )
 
+test.each(["ACTIVE", "ON_LEAVE", "TERMINATED"])(
+  "責務を保持していても承認候補には休職していない在職中の雇用だけを使う: %s",
+  (status) => {
+    const resolved = resolveCompanyGovernanceAuthority({
+      asOf,
+      organizationRevision: 1,
+      subjectEmployeeId: null,
+      criteria: [{ responsibilityCode: "APPROVE", scope: null }],
+      activeAccountIds: new Set(["account:1"]),
+      resources: [
+        resource("employee", "employee:1", { personId: "person:1", employeeCode: "E1" }),
+        resource("employment", "employment:1", {
+          employeeId: "employee:1",
+          status,
+          employmentType: "FULL_TIME",
+        }),
+        resource("account-employee-link", "link:1", {
+          employeeId: "employee:1",
+          accountId: "account:1",
+        }),
+        resource("responsibility", "responsibility:approve", {
+          code: "APPROVE",
+          officialName: "Approval",
+        }),
+        resource("responsibility-assignment", "appointment:1", {
+          responsibilityId: "responsibility:approve",
+          holderType: "employee",
+          holderId: "employee:1",
+          authorityScopeId: null,
+          delegationAllowed: false,
+        }),
+      ],
+    })
+    if (resolved instanceof Error) throw resolved
+    expect(resolved.candidates).toHaveLength(status === "ACTIVE" ? 1 : 0)
+  },
+)
+
 function resource(
   type: Parameters<typeof CompanyResourceEntity.create>[0]["type"],
   id: string,

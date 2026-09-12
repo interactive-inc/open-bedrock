@@ -21,12 +21,142 @@ const companySql = readFileSync(
   new URL("../../infrastructure/schema/company.sql", import.meta.url),
   "utf8",
 )
+const principalSql = ["system-integration.sql", "system-principal.sql"]
+  .map((name) =>
+    readFileSync(new URL(`../../../system/infrastructure/schema/${name}`, import.meta.url), "utf8"),
+  )
+  .join("\n")
 const organizationId = "organization:default"
 const asOf = restoreCalendarDate("2026-01-01")
 
 describe("Company authority resolution HTTP", () => {
+  test("候補取得と期間照合の間の変更は409で拒否し、同じ照会を再試行できる", async () => {
+    const database = createCompanyD1TestDatabase(`${systemSql}\n${principalSql}\n${companySql}`)
+    await seed(database)
+    const pending = new Set(["change"])
+    const concurrent = new Proxy(database, {
+      get(target, property) {
+        if (property === "batch")
+          return async (statements: D1PreparedStatement[]) => {
+            const rows = await target.batch(statements)
+            if (pending.delete("change")) {
+              const change = CompanyResourceChangeEntity.create({
+                commandId: "command:concurrent-authority",
+                expectedRevision: 1,
+                actorAccountId: "account:active",
+                reason: "Confirmed responsibility correction",
+                recordedAt: 2,
+                resources: [
+                  {
+                    organizationId,
+                    type: "responsibility",
+                    id: "responsibility:approve",
+                    revision: 2,
+                    state: "active",
+                    effectiveFrom: asOf,
+                    effectiveTo: null,
+                    attributes: { code: "APPROVE", officialName: "Corrected approval" },
+                  },
+                ],
+              })
+              if (change instanceof Error) throw change
+              expect((await new D1CompanyResourceRepository(database).write(change)).kind).toBe(
+                "applied",
+              )
+            }
+            return rows
+          }
+        const value = Reflect.get(target, property)
+        return typeof value === "function" ? value.bind(target) : value
+      },
+    })
+    const app = createApp()
+    const request = () =>
+      app.request(
+        "/company/authority-resolutions",
+        {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            "x-company-organization-id": organizationId,
+          },
+          body: JSON.stringify({
+            as_of: asOf,
+            subject_employee_id: null,
+            criteria: [{ responsibility_code: "APPROVE", scope: null }],
+          }),
+        },
+        { DB: concurrent, NOW: "2026-01-01T00:00:00Z" },
+      )
+    const rejected = await request()
+    expect(rejected.status).toBe(409)
+    expect(await rejected.json()).toMatchObject({ code: "company_authority_snapshot_changed" })
+    const retried = await request()
+    expect(retried.status).toBe(200)
+    expect(await retried.json()).toMatchObject({
+      snapshot: { organizationRevision: 2 },
+      candidates: [{ accountId: "account:active" }],
+    })
+  })
+
+  test("公開Account対応が期間台帳に接続していなければ承認候補を返さない", async () => {
+    const database = createCompanyD1TestDatabase(`${systemSql}\n${principalSql}\n${companySql}`)
+    await seed(database)
+    await database.exec("DROP TRIGGER company_account_employee_resource_bindings_delete_guard")
+    await database.exec(
+      "DELETE FROM company_account_employee_resource_bindings WHERE account_id = 'account:active'",
+    )
+    const response = await createApp().request(
+      "/company/authority-resolutions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-company-organization-id": organizationId,
+        },
+        body: JSON.stringify({
+          as_of: asOf,
+          subject_employee_id: null,
+          criteria: [{ responsibility_code: "APPROVE", scope: null }],
+        }),
+      },
+      { DB: database, NOW: "2026-01-01T00:00:00Z" },
+    )
+    expect(response.status).toBe(503)
+    expect(await response.json()).toMatchObject({ code: "company_read_unavailable" })
+  })
+
+  test.each([
+    { kind: "service", accountCreatedAt: 1, principalCreatedAt: 1 },
+    { kind: "agent", accountCreatedAt: 1, principalCreatedAt: 1 },
+    { kind: "missing", accountCreatedAt: 1, principalCreatedAt: 1 },
+    { kind: "human", accountCreatedAt: 1, principalCreatedAt: 4102444800000 },
+    { kind: "human", accountCreatedAt: 4102444800000, principalCreatedAt: 4102444800000 },
+  ])("人間でない主体・未登録・判定後に作られる主体を承認候補へ含めない: %s", async (principal) => {
+    const database = createCompanyD1TestDatabase(`${systemSql}\n${principalSql}\n${companySql}`)
+    await seed(database, principal)
+    const response = await createApp().request(
+      "/company/authority-resolutions",
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          "x-company-organization-id": organizationId,
+        },
+        body: JSON.stringify({
+          as_of: asOf,
+          subject_employee_id: null,
+          criteria: [{ responsibility_code: "APPROVE", scope: null }],
+        }),
+      },
+      { DB: database, NOW: "2026-01-01T00:00:00Z" },
+    )
+    expect(response.status).toBe(200)
+    expect(await response.json()).toMatchObject({ candidates: [] })
+  })
+
   test("Company責務をliveなSystem Accountへ解決し、DB障害は候補なしへ畳まない", async () => {
-    const database = createCompanyD1TestDatabase(`${systemSql}\n${companySql}`)
+    const database = createCompanyD1TestDatabase(`${systemSql}\n${principalSql}\n${companySql}`)
     await seed(database)
     const app = createApp()
     const request = (
@@ -97,15 +227,24 @@ function createApp() {
   return app.post("/company/authority-resolutions", ...POST)
 }
 
-async function seed(database: D1Database): Promise<void> {
+async function seed(
+  database: D1Database,
+  principal = { kind: "human", accountCreatedAt: 1, principalCreatedAt: 1 },
+): Promise<void> {
   await database.exec(
     `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-     VALUES ('account:active', 'active', 0, 1, 1),
+     VALUES ('account:active', 'active', 0, ${principal.accountCreatedAt}, ${principal.accountCreatedAt}),
             ('account:suspended', 'suspended', 0, 1, 1);
      INSERT INTO company_organizations
        (id, revision, name, representative_name, created_at, updated_at)
      VALUES ('${organizationId}', 0, '', '', 1, 1);`,
   )
+  if (principal.kind !== "missing")
+    await database
+      .prepare(`INSERT INTO system_principals (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
+      VALUES ('principal:active', 'account:active', ?, 'Example Human', NULL, 1, ?, ?)`)
+      .bind(principal.kind, principal.principalCreatedAt, principal.principalCreatedAt)
+      .run()
   const base = {
     organizationId,
     revision: 1,

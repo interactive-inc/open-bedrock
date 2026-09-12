@@ -3,6 +3,8 @@ export const COMPANY_PERMISSION_KEYS = [
   "org:read",
   "org:write",
   "master:org:write",
+  "master:grade:write",
+  "master:position:write",
   "employee:read",
   "employee:attributes:read",
   "employee:write",

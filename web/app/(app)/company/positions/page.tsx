@@ -47,5 +47,5 @@ async function Positions(props: { canManage: boolean }) {
     return <FetchError message="役職の取得に失敗しました" />
   }
 
-  return <PositionList positions={positions} canManage={props.canManage} />
+  return <PositionList positions={positions.positions} canManage={props.canManage} />
 }

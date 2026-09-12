@@ -21,8 +21,6 @@ import { ApplyOrganizationResourceAdoption } from "@/contexts/company/applicatio
 import { OrganizationResourceAdoptionSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/organization/organization-resource-adoption-snapshot.adapter"
 import { OrganizationResourceAdoptionRepository } from "@/contexts/company/infrastructure/repositories/organization/organization-resource-adoption.repository"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
-import { PositionRepository } from "@/contexts/company/infrastructure/repositories/definitions/position.repository"
-import { PositionEntity } from "@/contexts/company/domain/entities/position.entity"
 
 async function createFixture() {
   const c = await createGovernanceTaskTestContext()
@@ -125,6 +123,9 @@ async function createFixture() {
   if (revision === null) throw new Error("employee revision is missing")
   const input = {
     action: { kind: "leave_started", employeeCode: "MEMBER-1", eventOn: assignment.effectiveFrom },
+    base_company_revision: await c.database
+      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+      .first<number>("revision"),
     base_employee_revision: revision,
     base_organization_revision: null,
   }
@@ -219,22 +220,25 @@ describe("Company公開責務による人事発令", () => {
     const organizationRevision = await c.database
       .prepare("SELECT revision FROM company_organization_lifecycle_states WHERE id = 1")
       .first<number>("revision")
-    expect(
-      await new PositionRepository(c.context).create(
-        PositionEntity.create({
-          code: "APPROVED-LEAD",
-          name: "Approved Lead",
-          rank: 1,
-          description: null,
-          createdAt: c.at.toISOString(),
-        }),
-      ),
-    ).not.toBeInstanceOf(Error)
+    await c.write([
+      {
+        ...base,
+        type: "position",
+        id: "position:approved-lead",
+        attributes: { code: "APPROVED-LEAD", officialName: "Approved Lead", jobId: null },
+      },
+    ])
+    const companyRevision = await c.database
+      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+      .first<number>("revision")
+    if (companyRevision === null) throw new Error("Company revision missing")
+    await c.database.exec("DROP TABLE company_position_definitions")
     const submitted = await c.request(
       0,
       "/company/personnel-action-requests",
       {
         ...c.input,
+        base_company_revision: companyRevision,
         base_organization_revision: organizationRevision,
         action: {
           kind: "position_changed",
@@ -254,6 +258,21 @@ describe("Company公開責務による人事発令", () => {
     const number = z
       .object({ application_id: z.number() })
       .parse(await submitted.json()).application_id
+    const persistedRequest = await c.database
+      .prepare(
+        "SELECT base_company_revision, payload_json FROM company_personnel_action_requests WHERE application_id = ?1",
+      )
+      .bind(number)
+      .first<{ base_company_revision: number; payload_json: string }>()
+    expect(persistedRequest?.base_company_revision).toBe(companyRevision)
+    expect(JSON.parse(persistedRequest?.payload_json ?? "null")).toMatchObject({
+      positionReference: {
+        resourceId: "position:approved-lead",
+        resourceRevision: 1,
+        organizationRevision: companyRevision,
+        effectiveOn: c.input.action.eventOn,
+      },
+    })
     for (const index of [2, 3])
       expect(
         (
@@ -393,6 +412,9 @@ describe("Company公開責務による人事発令", () => {
         managerEmployeeCode: "MEMBER-1",
         eventOn: c.at.toISOString().slice(0, 10),
       },
+      base_company_revision: await c.database
+        .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+        .first<number>("revision"),
       base_employee_revision: 0,
       base_organization_revision: organizationRevision,
     }
@@ -499,7 +521,7 @@ describe("Company公開責務による人事発令", () => {
     ).toBe(0)
   })
 
-  test.each(["authority", "account"])(
+  test.each(["authority", "account", "company-revision"])(
     "資格確認後の変更でも発令・実行許可を原子的に取り消す: %s",
     async (change) => {
       const c = await createFixture()
@@ -516,7 +538,20 @@ describe("Company公開責務による人事発令", () => {
       ).mockImplementationOnce(async function (this: PersonnelActionPersistenceAdapter, command) {
         interception.mockRestore()
         if (change === "authority") await c.withdrawAuthority()
-        else
+        else if (change === "company-revision") {
+          await c.write([
+            {
+              organizationId: "organization:default",
+              type: "position",
+              id: "position:concurrent-definition",
+              revision: 1,
+              state: "active",
+              effectiveFrom: c.input.action.eventOn,
+              effectiveTo: null,
+              attributes: { code: "CONCURRENT", officialName: "Concurrent position", jobId: null },
+            },
+          ])
+        } else
           await c.database
             .prepare(
               "UPDATE system_accounts SET status = 'suspended', token_version = token_version + 1 WHERE id = ?1",

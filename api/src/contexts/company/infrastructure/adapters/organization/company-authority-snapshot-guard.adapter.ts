@@ -40,6 +40,18 @@ export class CompanyAuthoritySnapshotGuardAdapter {
     Object.freeze(this)
   }
 
+  async findSnapshot(): Promise<string | Error> {
+    try {
+      const snapshot = await this.c.database
+        .prepare(snapshotSql)
+        .bind(JSON.stringify({ employeeCodes: [], accountIds: [] }))
+        .first<string>("snapshot")
+      return snapshot ?? new Error("Company authority snapshot is unavailable")
+    } catch (cause) {
+      return cause instanceof Error ? cause : new Error("Company authority snapshot is unavailable")
+    }
+  }
+
   async prepare(
     input: Readonly<{
       employeeCodes: ReadonlyArray<string>

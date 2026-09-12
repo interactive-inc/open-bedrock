@@ -1,3 +1,4 @@
+import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { describe, expect, test } from "bun:test"
 import { CancelSystemProcedure } from "@system/application/workflow/cancel-system-procedure"
 import { ApproveSystemTask } from "@system/application/workflow/approve-system-task"
@@ -686,6 +687,32 @@ describe("System workflow application", () => {
     if (second instanceof Error) throw second
 
     expect(second.number).toBe(first.number)
+    await fixture.database
+      .prepare("INSERT INTO system_procedure_numbers (procedure_key) VALUES ('change')")
+      .run()
+    const proposals = new SystemD1ProposalAdapter({ env: { DB: fixture.database } })
+    expect(await proposals.findByNumber(first.number)).toMatchObject({
+      version: 2,
+      bodyJson: '{"amount":20}',
+      caseId: second.workflowCase.id,
+    })
+    expect(await proposals.findByNumber(first.number, 1)).toMatchObject({
+      version: 1,
+      bodyJson: '{"amount":10}',
+      caseId: first.workflowCase.id,
+      status: "cancelled",
+      digest: first.proposal.digest,
+    })
+    expect(await proposals.findByNumber(first.number, 3)).toBeNull()
+    expect(await proposals.findByNumber(first.number + 100, 1)).toBeNull()
+    for (const version of [0, -1, 1.5, Number.NaN, Number.MAX_SAFE_INTEGER + 1]) {
+      expect(await proposals.findByNumber(first.number, version)).toBeInstanceOf(Error)
+    }
+    const hidden = new SystemD1ProposalAdapter({
+      env: { DB: fixture.database },
+      visibleCompletionOperationKeys: [],
+    })
+    expect(await hidden.findByNumber(first.number, 1)).toBeNull()
     expect(
       await fixture.database
         .prepare("SELECT status FROM system_cases WHERE id = ?1")

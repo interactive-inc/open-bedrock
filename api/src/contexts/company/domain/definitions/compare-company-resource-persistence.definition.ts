@@ -10,6 +10,7 @@ const resourceOrder = [
   "job",
   "position",
   "grade",
+  "grade-assignment",
   "site",
   "workplace",
   "organizational-office",

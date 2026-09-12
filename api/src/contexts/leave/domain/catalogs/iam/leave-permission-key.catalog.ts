@@ -1,5 +1,7 @@
 /** Leave が所有する権限key。 */
 export const LEAVE_PERMISSION_KEYS = [
+  "leave:submit",
+  "leave:procedure:manage",
   "leave:approve",
   "leave:read:all",
   "leave:read:department",

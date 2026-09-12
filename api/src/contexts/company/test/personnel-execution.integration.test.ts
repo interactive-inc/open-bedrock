@@ -173,6 +173,7 @@ async function createFixture(delegated = false) {
     requestedByEmployeeCode: "CREATOR",
     requestedByEmployeeName: "Creator",
     baseEmployeeRevision: 1,
+    baseCompanyRevision: null,
     baseOrganizationRevision: null,
     status: "approved",
     currentStep: null,

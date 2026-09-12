@@ -153,3 +153,44 @@ describe("LeaveRequest.withRevised", () => {
     expect(revised.status).toBe("pending")
   })
 })
+
+test.each(["2026-02-29", "2026-02-30", "2026-04-31"])(
+  "存在しない暦日を翌月へ補正しない: %s",
+  (date) => {
+    expect(LeaveRequest.daysBetween(date, date)).toBeInstanceOf(Error)
+  },
+)
+test("うるう年の2月29日は有効", () => {
+  expect(LeaveRequest.daysBetween("2028-02-28", "2028-03-01")).toBe(3)
+})
+
+test("休暇の提案は申請内容を固定し、承認結果によって変わらない", () => {
+  const request = new LeaveRequest({
+    id: 1,
+    employeeId: toWorkforceEmployeeId(7),
+    leaveType: "annual",
+    startDate: "2026-07-01",
+    endDate: "2026-07-01",
+    days: 1,
+    unit: "full_day",
+    hours: null,
+    consumedDays: 1,
+    reason: "Family trip",
+    createdAt: "2026-06-15T09:00:00.000Z",
+    status: "pending",
+    approverId: null,
+    decidedComment: null,
+  })
+  const approved = new LeaveRequest({
+    ...request.toProposalBody(),
+    id: 1,
+    createdAt: request.createdAt,
+    status: "approved",
+    approverId: toWorkforceEmployeeId(2),
+    decidedComment: "Approved",
+  })
+  expect(approved.toProposalBody()).toEqual(request.toProposalBody())
+  const revised = request.withRevised({ ...request.toProposalBody(), reason: "Changed reason" })
+  expect(revised.toProposalBody()).not.toEqual(request.toProposalBody())
+  expect(request.toProposalBody().reason).toBe("Family trip")
+})

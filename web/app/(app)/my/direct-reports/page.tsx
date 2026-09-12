@@ -5,7 +5,7 @@ import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { ApplicationStatusBadge } from "@/components/application-status-badge"
+import { LeaveStatusBadge } from "@/components/leave-status-badge"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { formatDate } from "@/lib/format-date"
 import { getMe } from "@/lib/api/get-me"
@@ -192,7 +192,7 @@ async function TeamLeaveSection() {
                 </span>
               </span>
 
-              <ApplicationStatusBadge status={request.status} />
+              <LeaveStatusBadge status={request.status} />
             </li>
           ))}
         </ul>
