@@ -105,7 +105,13 @@ export class AssignmentResourceAdoptionRepository {
       .prepare(`SELECT 1 AS present FROM company_resource_heads
       WHERE organization_id = 'organization:default' AND resource_type = 'assignment'
         AND resource_id IN (SELECT value FROM json_each(?1)) LIMIT 1`)
-      .bind(JSON.stringify(assignments.map((entry) => entry.resource.id)))
+      .bind(
+        JSON.stringify(
+          assignments
+            .filter((entry) => entry.resource.revision === 1)
+            .map((entry) => entry.resource.id),
+        ),
+      )
       .first()
     if (occupied !== null) return this.conflict()
     const first = assignments[0]
@@ -227,11 +233,40 @@ export class AssignmentResourceAdoptionRepository {
       statements.push(...prepared.statements, prepared.commit)
     }
     const organizationRevision = command.props.expectedRevision + changes.length
+    const insertedResources = new Set<string>()
+    for (const entry of assignments) {
+      if (!insertedResources.has(entry.resource.id)) {
+        insertedResources.add(entry.resource.id)
+        statements.push(
+          database
+            .prepare(`INSERT INTO company_assignment_resource_bindings
+          (resource_id, organization_id, employee_id, resource_revision, recorded_at)
+          VALUES (?1, 'organization:default', ?2, ?3, ?4)`)
+            .bind(
+              entry.resource.id,
+              command.props.employeeId,
+              entry.resource.revision,
+              command.props.recordedAt,
+            ),
+        )
+      }
+      statements.push(
+        database
+          .prepare(`INSERT INTO company_assignment_period_bindings
+        (period_id, resource_id, period_revision, source_revision) VALUES (?1, ?2, ?3, ?4)`)
+          .bind(
+            entry.period.periodId,
+            entry.resource.id,
+            entry.period.revision,
+            entry.resource.revision,
+          ),
+      )
+    }
     statements.push(
       database
         .prepare(`INSERT INTO company_assignment_resource_adoptions
-      (command_id, employee_id, fingerprint, actor_account_id, reason, expected_revision, organization_revision, observed_on, snapshot_digest, source_json, recorded_at, adopted_periods)
-      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)`)
+      (command_id, employee_id, fingerprint, actor_account_id, reason, expected_revision, organization_revision, observed_on, snapshot_digest, source_json, recorded_at, adopted_periods, mappings_json)
+      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13)`)
         .bind(
           command.props.commandId,
           command.props.employeeId,
@@ -245,22 +280,9 @@ export class AssignmentResourceAdoptionRepository {
           snapshot.props.sourceJson,
           command.props.recordedAt,
           assignments.length,
+          JSON.stringify(command.props.mappings ?? []),
         ),
     )
-    for (const entry of assignments) {
-      statements.push(
-        database
-          .prepare(`INSERT INTO company_assignment_resource_bindings (resource_id, organization_id, employee_id, resource_revision, recorded_at)
-        VALUES (?1, 'organization:default', ?2, 1, ?3)`)
-          .bind(entry.resource.id, command.props.employeeId, command.props.recordedAt),
-      )
-      statements.push(
-        database
-          .prepare(`INSERT INTO company_assignment_period_bindings (period_id, resource_id, period_revision, source_revision)
-        VALUES (?1, ?2, ?3, 1)`)
-          .bind(entry.period.periodId, entry.resource.id, entry.period.revision),
-      )
-    }
     for (const scope of reporting.scopes) {
       statements.push(
         database

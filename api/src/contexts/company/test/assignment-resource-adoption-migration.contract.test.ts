@@ -118,3 +118,64 @@ describe("所属移行の上長対応を追加するmigration", () => {
     expect((await database.prepare("PRAGMA foreign_key_check").all()).results).toEqual([])
   })
 })
+
+test("既存の移行証跡へ接続先を推測して補わず、新しい列と制約の追加後も原文を保全する", async () => {
+  const files = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
+    .filter((file) => file.endsWith(".sql"))
+    .sort()
+  const first = files.find((file) =>
+    file.endsWith("_record_company_assignment_connection_mappings.sql"),
+  )
+  if (first === undefined) throw new Error("connection mapping migration missing")
+  const database = createCompanyD1TestDatabase(
+    files
+      .filter((file) => file < first)
+      .map((file) => readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8"))
+      .join("\n")
+      .replaceAll("initialization:organization:default", "fixture:confirmed-organization")
+      .replaceAll("initialization:company:root", "fixture:confirmed-organization")
+      .replaceAll("system:initialization", "fixture:organization-recorder"),
+  )
+  const f = await createCompanyAssignmentResourceTestContext(database, "confirmed")
+  const sourceJson = JSON.stringify({
+    employeeId: f.people[0]!.employeeId,
+    periods: [],
+    originalNote: "Preserve the recorded confirmation verbatim",
+  })
+  await database
+    .prepare(`INSERT INTO company_assignment_resource_adoptions
+    (command_id, employee_id, fingerprint, actor_account_id, reason, expected_revision, organization_revision, observed_on, adopted_periods, snapshot_digest, source_json, recorded_at)
+    VALUES ('historical:receipt', ?1, ?2, ?3, 'Confirm historical assignments', 1, 2, '2030-01-01', 1, ?4, ?5, 123)`)
+    .bind(f.people[0]!.employeeId, "a".repeat(64), f.creator.accountId, "b".repeat(64), sourceJson)
+    .run()
+  const before = (
+    await database.prepare("SELECT rowid, * FROM company_assignment_resource_adoptions").all()
+  ).results
+  for (const file of files.filter((file) => file >= first)) {
+    await database.batch(
+      splitSqlStatements(readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8")).map((sql) =>
+        database.prepare(sql),
+      ),
+    )
+  }
+  expect(
+    (await database.prepare("SELECT rowid, * FROM company_assignment_resource_adoptions").all())
+      .results,
+  ).toEqual(before.map((row) => ({ ...row, mappings_json: null })))
+  for (const sql of [
+    "UPDATE company_assignment_resource_adoptions SET mappings_json = '[]'",
+    "DELETE FROM company_assignment_resource_adoptions",
+  ]) {
+    const failed = await database
+      .prepare(sql)
+      .run()
+      .catch((cause: unknown) => cause)
+    expect(failed).toBeInstanceOf(Error)
+  }
+  expect(
+    await database
+      .prepare("SELECT source_json FROM company_assignment_resource_adoptions")
+      .first<string>("source_json"),
+  ).toBe(sourceJson)
+  expect((await database.prepare("PRAGMA foreign_key_check").all()).results).toEqual([])
+})

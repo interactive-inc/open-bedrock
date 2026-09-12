@@ -34,6 +34,24 @@ export class AssignmentResourceAdoptionSnapshotAdapter {
       'lifecycleRevision', (SELECT revision FROM company_organization_lifecycle_states WHERE id = 1),
       'pendingOperations', (SELECT count(*) FROM company_organization_change_operations WHERE status = 'PENDING'),
       'employeeOrganizationId', (SELECT organization_id FROM company_workforce_resource_bindings WHERE resource_type = 'employee' AND resource_id = employee.id),
+      'publicAssignments', json((SELECT json_group_array(json(resource_json)) FROM (
+        SELECT json_object(
+          'resourceId', resource.resource_id, 'revision', resource.revision,
+          'organizationRevision', resource.organization_revision,
+          'state', resource.state, 'effectiveFrom', resource.effective_from,
+          'effectiveTo', resource.effective_to, 'attributesJson', resource.attributes_json,
+          'commandId', resource.command_id, 'actorAccountId', resource.actor_account_id,
+          'reason', resource.reason, 'recordedAt', resource.recorded_at,
+          'bindingEmployeeId', binding.employee_id
+        ) AS resource_json
+        FROM company_resource_heads head
+        JOIN company_resource_revisions resource ON resource.organization_id = head.organization_id
+          AND resource.resource_type = head.resource_type AND resource.resource_id = head.resource_id
+        LEFT JOIN company_assignment_resource_bindings binding ON binding.resource_id = head.resource_id
+        WHERE head.organization_id = 'organization:default' AND head.resource_type = 'assignment'
+          AND json_extract(head.attributes_json, '$.employeeId') = employee.id
+        ORDER BY resource.resource_id, resource.revision
+      ))),
       'periods', json((SELECT json_group_array(json(period_json)) FROM (
         SELECT json_set(json_object('periodId', period.period_id, 'revision', period.revision,
           'employeeId', period.employee_id, 'employmentId', period.employment_id,

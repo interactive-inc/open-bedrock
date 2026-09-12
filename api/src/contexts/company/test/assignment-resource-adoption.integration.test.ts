@@ -1,3 +1,7 @@
+import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
+import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
+import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
+import { drizzle } from "drizzle-orm/d1"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import { AssignmentResourceAdoptionSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/organization/assignment-resource-adoption-snapshot.adapter"
 import { describe, expect, test, spyOn } from "bun:test"
@@ -131,10 +135,236 @@ async function fixture(secondStartsOn = "2030-04-01", managerRetires = false) {
     observedOn: first.observedOn,
     reason: "Confirm all original assignment history",
   }
-  const adopt = (key = "assignment:adopt", body = input) =>
+  type AdoptionBody = Parameters<(typeof base.client)["assignment-adoptions"]["$post"]>[0]["json"]
+  const adopt = (key = "assignment:adopt", body: AdoptionBody = input) =>
     base.client["assignment-adoptions"].$post({ header: { "idempotency-key": key }, json: body })
   return { ...base, preview, input, adopt, first }
 }
+
+test("所属の確認対象に公開割当の全改訂と来歴を含め、確認後の変更を拒否する", async () => {
+  const f = await fixture()
+  const original: typeof f.assignment = {
+    ...f.assignment,
+    attributes: { ...f.assignment.attributes, assignmentType: "CONCURRENT" },
+  }
+  expect(
+    Number((await f.write([original], await f.companyRevision(), "independent:original")).status),
+  ).toBe(201)
+  const updated = {
+    ...original,
+    revision: 2,
+    effectiveFrom: "2030-06-01",
+    attributes: { ...original.attributes, positionTitle: "Manager" },
+  }
+  expect(
+    Number((await f.write([updated], await f.companyRevision(), "independent:future")).status),
+  ).toBe(201)
+  const snapshot = await new AssignmentResourceAdoptionSnapshotAdapter(f.database).find(
+    f.people[0]!.employeeId,
+  )
+  if (snapshot === null || snapshot instanceof Error) throw new Error("snapshot unavailable")
+  expect(
+    snapshot.props.value.publicAssignments.map((entry) => ({
+      id: entry.resourceId,
+      revision: entry.revision,
+      command: entry.commandId,
+      actor: entry.actorAccountId,
+    })),
+  ).toEqual([
+    { id: original.id, revision: 1, command: "independent:original", actor: f.creator.accountId },
+    { id: original.id, revision: 2, command: "independent:future", actor: f.creator.accountId },
+  ])
+  expect(JSON.parse(snapshot.props.value.publicAssignments[0]!.attributesJson).positionTitle).toBe(
+    "Coordinator",
+  )
+  expect(JSON.parse(snapshot.props.value.publicAssignments[1]!.attributesJson).positionTitle).toBe(
+    "Manager",
+  )
+  const confirmed = {
+    ...f.input,
+    expectedRevision: snapshot.props.value.organizationRevision,
+    snapshotDigest: snapshot.props.digest,
+  }
+  expect(
+    Number(
+      (
+        await f.write(
+          [{ ...updated, revision: 3, effectiveTo: "2030-09-01" }],
+          await f.companyRevision(),
+          "independent:end",
+        )
+      ).status,
+    ),
+  ).toBe(201)
+  const before = await f.persisted()
+  expect(Number((await f.adopt("assignment:stale-public", confirmed)).status)).toBe(409)
+  expect(await f.persisted()).toEqual(before)
+})
+
+test("既存の公開所属IDへ複数期間を接続し、証跡失敗と再送でも全履歴を保全する", async () => {
+  const f = await fixture()
+  const journal = new CompanyResourceJournalAdapter({
+    database: drizzle(f.database),
+    d1: f.database,
+  })
+  const existing: CompanyResourceProps = {
+    ...f.assignment,
+    id: "assignment:independent",
+    effectiveFrom: restoreCalendarDate("2030-02-01"),
+    effectiveTo: restoreCalendarDate("2030-04-01"),
+    attributes: { ...f.assignment.attributes, organizationUnitId: "unit:adoption" },
+  }
+  for (const resource of [
+    existing,
+    {
+      ...existing,
+      revision: 2,
+      effectiveFrom: restoreCalendarDate("2030-04-01"),
+      effectiveTo: null,
+    },
+  ]) {
+    const command = CompanyResourceChangeEntity.create({
+      commandId: `existing:assignment:${resource.revision}`,
+      expectedRevision: await f.companyRevision(),
+      actorAccountId: f.creator.accountId,
+      reason: "Confirm independent assignment history",
+      recordedAt: f.at.getTime(),
+      resources: [resource],
+    })
+    if (command instanceof Error) throw command
+    const prepared = await journal.prepare(command)
+    if (prepared instanceof Error) throw prepared
+    await f.database.batch([...prepared.statements, prepared.commit])
+  }
+  const preview = await f.preview()
+  const originalHistory = await f.database
+    .prepare("SELECT * FROM company_resource_revisions WHERE resource_id = ?1 ORDER BY revision")
+    .bind(existing.id)
+    .all()
+  const body = {
+    ...f.input,
+    expectedRevision: preview.expectedRevision,
+    snapshotDigest: preview.snapshotDigest,
+    mappings: [
+      { periodId: "assignment:legacy-one", existingResourceId: existing.id },
+      { periodId: "assignment:legacy-two", existingResourceId: existing.id },
+    ],
+  }
+  const before = await f.persisted()
+  for (const mappings of [
+    [body.mappings[0]!],
+    [body.mappings[0]!, body.mappings[0]!],
+    [{ periodId: "missing:period", existingResourceId: existing.id }],
+    body.mappings.map((mapping) => ({ ...mapping, existingResourceId: "missing:assignment" })),
+  ]) {
+    expect(Number((await f.adopt("assignment:existing", { ...body, mappings })).status)).toBe(422)
+    expect(await f.persisted()).toEqual(before)
+  }
+  for (const replacement of [
+    { placeholder: "?13", sql: "json_set(?13, '$[0].existingResourceId', 'different:target')" },
+    {
+      placeholder: "?13",
+      sql: "json_insert(?13, '$[#]', json_object('periodId', 'unknown:period', 'existingResourceId', 'unknown:target'))",
+    },
+    { placeholder: "?10", sql: "json_remove(?10, '$.publicAssignments')" },
+  ]) {
+    const prepare = f.database.prepare.bind(f.database)
+    const injected = spyOn(f.database, "prepare").mockImplementation((sql) =>
+      prepare(
+        sql.startsWith("INSERT INTO company_assignment_resource_adoptions")
+          ? sql.replace(replacement.placeholder, replacement.sql)
+          : sql,
+      ),
+    )
+    try {
+      expect(Number((await f.adopt("assignment:existing", body)).status)).toBe(503)
+    } finally {
+      injected.mockRestore()
+    }
+    expect(await f.persisted()).toEqual(before)
+  }
+  await f.database.exec(
+    "CREATE TRIGGER reject_existing_assignment_receipt BEFORE INSERT ON company_assignment_resource_adoptions BEGIN SELECT RAISE(ABORT, 'injected failure'); END;",
+  )
+  expect(Number((await f.adopt("assignment:existing", body)).status)).toBe(503)
+  expect(await f.persisted()).toEqual(before)
+  await f.database.exec("DROP TRIGGER reject_existing_assignment_receipt")
+  expect(Number((await f.adopt("assignment:existing", body)).status)).toBe(201)
+  expect(
+    (
+      await f.database
+        .prepare(
+          "SELECT * FROM company_resource_revisions WHERE resource_id = ?1 AND revision <= 2 ORDER BY revision",
+        )
+        .bind(existing.id)
+        .all()
+    ).results,
+  ).toEqual(originalHistory.results)
+  expect(
+    (
+      await f.database
+        .prepare(
+          "SELECT resource_id, source_revision FROM company_assignment_period_bindings WHERE period_id IN ('assignment:legacy-one', 'assignment:legacy-two') ORDER BY period_id",
+        )
+        .all()
+    ).results,
+  ).toEqual([
+    { resource_id: existing.id, source_revision: 3 },
+    { resource_id: existing.id, source_revision: 3 },
+  ])
+  const saved = await f.persisted()
+  expect(Number((await f.adopt("assignment:existing", body)).status)).toBe(200)
+  expect(await f.persisted()).toEqual(saved)
+  expect((await f.publicAssignments("2030-03-01")).map((resource) => resource.id)).toContain(
+    existing.id,
+  )
+  expect((await f.publicAssignments("2030-05-01")).map((resource) => resource.id)).toContain(
+    existing.id,
+  )
+  expect(
+    Number(
+      (
+        await f.write(
+          [
+            {
+              ...f.assignment,
+              id: existing.id,
+              revision: 4,
+              effectiveFrom: "2030-04-01",
+              attributes: {
+                ...f.assignment.attributes,
+                organizationUnitId: "unit:adoption",
+                positionTitle: "Lead",
+              },
+            },
+          ],
+          await f.companyRevision(),
+          "assignment:after-connection",
+        )
+      ).status,
+    ),
+  ).toBe(201)
+  expect((await f.publicAssignments("2030-03-01"))[0]?.readText("positionTitle")).toBe(
+    "Coordinator",
+  )
+  expect((await f.publicAssignments("2030-05-01"))[0]?.readText("positionTitle")).toBe("Lead")
+  expect(
+    await f.personnel(
+      {
+        kind: "retired",
+        employeeCode: "EMPLOYEE-001",
+        retirementOn: restoreCalendarDate("2030-05-30"),
+      },
+      "assignment:retire-after-connection",
+      f.people[0]!.employeeId,
+    ),
+  ).toMatchObject({ replayed: false })
+  expect(await f.publicAssignments("2030-05-31")).toEqual([])
+  expect((await f.publicAssignments("2030-03-01")).map((resource) => resource.id)).toContain(
+    existing.id,
+  )
+  expect((await f.database.prepare("PRAGMA foreign_key_check").all()).results).toEqual([])
+})
 
 describe("既存の所属・上長履歴の公開正本への接続", () => {
   test("過去の訂正と元の全改訂を保全し、移行後の上長変更・訂正・退職も同じ履歴へ反映する", async () => {
