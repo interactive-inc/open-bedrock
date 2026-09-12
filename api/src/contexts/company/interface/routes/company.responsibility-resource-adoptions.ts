@@ -91,6 +91,10 @@ export const POST = factory.createHandlers(
                 periodId: z.string().regex(/^\S{1,255}$/),
                 responsibilityId: z.string().regex(/^\S{1,255}$/),
                 authorityScopeId: z.string().regex(/^\S{1,255}$/),
+                existingResourceId: z
+                  .string()
+                  .regex(/^\S{1,255}$/)
+                  .optional(),
               })
               .strict(),
           )

@@ -9,6 +9,26 @@ const schema = z
     lifecycleRevision: z.number().int().nonnegative(),
     pendingOperations: z.number().int().nonnegative(),
     employeeOrganizationId: z.string().nullable(),
+    publicResponsibilities: z
+      .array(
+        z
+          .object({
+            resourceId: z.string(),
+            revision: z.number().int().positive(),
+            organizationRevision: z.number().int().positive(),
+            state: z.enum(["active", "void"]),
+            effectiveFrom: z.string().date(),
+            effectiveTo: z.string().date().nullable(),
+            attributesJson: z.string(),
+            commandId: z.string(),
+            actorAccountId: z.string(),
+            reason: z.string(),
+            recordedAt: z.number().int().nonnegative(),
+            bindingEmployeeId: z.string().nullable(),
+          })
+          .readonly(),
+      )
+      .readonly(),
     periods: z
       .array(
         z

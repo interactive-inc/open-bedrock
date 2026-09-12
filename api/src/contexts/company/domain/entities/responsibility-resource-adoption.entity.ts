@@ -9,6 +9,7 @@ import type { OrgResponsibilityPeriod } from "@/contexts/company/domain/definiti
 import type { ResponsibilityResourceAdoptionSnapshotValue } from "@/contexts/company/domain/values/responsibility-resource-adoption-snapshot.value"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
+import { ResponsibilityResourceConnectionValue } from "@/contexts/company/domain/values/responsibility-resource-connection.value"
 
 const schema = z
   .object({
@@ -29,6 +30,10 @@ const schema = z
             periodId: z.string().regex(/^\S{1,255}$/),
             responsibilityId: z.string().regex(/^\S{1,255}$/),
             authorityScopeId: z.string().regex(/^\S{1,255}$/),
+            existingResourceId: z
+              .string()
+              .regex(/^\S{1,255}$/)
+              .optional(),
           })
           .strict()
           .readonly(),
@@ -178,14 +183,127 @@ export class ResponsibilityResourceAdoptionEntity {
         },
       })
     }
-    return responsibilities
+    return this.connectExisting(responsibilities, snapshot)
+  }
+
+  private connectExisting(
+    responsibilities: ReadonlyArray<AdoptedResponsibility>,
+    snapshot: ResponsibilityResourceAdoptionSnapshotValue,
+  ): ReadonlyArray<AdoptedResponsibility> | Error {
+    const groups = new Map<string, AdoptedResponsibility[]>()
+    const connected: AdoptedResponsibility[] = []
+    for (const entry of responsibilities) {
+      const target = this.props.mappings.find(
+        (mapping) => mapping.periodId === entry.period.periodId,
+      )?.existingResourceId
+      if (target === undefined) {
+        connected.push(entry)
+        continue
+      }
+      const group = groups.get(target) ?? []
+      group.push(entry)
+      groups.set(target, group)
+    }
+    for (const [target, entries] of groups) {
+      const resolved = this.connectGroup(target, entries, snapshot)
+      if (resolved instanceof Error) return resolved
+      connected.push(...resolved)
+    }
+    return connected
+  }
+
+  private connectGroup(
+    target: string,
+    entries: ReadonlyArray<AdoptedResponsibility>,
+    snapshot: ResponsibilityResourceAdoptionSnapshotValue,
+  ): ReadonlyArray<AdoptedResponsibility> | Error {
+    const first = entries[0]
+    if (first === undefined)
+      return new CompanyValidationError("接続対象がありません", "invalid_responsibility_connection")
+    const history: CompanyResourceEntity[] = []
+    for (const row of snapshot.props.value.publicResponsibilities.filter(
+      (resource) => resource.resourceId === target,
+    )) {
+      if (row.bindingEmployeeId !== null)
+        return new CompanyValidationError(
+          "接続先は既に期間台帳へ接続されています",
+          "invalid_responsibility_connection",
+        )
+      const attributes = z.record(z.string(), z.json()).safeParse(
+        (() => {
+          try {
+            return JSON.parse(row.attributesJson)
+          } catch {
+            return null
+          }
+        })(),
+      )
+      if (!attributes.success)
+        return new CompanyValidationError(
+          "公開責務の属性が不正です",
+          "invalid_responsibility_connection",
+        )
+      const resource = CompanyResourceEntity.create({
+        organizationId: "organization:default",
+        type: "responsibility-assignment",
+        id: target,
+        revision: row.revision,
+        state: row.state,
+        effectiveFrom: restoreCalendarDate(row.effectiveFrom),
+        effectiveTo: row.effectiveTo === null ? null : restoreCalendarDate(row.effectiveTo),
+        attributes: attributes.data,
+      })
+      if (resource instanceof Error) return resource
+      history.push(resource)
+    }
+    const responsibilityId = first.resource.readText("responsibilityId")
+    const authorityScopeId = first.resource.readText("authorityScopeId")
+    if (responsibilityId === null || authorityScopeId === null)
+      return new CompanyValidationError(
+        "接続先の定義がありません",
+        "invalid_responsibility_connection",
+      )
+    const connection = ResponsibilityResourceConnectionValue.create({
+      history,
+      periods: entries.map((entry) => entry.period),
+      source: {
+        ...first.period,
+        responsibilityId,
+        authorityScopeId,
+      },
+    })
+    if (connection instanceof Error) return connection
+    if (
+      entries.some(
+        (entry) =>
+          entry.resource.readText("responsibilityId") !==
+            first.resource.readText("responsibilityId") ||
+          entry.resource.readText("authorityScopeId") !==
+            first.resource.readText("authorityScopeId"),
+      )
+    )
+      return new CompanyValidationError(
+        "同じ接続先への定義が一致しません",
+        "invalid_responsibility_connection",
+      )
+    const resource = CompanyResourceEntity.create({
+      ...connection.head.toProps(),
+      revision: connection.head.revision + 1,
+    })
+    if (resource instanceof Error) return resource
+    return entries.map((entry) => ({ ...entry, resource }))
   }
 
   toChanges(
     resources: ReadonlyArray<CompanyResourceEntity>,
   ): ReadonlyArray<CompanyResourceChangeEntity> | Error {
     const groups = new Map<string, CompanyResourceEntity[]>()
-    for (const resource of resources) {
+    for (const resource of new Map(
+      resources.map((resource) => [
+        `${resource.type}:${resource.id}:${resource.revision}`,
+        resource,
+      ]),
+    ).values()) {
       const key = `${resource.type}:${resource.id}`
       const versions = groups.get(key) ?? []
       versions.push(resource)
