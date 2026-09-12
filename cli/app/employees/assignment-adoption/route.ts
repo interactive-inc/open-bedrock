@@ -10,6 +10,7 @@ bedrock employees assignment-adoption --data <confirmed-history.json> --idempote
 
 employee-idで既存の全所属・上長履歴とsnapshotDigest・expectedRevision・observedOnを確認します。
 dataにはemployeeId、snapshotDigest、expectedRevision、observedOn、reasonを指定します。
+既存の公開所属IDへ接続する期間はmappingsにperiodIdとexistingResourceIdを明示します。
 先に従業員・雇用と組織の履歴を公開APIへ接続してください。
 全改訂を保全し、訂正後の期間を公開AssignmentとReportingRelationへ接続します。
 再送は同じJSONとキーを使い、競合時は履歴を確認し直してください。`
@@ -45,6 +46,20 @@ export default factory.createHandlers(
         snapshotDigest: z.string().regex(/^[a-f0-9]{64}$/),
         observedOn: z.string().date(),
         reason: z.string().trim().min(1).max(1000),
+        mappings: z
+          .array(
+            z
+              .object({
+                periodId: z.string().regex(/^\S{1,255}$/),
+                existingResourceId: z.string().regex(/^\S{1,255}$/),
+              })
+              .strict()
+              .readonly(),
+          )
+          .min(1)
+          .max(1000)
+          .readonly()
+          .optional(),
       })
       .strict()
       .safeParse(await readJsonObjectFile(input.data))

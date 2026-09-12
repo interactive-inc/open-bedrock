@@ -287,7 +287,9 @@ CLIは `departments adoption --organization-unit-id <id>` で確認内容を取�
 
 `POST /company/assignment-resource-adoptions`は`employeeId`、`snapshotDigest`、`expectedRevision`、`observedOn`、`reason`と`Idempotency-Key`を受け付ける。従業員・雇用と所属先のOrgUnitが接続済みであることを必要とし、その従業員の未接続の所属期間をまとめて接続する。対象は一件から千件、確認する履歴JSONは750,000 bytesまでとする。
 
-元の全改訂を更新・削除せず、各期間の最新の訂正内容を公開Assignmentの初版へ保存する。取り消された期間は取消状態にし、将来予約の前後の空白を埋めない。過去の訂正前の理解を公開resourceの当時の記録と偽って再作成しない。確認した元の履歴とdigestは追記専用の移行証跡にも保持する。
+接続先を指定しない期間は、元の全改訂を更新・削除せず、各期間の最新の訂正内容を公開Assignmentの初版へ保存する。取り消された期間は取消状態にし、将来予約の前後の空白を埋めない。過去の訂正前の理解を公開resourceの当時の記録と偽って再作成しない。確認した元の履歴とdigestは追記専用の移行証跡にも保持する。
+
+既存の公開Assignmentへ接続する場合は、`mappings`に旧期間の`periodId`と`existingResourceId`を明示する。同じIDへ複数の期間を接続できる。確認対象には従業員の公開所属の全改訂・属性・変更主体・理由・記録時点も含める。接続先が未接続で、従業員・雇用・組織・所属種別・役職と過去・将来の全有効期間が一致する場合だけ接続する。同じ所属内容の隣接期間の分割差は許すが、空白・重複・内容の違いを現在の一致から補わない。既存IDと全改訂を保ち、接続を記録する同内容の次版と旧期間の対応を一括保存する。指定した対応も変更不能な移行証跡へ残す。以前の移行証跡に対応指定を推測で追記しない。
 
 上長はReportingRelationへ接続し、所属期間には上長を空にした次の版を追加する。既存の公開関係と同じ従業員・組織・期間が重なる場合、同じ上長であっても422で拒否する。接続済みの同じ雇用・組織・所属種別に将来の関係がある場合は、そのIDと発令の来歴を維持しながら未接続の過去の期間を追加する。
 
@@ -295,7 +297,7 @@ CLIは `departments adoption --organization-unit-id <id>` で確認内容を取�
 
 接続後の上長変更・訂正・退職は、通常の公開履歴と人事発令の保存処理を使う。移行自体も組織と所属期間の版を進めるため、移行前の版を確認した未実行の変更は再確認が必要になる。
 
-CLIは`bedrock employees assignment-adoption --employee-id <id>`で確認し、`--data <confirmed-history.json> --idempotency-key <uuid>`で保存する。JSONにはPOSTの五項目を指定し、競合時に自動再送しない。
+CLIは`bedrock employees assignment-adoption --employee-id <id>`で確認し、`--data <confirmed-history.json> --idempotency-key <uuid>`で保存する。JSONにはPOSTの五項目と必要な`mappings`を指定し、競合時に自動再送しない。
 
 ## 人事発令の配送元
 

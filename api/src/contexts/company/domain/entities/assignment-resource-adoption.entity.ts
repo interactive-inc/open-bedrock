@@ -8,6 +8,7 @@ import type { OrgAssignmentPeriod } from "@/contexts/company/domain/definitions/
 import type { AssignmentResourceAdoptionSnapshotValue } from "@/contexts/company/domain/values/assignment-resource-adoption-snapshot.value"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
+import { AssignmentResourceConnectionValue } from "@/contexts/company/domain/values/assignment-resource-connection.value"
 
 const schema = z
   .object({
@@ -21,6 +22,20 @@ const schema = z
     snapshotDigest: z.string().regex(/^[a-f0-9]{64}$/),
     observedOn: z.string().date(),
     reason: z.string().trim().min(1).max(1000),
+    mappings: z
+      .array(
+        z
+          .object({
+            periodId: z.string().regex(/^\S{1,255}$/),
+            existingResourceId: z.string().regex(/^\S{1,255}$/),
+          })
+          .strict()
+          .readonly(),
+      )
+      .min(1)
+      .max(1000)
+      .readonly()
+      .optional(),
     actorAccountId: z.string().regex(/^\S{1,255}$/),
     recordedAt: z.number().int().nonnegative(),
   })
@@ -144,14 +159,113 @@ export class AssignmentResourceAdoptionEntity {
         },
       })
     }
-    return assignments
+    return this.connectExisting(assignments, snapshot)
+  }
+
+  private connectExisting(
+    assignments: ReadonlyArray<AdoptedAssignment>,
+    snapshot: AssignmentResourceAdoptionSnapshotValue,
+  ): ReadonlyArray<AdoptedAssignment> | Error {
+    const mappings = this.props.mappings ?? []
+    if (
+      new Set(mappings.map((mapping) => mapping.periodId)).size !== mappings.length ||
+      mappings.some(
+        (mapping) => !assignments.some((entry) => entry.period.periodId === mapping.periodId),
+      )
+    )
+      return new CompanyValidationError(
+        "接続する旧所属期間の指定が不正です",
+        "invalid_assignment_connection",
+      )
+    const groups = new Map<string, AdoptedAssignment[]>()
+    const connected: AdoptedAssignment[] = []
+    for (const entry of assignments) {
+      const target = mappings.find(
+        (mapping) => mapping.periodId === entry.period.periodId,
+      )?.existingResourceId
+      if (target === undefined) {
+        connected.push(entry)
+        continue
+      }
+      const group = groups.get(target) ?? []
+      group.push(entry)
+      groups.set(target, group)
+    }
+    for (const [target, entries] of groups) {
+      const resolved = this.connectGroup(target, entries, snapshot)
+      if (resolved instanceof Error) return resolved
+      connected.push(...resolved)
+    }
+    return connected
+  }
+
+  private connectGroup(
+    target: string,
+    entries: ReadonlyArray<AdoptedAssignment>,
+    snapshot: AssignmentResourceAdoptionSnapshotValue,
+  ): ReadonlyArray<AdoptedAssignment> | Error {
+    const first = entries[0]
+    if (first === undefined)
+      return new CompanyValidationError("接続対象がありません", "invalid_assignment_connection")
+    const history: CompanyResourceEntity[] = []
+    for (const row of snapshot.props.value.publicAssignments.filter(
+      (resource) => resource.resourceId === target,
+    )) {
+      if (row.bindingEmployeeId !== null)
+        return new CompanyValidationError(
+          "接続先は既に期間台帳へ接続されています",
+          "invalid_assignment_connection",
+        )
+      const attributes = z.record(z.string(), z.json()).safeParse(
+        (() => {
+          try {
+            return JSON.parse(row.attributesJson)
+          } catch {
+            return null
+          }
+        })(),
+      )
+      if (!attributes.success)
+        return new CompanyValidationError(
+          "公開所属の属性が不正です",
+          "invalid_assignment_connection",
+        )
+      const resource = CompanyResourceEntity.create({
+        organizationId: "organization:default",
+        type: "assignment",
+        id: target,
+        revision: row.revision,
+        state: row.state,
+        effectiveFrom: restoreCalendarDate(row.effectiveFrom),
+        effectiveTo: row.effectiveTo === null ? null : restoreCalendarDate(row.effectiveTo),
+        attributes: attributes.data,
+      })
+      if (resource instanceof Error) return resource
+      history.push(resource)
+    }
+    const connection = AssignmentResourceConnectionValue.create({
+      history,
+      periods: entries.map((entry) => entry.period),
+    })
+    if (connection instanceof Error) return connection
+    const resource = CompanyResourceEntity.create({
+      ...connection.head.toProps(),
+      revision: connection.head.revision + 1,
+    })
+    if (resource instanceof Error) return resource
+    return entries.map((entry) => ({ ...entry, resource }))
   }
 
   toChanges(
     resources: ReadonlyArray<CompanyResourceEntity>,
   ): ReadonlyArray<CompanyResourceChangeEntity> | Error {
     const groups = new Map<string, CompanyResourceEntity[]>()
-    for (const resource of resources) {
+    for (const resource of new Map(
+      resources.map((resource) => [
+        `${resource.type}:${resource.id}:${resource.revision}`,
+        resource,
+      ]),
+    ).values()) {
       const key = `${resource.type}:${resource.id}`
       const versions = groups.get(key) ?? []
       versions.push(resource)
