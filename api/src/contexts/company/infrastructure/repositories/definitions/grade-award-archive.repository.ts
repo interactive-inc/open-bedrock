@@ -176,6 +176,20 @@ export class GradeAwardArchiveRepository {
     }
   }
 
+  async findByEmployee(employeeId: string) {
+    try {
+      const row = await this.c.env.DB.prepare(
+        "SELECT command_id FROM company_grade_award_archives WHERE organization_id = 'organization:default' AND employee_id = ?1",
+      )
+        .bind(employeeId)
+        .first<{ command_id: string }>()
+      if (row === null) return null
+      return this.find(row.command_id)
+    } catch (cause) {
+      return this.unavailable(cause)
+    }
+  }
+
   private async replay(commandId: string, fingerprint: string) {
     const row = await this.c.env.DB.prepare(
       "SELECT * FROM company_grade_award_archives WHERE organization_id = 'organization:default' AND command_id = ?1",

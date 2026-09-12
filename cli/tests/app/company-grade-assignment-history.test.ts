@@ -148,6 +148,7 @@ test("等級一覧は公開履歴の会社版を保ち、別従業員や別種�
       "organization-id": "organization:example",
       "employee-id": "employee:one",
       "as-of": "2030-01-01",
+      "organization-revision": "19",
     })
     expect(response.status).toBe(200)
     expect(await response.json()).toEqual({
@@ -157,6 +158,7 @@ test("等級一覧は公開履歴の会社版を保ち、別従業員や別種�
     })
     expect(f.requests).toHaveLength(1)
     expect(new URL(f.requests[0]!.url).pathname).toBe("/company/organization-snapshots")
+    expect(new URL(f.requests[0]!.url).searchParams.get("organization_revision")).toBe("19")
     expect(new URL(f.requests[0]!.url).searchParams.get("effective_on")).toBe("2030-01-01")
     expect((await request("/employee-grades/list", { "employee-code": "OLD" })).status).toBe(400)
     expect(f.requests).toHaveLength(1)

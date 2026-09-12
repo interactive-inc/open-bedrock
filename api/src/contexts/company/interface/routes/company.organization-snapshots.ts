@@ -1,5 +1,8 @@
 /** /company/organization-snapshots */
-import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
+import {
+  CompanyResourceValidationError,
+  CompanySnapshotRevisionError,
+} from "@/contexts/company/domain/errors"
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
@@ -38,6 +41,12 @@ export const GET = factory.createHandlers(
     z.object({
       id: z
         .union([z.string().regex(/^\S{1,255}$/), z.array(z.string().regex(/^\S{1,255}$/)).max(100)])
+        .optional(),
+      organization_revision: z
+        .string()
+        .regex(/^(0|[1-9]\d*)$/)
+        .transform(Number)
+        .pipe(z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER))
         .optional(),
       effective_on: z.string().date().optional(),
       as_of: z.string().date().optional(),
@@ -78,6 +87,7 @@ export const GET = factory.createHandlers(
     const effectiveOn = requestQuery.effective_on ?? requestQuery.as_of
     const query = {
       organizationId: headers["x-company-organization-id"],
+      organizationRevision: requestQuery.organization_revision,
       types: [
         "organization-unit",
         "assignment",
@@ -116,6 +126,8 @@ export const GET = factory.createHandlers(
 
     const result = await new D1CompanyResourceRepository(database).findMany(query)
     if (!result.ok) {
+      if (result.cause instanceof CompanySnapshotRevisionError)
+        throw new CompanyQueryInvalidError(result.cause)
       throw new CompanyReadUnavailableError(result.cause)
     }
 

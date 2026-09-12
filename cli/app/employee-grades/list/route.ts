@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `bedrock employee-grades list --organization-id <id> --employee-id <id> [--as-of <YYYY-MM-DD>]
+export const help = `bedrock employee-grades list --organization-id <id> --employee-id <id> [--as-of <YYYY-MM-DD>] [--organization-revision <revision>]
 
 公開Companyの等級割当を、会社版・資源版・雇用ID・有効期間とともに返します。
 as-ofを省略すると将来予約を含む資源版、指定するとその日に有効な割当を返します。
@@ -24,6 +24,11 @@ export default factory.createHandlers(
         .regex(/^\S{1,255}$/)
         .optional(),
       "as-of": z.string().date().optional(),
+      "organization-revision": z
+        .string()
+        .regex(/^(0|[1-9]\d*)$/)
+        .refine((value) => Number.isSafeInteger(Number(value)))
+        .optional(),
     }),
   ),
   async (context) => {
@@ -34,7 +39,12 @@ export default factory.createHandlers(
     const client = await createClient()
     const response = await client.company["organization-snapshots"].$get({
       header: { "x-company-organization-id": input["organization-id"] },
-      query: input["as-of"] === undefined ? {} : { effective_on: input["as-of"] },
+      query: {
+        ...(input["as-of"] === undefined ? {} : { effective_on: input["as-of"] }),
+        ...(input["organization-revision"] === undefined
+          ? {}
+          : { organization_revision: input["organization-revision"] }),
+      },
     })
     const snapshot = await response.json()
     return context.json({

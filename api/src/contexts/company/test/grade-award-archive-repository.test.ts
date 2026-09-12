@@ -72,6 +72,10 @@ test("監査と原記録を一緒に固定し、旧台帳撤去後の参照と�
     replayed: true,
     observedCompanyRevision: 8,
   })
+  expect(await f.repository.findByEmployee(f.props.employeeId)).toEqual(
+    await f.repository.find(f.props.commandId),
+  )
+  expect(await f.repository.findByEmployee("employee:missing")).toBeNull()
   expect(await f.repository.find(f.props.commandId)).toMatchObject({
     recordedAt: f.props.recordedAt,
     source: { awards: [{ reason: " original ", createdAt: "unknown", observedDefinition: null }] },
