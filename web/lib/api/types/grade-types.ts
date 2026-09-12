@@ -38,11 +38,3 @@ export type EmployeeGradeResponse = {
 export type EmployeeGradeSearchQuery = {
   employeeCode: string
 }
-
-/** POST /employee-grades のリクエストボディ。reason は未指定可。 */
-export type EmployeeGradeCreateRequest = {
-  employee_id: string
-  grade_id: number
-  effective_date: string
-  reason?: string
-}
