@@ -26,6 +26,11 @@ export class CompanyOrganizationResourceJournalAdapter {
           "SELECT organization_unit_id FROM company_organization_resource_bindings WHERE organization_id = 'organization:default'",
         )
         .all<{ organization_unit_id: string }>()
+      if (!bindings.success)
+        return new CompanyUnavailableError(
+          "公開組織の接続台帳を参照できません",
+          "organization_change_unavailable",
+        )
       const connected = new Set(bindings.results.map((binding) => binding.organization_unit_id))
       if (connected.size === 0) return []
       const newIds = new Set(change.organizationUnits.map((unit) => unit.id))

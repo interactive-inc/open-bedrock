@@ -227,6 +227,39 @@ describe("organization resources and the company period ledger", () => {
     ).toBe(0)
   })
 
+  test("接続台帳の照会失敗を未接続と扱わず、新設を全体拒否して再試行できる", async () => {
+    const f = await fixture()
+    await f.connect()
+    const before = await f.state()
+    const history = await f.legacy()
+    const prepare = f.database.prepare.bind(f.database)
+    const interception = spyOn(f.database, "prepare").mockImplementation((sql) => {
+      const statement = prepare(sql)
+      if (
+        sql.startsWith("SELECT organization_unit_id FROM company_organization_resource_bindings")
+      ) {
+        const all = statement.all.bind(statement)
+        spyOn(statement, "all").mockImplementation(async () =>
+          Object.defineProperty({ ...(await all()), results: [] }, "success", { value: false }),
+        )
+      }
+      return statement
+    })
+    try {
+      expect(Number((await f.create("RETRY_BINDING_READ")).status)).toBe(503)
+    } finally {
+      interception.mockRestore()
+    }
+    expect(await f.state()).toEqual(before)
+    expect(await f.legacy()).toEqual(history)
+    expect(Number((await f.create("RETRY_BINDING_READ")).status)).toBe(201)
+    expect(
+      (await f.snapshot()).resources.find(
+        (resource) => resource.attributes.code === "RETRY_BINDING_READ",
+      ),
+    ).toMatchObject({ revision: 1 })
+  })
+
   test("公開APIで新設した組織を既存一覧から参照できる", async () => {
     const f = await fixture()
     await f.connect()
