@@ -494,7 +494,7 @@
     "src/contexts/company/interface/routes/company.profile.ts": "2de4136763c4d4441349ccffb57e87c443981698bf055a93caa3e7ae6c730244",
     "src/contexts/company/interface/routes/company.reporting-lines.$employeeCode.ts": "a0b4e6a6682ab6a922ff68d309e7a0fc8696249568f1e9acb3e8792bf72e9f8d",
     "src/contexts/company/interface/routes/company.responsibility-resource-adoptions.ts": "66c819d77c71f6ed51e42402162b72dd5cb28bb92ca5ac5872fc57bd736a8e99",
-    "src/contexts/company/interface/routes/company.ts": "a99fa17b89f721869fa7be440f52ffda51f8a600c20834cee0bc7e26796a9d03",
+    "src/contexts/company/interface/routes/company.ts": "23e259a83a4bb3129635460beedfa48c629a66cb5082bbada8784bd67fb62e96",
     "src/contexts/company/lib/workforce/CLAUDE.md": "fbdf55de84b7848a96e85c4d166d1a6b886fd799835e736ae56d61309522fcb2",
     "src/contexts/company/lib/workforce/apply-organization-workforce-changes.ts": "36a92b7029da22a5df92f76935e3256f373b9fcd46a5ffda939ff795cfd8a75f",
     "src/contexts/company/lib/workforce/employee-lifecycle-state.ts": "43e33a70de7dbb68a3ce3f36c38a5d9b0011afb02f21616e1e9cf3e753eef586",
