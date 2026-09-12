@@ -174,7 +174,15 @@ function toSingleValue(value: string | Array<string> | undefined): string | null
 }
 
 function toStatus(value: string | null): LeaveStatus | null {
-  if (value === "pending" || value === "approved" || value === "rejected") {
+  if (
+    value === "pending" ||
+    value === "approved" ||
+    value === "rejected" ||
+    value === "draft" ||
+    value === "returned" ||
+    value === "cancelled" ||
+    value === "awaiting_execution"
+  ) {
     return value
   }
 

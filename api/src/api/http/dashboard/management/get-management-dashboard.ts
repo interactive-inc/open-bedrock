@@ -1,3 +1,4 @@
+import { leaveProcedureStatusSql } from "@/contexts/leave/infrastructure/adapters/lib/leave-procedure-status-sql"
 import type { Context } from "@/env"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { UnexpectedError } from "@/lib/errors"
@@ -99,7 +100,7 @@ export class GetManagementDashboard {
         database
           .select({ total: count() })
           .from(leaveRequests)
-          .where(eq(leaveRequests.status, "pending")),
+          .where(eq(leaveProcedureStatusSql, "pending")),
         database
           .select({ total: count() })
           .from(expenses)
