@@ -364,3 +364,11 @@ Webは表示内容と確認条件を同じ組織行に保持し、再読み込�
 `GET /company/definition-resource-adoptions/:commandId`は確認主体・理由・会社版・確認日・記録時点と元の定義を返す。旧定義テーブルの撤去後も、この証跡と成功済みの再送結果は残る。証跡の更新と削除は拒否する。
 
 従業員等級の旧台帳の移行と旧定義APIの切り替えは未完了である。移行APIの追加だけで全台帳が統一されたとは扱わない。
+
+## 等級・役職CLIの公開履歴
+
+`grade-definitions`と`position-definitions`のlist・create・update・deleteは、`/company/definitions`だけを使用する。listはorganization-idを必須とし、会社版・資源版・有効期間を返す。as-ofを指定した場合はその日の有効な定義を取得し、省略した場合は将来予約を含む最新の資源版を取得する。
+
+保存にはdataで指定したJSONとidempotency-keyが必要である。JSONはorganizationId・expectedRevision・reason・resourcesを持ち、各資源には同じ会社ID、公開ID、種類、版、状態、有効期間、属性を含める。createはactiveの初版、updateはactiveの後続版、deleteはvoidの後続版を一つの公開commandで保存する。取消も履歴を残す。
+
+CLIは保存直前に最新版を取得して確認条件を置き換えず、指定された会社版・資源版・再送キーを保持する。競合を自動で上書き・再試行しない。旧形式の数値IDやcode・name・rankだけを指定する保存は拒否する。

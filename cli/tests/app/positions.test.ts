@@ -24,7 +24,7 @@ describe("positions commands", () => {
     })
   }
 
-  it("positions create requires --code, --name, --rank", async () => {
+  it("positions create requires reviewed JSON and an idempotency key", async () => {
     const response = await app.request("/position-definitions/create", {
       method: "POST",
       headers: { "content-type": "application/json" },
