@@ -12,6 +12,7 @@ employee-idで既存の全責務履歴とsnapshotDigest・expectedRevision・obs
 dataにはemployeeId、snapshotDigest、expectedRevision、observedOn、reason、mappingsを指定します。
 先に従業員・雇用と組織の履歴を公開APIへ接続してください。
 mappingsには各期間のperiodId、responsibilityId、authorityScopeIdを指定します。
+既存の公開責務へ統合する場合はexistingResourceIdを明示し、全有効期間と所有者が一致することを確認します。
 全改訂を保全し、訂正後の期間を公開ResponsibilityAssignmentへ接続します。
 再送は同じJSONとキーを使い、競合時は履歴を確認し直してください。`
 
@@ -53,6 +54,10 @@ export default factory.createHandlers(
                 periodId: z.string().regex(/^\S{1,255}$/),
                 responsibilityId: z.string().regex(/^\S{1,255}$/),
                 authorityScopeId: z.string().regex(/^\S{1,255}$/),
+                existingResourceId: z
+                  .string()
+                  .regex(/^\S{1,255}$/)
+                  .optional(),
               })
               .strict(),
           )
