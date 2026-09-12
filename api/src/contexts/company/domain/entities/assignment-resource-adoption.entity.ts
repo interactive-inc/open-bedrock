@@ -8,7 +8,6 @@ import type { OrgAssignmentPeriod } from "@/contexts/company/domain/definitions/
 import type { AssignmentResourceAdoptionSnapshotValue } from "@/contexts/company/domain/values/assignment-resource-adoption-snapshot.value"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
-
 import { AssignmentResourceConnectionValue } from "@/contexts/company/domain/values/assignment-resource-connection.value"
 
 const schema = z

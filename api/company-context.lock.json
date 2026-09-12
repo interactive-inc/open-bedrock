@@ -145,7 +145,7 @@
     "src/contexts/company/domain/definitions/workforce-invariant.definition.ts": "0051761a324e370f6637c8f32b01b157099e92e5494b82370200dd9a8b5651c7",
     "src/contexts/company/domain/definitions/workforce-manager-relation.definition.ts": "e284bf4672274e373fbcb88a7c79cd5ef7d4717af633f50b868e121fe6594add",
     "src/contexts/company/domain/definitions/workforce-schedule.definition.ts": "fbb0c75618f5f8196e51da42f0112b1337965b9aaf078eb01415d6fce20b1b87",
-    "src/contexts/company/domain/entities/assignment-resource-adoption.entity.ts": "13b64196d88ec37abf5571c037711b2d8143b4d6560758ab6185e8590f67f5be",
+    "src/contexts/company/domain/entities/assignment-resource-adoption.entity.ts": "35d54c3a4e89a702a173cad9b529da89b7307f6ed8dc47f201dd56805da83d93",
     "src/contexts/company/domain/entities/company-account-profile.entity.test.ts": "120dcff1772501220477d66c967c0c25974854ec59142aabc11c35ab9fab639f",
     "src/contexts/company/domain/entities/company-account-profile.entity.ts": "b6b8e4cefc9ee113aaf3c0ef6a1380b2ac70f1bc50cc04486001ad18a6bd9466",
     "src/contexts/company/domain/entities/company-bootstrap.entity.ts": "7f1eec0862e3420c4481975136557642060c6eabe836bcc4395452b25ac4821a",
