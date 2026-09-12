@@ -149,7 +149,7 @@ test.each(["responsibility-assignment", "collective-body-membership"] as const)(
     expect(await f.resolve("2030-09-01")).toBe(false)
     expect(await f.read("2030-06-30")).toHaveLength(1)
     expect(await f.read("2030-07-01")).toEqual([])
-    const history = await f.repository.findEmploymentAuthorityHistory(
+    const history = await f.repository.findEmploymentDependentHistory(
       "organization:default",
       await f.companyRevision(),
     )
@@ -261,7 +261,7 @@ test.each(["responsibility-assignment", "collective-body-membership"] as const)(
     }
     const retired = await f.personnel(retirement, "personal:exit")
     if (retired instanceof Error) throw retired
-    const history = await f.repository.findEmploymentAuthorityHistory(
+    const history = await f.repository.findEmploymentDependentHistory(
       "organization:default",
       await f.companyRevision(),
     )

@@ -9,6 +9,7 @@ export const COMPANY_CORE_CAPABILITIES = [
   "employee",
   "employment",
   "grade",
+  "grade-assignment",
   "job",
   "legal-entity",
   "organization",

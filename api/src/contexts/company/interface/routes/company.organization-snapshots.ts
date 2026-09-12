@@ -83,6 +83,7 @@ export const GET = factory.createHandlers(
         "assignment",
         "reporting-relation",
         "office-assignment",
+        "grade-assignment",
         "responsibility-assignment",
         "collective-body-membership",
         "organizational-authority",

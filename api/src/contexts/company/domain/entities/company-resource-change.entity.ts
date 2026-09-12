@@ -37,6 +37,20 @@ export class CompanyResourceChangeEntity {
   static create(
     props: CompanyResourceChangeProps,
   ): CompanyResourceChangeEntity | CompanyResourceValidationError {
+    return CompanyResourceChangeEntity.validate(props, false)
+  }
+
+  /** 一つの確定事実が持つ連続した資源版を、同じ会社版へ保存する。 */
+  static createHistoryBatch(
+    props: CompanyResourceChangeProps,
+  ): CompanyResourceChangeEntity | CompanyResourceValidationError {
+    return CompanyResourceChangeEntity.validate(props, true)
+  }
+
+  private static validate(
+    props: CompanyResourceChangeProps,
+    historyBatch: boolean,
+  ): CompanyResourceChangeEntity | CompanyResourceValidationError {
     if (
       !isCompanyIdentifier(props.commandId) ||
       !isCompanyIdentifier(props.actorAccountId) ||
@@ -48,7 +62,7 @@ export class CompanyResourceChangeEntity {
       props.reason.length > 2_000 ||
       props.reason.trim() !== props.reason ||
       props.resources.length < 1 ||
-      props.resources.length > 100
+      (!historyBatch && props.resources.length > 100)
     ) {
       return new CompanyResourceValidationError("invalid_change")
     }
@@ -61,14 +75,19 @@ export class CompanyResourceChangeEntity {
     }
 
     const organizationId = resources[0]?.organizationId
-    const identities = new Set<string>()
+    const identities = new Map<string, number>()
     for (const resource of resources) {
       if (resource.organizationId !== organizationId) {
         return new CompanyResourceValidationError("invalid_change")
       }
       const identity = `${resource.type}\u0000${resource.id}`
-      if (identities.has(identity)) return new CompanyResourceValidationError("invalid_change")
-      identities.add(identity)
+      const previousRevision = identities.get(identity)
+      if (
+        previousRevision !== undefined &&
+        (!historyBatch || resource.revision !== previousRevision + 1)
+      )
+        return new CompanyResourceValidationError("invalid_change")
+      identities.set(identity, resource.revision)
     }
 
     return new CompanyResourceChangeEntity({ ...props, resources })

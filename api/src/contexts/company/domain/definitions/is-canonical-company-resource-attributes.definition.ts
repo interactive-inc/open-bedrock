@@ -98,9 +98,25 @@ const resourceAttributeSchemas = {
     .strict(),
   job: z.object({ code, officialName: text }).strict(),
   position: z
-    .object({ code, officialName: text, jobId: identifier.nullable().optional() })
+    .object({
+      code,
+      officialName: text,
+      jobId: identifier.nullable().optional(),
+      rank: z.number().int().nullable().optional(),
+      description: text.nullable().optional(),
+    })
     .strict(),
-  grade: z.object({ code, officialName: text }).strict(),
+  grade: z
+    .object({
+      code,
+      officialName: text,
+      rank: z.number().int().nullable().optional(),
+      description: text.nullable().optional(),
+    })
+    .strict(),
+  "grade-assignment": z
+    .object({ employeeId: identifier, employmentId: identifier, gradeId: identifier })
+    .strict(),
   "organizational-office": z
     .object({
       code,

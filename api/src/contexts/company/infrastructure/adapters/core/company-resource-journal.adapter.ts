@@ -1,3 +1,4 @@
+import type { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import type { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { compareCompanyResourcePersistence } from "@/contexts/company/domain/definitions/compare-company-resource-persistence.definition"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
@@ -93,7 +94,22 @@ export class CompanyResourceJournalAdapter {
       }),
     )
 
-    for (const resource of change.resources.toSorted(compareCompanyResourcePersistence)) {
+    const groups = new Map<string, CompanyResourceEntity[]>()
+    for (const resource of change.resources) {
+      const key = `${resource.type}:${resource.id}`
+      const versions = groups.get(key) ?? []
+      versions.push(resource)
+      groups.set(key, versions)
+    }
+    const ordered = [...groups.values()]
+      .toSorted((left, right) => {
+        const firstLeft = left[0]
+        const firstRight = right[0]
+        if (firstLeft === undefined || firstRight === undefined) return 0
+        return compareCompanyResourcePersistence(firstLeft, firstRight)
+      })
+      .flatMap((versions) => versions.toSorted((left, right) => left.revision - right.revision))
+    for (const resource of ordered) {
       const attributesJson = CanonicalSystemJsonValue.create(resource.attributes)
       if (attributesJson instanceof Error) return attributesJson
       const values = {

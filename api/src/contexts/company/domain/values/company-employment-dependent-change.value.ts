@@ -12,8 +12,8 @@ type Props = Readonly<{
   schedule: LifecycleSchedule
 }>
 
-/** 雇用と所属の終了に合わせて任用・決裁資格を閉じ、将来の別任用と訂正元を保つ。 */
-export class CompanyEmploymentAuthorityChangeValue {
+/** 雇用と所属の終了に合わせて等級割当・任用・決裁資格を閉じ、将来の別任用と訂正元を保つ。 */
+export class CompanyEmploymentDependentChangeValue {
   readonly resources: ReadonlyArray<CompanyResourceEntity>
 
   private constructor(resources: ReadonlyArray<CompanyResourceEntity>) {
@@ -21,12 +21,13 @@ export class CompanyEmploymentAuthorityChangeValue {
     Object.freeze(this)
   }
 
-  static create(props: Props): CompanyEmploymentAuthorityChangeValue | Error {
+  static create(props: Props): CompanyEmploymentDependentChangeValue | Error {
     const history = props.history.toSorted((left, right) => left.revision - right.revision)
     const first = history[0]
     if (
       first === undefined ||
       (first.type !== "office-assignment" &&
+        first.type !== "grade-assignment" &&
         first.type !== "organizational-authority" &&
         first.type !== "responsibility-assignment" &&
         first.type !== "collective-body-membership") ||
@@ -74,7 +75,9 @@ export class CompanyEmploymentAuthorityChangeValue {
           source.readText("holderType") === "employee" &&
           source.readText("holderId") === props.employeeId)
       const employmentBound =
-        source?.type === "office-assignment" || source?.type === "organizational-authority"
+        source?.type === "office-assignment" ||
+        source?.type === "grade-assignment" ||
+        source?.type === "organizational-authority"
       const employed = props.schedule.employments.some(
         (period) =>
           !period.isVoid &&
@@ -124,7 +127,7 @@ export class CompanyEmploymentAuthorityChangeValue {
       if (resource instanceof Error) return resource
       resources.push(resource)
     }
-    return new CompanyEmploymentAuthorityChangeValue(resources)
+    return new CompanyEmploymentDependentChangeValue(resources)
   }
 
   private static at(history: ReadonlyArray<CompanyResourceEntity>, date: CalendarDate) {

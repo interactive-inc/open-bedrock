@@ -655,7 +655,7 @@ async function responsibilityLifecycleFixture() {
       .bind(employeeId, responsibilityType)
       .first<string>("resource_id")
     if (id === null) throw new Error("public responsibility missing")
-    const history = await repository.findEmploymentAuthorityHistory(
+    const history = await repository.findEmploymentDependentHistory(
       "organization:default",
       (await f.state())?.revision ?? 0,
     )
