@@ -16,6 +16,7 @@ export type SystemProposalStatus =
 export type SystemProposalView = Readonly<{
   number: number
   proposalId: string
+  supersedesProposalId: string | null
   seriesId: string
   version: number
   procedureKey: string
@@ -75,7 +76,7 @@ export type SystemDecisionTaskView = Readonly<{
 }>
 
 export type SystemProposalQuery = Readonly<{
-  findByNumber(number: number): Promise<SystemProposalView | null | Error>
+  findByNumber(number: number, version?: number): Promise<SystemProposalView | null | Error>
   list(
     input: Readonly<{
       creatorAccountIds: ReadonlyArray<AccountId> | null
@@ -114,6 +115,7 @@ export type SystemProposalQuery = Readonly<{
 type ProposalRow = Readonly<{
   number: number
   proposal_id: string
+  supersedes_proposal_id: string | null
   series_id: string
   version: number
   procedure_key: string
@@ -156,6 +158,7 @@ type AttestationRow = Readonly<{
 const proposalSelect = `SELECT
   number.number,
   proposal.id AS proposal_id,
+  proposal.supersedes_proposal_id,
   proposal.series_id,
   proposal.version,
   proposal.procedure_key,
@@ -211,18 +214,25 @@ type Context = SystemD1Context &
 export class SystemD1ProposalAdapter implements SystemProposalQuery {
   constructor(private readonly c: Context) {}
 
-  async findByNumber(number: number): Promise<SystemProposalView | null | Error> {
+  async findByNumber(number: number, version?: number): Promise<SystemProposalView | null | Error> {
+    if (
+      !Number.isSafeInteger(number) ||
+      number <= 0 ||
+      (version !== undefined && (!Number.isSafeInteger(version) || version <= 0))
+    )
+      return new Error("invalid System proposal number or version")
+
     try {
       const row = await this.c.env.DB.prepare(
         `${proposalSelect}
          WHERE number.number = ?1
-           AND proposal.version = (
+           AND proposal.version = coalesce(?2, (
              SELECT max(latest.version)
              FROM system_proposals AS latest
              WHERE latest.series_id = proposal.series_id
-           )`,
+           ))`,
       )
-        .bind(number)
+        .bind(number, version ?? null)
         .first<ProposalRow>()
 
       return row === null ||
@@ -548,6 +558,7 @@ export class SystemD1ProposalAdapter implements SystemProposalQuery {
     return {
       number: row.number,
       proposalId: row.proposal_id,
+      supersedesProposalId: row.supersedes_proposal_id,
       seriesId: row.series_id,
       version: row.version,
       procedureKey: row.procedure_key,

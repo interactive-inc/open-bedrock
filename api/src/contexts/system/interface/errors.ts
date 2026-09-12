@@ -357,6 +357,16 @@ export class SystemCredentialsInvalidError extends SystemHTTPException {
   }
 }
 
+export class SystemProposalHistoryUnavailableError extends SystemHTTPException {
+  constructor() {
+    super({
+      status: 503,
+      code: "proposal_history_unavailable",
+      detail: "提案履歴の閲覧資格・整合性・開示監査を確認できません",
+    })
+  }
+}
+
 export class SystemForbiddenError extends SystemHTTPException {
   constructor() {
     super({ status: 403, code: "forbidden", detail: "forbidden" })

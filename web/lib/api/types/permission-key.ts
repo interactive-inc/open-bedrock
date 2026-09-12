@@ -121,6 +121,8 @@ export const permissionKeys = [
   "system:work:create",
   "system:work:manage",
   "system:work:perform",
+  "system:procedure:read",
+  "system:procedure:read:all",
   "system:work:read",
   "system:work:review",
   "thanks_redemption:approve",
