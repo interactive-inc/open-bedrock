@@ -337,7 +337,7 @@
     "src/contexts/company/infrastructure/adapters/organization/company-governance-authority-resolution.adapter.ts": "a3cdbda8352934c9afc2c15645086c1c75db0aa5b481678182ab15296443b7ac",
     "src/contexts/company/infrastructure/adapters/organization/company-governance-procedure-task.adapter.test.ts": "022eb1640b91741666678f61981f1e4947fcca4f52c96fb9ec310090116c60f9",
     "src/contexts/company/infrastructure/adapters/organization/company-governance-procedure-task.adapter.ts": "bd80bdc8319e40a795f9042770a7fa0d2d3db9a465259c445370c76f88c3234a",
-    "src/contexts/company/infrastructure/adapters/organization/company-organization-resource-journal.adapter.ts": "a3500b82cbcb3d22b22ea6e3820a527d3ea66f91a65283e3bcb3284bb690bf6c",
+    "src/contexts/company/infrastructure/adapters/organization/company-organization-resource-journal.adapter.ts": "8ae64336d239dcdf6eb5d09f112ed462b64f1feed35c9a9fdc9bdc606bdc5552",
     "src/contexts/company/infrastructure/adapters/organization/company-organization-resource-projection.adapter.ts": "391ce2e0c79376c025e0abcb9ae7eb1516427b07195564ff573815cb71741fec",
     "src/contexts/company/infrastructure/adapters/organization/company-responsibility-journal.adapter.ts": "9ef8318cbfc437d5ef3c8f6694515b4f3711380f308d54e1323d12eb20066c59",
     "src/contexts/company/infrastructure/adapters/organization/company-responsibility-resource-history.adapter.ts": "7089736f6004aed2b20ae083d1a7d7f714119a0e79d2c2f8495f5f54b16d09b2",
@@ -539,7 +539,7 @@
     "src/contexts/company/test/organization-period-coverage.integration.test.ts": "3c01579386fb3d4f88f9ed0684f41a04d0b750c1e49fd9576fb3584f9a5cdb57",
     "src/contexts/company/test/organization-profile.integration.test.ts": "69c3d703e332e3e501a233e199fa12c56fb1e8467f9c80dbc8f6663e8aecb3f1",
     "src/contexts/company/test/organization-profile.test-support.ts": "b3d57cbb942b8f7da3b60dba4415b5d6104869cccca02842fb7004df532b2336",
-    "src/contexts/company/test/organization-resource-connection.integration.test.ts": "c897349d2c06e5a87278c4a78d17c767ca8ed6feff2df2c33f300ac1a25987f8",
+    "src/contexts/company/test/organization-resource-connection.integration.test.ts": "f59048d53113d858a3b0540128a34390e31551ef25ab3b9e6b524b7650a16109",
     "src/contexts/company/test/personnel-execution.integration.test.ts": "51db94c6d8f64c51cafa7c6977bd0965ea04ce153f445e174143ae09079dbea0",
     "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts": "1a49298c4aea0a95f8ce490e790c9250300cef5a087f3b0516c3d0ae340fefd9"
   }
