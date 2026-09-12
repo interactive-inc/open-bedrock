@@ -4,6 +4,7 @@ import { z } from "zod"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import * as archives from "@/contexts/company/interface/routes/company.grade-award-archives"
+import * as employeeArchives from "@/contexts/company/interface/routes/company.grade-award-archives.by-employee.$employeeId"
 import * as records from "@/contexts/company/interface/routes/company.grade-award-archives.$commandId"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/test/company-assignment-resource.test-support"
@@ -32,6 +33,7 @@ test("原記録の保全APIは会社範囲と権限を強制し、主体の詐�
   app
     .get("/archives", ...archives.GET)
     .post("/archives", ...archives.POST)
+    .get("/archives/by-employee/:employeeId", ...employeeArchives.GET)
     .get("/archives/:commandId", ...records.GET)
   const env = { ...f.context.env, COMPANY_TIME_ZONE: "UTC" }
   const previewUrl = `/archives?employee_id=${encodeURIComponent(f.people[0]!.employeeId)}`
@@ -75,6 +77,15 @@ test("原記録の保全APIは会社範囲と権限を強制し、主体の詐�
     expect((await app.request(previewUrl, {}, env)).status).toBe(expected)
     expect((await post()).status).toBe(expected)
     expect((await app.request("/archives/archive:http", {}, env)).status).toBe(expected)
+    expect(
+      (
+        await app.request(
+          `/archives/by-employee/${encodeURIComponent(f.people[0]!.employeeId)}`,
+          {},
+          env,
+        )
+      ).status,
+    ).toBe(expected)
   }
   state.actor = administrator
   expect((await app.request("/archives?employee_id=employee:missing", {}, env)).status).toBe(404)
@@ -101,6 +112,17 @@ test("原記録の保全APIは会社範囲と権限を強制し、主体の詐�
   expect(JSON.parse(audit?.metadata_json ?? "null")).toEqual(f.context.var.auditContext)
   await f.database.exec("DROP TABLE company_employee_grades; DROP TABLE company_grade_definitions;")
   expect((await post()).status).toBe(200)
+  const foundByEmployee = await app.request(
+    `/archives/by-employee/${encodeURIComponent(f.people[0]!.employeeId)}`,
+    {},
+    env,
+  )
+  expect(foundByEmployee.status).toBe(200)
+  expect(await foundByEmployee.json()).toMatchObject({
+    commandId: "archive:http",
+    employeeId: f.people[0]!.employeeId,
+  })
+  expect((await app.request("/archives/by-employee/employee:missing", {}, env)).status).toBe(404)
   const evidence = await app.request("/archives/archive:http", {}, env)
   expect(evidence.status).toBe(200)
   expect(await evidence.json()).toMatchObject({

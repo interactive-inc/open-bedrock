@@ -106,6 +106,7 @@ import * as companyEmploymentsRoute from "@/contexts/company/interface/routes/co
 import * as companyExternalIdentityImportsRoute from "@/contexts/company/interface/routes/company.external-identity-imports"
 import * as companyGradeAwardArchivesRoute from "@/contexts/company/interface/routes/company.grade-award-archives"
 import * as companyGradeAwardArchivesCommandIdRoute from "@/contexts/company/interface/routes/company.grade-award-archives.$commandId"
+import * as companyGradeAwardArchivesByEmployeeEmployeeIdRoute from "@/contexts/company/interface/routes/company.grade-award-archives.by-employee.$employeeId"
 import * as companyGradeDefinitionsRoute from "@/contexts/company/interface/routes/company.grade-definitions"
 import * as companyGradeDefinitionsIdRoute from "@/contexts/company/interface/routes/company.grade-definitions.$id"
 import * as companyLegacyPersonnelActionRecordsRoute from "@/contexts/company/interface/routes/company.legacy-personnel-action-records"
@@ -634,6 +635,10 @@ const routePart25 = createRouteApp()
   .get("/company/features", ...companyFeaturesRoute.GET)
   .get("/company/grade-award-archives", ...companyGradeAwardArchivesRoute.GET)
   .post("/company/grade-award-archives", ...companyGradeAwardArchivesRoute.POST)
+  .get(
+    "/company/grade-award-archives/by-employee/:employeeId",
+    ...companyGradeAwardArchivesByEmployeeEmployeeIdRoute.GET,
+  )
   .get("/company/grade-award-archives/:commandId", ...companyGradeAwardArchivesCommandIdRoute.GET)
   .get("/company/grade-definitions", ...companyGradeDefinitionsRoute.GET)
   .post("/company/grade-definitions", ...companyGradeDefinitionsRoute.POST)
@@ -644,9 +649,9 @@ const routePart25 = createRouteApp()
   .get("/company/my-direct-reports", ...companyMyDirectReportsRoute.GET)
   .get("/company/my-organization-units", ...companyMyOrganizationUnitsRoute.GET)
   .get("/company/my-profile", ...companyMyProfileRoute.GET)
-  .put("/company/my-profile", ...companyMyProfileRoute.PUT)
 
 const routePart26 = createRouteApp()
+  .put("/company/my-profile", ...companyMyProfileRoute.PUT)
   .post("/company/notifications", ...companyNotificationsRoute.POST)
   .post("/company/organization-changes", ...companyOrganizationChangesRoute.POST)
   .get("/company/organization-profile", ...companyOrganizationProfileRoute.GET)
