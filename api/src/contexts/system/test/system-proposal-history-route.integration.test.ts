@@ -139,6 +139,32 @@ test("Company・業務コードなしで取消済み原版と再提出版を読�
   expect((await f.request("recipient")).status).toBe(200)
 })
 
+test("手続きの現行版を変更しても提案時の定義原文を返す", async () => {
+  const f = await fixture()
+  f.sqlite.exec(`
+    INSERT INTO system_procedure_definition_revisions
+      (procedure_key,revision,title,category,input_schema_json,decision_policy_json,created_by_account_id,created_at)
+      VALUES ('change',2,'Changed definition','revised','{"type":"object"}','{"revised":true}','owner',101);
+    UPDATE system_procedure_definitions SET current_revision=2,updated_at=101 WHERE key='change';
+  `)
+  const response = await f.request("owner")
+  expect(response.status).toBe(200)
+  expect(await response.json()).toMatchObject({
+    procedure_key: "change",
+    procedure_revision: 1,
+    procedure_definition: {
+      key: "change",
+      revision: 1,
+      title: "Change",
+      category: "operation",
+      description: null,
+      input_schema_json: "{}",
+      decision_policy_json: "{}",
+      completion_operation_key: null,
+    },
+  })
+})
+
 test("関係のない主体と管理者だけの権限を拒否し、関係による拒否を監査する", async () => {
   const f = await fixture()
   expect((await f.request("other")).status).toBe(403)
