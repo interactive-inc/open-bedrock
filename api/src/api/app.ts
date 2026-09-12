@@ -90,6 +90,8 @@ import * as companyAssignmentResourceAdoptionsRoute from "@/contexts/company/int
 import * as companyAuthorityResolutionsRoute from "@/contexts/company/interface/routes/company.authority-resolutions"
 import * as companyBootstrapRoute from "@/contexts/company/interface/routes/company.bootstrap"
 import * as companyCapabilitiesRoute from "@/contexts/company/interface/routes/company.capabilities"
+import * as companyDefinitionResourceAdoptionsRoute from "@/contexts/company/interface/routes/company.definition-resource-adoptions"
+import * as companyDefinitionResourceAdoptionsCommandIdRoute from "@/contexts/company/interface/routes/company.definition-resource-adoptions.$commandId"
 import * as companyDefinitionsRoute from "@/contexts/company/interface/routes/company.definitions"
 import * as companyEmployeeDirectoryRoute from "@/contexts/company/interface/routes/company.employee-directory"
 import * as companyEmployeeDirectoryCodeRoute from "@/contexts/company/interface/routes/company.employee-directory.$code"
@@ -598,6 +600,12 @@ const routePart25 = createRouteApp()
   .get("/company/current-profile", ...companyCurrentProfileRoute.GET)
   .get("/company/dashboard", ...companyDashboardRoute.GET)
   .get("/company/dashboard/management", ...companyDashboardManagementRoute.GET)
+  .get("/company/definition-resource-adoptions", ...companyDefinitionResourceAdoptionsRoute.GET)
+  .post("/company/definition-resource-adoptions", ...companyDefinitionResourceAdoptionsRoute.POST)
+  .get(
+    "/company/definition-resource-adoptions/:commandId",
+    ...companyDefinitionResourceAdoptionsCommandIdRoute.GET,
+  )
   .get("/company/definitions", ...companyDefinitionsRoute.GET)
   .post("/company/definitions", ...companyDefinitionsRoute.POST)
   .get("/company/employee-directory", ...companyEmployeeDirectoryRoute.GET)
@@ -635,14 +643,14 @@ const routePart25 = createRouteApp()
   .post("/company/notifications", ...companyNotificationsRoute.POST)
   .post("/company/organization-changes", ...companyOrganizationChangesRoute.POST)
   .get("/company/organization-profile", ...companyOrganizationProfileRoute.GET)
+
+const routePart26 = createRouteApp()
   .put("/company/organization-profile", ...companyOrganizationProfileRoute.PUT)
   .get("/company/organization-resource-adoptions", ...companyOrganizationResourceAdoptionsRoute.GET)
   .post(
     "/company/organization-resource-adoptions",
     ...companyOrganizationResourceAdoptionsRoute.POST,
   )
-
-const routePart26 = createRouteApp()
   .get("/company/organization-snapshots", ...companyOrganizationSnapshotsRoute.GET)
   .get("/company/organization-tree", ...companyOrganizationTreeRoute.GET)
   .get("/company/organization-units", ...companyOrganizationUnitsRoute.GET)

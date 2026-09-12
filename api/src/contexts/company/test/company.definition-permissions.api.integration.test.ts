@@ -10,29 +10,18 @@ import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-dat
 import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
 import { Hono } from "hono"
-import { readFileSync } from "node:fs"
+import { readFileSync, readdirSync } from "node:fs"
+import { join } from "node:path"
+import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
 
-const companySql =
-  readFileSync(
-    new URL("../../system/infrastructure/schema/system-core.sql", import.meta.url),
-    "utf8",
-  ) +
-  "\n" +
-  readFileSync(new URL("../infrastructure/schema/company.sql", import.meta.url), "utf8")
-const gradeDefinitionSql = `${companySql}
-CREATE TABLE company_grade_definitions (
-  id INTEGER PRIMARY KEY,
-  code TEXT NOT NULL,
-  name TEXT NOT NULL,
-  rank INTEGER NOT NULL,
-  description TEXT,
-  created_at TEXT NOT NULL
-);
-CREATE UNIQUE INDEX uq_company_grade_definitions_code
-  ON company_grade_definitions(code);`
+const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
+  .filter((file) => file.endsWith(".sql"))
+  .sort()
+  .map((file) => readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8"))
+  .join("\n")
 
 function createTestDatabase() {
-  const binding = createCompanyD1TestDatabase(gradeDefinitionSql)
+  const binding = createCompanyD1TestDatabase(schemaSql)
   return { binding, database: drizzle(binding, { schema: companySchema }) }
 }
 
