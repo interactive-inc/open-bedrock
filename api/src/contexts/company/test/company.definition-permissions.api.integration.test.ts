@@ -1,11 +1,9 @@
 import { handleApiError } from "@/api/error-response/handle-api-error"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
+import { companyRouteManifest } from "@/contexts/company/interface/route-manifest"
 import { companySchema } from "@/contexts/company/infrastructure/schema/company"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
-import {
-  GET as gradeDefinitionsGET,
-  POST as gradeDefinitionsPOST,
-} from "@/contexts/company/interface/routes/company.grade-definitions"
+import { GET as gradeDefinitionsGET } from "@/contexts/company/interface/routes/company.grade-definitions"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
@@ -53,11 +51,24 @@ function createApp(
     await next()
   })
   app.get("/grade-definitions", ...gradeDefinitionsGET)
-  app.post("/grade-definitions", ...gradeDefinitionsPOST)
   return app
 }
 
 describe("Company等級定義の権限", () => {
+  test("旧台帳は原記録の読み取りだけを公開し、履歴を伴わない書き込みを登録しない", () => {
+    const legacy = companyRouteManifest.filter((route) =>
+      [
+        "/company/grade-definitions",
+        "/company/position-definitions",
+        "/company/employee-grades",
+      ].some((path) => route.path === path || route.path.startsWith(`${path}/`)),
+    )
+    expect(legacy.map((route) => ({ method: route.method, path: route.path }))).toEqual([
+      { method: "GET", path: "/company/employee-grades" },
+      { method: "GET", path: "/company/grade-definitions" },
+      { method: "GET", path: "/company/position-definitions" },
+    ])
+  })
   test("org:readがあればGETでき、なければ403になる", async () => {
     const { binding, database } = createTestDatabase()
     const allowed = await createApp(database, ["org:read"]).request(
@@ -71,36 +82,5 @@ describe("Company等級定義の権限", () => {
 
     expect(allowed.status).toBe(200)
     expect(denied.status).toBe(403)
-  })
-
-  test("master:org:writeがあれば作成でき、org:readだけでは403になる", async () => {
-    const { binding, database } = createTestDatabase()
-    const input = {
-      code: "G1",
-      name: "等級1",
-      rank: 1,
-      description: "テスト等級",
-    }
-    const denied = await createApp(database, ["org:read"]).request(
-      "/grade-definitions",
-      {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(input),
-      },
-      { DB: binding },
-    )
-    const allowed = await createApp(database, ["master:org:write"]).request(
-      "/grade-definitions",
-      {
-        method: "POST",
-        headers: { "content-type": "application/json" },
-        body: JSON.stringify(input),
-      },
-      { DB: binding },
-    )
-
-    expect(denied.status).toBe(403)
-    expect(allowed.status).toBe(201)
   })
 })

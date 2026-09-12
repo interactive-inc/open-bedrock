@@ -109,7 +109,6 @@ import * as companyGradeAwardArchivesRoute from "@/contexts/company/interface/ro
 import * as companyGradeAwardArchivesCommandIdRoute from "@/contexts/company/interface/routes/company.grade-award-archives.$commandId"
 import * as companyGradeAwardArchivesByEmployeeEmployeeIdRoute from "@/contexts/company/interface/routes/company.grade-award-archives.by-employee.$employeeId"
 import * as companyGradeDefinitionsRoute from "@/contexts/company/interface/routes/company.grade-definitions"
-import * as companyGradeDefinitionsIdRoute from "@/contexts/company/interface/routes/company.grade-definitions.$id"
 import * as companyLegacyPersonnelActionRecordsRoute from "@/contexts/company/interface/routes/company.legacy-personnel-action-records"
 import * as companyMyDirectReportsRoute from "@/contexts/company/interface/routes/company.my-direct-reports"
 import * as companyMyOrganizationUnitsRoute from "@/contexts/company/interface/routes/company.my-organization-units"
@@ -127,7 +126,6 @@ import * as companyPersonnelActionEventsRoute from "@/contexts/company/interface
 import * as companyPersonnelActionExecutionsRoute from "@/contexts/company/interface/routes/company.personnel-action-executions"
 import * as companyPersonnelActionsRoute from "@/contexts/company/interface/routes/company.personnel-actions"
 import * as companyPositionDefinitionsRoute from "@/contexts/company/interface/routes/company.position-definitions"
-import * as companyPositionDefinitionsIdRoute from "@/contexts/company/interface/routes/company.position-definitions.$id"
 import * as companyProfileRoute from "@/contexts/company/interface/routes/company.profile"
 import * as companyReportingLinesEmployeeCodeRoute from "@/contexts/company/interface/routes/company.reporting-lines.$employeeCode"
 import * as companyResponsibilityResourceAdoptionsRoute from "@/contexts/company/interface/routes/company.responsibility-resource-adoptions"
@@ -618,7 +616,6 @@ const routePart25 = createRouteApp()
   .get("/company/employee-events", ...companyEmployeeEventsRoute.GET)
   .post("/company/employee-events", ...companyEmployeeEventsRoute.POST)
   .get("/company/employee-grades", ...companyEmployeeGradesRoute.GET)
-  .post("/company/employee-grades", ...companyEmployeeGradesRoute.POST)
   .get("/company/employee-lifecycle/:code/events", ...companyEmployeeLifecycleCodeEventsRoute.GET)
   .get("/company/employee-lifecycle/:code/state", ...companyEmployeeLifecycleCodeStateRoute.GET)
   .post("/company/employee-registrations", ...companyEmployeeRegistrationsRoute.POST)
@@ -643,19 +640,16 @@ const routePart25 = createRouteApp()
   )
   .get("/company/grade-award-archives/:commandId", ...companyGradeAwardArchivesCommandIdRoute.GET)
   .get("/company/grade-definitions", ...companyGradeDefinitionsRoute.GET)
-  .post("/company/grade-definitions", ...companyGradeDefinitionsRoute.POST)
-  .put("/company/grade-definitions/:id", ...companyGradeDefinitionsIdRoute.PUT)
-  .delete("/company/grade-definitions/:id", ...companyGradeDefinitionsIdRoute.DELETE)
   .get("/company/inbox/counts", ...companyInboxCountsRoute.GET)
   .get("/company/legacy-personnel-action-records", ...companyLegacyPersonnelActionRecordsRoute.GET)
   .get("/company/my-direct-reports", ...companyMyDirectReportsRoute.GET)
   .get("/company/my-organization-units", ...companyMyOrganizationUnitsRoute.GET)
-
-const routePart26 = createRouteApp()
   .get("/company/my-profile", ...companyMyProfileRoute.GET)
   .put("/company/my-profile", ...companyMyProfileRoute.PUT)
   .post("/company/notifications", ...companyNotificationsRoute.POST)
   .post("/company/organization-changes", ...companyOrganizationChangesRoute.POST)
+
+const routePart26 = createRouteApp()
   .get("/company/organization-profile", ...companyOrganizationProfileRoute.GET)
   .put("/company/organization-profile", ...companyOrganizationProfileRoute.PUT)
   .get("/company/organization-resource-adoptions", ...companyOrganizationResourceAdoptionsRoute.GET)
@@ -690,9 +684,6 @@ const routePart29 = createRouteApp()
   .get("/company/personnel-actions", ...companyPersonnelActionsRoute.GET)
   .post("/company/personnel-actions", ...companyPersonnelActionsRoute.POST)
   .get("/company/position-definitions", ...companyPositionDefinitionsRoute.GET)
-  .post("/company/position-definitions", ...companyPositionDefinitionsRoute.POST)
-  .put("/company/position-definitions/:id", ...companyPositionDefinitionsIdRoute.PUT)
-  .delete("/company/position-definitions/:id", ...companyPositionDefinitionsIdRoute.DELETE)
   .get("/company/profile", ...companyProfileRoute.GET)
   .post("/company/profile", ...companyProfileRoute.POST)
   .get("/company/reporting-lines/:employeeCode", ...companyReportingLinesEmployeeCodeRoute.GET)
@@ -744,11 +735,11 @@ const routePart29 = createRouteApp()
   .post("/family-care-leave/family-care-leaves/:id/approve", ...familyCareLeavesIdApproveRoute.POST)
   .post("/family-care-leave/family-care-leaves/:id/cancel", ...familyCareLeavesIdCancelRoute.POST)
   .get("/governance/governance-capabilities", ...governanceCapabilitiesRoute.GET)
-
-const routePart30 = createRouteApp()
   .get("/governance/governance-documents", ...governanceDocumentsRoute.GET)
   .get("/governance/governance-documents/impact", ...governanceGovernanceDocumentsImpactRoute.GET)
   .post("/governance/governance-documents/sync", ...governanceGovernanceDocumentsSyncRoute.POST)
+
+const routePart30 = createRouteApp()
   .get("/governance/governance-documents/:code", ...governanceDocumentsCodeRoute.GET)
   .post(
     "/governance/governance-documents/:code/acknowledge",
@@ -812,11 +803,11 @@ const routePart30 = createRouteApp()
   .post("/life-event/life-events/:id/reject", ...lifeEventsIdRejectRoute.POST)
   .get("/meeting/decision-records", ...decisionRecordsRoute.GET)
   .post("/meeting/decision-records", ...decisionRecordsRoute.POST)
-
-const routePart31 = createRouteApp()
   .get("/meeting/decision-records/:id", ...decisionRecordsIdRoute.GET)
   .put("/meeting/decision-records/:id", ...decisionRecordsIdRoute.PUT)
   .post("/meeting/decision-records/:id/supersede", ...decisionRecordsIdSupersedeRoute.POST)
+
+const routePart31 = createRouteApp()
   .get("/meeting/meeting-minutes-records/:id", ...meetingMinutesRecordsIdRoute.GET)
   .put("/meeting/meeting-minutes-records/:id", ...meetingMinutesRecordsIdRoute.PUT)
   .get("/meeting/meetings", ...meetingsRoute.GET)
@@ -877,14 +868,14 @@ const routePart31 = createRouteApp()
     "/performance-review/evaluation-sheets/:sheetId/evaluators",
     ...evaluationSheetsSheetIdEvaluatorsRoute.PUT,
   )
-
-const routePart32 = createRouteApp()
   .post(
     "/performance-review/evaluation-sheets/:sheetId/transition",
     ...evaluationSheetsSheetIdTransitionRoute.POST,
   )
   .get("/performance-review/evaluation-templates", ...evaluationTemplatesRoute.GET)
   .post("/performance-review/evaluation-templates", ...evaluationTemplatesRoute.POST)
+
+const routePart32 = createRouteApp()
   .get(
     "/performance-review/evaluation-templates/:templateId",
     ...evaluationTemplatesTemplateIdRoute.GET,
@@ -963,11 +954,11 @@ const routePart32 = createRouteApp()
   .get("/rental/rental-reservations/me", ...rentalReservationsMeRoute.GET)
   .get("/rental/rental-reservations/:id", ...rentalReservationsIdRoute.GET)
   .put("/rental/rental-reservations/:id", ...rentalReservationsIdRoute.PUT)
-
-const routePart33 = createRouteApp()
   .delete("/rental/rental-reservations/:id", ...rentalReservationsIdRoute.DELETE)
   .post("/rental/rental-reservations/:id/lend", ...rentalReservationsIdLendRoute.POST)
   .post("/rental/rental-reservations/:id/return", ...rentalReservationsIdReturnRoute.POST)
+
+const routePart33 = createRouteApp()
   .post("/resignation/resignations", ...resignationsRoute.POST)
   .get("/resignation/resignations/admin", ...resignationsAdminRoute.GET)
   .get("/resignation/resignations/me", ...resignationsMeRoute.GET)
@@ -1013,11 +1004,11 @@ const routePart33 = createRouteApp()
   .get("/shift/shift-swap-requests", ...shiftSwapRequestsRoute.GET)
   .post("/shift/shift-swap-requests", ...shiftSwapRequestsRoute.POST)
   .get("/shift/shift-swap-requests/admin", ...shiftSwapRequestsAdminRoute.GET)
-
-const routePart34 = createRouteApp()
   .get("/shift/shift-swap-requests/me", ...shiftSwapRequestsMeRoute.GET)
   .get("/shift/shift-swap-requests/:id", ...shiftSwapRequestsIdRoute.GET)
   .delete("/shift/shift-swap-requests/:id", ...shiftSwapRequestsIdRoute.DELETE)
+
+const routePart34 = createRouteApp()
   .post("/shift/shift-swap-requests/:id/approve", ...shiftSwapRequestsIdApproveRoute.POST)
   .get("/skill/employee-skills/me", ...employeeSkillsMeRoute.GET)
   .put("/skill/employee-skills/me", ...employeeSkillsMeRoute.PUT)
@@ -1102,11 +1093,11 @@ const routePart34 = createRouteApp()
     ...systemAttachmentsAttachmentIdPreservationsPreservationIdReleaseRoute.POST,
   )
   .get("/system/audit-disclosure-policies", ...systemAuditDisclosurePoliciesRoute.GET)
-
-const routePart35 = createRouteApp()
   .post("/system/audit-disclosure-policies", ...systemAuditDisclosurePoliciesRoute.POST)
   .get("/system/audit-events", ...systemAuditEventsRoute.GET)
   .get("/system/audit-events/:eventId", ...systemAuditEventsEventIdRoute.GET)
+
+const routePart35 = createRouteApp()
   .post("/system/auth/password/reset", ...systemAuthPasswordResetRoute.POST)
   .patch("/system/auth/password/reset", ...systemAuthPasswordResetRoute.PATCH)
   .get("/system/batch-jobs", ...systemBatchJobsRoute.GET)
@@ -1173,14 +1164,14 @@ const routePart35 = createRouteApp()
     "/system/principals/:principalId/machine-credentials",
     ...systemPrincipalsPrincipalIdMachineCredentialsRoute.GET,
   )
-
-const routePart36 = createRouteApp()
   .post(
     "/system/principals/:principalId/machine-credentials",
     ...systemPrincipalsPrincipalIdMachineCredentialsRoute.POST,
   )
   .get("/system/roles", ...systemRolesRoute.GET)
   .post("/system/roles", ...systemRolesRoute.POST)
+
+const routePart36 = createRouteApp()
   .get("/system/roles/:roleId", ...systemRolesRoleIdRoute.GET)
   .patch("/system/roles/:roleId", ...systemRolesRoleIdRoute.PATCH)
   .delete("/system/roles/:roleId", ...systemRolesRoleIdRoute.DELETE)
@@ -1229,11 +1220,11 @@ const routePart36 = createRouteApp()
   .get("/training/training-enrollments/me", ...trainingEnrollmentsMeRoute.GET)
   .get("/training/training-enrollments/:id", ...trainingEnrollmentsIdRoute.GET)
   .put("/training/training-enrollments/:id", ...trainingEnrollmentsIdRoute.PUT)
-
-const routePart37 = createRouteApp()
   .delete("/training/training-enrollments/:id", ...trainingEnrollmentsIdRoute.DELETE)
   .post("/training/training-enrollments/:id/complete", ...trainingEnrollmentsIdCompleteRoute.POST)
   .get("/work-accident/work-accidents", ...workAccidentsRoute.GET)
+
+const routePart37 = createRouteApp()
   .post("/work-accident/work-accidents", ...workAccidentsRoute.POST)
   .post("/work-accident/work-accidents/:id/close", ...workAccidentsIdCloseRoute.POST)
   .get("/work-style/employee-work-styles", ...employeeWorkStylesRoute.GET)

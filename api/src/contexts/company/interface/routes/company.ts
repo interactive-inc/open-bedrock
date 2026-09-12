@@ -24,7 +24,6 @@ import * as gradeAwardArchives from "@/contexts/company/interface/routes/company
 import * as gradeAwardArchivesCommandId from "@/contexts/company/interface/routes/company.grade-award-archives.$commandId"
 import * as gradeAwardArchivesByEmployeeEmployeeId from "@/contexts/company/interface/routes/company.grade-award-archives.by-employee.$employeeId"
 import * as gradeDefinitions from "@/contexts/company/interface/routes/company.grade-definitions"
-import * as gradeDefinitionsId from "@/contexts/company/interface/routes/company.grade-definitions.$id"
 import * as legacyPersonnelActionRecords from "@/contexts/company/interface/routes/company.legacy-personnel-action-records"
 import * as myDirectReports from "@/contexts/company/interface/routes/company.my-direct-reports"
 import * as myOrganizationUnits from "@/contexts/company/interface/routes/company.my-organization-units"
@@ -42,7 +41,6 @@ import * as personnelActionEvents from "@/contexts/company/interface/routes/comp
 import * as personnelActionExecutions from "@/contexts/company/interface/routes/company.personnel-action-executions"
 import * as personnelActions from "@/contexts/company/interface/routes/company.personnel-actions"
 import * as positionDefinitions from "@/contexts/company/interface/routes/company.position-definitions"
-import * as positionDefinitionsId from "@/contexts/company/interface/routes/company.position-definitions.$id"
 import * as profile from "@/contexts/company/interface/routes/company.profile"
 import * as reportingLinesEmployeeCode from "@/contexts/company/interface/routes/company.reporting-lines.$employeeCode"
 import * as responsibilityResourceAdoptions from "@/contexts/company/interface/routes/company.responsibility-resource-adoptions"
@@ -104,15 +102,11 @@ export const companyAuditedRoutes = new Hono<CompanyHttpEnvironment>()
   .post("/definitions", ...definitions.POST)
   .put("/employee-directory/:code", ...employeeDirectoryCode.PUT)
   .post("/employee-events", ...employeeEvents.POST)
-  .post("/employee-grades", ...employeeGrades.POST)
   .post("/employee-resource-adoption-batches", ...employeeResourceAdoptionBatches.POST)
   .post("/employee-resource-adoptions", ...employeeResourceAdoptions.POST)
   .post("/employees", ...employees.POST)
   .post("/employments", ...employments.POST)
   .post("/grade-award-archives", ...gradeAwardArchives.POST)
-  .post("/grade-definitions", ...gradeDefinitions.POST)
-  .put("/grade-definitions/:id", ...gradeDefinitionsId.PUT)
-  .delete("/grade-definitions/:id", ...gradeDefinitionsId.DELETE)
   .put("/my-profile", ...myProfile.PUT)
   .post("/organization-changes", ...organizationChanges.POST)
   .put("/organization-profile", ...organizationProfile.PUT)
@@ -123,9 +117,6 @@ export const companyAuditedRoutes = new Hono<CompanyHttpEnvironment>()
   .post("/people", ...people.POST)
   .post("/personnel-action-executions", ...personnelActionExecutions.POST)
   .post("/personnel-actions", ...personnelActions.POST)
-  .post("/position-definitions", ...positionDefinitions.POST)
-  .put("/position-definitions/:id", ...positionDefinitionsId.PUT)
-  .delete("/position-definitions/:id", ...positionDefinitionsId.DELETE)
   .post("/profile", ...profile.POST)
   .get("/responsibility-resource-adoptions", ...responsibilityResourceAdoptions.GET)
   .post("/responsibility-resource-adoptions", ...responsibilityResourceAdoptions.POST)
