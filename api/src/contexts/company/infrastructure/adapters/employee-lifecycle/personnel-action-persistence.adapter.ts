@@ -1,3 +1,4 @@
+import { isEmploymentEmployerReferenceInvalid } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/is-employment-employer-reference-invalid"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { validatePersonnelPositionReference } from "@/contexts/company/domain/policies/validate-personnel-position-reference.policy"
@@ -655,6 +656,11 @@ export class PersonnelActionPersistenceAdapter {
 
       return action
     } catch (cause) {
+      if (isEmploymentEmployerReferenceInvalid(cause))
+        return new CompanyValidationError(
+          "雇用期間を覆う雇用主法人を確認できません",
+          "invalid_employment_employer",
+        )
       if (isAbortedByGuard(cause)) {
         return new CompanyConflictError("人事情報が同時に更新されました", "personnel_action_stale")
       }
@@ -701,6 +707,11 @@ export class PersonnelActionPersistenceAdapter {
         ).abortWhenPreviousStatementChangedNoRows(),
       ],
     })
+    if (isEmploymentEmployerReferenceInvalid(executed))
+      return new CompanyValidationError(
+        "雇用期間を覆う雇用主法人を確認できません",
+        "invalid_employment_employer",
+      )
     if (executed instanceof Error && isAbortedByGuard(executed)) {
       return new CompanyConflictError(
         "発令内容または承認資格が同時に更新されました",
