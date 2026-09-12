@@ -523,7 +523,7 @@
     "src/contexts/company/test/company-reporting-reference-migration.contract.test.ts": "e1eb058dbc4927d06f101de49f695527774daa58179d930f0dda449f28fd0339",
     "src/contexts/company/test/company-reporting-reference-periods.integration.test.ts": "ed238cdac332e8aaed4ca301fc682e24a2f174fc55511f64efd2a588c9f9da80",
     "src/contexts/company/test/company-reporting-reference.test-support.ts": "2f9b277e3b4af7f4da868746f9af3da2b1ee7a0349a89c5c88b06226ef78c424",
-    "src/contexts/company/test/company-resource-read-limits.integration.test.ts": "5168158a38763c9218b6c439ef51cd986a11c701dd3e6fa327805e8f611584bf",
+    "src/contexts/company/test/company-resource-read-limits.integration.test.ts": "f7bed9e402d83010779b189cd960ba57cea57ccce11c815060bceefd1b149ef1",
     "src/contexts/company/test/company-resource-snapshot.integration.test.ts": "dc6a7847437ab445dfa0308c479bdfea0da3982f1ebef5911077677cc65314b0",
     "src/contexts/company/test/company-workforce-account-batch.integration.test.ts": "60a38e98271e15d13a9df2c43fad86ad5d0233057641c50efec82aa1c1200158",
     "src/contexts/company/test/company-workforce-organization-command.integration.test.ts": "66f844d57142f962fed1411b7208306803bdd994ed53bcf45fcc1093a264612a",
