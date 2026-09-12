@@ -1,5 +1,6 @@
 "use client"
 
+import { GradeRevisionFields } from "@/app/(app)/company/grades/_components/grade-revision-fields"
 import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
@@ -11,10 +12,12 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
+type Props = { companyRevision: number; commandId: string; gradeId: string }
+
 const initialState: GradeActionState = { ok: false, error: null }
 
 /** 等級作成フォーム。code/name/rank 必須、説明は任意。成功時は /grades へ戻す。 */
-export function GradeCreateForm() {
+export function GradeCreateForm(props: Props) {
   const router = useRouter()
 
   async function reduce(
@@ -45,6 +48,14 @@ export function GradeCreateForm() {
   return (
     <form action={formAction}>
       <FieldGroup>
+        <GradeRevisionFields
+          id={props.gradeId}
+          companyRevision={props.companyRevision}
+          resourceRevision={0}
+          commandId={props.commandId}
+          effectiveFrom=""
+          effectiveTo={null}
+        />
         <Field>
           <FieldLabel htmlFor="grade-code">コード</FieldLabel>
 
@@ -80,8 +91,7 @@ export function GradeCreateForm() {
             min={FORM_CONSTRAINTS.grade.rankMin}
             max={FORM_CONSTRAINTS.grade.rankMax}
             step={1}
-            placeholder="1"
-            required
+            placeholder="不明なら空欄"
           />
         </Field>
 

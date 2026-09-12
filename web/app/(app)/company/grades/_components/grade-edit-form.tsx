@@ -1,5 +1,6 @@
 "use client"
 
+import { GradeRevisionFields } from "@/app/(app)/company/grades/_components/grade-revision-fields"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 import { updateGradeAction } from "@/app/(app)/company/grades/actions"
@@ -66,7 +67,14 @@ export function GradeEditForm(props: Props) {
         </DialogHeader>
 
         <form action={formAction} className="flex flex-col gap-4">
-          <input type="hidden" name="gradeId" value={props.grade.id} />
+          <GradeRevisionFields
+            id={props.grade.id}
+            companyRevision={props.grade.organizationRevision}
+            resourceRevision={props.grade.revision}
+            commandId={props.grade.commandId}
+            effectiveFrom={props.grade.effectiveFrom}
+            effectiveTo={props.grade.effectiveTo}
+          />
 
           <FieldGroup>
             <Field>
@@ -101,11 +109,10 @@ export function GradeEditForm(props: Props) {
                 name="rank"
                 type="number"
                 inputMode="numeric"
-                defaultValue={props.grade.rank}
+                defaultValue={props.grade.rank ?? ""}
                 min={FORM_CONSTRAINTS.grade.rankMin}
                 max={FORM_CONSTRAINTS.grade.rankMax}
                 step={1}
-                required
               />
             </Field>
 

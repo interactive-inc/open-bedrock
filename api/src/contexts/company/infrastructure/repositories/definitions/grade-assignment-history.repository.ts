@@ -1,5 +1,9 @@
 import { z } from "zod"
 import { CompanySnapshotRevisionError } from "@/contexts/company/domain/errors"
+import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+
+type Context = D1Database
 
 const revisionSchema = z.object({
   id: z.string(),
@@ -27,7 +31,7 @@ type Props = Readonly<{
 
 /** 指定会社版までの等級割当の全改訂を、判断根拠とともにページ単位で取得する。 */
 export class GradeAssignmentHistoryRepository {
-  constructor(private readonly c: D1Database) {
+  constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 
@@ -68,6 +72,24 @@ export class GradeAssignmentHistoryRepository {
         return new CompanySnapshotRevisionError()
       const parsed = z.array(revisionSchema).safeParse(JSON.parse(row.history_json))
       if (!parsed.success) return parsed.error
+      for (const revision of parsed.data) {
+        const resource = CompanyResourceEntity.create({
+          organizationId: props.organizationId,
+          type: "grade-assignment",
+          id: revision.id,
+          revision: revision.revision,
+          state: revision.state,
+          effectiveFrom: restoreCalendarDate(revision.effectiveFrom),
+          effectiveTo:
+            revision.effectiveTo === null ? null : restoreCalendarDate(revision.effectiveTo),
+          attributes: {
+            employeeId: revision.employeeId,
+            employmentId: revision.employmentId,
+            gradeId: revision.gradeId,
+          },
+        })
+        if (resource instanceof Error) return resource
+      }
       return {
         organizationId: props.organizationId,
         organizationRevision: props.organizationRevision,

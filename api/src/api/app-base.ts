@@ -174,6 +174,9 @@ const companyActorMiddleware = factory.createMiddleware(async (c, next) => {
     permissions.push("master:org:write")
   }
 
+  if (session.hasPermission("grade:manage")) permissions.push("master:grade:write")
+  if (session.hasPermission("position:manage")) permissions.push("master:position:write")
+
   c.set(
     "companyActor",
     CompanyActorValue.restore({

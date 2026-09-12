@@ -60,6 +60,7 @@ export const GET = factory.createHandlers(
         .transform(Number)
         .pipe(z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER))
         .optional(),
+      type: z.enum(["grade", "position"]).optional(),
       effective_on: z.string().date().optional(),
       as_of: z.string().date().optional(),
     }),
@@ -100,17 +101,20 @@ export const GET = factory.createHandlers(
     const query = {
       organizationId: headers["x-company-organization-id"],
       organizationRevision: requestQuery.organization_revision,
-      types: [
-        "site",
-        "workplace",
-        "job",
-        "position",
-        "grade",
-        "organizational-office",
-        "responsibility",
-        "authority-scope",
-        "collective-body",
-      ] as const,
+      types:
+        requestQuery.type === undefined
+          ? ([
+              "site",
+              "workplace",
+              "job",
+              "position",
+              "grade",
+              "organizational-office",
+              "responsibility",
+              "authority-scope",
+              "collective-body",
+            ] as const)
+          : [requestQuery.type],
       ...(ids.length === 0 ? {} : { ids }),
       ...(effectiveOn === undefined ? {} : { effectiveOn: restoreCalendarDate(effectiveOn) }),
     }
@@ -132,7 +136,9 @@ export const GET = factory.createHandlers(
       (!actor.organizationIds.includes(query.organizationId) &&
         !actor.organizationIds.includes("*")) ||
       (!actor.capabilities.includes("company:admin") &&
-        !actor.capabilities.includes("company:read"))
+        !actor.capabilities.includes("company:read") &&
+        !(requestQuery.type === "grade" && actor.hasPermission("master:grade:write")) &&
+        !(requestQuery.type === "position" && actor.hasPermission("master:position:write")))
     ) {
       throw new CompanyAccessDeniedError()
     }

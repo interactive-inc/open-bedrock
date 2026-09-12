@@ -91,6 +91,7 @@ test.each(["grade", "position"] as const)(
       expect(new URL(sent.url).pathname).toBe("/company/definitions")
       expect(new URL(sent.url).searchParams.get("effective_on")).toBe("2030-06-01")
       expect(new URL(sent.url).searchParams.get("organization_revision")).toBe("4")
+      expect(new URL(sent.url).searchParams.get("type")).toBe(type)
       expect(sent.headers.get("x-company-organization-id")).toBe("organization:example")
     } finally {
       f.interception.mockRestore()
