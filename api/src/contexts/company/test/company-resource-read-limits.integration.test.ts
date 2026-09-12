@@ -137,14 +137,16 @@ test("公開定義APIで会社版を固定し、未知の版と不正な版を�
     const historical = await f.request(ids, date, organizationId, "1")
     expect(historical.status).toBe(200)
     expect(historical.headers.get("etag")).toBe('"1"')
-    expect(await historical.json()).toEqual({
+    const historicalBody: unknown = await historical.json()
+    expect(historicalBody).toEqual({
       organizationId,
       organizationRevision: 1,
       resources: [f.resources[0]],
     })
     const current = await f.request(ids, date, organizationId, "2")
     expect(current.status).toBe(200)
-    expect(await current.json()).toMatchObject({
+    const currentBody: unknown = await current.json()
+    expect(currentBody).toMatchObject({
       organizationRevision: 2,
       resources: [{ id: f.resources[0].id }, { id: "grade:excluded" }],
     })
