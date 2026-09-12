@@ -10,7 +10,6 @@ import { Skeleton } from "@/components/ui/skeleton"
 import { PageHeader } from "@/components/page-header"
 import { getMe } from "@/lib/api/get-me"
 import { canReadEmployees } from "@/lib/employee/can-read-employees"
-import { canManageEmployeeEvents } from "@/lib/employee-event/can-manage-employee-events"
 import { canManageSalaryRevisions } from "@/lib/salary-revision/can-manage-salary-revisions"
 import { canViewAllSalaryRevisions } from "@/lib/salary-revision/can-view-all-salary-revisions"
 import { notFound } from "next/navigation"
@@ -60,10 +59,7 @@ export default async function EmployeeDetailPage(props: Props) {
       </Suspense>
 
       <Suspense fallback={<Skeleton className="w-full" />}>
-        <EmployeeEventHistory
-          code={params.employee}
-          canManage={canManageEmployeeEvents(currentUser.permissions)}
-        />
+        <EmployeeEventHistory code={params.employee} />
       </Suspense>
     </div>
   )

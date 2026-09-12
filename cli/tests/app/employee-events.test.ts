@@ -4,7 +4,6 @@ import { app } from "@/app/index"
 const paths: ReadonlyArray<{ path: string; help: string }> = [
   { path: "/employee-events", help: "bedrock employee-events" },
   { path: "/employee-events/list", help: "employee-events list" },
-  { path: "/employee-events/record", help: "employee-events record" },
 ]
 
 describe("employee-events commands", () => {
@@ -22,7 +21,7 @@ describe("employee-events commands", () => {
     })
   }
 
-  it("employee-events record rejects an unknown kind", async () => {
+  it("旧記録への書き込みコマンドを公開しない", async () => {
     const response = await app.request("/employee-events/record", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -33,6 +32,6 @@ describe("employee-events commands", () => {
       }),
     })
 
-    expect(response.status).not.toBe(200)
+    expect(response.status).toBe(404)
   })
 })

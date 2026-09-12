@@ -106,7 +106,6 @@ import positionsUpdateHandler from "@/app/position-definitions/update/route"
 import positionsDeleteHandler from "@/app/position-definitions/delete/route"
 import employeeEventsHandler from "@/app/employee-events/route"
 import employeeEventsListHandler from "@/app/employee-events/list/route"
-import employeeEventsRecordHandler from "@/app/employee-events/record/route"
 import kbGetHandler from "@/app/knowledge-articles/get/[kid]/route"
 import kbHistoryHandler from "@/app/knowledge-articles/history/route"
 import kbHandler from "@/app/knowledge-articles/route"
@@ -621,7 +620,6 @@ routes.post("/position-definitions/delete", ...positionsDeleteHandler)
 
 routes.post("/employee-events", ...employeeEventsHandler)
 routes.post("/employee-events/list", ...employeeEventsListHandler)
-routes.post("/employee-events/record", ...employeeEventsRecordHandler)
 
 routes.post("/one-on-ones", ...oneononeHandler)
 routes.post("/one-on-ones/list", ...oneononeListHandler)
