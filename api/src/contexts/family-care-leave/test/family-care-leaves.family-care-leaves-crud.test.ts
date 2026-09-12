@@ -55,9 +55,9 @@ const familyCareLeaveResponseSchema = z.object({
 
 const jwtSecret = "family-care-leaves-crud-test-secret"
 
-const ownFamilyCareLeaveId = "20000000-0000-0000-0000-000000000002"
+const ownFamilyCareLeaveId = "01900008-0000-7000-8000-000000000002"
 
-const othersFamilyCareLeaveId = "20000000-0000-0000-0000-000000000001"
+const othersFamilyCareLeaveId = "01900008-0000-7000-8000-000000000001"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())

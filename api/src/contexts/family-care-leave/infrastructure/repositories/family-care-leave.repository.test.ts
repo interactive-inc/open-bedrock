@@ -117,7 +117,7 @@ describe("FamilyCareLeaveRepository", () => {
 
       // status が requested 以外（approved）の行はドメインで作れないため直接挿入する。
       await context.var.database.insert(familyCareLeaves).values({
-        id: "00000000-0000-0000-0000-0000000000aa",
+        id: "01900008-0000-7000-8000-0000000000aa",
         employeeId: toWorkforceEmployeeId(1),
         leaveKind: "family_care",
         startDate: "2026-02-01",
@@ -266,7 +266,7 @@ describe("FamilyCareLeaveRepository", () => {
 
       // status が requested 以外（approved）の行はドメインで作れないため直接挿入する。
       await context.var.database.insert(familyCareLeaves).values({
-        id: "00000000-0000-0000-0000-0000000000bb",
+        id: "01900008-0000-7000-8000-0000000000bb",
         employeeId: toWorkforceEmployeeId(1),
         leaveKind: "family_care",
         startDate: "2026-02-01",
@@ -277,7 +277,7 @@ describe("FamilyCareLeaveRepository", () => {
       })
 
       const target = new FamilyCareLeave({
-        id: "00000000-0000-0000-0000-0000000000bb",
+        id: "01900008-0000-7000-8000-0000000000bb",
         employeeId: toWorkforceEmployeeId(1),
         leaveKind: "family_care",
         startDate: "2026-03-01",

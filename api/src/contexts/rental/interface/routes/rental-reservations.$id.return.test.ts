@@ -14,7 +14,7 @@ import { initializeStandardCompanyTestState } from "@tests/api/support/initializ
 
 const jwtSecret = "rental-return-route-test-secret"
 
-const seedId = "10000000-0000-0000-0000-000000000001"
+const seedId = "01900004-0000-7000-8000-000000000001"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())

@@ -14,7 +14,7 @@ type SeedBusinessTrip = {
 
 export const seedBusinessTrips: ReadonlyArray<SeedBusinessTrip> = [
   {
-    id: "10000000-0000-0000-0000-000000000001",
+    id: "01900007-0000-7000-8000-000000000001",
     travelerId: toWorkforceEmployeeId(2),
     destination: "大阪支社",
     startDate: "2026-06-10",
@@ -25,7 +25,7 @@ export const seedBusinessTrips: ReadonlyArray<SeedBusinessTrip> = [
     createdAt: "2026-06-01T00:00:00.000Z",
   },
   {
-    id: "10000000-0000-0000-0000-000000000002",
+    id: "01900007-0000-7000-8000-000000000002",
     travelerId: toWorkforceEmployeeId(4),
     destination: "札幌拠点",
     startDate: "2026-06-20",
@@ -36,7 +36,7 @@ export const seedBusinessTrips: ReadonlyArray<SeedBusinessTrip> = [
     createdAt: "2026-06-01T00:00:00.000Z",
   },
   {
-    id: "10000000-0000-0000-0000-000000000003",
+    id: "01900007-0000-7000-8000-000000000003",
     travelerId: toWorkforceEmployeeId(9),
     destination: "福岡オフィス",
     startDate: "2026-07-01",

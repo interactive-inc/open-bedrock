@@ -25,10 +25,10 @@ const oneOnOneResponseSchema = z.object({
 const jwtSecret = "one-on-one-crud-test-secret"
 
 /** seed: manager 4 が記録した 1on1（member 5） */
-const ownOneOnOneId = "00000000-0000-0000-0000-000000000001"
+const ownOneOnOneId = "01900003-0000-7000-8000-000000000001"
 
 /** seed: manager 9 が記録した 1on1（manager 4 から見て他人の記録） */
-const othersOneOnOneId = "00000000-0000-0000-0000-000000000003"
+const othersOneOnOneId = "01900003-0000-7000-8000-000000000003"
 
 const unknownId = "ffffffff-ffff-ffff-ffff-ffffffffffff"
 

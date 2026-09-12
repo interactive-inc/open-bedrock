@@ -13,7 +13,7 @@ type SeedAntisocialCheck = {
 
 export const seedAntisocialChecks: ReadonlyArray<SeedAntisocialCheck> = [
   {
-    id: "20000000-0000-0000-0000-000000000001",
+    id: "0190000a-0000-7000-8000-000000000001",
     requesterId: toWorkforceEmployeeId(2),
     partnerName: "株式会社サンプル商事",
     partnerAddress: "東京都サンプル区サンプル1-2-3",
@@ -23,7 +23,7 @@ export const seedAntisocialChecks: ReadonlyArray<SeedAntisocialCheck> = [
     createdAt: "2026-06-01T00:00:00.000Z",
   },
   {
-    id: "20000000-0000-0000-0000-000000000002",
+    id: "0190000a-0000-7000-8000-000000000002",
     requesterId: toWorkforceEmployeeId(4),
     partnerName: "サンプル物流株式会社",
     partnerAddress: null,
@@ -33,7 +33,7 @@ export const seedAntisocialChecks: ReadonlyArray<SeedAntisocialCheck> = [
     createdAt: "2026-06-01T00:00:00.000Z",
   },
   {
-    id: "20000000-0000-0000-0000-000000000003",
+    id: "0190000a-0000-7000-8000-000000000003",
     requesterId: toWorkforceEmployeeId(9),
     partnerName: "デモパートナーズ合同会社",
     partnerAddress: "大阪府サンプル市サンプル4-5-6",

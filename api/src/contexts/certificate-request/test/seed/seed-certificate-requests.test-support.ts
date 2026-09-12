@@ -13,7 +13,7 @@ type SeedCertificateRequest = {
 
 export const seedCertificateRequests: ReadonlyArray<SeedCertificateRequest> = [
   {
-    id: "20000000-0000-0000-0000-000000000001",
+    id: "01900009-0000-7000-8000-000000000001",
     requesterId: toWorkforceEmployeeId(2),
     certificateType: "employment",
     submitTo: "市役所",
@@ -23,7 +23,7 @@ export const seedCertificateRequests: ReadonlyArray<SeedCertificateRequest> = [
     createdAt: "2026-06-01T00:00:00.000Z",
   },
   {
-    id: "20000000-0000-0000-0000-000000000002",
+    id: "01900009-0000-7000-8000-000000000002",
     requesterId: toWorkforceEmployeeId(4),
     certificateType: "income",
     submitTo: null,
@@ -33,7 +33,7 @@ export const seedCertificateRequests: ReadonlyArray<SeedCertificateRequest> = [
     createdAt: "2026-06-01T00:00:00.000Z",
   },
   {
-    id: "20000000-0000-0000-0000-000000000003",
+    id: "01900009-0000-7000-8000-000000000003",
     requesterId: toWorkforceEmployeeId(9),
     certificateType: "retirement",
     submitTo: "年金事務所",
