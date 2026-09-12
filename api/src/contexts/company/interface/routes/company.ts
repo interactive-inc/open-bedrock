@@ -11,7 +11,6 @@ import * as definitionResourceAdoptionsCommandId from "@/contexts/company/interf
 import * as definitions from "@/contexts/company/interface/routes/company.definitions"
 import * as employeeDirectory from "@/contexts/company/interface/routes/company.employee-directory"
 import * as employeeDirectoryCode from "@/contexts/company/interface/routes/company.employee-directory.$code"
-import * as employeeGrades from "@/contexts/company/interface/routes/company.employee-grades"
 import * as employeeLifecycleCodeEvents from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.events"
 import * as employeeLifecycleCodeState from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.state"
 import * as employeeResourceAdoptionBatches from "@/contexts/company/interface/routes/company.employee-resource-adoption-batches"
@@ -23,7 +22,6 @@ import * as gradeAssignmentHistory from "@/contexts/company/interface/routes/com
 import * as gradeAwardArchives from "@/contexts/company/interface/routes/company.grade-award-archives"
 import * as gradeAwardArchivesCommandId from "@/contexts/company/interface/routes/company.grade-award-archives.$commandId"
 import * as gradeAwardArchivesByEmployeeEmployeeId from "@/contexts/company/interface/routes/company.grade-award-archives.by-employee.$employeeId"
-import * as gradeDefinitions from "@/contexts/company/interface/routes/company.grade-definitions"
 import * as legacyPersonnelActionRecords from "@/contexts/company/interface/routes/company.legacy-personnel-action-records"
 import * as myDirectReports from "@/contexts/company/interface/routes/company.my-direct-reports"
 import * as myOrganizationUnits from "@/contexts/company/interface/routes/company.my-organization-units"
@@ -41,7 +39,6 @@ import * as personnelActionEvents from "@/contexts/company/interface/routes/comp
 import * as personnelActionExecutions from "@/contexts/company/interface/routes/company.personnel-action-executions"
 import * as personnelActions from "@/contexts/company/interface/routes/company.personnel-actions"
 import * as personnelAnnotations from "@/contexts/company/interface/routes/company.personnel-annotations"
-import * as positionDefinitions from "@/contexts/company/interface/routes/company.position-definitions"
 import * as profile from "@/contexts/company/interface/routes/company.profile"
 import * as reportingLinesEmployeeCode from "@/contexts/company/interface/routes/company.reporting-lines.$employeeCode"
 import * as responsibilityResourceAdoptions from "@/contexts/company/interface/routes/company.responsibility-resource-adoptions"
@@ -64,7 +61,6 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/definitions", ...definitions.GET)
   .get("/employee-directory", ...employeeDirectory.GET)
   .get("/employee-directory/:code", ...employeeDirectoryCode.GET)
-  .get("/employee-grades", ...employeeGrades.GET)
   .get("/employee-lifecycle/:code/events", ...employeeLifecycleCodeEvents.GET)
   .get("/employee-lifecycle/:code/state", ...employeeLifecycleCodeState.GET)
   .get("/employee-resource-adoptions", ...employeeResourceAdoptions.GET)
@@ -77,7 +73,6 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
     ...gradeAwardArchivesByEmployeeEmployeeId.GET,
   )
   .get("/grade-award-archives/:commandId", ...gradeAwardArchivesCommandId.GET)
-  .get("/grade-definitions", ...gradeDefinitions.GET)
   .get("/legacy-personnel-action-records", ...legacyPersonnelActionRecords.GET)
   .get("/my-direct-reports", ...myDirectReports.GET)
   .get("/my-organization-units", ...myOrganizationUnits.GET)
@@ -93,7 +88,6 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/personnel-action-events", ...personnelActionEvents.GET)
   .get("/personnel-actions", ...personnelActions.GET)
   .get("/personnel-annotations", ...personnelAnnotations.GET)
-  .get("/position-definitions", ...positionDefinitions.GET)
   .get("/profile", ...profile.GET)
   .get("/reporting-lines/:employeeCode", ...reportingLinesEmployeeCode.GET)
 
