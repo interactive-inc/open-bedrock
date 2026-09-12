@@ -83,6 +83,25 @@ export const POST = factory.createHandlers(
         snapshotDigest: z.string().regex(/^[a-f0-9]{64}$/),
         observedOn: z.string().date(),
         reason: z.string().trim().min(1).max(1000),
+        initializationConfirmation: z
+          .object({
+            startsOn: z.string().date(),
+            evidenceReferences: z
+              .array(
+                z
+                  .object({
+                    context: z.string().trim().min(1).max(100),
+                    kind: z.string().trim().min(1).max(100),
+                    id: z.string().trim().min(1).max(512),
+                    version: z.string().trim().min(1).max(255),
+                  })
+                  .strict(),
+              )
+              .min(1)
+              .max(20),
+          })
+          .strict()
+          .optional(),
       })
       .strict(),
     (validation) => {

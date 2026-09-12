@@ -10,6 +10,7 @@ bedrock departments adoption --data <confirmed-history.json> --idempotency-key <
 
 既存組織の全期間・訂正履歴とsnapshotDigest・expectedRevision・observedOnを確認します。
 dataにはorganizationUnitIdとこの参照、reasonを指定します。親組織から順に接続してください。
+仮の初期期間にはinitializationConfirmationで確認したstartsOnとevidenceReferencesを指定します。
 履歴は台帳の値を保ったまま接続します。同じJSONとキーで再送し、競合時は確認し直してください。`
 
 export default factory.createHandlers(
@@ -43,6 +44,25 @@ export default factory.createHandlers(
         snapshotDigest: z.string().regex(/^[a-f0-9]{64}$/),
         observedOn: z.string().date(),
         reason: z.string().trim().min(1).max(1000),
+        initializationConfirmation: z
+          .object({
+            startsOn: z.string().date(),
+            evidenceReferences: z
+              .array(
+                z
+                  .object({
+                    context: z.string().trim().min(1).max(100),
+                    kind: z.string().trim().min(1).max(100),
+                    id: z.string().trim().min(1).max(512),
+                    version: z.string().trim().min(1).max(255),
+                  })
+                  .strict(),
+              )
+              .min(1)
+              .max(20),
+          })
+          .strict()
+          .optional(),
       })
       .strict()
       .safeParse(await readJsonObjectFile(input.data))

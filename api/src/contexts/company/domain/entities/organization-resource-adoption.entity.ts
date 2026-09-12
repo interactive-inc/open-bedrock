@@ -1,5 +1,6 @@
 import { z } from "zod"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
+import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyConflictError, CompanyValidationError } from "@/contexts/company/domain/errors"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import type { OrganizationResourceAdoptionSnapshotValue } from "@/contexts/company/domain/values/organization-resource-adoption-snapshot.value"
@@ -18,6 +19,22 @@ const schema = z
     reason: z.string().trim().min(1).max(1000),
     actorAccountId: z.string().regex(/^\S{1,255}$/),
     recordedAt: z.number().int().nonnegative(),
+    initializationConfirmation: z
+      .object({
+        startsOn: z.string().date(),
+        evidenceReferences: z
+          .array(
+            z.object({
+              context: z.string().trim().min(1).max(100),
+              kind: z.string().trim().min(1).max(100),
+              id: z.string().trim().min(1).max(512),
+              version: z.string().trim().min(1).max(255),
+            }),
+          )
+          .min(1)
+          .max(20),
+      })
+      .optional(),
   })
   .readonly()
 type Props = z.infer<typeof schema>
@@ -61,6 +78,81 @@ export class OrganizationResourceAdoptionEntity {
     const revisions = new Map<string, number>()
     const changes: CompanyResourceChangeEntity[] = []
     for (const period of source.periods) {
+      if (
+        (period.recordedByActionId === "initialization:organization:default" ||
+          period.recordedByActionId === "initialization:company:root") &&
+        period.actorAccountId === "system:initialization" &&
+        period.recordedAt === 0
+      ) {
+        const confirmation = this.props.initializationConfirmation
+        if (confirmation === undefined)
+          return new CompanyValidationError(
+            "初期データの仮期間は組織の確定履歴へ接続できません",
+            "organization_history_confirmation_required",
+          )
+        if (
+          source.periods.length !== 1 ||
+          source.organizationUnit.id !== "company:root" ||
+          source.organizationUnit.createdAt !== 0 ||
+          period.organizationUnitId !== source.organizationUnit.id ||
+          period.periodId !== "company:root:initial" ||
+          period.startsOn !== "1970-01-01" ||
+          period.parentOrganizationUnitId !== null ||
+          period.kind !== "COMPANY" ||
+          period.revision !== 1 ||
+          period.isVoid !== 0 ||
+          period.endsOn !== null ||
+          confirmation.startsOn > this.props.observedOn
+        )
+          return new CompanyValidationError(
+            "確認対象の初期履歴が変更されています",
+            "invalid_organization_adoption",
+          )
+        const resource: CompanyResourceProps = {
+          organizationId: "organization:default",
+          type: "organization-unit",
+          id: period.periodId,
+          revision: 1,
+          state: "void",
+          effectiveFrom: restoreCalendarDate(period.startsOn),
+          effectiveTo: null,
+          attributes: {
+            organizationUnitId: period.organizationUnitId,
+            code: period.code,
+            officialName: period.officialName,
+            kind: period.kind,
+            parentOrganizationUnitId: period.parentOrganizationUnitId,
+          },
+        }
+        const change = CompanyResourceChangeEntity.createHistoryBatch({
+          commandId: `org-adoption:${this.props.commandId}:0`,
+          expectedRevision: this.props.expectedRevision,
+          actorAccountId: this.props.actorAccountId,
+          recordedAt: this.props.recordedAt,
+          reason: this.props.reason,
+          resources: [
+            resource,
+            {
+              ...resource,
+              revision: 2,
+              state: "active",
+              effectiveFrom: restoreCalendarDate(confirmation.startsOn),
+            },
+          ],
+        })
+        if (change instanceof Error)
+          return new CompanyValidationError(
+            "確認した組織期間が不正です",
+            "invalid_organization_adoption",
+            { cause: change },
+          )
+        return [change]
+      }
+      if (this.props.initializationConfirmation !== undefined)
+        return new CompanyValidationError(
+          "初期データ以外の期間を置き換えることはできません",
+          "invalid_organization_adoption",
+        )
       if (
         period.organizationUnitId !== source.organizationUnit.id ||
         period.revision !== (revisions.get(period.periodId) ?? 0) + 1
