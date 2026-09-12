@@ -23,7 +23,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import type { EmployeeListItem } from "@/lib/api/types/employee-list-item"
 import { usePersonnelPositionSnapshot } from "@/lib/employee/use-personnel-position-snapshot"
 import { useRouter } from "next/navigation"
-import { useActionState, useState } from "react"
+import { useActionState, useRef, useState } from "react"
 import { toast } from "sonner"
 
 type Props = {
@@ -47,7 +47,10 @@ export function TeamMemberAddForm(props: Props) {
 
   const [revisions, setRevisions] = useState<AssignmentBaseRevisions | null>(null)
 
+  const selectionSequence = useRef(0)
+
   const handleEmployeeChange = (selected: EmployeeListItem | null) => {
+    const sequence = ++selectionSequence.current
     setEmployee(selected)
 
     setRevisions(null)
@@ -55,10 +58,11 @@ export function TeamMemberAddForm(props: Props) {
     if (selected !== null && selected.code !== null) {
       getAssignmentBaseRevisionsAction(selected.code)
         .then((revisions) => {
-          setRevisions(revisions)
+          if (sequence === selectionSequence.current) setRevisions(revisions)
         })
         .catch(() => {
-          toast.error("配属基準リビジョンの取得に失敗しました")
+          if (sequence === selectionSequence.current)
+            toast.error("配属基準リビジョンの取得に失敗しました")
         })
     }
   }
@@ -72,7 +76,7 @@ export function TeamMemberAddForm(props: Props) {
 
       setOpen(false)
 
-      setEmployee(null)
+      handleEmployeeChange(null)
 
       router.refresh()
     } else if (result.error !== null) {
