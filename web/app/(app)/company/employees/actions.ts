@@ -1,5 +1,6 @@
 "use server"
 
+import { readCompanyRevision } from "@/lib/form/read-company-revision"
 import { readEmployeeProfileCommand } from "@/lib/form/read-employee-profile-command"
 
 import { revalidatePath } from "next/cache"
@@ -150,7 +151,11 @@ export async function createEmployeeAction(
   }
 
   // errors.length === 0 なら全フィールドは非 Error 確定
+  const companyRevision = readCompanyRevision(formData)
+  if (companyRevision instanceof Error) return { ok: false, error: companyRevision.message }
+
   const created = await createEmployee({
+    expected_company_revision: companyRevision,
     code: code as string,
     name: name as string,
     email: email as string,

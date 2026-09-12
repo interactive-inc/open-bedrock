@@ -160,6 +160,7 @@ export const personnelActionRequests = sqliteTable(
     requestedByEmployeeId: text("requested_by_employee_id").notNull().$type<EmployeeId>(),
     baseEmployeeRevision: integer("base_employee_revision"),
     baseOrganizationRevision: integer("base_organization_revision"),
+    baseCompanyRevision: integer("base_company_revision"),
     createdAt: integer("created_at").notNull(),
     appliedActionId: text("applied_action_id"),
     withdrawnAt: integer("withdrawn_at"),

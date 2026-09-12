@@ -4,7 +4,7 @@ import { OrgMembersTable } from "@/app/(app)/teams/[team]/_components/org-member
 import { TeamMemberAddForm } from "@/app/(app)/teams/[team]/_components/team-member-add-form"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { getPositionList } from "@/lib/api/get-position-list"
+import { getPersonnelPositionSnapshot } from "@/lib/api/get-personnel-position-snapshot"
 import { requireAuth } from "@/lib/auth/require-auth"
 
 export const metadata = { title: "メンバー" }
@@ -24,14 +24,12 @@ export default async function OrgDepartmentMembersPage(props: Props) {
 
   const canApply = me.permissions.includes("employee:lifecycle:apply")
 
-  const positions = canApply ? await getPositionList() : null
+  const snapshot = canApply ? await getPersonnelPositionSnapshot() : null
 
-  const addForm = canApply ? (
-    <TeamMemberAddForm
-      teamCode={params.team}
-      positions={positions === null || positions instanceof Error ? [] : positions}
-    />
-  ) : null
+  const addForm =
+    canApply && snapshot !== null && !(snapshot instanceof Error) ? (
+      <TeamMemberAddForm teamCode={params.team} companyRevision={snapshot.companyRevision} />
+    ) : null
 
   return (
     <div className="flex flex-col gap-8">

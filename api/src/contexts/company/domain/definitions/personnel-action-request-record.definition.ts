@@ -21,6 +21,7 @@ export type PersonnelActionRequestRecord = Readonly<{
   requestedByEmployeeName: string
   baseEmployeeRevision: number
   baseOrganizationRevision: number | null
+  baseCompanyRevision: number | null
   status: PersonnelActionRequestStatus
   currentStep: string | null
   createdAt: number

@@ -7,6 +7,7 @@ export type DirectPersonnelActionCommand = Readonly<{
   employeeId: EmployeeId
   input: PersonnelActionInput
   idempotencyKey: string
+  expectedCompanyRevision?: number
   expectedEmployeeRevision: number
   expectedOrganizationRevision: number | null
 }>

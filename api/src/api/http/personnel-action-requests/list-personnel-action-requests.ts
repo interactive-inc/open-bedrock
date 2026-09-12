@@ -36,7 +36,7 @@ export class ListPersonnelActionRequests {
                   AS target_employee_name,
                 request.kind, request.payload_json, request.payload_fingerprint,
                 request.requested_by_employee_id,
-                request.base_employee_revision, request.base_organization_revision,
+                request.base_employee_revision, request.base_organization_revision, request.base_company_revision,
                 request.created_at, request.applied_action_id, request.withdrawn_at
          FROM company_personnel_action_requests AS request
          ORDER BY request.created_at DESC, request.id DESC`,
@@ -54,6 +54,7 @@ export class ListPersonnelActionRequests {
         requested_by_employee_id: EmployeeId
         base_employee_revision: number | null
         base_organization_revision: number | null
+        base_company_revision: number | null
         created_at: number
         applied_action_id: string | null
         withdrawn_at: number | null
@@ -135,6 +136,7 @@ export class ListPersonnelActionRequests {
           requestedByEmployeeName: requester.officialName,
           baseEmployeeRevision: row.base_employee_revision,
           baseOrganizationRevision: row.base_organization_revision,
+          baseCompanyRevision: row.base_company_revision,
           status,
           currentStep: workflow.currentTaskKey,
           createdAt: row.created_at,

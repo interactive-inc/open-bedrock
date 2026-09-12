@@ -33,6 +33,7 @@ describe("公開Assignmentと業務の所属期間", () => {
     const request = {
       json: {
         action: { kind: "retired", employeeCode: "MANAGER-001", retirementOn: "2030-06-30" },
+        expected_company_revision: await f.companyRevision(),
         expected_employee_revision: revisions.employeeRevision,
         expected_organization_revision: revisions.organizationRevision,
       },

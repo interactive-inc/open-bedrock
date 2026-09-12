@@ -1,3 +1,4 @@
+import { validatePersonnelPositionReference } from "@/contexts/company/domain/policies/validate-personnel-position-reference.policy"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active-system-account-id"
 import type { Context } from "@/env"
@@ -54,6 +55,7 @@ export class CreatePersonnelActionRequest {
   async execute(command: {
     idempotencyKey: string
     input: PersonnelActionInput
+    baseCompanyRevision?: number
     baseEmployeeRevision: number
     baseOrganizationRevision: number | null
     createdAt: Date
@@ -62,6 +64,19 @@ export class CreatePersonnelActionRequest {
     if (session === null) return new ForbiddenError("認証が必要です", "forbidden")
     if (!session.hasPermission("employee:lifecycle:request")) {
       return new ForbiddenError("人事変更を申請する権限がありません", "forbidden")
+    }
+    if (
+      command.baseCompanyRevision !== undefined &&
+      (!Number.isSafeInteger(command.baseCompanyRevision) || command.baseCompanyRevision < 0)
+    ) {
+      return new ValidationError("確認した会社版が不正です", "personnel_action_invalid_transition")
+    }
+    const positionReference = validatePersonnelPositionReference({
+      input: command.input,
+      expectedCompanyRevision: command.baseCompanyRevision,
+    })
+    if (positionReference !== null) {
+      return new ValidationError(positionReference.message, "personnel_action_invalid_transition")
     }
     if (command.input.kind === "initial_state") {
       return new ValidationError(
@@ -102,6 +117,7 @@ export class CreatePersonnelActionRequest {
       input: command.input,
       requesterId: requester.id,
       employeeCode,
+      baseCompanyRevision: command.baseCompanyRevision,
       baseEmployeeRevision: command.baseEmployeeRevision,
       baseOrganizationRevision: command.baseOrganizationRevision,
     })
@@ -196,6 +212,7 @@ export class CreatePersonnelActionRequest {
     const fingerprint = await fingerprintPersonnelAction(
       target?.id ?? `prospective:${employeeCode}`,
       command.input,
+      command.baseCompanyRevision,
     )
     const createdAtSeconds = Math.floor(command.createdAt.getTime() / 1_000)
     const audit = createCompanySystemAuditEvent({
@@ -243,9 +260,9 @@ export class CreatePersonnelActionRequest {
              (id, application_id, system_proposal_series_id, target_employee_id,
               subject_snapshot_json, target_department_code, kind, payload_json,
               payload_fingerprint, requested_by_employee_id, base_employee_revision,
-              base_organization_revision, created_at, applied_action_id)
+              base_organization_revision, base_company_revision, created_at, applied_action_id)
            VALUES (?1, (SELECT number FROM system_proposal_numbers WHERE series_id = ?2),
-                   ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, NULL)`,
+                   ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, NULL)`,
         ).bind(
           requestId,
           seriesId,
@@ -258,10 +275,18 @@ export class CreatePersonnelActionRequest {
           requester.id,
           command.baseEmployeeRevision,
           command.baseOrganizationRevision,
+          command.baseCompanyRevision ?? null,
           createdAtSeconds,
         )
         try {
           const results = await this.c.env.DB.batch<{ number: number }>([
+            ...(command.baseCompanyRevision === undefined
+              ? []
+              : [
+                  this.c.env.DB.prepare(
+                    "SELECT CASE WHEN EXISTS (SELECT 1 FROM company_organizations WHERE id = 'organization:default' AND revision = ?) THEN 1 ELSE json_extract('', '$') END",
+                  ).bind(command.baseCompanyRevision),
+                ]),
             ...systemStatements.slice(0, -1),
             association,
             abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
@@ -304,6 +329,7 @@ export class CreatePersonnelActionRequest {
         input: command.input,
         requesterId: requester.id,
         employeeCode,
+        baseCompanyRevision: command.baseCompanyRevision,
         baseEmployeeRevision: command.baseEmployeeRevision,
         baseOrganizationRevision: command.baseOrganizationRevision,
       })
@@ -333,6 +359,7 @@ export class CreatePersonnelActionRequest {
     input: PersonnelActionInput
     requesterId: EmployeeId
     employeeCode: string
+    baseCompanyRevision?: number
     baseEmployeeRevision: number
     baseOrganizationRevision: number | null
   }): Promise<CreatedPersonnelActionRequest | ApplicationError | null> {
@@ -355,12 +382,14 @@ export class CreatePersonnelActionRequest {
     const fingerprint = await fingerprintPersonnelAction(
       existing.targetEmployeeId ?? `prospective:${input.employeeCode}`,
       input.input,
+      input.baseCompanyRevision,
     )
     if (
       existing.payloadFingerprint !== fingerprint ||
       existing.requestedByEmployeeId !== input.requesterId ||
       existing.targetEmployeeCode !== input.employeeCode ||
       existing.baseEmployeeRevision !== input.baseEmployeeRevision ||
+      existing.baseCompanyRevision !== (input.baseCompanyRevision ?? null) ||
       existing.baseOrganizationRevision !== input.baseOrganizationRevision
     ) {
       return new ConflictError(

@@ -1,3 +1,4 @@
+import { personnelPositionReferenceSchema } from "@/contexts/company/domain/definitions/personnel-position-reference.definition"
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
 import { z } from "zod"
 
@@ -59,6 +60,7 @@ const hireActionSchema = z
     employeeName: z.string().min(1).max(200),
     eventOn: z.string().refine(isCalendarDate),
     departmentCode: z.string().min(1).max(200).nullable().optional(),
+    positionReference: personnelPositionReferenceSchema.optional(),
     positionTitle: z.string().min(1).max(200).nullable().optional(),
     managerEmployeeCode: z.string().min(1).max(200).nullable().optional(),
   })
@@ -71,6 +73,7 @@ const rehireActionSchema = z
     employeeCode: z.string().min(1).max(200),
     eventOn: z.string().refine(isCalendarDate),
     departmentCode: z.string().min(1).max(200).nullable().optional(),
+    positionReference: personnelPositionReferenceSchema.optional(),
     positionTitle: z.string().min(1).max(200).nullable().optional(),
     managerEmployeeCode: z.string().min(1).max(200).nullable().optional(),
   })
@@ -82,6 +85,7 @@ const primaryAssignmentStartedActionSchema = z
     employeeCode: z.string().min(1).max(200),
     eventOn: z.string().refine(isCalendarDate),
     departmentCode: z.string().min(1).max(200),
+    positionReference: personnelPositionReferenceSchema.optional(),
     positionTitle: z.string().min(1).max(200).nullable(),
     managerEmployeeCode: z.string().min(1).max(200).nullable(),
   })
@@ -93,6 +97,7 @@ const transferredActionSchema = z
     employeeCode: z.string().min(1).max(200),
     eventOn: z.string().refine(isCalendarDate),
     departmentCode: z.string().min(1).max(200),
+    positionReference: personnelPositionReferenceSchema.optional(),
     positionTitle: z.string().min(1).max(200).nullable(),
     managerEmployeeCode: z.string().min(1).max(200).nullable(),
   })
@@ -104,6 +109,7 @@ const concurrentAssignmentStartedActionSchema = z
     employeeCode: z.string().min(1).max(200),
     eventOn: z.string().refine(isCalendarDate),
     departmentCode: z.string().min(1).max(200),
+    positionReference: personnelPositionReferenceSchema.optional(),
     positionTitle: z.string().min(1).max(200).nullable(),
     managerEmployeeCode: z.string().min(1).max(200).nullable(),
   })
@@ -126,6 +132,7 @@ const positionChangedActionSchema = z
     eventOn: z.string().refine(isCalendarDate),
     departmentCode: z.string().min(1).max(200),
     assignmentType: z.enum(["primary", "concurrent"]),
+    positionReference: personnelPositionReferenceSchema.optional(),
     positionTitle: z.string().min(1).max(200),
     changeType: z.enum(["promotion", "demotion", "lateral", "other"]),
   })
@@ -223,6 +230,7 @@ const initialStateActionSchema = z
     eventOn: z.string().refine(isCalendarDate),
     initialStatus: z.enum(["active", "leave", "retired"]),
     departmentCode: z.string().min(1).max(200).nullable(),
+    positionReference: personnelPositionReferenceSchema.optional(),
     positionTitle: z.string().min(1).max(200).nullable(),
     managerEmployeeCode: z.string().min(1).max(200).nullable(),
   })
