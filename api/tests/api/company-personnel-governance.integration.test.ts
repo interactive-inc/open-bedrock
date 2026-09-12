@@ -166,6 +166,12 @@ async function connectRoot(c: Awaited<ReturnType<typeof createFixture>>) {
     snapshotDigest: snapshot.props.digest,
     observedOn: c.input.action.eventOn,
     reason: "Confirm root history",
+    initializationConfirmation: {
+      startsOn: "2020-01-01",
+      evidenceReferences: [
+        { context: "company", kind: "confirmed-test-history", id: "root-start", version: "1" },
+      ],
+    },
     commandId: "approved-assignment-root",
   })
   expect(adopted).toMatchObject({ replayed: false })

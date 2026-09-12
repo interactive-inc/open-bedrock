@@ -16,11 +16,16 @@ describe("所属移行の上長対応を追加するmigration", () => {
       file.endsWith("_record_company_assignment_resource_adoptions.sql"),
     )
     if (first === undefined) throw new Error("missing assignment adoption migration")
+    // このfixtureでは初期化の仮期間ではなく、移行前に確認済みだった組織を再現する。
+    // 旧schemaへ後年の複数revision同時保存を持ち込まず、実migrationは変更しない。
     const database = createCompanyD1TestDatabase(
       files
         .filter((file) => file < first)
         .map((file) => readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8"))
-        .join("\n"),
+        .join("\n")
+        .replaceAll("initialization:organization:default", "fixture:confirmed-organization")
+        .replaceAll("initialization:company:root", "fixture:confirmed-organization")
+        .replaceAll("system:initialization", "fixture:organization-recorder"),
     )
     // 旧schemaのfixtureを現行readerで準備する間だけ、当時の対応表を投影する。
     // Account履歴のmigrationに達したら破棄し、実際のviewへ置き換える。
@@ -34,7 +39,7 @@ describe("所属移行の上長対応を追加するmigration", () => {
       NULL AS authority_scope_id, NULL AS resource_revision WHERE 0`)
     await database.exec(`CREATE VIEW company_responsibility_period_bindings AS SELECT
       NULL AS period_id, NULL AS resource_id, NULL AS period_revision, NULL AS source_revision WHERE 0`)
-    const f = await createCompanyAssignmentResourceTestContext(database)
+    const f = await createCompanyAssignmentResourceTestContext(database, "confirmed")
     await f.initializeAssignment()
     await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
     await f.assignEmployeeCode(f.people[2]!.employeeId, "MANAGER-002")
