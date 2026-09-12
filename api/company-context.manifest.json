@@ -135,6 +135,7 @@
     "src/contexts/company/domain/definitions/periods-contain-period.definition.ts",
     "src/contexts/company/domain/definitions/personnel-action-request-record.definition.ts",
     "src/contexts/company/domain/definitions/personnel-action-summary.definition.ts",
+    "src/contexts/company/domain/definitions/personnel-position-reference.definition.ts",
     "src/contexts/company/domain/definitions/resolve-company-business-date.definition.ts",
     "src/contexts/company/domain/definitions/restore-calendar-date.definition.test.ts",
     "src/contexts/company/domain/definitions/restore-calendar-date.definition.ts",
@@ -234,6 +235,7 @@
     "src/contexts/company/domain/policies/validate-organization-unit-periods.policy.ts",
     "src/contexts/company/domain/policies/validate-organization-unit-snapshot.policy.ts",
     "src/contexts/company/domain/policies/validate-organizational-authority-projection.policy.ts",
+    "src/contexts/company/domain/policies/validate-personnel-position-reference.policy.ts",
     "src/contexts/company/domain/policies/validate-workforce-assignments.policy.ts",
     "src/contexts/company/domain/policies/validate-workforce-employee.policy.ts",
     "src/contexts/company/domain/policies/validate-workforce-employment-statuses.policy.ts",
@@ -554,7 +556,9 @@
     "src/contexts/company/test/organization-profile.integration.test.ts",
     "src/contexts/company/test/organization-profile.test-support.ts",
     "src/contexts/company/test/organization-resource-connection.integration.test.ts",
+    "src/contexts/company/test/personnel-company-revision.integration.test.ts",
     "src/contexts/company/test/personnel-execution.integration.test.ts",
+    "src/contexts/company/test/personnel-position-snapshot.integration.test.ts",
     "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts"
   ],
   "implementedCapabilities": [

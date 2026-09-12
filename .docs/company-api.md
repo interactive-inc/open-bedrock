@@ -293,6 +293,16 @@ CLIは`bedrock employees assignment-adoption --employee-id <id>`で確認し、`
 
 この一覧は現在の雇用に対する実行許可や消費済みの記録ではない。受領先は発令の重複を排除し、訂正と現在の雇用を保存直前に再検査する。Companyの配送元Repositoryは、この照合に使う履歴snapshotと保存時のDB guardを提供する。
 
+## 人事変更で確認した会社版
+
+`POST /company/personnel-action-executions`と`POST /company/employee-registrations`は`expected_company_revision`、`POST /company/personnel-action-requests`は`base_company_revision`を必須とする。従業員・組織のライフサイクル版とは別に、入力を確認したCompanyの版を送る。保存直前に会社版が変わっていれば409で拒否し、最新版への自動置換は行わない。
+
+役職コードは、指定した会社版と発令の有効日におけるCompanyのPositionから解決する。訂正では置換後の発令の有効日を使う。旧役職台帳や現在の名称へのフォールバックは行わず、該当なし・複数該当・存在しない会社版は拒否する。
+
+解決した役職のresource ID・resource revision・コード・会社版・有効日を`positionReference`として発令内容に保持する。同じ名称でも別の役職は異なる内容として扱う。承認申請はこの内容と確認した会社版を保存し、実行時に参照の整合性と会社版を再検査する。承認後の競合では既存の判断証跡を残し、発令と実行許可の消費を確定しない。
+
+同じ依頼の再送は確認した会社版も含めて照合する。過去の記録に会社版や役職参照が残っていない場合は、現在の情報から補完しない。
+
 ## 退職と組織責務
 
 人事発令の変更と申請の実行準備は、対象雇用の全種類の組織責務を読む。部署責任者の終了は`MANAGER`だけを対象とし、同じ部署の`PEOPLE_OPERATIONS`などの別の責務は保持する。

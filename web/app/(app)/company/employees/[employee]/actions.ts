@@ -1,5 +1,6 @@
 "use server"
 
+import { readCompanyRevision } from "@/lib/form/read-company-revision"
 import { applyPersonnelAction } from "@/lib/api/apply-personnel-action"
 import { createEmployeeEvent } from "@/lib/api/create-employee-event"
 import { createPersonnelActionRequest } from "@/lib/api/create-personnel-action-request"
@@ -90,6 +91,8 @@ export async function submitPersonnelAction(
   if (!me.permissions.includes(requiredPermission)) {
     return { ok: false, error: "この人事変更を実行する権限がありません" }
   }
+  const companyRevision = readCompanyRevision(form)
+  if (companyRevision instanceof Error) return { ok: false, error: companyRevision.message }
   const action = buildAction(form)
   if (action instanceof Error) return { ok: false, error: action.message }
   const employeeRevisionText = text(form, "employee_revision")
@@ -112,6 +115,7 @@ export async function submitPersonnelAction(
           {
             action,
             expected_employee_revision: employeeRevision,
+            expected_company_revision: companyRevision,
             expected_organization_revision: organizationRevision,
           },
           crypto.randomUUID(),
@@ -119,6 +123,7 @@ export async function submitPersonnelAction(
       : await createPersonnelActionRequest({
           action,
           base_employee_revision: employeeRevision,
+          base_company_revision: companyRevision,
           base_organization_revision: organizationRevision,
         })
   if (result instanceof Error) return { ok: false, error: result.message }

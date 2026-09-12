@@ -1,3 +1,4 @@
+import type { PersonnelPositionReference } from "@/contexts/company/domain/definitions/personnel-position-reference.definition"
 import {
   nonCorrectionPersonnelActionInputSchema,
   personnelActionInputSchema,
@@ -8,7 +9,9 @@ import {
   CompanyUnexpectedError,
   CompanyValidationError,
 } from "@/contexts/company/domain/errors"
-import { PositionRepository } from "@/contexts/company/infrastructure/repositories/definitions/position.repository"
+import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { CompanySnapshotRevisionError } from "@/contexts/company/domain/errors"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { z } from "zod"
 
@@ -124,23 +127,51 @@ export const wirePersonnelActionInputSchema = z.discriminatedUnion("kind", [
 type NonCorrectionWireInput = z.infer<typeof nonCorrectionWireSchema>
 export type WirePersonnelActionInput = z.infer<typeof wirePersonnelActionInputSchema>
 
-async function resolvePositionTitle(
-  repository: PositionRepository,
-  codeValue: string | null | undefined,
-): Promise<string | null | CompanyOperationError> {
-  if (codeValue === null || codeValue === undefined) return null
-  const position = await repository.find({ code: codeValue })
-  if (position instanceof Error) {
-    return new CompanyUnexpectedError("役職を取得できません", { cause: position })
+async function resolvePosition(
+  repository: D1CompanyResourceRepository,
+  reference: { code: string | null | undefined; effectiveOn: string; organizationRevision: number },
+): Promise<
+  { title: string; reference: PersonnelPositionReference } | null | CompanyOperationError
+> {
+  if (reference.code === null || reference.code === undefined) return null
+  const snapshot = await repository.findMany({
+    organizationId: "organization:default",
+    organizationRevision: reference.organizationRevision,
+    effectiveOn: restoreCalendarDate(reference.effectiveOn),
+    types: ["position"],
+    codes: [reference.code],
+  })
+  if (!snapshot.ok) {
+    if (snapshot.cause instanceof CompanySnapshotRevisionError)
+      return new CompanyValidationError("確認した会社版が見つかりません", "invalid_change")
+    return new CompanyUnexpectedError("役職履歴を取得できません", { cause: snapshot.cause })
   }
-  return position === null
-    ? new CompanyValidationError("役職コードが見つかりません", "invalid_change")
-    : position.toProps().name
+  if (snapshot.resources.length !== 1)
+    return new CompanyValidationError(
+      "指定した会社版と日付の役職コードを一意に解決できません",
+      "invalid_change",
+    )
+  const resource = snapshot.resources[0]
+  const name = resource?.readText("officialName")
+  if (resource === undefined || name === null || name === undefined)
+    return new CompanyValidationError("役職名が不正です", "invalid_change")
+  return {
+    title: name,
+    reference: {
+      organizationId: resource.organizationId,
+      organizationRevision: snapshot.organizationRevision,
+      resourceId: resource.id,
+      resourceRevision: resource.revision,
+      code: reference.code,
+      effectiveOn: reference.effectiveOn,
+    },
+  }
 }
 
 async function resolveNonCorrection(
-  repository: PositionRepository,
+  repository: D1CompanyResourceRepository,
   action: NonCorrectionWireInput,
+  organizationRevision: number,
 ): Promise<unknown> {
   if (
     action.kind === "hire" ||
@@ -155,19 +186,35 @@ async function resolveNonCorrection(
         "invalid_change",
       )
     }
-    const positionTitle = await resolvePositionTitle(repository, action.positionCode)
-    if (positionTitle instanceof CompanyOperationError) return positionTitle
+    const position = await resolvePosition(repository, {
+      code: action.positionCode,
+      effectiveOn: action.eventOn,
+      organizationRevision,
+    })
+    if (position instanceof CompanyOperationError) return position
     const { positionCode: _positionCode, ...rest } = action
-    return { ...rest, positionTitle }
+    return {
+      ...rest,
+      positionTitle: position?.title ?? null,
+      ...(position === null ? {} : { positionReference: position.reference }),
+    }
   }
   if (action.kind === "position_changed") {
-    const positionTitle = await resolvePositionTitle(repository, action.positionCode)
-    if (positionTitle instanceof CompanyOperationError) return positionTitle
-    if (positionTitle === null) {
+    const position = await resolvePosition(repository, {
+      code: action.positionCode,
+      effectiveOn: action.eventOn,
+      organizationRevision,
+    })
+    if (position instanceof CompanyOperationError) return position
+    if (position === null) {
       return new CompanyValidationError("役職コードが必要です", "invalid_change")
     }
     const { positionCode: _positionCode, ...rest } = action
-    return { ...rest, positionTitle }
+    return {
+      ...rest,
+      positionTitle: position?.title ?? null,
+      ...(position === null ? {} : { positionReference: position.reference }),
+    }
   }
   return action
 }
@@ -176,10 +223,15 @@ async function resolveNonCorrection(
 export async function resolvePersonnelActionInput(
   context: CompanyContext,
   wire: WirePersonnelActionInput,
+  organizationRevision: number,
 ): Promise<PersonnelActionInput | CompanyOperationError> {
-  const repository = new PositionRepository(context)
+  const repository = new D1CompanyResourceRepository(context.env.DB)
   if (wire.kind === "corrected") {
-    const replacement = await resolveNonCorrection(repository, wire.replacementAction)
+    const replacement = await resolveNonCorrection(
+      repository,
+      wire.replacementAction,
+      organizationRevision,
+    )
     if (replacement instanceof CompanyOperationError) return replacement
     const parsedReplacement = nonCorrectionPersonnelActionInputSchema.safeParse(replacement)
     if (!parsedReplacement.success) {
@@ -199,7 +251,7 @@ export async function resolvePersonnelActionInput(
           cause: parsed.error,
         })
   }
-  const resolved = await resolveNonCorrection(repository, wire)
+  const resolved = await resolveNonCorrection(repository, wire, organizationRevision)
   if (resolved instanceof CompanyOperationError) return resolved
   const parsed = personnelActionInputSchema.safeParse(resolved)
   return parsed.success

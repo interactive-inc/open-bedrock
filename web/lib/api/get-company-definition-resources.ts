@@ -6,12 +6,17 @@ import type { CompanyResourceList } from "@/lib/api/types/company-resource-types
  * GET /company/definitions。Site / Workplace / Job / Position / Grade /
  * OrganizationalOffice / Responsibility / AuthorityScope / CollectiveBody をまとめて返す。
  */
-export async function getCompanyDefinitionResources(): Promise<CompanyResourceList | Error> {
+export async function getCompanyDefinitionResources(
+  snapshot: { organizationRevision?: number; effectiveOn?: string } = {},
+): Promise<CompanyResourceList | Error> {
   const client = await createClient()
 
   const response = await client.company.definitions.$get({
     header: { "x-company-organization-id": companyOrganizationId },
-    query: {},
+    query: {
+      organization_revision: snapshot.organizationRevision?.toString(),
+      effective_on: snapshot.effectiveOn,
+    },
   })
 
   if (response.status >= 400) {

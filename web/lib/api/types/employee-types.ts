@@ -18,6 +18,7 @@ export type EmployeeRole = "member" | "manager" | "hr" | "root"
 
 /** POST /employees のリクエストボディ。 */
 export type EmployeeCreateRequest = {
+  expected_company_revision: number
   code: string
   name: string
   email: string

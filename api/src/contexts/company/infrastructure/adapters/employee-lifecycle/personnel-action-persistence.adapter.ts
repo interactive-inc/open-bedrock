@@ -1,3 +1,6 @@
+import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { validatePersonnelPositionReference } from "@/contexts/company/domain/policies/validate-personnel-position-reference.policy"
 import { toWorkforceResponsibilityType } from "@/contexts/company/domain/definitions/to-workforce-responsibility-type.definition"
 import type { PersonnelActionPersistenceProps } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/personnel-action-persistence-props"
 import { createCompanySystemAuditEvent } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/create-company-system-audit-event"
@@ -14,6 +17,7 @@ import type { PersonnelActionRecord } from "@/contexts/company/infrastructure/ad
 import { AbortWhenPreviousStatementChangedNoRowsAdapter } from "@/contexts/company/infrastructure/adapters/database/abort-when-previous-statement-changed-no-rows.adapter"
 import { isAbortedByGuard } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/is-aborted-by-guard"
 import {
+  CompanyValidationError,
   CompanyConflictError,
   CompanyOperationError,
   CompanyUnexpectedError,
@@ -361,6 +365,10 @@ function preparePersistenceStatements(
     props.businessDate,
     props.employeeCodes,
   )
+  const sourceAction =
+    props.command.input.kind === "corrected"
+      ? props.command.input.replacementAction
+      : props.command.input
   const audit = createCompanySystemAuditEvent({
     actorAccountId: props.command.session.accountId,
     actorEmployeeId: props.command.session.employeeId,
@@ -388,7 +396,16 @@ function preparePersistenceStatements(
       nextOrganizationRevision,
       publicAssignmentPeriodIds.size === 0,
     ),
-    metadata: { actionKind: props.action.kind, effectiveOn: props.action.eventOn },
+    metadata: {
+      ...("positionReference" in sourceAction && sourceAction.positionReference !== undefined
+        ? { positionReference: sourceAction.positionReference }
+        : {}),
+      actionKind: props.action.kind,
+      effectiveOn: props.action.eventOn,
+      ...(props.command.expectedCompanyRevision === undefined
+        ? {}
+        : { expectedCompanyRevision: props.command.expectedCompanyRevision }),
+    },
     occurredAt: new Date(props.action.recordedAt * 1_000),
     requestAudit: c.var.auditContext,
   })
@@ -567,6 +584,8 @@ export class PersonnelActionPersistenceAdapter {
       )
     )
       return new CompanyUnexpectedError("新しい雇用の区分が指定されていません")
+    const referenceError = await this.validatePositionReference(props)
+    if (referenceError !== null) return referenceError
     const journal = await new CompanyPersonnelResourceJournalAdapter(this.c.env.DB).prepare(props)
     if (journal instanceof CompanyOperationError) return journal
     const action = { ...props.action, summary: journal.summary }
@@ -576,7 +595,48 @@ export class PersonnelActionPersistenceAdapter {
       journal.statements,
       journal.assignmentPeriodIds,
     )
-    return statements instanceof CompanyOperationError ? statements : { statements, action }
+    if (statements instanceof CompanyOperationError) return statements
+    if (props.command.expectedCompanyRevision !== undefined) {
+      statements.unshift(
+        this.c.env.DB.prepare(
+          `SELECT CASE WHEN EXISTS (
+          SELECT 1 FROM company_organizations WHERE id = 'organization:default' AND revision = ?
+        ) THEN 1 ELSE json_extract('', '$') END`,
+        ).bind(props.command.expectedCompanyRevision),
+      )
+    }
+    return { statements, action }
+  }
+
+  private async validatePositionReference(
+    props: PersonnelActionPersistenceProps,
+  ): Promise<CompanyOperationError | null> {
+    const invalid = validatePersonnelPositionReference(props.command)
+    if (invalid !== null) return invalid
+    const action =
+      props.command.input.kind === "corrected"
+        ? props.command.input.replacementAction
+        : props.command.input
+    if (!("positionReference" in action) || action.positionReference === undefined) return null
+    const reference = action.positionReference
+    const snapshot = await new D1CompanyResourceRepository(this.c.env.DB).findMany({
+      organizationId: reference.organizationId,
+      organizationRevision: reference.organizationRevision,
+      effectiveOn: restoreCalendarDate(reference.effectiveOn),
+      types: ["position"],
+      ids: [reference.resourceId],
+    })
+    if (!snapshot.ok)
+      return new CompanyUnexpectedError("役職の参照根拠を検証できません", { cause: snapshot.cause })
+    const position = snapshot.resources[0]
+    if (
+      snapshot.resources.length !== 1 ||
+      position?.revision !== reference.resourceRevision ||
+      position.readText("code") !== reference.code ||
+      position.readText("officialName") !== action.positionTitle
+    )
+      return new CompanyValidationError("役職の参照根拠が公開履歴と一致しません", "invalid_change")
+    return null
   }
 
   async write(

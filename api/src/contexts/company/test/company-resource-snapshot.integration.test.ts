@@ -38,7 +38,10 @@ async function fixture() {
           state: revision.state,
           effectiveFrom: restoreCalendarDate(revision.date),
           effectiveTo: null,
-          attributes: { code: "GRADE", officialName: revision.name },
+          attributes: {
+            code: index === 1 || index === 3 ? "RENAMED" : "GRADE",
+            officialName: revision.name,
+          },
         },
       ],
     })
@@ -102,4 +105,56 @@ test("日付未指定でも指定会社版のheadを返し、不明な版を最�
       types: ["grade"],
     }),
   ).toMatchObject({ ok: false })
+})
+
+test("コードは会社版・有効日の資源を選んだ後で照合し、改名した旧版を復活させない", async () => {
+  const repository = await fixture()
+  for (const [revision, day, code, expected] of [
+    [1, "2026-08-01", "GRADE", "Original"],
+    [2, "2026-08-01", "GRADE", null],
+    [2, "2026-06-01", "GRADE", "Original"],
+    [2, "2026-08-01", "RENAMED", "Future"],
+    [3, "2026-08-01", "GRADE", null],
+    [3, "2026-06-01", "GRADE", "Corrected"],
+    [4, "2026-10-01", "RENAMED", null],
+  ] as const) {
+    const snapshot = await repository.findMany({
+      organizationId,
+      organizationRevision: revision,
+      effectiveOn: restoreCalendarDate(day),
+      types: ["grade"],
+      codes: [code],
+    })
+    if (!snapshot.ok) throw snapshot.cause
+    expect(
+      snapshot.resources.map((resource) => resource.toProps().attributes.officialName),
+    ).toEqual(expected === null ? [] : [expected])
+  }
+  for (const query of [
+    { organizationRevision: 2 },
+    { effectiveOn: restoreCalendarDate("2026-08-01") },
+    {},
+  ]) {
+    const snapshot = await repository.findMany({
+      organizationId,
+      types: ["grade"],
+      codes: ["GRADE"],
+      ...query,
+    })
+    if (!snapshot.ok) throw snapshot.cause
+    expect(snapshot.resources).toEqual([])
+  }
+  const quoted = await repository.findMany({
+    organizationId,
+    types: ["grade"],
+    codes: ["GRADE' OR 1=1 --"],
+    organizationRevision: 1,
+  })
+  expect(quoted).toMatchObject({ ok: true, resources: [] })
+  const overLimit = await repository.findMany({
+    organizationId,
+    types: ["grade"],
+    codes: Array.from({ length: 101 }, () => "GRADE"),
+  })
+  expect(overLimit).toMatchObject({ ok: false })
 })

@@ -49,6 +49,7 @@ describe("CLIの雇用区分", () => {
           name: "Example Employee",
           email: "you@example.com",
           role: "member",
+          "company-revision": 8,
           "hire-on": "2026-10-01",
           "employment-type": "PART_TIME",
           "password-stdin": "true",
@@ -107,6 +108,7 @@ describe("CLIの雇用区分", () => {
       const response = await request(`/personnel-actions/${mode}`, {
         type: "rehire",
         payload,
+        "company-revision": 8,
         "employee-revision": 3,
         "idempotency-key": crypto.randomUUID(),
         "action-id": crypto.randomUUID(),

@@ -31,6 +31,7 @@ function form() {
     mode: "apply",
     employee_revision: "3",
     organization_revision: "2",
+    company_revision: "8",
   }))
     body.set(key, value)
   return body
@@ -51,7 +52,12 @@ describe("入社と再入社で選択した雇用区分", () => {
   test("新規登録の区分を実APIクライアントへ渡す", async () => {
     expect(await createEmployeeAction(initial, form())).toEqual({ ok: true, error: null })
     expect(mocks.post).toHaveBeenCalledWith(
-      expect.objectContaining({ json: expect.objectContaining({ employment_type: "PART_TIME" }) }),
+      expect.objectContaining({
+        json: expect.objectContaining({
+          employment_type: "PART_TIME",
+          expected_company_revision: 8,
+        }),
+      }),
       expect.objectContaining({ headers: { "Idempotency-Key": expect.any(String) } }),
     )
   })
@@ -60,7 +66,10 @@ describe("入社と再入社で選択した雇用区分", () => {
     body.set("mode", mode)
     expect(await submitPersonnelAction(initial, body)).toEqual({ ok: true, error: null })
     expect(mocks.post.mock.calls[0]?.[0]).toMatchObject({
-      json: { action: { kind: "rehire", employmentType: "PART_TIME" } },
+      json: {
+        action: { kind: "rehire", employmentType: "PART_TIME" },
+        [mode === "apply" ? "expected_company_revision" : "base_company_revision"]: 8,
+      },
     })
   })
   test.each([undefined, "UNKNOWN"])("未選択・不正な区分でAPIを呼ばない: %s", async (value) => {
@@ -71,4 +80,15 @@ describe("入社と再入社で選択した雇用区分", () => {
     expect(await submitPersonnelAction(initial, body)).toMatchObject({ ok: false })
     expect(mocks.post).not.toHaveBeenCalled()
   })
+})
+
+test("確認した会社版なしでは登録・発令・承認申請を送らない", async () => {
+  const body = form()
+  body.delete("company_revision")
+  expect(await createEmployeeAction(initial, body)).toMatchObject({ ok: false })
+  for (const mode of ["apply", "request"]) {
+    body.set("mode", mode)
+    expect(await submitPersonnelAction(initial, body)).toMatchObject({ ok: false })
+  }
+  expect(mocks.post).not.toHaveBeenCalled()
 })

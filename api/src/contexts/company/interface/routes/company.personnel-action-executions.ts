@@ -2,6 +2,7 @@
 import { CompanyOperationError } from "@/contexts/company/domain/errors"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/repositories/employee/employee.repository"
 import {
+  CompanyAccessDeniedError,
   CompanyAuthenticationRequiredError,
   CompanyBodyInvalidError,
   CompanyDatabaseUnavailableError,
@@ -25,6 +26,7 @@ import { z } from "zod"
 const factory = createFactory<CompanyHttpEnvironment>()
 const requestSchema = z.object({
   action: wirePersonnelActionInputSchema,
+  expected_company_revision: z.number().int().nonnegative(),
   expected_employee_revision: z.number().int().nonnegative(),
   expected_organization_revision: z.number().int().nonnegative().nullable(),
 })
@@ -37,6 +39,13 @@ export const POST = factory.createHandlers(
   async (context) => {
     const actor = context.var.companyActor
     if (actor === undefined) throw new CompanyAuthenticationRequiredError()
+    if (
+      !actor.hasPermission("employee:write") ||
+      (!actor.organizationIds.includes("organization:default") &&
+        !actor.organizationIds.includes("*"))
+    ) {
+      throw new CompanyAccessDeniedError()
+    }
     if (context.env.DB === undefined) throw new CompanyDatabaseUnavailableError()
     const session = toCompanyPersonnelSession(actor)
     if (session === null) {
@@ -55,7 +64,11 @@ export const POST = factory.createHandlers(
       var: { database: context.var.database, auditContext: context.var.auditContext },
     }
     const body = context.req.valid("json")
-    const action = await resolvePersonnelActionInput(companyContext, body.action)
+    const action = await resolvePersonnelActionInput(
+      companyContext,
+      body.action,
+      body.expected_company_revision,
+    )
     if (action instanceof CompanyOperationError) throw toHttpException(action)
     const employeeCode =
       action.kind === "corrected" ? action.replacementAction.employeeCode : action.employeeCode
@@ -69,6 +82,7 @@ export const POST = factory.createHandlers(
       employeeId: employee.id,
       input: action,
       idempotencyKey,
+      expectedCompanyRevision: body.expected_company_revision,
       expectedEmployeeRevision: body.expected_employee_revision,
       expectedOrganizationRevision: body.expected_organization_revision,
     })

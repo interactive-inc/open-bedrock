@@ -20,6 +20,7 @@ export type CompanyResourceQuery = Readonly<{
   organizationId: string
   types: ReadonlyArray<CompanyResourceType>
   ids?: ReadonlyArray<string>
+  codes?: ReadonlyArray<string>
   effectiveOn?: CalendarDate
   organizationRevision?: number
 }>
@@ -105,7 +106,12 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
   constructor(private readonly c: Context) {}
 
   async findMany(query: CompanyResourceQuery): Promise<CompanyResourceReadResult> {
-    if (query.types.length < 1 || query.types.length > 100 || (query.ids?.length ?? 0) > 100) {
+    if (
+      query.types.length < 1 ||
+      query.types.length > 100 ||
+      (query.ids?.length ?? 0) > 100 ||
+      (query.codes?.length ?? 0) > 100
+    ) {
       return { ok: false, cause: new Error("Invalid Company resource query") }
     }
 
@@ -125,6 +131,13 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
         conditions.push("resource_id IN (SELECT value FROM json_each(?))")
         binds.push(JSON.stringify(query.ids))
       }
+
+      // code は版を選んだ後で絞る。先に絞ると改名済みの旧版が復活する。
+      const codeCondition =
+        query.codes === undefined
+          ? ""
+          : "AND json_extract(attributes_json, '$.code') IN (SELECT value FROM json_each(?))"
+      const codeBinds = query.codes === undefined ? [] : [JSON.stringify(query.codes)]
 
       const resourceStatement =
         query.organizationRevision !== undefined
@@ -148,7 +161,8 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                  FROM ranked_resources
                 WHERE effective_rank = 1 AND state = 'active'
                   AND (? IS NULL OR (effective_from <= ? AND (effective_to IS NULL OR effective_to > ?)))
-                ORDER BY resource_type, resource_id`,
+                ${codeCondition}
+                  ORDER BY resource_type, resource_id`,
               )
               .bind(
                 query.effectiveOn ?? null,
@@ -160,6 +174,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                 query.effectiveOn ?? null,
                 query.effectiveOn ?? null,
                 query.effectiveOn ?? null,
+                ...codeBinds,
               )
           : query.effectiveOn === undefined
             ? this.c
@@ -170,9 +185,10 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                   WHERE organization_id = ?
                     AND state = 'active'
                     AND ${conditions.join(" AND ")}
+                  ${codeCondition}
                   ORDER BY resource_type, resource_id`,
                 )
-                .bind(query.organizationId, ...binds)
+                .bind(query.organizationId, ...binds, ...codeBinds)
             : this.c
                 .prepare(
                   `WITH snapshot AS (
@@ -207,6 +223,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                     AND state = 'active'
                     AND effective_from <= ?
                     AND (effective_to IS NULL OR effective_to > ?)
+                  ${codeCondition}
                   ORDER BY resource_type, resource_id`,
                 )
                 .bind(
@@ -216,6 +233,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                   ...binds,
                   query.effectiveOn,
                   query.effectiveOn,
+                  ...codeBinds,
                 )
 
       const [revisionResult, resourceResult] = await this.c.batch([

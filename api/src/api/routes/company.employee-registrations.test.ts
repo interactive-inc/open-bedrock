@@ -10,6 +10,8 @@ import { loadSchema } from "@tests/api/support/load-schema"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 
+const observedCompanyRevisions = new WeakMap<D1Database, number>()
+
 const jwtSecret = "employee-registration-route-test-secret"
 const idempotencyKey = "12345678-1234-4abc-8def-1234567890ab"
 const body = {
@@ -28,6 +30,11 @@ const body = {
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
   await initializeStandardCompanyTestState(db)
+  const companyRevision = await db
+    .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+    .first<number>("revision")
+  if (companyRevision === null) throw new Error("Company revision missing")
+  observedCompanyRevisions.set(db, companyRevision)
   return db
 }
 
@@ -42,7 +49,10 @@ async function post(
     path: "/company/employee-registrations",
     token: await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(1) }),
     method: "POST",
-    body: requestBody,
+    body:
+      typeof requestBody === "object" && requestBody !== null && !Array.isArray(requestBody)
+        ? { expected_company_revision: observedCompanyRevisions.get(db), ...requestBody }
+        : requestBody,
     headers: key === null ? {} : { "Idempotency-Key": key },
   })
 }
@@ -56,6 +66,22 @@ async function count(db: D1Database, table: string, where: string): Promise<numb
 }
 
 describe("POST /company/employee-registrations", () => {
+  test("確認した会社版が欠落・不正・古い場合は人物もAccountも作成しない", async () => {
+    const db = await createTestDb()
+    const beforeAccounts = await count(db, "system_accounts", "1 = 1")
+    for (const revision of [undefined, null, -1, 0.5, "1"]) {
+      expect((await post(db, { ...body, expected_company_revision: revision })).status).toBe(400)
+    }
+    await db
+      .prepare(
+        "UPDATE company_organizations SET revision = revision + 1 WHERE id = 'organization:default'",
+      )
+      .run()
+    expect((await post(db, body)).status).toBe(409)
+    expect(await count(db, "system_accounts", "1 = 1")).toBe(beforeAccounts)
+    expect(await count(db, "company_employees", "employee_code = 'E100'")).toBe(0)
+  })
+
   test("新規登録のAccount対応を公開し、取消後は同じtokenで従業員情報へアクセスできない", async () => {
     const db = await createTestDb()
     expect((await post(db, body)).status).toBe(201)

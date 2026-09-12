@@ -15,7 +15,7 @@ import {
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import type { PositionResponse } from "@/lib/api/types/position-types"
+import { usePersonnelPositionSnapshot } from "@/lib/employee/use-personnel-position-snapshot"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 
@@ -44,8 +44,9 @@ export function PersonnelActionForm(props: {
   organizationRevision: number
   canRequest: boolean
   canApply: boolean
-  positions: ReadonlyArray<PositionResponse>
+  companyRevision: number
 }) {
+  const positionSnapshot = usePersonnelPositionSnapshot(props.companyRevision)
   const [open, setOpen] = useState(false)
   const [kind, setKind] = useState<ActionKind>("transferred")
   const [mode, setMode] = useState<"apply" | "request">(props.canApply ? "apply" : "request")
@@ -66,6 +67,7 @@ export function PersonnelActionForm(props: {
     "rehire",
   ].includes(kind)
   async function reduce(previous: PersonnelActionFormState, form: FormData) {
+    if (!positionSnapshot.isReady) return { ok: false, error: "有効日の会社情報を確認してください" }
     const result = await submitPersonnelAction(previous, form)
     if (result.ok) {
       toast.success(
@@ -85,9 +87,11 @@ export function PersonnelActionForm(props: {
           <DialogDescription>有効日付きの発令として、申請または直接確定します。</DialogDescription>
         </DialogHeader>
         <form action={action}>
+          <input type="hidden" name="company_revision" value={props.companyRevision} />
           <input type="hidden" name="employee_code" value={props.employeeCode} />
           <input type="hidden" name="employee_revision" value={props.employeeRevision} />
           <input type="hidden" name="organization_revision" value={props.organizationRevision} />
+          {positionSnapshot.error ? <FieldError>{positionSnapshot.error}</FieldError> : null}
           <FieldGroup>
             <Field>
               <FieldLabel id="personnel-mode-label" htmlFor="personnel-mode">
@@ -130,7 +134,17 @@ export function PersonnelActionForm(props: {
             </Field>
             <Field>
               <FieldLabel htmlFor="personnel-date">発令日</FieldLabel>
-              <Input id="personnel-date" name="event_on" type="date" autoComplete="off" required />
+              <Input
+                value={positionSnapshot.effectiveOn}
+                onChange={(event) => {
+                  void positionSnapshot.changeEffectiveOn(event.target.value)
+                }}
+                id="personnel-date"
+                name="event_on"
+                type="date"
+                autoComplete="off"
+                required
+              />
             </Field>
             <EmploymentTypeField id="personnel-employment-type" isVisible={kind === "rehire"} />
             {needsDepartment ? (
@@ -174,13 +188,15 @@ export function PersonnelActionForm(props: {
                 <NativeSelect
                   id="personnel-position"
                   name="position_code"
+                  key={positionSnapshot.effectiveOn}
+                  disabled={!positionSnapshot.isReady}
                   aria-labelledby="personnel-position-label"
                   className="w-full"
                   defaultValue=""
                   required={kind === "position_changed"}
                 >
                   <NativeSelectOption value="">役職なし</NativeSelectOption>
-                  {props.positions.map((position) => (
+                  {positionSnapshot.positions.map((position) => (
                     <NativeSelectOption key={position.id} value={position.code}>
                       {position.name}
                     </NativeSelectOption>
@@ -228,7 +244,7 @@ export function PersonnelActionForm(props: {
                 <FieldError>{state.error}</FieldError>
               </div>
             ) : null}
-            <Button type="submit" disabled={pending}>
+            <Button type="submit" disabled={pending || !positionSnapshot.isReady}>
               {pending ? "処理中…" : mode === "apply" ? "人事発令を確定" : "承認を申請"}
             </Button>
           </FieldGroup>

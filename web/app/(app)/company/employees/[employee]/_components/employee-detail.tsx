@@ -14,7 +14,7 @@ import { EmployeeLifecycleTimeline } from "@/app/(app)/company/employees/[employ
 import { PersonnelActionForm } from "@/app/(app)/company/employees/[employee]/_components/personnel-action-form"
 import { PersonnelActionRequestList } from "@/app/(app)/company/employees/[employee]/_components/personnel-action-request-list"
 import { listPersonnelActionRequests } from "@/lib/api/list-personnel-action-requests"
-import { getPositionList } from "@/lib/api/get-position-list"
+import { getPersonnelPositionSnapshot } from "@/lib/api/get-personnel-position-snapshot"
 
 type Props = {
   code: string
@@ -27,13 +27,13 @@ type Props = {
  * permissions と現在のライフサイクル状態に応じて、編集・人事発令導線を出す。
  */
 export async function EmployeeDetail(props: Props) {
-  const [employee, lifecycleState, lifecycleEvents, lifecycleRequests, positions] =
+  const [employee, lifecycleState, lifecycleEvents, lifecycleRequests, positionSnapshot] =
     await Promise.all([
       getEmployeeByCode(props.code),
       getEmployeeLifecycleState(props.code),
       getEmployeeLifecycleEvents(props.code),
       listPersonnelActionRequests(props.code),
-      getPositionList(),
+      getPersonnelPositionSnapshot(),
     ])
 
   if (employee instanceof Error) {
@@ -49,7 +49,9 @@ export async function EmployeeDetail(props: Props) {
   const canRequestLifecycle = props.permissions.includes("employee:lifecycle:request")
   const canApplyLifecycle = props.permissions.includes("employee:lifecycle:apply")
   const showPersonnelAction =
-    !(lifecycleState instanceof Error) && (canRequestLifecycle || canApplyLifecycle)
+    !(lifecycleState instanceof Error) &&
+    !(positionSnapshot instanceof Error) &&
+    (canRequestLifecycle || canApplyLifecycle)
 
   return (
     <div className="flex flex-col gap-8">
@@ -64,14 +66,16 @@ export async function EmployeeDetail(props: Props) {
 
             {showEdit || showPersonnelAction ? (
               <div className="flex flex-wrap items-center gap-2">
-                {showPersonnelAction && !(lifecycleState instanceof Error) ? (
+                {showPersonnelAction &&
+                !(lifecycleState instanceof Error) &&
+                !(positionSnapshot instanceof Error) ? (
                   <PersonnelActionForm
                     employeeCode={employee.code}
                     employeeRevision={lifecycleState.employee_revision}
                     organizationRevision={lifecycleState.organization_revision}
                     canRequest={canRequestLifecycle}
                     canApply={canApplyLifecycle}
-                    positions={positions instanceof Error ? [] : positions}
+                    companyRevision={positionSnapshot.companyRevision}
                   />
                 ) : null}
 

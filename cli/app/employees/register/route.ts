@@ -5,9 +5,9 @@ import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 import { readSecretStdin } from "@/lib/input/read-secret-stdin"
 
-export const help = `bedrock employees register --code <c> --name <n> --hire-on <YYYY-MM-DD> --employment-type <FULL_TIME|PART_TIME> --email <e> --role <r> --password-stdin [--idempotency-key <uuid>] [--department-code <c>] [--position-code <c>] [--manager-employee-code <c>]
+export const help = `bedrock employees register --company-revision <n> --code <c> --name <n> --hire-on <YYYY-MM-DD> --employment-type <FULL_TIME|PART_TIME> --email <e> --role <r> --password-stdin [--idempotency-key <uuid>] [--department-code <c>] [--position-code <c>] [--manager-employee-code <c>]
 
-役職は役職マスタの code を指定してください（自由入力ではありません）。
+役職は確認した会社版と入社日に有効な公開定義の code を指定してください（自由入力ではありません）。
 初期パスワードはコマンド引数に含めず、標準入力から渡してください。`
 
 export default factory.createHandlers(
@@ -15,6 +15,7 @@ export default factory.createHandlers(
     "json",
     z.object({
       help: z.string().optional(),
+      "company-revision": z.coerce.number().int().nonnegative().optional(),
       code: z.string().optional(),
       name: z.string().optional(),
       email: z.string().optional(),
@@ -37,6 +38,7 @@ export default factory.createHandlers(
     if (query.help) return c.text(help)
 
     if (
+      query["company-revision"] === undefined ||
       !query.code ||
       !query.name ||
       !query.email ||
@@ -46,12 +48,13 @@ export default factory.createHandlers(
       !query["password-stdin"]
     )
       throw new UsageError(
-        "--code, --name, --hire-on, --employment-type, --email, --role, --password-stdin が必要です",
+        "--company-revision, --code, --name, --hire-on, --employment-type, --email, --role, --password-stdin が必要です",
       )
 
     const password = await readSecretStdin()
 
     const payload = {
+      expected_company_revision: query["company-revision"],
       code: query.code,
       name: query.name,
       email: query.email,
