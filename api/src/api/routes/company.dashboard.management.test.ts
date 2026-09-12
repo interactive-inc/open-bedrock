@@ -167,6 +167,54 @@ async function createTestDb(): Promise<D1Database> {
     },
   ])
 
+  // 集計の正本となる公開雇用履歴。旧注記は参照元として使用しない。
+  await db
+    .prepare(`INSERT INTO company_organizations (id, revision, created_at, updated_at)
+    VALUES ('organization:default', 1, 0, 0) ON CONFLICT(id) DO UPDATE SET revision = 1`)
+    .run()
+  for (const employee of managementEmployees) {
+    const employeeId = String(employee.id)
+    await seedD1(db, "company_resource_heads", [
+      {
+        organization_id: "organization:default",
+        resource_type: "employee",
+        resource_id: employeeId,
+        revision: 1,
+        organization_revision: 1,
+        state: "active",
+        effective_from: "2024-01-01",
+        effective_to: null,
+        attributes_json: JSON.stringify({
+          personId: `person:${employeeId}`,
+          employeeCode: employee.code,
+        }),
+        updated_at: 0,
+      },
+    ])
+    await seedD1(db, "company_resource_revisions", [
+      {
+        organization_id: "organization:default",
+        resource_type: "employment",
+        resource_id: `test:${employeeId}:employment`,
+        revision: 1,
+        organization_revision: 1,
+        state: "active",
+        effective_from:
+          employee.id === 2 ? "2026-06-01" : employee.id === 3 ? "2026-05-20" : "2024-01-01",
+        effective_to: employee.id === 4 ? "2026-06-11" : null,
+        attributes_json: JSON.stringify({
+          employeeId,
+          employmentType: "FULL_TIME",
+          status: "ACTIVE",
+        }),
+        command_id: "confirmed-fixture",
+        actor_account_id: "1",
+        reason: "Confirmed employment dates",
+        recorded_at: 0,
+      },
+    ])
+  }
+
   // 当月の打刻 2 件、前月 1 件(数えない)。
   await seedD1(db, "attendance_records", [
     { id: 1, employee_id: "2", work_date: "2026-06-02", status: "closed" },
@@ -398,4 +446,48 @@ describe("GET /dashboard/management", () => {
 
     expect(response.status).toBe(401)
   })
+})
+
+test("旧注記の削除後も正式な雇用履歴から同じ入退社件数を返す", async () => {
+  const db = await createTestDb()
+  await db.prepare("DELETE FROM company_employee_events").run()
+  const response = await requestWithContext({
+    db,
+    jwtSecret,
+    path: "/company/dashboard/management",
+    token: await tokenFor(1),
+    now,
+  })
+  expect(response.status).toBe(200)
+  const summary = managementDashboardSchema.parse(await response.json())
+  expect(summary.recent_join_count).toBe(2)
+  expect(summary.recent_retire_count).toBe(1)
+})
+
+test("既存契約が未接続なら正確な集計としてゼロ件を返さない", async () => {
+  const db = await createTestDb()
+  await seedCompanyEmployees(db, [{ id: 5, code: "E005", name: "Unconnected", status: "active" }])
+  const response = await requestWithContext({
+    db,
+    jwtSecret,
+    path: "/company/dashboard/management",
+    token: await tokenFor(1),
+    now,
+  })
+  expect(response.status).toBe(500)
+})
+
+test("会社営業日を上限にし、未来の退職を数えない", async () => {
+  const response = await requestWithContext({
+    db: await createTestDb(),
+    jwtSecret,
+    path: "/company/dashboard/management",
+    token: await tokenFor(1),
+    now: "2026-05-31T15:00:00.000Z",
+    companyTimeZone: "Asia/Tokyo",
+  })
+  expect(response.status).toBe(200)
+  const summary = managementDashboardSchema.parse(await response.json())
+  expect(summary.recent_join_count).toBe(2)
+  expect(summary.recent_retire_count).toBe(0)
 })

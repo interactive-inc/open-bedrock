@@ -1,17 +1,18 @@
 import type { Context } from "@/env"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { toManagementDashboardRanges } from "@/api/http/dashboard/management/to-management-dashboard-ranges"
 import type { AppManagementDashboard } from "@/api/http/company/response-schemas"
 import { attendanceRecords } from "@/contexts/attendance/infrastructure/schema/attendance"
-import { employeeEvents } from "@/contexts/company/infrastructure/schema/employee-event"
+import { CompanyEmploymentMovementsRepository } from "@/contexts/company/infrastructure/repositories/employee-lifecycle/company-employment-movements.repository"
 import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
 import { reviewCycles } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { CountPendingSystemCasesAdapter } from "@system/infrastructure/adapters/workflow/count-pending-system-cases.adapter"
-import { and, count, eq, gte, like } from "drizzle-orm"
+import { count, eq, like } from "drizzle-orm"
 
 /**
  * 経営ダッシュボードの横断集計。予測・計算は持たず、在籍・入退社・勤怠・休暇・経費・評価・
@@ -23,7 +24,14 @@ export class GetManagementDashboard {
   async run(): Promise<AppManagementDashboard | ApplicationError> {
     const nowIso = this.c.env.NOW ?? new Date().toISOString()
 
+    const businessDate = resolveCompanyBusinessDate({
+      now: nowIso,
+      timeZone: this.c.env.COMPANY_TIME_ZONE,
+    })
+    if (businessDate instanceof Error)
+      return new UnexpectedError("failed to resolve company business date", { cause: businessDate })
     const ranges = toManagementDashboardRanges(nowIso)
+    const employmentRanges = toManagementDashboardRanges(`${businessDate}T00:00:00.000Z`)
 
     const monthLike = `${ranges.monthPrefix}%`
 
@@ -47,6 +55,16 @@ export class GetManagementDashboard {
           cause: companySnapshot,
         })
       }
+      const movements = await new CompanyEmploymentMovementsRepository(this.c).find({
+        organizationId: "organization:default",
+        organizationRevision: companySnapshot.companyRevision,
+        from: employmentRanges.since,
+        through: businessDate,
+      })
+      if (movements instanceof Error)
+        return new UnexpectedError("failed to aggregate confirmed employment movements", {
+          cause: movements,
+        })
       const activeStates = companySnapshot.employees.filter((state) => state.status === "ACTIVE")
       const unitById = new Map(
         companySnapshot.organization.units.map((unit) => [unit.organizationUnitId, unit]),
@@ -63,8 +81,6 @@ export class GetManagementDashboard {
       }
 
       const [
-        joinRows,
-        retireRows,
         attendanceRows,
         leaveMonthRows,
         leavePendingRows,
@@ -72,18 +88,6 @@ export class GetManagementDashboard {
         expensePendingRows,
         openReviewCycleRows,
       ] = await database.batch([
-        database
-          .select({ total: count() })
-          .from(employeeEvents)
-          .where(
-            and(eq(employeeEvents.kind, "join"), gte(employeeEvents.effectiveDate, ranges.since)),
-          ),
-        database
-          .select({ total: count() })
-          .from(employeeEvents)
-          .where(
-            and(eq(employeeEvents.kind, "retire"), gte(employeeEvents.effectiveDate, ranges.since)),
-          ),
         database
           .select({ total: count() })
           .from(attendanceRecords)
@@ -121,8 +125,8 @@ export class GetManagementDashboard {
         department_headcounts: [...headcountByUnitName]
           .map(([department_name, headcount]) => ({ department_name, headcount }))
           .toSorted((left, right) => right.headcount - left.headcount),
-        recent_join_count: joinRows.at(0)?.total ?? 0,
-        recent_retire_count: retireRows.at(0)?.total ?? 0,
+        recent_join_count: movements.joinCount,
+        recent_retire_count: movements.retireCount,
         attendance_record_count: attendanceRows.at(0)?.total ?? 0,
         leave_request_count: leaveMonthRows.at(0)?.total ?? 0,
         leave_pending_count: leavePendingRows.at(0)?.total ?? 0,
