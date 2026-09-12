@@ -74,6 +74,8 @@ JSON envelopeはCompany coreの版・期間・原子性を一つに揃えるた�
 
 resource参照用のGETは`id` queryを繰り返して最大100件へ絞れる。`effective_on`を指定したreadはappend-only revisionからその日に有効な最新訂正を選び、将来発効の変更を過去へ混ぜない。`void`が発効した後はresourceを返さない。日付を省略したreadはcurrent headだけを返す。
 
+`GET /company/profile`、`/company/people`、`/company/employees`、`/company/employments`、`/company/definitions`、`/company/organization-snapshots`、`/company/account-employee-links`、`/company/legacy-personnel-action-records`は`organization_revision`で会社版を固定できる。同じ会社版と有効日を各APIへ渡すことで、取得途中の更新を混ぜずに関連情報を参照できる。応答の`organizationRevision`とETagは指定版に一致する。指定版より後の遡及訂正は含めない。存在しない未来版や安全な非負整数でない値は400となり、最新版へ置き換えない。会社へのアクセス資格と読取能力がなければ、版の存在を照会せず403となる。
+
 resource更新用のPOSTはendpointが所有するresource種別以外を拒否する。例えば`/people`からEmployeeを書いたり、`/organization-changes`からPositionを書いたりできない。
 
 Account対応はSystem AccountとEmployeeの一対一の同一性を固定し、その対応が有効な期間を改訂する。同じresourceの相手の変更、別resourceによるAccountまたはEmployeeの重複所有、存在しないSystem Accountへの対応を拒否する。対応期間は公開Employeeの存在期間に収まる必要があり、Employee側の訂正でも参照を孤立させない。

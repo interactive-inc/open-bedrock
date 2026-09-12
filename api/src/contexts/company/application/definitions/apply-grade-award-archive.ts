@@ -10,7 +10,7 @@ type Context = Readonly<{
   now: Date
   requestAudit: SystemRequestAudit
 }>
-type Input = Omit<GradeAwardArchiveEntity["props"], "actorAccountId" | "recordedAt">
+type Props = Omit<GradeAwardArchiveEntity["props"], "actorAccountId" | "recordedAt">
 
 /** 確認した等級付与の原記録を保全し、過去の判断資格や雇用期間を補完しない。 */
 export class ApplyGradeAwardArchive {
@@ -18,14 +18,14 @@ export class ApplyGradeAwardArchive {
     Object.freeze(this)
   }
 
-  async execute(input: Input) {
+  async execute(props: Props) {
     if (
       !this.c.actor.canAccessOrganization("organization:default") ||
       !this.c.actor.hasCapability("company:admin")
     )
       return new CompanyForbiddenError()
     const command = GradeAwardArchiveEntity.create({
-      ...input,
+      ...props,
       actorAccountId: this.c.actor.accountId,
       recordedAt: this.c.now.getTime(),
     })
