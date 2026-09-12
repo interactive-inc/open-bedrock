@@ -424,16 +424,6 @@ export const companyRouteManifest = [
     },
   },
   {
-    method: "POST",
-    path: "/company/employee-grades",
-    phase: "audited",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.employee-grades",
-      exportName: "POST",
-    },
-  },
-  {
     method: "GET",
     path: "/company/grade-definitions",
     phase: "authenticated",
@@ -444,36 +434,6 @@ export const companyRouteManifest = [
     },
   },
   {
-    method: "POST",
-    path: "/company/grade-definitions",
-    phase: "audited",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.grade-definitions",
-      exportName: "POST",
-    },
-  },
-  {
-    method: "PUT",
-    path: "/company/grade-definitions/:id",
-    phase: "audited",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.grade-definitions.$id",
-      exportName: "PUT",
-    },
-  },
-  {
-    method: "DELETE",
-    path: "/company/grade-definitions/:id",
-    phase: "audited",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.grade-definitions.$id",
-      exportName: "DELETE",
-    },
-  },
-  {
     method: "GET",
     path: "/company/position-definitions",
     phase: "authenticated",
@@ -481,36 +441,6 @@ export const companyRouteManifest = [
       kind: "module",
       module: "@/contexts/company/interface/routes/company.position-definitions",
       exportName: "GET",
-    },
-  },
-  {
-    method: "POST",
-    path: "/company/position-definitions",
-    phase: "audited",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.position-definitions",
-      exportName: "POST",
-    },
-  },
-  {
-    method: "PUT",
-    path: "/company/position-definitions/:id",
-    phase: "audited",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.position-definitions.$id",
-      exportName: "PUT",
-    },
-  },
-  {
-    method: "DELETE",
-    path: "/company/position-definitions/:id",
-    phase: "audited",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.position-definitions.$id",
-      exportName: "DELETE",
     },
   },
   {
