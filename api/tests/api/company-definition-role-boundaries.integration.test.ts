@@ -82,7 +82,7 @@ test.each(["grade", "position"] as const)(
       path: "/company/employee-events",
       body: { employee_code: "E001", kind: "join", effective_date: "2026-01-01" },
     })
-    expect(event.status).toBe(403)
+    expect(event.status).toBe(404)
     expect(await db.prepare("SELECT * FROM company_employee_events ORDER BY id").all()).toEqual(
       originalEvents,
     )

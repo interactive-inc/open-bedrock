@@ -3,21 +3,21 @@ import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restor
 import { z } from "zod"
 
 const employeeEventPropsSchema = z.object({
-  id: z.number().int().positive().nullable(),
+  id: z.number().int(),
   employeeId: z.string().min(1).max(128),
-  kind: z.enum(["join", "transfer", "leave_of_absence", "return", "retire"]),
-  effectiveDate: z.string().date(),
-  fromDepartmentCode: z.string().trim().min(1).max(64).nullable(),
-  toDepartmentCode: z.string().trim().min(1).max(64).nullable(),
-  note: z.string().trim().min(1).max(3_000).nullable(),
-  createdAt: z.string().datetime(),
+  kind: z.string(),
+  effectiveDate: z.string(),
+  fromDepartmentCode: z.string().nullable(),
+  toDepartmentCode: z.string().nullable(),
+  note: z.string().nullable(),
+  createdAt: z.string(),
 })
 
 export type EmployeeEventProps = Omit<z.infer<typeof employeeEventPropsSchema>, "employeeId"> & {
   employeeId: EmployeeId
 }
 
-/** 従業員の異動・在籍イベントという履歴事実。 */
+/** 旧人事注記の原記録。文字列を補正せず、確定した発令へ読み替えない。 */
 export class EmployeeEventEntity {
   private static parse(props: unknown): EmployeeEventProps {
     const parsed = employeeEventPropsSchema.parse(props)
@@ -26,10 +26,6 @@ export class EmployeeEventEntity {
 
   private constructor(private readonly props: EmployeeEventProps) {
     Object.freeze(this)
-  }
-
-  static create(props: Omit<EmployeeEventProps, "id">): EmployeeEventEntity {
-    return new EmployeeEventEntity(EmployeeEventEntity.parse({ ...props, id: null }))
   }
 
   static restore(props: unknown): EmployeeEventEntity {

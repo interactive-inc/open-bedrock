@@ -50,31 +50,6 @@ export class EmployeeEventRepository {
     }
   }
 
-  async create(entity: EmployeeEventEntity): Promise<EmployeeEventEntity | Error> {
-    try {
-      const props = entity.toProps()
-      const row = (
-        await this.c.var.database
-          .insert(employeeEvents)
-          .values({
-            employeeId: props.employeeId,
-            kind: props.kind,
-            effectiveDate: props.effectiveDate,
-            fromDepartmentCode: props.fromDepartmentCode,
-            toDepartmentCode: props.toDepartmentCode,
-            note: props.note,
-            createdAt: props.createdAt,
-          })
-          .returning()
-      )[0]
-      return row === undefined
-        ? new Error("failed to create Company employee event")
-        : EmployeeEventEntity.restore(row)
-    } catch (cause) {
-      return cause instanceof Error ? cause : new Error("failed to create Company employee event")
-    }
-  }
-
   private conditions(employeeId: EmployeeId, kind: string | null): SQL | undefined {
     return and(
       eq(employeeEvents.employeeId, employeeId),

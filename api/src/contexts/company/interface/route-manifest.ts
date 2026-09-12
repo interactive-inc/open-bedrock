@@ -404,16 +404,6 @@ export const companyRouteManifest = [
     },
   },
   {
-    method: "POST",
-    path: "/company/employee-events",
-    phase: "audited",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.employee-events",
-      exportName: "POST",
-    },
-  },
-  {
     method: "GET",
     path: "/company/employee-grades",
     phase: "authenticated",
