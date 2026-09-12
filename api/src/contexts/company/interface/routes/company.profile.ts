@@ -4,7 +4,10 @@ import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definition
 import { CreateCompanyProfile } from "@/contexts/company/application/profile/create-company-profile"
 import { DeleteCompanyProfile } from "@/contexts/company/application/profile/delete-company-profile"
 import { UpdateCompanyProfile } from "@/contexts/company/application/profile/update-company-profile"
-import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
+import {
+  CompanyResourceValidationError,
+  CompanySnapshotRevisionError,
+} from "@/contexts/company/domain/errors"
 import type { CompanyJsonObject } from "@/contexts/company/domain/entities/company-resource.entity"
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
@@ -51,6 +54,12 @@ export const GET = factory.createHandlers(
     z.object({
       id: z
         .union([z.string().regex(/^\S{1,255}$/), z.array(z.string().regex(/^\S{1,255}$/)).max(100)])
+        .optional(),
+      organization_revision: z
+        .string()
+        .regex(/^(0|[1-9]\d*)$/)
+        .transform(Number)
+        .pipe(z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER))
         .optional(),
       effective_on: z.string().date().optional(),
       as_of: z.string().date().optional(),
@@ -101,6 +110,7 @@ export const GET = factory.createHandlers(
     if (effectiveOn instanceof Error) throw new CompanyReadUnavailableError(effectiveOn)
     const query = {
       organizationId: headers["x-company-organization-id"],
+      organizationRevision: requestQuery.organization_revision,
       types: ["legal-entity", "company-profile"] as const,
       ...(ids.length === 0 ? {} : { ids }),
       ...(effectiveOn === undefined ? {} : { effectiveOn: restoreCalendarDate(effectiveOn) }),
@@ -130,6 +140,8 @@ export const GET = factory.createHandlers(
 
     const result = await new D1CompanyResourceRepository(database).findMany(query)
     if (!result.ok) {
+      if (result.cause instanceof CompanySnapshotRevisionError)
+        throw new CompanyQueryInvalidError(result.cause)
       throw new CompanyReadUnavailableError(result.cause)
     }
 
