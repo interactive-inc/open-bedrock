@@ -19,6 +19,7 @@ import * as employeeResourceAdoptions from "@/contexts/company/interface/routes/
 import * as employees from "@/contexts/company/interface/routes/company.employees"
 import * as employments from "@/contexts/company/interface/routes/company.employments"
 import * as externalIdentityImports from "@/contexts/company/interface/routes/company.external-identity-imports"
+import * as gradeAssignmentHistory from "@/contexts/company/interface/routes/company.grade-assignment-history"
 import * as gradeAwardArchives from "@/contexts/company/interface/routes/company.grade-award-archives"
 import * as gradeAwardArchivesCommandId from "@/contexts/company/interface/routes/company.grade-award-archives.$commandId"
 import * as gradeAwardArchivesByEmployeeEmployeeId from "@/contexts/company/interface/routes/company.grade-award-archives.by-employee.$employeeId"
@@ -70,6 +71,7 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/employee-resource-adoptions", ...employeeResourceAdoptions.GET)
   .get("/employees", ...employees.GET)
   .get("/employments", ...employments.GET)
+  .get("/grade-assignment-history", ...gradeAssignmentHistory.GET)
   .get("/grade-award-archives", ...gradeAwardArchives.GET)
   .get(
     "/grade-award-archives/by-employee/:employeeId",
