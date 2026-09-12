@@ -395,11 +395,11 @@ export const companyRouteManifest = [
   },
   {
     method: "GET",
-    path: "/company/employee-events",
+    path: "/company/personnel-annotations",
     phase: "authenticated",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company.employee-events",
+      module: "@/contexts/company/interface/routes/company.personnel-annotations",
       exportName: "GET",
     },
   },

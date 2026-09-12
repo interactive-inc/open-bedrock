@@ -4310,3 +4310,38 @@ BEFORE DELETE ON company_grade_award_archives
 BEGIN
   SELECT RAISE(ABORT, 'company grade award archives are immutable');
 END;
+
+CREATE TABLE company_personnel_annotations (
+  id INTEGER PRIMARY KEY,
+  employee_id TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  effective_date TEXT NOT NULL,
+  from_department_code TEXT,
+  to_department_code TEXT,
+  note TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX idx_company_personnel_annotations_employee ON company_personnel_annotations(employee_id);
+CREATE INDEX idx_company_personnel_annotations_kind ON company_personnel_annotations(kind);
+
+DROP TRIGGER IF EXISTS company_personnel_annotations_no_update;
+CREATE TRIGGER company_personnel_annotations_no_update
+BEFORE UPDATE ON company_personnel_annotations
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel annotations are immutable');
+END;
+
+DROP TRIGGER IF EXISTS company_personnel_annotations_no_delete;
+CREATE TRIGGER company_personnel_annotations_no_delete
+BEFORE DELETE ON company_personnel_annotations
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel annotations are immutable');
+END;
+
+DROP TRIGGER IF EXISTS company_personnel_annotations_no_replace;
+CREATE TRIGGER company_personnel_annotations_no_replace
+BEFORE INSERT ON company_personnel_annotations
+WHEN EXISTS (SELECT 1 FROM company_personnel_annotations WHERE id = NEW.id)
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel annotations are immutable');
+END;

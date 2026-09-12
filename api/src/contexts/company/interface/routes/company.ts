@@ -10,7 +10,6 @@ import * as definitionResourceAdoptionsCommandId from "@/contexts/company/interf
 import * as definitions from "@/contexts/company/interface/routes/company.definitions"
 import * as employeeDirectory from "@/contexts/company/interface/routes/company.employee-directory"
 import * as employeeDirectoryCode from "@/contexts/company/interface/routes/company.employee-directory.$code"
-import * as employeeEvents from "@/contexts/company/interface/routes/company.employee-events"
 import * as employeeGrades from "@/contexts/company/interface/routes/company.employee-grades"
 import * as employeeLifecycleCodeEvents from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.events"
 import * as employeeLifecycleCodeState from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.state"
@@ -40,6 +39,7 @@ import * as people from "@/contexts/company/interface/routes/company.people"
 import * as personnelActionEvents from "@/contexts/company/interface/routes/company.personnel-action-events"
 import * as personnelActionExecutions from "@/contexts/company/interface/routes/company.personnel-action-executions"
 import * as personnelActions from "@/contexts/company/interface/routes/company.personnel-actions"
+import * as personnelAnnotations from "@/contexts/company/interface/routes/company.personnel-annotations"
 import * as positionDefinitions from "@/contexts/company/interface/routes/company.position-definitions"
 import * as profile from "@/contexts/company/interface/routes/company.profile"
 import * as reportingLinesEmployeeCode from "@/contexts/company/interface/routes/company.reporting-lines.$employeeCode"
@@ -62,7 +62,6 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/definitions", ...definitions.GET)
   .get("/employee-directory", ...employeeDirectory.GET)
   .get("/employee-directory/:code", ...employeeDirectoryCode.GET)
-  .get("/employee-events", ...employeeEvents.GET)
   .get("/employee-grades", ...employeeGrades.GET)
   .get("/employee-lifecycle/:code/events", ...employeeLifecycleCodeEvents.GET)
   .get("/employee-lifecycle/:code/state", ...employeeLifecycleCodeState.GET)
@@ -91,6 +90,7 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/people", ...people.GET)
   .get("/personnel-action-events", ...personnelActionEvents.GET)
   .get("/personnel-actions", ...personnelActions.GET)
+  .get("/personnel-annotations", ...personnelAnnotations.GET)
   .get("/position-definitions", ...positionDefinitions.GET)
   .get("/profile", ...profile.GET)
   .get("/reporting-lines/:employeeCode", ...reportingLinesEmployeeCode.GET)

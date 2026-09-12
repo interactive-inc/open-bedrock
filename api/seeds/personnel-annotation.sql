@@ -1,8 +1,6 @@
--- employee-event ドメインの seed
--- 入社・異動などの在籍イベント（従業員のタイムラインに出る）
--- 値は src/infrastructure/seed/seed-employee-events.ts と一致させること。
+-- 移行元の人事注記を保全するローカル検証用データ。確定した発令とは区別する。
 
-INSERT INTO company_employee_events
+INSERT INTO company_personnel_annotations
   (id, employee_id, kind, effective_date, from_department_code, to_department_code, note, created_at)
 VALUES
   (1, 5, 'join', '2024-04-01', NULL, 'D003', '新卒入社', '2024-04-01T00:00:00.000Z'),
