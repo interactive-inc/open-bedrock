@@ -132,7 +132,7 @@ export const companyResourceRevisions = sqliteTable(
     primaryKey({
       columns: [table.organizationId, table.resourceType, table.resourceId, table.revision],
     }),
-    uniqueIndex("company_resource_revisions_org_revision_idx").on(
+    index("company_resource_revisions_org_revision_idx").on(
       table.organizationId,
       table.organizationRevision,
       table.resourceType,

@@ -18,6 +18,7 @@ export type CompanyResourceType =
   | "job"
   | "position"
   | "grade"
+  | "grade-assignment"
   | "organizational-office"
   | "office-assignment"
   | "responsibility"

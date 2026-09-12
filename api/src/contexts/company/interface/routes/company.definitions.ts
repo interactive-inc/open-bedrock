@@ -235,6 +235,8 @@ export const POST = factory.createHandlers(
                 .object({
                   code: z.string().trim().min(1).max(255),
                   officialName: z.string().trim().min(1).max(2_000),
+                  rank: z.number().int().nullable().optional(),
+                  description: z.string().trim().min(1).max(2_000).nullable().optional(),
                   jobId: z
                     .string()
                     .regex(/^\S{1,255}$/)
@@ -255,6 +257,8 @@ export const POST = factory.createHandlers(
                 .object({
                   code: z.string().trim().min(1).max(255),
                   officialName: z.string().trim().min(1).max(2_000),
+                  rank: z.number().int().nullable().optional(),
+                  description: z.string().trim().min(1).max(2_000).nullable().optional(),
                 })
                 .strict(),
             }),

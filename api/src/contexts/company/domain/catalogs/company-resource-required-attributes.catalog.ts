@@ -14,6 +14,7 @@ export const companyResourceRequiredAttributes = {
   job: ["code", "officialName"],
   position: ["code", "officialName"],
   grade: ["code", "officialName"],
+  "grade-assignment": ["employeeId", "employmentId", "gradeId"],
   "organizational-office": ["code", "officialName", "organizationUnitId", "positionId"],
   "office-assignment": ["employeeId", "employmentId", "organizationalOfficeId"],
   responsibility: ["code", "officialName"],

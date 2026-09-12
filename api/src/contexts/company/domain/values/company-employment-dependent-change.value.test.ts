@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { CompanyEmploymentAuthorityChangeValue } from "@/contexts/company/domain/values/company-employment-authority-change.value"
+import { CompanyEmploymentDependentChangeValue } from "@/contexts/company/domain/values/company-employment-dependent-change.value"
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
@@ -75,7 +75,7 @@ function change(
   basis = history,
   periods = schedule(),
 ) {
-  const changed = CompanyEmploymentAuthorityChangeValue.create({
+  const changed = CompanyEmploymentDependentChangeValue.create({
     employeeId,
     history,
     basis,
@@ -152,7 +152,7 @@ test("所属終了は同じ雇用の組織別決裁資格を閉じ、任用を�
 test("無効な期間と履歴の欠落を拒否する", () => {
   const history = [version(2)]
   expect(
-    CompanyEmploymentAuthorityChangeValue.create({
+    CompanyEmploymentDependentChangeValue.create({
       employeeId,
       history,
       basis: history,
@@ -161,7 +161,7 @@ test("無効な期間と履歴の欠落を拒否する", () => {
   ).toBeInstanceOf(Error)
   const valid = [version(1)]
   expect(
-    CompanyEmploymentAuthorityChangeValue.create({
+    CompanyEmploymentDependentChangeValue.create({
       employeeId,
       history: valid,
       basis: valid,

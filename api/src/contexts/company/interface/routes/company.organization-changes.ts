@@ -178,6 +178,39 @@ export const POST = factory.createHandlers(
             }),
             z.object({
               organizationId: z.string().regex(/^\S{1,255}$/),
+              type: z.literal("grade"),
+              id: z.string().regex(/^\S{1,255}$/),
+              revision: z.number().int().min(1),
+              state: z.enum(["active", "void"]),
+              effectiveFrom: z.string().date(),
+              effectiveTo: z.string().date().nullable(),
+              attributes: z
+                .object({
+                  code: z.string().trim().min(1).max(255),
+                  officialName: z.string().trim().min(1).max(2_000),
+                  rank: z.number().int().nullable().optional(),
+                  description: z.string().trim().min(1).max(2_000).nullable().optional(),
+                })
+                .strict(),
+            }),
+            z.object({
+              organizationId: z.string().regex(/^\S{1,255}$/),
+              type: z.literal("grade-assignment"),
+              id: z.string().regex(/^\S{1,255}$/),
+              revision: z.number().int().min(1),
+              state: z.enum(["active", "void"]),
+              effectiveFrom: z.string().date(),
+              effectiveTo: z.string().date().nullable(),
+              attributes: z
+                .object({
+                  employeeId: z.string().regex(/^\S{1,255}$/),
+                  employmentId: z.string().regex(/^\S{1,255}$/),
+                  gradeId: z.string().regex(/^\S{1,255}$/),
+                })
+                .strict(),
+            }),
+            z.object({
+              organizationId: z.string().regex(/^\S{1,255}$/),
               type: z.literal("office-assignment"),
               id: z.string().regex(/^\S{1,255}$/),
               revision: z.number().int().min(1),

@@ -356,6 +356,8 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       "assignment",
       "reporting-relation",
       "position",
+      "grade",
+      "grade-assignment",
       "organizational-office",
       "office-assignment",
       "responsibility",
@@ -386,7 +388,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
     return this.findResourceHistory(organizationId, ["reporting-relation"], revision)
   }
 
-  async findEmploymentAuthorityHistory(
+  async findEmploymentDependentHistory(
     organizationId: string,
     revision: number,
   ): Promise<ReadonlyArray<CompanyResourceEntity> | Error> {
@@ -394,6 +396,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       organizationId,
       [
         "office-assignment",
+        "grade-assignment",
         "organizational-authority",
         "responsibility-assignment",
         "collective-body-membership",
@@ -412,7 +415,8 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                       effective_from, effective_to, attributes_json
                  FROM company_resource_revisions
                 WHERE organization_id = ? AND resource_type IN (${placeholders(types)})
-                  AND organization_revision <= ?`)
+                  AND organization_revision <= ?
+                ORDER BY resource_type, resource_id, revision`)
       .bind(organizationId, ...types, revision)
       .all<CompanyResourceRow>()
     if (!history.success) return new Error("Company resource history is unavailable")
@@ -430,6 +434,8 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
     while (cause instanceof Error && !visited.has(cause)) {
       visited.add(cause)
       if (
+        cause.message.includes("company_grade_assignment_invalid") ||
+        cause.message.includes("company_grade_assignment_owner_changed") ||
         cause.message.endsWith(
           "UNIQUE constraint failed: company_resource_heads.organization_id",
         ) ||
