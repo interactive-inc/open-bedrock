@@ -146,7 +146,6 @@ commands:
   employee-work-styles list                   勤務形態一覧 ([--employee-id])
   employee-work-styles add                    勤務形態を記録 (--employee-id --style --starts-on [--ends-on --note])
   employee-events list                        異動・在籍イベント履歴 (--employee-id --kind)
-  employee-events record                      異動・在籍イベントを記録 (--employee-id --kind --effective-date [--from --to --note])
   one-on-ones list                            one-on-ones 履歴
   one-on-ones create                          one-on-ones 作成 (--member-email [--topics --manager-note --next-action])
   one-on-ones show <id>                       one-on-ones の詳細
