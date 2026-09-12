@@ -81,6 +81,20 @@ export const POST = factory.createHandlers(
         snapshotDigest: z.string().regex(/^[a-f0-9]{64}$/),
         observedOn: z.string().date(),
         reason: z.string().trim().min(1).max(1000),
+        mappings: z
+          .array(
+            z
+              .object({
+                periodId: z.string().regex(/^\S{1,255}$/),
+                existingResourceId: z.string().regex(/^\S{1,255}$/),
+              })
+              .strict()
+              .readonly(),
+          )
+          .min(1)
+          .max(1000)
+          .readonly()
+          .optional(),
       })
       .strict(),
     (validation) => {

@@ -250,6 +250,8 @@
     "src/contexts/company/domain/policies/workforce-periods-overlap.policy.ts",
     "src/contexts/company/domain/values/assignment-reporting-adoption-change.value.ts",
     "src/contexts/company/domain/values/assignment-resource-adoption-snapshot.value.ts",
+    "src/contexts/company/domain/values/assignment-resource-connection.value.test.ts",
+    "src/contexts/company/domain/values/assignment-resource-connection.value.ts",
     "src/contexts/company/domain/values/company-actor.value.test.ts",
     "src/contexts/company/domain/values/company-actor.value.ts",
     "src/contexts/company/domain/values/company-assignment-journal-change.value.ts",
