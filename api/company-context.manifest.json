@@ -284,6 +284,8 @@
     "src/contexts/company/domain/values/organization-structure.value.test.ts",
     "src/contexts/company/domain/values/organization-structure.value.ts",
     "src/contexts/company/domain/values/responsibility-resource-adoption-snapshot.value.ts",
+    "src/contexts/company/domain/values/responsibility-resource-connection.value.test.ts",
+    "src/contexts/company/domain/values/responsibility-resource-connection.value.ts",
     "src/contexts/company/domain/values/workforce-invariant-violation.value.ts",
     "src/contexts/company/domain/values/workforce-state.value.test.ts",
     "src/contexts/company/domain/values/workforce-state.value.ts",
