@@ -415,36 +415,6 @@ export const companyRouteManifest = [
   },
   {
     method: "GET",
-    path: "/company/employee-grades",
-    phase: "authenticated",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.employee-grades",
-      exportName: "GET",
-    },
-  },
-  {
-    method: "GET",
-    path: "/company/grade-definitions",
-    phase: "authenticated",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.grade-definitions",
-      exportName: "GET",
-    },
-  },
-  {
-    method: "GET",
-    path: "/company/position-definitions",
-    phase: "authenticated",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.position-definitions",
-      exportName: "GET",
-    },
-  },
-  {
-    method: "GET",
     path: "/company/organization-units",
     phase: "authenticated",
     handler: {
