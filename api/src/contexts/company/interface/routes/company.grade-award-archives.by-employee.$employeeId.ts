@@ -14,7 +14,7 @@ import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 const factory = createFactory<CompanyHttpEnvironment>()
 
-// @authorization service - Company管理者が従業員を指定して保全済みの原記録を参照する
+// @authorization permission - 会社へのアクセス資格を持つ本人または属性閲覧権限者が保全済み原記録を参照する
 export const GET = factory.createHandlers(
   zValidator("param", z.object({ employeeId: z.string().regex(/^\S{1,200}$/) }), (validation) => {
     if (!validation.success) throw new CompanyQueryInvalidError(validation.error)
@@ -24,7 +24,8 @@ export const GET = factory.createHandlers(
     if (actor === undefined) throw new CompanyAuthenticationRequiredError()
     if (
       !actor.canAccessOrganization("organization:default") ||
-      !actor.hasCapability("company:admin")
+      (actor.employeeId !== context.req.valid("param").employeeId &&
+        !actor.hasPermission("employee:attributes:read"))
     )
       throw new CompanyAccessDeniedError()
     if (context.env.DB === undefined) throw new CompanyDatabaseUnavailableError()

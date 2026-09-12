@@ -130,6 +130,48 @@ test("原記録の保全APIは会社範囲と権限を強制し、主体の詐�
     actorAccountId: administrator.accountId,
     observedCompanyRevision: input.expectedRevision,
   })
+  for (const reader of [
+    CompanyActorValue.restore({
+      accountId: "account:self",
+      employeeId: f.people[0]!.employeeId,
+      organizationIds: ["organization:default"],
+      capabilities: [],
+    }),
+    CompanyActorValue.restore({
+      accountId: "account:reader",
+      employeeId: null,
+      organizationIds: ["organization:default"],
+      capabilities: [],
+      permissions: ["employee:attributes:read"],
+    }),
+  ]) {
+    state.actor = reader
+    expect(
+      (
+        await app.request(
+          `/archives/by-employee/${encodeURIComponent(f.people[0]!.employeeId)}`,
+          {},
+          env,
+        )
+      ).status,
+    ).toBe(200)
+    expect((await post(input)).status).toBe(403)
+  }
+  state.actor = CompanyActorValue.restore({
+    accountId: "account:other",
+    employeeId: "employee:other",
+    organizationIds: ["organization:default"],
+    capabilities: [],
+  })
+  expect(
+    (
+      await app.request(
+        `/archives/by-employee/${encodeURIComponent(f.people[0]!.employeeId)}`,
+        {},
+        env,
+      )
+    ).status,
+  ).toBe(403)
   state.actor = undefined
   expect((await post()).status).toBe(401)
 })
