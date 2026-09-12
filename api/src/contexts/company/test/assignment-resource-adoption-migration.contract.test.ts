@@ -38,10 +38,12 @@ describe("所属移行の上長対応を追加するmigration", () => {
     await f.initializeAssignment()
     await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
     await f.assignEmployeeCode(f.people[2]!.employeeId, "MANAGER-002")
+    // 旧schemaは一つの会社版に同じ資源の複数revisionを保存できない。
+    // 所属開始日と同日の上長変更で、当時も保存できた既存発令を準備する。
     const changed = await f.personnel(
       {
         kind: "manager_changed",
-        eventOn: restoreCalendarDate("2030-02-01"),
+        eventOn: restoreCalendarDate("2030-01-01"),
         employeeCode: "EMPLOYEE-001",
         departmentCode: "TEAM",
         assignmentType: "primary",
@@ -49,6 +51,7 @@ describe("所属移行の上長対応を追加するmigration", () => {
       },
       "manager:before-migration",
     )
+    if (changed instanceof Error) throw changed
     expect(changed).toMatchObject({ replayed: false })
     const before = (
       await database

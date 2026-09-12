@@ -1,9 +1,10 @@
+import { FetchError } from "@/components/fetch-error"
 import { EmployeeCreateForm } from "@/app/(app)/company/employees/_components/employee-create-form"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Card } from "@/components/ui/card"
 import { getMe } from "@/lib/api/get-me"
-import { getPositionList } from "@/lib/api/get-position-list"
+import { getPersonnelPositionSnapshot } from "@/lib/api/get-personnel-position-snapshot"
 import { canCreateEmployee } from "@/lib/employee/can-create-employee"
 import { notFound } from "next/navigation"
 
@@ -19,7 +20,9 @@ export default async function EmployeeNewPage() {
 
   const canAssignRole = currentUser.permissions.includes("employee:assign_role")
 
-  const positions = await getPositionList()
+  const snapshot = await getPersonnelPositionSnapshot()
+
+  if (snapshot instanceof Error) return <FetchError message="会社情報の取得に失敗しました" />
 
   return (
     <div className="flex flex-col gap-8">
@@ -31,7 +34,7 @@ export default async function EmployeeNewPage() {
         <div className="p-8">
           <EmployeeCreateForm
             canAssignRole={canAssignRole}
-            positions={positions instanceof Error ? [] : positions}
+            companyRevision={snapshot.companyRevision}
           />
         </div>
       </Card>

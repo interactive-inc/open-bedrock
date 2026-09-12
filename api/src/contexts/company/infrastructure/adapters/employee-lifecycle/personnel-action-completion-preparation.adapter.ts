@@ -1,3 +1,4 @@
+import { validatePersonnelPositionReference } from "@/contexts/company/domain/policies/validate-personnel-position-reference.policy"
 import type {
   LifecycleSchedule,
   LifecycleVersionMutation,
@@ -235,6 +236,7 @@ export class PersonnelActionCompletionPreparationAdapter {
     sourceApplicationId: number | null
     idempotencyKey?: string
     requestedByEmployeeId: EmployeeId
+    expectedCompanyRevision?: number
     expectedEmployeeRevision: number
     expectedOrganizationRevision: number | null
     expectedPayloadFingerprint: string
@@ -246,7 +248,14 @@ export class PersonnelActionCompletionPreparationAdapter {
     const organizationRevisionResult = z
       .union([PersonnelActionCompletionPreparationAdapter.revisionSchema, z.null()])
       .safeParse(command.expectedOrganizationRevision)
-    if (!employeeRevisionResult.success || !organizationRevisionResult.success) {
+    const companyRevisionResult = PersonnelActionCompletionPreparationAdapter.revisionSchema
+      .optional()
+      .safeParse(command.expectedCompanyRevision)
+    if (
+      !companyRevisionResult.success ||
+      !employeeRevisionResult.success ||
+      !organizationRevisionResult.success
+    ) {
       return new CompanyValidationError(
         "人事発令の競合制御入力が不正です",
         "personnel_action_stale",
@@ -267,7 +276,13 @@ export class PersonnelActionCompletionPreparationAdapter {
         "personnel_action_invalid_transition",
       )
     }
-    const fingerprint = await fingerprintPersonnelAction(fingerprintSubject, command.input)
+    const referenceError = validatePersonnelPositionReference(command)
+    if (referenceError !== null) return referenceError
+    const fingerprint = await fingerprintPersonnelAction(
+      fingerprintSubject,
+      command.input,
+      command.expectedCompanyRevision,
+    )
     if (fingerprint !== command.expectedPayloadFingerprint) {
       return new CompanyConflictError("申請内容の整合性を確認できません", "idempotency_conflict")
     }
@@ -442,6 +457,7 @@ export class PersonnelActionCompletionPreparationAdapter {
       input: command.input,
       idempotencyKey: operationId,
       expectedEmployeeRevision: command.expectedEmployeeRevision,
+      expectedCompanyRevision: command.expectedCompanyRevision,
       expectedOrganizationRevision: command.expectedOrganizationRevision,
     }
     const persistence: PersonnelActionPersistenceProps = {

@@ -277,7 +277,7 @@ test.each(["office-assignment", "organizational-authority"] as const)(
     const retired = await f.personnel(retirement, "authority:failed-exit")
     if (retired instanceof Error) throw retired
     const repository = new D1CompanyResourceRepository(f.database)
-    const history = await repository.findEmploymentAuthorityHistory(
+    const history = await repository.findEmploymentDependentHistory(
       "organization:default",
       await f.companyRevision(),
     )

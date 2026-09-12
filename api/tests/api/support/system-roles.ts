@@ -2,6 +2,7 @@ import type { PermissionKey } from "@/api/http/permissions/permission-key.catalo
 
 /** 全従業員が持つガバナンスの基本権限。 */
 const MEMBER_PERMISSIONS: ReadonlyArray<PermissionKey> = [
+  "leave:submit",
   "governance:read",
   "governance:acknowledge",
 ]

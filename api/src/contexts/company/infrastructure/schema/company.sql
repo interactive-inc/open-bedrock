@@ -4045,3 +4045,342 @@ BEGIN
   SELECT RAISE(ABORT, 'company_reporting_reference_period_not_covered')
   WHERE EXISTS (SELECT 1 FROM company_reporting_reference_period_violations WHERE organization_id = NEW.id);
 END;
+
+CREATE VIEW company_grade_assignment_periods AS
+WITH versions AS (
+  SELECT resource.* FROM company_resource_revisions resource
+  WHERE resource.resource_type IN ('employee', 'employment', 'grade', 'grade-assignment')
+    AND resource.revision = (
+      SELECT max(latest.revision) FROM company_resource_revisions latest
+      WHERE latest.organization_id = resource.organization_id
+        AND latest.resource_type = resource.resource_type AND latest.resource_id = resource.resource_id
+        AND latest.effective_from = resource.effective_from
+    )
+), boundaries AS (
+  SELECT *, lead(effective_from) OVER (
+    PARTITION BY organization_id, resource_type, resource_id ORDER BY effective_from
+  ) AS next_from FROM versions
+)
+SELECT organization_id, resource_type, resource_id, attributes_json,
+  effective_from AS starts_on,
+  CASE WHEN next_from IS NULL OR (effective_to IS NOT NULL AND effective_to < next_from)
+    THEN effective_to ELSE next_from END AS ends_on
+FROM boundaries WHERE state = 'active'
+  AND (resource_type != 'employment' OR json_extract(attributes_json, '$.status') != 'TERMINATED');
+
+CREATE VIEW company_grade_assignment_coverage AS
+WITH prior AS (
+  SELECT *, max(coalesce(ends_on, '9999-12-31')) OVER (
+    PARTITION BY organization_id, resource_type, resource_id, json_extract(attributes_json, '$.employeeId')
+    ORDER BY starts_on, ends_on ROWS BETWEEN UNBOUNDED PRECEDING AND 1 PRECEDING
+  ) AS covered_until FROM company_grade_assignment_periods
+), islands AS (
+  SELECT *, sum(CASE WHEN covered_until IS NULL OR starts_on > covered_until THEN 1 ELSE 0 END) OVER (
+    PARTITION BY organization_id, resource_type, resource_id, json_extract(attributes_json, '$.employeeId')
+    ORDER BY starts_on, ends_on ROWS UNBOUNDED PRECEDING
+  ) AS island FROM prior
+)
+SELECT organization_id, resource_type, resource_id,
+  json_extract(attributes_json, '$.employeeId') AS employee_id, min(starts_on) AS starts_on,
+  CASE WHEN max(ends_on IS NULL) = 1 THEN NULL ELSE max(ends_on) END AS ends_on
+FROM islands GROUP BY organization_id, resource_type, resource_id, employee_id, island;
+
+CREATE VIEW company_grade_assignment_violations AS
+SELECT assignment.organization_id, assignment.resource_id
+FROM company_grade_assignment_periods assignment
+WHERE assignment.resource_type = 'grade-assignment' AND (
+  NOT EXISTS (
+    SELECT 1 FROM company_grade_assignment_coverage employee
+    WHERE employee.organization_id = assignment.organization_id AND employee.resource_type = 'employee'
+      AND employee.resource_id = json_extract(assignment.attributes_json, '$.employeeId')
+      AND employee.starts_on <= assignment.starts_on
+      AND (employee.ends_on IS NULL OR (assignment.ends_on IS NOT NULL AND assignment.ends_on <= employee.ends_on))
+  ) OR NOT EXISTS (
+    SELECT 1 FROM company_grade_assignment_coverage employment
+    WHERE employment.organization_id = assignment.organization_id AND employment.resource_type = 'employment'
+      AND employment.resource_id = json_extract(assignment.attributes_json, '$.employmentId')
+      AND employment.employee_id = json_extract(assignment.attributes_json, '$.employeeId')
+      AND employment.starts_on <= assignment.starts_on
+      AND (employment.ends_on IS NULL OR (assignment.ends_on IS NOT NULL AND assignment.ends_on <= employment.ends_on))
+  ) OR NOT EXISTS (
+    SELECT 1 FROM company_grade_assignment_coverage grade
+    WHERE grade.organization_id = assignment.organization_id AND grade.resource_type = 'grade'
+      AND grade.resource_id = json_extract(assignment.attributes_json, '$.gradeId')
+      AND grade.starts_on <= assignment.starts_on
+      AND (grade.ends_on IS NULL OR (assignment.ends_on IS NOT NULL AND assignment.ends_on <= grade.ends_on))
+  ) OR EXISTS (
+    SELECT 1 FROM company_grade_assignment_periods other
+    WHERE other.organization_id = assignment.organization_id AND other.resource_type = 'grade-assignment'
+      AND other.resource_id != assignment.resource_id
+      AND json_extract(other.attributes_json, '$.employmentId') = json_extract(assignment.attributes_json, '$.employmentId')
+      AND (other.ends_on IS NULL OR assignment.starts_on < other.ends_on)
+      AND (assignment.ends_on IS NULL OR other.starts_on < assignment.ends_on)
+  )
+);
+
+SELECT json_extract('{}', 'company_grade_assignment_invalid')
+FROM company_grade_assignment_violations LIMIT 1;
+
+DROP TRIGGER IF EXISTS company_grade_assignment_owner_guard;
+CREATE TRIGGER company_grade_assignment_owner_guard
+BEFORE INSERT ON company_resource_revisions
+WHEN NEW.resource_type = 'grade-assignment'
+BEGIN
+  SELECT RAISE(ABORT, 'company_grade_assignment_owner_changed') WHERE EXISTS (
+    SELECT 1 FROM company_resource_revisions original
+    WHERE original.organization_id = NEW.organization_id AND original.resource_type = NEW.resource_type
+      AND original.resource_id = NEW.resource_id AND original.revision = 1
+      AND (json_extract(original.attributes_json, '$.employeeId') IS NOT json_extract(NEW.attributes_json, '$.employeeId')
+        OR json_extract(original.attributes_json, '$.employmentId') IS NOT json_extract(NEW.attributes_json, '$.employmentId'))
+  );
+END;
+
+DROP TRIGGER IF EXISTS company_grade_assignment_commit_guard;
+CREATE TRIGGER company_grade_assignment_commit_guard
+BEFORE UPDATE OF revision ON company_organizations
+WHEN NEW.revision != OLD.revision
+BEGIN
+  SELECT RAISE(ABORT, 'company_grade_assignment_invalid') WHERE EXISTS (
+    SELECT 1 FROM company_grade_assignment_violations WHERE organization_id = NEW.id
+  );
+END;
+
+DROP INDEX company_resource_revisions_org_revision_idx;
+CREATE INDEX company_resource_revisions_org_revision_idx
+  ON company_resource_revisions (organization_id, organization_revision, resource_type, resource_id);
+
+CREATE TABLE company_definition_resource_adoptions (
+  organization_id TEXT NOT NULL DEFAULT 'organization:default' CHECK (organization_id = 'organization:default'),
+  command_id TEXT NOT NULL,
+  resource_type TEXT NOT NULL CHECK (resource_type IN ('grade', 'position')),
+  definition_id INTEGER NOT NULL CHECK (definition_id > 0),
+  resource_id TEXT NOT NULL,
+  fingerprint TEXT NOT NULL CHECK (length(fingerprint) = 64),
+  actor_account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE RESTRICT,
+  reason TEXT NOT NULL CHECK (length(trim(reason)) BETWEEN 1 AND 1000),
+  expected_revision INTEGER NOT NULL CHECK (expected_revision >= 0),
+  organization_revision INTEGER NOT NULL CHECK (organization_revision = expected_revision + 1),
+  observed_on TEXT NOT NULL CHECK (length(observed_on) = 10),
+  snapshot_digest TEXT NOT NULL CHECK (length(snapshot_digest) = 64),
+  source_json TEXT NOT NULL CHECK (json_valid(source_json) AND length(CAST(source_json AS BLOB)) <= 20000
+    AND json_extract(source_json, '$.definition.type') IS resource_type
+    AND json_extract(source_json, '$.definition.id') IS definition_id
+    AND json_extract(source_json, '$.organizationRevision') IS expected_revision),
+  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
+  PRIMARY KEY (organization_id, command_id),
+  UNIQUE (resource_type, definition_id),
+  UNIQUE (organization_id, resource_type, resource_id),
+  FOREIGN KEY (organization_id, resource_type, resource_id)
+    REFERENCES company_resource_heads(organization_id, resource_type, resource_id) ON DELETE RESTRICT,
+  FOREIGN KEY (organization_id, command_id)
+    REFERENCES company_command_receipts(organization_id, command_id) ON DELETE RESTRICT
+);
+
+DROP TRIGGER IF EXISTS company_definition_adoptions_update_guard;
+CREATE TRIGGER company_definition_adoptions_update_guard
+BEFORE UPDATE ON company_definition_resource_adoptions
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_adoption_immutable');
+END;
+DROP TRIGGER IF EXISTS company_definition_adoptions_delete_guard;
+CREATE TRIGGER company_definition_adoptions_delete_guard
+BEFORE DELETE ON company_definition_resource_adoptions
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_adoption_immutable');
+END;
+DROP TRIGGER IF EXISTS company_definition_adoptions_insert_guard;
+CREATE TRIGGER company_definition_adoptions_insert_guard
+BEFORE INSERT ON company_definition_resource_adoptions
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_adoption_resource_invalid')
+  WHERE NOT EXISTS (
+    SELECT 1 FROM company_resource_revisions resource
+    JOIN company_command_receipts receipt
+      ON receipt.organization_id = resource.organization_id AND receipt.command_id = resource.command_id
+    WHERE resource.organization_id = NEW.organization_id AND resource.resource_type = NEW.resource_type
+      AND resource.resource_id = NEW.resource_id AND resource.revision = 1
+      AND resource.command_id = NEW.command_id AND resource.organization_revision = NEW.organization_revision
+      AND resource.effective_from = NEW.observed_on AND resource.effective_to IS NULL AND resource.state = 'active'
+      AND resource.actor_account_id = NEW.actor_account_id AND resource.recorded_at = NEW.recorded_at
+      AND resource.reason = NEW.reason AND receipt.expected_revision = NEW.expected_revision
+      AND json_extract(resource.attributes_json, '$.code') = json_extract(NEW.source_json, '$.definition.code')
+      AND json_extract(resource.attributes_json, '$.officialName') = json_extract(NEW.source_json, '$.definition.name')
+      AND json_extract(resource.attributes_json, '$.rank') = json_extract(NEW.source_json, '$.definition.rank')
+      AND json_extract(resource.attributes_json, '$.description') IS json_extract(NEW.source_json, '$.definition.description')
+  );
+END;
+
+CREATE TABLE company_grade_definitions (
+  id INTEGER PRIMARY KEY,
+  code TEXT NOT NULL,
+  name TEXT NOT NULL,
+  rank INTEGER NOT NULL,
+  description TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX uq_company_grade_definitions_code ON company_grade_definitions(code);
+
+CREATE TABLE company_position_definitions (
+  id INTEGER PRIMARY KEY,
+  code TEXT NOT NULL,
+  name TEXT NOT NULL,
+  rank INTEGER NOT NULL,
+  description TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX uq_company_position_definitions_code ON company_position_definitions(code);
+
+DROP TRIGGER IF EXISTS company_adopted_grade_insert_guard;
+CREATE TRIGGER company_adopted_grade_insert_guard
+BEFORE INSERT ON company_grade_definitions
+WHEN EXISTS (SELECT 1 FROM company_definition_resource_adoptions
+  WHERE resource_type = 'grade' AND definition_id = NEW.id)
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_already_adopted');
+END;
+DROP TRIGGER IF EXISTS company_adopted_grade_update_guard;
+CREATE TRIGGER company_adopted_grade_update_guard
+BEFORE UPDATE ON company_grade_definitions
+WHEN EXISTS (SELECT 1 FROM company_definition_resource_adoptions
+  WHERE resource_type = 'grade' AND definition_id IN (OLD.id, NEW.id))
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_already_adopted');
+END;
+DROP TRIGGER IF EXISTS company_adopted_grade_delete_guard;
+CREATE TRIGGER company_adopted_grade_delete_guard
+BEFORE DELETE ON company_grade_definitions
+WHEN EXISTS (SELECT 1 FROM company_definition_resource_adoptions
+  WHERE resource_type = 'grade' AND definition_id = OLD.id)
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_already_adopted');
+END;
+DROP TRIGGER IF EXISTS company_adopted_position_insert_guard;
+CREATE TRIGGER company_adopted_position_insert_guard
+BEFORE INSERT ON company_position_definitions
+WHEN EXISTS (SELECT 1 FROM company_definition_resource_adoptions
+  WHERE resource_type = 'position' AND definition_id = NEW.id)
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_already_adopted');
+END;
+DROP TRIGGER IF EXISTS company_adopted_position_update_guard;
+CREATE TRIGGER company_adopted_position_update_guard
+BEFORE UPDATE ON company_position_definitions
+WHEN EXISTS (SELECT 1 FROM company_definition_resource_adoptions
+  WHERE resource_type = 'position' AND definition_id IN (OLD.id, NEW.id))
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_already_adopted');
+END;
+DROP TRIGGER IF EXISTS company_adopted_position_delete_guard;
+CREATE TRIGGER company_adopted_position_delete_guard
+BEFORE DELETE ON company_position_definitions
+WHEN EXISTS (SELECT 1 FROM company_definition_resource_adoptions
+  WHERE resource_type = 'position' AND definition_id = OLD.id)
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_already_adopted');
+END;
+
+CREATE TABLE company_grade_award_archives (
+  organization_id TEXT NOT NULL REFERENCES company_organizations(id) CHECK (organization_id = 'organization:default'),
+  command_id TEXT NOT NULL,
+  employee_id TEXT NOT NULL REFERENCES company_employees(id),
+  fingerprint TEXT NOT NULL CHECK (length(fingerprint) = 64),
+  actor_account_id TEXT NOT NULL REFERENCES system_accounts(id),
+  reason TEXT NOT NULL CHECK (length(trim(reason)) BETWEEN 1 AND 2000),
+  observed_on TEXT NOT NULL CHECK (length(observed_on) = 10),
+  observed_company_revision INTEGER NOT NULL CHECK (observed_company_revision >= 0),
+  snapshot_digest TEXT NOT NULL CHECK (length(snapshot_digest) = 64),
+  source_json TEXT NOT NULL CHECK (json_valid(source_json)),
+  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
+  PRIMARY KEY (organization_id, command_id),
+  UNIQUE (organization_id, employee_id),
+  CHECK (json_extract(source_json, '$.employeeId') IS employee_id),
+  CHECK (json_extract(source_json, '$.organizationRevision') IS observed_company_revision)
+);
+
+DROP TRIGGER IF EXISTS company_grade_award_archive_no_update;
+CREATE TRIGGER company_grade_award_archive_no_update
+BEFORE UPDATE ON company_grade_award_archives
+BEGIN
+  SELECT RAISE(ABORT, 'company grade award archives are immutable');
+END;
+
+DROP TRIGGER IF EXISTS company_grade_award_archive_no_delete;
+CREATE TRIGGER company_grade_award_archive_no_delete
+BEFORE DELETE ON company_grade_award_archives
+BEGIN
+  SELECT RAISE(ABORT, 'company grade award archives are immutable');
+END;
+
+CREATE TABLE company_personnel_annotations (
+  id INTEGER PRIMARY KEY,
+  employee_id TEXT NOT NULL,
+  kind TEXT NOT NULL,
+  effective_date TEXT NOT NULL,
+  from_department_code TEXT,
+  to_department_code TEXT,
+  note TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE INDEX idx_company_personnel_annotations_employee ON company_personnel_annotations(employee_id);
+CREATE INDEX idx_company_personnel_annotations_kind ON company_personnel_annotations(kind);
+
+DROP TRIGGER IF EXISTS company_personnel_annotations_no_update;
+CREATE TRIGGER company_personnel_annotations_no_update
+BEFORE UPDATE ON company_personnel_annotations
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel annotations are immutable');
+END;
+
+DROP TRIGGER IF EXISTS company_personnel_annotations_no_delete;
+CREATE TRIGGER company_personnel_annotations_no_delete
+BEFORE DELETE ON company_personnel_annotations
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel annotations are immutable');
+END;
+
+DROP TRIGGER IF EXISTS company_personnel_annotations_no_replace;
+CREATE TRIGGER company_personnel_annotations_no_replace
+BEFORE INSERT ON company_personnel_annotations
+WHEN EXISTS (SELECT 1 FROM company_personnel_annotations WHERE id = NEW.id)
+BEGIN
+  SELECT RAISE(ABORT, 'company personnel annotations are immutable');
+END;
+
+CREATE VIEW company_employment_employer_reference_violations AS
+SELECT employment.organization_id, employment.resource_id, employment.starts_on, employment.ends_on,
+  json_extract(employment.attributes_json, '$.employerLegalEntityId') AS employer_legal_entity_id
+FROM company_governance_resource_periods employment
+WHERE employment.resource_type = 'employment'
+  AND json_type(employment.attributes_json, '$.employerLegalEntityId') IS NOT NULL
+  AND json_type(employment.attributes_json, '$.employerLegalEntityId') <> 'null'
+  AND (
+    json_type(employment.attributes_json, '$.employerLegalEntityId') <> 'text'
+    OR NOT EXISTS (
+      SELECT 1 FROM company_resource_revisions identity
+      WHERE identity.organization_id = employment.organization_id
+        AND identity.resource_type = 'legal-entity' AND identity.state = 'active'
+        AND identity.resource_id = json_extract(employment.attributes_json, '$.employerLegalEntityId')
+    )
+    OR (
+      json_extract(employment.attributes_json, '$.status') IN ('ACTIVE', 'ON_LEAVE')
+      AND NOT EXISTS (
+        SELECT 1 FROM company_governance_resource_coverage employer
+        WHERE employer.organization_id = employment.organization_id AND employer.resource_type = 'legal-entity'
+          AND employer.reference_id = json_extract(employment.attributes_json, '$.employerLegalEntityId')
+          AND employer.starts_on <= employment.starts_on
+          AND (employer.ends_on IS NULL OR (employment.ends_on IS NOT NULL AND employment.ends_on <= employer.ends_on))
+      )
+    )
+  );
+
+SELECT json_extract('{}', 'company_employment_employer_reference_invalid')
+FROM company_employment_employer_reference_violations LIMIT 1;
+
+CREATE TRIGGER company_employment_employer_commit_guard
+BEFORE UPDATE OF revision ON company_organizations
+BEGIN
+  SELECT RAISE(ABORT, 'company_employment_employer_reference_invalid')
+  WHERE EXISTS (
+    SELECT 1 FROM company_employment_employer_reference_violations WHERE organization_id = NEW.id
+  );
+END;

@@ -1,3 +1,5 @@
+import { leaveProcedureStatusSql } from "@/contexts/leave/infrastructure/adapters/lib/leave-procedure-status-sql"
+import { leaveProcedureStatusSchema } from "@/contexts/leave/domain/definitions/leave-procedure.definition"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
@@ -39,7 +41,7 @@ export const GET = factory.createHandlers(
   zValidator(
     "query",
     z.object({
-      status: z.enum(["pending", "approved", "rejected"]).optional(),
+      status: leaveProcedureStatusSchema.optional(),
       applicant_id: zEmployeeId.optional(),
       leave_type: leaveTypeSchema.optional(),
       from: z.string().optional(),
@@ -79,7 +81,7 @@ export const GET = factory.createHandlers(
     const conditions: Array<SQL> = []
 
     if (query.status !== undefined) {
-      conditions.push(eq(leaveRequests.status, query.status))
+      conditions.push(eq(leaveProcedureStatusSql, query.status))
     }
 
     if (query.applicant_id !== undefined) {
@@ -119,7 +121,7 @@ export const GET = factory.createHandlers(
         unit: leaveRequests.unit,
         hours: leaveRequests.hours,
         reason: leaveRequests.reason,
-        status: leaveRequests.status,
+        status: leaveProcedureStatusSql,
         createdAt: leaveRequests.createdAt,
       })
       .from(leaveRequests)

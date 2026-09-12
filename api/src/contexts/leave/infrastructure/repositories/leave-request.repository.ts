@@ -43,6 +43,7 @@ export class LeaveRequestRepository {
           and(
             eq(leaveRequests.employeeId, props.employeeId),
             inArray(leaveRequests.status, ["pending", "approved"]),
+            sql`NOT EXISTS (SELECT 1 FROM leave_procedure_bindings binding JOIN system_cases workflow_case ON workflow_case.id = binding.case_id WHERE binding.leave_request_id = ${leaveRequests.id} AND workflow_case.status IN ('returned', 'cancelled'))`,
             lte(leaveRequests.startDate, props.endDate),
             gte(leaveRequests.endDate, props.startDate),
             props.excludeId === undefined ? undefined : ne(leaveRequests.id, props.excludeId),
@@ -55,38 +56,55 @@ export class LeaveRequestRepository {
     }
   }
 
+  /** 本人の差戻し案件が、まだ別の再提出へ接続されていないことを確認する。 */
+  async isReturnedSource(employeeId: EmployeeId, previousLeaveRequestId: number) {
+    return (
+      (await this.c.env.DB.prepare(`SELECT 1 AS found FROM leave_requests original
+      JOIN leave_procedure_bindings binding ON binding.leave_request_id = original.id
+      JOIN system_cases workflow_case ON workflow_case.id = binding.case_id
+      WHERE original.id = ?1 AND original.employee_id = ?2 AND workflow_case.status = 'returned'
+      AND NOT EXISTS (SELECT 1 FROM leave_procedure_bindings next WHERE next.previous_leave_request_id = original.id)`)
+        .bind(previousLeaveRequestId, employeeId)
+        .first<number>("found")) === 1
+    )
+  }
+
   /**
    * 重複チェックと INSERT をアトミックに行い TOCTOU 競合を防ぐ。
    * 同一社員の未却下（pending/approved）申請と期間が重なる行があれば INSERT をスキップし null を返す。
    */
-  async create(leaveRequest: LeaveRequest): Promise<LeaveRequest | null | Error> {
+  async create(
+    leaveRequest: LeaveRequest,
+    previousLeaveRequestId: number | null = null,
+  ): Promise<LeaveRequest | null | Error> {
     try {
-      const result = await this.c.var.database.run(
-        sql`INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, days, unit, hours, consumed_days, reason, status, approver_id, decided_comment, created_at)
+      const inserted = await this.c.var.database.get<{ id: number }>(
+        sql`INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, days, unit, hours, consumed_days, reason, status, approver_id, decided_comment, created_at, previous_leave_request_id)
             SELECT ${leaveRequest.employeeId}, ${leaveRequest.leaveType},
                    ${leaveRequest.startDate}, ${leaveRequest.endDate},
                    ${leaveRequest.days}, ${leaveRequest.unit}, ${leaveRequest.hours},
                    ${leaveRequest.consumedDays},
                    ${leaveRequest.reason},
                    ${leaveRequest.status}, ${leaveRequest.approverId},
-                   ${leaveRequest.decidedComment}, ${leaveRequest.createdAt}
+                   ${leaveRequest.decidedComment}, ${leaveRequest.createdAt}, ${previousLeaveRequestId}
             WHERE NOT EXISTS (
               SELECT 1 FROM leave_requests
               WHERE employee_id = ${leaveRequest.employeeId}
                 AND status IN ('pending', 'approved')
+                AND NOT EXISTS (SELECT 1 FROM leave_procedure_bindings binding JOIN system_cases workflow_case ON workflow_case.id = binding.case_id WHERE binding.leave_request_id = leave_requests.id AND workflow_case.status IN ('returned', 'cancelled'))
                 AND start_date <= ${leaveRequest.endDate}
                 AND end_date >= ${leaveRequest.startDate}
-            )`,
+            ) RETURNING id`,
       )
 
-      if (result.meta.changes === 0) {
+      if (inserted === undefined || inserted === null) {
         return null
       }
 
       const rows = await this.c.var.database
         .select()
         .from(leaveRequests)
-        .where(eq(leaveRequests.id, Number(result.meta.last_row_id)))
+        .where(eq(leaveRequests.id, inserted.id))
         .limit(1)
 
       const row = rows.at(0)
@@ -124,10 +142,12 @@ export class LeaveRequestRepository {
                 reason        = ${leaveRequest.reason}
             WHERE id = ${leaveRequest.id}
               AND status = 'pending'
+              AND NOT EXISTS (SELECT 1 FROM leave_procedure_bindings WHERE leave_request_id = ${leaveRequest.id})
               AND NOT EXISTS (
                 SELECT 1 FROM leave_requests
                 WHERE employee_id = ${leaveRequest.employeeId}
                   AND status IN ('pending', 'approved')
+                AND NOT EXISTS (SELECT 1 FROM leave_procedure_bindings binding JOIN system_cases workflow_case ON workflow_case.id = binding.case_id WHERE binding.leave_request_id = leave_requests.id AND workflow_case.status IN ('returned', 'cancelled'))
                   AND id != ${leaveRequest.id}
                   AND start_date <= ${leaveRequest.endDate}
                   AND end_date >= ${leaveRequest.startDate}
@@ -142,7 +162,12 @@ export class LeaveRequestRepository {
           return current
         }
 
-        if (current === null || current.status !== "pending") {
+        const binding = await this.c.env.DB.prepare(
+          "SELECT 1 AS found FROM leave_procedure_bindings WHERE leave_request_id = ?1",
+        )
+          .bind(leaveRequest.id)
+          .first<number>("found")
+        if (current === null || current.status !== "pending" || binding !== null) {
           return "already_decided"
         }
 
@@ -173,7 +198,13 @@ export class LeaveRequestRepository {
     try {
       const rows = await this.c.var.database
         .delete(leaveRequests)
-        .where(and(eq(leaveRequests.id, leaveRequestId), eq(leaveRequests.status, "pending")))
+        .where(
+          and(
+            eq(leaveRequests.id, leaveRequestId),
+            eq(leaveRequests.status, "pending"),
+            sql`NOT EXISTS (SELECT 1 FROM leave_procedure_bindings WHERE leave_request_id = ${leaveRequests.id})`,
+          ),
+        )
         .returning({ id: leaveRequests.id })
 
       return rows.length > 0 ? true : null

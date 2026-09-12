@@ -12,7 +12,7 @@ export type InboxType = {
   label: string
   href: string
   requiredPermission?: PermissionKey
-  countKey?: Exclude<keyof InboxCounts, "expenses_has_more">
+  countKey?: Exclude<keyof InboxCounts, `${string}_has_more`>
 }
 
 export const inboxTypes: ReadonlyArray<InboxType> = [

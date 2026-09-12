@@ -1,8 +1,9 @@
 "use client"
 
+import { GradeRevisionFields } from "@/app/(app)/company/grades/_components/grade-revision-fields"
 import { useActionState } from "react"
 import { toast } from "sonner"
-import { deleteGradeAction } from "@/app/(app)/company/grades/actions"
+import { cancelGradeAction } from "@/app/(app)/company/grades/actions"
 import { GradeEditForm } from "@/app/(app)/company/grades/_components/grade-edit-form"
 import {
   AlertDialog,
@@ -22,26 +23,26 @@ type Props = {
   grade: GradeResponse
 }
 
-/** 等級一覧の各行の操作。変更（Dialog フォーム）と削除ボタンを並べる。 */
+/** 等級一覧の各行の操作。変更（Dialog フォーム）と取消ボタンを並べる。 */
 export function GradeRowActions(props: Props) {
   return (
     <div className="flex justify-end gap-2">
       <GradeEditForm grade={props.grade} />
 
-      <DeleteGradeButton gradeId={props.grade.id} />
+      <CancelGradeButton grade={props.grade} />
     </div>
   )
 }
 
-/** 等級削除ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。 */
-function DeleteGradeButton(props: { gradeId: number }) {
+/** 等級取消ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。 */
+function CancelGradeButton(props: Props) {
   async function reduce(previousState: { ok: boolean; error: string | null }, formData: FormData) {
-    const result = await deleteGradeAction(previousState, formData)
+    const result = await cancelGradeAction(previousState, formData)
 
     if (result.error !== null) {
       toast.error(result.error)
     } else if (result.ok) {
-      toast.success("等級を削除しました")
+      toast.success("等級の取消を記録しました")
     }
 
     return result
@@ -56,15 +57,15 @@ function DeleteGradeButton(props: { gradeId: number }) {
   return (
     <AlertDialog>
       <AlertDialogTrigger render={<Button variant="destructive" size="sm" disabled={isPending} />}>
-        削除
+        取消
       </AlertDialogTrigger>
 
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>この等級を削除しますか？</AlertDialogTitle>
+          <AlertDialogTitle>この等級を取り消しますか？</AlertDialogTitle>
 
           <AlertDialogDescription>
-            この操作は取り消せません。等級マスタの記録が完全に削除されます。
+            指定した日からの取消を記録します。過去の改訂と判断理由は残ります。
           </AlertDialogDescription>
         </AlertDialogHeader>
 
@@ -72,10 +73,22 @@ function DeleteGradeButton(props: { gradeId: number }) {
           <AlertDialogCancel>やめる</AlertDialogCancel>
 
           <form action={formAction}>
-            <input type="hidden" name="gradeId" value={props.gradeId} />
+            <GradeRevisionFields
+              id={props.grade.id}
+              companyRevision={props.grade.organizationRevision}
+              resourceRevision={props.grade.revision}
+              commandId={props.grade.cancelCommandId}
+              effectiveFrom=""
+              effectiveTo={null}
+              isCancellation
+            />
+            <input type="hidden" name="code" value={props.grade.code} />
+            <input type="hidden" name="name" value={props.grade.name} />
+            <input type="hidden" name="rank" value={props.grade.rank ?? ""} />
+            <input type="hidden" name="description" value={props.grade.description ?? ""} />
 
             <AlertDialogAction type="submit" variant="destructive" disabled={isPending}>
-              削除する
+              取消を記録
             </AlertDialogAction>
           </form>
         </AlertDialogFooter>

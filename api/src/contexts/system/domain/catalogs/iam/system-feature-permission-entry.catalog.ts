@@ -13,6 +13,18 @@ type PermissionEntry = {
  */
 export const SYSTEM_FEATURE_PERMISSION_ENTRIES = [
   {
+    key: "system:procedure:read",
+    category: "procedure",
+    featureKey: null,
+    description: "自分が申請・判断した提案の履歴を閲覧する",
+  },
+  {
+    key: "system:procedure:read:all",
+    category: "procedure",
+    featureKey: null,
+    description: "提案履歴の閲覧範囲を全件へ広げる",
+  },
+  {
     key: "account:manage",
     category: "iam",
     featureKey: null,

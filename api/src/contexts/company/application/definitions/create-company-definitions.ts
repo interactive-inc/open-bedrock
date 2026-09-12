@@ -1,3 +1,4 @@
+import { canWriteCompanyDefinitions } from "@/contexts/company/domain/policies/can-write-company-definitions.policy"
 import type { CompanyResourceType } from "@/contexts/company/domain/catalogs/company-resource-type.catalog"
 import {
   CompanyResourceChangeEntity,
@@ -30,7 +31,10 @@ export class CreateCompanyDefinitions {
     const organizationId = change.resources[0]?.organizationId ?? ""
     if (
       !this.c.actor.canAccessOrganization(organizationId) ||
-      !this.c.actor.hasCapability("company:write")
+      !canWriteCompanyDefinitions(
+        this.c.actor,
+        change.resources.map((resource) => resource.type),
+      )
     ) {
       return { kind: "forbidden" }
     }

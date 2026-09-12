@@ -1,6 +1,6 @@
 import * as auditSchema from "@/contexts/company/infrastructure/schema/audit"
 import * as companySchema from "@/contexts/company/infrastructure/schema/company"
-import * as employeeEventSchema from "@/contexts/company/infrastructure/schema/employee-event"
+import * as employeeEventSchema from "@/contexts/company/infrastructure/schema/personnel-annotation"
 import * as employeeLifecycleSchema from "@/contexts/company/infrastructure/schema/employee-lifecycle"
 import * as employeeSchema from "@/contexts/company/infrastructure/schema/employee"
 import * as employmentSchema from "@/contexts/company/infrastructure/schema/employment"
@@ -106,7 +106,7 @@ test("Company cutover preserves records and matches every shared Company table",
       .query("SELECT employee_id, status FROM company_employments WHERE employee_id = '7'")
       .get(),
   ).toEqual({ employee_id: "7", status: "ACTIVE" })
-  expect(database.query("SELECT id FROM company_employee_events").get()).toEqual({ id: 11 })
+  expect(database.query("SELECT id FROM company_personnel_annotations").get()).toEqual({ id: 11 })
   expect(database.query("SELECT id, organization_unit_id FROM expense_budgets").get()).toEqual({
     id: 13,
     organization_unit_id: "department:D001",

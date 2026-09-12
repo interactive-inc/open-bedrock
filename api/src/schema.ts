@@ -24,7 +24,7 @@ import * as ownedSchema11 from "@/contexts/certification/infrastructure/schema/c
 import * as ownedSchema12 from "@/contexts/commendation/infrastructure/schema/commendation"
 import * as ownedSchema13 from "@/contexts/company-calendar/infrastructure/schema/company-calendar"
 import * as ownedSchema14 from "@/contexts/company/infrastructure/schema/audit"
-import * as ownedSchema15 from "@/contexts/company/infrastructure/schema/employee-event"
+import * as ownedSchema15 from "@/contexts/company/infrastructure/schema/personnel-annotation"
 import * as ownedSchema16 from "@/contexts/company/infrastructure/schema/grade"
 import * as ownedSchema17 from "@/contexts/company/infrastructure/schema/position"
 import * as ownedSchema18 from "@/contexts/compensation-change/infrastructure/schema/compensation-change"

@@ -117,6 +117,11 @@ export const POST = factory.createHandlers(
                   employeeId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/),
                   status: z.enum(["ACTIVE", "ON_LEAVE", "TERMINATED"]),
                   employmentType: z.enum(["FULL_TIME", "PART_TIME"]),
+                  employerLegalEntityId: z
+                    .string()
+                    .regex(/^\S{1,255}$/)
+                    .nullable()
+                    .optional(),
                   officialName: z.string().trim().min(1).max(200).optional(),
                 })
                 .strict(),
@@ -173,6 +178,39 @@ export const POST = factory.createHandlers(
                   employeeId: z.string().regex(/^\S{1,255}$/),
                   managerEmployeeId: z.string().regex(/^\S{1,255}$/),
                   organizationUnitId: z.string().regex(/^\S{1,255}$/),
+                })
+                .strict(),
+            }),
+            z.object({
+              organizationId: z.string().regex(/^\S{1,255}$/),
+              type: z.literal("grade"),
+              id: z.string().regex(/^\S{1,255}$/),
+              revision: z.number().int().min(1),
+              state: z.enum(["active", "void"]),
+              effectiveFrom: z.string().date(),
+              effectiveTo: z.string().date().nullable(),
+              attributes: z
+                .object({
+                  code: z.string().trim().min(1).max(255),
+                  officialName: z.string().trim().min(1).max(2_000),
+                  rank: z.number().int().nullable().optional(),
+                  description: z.string().trim().min(1).max(2_000).nullable().optional(),
+                })
+                .strict(),
+            }),
+            z.object({
+              organizationId: z.string().regex(/^\S{1,255}$/),
+              type: z.literal("grade-assignment"),
+              id: z.string().regex(/^\S{1,255}$/),
+              revision: z.number().int().min(1),
+              state: z.enum(["active", "void"]),
+              effectiveFrom: z.string().date(),
+              effectiveTo: z.string().date().nullable(),
+              attributes: z
+                .object({
+                  employeeId: z.string().regex(/^\S{1,255}$/),
+                  employmentId: z.string().regex(/^\S{1,255}$/),
+                  gradeId: z.string().regex(/^\S{1,255}$/),
                 })
                 .strict(),
             }),

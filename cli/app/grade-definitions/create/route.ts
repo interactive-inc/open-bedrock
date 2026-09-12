@@ -1,44 +1,10 @@
-import { zValidator } from "@hono/zod-validator"
-import { z } from "zod"
-import { createClient } from "@/lib/http/hc-client"
-import { toFiniteNumber } from "@/lib/to-finite-number"
-import { factory } from "@/factory"
-import { UsageError } from "@/lib/errors"
+import { createCompanyDefinitionCommandHandlers } from "@/lib/company-definitions/create-company-definition-command-handlers"
 
-export const help = `bedrock grade-definitions create --code <c> --name <n> --rank <r> [--description <d>]`
+export const help = `bedrock grade-definitions create --data <confirmed-definition.json> --idempotency-key <key>
 
-export default factory.createHandlers(
-  zValidator(
-    "json",
-    z.object({
-      help: z.string().optional(),
-      code: z.string().optional(),
-      name: z.string().optional(),
-      rank: z.string().optional(),
-      description: z.string().optional(),
-    }),
-  ),
-  async (c) => {
-    const query = c.req.valid("json")
+JSONにはorganizationId、expectedRevision、reason、resourcesを指定します。
+resourcesは公開APIで確認したID・版・有効期間・属性を持つgradeです。
+createはrevision: 1、update/deleteは確認した資源版の次のrevisionを指定します。
+deleteはstate: voidで履歴を残して取り消します。同じ内容の再送には同じキーを使ってください。`
 
-    if (query.help) return c.text(help)
-
-    if (!query.code || !query.name || !query.rank)
-      throw new UsageError("--code, --name, --rank が必要です")
-
-    const client = await createClient()
-
-    const response = await client.company["grade-definitions"].$post({
-      json: {
-        code: query.code,
-        name: query.name,
-        rank: toFiniteNumber(query.rank, "--rank"),
-        description: query.description,
-      },
-    })
-
-    const data = await response.json()
-
-    return c.json(data)
-  },
-)
+export default createCompanyDefinitionCommandHandlers({ type: "grade", action: "create", help })

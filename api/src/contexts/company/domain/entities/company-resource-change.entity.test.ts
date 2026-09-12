@@ -43,3 +43,30 @@ describe("CompanyResourceChangeEntity", () => {
     expect(Object.isFrozen(change.resources)).toBeTrue()
   })
 })
+
+test("人事履歴の内部batchは同じ資源の連続版を受け付け、通常commandは重複を拒否する", () => {
+  const props = {
+    commandId: "command:history",
+    expectedRevision: 1,
+    actorAccountId: "account:1",
+    reason: "confirmed personnel history",
+    recordedAt: 2,
+    resources: [employee, { ...employee, revision: 2 }],
+  }
+  expect(CompanyResourceChangeEntity.create(props)).toMatchObject({ code: "invalid_change" })
+  expect(CompanyResourceChangeEntity.createHistoryBatch(props)).toBeInstanceOf(
+    CompanyResourceChangeEntity,
+  )
+  for (const revisions of [
+    [1, 1],
+    [1, 3],
+    [2, 1],
+  ]) {
+    expect(
+      CompanyResourceChangeEntity.createHistoryBatch({
+        ...props,
+        resources: revisions.map((revision) => ({ ...employee, revision })),
+      }),
+    ).toMatchObject({ code: "invalid_change" })
+  }
+})

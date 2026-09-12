@@ -1,6 +1,98 @@
 /** canonical Company APIの宣言的な正本。API rootだけがHTTP runtimeへ合成する。 */
 export const companyRouteManifest = [
   {
+    method: "GET",
+    path: "/company/changes",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.changes",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/grade-assignment-history",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.grade-assignment-history",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/grade-award-archives/by-employee/:employeeId",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module:
+        "@/contexts/company/interface/routes/company.grade-award-archives.by-employee.$employeeId",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/grade-award-archives",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.grade-award-archives",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/company/grade-award-archives",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.grade-award-archives",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/grade-award-archives/:commandId",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.grade-award-archives.$commandId",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/definition-resource-adoptions",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.definition-resource-adoptions",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/company/definition-resource-adoptions",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.definition-resource-adoptions",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/definition-resource-adoptions/:commandId",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module:
+        "@/contexts/company/interface/routes/company.definition-resource-adoptions.$commandId",
+      exportName: "GET",
+    },
+  },
+  {
     method: "POST",
     path: "/company/employee-resource-adoption-batches",
     phase: "audited",
@@ -313,122 +405,12 @@ export const companyRouteManifest = [
   },
   {
     method: "GET",
-    path: "/company/employee-events",
+    path: "/company/personnel-annotations",
     phase: "authenticated",
     handler: {
       kind: "module",
-      module: "@/contexts/company/interface/routes/company.employee-events",
+      module: "@/contexts/company/interface/routes/company.personnel-annotations",
       exportName: "GET",
-    },
-  },
-  {
-    method: "POST",
-    path: "/company/employee-events",
-    phase: "audited",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.employee-events",
-      exportName: "POST",
-    },
-  },
-  {
-    method: "GET",
-    path: "/company/employee-grades",
-    phase: "authenticated",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.employee-grades",
-      exportName: "GET",
-    },
-  },
-  {
-    method: "POST",
-    path: "/company/employee-grades",
-    phase: "audited",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.employee-grades",
-      exportName: "POST",
-    },
-  },
-  {
-    method: "GET",
-    path: "/company/grade-definitions",
-    phase: "authenticated",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.grade-definitions",
-      exportName: "GET",
-    },
-  },
-  {
-    method: "POST",
-    path: "/company/grade-definitions",
-    phase: "audited",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.grade-definitions",
-      exportName: "POST",
-    },
-  },
-  {
-    method: "PUT",
-    path: "/company/grade-definitions/:id",
-    phase: "audited",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.grade-definitions.$id",
-      exportName: "PUT",
-    },
-  },
-  {
-    method: "DELETE",
-    path: "/company/grade-definitions/:id",
-    phase: "audited",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.grade-definitions.$id",
-      exportName: "DELETE",
-    },
-  },
-  {
-    method: "GET",
-    path: "/company/position-definitions",
-    phase: "authenticated",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.position-definitions",
-      exportName: "GET",
-    },
-  },
-  {
-    method: "POST",
-    path: "/company/position-definitions",
-    phase: "audited",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.position-definitions",
-      exportName: "POST",
-    },
-  },
-  {
-    method: "PUT",
-    path: "/company/position-definitions/:id",
-    phase: "audited",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.position-definitions.$id",
-      exportName: "PUT",
-    },
-  },
-  {
-    method: "DELETE",
-    path: "/company/position-definitions/:id",
-    phase: "audited",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.position-definitions.$id",
-      exportName: "DELETE",
     },
   },
   {

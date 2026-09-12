@@ -55,6 +55,7 @@ async function fixture() {
           employeeCode: "MANAGER-001",
           retirementOn: restoreCalendarDate("2030-06-30"),
         },
+        expected_company_revision: await base.companyRevision(),
         expected_employee_revision: revisions.employeeRevision,
         expected_organization_revision: revisions.organizationRevision,
       },

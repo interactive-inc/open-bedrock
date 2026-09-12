@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
-import type { PositionResponse } from "@/lib/api/types/position-types"
+import { usePersonnelPositionSnapshot } from "@/lib/employee/use-personnel-position-snapshot"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: EmployeeCreateFormState = { ok: false, error: null }
@@ -19,16 +19,15 @@ const initialState: EmployeeCreateFormState = { ok: false, error: null }
  * 従業員登録フォーム。人物、入社発令、初期アカウントを一括作成する。
  * 成功・失敗の通知は action の結果を見て toast() で出す（useEffect は使わない）。
  */
-export function EmployeeCreateForm(props: {
-  canAssignRole: boolean
-  positions: ReadonlyArray<PositionResponse>
-}) {
+export function EmployeeCreateForm(props: { canAssignRole: boolean; companyRevision: number }) {
+  const positionSnapshot = usePersonnelPositionSnapshot(props.companyRevision)
   const router = useRouter()
 
   async function reduce(
     previousState: EmployeeCreateFormState,
     formData: FormData,
   ): Promise<EmployeeCreateFormState> {
+    if (!positionSnapshot.isReady) return { ok: false, error: "有効日の会社情報を確認してください" }
     const result = await createEmployeeAction(previousState, formData)
 
     if (result.ok) {
@@ -52,6 +51,8 @@ export function EmployeeCreateForm(props: {
 
   return (
     <form action={formAction}>
+      <input type="hidden" name="company_revision" value={props.companyRevision} />
+      {positionSnapshot.error ? <FieldError>{positionSnapshot.error}</FieldError> : null}
       <FieldGroup>
         <Field>
           <FieldLabel htmlFor="employee-code">従業員コード</FieldLabel>
@@ -83,7 +84,17 @@ export function EmployeeCreateForm(props: {
         <Field>
           <FieldLabel htmlFor="employee-hire-on">入社日</FieldLabel>
 
-          <Input id="employee-hire-on" name="hire_on" type="date" autoComplete="off" required />
+          <Input
+            value={positionSnapshot.effectiveOn}
+            onChange={(event) => {
+              void positionSnapshot.changeEffectiveOn(event.target.value)
+            }}
+            id="employee-hire-on"
+            name="hire_on"
+            type="date"
+            autoComplete="off"
+            required
+          />
           <FieldDescription>
             未来日を指定した場合、入社日までは入社予定としてログインできません。
           </FieldDescription>
@@ -171,12 +182,14 @@ export function EmployeeCreateForm(props: {
           <NativeSelect
             id="employee-position"
             name="position_code"
+            key={positionSnapshot.effectiveOn}
+            disabled={!positionSnapshot.isReady}
             defaultValue=""
             className="w-full"
             autoComplete="off"
           >
             <NativeSelectOption value="">役職なし</NativeSelectOption>
-            {props.positions.map((position) => (
+            {positionSnapshot.positions.map((position) => (
               <NativeSelectOption key={position.id} value={position.code}>
                 {position.name}
               </NativeSelectOption>
@@ -210,7 +223,7 @@ export function EmployeeCreateForm(props: {
         ) : null}
 
         <Field orientation="horizontal">
-          <Button type="submit" disabled={isPending}>
+          <Button type="submit" disabled={isPending || !positionSnapshot.isReady}>
             {isPending ? "登録中…" : "従業員を登録"}
           </Button>
         </Field>

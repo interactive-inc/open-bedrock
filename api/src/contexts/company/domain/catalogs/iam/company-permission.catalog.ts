@@ -5,6 +5,8 @@ export const CompanyPermission = Object.freeze({
   ORG_READ: PermissionValue.known("org:read"),
   ORG_WRITE: PermissionValue.known("org:write"),
   MASTER_ORG_WRITE: PermissionValue.known("master:org:write"),
+  MASTER_GRADE_WRITE: PermissionValue.known("master:grade:write"),
+  MASTER_POSITION_WRITE: PermissionValue.known("master:position:write"),
   EMPLOYEE_READ: PermissionValue.known("employee:read"),
   EMPLOYEE_ATTRIBUTES_READ: PermissionValue.known("employee:attributes:read"),
   EMPLOYEE_WRITE: PermissionValue.known("employee:write"),

@@ -5,7 +5,7 @@ import { readJsonObjectFile } from "@/lib/input/read-json-file"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-export const help = `bedrock personnel-actions apply --type <type> --payload <json-file> --employee-revision <n> [--organization-revision <n>] --idempotency-key <key>
+export const help = `bedrock personnel-actions apply --type <type> --payload <json-file> --company-revision <n> --employee-revision <n> [--organization-revision <n>] --idempotency-key <key>
 
 入社・再入社のpayloadには employmentType（FULL_TIME または PART_TIME）が必要です。訂正でも replacementAction に指定してください。`
 
@@ -16,6 +16,7 @@ export default factory.createHandlers(
       help: z.string().optional(),
       type: z.string().optional(),
       payload: z.string().optional(),
+      "company-revision": z.coerce.number().int().nonnegative().optional(),
       "employee-revision": z.coerce.number().int().nonnegative().optional(),
       "organization-revision": z.coerce.number().int().nonnegative().optional(),
       "idempotency-key": z.string().min(1).max(200).optional(),
@@ -27,10 +28,13 @@ export default factory.createHandlers(
     if (
       !input.type ||
       !input.payload ||
+      input["company-revision"] === undefined ||
       input["employee-revision"] === undefined ||
       !input["idempotency-key"]
     ) {
-      throw new UsageError("--type, --payload, --employee-revision, --idempotency-key が必要です")
+      throw new UsageError(
+        "--type, --payload, --company-revision, --employee-revision, --idempotency-key が必要です",
+      )
     }
     const action = { ...(await readJsonObjectFile(input.payload)), kind: input.type }
     const client = await createClient()
@@ -40,6 +44,7 @@ export default factory.createHandlers(
       {
         json: {
           action,
+          expected_company_revision: input["company-revision"],
           expected_employee_revision: input["employee-revision"],
           expected_organization_revision: input["organization-revision"] ?? null,
         } as RequestJson,

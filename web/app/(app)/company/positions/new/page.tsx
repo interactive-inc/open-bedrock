@@ -1,3 +1,5 @@
+import { getPositionCreationContext } from "@/lib/api/get-position-creation-context"
+import { FetchError } from "@/components/fetch-error"
 import { notFound } from "next/navigation"
 import { PositionCreateForm } from "@/app/(app)/company/positions/_components/position-create-form"
 import { BackButton } from "@/components/back-button"
@@ -15,6 +17,9 @@ export default async function NewPositionPage() {
     notFound()
   }
 
+  const snapshot = await getPositionCreationContext()
+  if (snapshot instanceof Error) return <FetchError message="会社情報を取得できませんでした" />
+
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="新規役職">
@@ -23,7 +28,11 @@ export default async function NewPositionPage() {
 
       <Card>
         <CardContent>
-          <PositionCreateForm />
+          <PositionCreateForm
+            companyRevision={snapshot.companyRevision}
+            commandId={snapshot.commandId}
+            positionId={snapshot.positionId}
+          />
         </CardContent>
       </Card>
     </div>

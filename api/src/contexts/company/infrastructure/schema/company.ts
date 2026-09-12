@@ -8,6 +8,7 @@ import {
   primaryKey,
   sqliteTable,
   text,
+  unique,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core"
 import { systemAccounts, systemIdentityBindings } from "@system/infrastructure/schema/system-core"
@@ -132,7 +133,7 @@ export const companyResourceRevisions = sqliteTable(
     primaryKey({
       columns: [table.organizationId, table.resourceType, table.resourceId, table.revision],
     }),
-    uniqueIndex("company_resource_revisions_org_revision_idx").on(
+    index("company_resource_revisions_org_revision_idx").on(
       table.organizationId,
       table.organizationRevision,
       table.resourceType,
@@ -455,7 +456,121 @@ export const companyProfileChangeReceipts = sqliteTable(
   ],
 )
 
+/** 旧等級・役職の確認時点の記録と公開履歴への接続証跡。 */
+export const companyDefinitionResourceAdoptions = sqliteTable(
+  "company_definition_resource_adoptions",
+  {
+    organizationId: text("organization_id").notNull().default("organization:default"),
+    commandId: text("command_id").notNull(),
+    resourceType: text("resource_type").notNull(),
+    definitionId: integer("definition_id").notNull(),
+    resourceId: text("resource_id").notNull(),
+    fingerprint: text("fingerprint").notNull(),
+    actorAccountId: text("actor_account_id")
+      .notNull()
+      .references(() => systemAccounts.id, { onDelete: "restrict" }),
+    reason: text("reason").notNull(),
+    expectedRevision: integer("expected_revision").notNull(),
+    organizationRevision: integer("organization_revision").notNull(),
+    observedOn: text("observed_on").notNull(),
+    snapshotDigest: text("snapshot_digest").notNull(),
+    sourceJson: text("source_json").notNull(),
+    recordedAt: integer("recorded_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.organizationId, table.commandId] }),
+    unique().on(table.resourceType, table.definitionId),
+    unique().on(table.organizationId, table.resourceType, table.resourceId),
+    foreignKey({
+      columns: [table.organizationId, table.commandId],
+      foreignColumns: [companyCommandReceipts.organizationId, companyCommandReceipts.commandId],
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.organizationId, table.resourceType, table.resourceId],
+      foreignColumns: [
+        companyResourceHeads.organizationId,
+        companyResourceHeads.resourceType,
+        companyResourceHeads.resourceId,
+      ],
+    }).onDelete("restrict"),
+    check(
+      "company_definition_adoption_organization",
+      sql`${table.organizationId} = 'organization:default'`,
+    ),
+    check("company_definition_adoption_type", sql`${table.resourceType} IN ('grade', 'position')`),
+    check("company_definition_adoption_id", sql`${table.definitionId} > 0`),
+    check("company_definition_adoption_fingerprint", sql`length(${table.fingerprint}) = 64`),
+    check(
+      "company_definition_adoption_reason",
+      sql`length(trim(${table.reason})) BETWEEN 1 AND 1000`,
+    ),
+    check(
+      "company_definition_adoption_revision",
+      sql`${table.expectedRevision} >= 0 AND ${table.organizationRevision} = ${table.expectedRevision} + 1`,
+    ),
+    check("company_definition_adoption_day", sql`length(${table.observedOn}) = 10`),
+    check("company_definition_adoption_digest", sql`length(${table.snapshotDigest}) = 64`),
+    check(
+      "company_definition_adoption_source",
+      sql`json_valid(${table.sourceJson}) AND length(CAST(${table.sourceJson} AS BLOB)) <= 20000
+      AND json_extract(${table.sourceJson}, '$.definition.type') IS ${table.resourceType}
+      AND json_extract(${table.sourceJson}, '$.definition.id') IS ${table.definitionId}
+      AND json_extract(${table.sourceJson}, '$.organizationRevision') IS ${table.expectedRevision}`,
+    ),
+    check("company_definition_adoption_recorded", sql`${table.recordedAt} >= 0`),
+  ],
+)
+
+/** 旧等級付与の元記録と、保全時の確認者・会社版。付与当時の判断者とは区別する。 */
+export const companyGradeAwardArchives = sqliteTable(
+  "company_grade_award_archives",
+  {
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => companyOrganizations.id),
+    commandId: text("command_id").notNull(),
+    employeeId: text("employee_id")
+      .notNull()
+      .references(() => employees.id),
+    fingerprint: text("fingerprint").notNull(),
+    actorAccountId: text("actor_account_id")
+      .notNull()
+      .references(() => systemAccounts.id),
+    reason: text("reason").notNull(),
+    observedOn: text("observed_on").notNull(),
+    observedCompanyRevision: integer("observed_company_revision").notNull(),
+    snapshotDigest: text("snapshot_digest").notNull(),
+    sourceJson: text("source_json").notNull(),
+    recordedAt: integer("recorded_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.organizationId, table.commandId] }),
+    unique().on(table.organizationId, table.employeeId),
+    check(
+      "grade_award_archive_organization",
+      sql`${table.organizationId} = 'organization:default'`,
+    ),
+    check("grade_award_archive_fingerprint", sql`length(${table.fingerprint}) = 64`),
+    check("grade_award_archive_reason", sql`length(trim(${table.reason})) BETWEEN 1 AND 2000`),
+    check("grade_award_archive_observed_on", sql`length(${table.observedOn}) = 10`),
+    check("grade_award_archive_revision", sql`${table.observedCompanyRevision} >= 0`),
+    check("grade_award_archive_digest", sql`length(${table.snapshotDigest}) = 64`),
+    check("grade_award_archive_json", sql`json_valid(${table.sourceJson})`),
+    check("grade_award_archive_time", sql`${table.recordedAt} >= 0`),
+    check(
+      "grade_award_archive_employee",
+      sql`json_extract(${table.sourceJson}, '$.employeeId') IS ${table.employeeId}`,
+    ),
+    check(
+      "grade_award_archive_source_revision",
+      sql`json_extract(${table.sourceJson}, '$.organizationRevision') IS ${table.observedCompanyRevision}`,
+    ),
+  ],
+)
+
 export const companySchema = {
+  companyGradeAwardArchives,
+  companyDefinitionResourceAdoptions,
   companyProfileChangeReceipts,
   companyBootstrapReceipts,
   companyOrganizationResourceAdoptions,

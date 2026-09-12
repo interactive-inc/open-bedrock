@@ -5,11 +5,12 @@ import * as assignmentResourceAdoptions from "@/contexts/company/interface/route
 import * as authorityResolutions from "@/contexts/company/interface/routes/company.authority-resolutions"
 import * as bootstrap from "@/contexts/company/interface/routes/company.bootstrap"
 import * as capabilities from "@/contexts/company/interface/routes/company.capabilities"
+import * as changes from "@/contexts/company/interface/routes/company.changes"
+import * as definitionResourceAdoptions from "@/contexts/company/interface/routes/company.definition-resource-adoptions"
+import * as definitionResourceAdoptionsCommandId from "@/contexts/company/interface/routes/company.definition-resource-adoptions.$commandId"
 import * as definitions from "@/contexts/company/interface/routes/company.definitions"
 import * as employeeDirectory from "@/contexts/company/interface/routes/company.employee-directory"
 import * as employeeDirectoryCode from "@/contexts/company/interface/routes/company.employee-directory.$code"
-import * as employeeEvents from "@/contexts/company/interface/routes/company.employee-events"
-import * as employeeGrades from "@/contexts/company/interface/routes/company.employee-grades"
 import * as employeeLifecycleCodeEvents from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.events"
 import * as employeeLifecycleCodeState from "@/contexts/company/interface/routes/company.employee-lifecycle.$code.state"
 import * as employeeResourceAdoptionBatches from "@/contexts/company/interface/routes/company.employee-resource-adoption-batches"
@@ -17,8 +18,10 @@ import * as employeeResourceAdoptions from "@/contexts/company/interface/routes/
 import * as employees from "@/contexts/company/interface/routes/company.employees"
 import * as employments from "@/contexts/company/interface/routes/company.employments"
 import * as externalIdentityImports from "@/contexts/company/interface/routes/company.external-identity-imports"
-import * as gradeDefinitions from "@/contexts/company/interface/routes/company.grade-definitions"
-import * as gradeDefinitionsId from "@/contexts/company/interface/routes/company.grade-definitions.$id"
+import * as gradeAssignmentHistory from "@/contexts/company/interface/routes/company.grade-assignment-history"
+import * as gradeAwardArchives from "@/contexts/company/interface/routes/company.grade-award-archives"
+import * as gradeAwardArchivesCommandId from "@/contexts/company/interface/routes/company.grade-award-archives.$commandId"
+import * as gradeAwardArchivesByEmployeeEmployeeId from "@/contexts/company/interface/routes/company.grade-award-archives.by-employee.$employeeId"
 import * as legacyPersonnelActionRecords from "@/contexts/company/interface/routes/company.legacy-personnel-action-records"
 import * as myDirectReports from "@/contexts/company/interface/routes/company.my-direct-reports"
 import * as myOrganizationUnits from "@/contexts/company/interface/routes/company.my-organization-units"
@@ -35,8 +38,7 @@ import * as people from "@/contexts/company/interface/routes/company.people"
 import * as personnelActionEvents from "@/contexts/company/interface/routes/company.personnel-action-events"
 import * as personnelActionExecutions from "@/contexts/company/interface/routes/company.personnel-action-executions"
 import * as personnelActions from "@/contexts/company/interface/routes/company.personnel-actions"
-import * as positionDefinitions from "@/contexts/company/interface/routes/company.position-definitions"
-import * as positionDefinitionsId from "@/contexts/company/interface/routes/company.position-definitions.$id"
+import * as personnelAnnotations from "@/contexts/company/interface/routes/company.personnel-annotations"
 import * as profile from "@/contexts/company/interface/routes/company.profile"
 import * as reportingLinesEmployeeCode from "@/contexts/company/interface/routes/company.reporting-lines.$employeeCode"
 import * as responsibilityResourceAdoptions from "@/contexts/company/interface/routes/company.responsibility-resource-adoptions"
@@ -53,17 +55,24 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .post("/authority-resolutions", ...authorityResolutions.POST)
   .post("/bootstrap", ...bootstrap.POST)
   .get("/capabilities", ...capabilities.GET)
+  .get("/changes", ...changes.GET)
+  .get("/definition-resource-adoptions", ...definitionResourceAdoptions.GET)
+  .get("/definition-resource-adoptions/:commandId", ...definitionResourceAdoptionsCommandId.GET)
   .get("/definitions", ...definitions.GET)
   .get("/employee-directory", ...employeeDirectory.GET)
   .get("/employee-directory/:code", ...employeeDirectoryCode.GET)
-  .get("/employee-events", ...employeeEvents.GET)
-  .get("/employee-grades", ...employeeGrades.GET)
   .get("/employee-lifecycle/:code/events", ...employeeLifecycleCodeEvents.GET)
   .get("/employee-lifecycle/:code/state", ...employeeLifecycleCodeState.GET)
   .get("/employee-resource-adoptions", ...employeeResourceAdoptions.GET)
   .get("/employees", ...employees.GET)
   .get("/employments", ...employments.GET)
-  .get("/grade-definitions", ...gradeDefinitions.GET)
+  .get("/grade-assignment-history", ...gradeAssignmentHistory.GET)
+  .get("/grade-award-archives", ...gradeAwardArchives.GET)
+  .get(
+    "/grade-award-archives/by-employee/:employeeId",
+    ...gradeAwardArchivesByEmployeeEmployeeId.GET,
+  )
+  .get("/grade-award-archives/:commandId", ...gradeAwardArchivesCommandId.GET)
   .get("/legacy-personnel-action-records", ...legacyPersonnelActionRecords.GET)
   .get("/my-direct-reports", ...myDirectReports.GET)
   .get("/my-organization-units", ...myOrganizationUnits.GET)
@@ -78,24 +87,21 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/people", ...people.GET)
   .get("/personnel-action-events", ...personnelActionEvents.GET)
   .get("/personnel-actions", ...personnelActions.GET)
-  .get("/position-definitions", ...positionDefinitions.GET)
+  .get("/personnel-annotations", ...personnelAnnotations.GET)
   .get("/profile", ...profile.GET)
   .get("/reporting-lines/:employeeCode", ...reportingLinesEmployeeCode.GET)
 
 export const companyAuditedRoutes = new Hono<CompanyHttpEnvironment>()
   .post("/account-employee-links", ...accountEmployeeLinks.POST)
   .post("/assignment-resource-adoptions", ...assignmentResourceAdoptions.POST)
+  .post("/definition-resource-adoptions", ...definitionResourceAdoptions.POST)
   .post("/definitions", ...definitions.POST)
   .put("/employee-directory/:code", ...employeeDirectoryCode.PUT)
-  .post("/employee-events", ...employeeEvents.POST)
-  .post("/employee-grades", ...employeeGrades.POST)
   .post("/employee-resource-adoption-batches", ...employeeResourceAdoptionBatches.POST)
   .post("/employee-resource-adoptions", ...employeeResourceAdoptions.POST)
   .post("/employees", ...employees.POST)
   .post("/employments", ...employments.POST)
-  .post("/grade-definitions", ...gradeDefinitions.POST)
-  .put("/grade-definitions/:id", ...gradeDefinitionsId.PUT)
-  .delete("/grade-definitions/:id", ...gradeDefinitionsId.DELETE)
+  .post("/grade-award-archives", ...gradeAwardArchives.POST)
   .put("/my-profile", ...myProfile.PUT)
   .post("/organization-changes", ...organizationChanges.POST)
   .put("/organization-profile", ...organizationProfile.PUT)
@@ -106,9 +112,6 @@ export const companyAuditedRoutes = new Hono<CompanyHttpEnvironment>()
   .post("/people", ...people.POST)
   .post("/personnel-action-executions", ...personnelActionExecutions.POST)
   .post("/personnel-actions", ...personnelActions.POST)
-  .post("/position-definitions", ...positionDefinitions.POST)
-  .put("/position-definitions/:id", ...positionDefinitionsId.PUT)
-  .delete("/position-definitions/:id", ...positionDefinitionsId.DELETE)
   .post("/profile", ...profile.POST)
   .get("/responsibility-resource-adoptions", ...responsibilityResourceAdoptions.GET)
   .post("/responsibility-resource-adoptions", ...responsibilityResourceAdoptions.POST)

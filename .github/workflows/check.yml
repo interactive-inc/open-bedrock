@@ -28,6 +28,14 @@ jobs:
         run: bun test
         working-directory: api
 
+      - name: Core route isolation
+        run: bun run verify:core-route-isolation
+        working-directory: api
+
+      - name: Core Worker isolation
+        run: bun run verify:core-worker-isolation
+        working-directory: api
+
       - name: cli test
         run: bun test
         working-directory: cli

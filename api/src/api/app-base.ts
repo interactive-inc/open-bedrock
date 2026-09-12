@@ -160,19 +160,12 @@ const companyActorMiddleware = factory.createMiddleware(async (c, next) => {
   if (session.hasPermission("system:admin") || session.hasPermission("employee:update")) {
     permissions.push("employee:write:basic")
   }
-  if (
-    session.hasPermission("system:admin") ||
-    session.hasPermission("grade:manage") ||
-    session.hasPermission("employee_event:manage")
-  ) {
+  if (session.hasPermission("system:admin") || session.hasPermission("employee_event:manage")) {
     permissions.push("employee:write:attributes")
   }
-  if (
-    !permissions.includes("master:org:write") &&
-    (session.hasPermission("position:manage") || session.hasPermission("grade:manage"))
-  ) {
-    permissions.push("master:org:write")
-  }
+
+  if (session.hasPermission("grade:manage")) permissions.push("master:grade:write")
+  if (session.hasPermission("position:manage")) permissions.push("master:position:write")
 
   c.set(
     "companyActor",

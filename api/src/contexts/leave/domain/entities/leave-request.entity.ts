@@ -127,7 +127,12 @@ export class LeaveRequest implements Props {
 
     const end = Date.parse(`${endDate}T00:00:00Z`)
 
-    if (Number.isNaN(start) || Number.isNaN(end)) {
+    if (
+      Number.isNaN(start) ||
+      Number.isNaN(end) ||
+      new Date(start).toISOString().slice(0, 10) !== startDate ||
+      new Date(end).toISOString().slice(0, 10) !== endDate
+    ) {
       return new Error("invalid leave date")
     }
 
@@ -136,6 +141,21 @@ export class LeaveRequest implements Props {
     }
 
     return (end - start) / millisecondsPerDay + 1
+  }
+
+  /** 判断結果とは独立した、System Proposalへ固定する休暇内容。 */
+  toProposalBody() {
+    return {
+      employeeId: this.employeeId,
+      leaveType: this.leaveType,
+      startDate: this.startDate,
+      endDate: this.endDate,
+      days: this.days,
+      unit: this.unit,
+      hours: this.hours,
+      consumedDays: this.consumedDays,
+      reason: this.reason,
+    }
   }
 
   static fromRow(row: LeaveRequestRow): LeaveRequest {

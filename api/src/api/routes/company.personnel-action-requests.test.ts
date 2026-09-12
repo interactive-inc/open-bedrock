@@ -10,6 +10,8 @@ import { initializeStandardCompanyTestState } from "@tests/api/support/initializ
 import { loadSchema } from "@tests/api/support/load-schema"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 
+const observedCompanyRevisions = new WeakMap<D1Database, number>()
+
 const jwtSecret = "personnel-action-request-route-test-secret"
 const idempotencyKey = "22345678-1234-4abc-8def-1234567890ab"
 const body = {
@@ -64,12 +66,17 @@ async function createTestDb(): Promise<D1Database> {
     0,
   )
   if (published !== true) throw published
+  const companyRevision = await db
+    .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+    .first<number>("revision")
+  if (companyRevision === null) throw new Error("Company revision missing")
+  observedCompanyRevisions.set(db, companyRevision)
   return db
 }
 
 async function post(
   db: D1Database,
-  requestBody: typeof body,
+  requestBody: typeof body & { base_company_revision?: unknown },
   key: string | null = idempotencyKey,
 ): Promise<Response> {
   return requestWithContext({
@@ -78,7 +85,7 @@ async function post(
     path: "/company/personnel-action-requests",
     token: await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(1) }),
     method: "POST",
-    body: requestBody,
+    body: { base_company_revision: observedCompanyRevisions.get(db), ...requestBody },
     headers: key === null ? {} : { "Idempotency-Key": key },
   })
 }
@@ -93,6 +100,21 @@ async function countById(db: D1Database, table: string): Promise<number> {
 }
 
 describe("POST /company/personnel-action-requests", () => {
+  test("rejects missing or stale Company revision without starting an approval", async () => {
+    const db = await createTestDb()
+    for (const revision of [undefined, null, -1, 0.5, "1"]) {
+      expect((await post(db, { ...body, base_company_revision: revision })).status).toBe(400)
+    }
+    await db
+      .prepare(
+        "UPDATE company_organizations SET revision = revision + 1 WHERE id = 'organization:default'",
+      )
+      .run()
+    expect((await post(db, body)).status).toBe(409)
+    expect(await countById(db, "company_personnel_action_requests")).toBe(0)
+    expect(await countById(db, "system_proposal_series")).toBe(0)
+  })
+
   test("starts one System procedure and replays the same Company request", async () => {
     const db = await createTestDb()
 

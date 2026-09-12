@@ -119,18 +119,16 @@ describe("LeaveRequestRepository", () => {
     })
 
     test("ignores rejected requests", async () => {
-      const created = await createPending({
-        employeeId: toWorkforceEmployeeId(1),
-        startDate: "2026-02-01",
-        endDate: "2026-02-05",
-      })
-
-      await created.db
-        .prepare("UPDATE leave_requests SET status = 'rejected' WHERE id = ?")
-        .bind(created.id)
+      const { context, db } = await createTestContext()
+      const repository = new LeaveRequestRepository(context)
+      await db
+        .prepare(`INSERT INTO leave_requests
+        (employee_id,leave_type,start_date,end_date,days,unit,hours,consumed_days,reason,status,created_at)
+        VALUES (?1,'annual','2026-02-01','2026-02-05',5,'full_day',NULL,5,NULL,'rejected','2026-01-01T00:00:00.000Z')`)
+        .bind(toWorkforceEmployeeId(1))
         .run()
 
-      const result = await created.repository.findOverlapping({
+      const result = await repository.findOverlapping({
         employeeId: toWorkforceEmployeeId(1),
         startDate: "2026-02-02",
         endDate: "2026-02-04",

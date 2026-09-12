@@ -7,7 +7,7 @@ import { toWorkforceResponsibilityType } from "@/contexts/company/domain/definit
 import type { PersonnelActionPersistenceProps } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/personnel-action-persistence-props"
 import type { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
-import { CompanyEmploymentAuthorityChangeValue } from "@/contexts/company/domain/values/company-employment-authority-change.value"
+import { CompanyEmploymentDependentChangeValue } from "@/contexts/company/domain/values/company-employment-dependent-change.value"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { CompanyEmploymentJournalAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/company-employment-journal.adapter"
 import { CompanyAssignmentJournalAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/company-assignment-journal.adapter"
@@ -80,34 +80,20 @@ export class CompanyPersonnelResourceJournalAdapter {
         responsibilities.resourceIds,
       )
       if (authority instanceof CompanyOperationError) return authority
-      const groups = new Map<string, CompanyResourceEntity[]>()
-      for (const resource of [
+      const resources = [
         ...employment.resources,
         ...assignment.resources,
         ...reporting.resources,
         ...authority,
         ...responsibilities.resources,
-      ]) {
-        const key = `${resource.type}:${resource.id}`
-        const versions = groups.get(key) ?? []
-        versions.push(resource)
-        groups.set(key, versions)
-      }
-      if (groups.size !== 0 && employment.organizationRevision === null)
+      ]
+      if (resources.length !== 0 && employment.organizationRevision === null)
         return new CompanyUnexpectedError("公開Companyの従業員対応がありません")
       const statements = [...employment.statements]
-      let commandIndex = 0
-      while (groups.size > 0) {
-        const resources: CompanyResourceEntity[] = []
-        for (const [key, versions] of groups) {
-          if (resources.length === 100) break
-          const resource = versions.shift()
-          if (resource !== undefined) resources.push(resource)
-          if (versions.length === 0) groups.delete(key)
-        }
-        const change = CompanyResourceChangeEntity.create({
-          commandId: `lifecycle:${props.action.id}:${commandIndex}`,
-          expectedRevision: (employment.organizationRevision ?? 0) + commandIndex,
+      if (resources.length > 0) {
+        const change = CompanyResourceChangeEntity.createHistoryBatch({
+          commandId: `lifecycle:${props.action.id}:0`,
+          expectedRevision: employment.organizationRevision ?? 0,
           actorAccountId: props.command.session.accountId,
           reason: `personnel_action:${props.action.kind}:${props.action.id}`,
           recordedAt: props.action.recordedAt * 1000,
@@ -126,7 +112,6 @@ export class CompanyPersonnelResourceJournalAdapter {
             cause: journal,
           })
         statements.push(...journal.statements, journal.commit)
-        commandIndex += 1
       }
       return {
         statements: [
@@ -156,12 +141,14 @@ export class CompanyPersonnelResourceJournalAdapter {
       )
     )
       return []
-    const history = await new D1CompanyResourceRepository(this.c).findEmploymentAuthorityHistory(
+    const history = await new D1CompanyResourceRepository(this.c).findEmploymentDependentHistory(
       "organization:default",
       organizationRevision,
     )
     if (history instanceof Error)
-      return new CompanyUnexpectedError("任用・決裁資格の履歴を参照できません", { cause: history })
+      return new CompanyUnexpectedError("等級割当・任用・決裁資格の履歴を参照できません", {
+        cause: history,
+      })
     const resources: CompanyResourceEntity[] = []
     const identities = new Set(
       history
@@ -182,7 +169,7 @@ export class CompanyPersonnelResourceJournalAdapter {
     for (const identity of identities) {
       const versions = history.filter((resource) => `${resource.type}:${resource.id}` === identity)
       const first = versions[0]
-      if (first === undefined) return new CompanyUnexpectedError("任用の履歴がありません")
+      if (first === undefined) return new CompanyUnexpectedError("雇用に付随する履歴がありません")
       const prefix = `lifecycle:${props.action.correctsActionId}:`
       const original =
         props.action.correctsActionId === null
@@ -198,14 +185,14 @@ export class CompanyPersonnelResourceJournalAdapter {
       const lastRevision = original?.last_revision ?? null
       if (lastRevision !== null && versions.some((resource) => resource.revision > lastRevision))
         return new CompanyConflictError(
-          "訂正対象の任用・決裁資格は後続の変更を受けています",
+          "訂正対象の等級割当・任用・決裁資格は後続の変更を受けています",
           "personnel_action_stale",
         )
       const basis =
         firstRevision === null
           ? versions
           : versions.filter((resource) => resource.revision < firstRevision)
-      const change = CompanyEmploymentAuthorityChangeValue.create({
+      const change = CompanyEmploymentDependentChangeValue.create({
         employeeId: props.action.employeeId,
         history: versions,
         basis,
@@ -213,7 +200,7 @@ export class CompanyPersonnelResourceJournalAdapter {
       })
       if (change instanceof Error)
         return new CompanyValidationError(
-          "雇用変更後の任用・決裁資格を準備できません",
+          "雇用変更後の等級割当・任用・決裁資格を準備できません",
           "lifecycle_projection_mismatch",
           { cause: change },
         )

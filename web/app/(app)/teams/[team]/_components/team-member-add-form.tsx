@@ -21,14 +21,14 @@ import { Field, FieldDescription, FieldError, FieldGroup, FieldLabel } from "@/c
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import type { EmployeeListItem } from "@/lib/api/types/employee-list-item"
-import type { PositionResponse } from "@/lib/api/types/position-types"
+import { usePersonnelPositionSnapshot } from "@/lib/employee/use-personnel-position-snapshot"
 import { useRouter } from "next/navigation"
-import { useActionState, useState } from "react"
+import { useActionState, useRef, useState } from "react"
 import { toast } from "sonner"
 
 type Props = {
   teamCode: string
-  positions: ReadonlyArray<PositionResponse>
+  companyRevision: number
 }
 
 const initialState: PersonnelActionFormState = { ok: false, error: null }
@@ -38,6 +38,7 @@ const initialState: PersonnelActionFormState = { ok: false, error: null }
  * 対象部署は固定し、既存の直接発令 action（mode=apply）へ送る。
  */
 export function TeamMemberAddForm(props: Props) {
+  const positionSnapshot = usePersonnelPositionSnapshot(props.companyRevision)
   const router = useRouter()
 
   const [open, setOpen] = useState(false)
@@ -46,7 +47,10 @@ export function TeamMemberAddForm(props: Props) {
 
   const [revisions, setRevisions] = useState<AssignmentBaseRevisions | null>(null)
 
+  const selectionSequence = useRef(0)
+
   const handleEmployeeChange = (selected: EmployeeListItem | null) => {
+    const sequence = ++selectionSequence.current
     setEmployee(selected)
 
     setRevisions(null)
@@ -54,15 +58,17 @@ export function TeamMemberAddForm(props: Props) {
     if (selected !== null && selected.code !== null) {
       getAssignmentBaseRevisionsAction(selected.code)
         .then((revisions) => {
-          setRevisions(revisions)
+          if (sequence === selectionSequence.current) setRevisions(revisions)
         })
         .catch(() => {
-          toast.error("配属基準リビジョンの取得に失敗しました")
+          if (sequence === selectionSequence.current)
+            toast.error("配属基準リビジョンの取得に失敗しました")
         })
     }
   }
 
   const reduce = async (previous: PersonnelActionFormState, formData: FormData) => {
+    if (!positionSnapshot.isReady) return { ok: false, error: "有効日の会社情報を確認してください" }
     const result = await submitPersonnelAction(previous, formData)
 
     if (result.ok) {
@@ -70,7 +76,7 @@ export function TeamMemberAddForm(props: Props) {
 
       setOpen(false)
 
-      setEmployee(null)
+      handleEmployeeChange(null)
 
       router.refresh()
     } else if (result.error !== null) {
@@ -98,6 +104,8 @@ export function TeamMemberAddForm(props: Props) {
         </DialogHeader>
 
         <form action={formAction}>
+          <input type="hidden" name="company_revision" value={props.companyRevision} />
+          {positionSnapshot.error ? <FieldError>{positionSnapshot.error}</FieldError> : null}
           <FieldGroup>
             <input type="hidden" name="mode" value="apply" />
 
@@ -155,7 +163,16 @@ export function TeamMemberAddForm(props: Props) {
             <Field>
               <FieldLabel htmlFor="team-member-event-on">発効日</FieldLabel>
 
-              <Input id="team-member-event-on" name="event_on" type="date" required />
+              <Input
+                value={positionSnapshot.effectiveOn}
+                onChange={(event) => {
+                  void positionSnapshot.changeEffectiveOn(event.target.value)
+                }}
+                id="team-member-event-on"
+                name="event_on"
+                type="date"
+                required
+              />
             </Field>
 
             <Field>
@@ -166,13 +183,15 @@ export function TeamMemberAddForm(props: Props) {
               <NativeSelect
                 id="team-member-position"
                 name="position_code"
+                key={positionSnapshot.effectiveOn}
+                disabled={!positionSnapshot.isReady}
                 aria-labelledby="team-member-position-label"
                 className="w-full"
                 defaultValue=""
               >
                 <NativeSelectOption value="">役職なし</NativeSelectOption>
 
-                {props.positions.map((position) => (
+                {positionSnapshot.positions.map((position) => (
                   <NativeSelectOption key={position.id} value={position.code}>
                     {position.name}
                   </NativeSelectOption>
@@ -188,7 +207,12 @@ export function TeamMemberAddForm(props: Props) {
 
             {state.error !== null ? <FieldError>{state.error}</FieldError> : null}
 
-            <Button type="submit" disabled={isPending || employee === null || revisions === null}>
+            <Button
+              type="submit"
+              disabled={
+                isPending || employee === null || revisions === null || !positionSnapshot.isReady
+              }
+            >
               配属を登録
             </Button>
           </FieldGroup>

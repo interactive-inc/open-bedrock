@@ -1,8 +1,8 @@
-import { EmployeeEventCreateForm } from "@/app/(app)/company/employees/[employee]/_components/employee-event-create-form"
 import { toEmployeeEventKindLabel } from "@/lib/employee-event/to-employee-event-kind-label"
 import { getEmployeeEventList } from "@/lib/api/get-employee-event-list"
+import { FetchError } from "@/components/fetch-error"
 import { Badge } from "@/components/ui/badge"
-import { Card, CardAction, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
   TableBody,
@@ -14,35 +14,20 @@ import {
 
 type Props = {
   code: string
-  canManage: boolean
 }
 
-/**
- * 従業員の異動・在籍履歴セクション。閲覧権限がない場合 api は 403 を返すため、
- * 取得が Error のときはセクション自体を描画しない（空表示ではなく非表示）。
- * employee_event:manage を持つ場合は空でも表示し、記録の登録導線を出す。
- */
+/** 元の人事注記を、確定した発令と区別して表示する。 */
 export async function EmployeeEventHistory(props: Props) {
   const events = await getEmployeeEventList({ employeeCode: props.code, kind: null })
 
   if (events instanceof Error) {
-    return null
-  }
-
-  if (events.length === 0 && props.canManage === false) {
-    return null
+    return <FetchError message="旧異動・在籍記録を取得できませんでした" />
   }
 
   return (
     <Card>
       <CardHeader>
-        <CardTitle>異動・在籍履歴</CardTitle>
-
-        {props.canManage ? (
-          <CardAction>
-            <EmployeeEventCreateForm employeeCode={props.code} />
-          </CardAction>
-        ) : null}
+        <CardTitle>旧異動・在籍記録</CardTitle>
       </CardHeader>
 
       <CardContent>

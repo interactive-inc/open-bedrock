@@ -16,6 +16,7 @@ import { z } from "zod"
 
 const requestSchema = z.strictObject({
   action: wirePersonnelActionInputSchema,
+  base_company_revision: z.number().int().nonnegative(),
   base_employee_revision: z.number().int().nonnegative(),
   base_organization_revision: z.number().int().nonnegative().nullable(),
 })
@@ -78,11 +79,16 @@ export const POST = factory.createHandlers(
       throw new BadRequestError("A UUID Idempotency-Key is required")
     }
     const body = context.req.valid("json")
-    const input = await resolvePersonnelActionInput(context, body.action)
+    const input = await resolvePersonnelActionInput(
+      context,
+      body.action,
+      body.base_company_revision,
+    )
     if (input instanceof CompanyOperationError) throw toCompanyHttpException(input)
     const result = await new CreatePersonnelActionRequest(context).execute({
       idempotencyKey,
       input,
+      baseCompanyRevision: body.base_company_revision,
       baseEmployeeRevision: body.base_employee_revision,
       baseOrganizationRevision: body.base_organization_revision,
       createdAt: context.var.now(),

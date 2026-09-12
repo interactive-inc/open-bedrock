@@ -38,7 +38,9 @@ export default async function InboxPage() {
   const cards = types.map((inboxType) => ({
     inboxType,
     count: inboxCountFor(inboxType, counts),
-    hasMore: inboxType.countKey === "expenses" && counts.expenses_has_more === true,
+    hasMore:
+      (inboxType.countKey === "expenses" && counts.expenses_has_more === true) ||
+      (inboxType.countKey === "leaves" && counts.leaves_has_more === true),
   }))
 
   const totalPending = cards.reduce((sum, card) => sum + (card.count ?? 0), 0)

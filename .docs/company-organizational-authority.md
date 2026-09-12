@@ -213,6 +213,12 @@ resolver は同じ `asOf` と organization revision に属する active resource
 
 `D1CompanyResourceRepository` は LegalEntity、Site、Workplace、Employee、Employment、OrgUnit、OrganizationalOffice、OfficeAssignment、Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody、CollectiveBodyMembership、AccountEmployeeLink を一つの `asOf` と organization revision へ固定して読む。System Account の状態を読めない場合は候補ゼロへ畳まず unavailable として停止し、Account role を候補資格として読まない。
 
+`POST /company/authority-resolutions`と承認Taskの生成は、同じ人間Accountの検査を使用する。Accountがactiveで終了しておらず、Accountとhuman Principalの作成時点が判定時点以前であることを要求する。Service・Agent・Connector、Principal未登録、将来作成の主体を人間の候補へ含めない。Systemの読取失敗や不正な時計を候補ゼロとして扱わない。
+
+公開候補とTask生成は、同じ営業日のAccount対応・在籍の期間台帳を照合する。公開履歴の対応と期間台帳が一致しない場合は候補を返さない。照会の前後で会社の履歴・期間台帳が変更された場合、公開APIは409を返し、照会全体の再試行を要求する。過去の営業日を指定した照会でも、その日付の在籍を検査し、現在の在籍で補完しない。
+
+対象営業日の雇用状態がACTIVEの場合だけ承認候補へ含める。休職中・退職済みでも責務の原記録は保持するが、承認候補には採用しない。在職と休職の雇用が同じ時点に重なる場合は、一方を選ばず不整合として拒否する。公開候補は実行許可ではなく、Task生成と判断・実行時の会社版、主体対応、在籍、自己承認、必要人数の検査を置き換えない。
+
 `CompanyGovernanceProcedureTaskAdapter` は解決済み Company qualification を System Task の候補証拠へ変換する。個人または役職の責任は一名承認、合議体は参加定足数、必要賛成数、成立不能による否決、代理禁止、差戻し禁止として固定する。異なる assignment、個人資格、合議資格が同じ criterion で混在し意味を一意に決められない場合は Task を作成しない。
 
 公開 Company resource の resolver は、法人、組織単位、拠点、勤務場所、地域、通貨付き金額の scope を明示型で評価する。申請の step に `governance_authority` を指定すると、汎用申請と人事申請の Task 生成は公開 resource の責務・役職・合議体を使う。指定しない step は、期間付き組織台帳に対する従業員・上司・部署責任者・責務の条件を使う。

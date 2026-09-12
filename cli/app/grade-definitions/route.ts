@@ -1,13 +1,14 @@
 import { factory } from "@/factory"
 
-export const help = `bedrock grade-definitions — 等級マスタと等級の割当
+export const help = `bedrock grade-definitions — 公開履歴の等級定義
 
 usage:
-  bedrock grade-definitions list                                     等級マスタ一覧（全認証者）
-  bedrock grade-definitions create --code <c> --name <n> --rank <r> [--description <d>]
-  bedrock grade-definitions update --id <grade-id> --code <c> --name <n> --rank <r> [--description <d>]
-  bedrock grade-definitions delete --id <grade-id>
-  bedrock employee-grades list [--employee-id <id>]         等級の割当履歴
-  bedrock employee-grades create --employee-id <id> --grade-id <id> --effective-date <YYYY-MM-DD> [--reason <r>]`
+  bedrock grade-definitions list --organization-id <id> [--as-of <YYYY-MM-DD>]
+  bedrock grade-definitions create --data <confirmed-definition.json> --idempotency-key <key>
+  bedrock grade-definitions update --data <confirmed-definition.json> --idempotency-key <key>
+  bedrock grade-definitions delete --data <confirmed-definition.json> --idempotency-key <key>
 
-export default factory.createHandlers((c) => c.text(help))
+listで会社版と資源版を確認し、保存時は同じ確認に基づくJSONを指定します。
+取消も履歴へ記録し、過去の定義を物理削除しません。`
+
+export default factory.createHandlers((context) => context.text(help))

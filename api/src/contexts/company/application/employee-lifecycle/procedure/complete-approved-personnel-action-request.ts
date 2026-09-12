@@ -64,6 +64,7 @@ export class CompleteApprovedPersonnelActionRequest {
       requestedByEmployeeId: request.requestedByEmployeeId,
       expectedEmployeeRevision: request.baseEmployeeRevision,
       expectedOrganizationRevision: request.baseOrganizationRevision,
+      expectedCompanyRevision: request.baseCompanyRevision ?? undefined,
       expectedPayloadFingerprint: request.payloadFingerprint,
     })
     if (prepared instanceof CompanyOperationError) return prepared

@@ -41,7 +41,10 @@ export default async function InboxLayout(props: Props) {
       href: inboxType.href,
       badge: count === null ? undefined : count,
       badgeSuffix:
-        inboxType.countKey === "expenses" && counts.expenses_has_more === true ? "+" : undefined,
+        (inboxType.countKey === "expenses" && counts.expenses_has_more === true) ||
+        (inboxType.countKey === "leaves" && counts.leaves_has_more === true)
+          ? "+"
+          : undefined,
     }
   })
 

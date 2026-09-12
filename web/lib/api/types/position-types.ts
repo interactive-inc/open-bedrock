@@ -1,25 +1,37 @@
-/** GET /position-definitions のレスポンス要素。api は snake_case で返す。 */
+/** 確認した公開役職の版と、操作ごとの再送キー。 */
 export type PositionResponse = {
-  id: number
+  id: string
   code: string
   name: string
-  rank: number
+  rank: number | null
+  jobId: string | null
   description: string | null
-  created_at: string
+  revision: number
+  organizationRevision: number
+  effectiveFrom: string
+  effectiveTo: string | null
+  commandId: string
+  cancelCommandId: string
 }
 
-/** POST /position-definitions のリクエストボディ。description は未指定可。 */
-export type PositionCreateRequest = {
-  code: string
-  name: string
-  rank: number
-  description?: string
-}
-
-/** PUT /position-definitions/:id のリクエストボディ。 */
-export type PositionUpdateRequest = {
-  code: string
-  name: string
-  rank: number
-  description?: string
+export type PositionDefinitionCommand = {
+  commandId: string
+  expectedRevision: number
+  reason: string
+  resource: {
+    organizationId: string
+    type: "position"
+    id: string
+    revision: number
+    state: "active" | "void"
+    effectiveFrom: string
+    effectiveTo: string | null
+    attributes: {
+      code: string
+      officialName: string
+      rank: number | null
+      jobId: string | null
+      description: string | null
+    }
+  }
 }

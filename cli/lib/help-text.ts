@@ -74,8 +74,8 @@ commands:
   leave-requests update <id>                  休暇申請を変更
   leave-requests cancel <id>                  休暇申請を取り下げ
   leave-requests inbox                        承認待ちの休暇申請一覧
-  leave-requests approve <id>                 休暇申請を承認
-  leave-requests reject <id>                  休暇申請を却下
+  leave-procedures                            休暇規程の参照・設定 ([--definition --expected-revision])
+  leave-requests procedure                    内容・判断履歴の確認と提出・判断 (--id [--operation])
   leave-balances list                         休暇残数
   expenses submit                             経費申請 (--request-key --category --amount --spent-at [--note --attachment-id])
   expenses mine                               自分の経費申請一覧
@@ -130,23 +130,22 @@ commands:
   evaluation-sheets create                    評価シート作成 (--employee-id --period [--template-id --primary-evaluator-id --secondary-evaluator-id])
   evaluation-sheets transition                評価シートの状態遷移 (--id --status --expected-revision [--note])
   evaluation-sheets evaluators                評価者の割当変更 (--id --primary-evaluator-id --expected-revision [--secondary-evaluator-id])
-  grade-definitions list                      等級マスタ一覧
-  grade-definitions create                    等級を作成 (--code --name --rank [--description])
-  grade-definitions update                    等級を更新 (--id --code --name --rank [--description])
-  grade-definitions delete                    等級を削除 (--id)
-  employee-grades list                        等級の割当履歴 (--employee-id)
-  employee-grades create                      等級の割当を記録 (--employee-id --grade-id --effective-date [--reason])
-  position-definitions list                   役職マスタ一覧
-  position-definitions create                 役職を作成 (--code --name --rank [--description])
-  position-definitions update                 役職を更新 (--id --code --name --rank [--description])
-  position-definitions delete                 役職を削除 (--id)
+  grade-definitions list                      等級の公開履歴 (--organization-id [--as-of --organization-revision])
+  grade-definitions create                    等級を登録 (--data --idempotency-key)
+  grade-definitions update                    等級を訂正 (--data --idempotency-key)
+  grade-definitions delete                    等級を取消 (--data --idempotency-key)
+  employee-grades list                        等級の割当履歴 (--organization-id --employee-id [--as-of --organization-revision])
+  employee-grades create                      等級の割当を記録 (--data --idempotency-key)
+  position-definitions list                      役職の公開履歴 (--organization-id [--as-of --organization-revision])
+  position-definitions create                    役職を登録 (--data --idempotency-key)
+  position-definitions update                    役職を訂正 (--data --idempotency-key)
+  position-definitions delete                    役職を取消 (--data --idempotency-key)
   company-calendar-days list                  会社カレンダー一覧 ([--year])
   company-calendar-days add                   会社休日/振替出勤日を記録 (--date --kind [--name])
   company-calendar-days delete                会社カレンダーを削除 (--id)
   employee-work-styles list                   勤務形態一覧 ([--employee-id])
   employee-work-styles add                    勤務形態を記録 (--employee-id --style --starts-on [--ends-on --note])
   employee-events list                        異動・在籍イベント履歴 (--employee-id --kind)
-  employee-events record                      異動・在籍イベントを記録 (--employee-id --kind --effective-date [--from --to --note])
   one-on-ones list                            one-on-ones 履歴
   one-on-ones create                          one-on-ones 作成 (--member-email [--topics --manager-note --next-action])
   one-on-ones show <id>                       one-on-ones の詳細

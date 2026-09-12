@@ -5,7 +5,7 @@ import { readJsonObjectFile } from "@/lib/input/read-json-file"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-export const help = `bedrock personnel-actions correct --action-id <id> --payload <json-file> --reason <text> --employee-revision <n> --idempotency-key <key> [--organization-revision <n>]
+export const help = `bedrock personnel-actions correct --action-id <id> --payload <json-file> --reason <text> --company-revision <n> --employee-revision <n> --idempotency-key <key> [--organization-revision <n>]
 
 入社・再入社のpayloadには employmentType（FULL_TIME または PART_TIME）が必要です。訂正でも replacementAction に指定してください。`
 
@@ -17,6 +17,7 @@ export default factory.createHandlers(
       "action-id": z.string().uuid().optional(),
       payload: z.string().optional(),
       reason: z.string().min(1).max(2000).optional(),
+      "company-revision": z.coerce.number().int().nonnegative().optional(),
       "employee-revision": z.coerce.number().int().nonnegative().optional(),
       "organization-revision": z.coerce.number().int().nonnegative().optional(),
       "idempotency-key": z.string().min(1).max(200).optional(),
@@ -29,11 +30,12 @@ export default factory.createHandlers(
       !input["action-id"] ||
       !input.payload ||
       !input.reason ||
+      input["company-revision"] === undefined ||
       input["employee-revision"] === undefined ||
       !input["idempotency-key"]
     ) {
       throw new UsageError(
-        "--action-id, --payload, --reason, --employee-revision, --idempotency-key が必要です",
+        "--action-id, --payload, --reason, --company-revision, --employee-revision, --idempotency-key が必要です",
       )
     }
     const file = await readJsonObjectFile(input.payload)
@@ -49,6 +51,7 @@ export default factory.createHandlers(
             correctsActionId: input["action-id"],
             reason: input.reason,
           },
+          expected_company_revision: input["company-revision"],
           expected_employee_revision: input["employee-revision"],
           expected_organization_revision: input["organization-revision"] ?? null,
         } as RequestJson,

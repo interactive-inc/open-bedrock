@@ -2,13 +2,13 @@ import { createClient } from "@/lib/api/hc-client"
 import type { EmployeeEventSearchQuery } from "@/lib/api/types/employee-event-types"
 
 /**
- * GET /employee-events。従業員コード指定で異動・在籍履歴を取得する。kind で絞り込める。
- * 権限がない場合 api は 403 を返すため、その場合も Error を返し呼び出し元でセクションを隠す。
+ * GET /company/personnel-annotations。従業員コード指定で原注記を取得する。kind で絞り込める。
+ * 参照に失敗した場合はErrorを返し、空の記録として扱わない。
  */
 export async function getEmployeeEventList(query: EmployeeEventSearchQuery) {
   const client = await createClient()
 
-  const response = await client.company["employee-events"].$get({
+  const response = await client.company["personnel-annotations"].$get({
     query: {
       employee_code: query.employeeCode,
       kind: query.kind ?? undefined,

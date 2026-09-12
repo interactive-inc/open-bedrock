@@ -1,11 +1,14 @@
 import { factory } from "@/factory"
 
-export const help = `bedrock position-definitions — 役職マスタ
+export const help = `bedrock position-definitions — 公開履歴の役職定義
 
 usage:
-  bedrock position-definitions list                                     役職マスタ一覧（全認証者）
-  bedrock position-definitions create --code <c> --name <n> --rank <r> [--description <d>]
-  bedrock position-definitions update --id <position-id> --code <c> --name <n> --rank <r> [--description <d>]
-  bedrock position-definitions delete --id <position-id>`
+  bedrock position-definitions list --organization-id <id> [--as-of <YYYY-MM-DD>]
+  bedrock position-definitions create --data <confirmed-definition.json> --idempotency-key <key>
+  bedrock position-definitions update --data <confirmed-definition.json> --idempotency-key <key>
+  bedrock position-definitions delete --data <confirmed-definition.json> --idempotency-key <key>
 
-export default factory.createHandlers((c) => c.text(help))
+listで会社版と資源版を確認し、保存時は同じ確認に基づくJSONを指定します。
+取消も履歴へ記録し、過去の定義を物理削除しません。`
+
+export default factory.createHandlers((context) => context.text(help))

@@ -9,6 +9,13 @@ import { stableLifecycleJson } from "@/contexts/company/domain/definitions/stabl
 export function fingerprintPersonnelAction(
   employeeId: EmployeeId | `prospective:${string}`,
   input: PersonnelActionInput,
+  expectedCompanyRevision?: number,
 ): Promise<string> {
-  return lifecycleSha256(stableLifecycleJson({ employeeId, input }))
+  return lifecycleSha256(
+    stableLifecycleJson({
+      employeeId,
+      input,
+      ...(expectedCompanyRevision === undefined ? {} : { expectedCompanyRevision }),
+    }),
+  )
 }

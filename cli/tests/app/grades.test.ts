@@ -26,7 +26,7 @@ describe("grades commands", () => {
     })
   }
 
-  it("grades create requires --code, --name, --rank", async () => {
+  it("grades create requires reviewed JSON and an idempotency key", async () => {
     const response = await app.request("/grade-definitions/create", {
       method: "POST",
       headers: { "content-type": "application/json" },
