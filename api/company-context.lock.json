@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "78b6ce8c2c3efeedaded5ebdf0fef863e49d19dda4a252dd8a5f3ba182a17ddb",
+    "company-context.manifest.json": "a28cbe2a8d5314bf0bd4799c11ddeddc555b53a09a41bc4884985e9ef7bcdc99",
     "src/contexts/company/CLAUDE.md": "80247089a24770a7dbfcbaf9151ac962b21b8dc36d6ef6244dc4eb50bb866412",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -259,6 +259,8 @@
     "src/contexts/company/domain/values/company-employment-dependent-change.value.ts": "433c9726d75c0789013818013d2a3df16d8c43bb4e6ecd22c8ea9516880a0284",
     "src/contexts/company/domain/values/company-employment-journal-change.value.test.ts": "da122fc6421f680beff348789b34d6a250905b5c5011863f58b236adebcb2da0",
     "src/contexts/company/domain/values/company-employment-journal-change.value.ts": "3ee8276db1fb6c50103ad1e918183f712e03283ecfc3e40cdf0c43ae107d0631",
+    "src/contexts/company/domain/values/company-employment-movements.value.test.ts": "ef197e60ba4f58a3f13c3c0a041dc065cd6ba814e9cbe151d8adbb75240f4e08",
+    "src/contexts/company/domain/values/company-employment-movements.value.ts": "26129cd50e2bbc4ab29e3b317d26a236bc7bae16782b62f0bc3aa299f397bdd3",
     "src/contexts/company/domain/values/company-employment-resource-timeline.value.test.ts": "7537c614d6cddddc342bb940a110080e27c9848d1deb0a1961d495926fb57b55",
     "src/contexts/company/domain/values/company-employment-resource-timeline.value.ts": "029b897e65cd92124269a5803e7754b94d3037cb505c6ecc59311571b2957e80",
     "src/contexts/company/domain/values/company-personnel-reporting-change.value.test.ts": "c15a6914a33e185a40b325764dd93b0c0f758811ab82c0357226dc3f2882b099",
@@ -397,6 +399,8 @@
     "src/contexts/company/infrastructure/repositories/definitions/position.repository.ts": "cb77a0d86fd1fe80fd366afcfa0e51033cdb78865ec2d4d0b0999e67b3f7b47d",
     "src/contexts/company/infrastructure/repositories/employee-history/employee-event.repository.ts": "2cedfbd7e536e6c1bcc179e075cb6677ea970c76521a9cddbabf642bc48d6930",
     "src/contexts/company/infrastructure/repositories/employee-history/employee-grade.repository.ts": "0b805aa430052f075fa84d16b285779f3ef8c500caf0a4f02ce390a3336a5427",
+    "src/contexts/company/infrastructure/repositories/employee-lifecycle/company-employment-movements.repository.test.ts": "1cef578e5642eddc0c51019f5741b66117d55714975a031073aadd868cfaee0c",
+    "src/contexts/company/infrastructure/repositories/employee-lifecycle/company-employment-movements.repository.ts": "8f74280d4ecb7110ea8ceb1da1b868eaa7c5b123da35206685482cdc531afebc",
     "src/contexts/company/infrastructure/repositories/employee-lifecycle/company-personnel-event.repository.ts": "b083086e30525fd01c3b940d32d00945ba68ca94b28fb1f52211c44919144f54",
     "src/contexts/company/infrastructure/repositories/employee-lifecycle/company-personnel-history.repository.ts": "0b3cbe219356b38ac365e49bf19c0dd9c87b5083a4f39543ceb30dbeaac16076",
     "src/contexts/company/infrastructure/repositories/employee-resource-adoption/employee-resource-adoption-batch.repository.ts": "ad2cf3117602d72ae6276312c6d5e8cf5eeaced848a51126fbbddacb25c527f7",
