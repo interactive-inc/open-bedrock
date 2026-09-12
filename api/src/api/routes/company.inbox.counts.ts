@@ -58,6 +58,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       expenses: counts.expenses,
       expenses_has_more: counts.expenses_has_more,
       leaves: counts.leaves,
+      leaves_has_more: counts.leaves_has_more,
       shifts: counts.shifts,
       thanks: counts.thanks,
     },

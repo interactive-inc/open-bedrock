@@ -29,6 +29,17 @@ export default async function LeavePage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="休暇">
+        {!(currentUser instanceof Error) &&
+        (currentUser.permissions.includes("leave:procedure:manage") ||
+          currentUser.permissions.includes("system:admin")) ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/leave/procedure" />}
+          >
+            承認規程
+          </Button>
+        ) : null}
         {canViewAll ? (
           <Button variant="secondary" nativeButton={false} render={<Link href="/leave/leaves" />}>
             全社の休暇

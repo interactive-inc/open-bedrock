@@ -1,3 +1,5 @@
+import { leaveProcedureStatusSql } from "@/contexts/leave/infrastructure/adapters/lib/leave-procedure-status-sql"
+import { leaveProcedureStatusSchema } from "@/contexts/leave/domain/definitions/leave-procedure.definition"
 import { factory } from "@/api/http/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -10,7 +12,7 @@ import { zAppLeaveRequestSummaryList } from "@/contexts/leave/interface/http/res
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { zValidator } from "@hono/zod-validator"
-import { and, count, desc, eq } from "drizzle-orm"
+import { and, count, desc, eq, getTableColumns } from "drizzle-orm"
 import { z } from "zod"
 
 // @authorization owner - 本人のリソースに限定する
@@ -20,7 +22,7 @@ export const GET = factory.createHandlers(
   zValidator(
     "query",
     z.object({
-      status: z.enum(["pending", "approved", "rejected"]).optional(),
+      status: leaveProcedureStatusSchema.optional(),
       limit: z.string().optional(),
       offset: z.string().optional(),
     }),
@@ -51,11 +53,11 @@ export const GET = factory.createHandlers(
     const conditions = [eq(leaveRequests.employeeId, session.employeeId)]
 
     if (query.status !== undefined) {
-      conditions.push(eq(leaveRequests.status, query.status))
+      conditions.push(eq(leaveProcedureStatusSql, query.status))
     }
 
     const rows = await c.var.database
-      .select()
+      .select({ ...getTableColumns(leaveRequests), status: leaveProcedureStatusSql })
       .from(leaveRequests)
       .where(and(...conditions))
       .orderBy(desc(leaveRequests.id))

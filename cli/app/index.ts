@@ -72,6 +72,8 @@ import expenseSubmitHandler from "@/app/expenses/submit/route"
 import ringiShowHandler from "@/app/ringi-requests/show/[ringi_id]/route"
 import ringiCancelHandler from "@/app/ringi-requests/cancel/[ringi_id]/route"
 import ringiExecuteHandler from "@/app/ringi-requests/execute/[ringi_id]/route"
+import leaveRequestProcedureHandler from "@/app/leave-requests/procedure/route"
+import leaveProcedureHandler from "@/app/leave-procedures/route"
 import ringiProcedureHandler from "@/app/ringi-procedures/route"
 import ringiHandler from "@/app/ringi-requests/route"
 import ringiAdminHandler from "@/app/ringi-requests/admin/route"
@@ -110,12 +112,10 @@ import kbGetHandler from "@/app/knowledge-articles/get/[kid]/route"
 import kbHistoryHandler from "@/app/knowledge-articles/history/route"
 import kbHandler from "@/app/knowledge-articles/route"
 import kbSearchHandler from "@/app/knowledge-articles/search/route"
-import leaveApproveHandler from "@/app/leave-requests/approve/[leave_id]/route"
 import leaveBalanceHandler from "@/app/leave-requests/balance/route"
 import leaveHandler from "@/app/leave-requests/route"
 import leaveInboxHandler from "@/app/leave-requests/inbox/route"
 import leaveMineHandler from "@/app/leave-requests/mine/route"
-import leaveRejectHandler from "@/app/leave-requests/reject/[leave_id]/route"
 import leaveRequestHandler from "@/app/leave-requests/request/route"
 import loginHandler from "@/app/login/route"
 import bootstrapHandler from "@/app/bootstrap/route"
@@ -587,6 +587,8 @@ routes.post("/department-budgets/update/:budget_id?", ...budgetUpdateHandler)
 routes.post("/department-budgets/delete/:budget_id?", ...budgetDeleteHandler)
 
 routes.post("/work-items/:operation?/:id?", ...workItemHandler)
+routes.post("/leave-requests/procedure", ...leaveRequestProcedureHandler)
+routes.post("/leave-procedures", ...leaveProcedureHandler)
 routes.post("/ringi-procedures", ...ringiProcedureHandler)
 routes.post("/ringi-requests/show/:ringi_id?", ...ringiShowHandler)
 routes.post("/ringi-requests/cancel/:ringi_id?", ...ringiCancelHandler)
@@ -710,8 +712,6 @@ routes.post("/leave-requests/balance", ...leaveBalanceHandler)
 routes.post("/leave-requests/request", ...leaveRequestHandler)
 routes.post("/leave-requests/mine", ...leaveMineHandler)
 routes.post("/leave-requests/inbox", ...leaveInboxHandler)
-routes.post("/leave-requests/approve/:leave_id?", ...leaveApproveHandler)
-routes.post("/leave-requests/reject/:leave_id?", ...leaveRejectHandler)
 
 routes.post("/departments", ...orgHandler)
 routes.post("/departments/tree", ...orgTreeHandler)

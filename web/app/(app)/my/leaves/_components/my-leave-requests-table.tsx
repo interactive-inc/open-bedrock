@@ -1,7 +1,8 @@
+import Link from "next/link"
 import { formatDateTime } from "@/lib/format-date-time"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
-import { LeaveStatusBadge } from "@/components/leave-status-badge"
+import { leaveProcedureStatusLabel } from "@/lib/leave/leave-procedure-status-label"
 import { LeaveTypeLabel } from "@/components/leave-type-label"
 import {
   Table,
@@ -22,7 +23,7 @@ export async function MyLeaveRequestsTable() {
   }
 
   if (leaveRequests.length === 0) {
-    return <EmptyState title="提出済みの休暇申請はまだありません" />
+    return <EmptyState title="休暇の記録はまだありません" />
   }
 
   return (
@@ -42,7 +43,9 @@ export async function MyLeaveRequestsTable() {
           {leaveRequests.map((leaveRequest) => (
             <TableRow key={leaveRequest.id}>
               <TableCell>
-                <LeaveTypeLabel leaveType={leaveRequest.leave_type} />
+                <Link href={`/my/leaves/${leaveRequest.id}`}>
+                  <LeaveTypeLabel leaveType={leaveRequest.leave_type} />
+                </Link>
               </TableCell>
 
               <TableCell>
@@ -51,9 +54,7 @@ export async function MyLeaveRequestsTable() {
 
               <TableCell>{leaveRequest.days} 日</TableCell>
 
-              <TableCell>
-                <LeaveStatusBadge status={leaveRequest.status} />
-              </TableCell>
+              <TableCell>{leaveProcedureStatusLabel(leaveRequest.status, false)}</TableCell>
 
               <TableCell>{formatDateTime(leaveRequest.created_at)}</TableCell>
             </TableRow>

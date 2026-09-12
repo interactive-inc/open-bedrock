@@ -1,122 +1,49 @@
-import { LeaveDecisionTargetValue } from "@/contexts/leave/domain/values/leave-decision-target.value"
-import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
+import { zValidator } from "@hono/zod-validator"
+import { z } from "zod"
 import { factory } from "@/api/http/factory"
+import { verifyBearer } from "@/api/http/verify-bearer"
+import { UnauthorizedError } from "@/lib/http/errors"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { verifyBearer } from "@/api/http/verify-bearer"
-import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
-import { zAppLeaveRequestInboxList } from "@/contexts/leave/interface/http/response-schemas"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
-import { and, asc, count, desc, eq, inArray, sql } from "drizzle-orm"
-import { ListManagedEmployeeIdsAdapter } from "@/contexts/company/infrastructure/adapters/organization/list-managed-employee-ids.adapter"
+import { LeaveProcedureInboxAdapter } from "@/contexts/leave/infrastructure/adapters/leave-procedure-inbox.adapter"
+import { zLeaveProcedureView } from "@/contexts/leave/interface/http/response-schemas"
+import { ApplicationError } from "@/lib/errors"
+import { toHttpException } from "@/lib/http/to-http-exception"
 
-/** 並び順クエリのホワイトリスト。未知の値は created_at desc にフォールバックする。 */
-const SORT_OPTIONS = {
-  created_at_desc: desc(leaveRequests.createdAt),
-  created_at_asc: asc(leaveRequests.createdAt),
-  start_date_desc: desc(leaveRequests.startDate),
-  start_date_asc: asc(leaveRequests.startDate),
-} as const
-
-type SortKey = keyof typeof SORT_OPTIONS
-
-// @authorization permission - 権限キーで判定する
-/** GET /leave-requests/inbox — 承認権限者向けの承認待ち一覧 */
-export const GET = factory.createHandlers(verifyBearer, async (c) => {
-  const session = c.var.session
-
-  if (session === null) {
-    throw new UnauthorizedError()
-  }
-
-  if (session.hasPermission("leave:approve") === false) {
-    throw new ForbiddenError()
-  }
-
-  const managedEmployeeIds = await new ListManagedEmployeeIdsAdapter(c).listManagedEmployeeIds(
-    session.employeeId,
-  )
-
-  if (managedEmployeeIds instanceof Error) {
-    throw new InternalError("failed to resolve organization scope")
-  }
-
-  const pendingInScope =
-    managedEmployeeIds.length === 0
-      ? and(eq(leaveRequests.status, "pending"), sql`0 = 1`)
-      : and(
-          eq(leaveRequests.status, "pending"),
-          inArray(leaveRequests.employeeId, [...managedEmployeeIds]),
-        )
-
-  const limit = toBoundedInt({
-    raw: c.req.query("limit"),
-    fallback: DEFAULT_LIST_LIMIT,
-    min: 1,
-    max: MAX_LIST_LIMIT,
-  })
-
-  const offset = toBoundedInt({
-    raw: c.req.query("offset"),
-    fallback: 0,
-    min: 0,
-    max: MAX_LIST_OFFSET,
-  })
-
-  const sortQuery = c.req.query("sort") ?? ""
-
-  const sortKey: SortKey = Object.hasOwn(SORT_OPTIONS, sortQuery)
-    ? (sortQuery as SortKey)
-    : "created_at_desc"
-
-  const rows = await c.var.database
-    .select({ leaveRequest: leaveRequests, applicantName: employees.officialName })
-    .from(leaveRequests)
-    .leftJoin(employees, eq(employees.id, leaveRequests.employeeId))
-    .where(pendingInScope)
-    .orderBy(SORT_OPTIONS[sortKey])
-    .limit(limit)
-    .offset(offset)
-
-  const totalRows = await c.var.database
-    .select({ total: count() })
-    .from(leaveRequests)
-    .where(pendingInScope)
-
-  const targets = await Promise.all(
-    rows.map(async (row) => {
-      const target = await LeaveDecisionTargetValue.create(LeaveRequest.fromRow(row.leaveRequest))
-      if (target instanceof Error || target === null)
-        return new Error("cannot identify leave decision target")
-      return {
-        decision_target: target.toJSON(),
-        employee_id: row.leaveRequest.employeeId,
-        consumed_days: row.leaveRequest.consumedDays,
-        id: row.leaveRequest.id,
-        applicant_name: row.applicantName ?? "",
-        leave_type: row.leaveRequest.leaveType,
-        start_date: row.leaveRequest.startDate,
-        end_date: row.leaveRequest.endDate,
-        days: row.leaveRequest.days,
-        unit: row.leaveRequest.unit,
-        hours: row.leaveRequest.hours,
-        reason: row.leaveRequest.reason,
-        status: row.leaveRequest.status,
-        created_at: row.leaveRequest.createdAt,
-      }
-    }),
-  )
-  if (targets.some((target) => target instanceof Error))
-    throw new InternalError("cannot identify leave decision targets")
-  const responseBody = zAppLeaveRequestInboxList.parse({
-    data: targets,
-    total: totalRows.at(0)?.total ?? 0,
-  })
-
-  return c.json(responseBody, 200)
-})
+// @authorization service - 現在の判断・確定資格を持つ案件だけを返す
+export const GET = factory.createHandlers(
+  verifyBearer,
+  zValidator("query", z.object({ limit: z.string().optional(), offset: z.string().optional() })),
+  async (c) => {
+    if (c.var.session === null || c.var.accountTokenVersion === null) throw new UnauthorizedError()
+    const page = await new LeaveProcedureInboxAdapter(c).list({
+      session: c.var.session,
+      tokenVersion: c.var.accountTokenVersion,
+      at: new Date(c.env.NOW ?? Date.now()),
+      limit: toBoundedInt({
+        raw: c.req.query("limit"),
+        fallback: DEFAULT_LIST_LIMIT,
+        min: 1,
+        max: MAX_LIST_LIMIT,
+      }),
+      offset: toBoundedInt({
+        raw: c.req.query("offset"),
+        fallback: 0,
+        min: 0,
+        max: MAX_LIST_OFFSET,
+      }),
+    })
+    if (page instanceof ApplicationError) throw toHttpException(page)
+    return c.json(
+      {
+        data: page.data.map((view) => zLeaveProcedureView.parse(view)),
+        next_offset: page.next_offset,
+      },
+      200,
+    )
+  },
+)
