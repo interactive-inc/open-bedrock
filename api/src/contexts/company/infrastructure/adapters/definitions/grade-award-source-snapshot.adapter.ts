@@ -34,11 +34,11 @@ export class GradeAwardSourceSnapshotAdapter {
       'organizationRevision', (SELECT revision FROM company_organizations WHERE id = 'organization:default'),
       'employeeId', ?1,
       'awards', json(coalesce((SELECT json_group_array(json(award_json)) FROM (
-        SELECT json_object('id', award.id, 'employeeId', award.employee_id,
-          'gradeId', award.grade_id, 'effectiveDate', award.effective_date,
+        SELECT json_object('id', CASE WHEN award.id BETWEEN -9007199254740991 AND 9007199254740991 THEN award.id ELSE CAST(award.id AS TEXT) END, 'employeeId', award.employee_id,
+          'gradeId', CASE WHEN award.grade_id BETWEEN -9007199254740991 AND 9007199254740991 THEN award.grade_id ELSE CAST(award.grade_id AS TEXT) END, 'effectiveDate', award.effective_date,
           'reason', award.reason, 'createdAt', award.created_at,
-          'observedDefinition', json((SELECT json_object('id', definition.id,
-            'code', definition.code, 'name', definition.name, 'rank', definition.rank,
+          'observedDefinition', json((SELECT json_object('id', CASE WHEN definition.id BETWEEN -9007199254740991 AND 9007199254740991 THEN definition.id ELSE CAST(definition.id AS TEXT) END,
+            'code', definition.code, 'name', definition.name, 'rank', CASE WHEN definition.rank BETWEEN -9007199254740991 AND 9007199254740991 THEN definition.rank ELSE CAST(definition.rank AS TEXT) END,
             'description', definition.description, 'createdAt', definition.created_at)
             FROM company_grade_definitions definition WHERE definition.id = award.grade_id))) AS award_json
         FROM company_employee_grades award WHERE award.employee_id = ?1

@@ -383,6 +383,8 @@ Webは表示内容と確認条件を同じ組織行に保持し、再読み込�
 
 `GET /company/definition-resource-adoptions/:commandId`は確認主体・理由・会社版・確認日・記録時点と元の定義を返す。旧定義テーブルの撤去後も、この証跡と成功済みの再送結果は残る。証跡の更新と削除は拒否する。
 
+旧等級付与の保全原記録では、付与ID・定義ID・確認時の順位がJavaScriptの安全な整数範囲内ならJSON数値、範囲外なら正確な十進文字列になる。SQLiteの符号付き64ビット整数を丸めず保持し、既に保存したJSON原文と照合digestは書き換えない。保全後は元の等級テーブルを参照せずに原記録を取得・再送できる。
+
 旧等級・役職定義と旧等級付与のAPIは原記録の読み取りだけを提供し、登録・上書き・削除は提供しない。新しい定義は`/company/definitions`、等級割当は`/company/organization-changes`で会社版・理由・有効期間を伴う履歴として保存する。
 
 旧人事注記は`GET /company/personnel-annotations`で参照する。`employee_code`または原記録の`employee_id`の一方を指定し、本人または`employee:read`を持つ主体が既定会社の範囲で読む。対象が現在の従業員台帳に存在しなくても、対象IDと閲覧権限から原記録を参照できる。`kind`は元の文字列で絞り込める。

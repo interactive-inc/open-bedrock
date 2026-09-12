@@ -223,3 +223,46 @@ test("保全後の旧付与台帳への追加・変更・削除・別人への�
     source: { awards: [{ reason: " original " }] },
   })
 })
+
+test("大きい整数を保全保存し、元台帳の撤去後も同じ原文を再送・参照できる", async () => {
+  const f = await fixture()
+  await f.database
+    .exec(`INSERT INTO company_grade_definitions VALUES (9223372036854775807, 'LARGE', 'Observed name', -9223372036854775808, NULL, 'unknown');
+    UPDATE company_employee_grades SET id = 9223372036854775807, grade_id = 9223372036854775807;`)
+  const snapshot = await new GradeAwardSourceSnapshotAdapter(f.database).find(f.props.employeeId)
+  if (snapshot instanceof Error) throw snapshot
+  const command = GradeAwardArchiveEntity.create({
+    ...f.props,
+    snapshotDigest: snapshot.props.digest,
+  })
+  if (command instanceof Error) throw command
+  expect(await f.repository.archive(command, auditContext)).toMatchObject({ replayed: false })
+  const before = await f.database
+    .prepare("SELECT source_json FROM company_grade_award_archives")
+    .first<string>("source_json")
+  expect(before).toBe(snapshot.props.sourceJson)
+  await f.database.exec("DROP TABLE company_employee_grades; DROP TABLE company_grade_definitions;")
+  expect(await f.repository.archive(command, auditContext)).toMatchObject({ replayed: true })
+  expect(await f.repository.findByEmployee(f.props.employeeId)).toMatchObject({
+    snapshotDigest: snapshot.props.digest,
+    source: {
+      awards: [
+        {
+          id: "9223372036854775807",
+          gradeId: "9223372036854775807",
+          observedDefinition: { id: "9223372036854775807", rank: "-9223372036854775808" },
+        },
+      ],
+    },
+  })
+  expect(
+    await f.database
+      .prepare("SELECT source_json FROM company_grade_award_archives")
+      .first<string>("source_json"),
+  ).toBe(before)
+  expect(
+    await f.database
+      .prepare("SELECT count(*) AS count FROM system_audit_events")
+      .first<number>("count"),
+  ).toBe(1)
+})

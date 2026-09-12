@@ -112,3 +112,24 @@ test("存在しない従業員を履歴ゼロの従業員として保全しな�
   if (empty instanceof Error) throw empty
   expect(empty.props.value.awards).toHaveLength(0)
 })
+
+test("SQLiteの大きな整数IDと順位を丸めず保存し、確認後の変更も検出する", async () => {
+  const f = fixture()
+  await f.database
+    .exec(`INSERT INTO company_grade_definitions VALUES (9223372036854775807, 'LARGE', 'Original', -9223372036854775808, NULL, 'unknown');
+    INSERT INTO company_employee_grades VALUES (9223372036854775807, 'employee:empty', 9223372036854775807, 'unknown', NULL, 'unknown');`)
+  const snapshot = await f.adapter.find("employee:empty")
+  if (snapshot instanceof Error) throw snapshot
+  expect(snapshot.props.value.awards[0]).toMatchObject({
+    id: "9223372036854775807",
+    gradeId: "9223372036854775807",
+    observedDefinition: { id: "9223372036854775807", rank: "-9223372036854775808" },
+  })
+  await f.database.batch([f.adapter.prepareGuard(snapshot)])
+  await f.database.exec(
+    "UPDATE company_grade_definitions SET rank = -9223372036854775807 WHERE id = 9223372036854775807",
+  )
+  expect(
+    await f.database.batch([f.adapter.prepareGuard(snapshot)]).catch((cause: unknown) => cause),
+  ).toBeInstanceOf(Error)
+})

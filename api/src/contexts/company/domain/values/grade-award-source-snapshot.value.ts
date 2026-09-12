@@ -2,12 +2,22 @@ import { z } from "zod"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
+const sqliteIntegerSchema = z.union([
+  z.number().int(),
+  z
+    .string()
+    .regex(/^(?:0|[1-9][0-9]{0,18}|-[1-9][0-9]{0,18})$/)
+    .refine(
+      (value) => BigInt(value) >= -9223372036854775808n && BigInt(value) <= 9223372036854775807n,
+    ),
+])
+
 const definitionSchema = z
   .strictObject({
-    id: z.number().int().positive(),
+    id: sqliteIntegerSchema,
     code: z.string(),
     name: z.string(),
-    rank: z.number().int(),
+    rank: sqliteIntegerSchema,
     description: z.string().nullable(),
     createdAt: z.string(),
   })
@@ -21,9 +31,9 @@ const schema = z
       .array(
         z
           .strictObject({
-            id: z.number().int().positive(),
+            id: sqliteIntegerSchema,
             employeeId: z.string().min(1).max(128),
-            gradeId: z.number().int().positive(),
+            gradeId: sqliteIntegerSchema,
             effectiveDate: z.string(),
             reason: z.string().nullable(),
             createdAt: z.string(),
@@ -50,16 +60,17 @@ export class GradeAwardSourceSnapshotValue {
         return new Error("grade award snapshot is too large")
       const parsed = schema.safeParse(JSON.parse(sourceJson))
       if (!parsed.success) return parsed.error
-      const ids = new Set<number>()
+      const ids = new Set<string>()
       for (const award of parsed.data.awards) {
         if (
           award.employeeId !== parsed.data.employeeId ||
-          ids.has(award.id) ||
-          (award.observedDefinition !== null && award.observedDefinition.id !== award.gradeId)
+          ids.has(String(award.id)) ||
+          (award.observedDefinition !== null &&
+            String(award.observedDefinition.id) !== String(award.gradeId))
         ) {
           return new Error("grade award source correspondence is invalid")
         }
-        ids.add(award.id)
+        ids.add(String(award.id))
       }
       const canonical = CanonicalSystemJsonValue.create(parsed.data)
       if (canonical instanceof Error) return canonical
