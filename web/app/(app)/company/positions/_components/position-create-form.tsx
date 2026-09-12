@@ -1,5 +1,6 @@
 "use client"
 
+import { PositionRevisionFields } from "@/app/(app)/company/positions/_components/position-revision-fields"
 import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
@@ -11,10 +12,12 @@ import { Input } from "@/components/ui/input"
 import { Textarea } from "@/components/ui/textarea"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
+type Props = { companyRevision: number; commandId: string; positionId: string }
+
 const initialState: PositionActionState = { ok: false, error: null }
 
 /** 役職作成フォーム。code/name/rank 必須、説明は任意。成功時は /positions へ戻す。 */
-export function PositionCreateForm() {
+export function PositionCreateForm(props: Props) {
   const router = useRouter()
 
   async function reduce(
@@ -45,13 +48,22 @@ export function PositionCreateForm() {
   return (
     <form action={formAction}>
       <FieldGroup>
+        <PositionRevisionFields
+          jobId={null}
+          id={props.positionId}
+          companyRevision={props.companyRevision}
+          resourceRevision={0}
+          commandId={props.commandId}
+          effectiveFrom=""
+          effectiveTo={null}
+        />
         <Field>
           <FieldLabel htmlFor="position-code">コード</FieldLabel>
 
           <Input
             id="position-code"
             name="code"
-            placeholder="CTO"
+            placeholder="G1"
             maxLength={FORM_CONSTRAINTS.position.codeMax}
             required
           />
@@ -63,7 +75,7 @@ export function PositionCreateForm() {
           <Input
             id="position-name"
             name="name"
-            placeholder="最高技術責任者"
+            placeholder="メンバー"
             maxLength={FORM_CONSTRAINTS.position.nameMax}
             required
           />
@@ -80,8 +92,7 @@ export function PositionCreateForm() {
             min={FORM_CONSTRAINTS.position.rankMin}
             max={FORM_CONSTRAINTS.position.rankMax}
             step={1}
-            placeholder="1"
-            required
+            placeholder="不明なら空欄"
           />
         </Field>
 
