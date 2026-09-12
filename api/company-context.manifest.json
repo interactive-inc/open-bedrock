@@ -167,6 +167,7 @@
     "src/contexts/company/domain/entities/external-identity-import.entity.ts",
     "src/contexts/company/domain/entities/grade-award-archive.entity.ts",
     "src/contexts/company/domain/entities/organization-profile-change.entity.ts",
+    "src/contexts/company/domain/entities/organization-resource-adoption.entity.test.ts",
     "src/contexts/company/domain/entities/organization-resource-adoption.entity.ts",
     "src/contexts/company/domain/entities/organization-workforce-change.entity.test.ts",
     "src/contexts/company/domain/entities/organization-workforce-change.entity.ts",

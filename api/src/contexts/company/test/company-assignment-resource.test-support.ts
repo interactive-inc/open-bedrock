@@ -19,7 +19,10 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import * as assignmentAdoptions from "@/contexts/company/interface/routes/company.assignment-resource-adoptions"
-export async function createCompanyAssignmentResourceTestContext(databaseOverride?: D1Database) {
+export async function createCompanyAssignmentResourceTestContext(
+  databaseOverride?: D1Database,
+  organizationHistory: "initialization" | "confirmed" = "initialization",
+) {
   const base = await createGovernanceTaskTestContext(databaseOverride)
   let actor: CompanyActorValue | undefined = CompanyActorValue.restore({
     ...base.creator,
@@ -70,7 +73,25 @@ export async function createCompanyAssignmentResourceTestContext(databaseOverrid
       (
         await client.adoptions.$post({
           header: { "idempotency-key": "assignment-root" },
-          json: { ...body, organizationUnitId: root.id, reason: "Confirm organization history" },
+          json: {
+            ...body,
+            organizationUnitId: root.id,
+            reason: "Confirm organization history",
+            initializationConfirmation:
+              organizationHistory === "initialization"
+                ? {
+                    startsOn: "2020-01-01",
+                    evidenceReferences: [
+                      {
+                        context: "company",
+                        kind: "confirmed-test-history",
+                        id: "root-start",
+                        version: "1",
+                      },
+                    ],
+                  }
+                : undefined,
+          },
         })
       ).status,
     ),

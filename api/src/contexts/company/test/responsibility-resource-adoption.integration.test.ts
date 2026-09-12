@@ -35,8 +35,14 @@ function resourceProps(resource: CompanyResourceEntity): CompanyResourceProps {
   }
 }
 
-async function fixture(databaseOverride?: D1Database) {
-  const base = await createCompanyAssignmentResourceTestContext(databaseOverride)
+async function fixture(
+  databaseOverride?: D1Database,
+  organizationHistory: "initialization" | "confirmed" = "initialization",
+) {
+  const base = await createCompanyAssignmentResourceTestContext(
+    databaseOverride,
+    organizationHistory,
+  )
   await base.initializeAssignment()
   const repository = new D1CompanyResourceRepository(base.database)
   const define = async (
@@ -638,9 +644,13 @@ test("既存の期間重複があるmigrationは一意制約を置換する前�
     files
       .filter((file) => file < migration)
       .map((file) => readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8"))
-      .join("\n"),
+      // 旧schemaに存在した確認済み組織を用意し、後年の初期確認処理を実行しない。
+      .join("\n")
+      .replaceAll("initialization:organization:default", "fixture:confirmed-organization")
+      .replaceAll("initialization:company:root", "fixture:confirmed-organization")
+      .replaceAll("system:initialization", "fixture:organization-recorder"),
   )
-  const f = await fixture(database)
+  const f = await fixture(database, "confirmed")
   const responsibility: CompanyResourceProps = {
     organizationId: "organization:default",
     type: "responsibility-assignment",

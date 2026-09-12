@@ -92,7 +92,17 @@ async function fixture() {
     .parse(await previewResponse.json())
   const connected = await client["organization-resource-adoptions"].$post({
     header: { "idempotency-key": "connect-root" },
-    json: { ...preview, organizationUnitId: root.id, reason: "Confirm organization history" },
+    json: {
+      ...preview,
+      organizationUnitId: root.id,
+      reason: "Confirm organization history",
+      initializationConfirmation: {
+        startsOn: "2020-01-01",
+        evidenceReferences: [
+          { context: "company", kind: "confirmed-test-history", id: "root-start", version: "1" },
+        ],
+      },
+    },
   })
   expect(Number(connected.status)).toBe(201)
   const revision = await base.database
