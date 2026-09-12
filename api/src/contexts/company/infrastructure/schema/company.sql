@@ -4148,3 +4148,133 @@ END;
 DROP INDEX company_resource_revisions_org_revision_idx;
 CREATE INDEX company_resource_revisions_org_revision_idx
   ON company_resource_revisions (organization_id, organization_revision, resource_type, resource_id);
+
+CREATE TABLE company_definition_resource_adoptions (
+  organization_id TEXT NOT NULL DEFAULT 'organization:default' CHECK (organization_id = 'organization:default'),
+  command_id TEXT NOT NULL,
+  resource_type TEXT NOT NULL CHECK (resource_type IN ('grade', 'position')),
+  definition_id INTEGER NOT NULL CHECK (definition_id > 0),
+  resource_id TEXT NOT NULL,
+  fingerprint TEXT NOT NULL CHECK (length(fingerprint) = 64),
+  actor_account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE RESTRICT,
+  reason TEXT NOT NULL CHECK (length(trim(reason)) BETWEEN 1 AND 1000),
+  expected_revision INTEGER NOT NULL CHECK (expected_revision >= 0),
+  organization_revision INTEGER NOT NULL CHECK (organization_revision = expected_revision + 1),
+  observed_on TEXT NOT NULL CHECK (length(observed_on) = 10),
+  snapshot_digest TEXT NOT NULL CHECK (length(snapshot_digest) = 64),
+  source_json TEXT NOT NULL CHECK (json_valid(source_json) AND length(CAST(source_json AS BLOB)) <= 20000
+    AND json_extract(source_json, '$.definition.type') IS resource_type
+    AND json_extract(source_json, '$.definition.id') IS definition_id
+    AND json_extract(source_json, '$.organizationRevision') IS expected_revision),
+  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
+  PRIMARY KEY (organization_id, command_id),
+  UNIQUE (resource_type, definition_id),
+  UNIQUE (organization_id, resource_type, resource_id),
+  FOREIGN KEY (organization_id, resource_type, resource_id)
+    REFERENCES company_resource_heads(organization_id, resource_type, resource_id) ON DELETE RESTRICT,
+  FOREIGN KEY (organization_id, command_id)
+    REFERENCES company_command_receipts(organization_id, command_id) ON DELETE RESTRICT
+);
+
+DROP TRIGGER IF EXISTS company_definition_adoptions_update_guard;
+CREATE TRIGGER company_definition_adoptions_update_guard
+BEFORE UPDATE ON company_definition_resource_adoptions
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_adoption_immutable');
+END;
+DROP TRIGGER IF EXISTS company_definition_adoptions_delete_guard;
+CREATE TRIGGER company_definition_adoptions_delete_guard
+BEFORE DELETE ON company_definition_resource_adoptions
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_adoption_immutable');
+END;
+DROP TRIGGER IF EXISTS company_definition_adoptions_insert_guard;
+CREATE TRIGGER company_definition_adoptions_insert_guard
+BEFORE INSERT ON company_definition_resource_adoptions
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_adoption_resource_invalid')
+  WHERE NOT EXISTS (
+    SELECT 1 FROM company_resource_revisions resource
+    JOIN company_command_receipts receipt
+      ON receipt.organization_id = resource.organization_id AND receipt.command_id = resource.command_id
+    WHERE resource.organization_id = NEW.organization_id AND resource.resource_type = NEW.resource_type
+      AND resource.resource_id = NEW.resource_id AND resource.revision = 1
+      AND resource.command_id = NEW.command_id AND resource.organization_revision = NEW.organization_revision
+      AND resource.effective_from = NEW.observed_on AND resource.effective_to IS NULL AND resource.state = 'active'
+      AND resource.actor_account_id = NEW.actor_account_id AND resource.recorded_at = NEW.recorded_at
+      AND resource.reason = NEW.reason AND receipt.expected_revision = NEW.expected_revision
+      AND json_extract(resource.attributes_json, '$.code') = json_extract(NEW.source_json, '$.definition.code')
+      AND json_extract(resource.attributes_json, '$.officialName') = json_extract(NEW.source_json, '$.definition.name')
+      AND json_extract(resource.attributes_json, '$.rank') = json_extract(NEW.source_json, '$.definition.rank')
+      AND json_extract(resource.attributes_json, '$.description') IS json_extract(NEW.source_json, '$.definition.description')
+  );
+END;
+
+CREATE TABLE company_grade_definitions (
+  id INTEGER PRIMARY KEY,
+  code TEXT NOT NULL,
+  name TEXT NOT NULL,
+  rank INTEGER NOT NULL,
+  description TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX uq_company_grade_definitions_code ON company_grade_definitions(code);
+
+CREATE TABLE company_position_definitions (
+  id INTEGER PRIMARY KEY,
+  code TEXT NOT NULL,
+  name TEXT NOT NULL,
+  rank INTEGER NOT NULL,
+  description TEXT,
+  created_at TEXT NOT NULL
+);
+CREATE UNIQUE INDEX uq_company_position_definitions_code ON company_position_definitions(code);
+
+DROP TRIGGER IF EXISTS company_adopted_grade_insert_guard;
+CREATE TRIGGER company_adopted_grade_insert_guard
+BEFORE INSERT ON company_grade_definitions
+WHEN EXISTS (SELECT 1 FROM company_definition_resource_adoptions
+  WHERE resource_type = 'grade' AND definition_id = NEW.id)
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_already_adopted');
+END;
+DROP TRIGGER IF EXISTS company_adopted_grade_update_guard;
+CREATE TRIGGER company_adopted_grade_update_guard
+BEFORE UPDATE ON company_grade_definitions
+WHEN EXISTS (SELECT 1 FROM company_definition_resource_adoptions
+  WHERE resource_type = 'grade' AND definition_id IN (OLD.id, NEW.id))
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_already_adopted');
+END;
+DROP TRIGGER IF EXISTS company_adopted_grade_delete_guard;
+CREATE TRIGGER company_adopted_grade_delete_guard
+BEFORE DELETE ON company_grade_definitions
+WHEN EXISTS (SELECT 1 FROM company_definition_resource_adoptions
+  WHERE resource_type = 'grade' AND definition_id = OLD.id)
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_already_adopted');
+END;
+DROP TRIGGER IF EXISTS company_adopted_position_insert_guard;
+CREATE TRIGGER company_adopted_position_insert_guard
+BEFORE INSERT ON company_position_definitions
+WHEN EXISTS (SELECT 1 FROM company_definition_resource_adoptions
+  WHERE resource_type = 'position' AND definition_id = NEW.id)
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_already_adopted');
+END;
+DROP TRIGGER IF EXISTS company_adopted_position_update_guard;
+CREATE TRIGGER company_adopted_position_update_guard
+BEFORE UPDATE ON company_position_definitions
+WHEN EXISTS (SELECT 1 FROM company_definition_resource_adoptions
+  WHERE resource_type = 'position' AND definition_id IN (OLD.id, NEW.id))
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_already_adopted');
+END;
+DROP TRIGGER IF EXISTS company_adopted_position_delete_guard;
+CREATE TRIGGER company_adopted_position_delete_guard
+BEFORE DELETE ON company_position_definitions
+WHEN EXISTS (SELECT 1 FROM company_definition_resource_adoptions
+  WHERE resource_type = 'position' AND definition_id = OLD.id)
+BEGIN
+  SELECT RAISE(ABORT, 'company_definition_already_adopted');
+END;

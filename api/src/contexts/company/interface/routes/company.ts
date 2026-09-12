@@ -5,6 +5,8 @@ import * as assignmentResourceAdoptions from "@/contexts/company/interface/route
 import * as authorityResolutions from "@/contexts/company/interface/routes/company.authority-resolutions"
 import * as bootstrap from "@/contexts/company/interface/routes/company.bootstrap"
 import * as capabilities from "@/contexts/company/interface/routes/company.capabilities"
+import * as definitionResourceAdoptions from "@/contexts/company/interface/routes/company.definition-resource-adoptions"
+import * as definitionResourceAdoptionsCommandId from "@/contexts/company/interface/routes/company.definition-resource-adoptions.$commandId"
 import * as definitions from "@/contexts/company/interface/routes/company.definitions"
 import * as employeeDirectory from "@/contexts/company/interface/routes/company.employee-directory"
 import * as employeeDirectoryCode from "@/contexts/company/interface/routes/company.employee-directory.$code"
@@ -53,6 +55,8 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .post("/authority-resolutions", ...authorityResolutions.POST)
   .post("/bootstrap", ...bootstrap.POST)
   .get("/capabilities", ...capabilities.GET)
+  .get("/definition-resource-adoptions", ...definitionResourceAdoptions.GET)
+  .get("/definition-resource-adoptions/:commandId", ...definitionResourceAdoptionsCommandId.GET)
   .get("/definitions", ...definitions.GET)
   .get("/employee-directory", ...employeeDirectory.GET)
   .get("/employee-directory/:code", ...employeeDirectoryCode.GET)
@@ -85,6 +89,7 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
 export const companyAuditedRoutes = new Hono<CompanyHttpEnvironment>()
   .post("/account-employee-links", ...accountEmployeeLinks.POST)
   .post("/assignment-resource-adoptions", ...assignmentResourceAdoptions.POST)
+  .post("/definition-resource-adoptions", ...definitionResourceAdoptions.POST)
   .post("/definitions", ...definitions.POST)
   .put("/employee-directory/:code", ...employeeDirectoryCode.PUT)
   .post("/employee-events", ...employeeEvents.POST)
