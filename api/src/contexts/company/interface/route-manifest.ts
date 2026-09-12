@@ -2,6 +2,16 @@
 export const companyRouteManifest = [
   {
     method: "GET",
+    path: "/company/changes",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.changes",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
     path: "/company/grade-assignment-history",
     phase: "authenticated",
     handler: {

@@ -90,6 +90,7 @@ import * as companyAssignmentResourceAdoptionsRoute from "@/contexts/company/int
 import * as companyAuthorityResolutionsRoute from "@/contexts/company/interface/routes/company.authority-resolutions"
 import * as companyBootstrapRoute from "@/contexts/company/interface/routes/company.bootstrap"
 import * as companyCapabilitiesRoute from "@/contexts/company/interface/routes/company.capabilities"
+import * as companyChangesRoute from "@/contexts/company/interface/routes/company.changes"
 import * as companyDefinitionResourceAdoptionsRoute from "@/contexts/company/interface/routes/company.definition-resource-adoptions"
 import * as companyDefinitionResourceAdoptionsCommandIdRoute from "@/contexts/company/interface/routes/company.definition-resource-adoptions.$commandId"
 import * as companyDefinitionsRoute from "@/contexts/company/interface/routes/company.definitions"
@@ -603,6 +604,7 @@ const routePart25 = createRouteApp()
   .post("/company/authority-resolutions", ...companyAuthorityResolutionsRoute.POST)
   .post("/company/bootstrap", ...companyBootstrapRoute.POST)
   .get("/company/capabilities", ...companyCapabilitiesRoute.GET)
+  .get("/company/changes", ...companyChangesRoute.GET)
   .get("/company/current-profile", ...companyCurrentProfileRoute.GET)
   .get("/company/dashboard", ...companyDashboardRoute.GET)
   .get("/company/dashboard/management", ...companyDashboardManagementRoute.GET)
@@ -651,9 +653,9 @@ const routePart25 = createRouteApp()
   .post("/company/notifications", ...companyNotificationsRoute.POST)
   .post("/company/organization-changes", ...companyOrganizationChangesRoute.POST)
   .get("/company/organization-profile", ...companyOrganizationProfileRoute.GET)
-  .put("/company/organization-profile", ...companyOrganizationProfileRoute.PUT)
 
 const routePart26 = createRouteApp()
+  .put("/company/organization-profile", ...companyOrganizationProfileRoute.PUT)
   .get("/company/organization-resource-adoptions", ...companyOrganizationResourceAdoptionsRoute.GET)
   .post(
     "/company/organization-resource-adoptions",

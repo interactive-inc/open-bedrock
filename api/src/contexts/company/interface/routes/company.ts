@@ -5,6 +5,7 @@ import * as assignmentResourceAdoptions from "@/contexts/company/interface/route
 import * as authorityResolutions from "@/contexts/company/interface/routes/company.authority-resolutions"
 import * as bootstrap from "@/contexts/company/interface/routes/company.bootstrap"
 import * as capabilities from "@/contexts/company/interface/routes/company.capabilities"
+import * as changes from "@/contexts/company/interface/routes/company.changes"
 import * as definitionResourceAdoptions from "@/contexts/company/interface/routes/company.definition-resource-adoptions"
 import * as definitionResourceAdoptionsCommandId from "@/contexts/company/interface/routes/company.definition-resource-adoptions.$commandId"
 import * as definitions from "@/contexts/company/interface/routes/company.definitions"
@@ -57,6 +58,7 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .post("/authority-resolutions", ...authorityResolutions.POST)
   .post("/bootstrap", ...bootstrap.POST)
   .get("/capabilities", ...capabilities.GET)
+  .get("/changes", ...changes.GET)
   .get("/definition-resource-adoptions", ...definitionResourceAdoptions.GET)
   .get("/definition-resource-adoptions/:commandId", ...definitionResourceAdoptionsCommandId.GET)
   .get("/definitions", ...definitions.GET)
