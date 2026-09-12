@@ -47,6 +47,7 @@ import * as oauthUserinfo from "@system/interface/routes/system.oauth.userinfo"
 import * as principals from "@system/interface/routes/system.principals"
 import * as principalsPrincipalId from "@system/interface/routes/system.principals.$principalId"
 import * as principalsPrincipalIdMachineCredentials from "@system/interface/routes/system.principals.$principalId.machine-credentials"
+import * as proposalsNumberVersionsVersion from "@system/interface/routes/system.proposals.$number.versions.$version"
 import * as roles from "@system/interface/routes/system.roles"
 import * as rolesRoleId from "@system/interface/routes/system.roles.$roleId"
 import * as sessions from "@system/interface/routes/system.sessions"
@@ -156,6 +157,7 @@ export const systemPublicRoutes = new Hono<SystemHonoEnv>()
     "/principals/:principalId/machine-credentials/:credentialId",
     ...machineCredentialsCredentialId.DELETE,
   )
+  .get("/proposals/:number/versions/:version", ...proposalsNumberVersionsVersion.GET)
   .get("/roles", ...roles.GET)
   .post("/roles", ...roles.POST)
   .get("/roles/:roleId", ...rolesRoleId.GET)

@@ -45,4 +45,6 @@ bun test --timeout 15000 \
   src/contexts/system/test/system-notification-application.integration.test.ts \
   src/contexts/system/test/system-procedure-application.integration.test.ts \
   src/contexts/system/test/system-case-read-guard.integration.test.ts \
-  src/contexts/system/test/system-workflow-application.integration.test.ts
+  src/contexts/system/test/system-workflow-application.integration.test.ts \
+  src/contexts/system/test/system-proposal-history-route.integration.test.ts \
+  src/contexts/system/domain/policies/can-read-system-proposal-history.policy.test.ts

@@ -373,6 +373,7 @@ import * as systemOauthUserinfoRoute from "@system/interface/routes/system.oauth
 import * as systemPrincipalsRoute from "@system/interface/routes/system.principals"
 import * as systemPrincipalsPrincipalIdRoute from "@system/interface/routes/system.principals.$principalId"
 import * as systemPrincipalsPrincipalIdMachineCredentialsRoute from "@system/interface/routes/system.principals.$principalId.machine-credentials"
+import * as systemProposalsNumberVersionsVersionRoute from "@system/interface/routes/system.proposals.$number.versions.$version"
 import * as systemRolesRoute from "@system/interface/routes/system.roles"
 import * as systemRolesRoleIdRoute from "@system/interface/routes/system.roles.$roleId"
 import * as systemSessionsRoute from "@system/interface/routes/system.sessions"
@@ -1180,6 +1181,10 @@ const routePart36 = createRouteApp()
     "/system/principals/:principalId/machine-credentials",
     ...systemPrincipalsPrincipalIdMachineCredentialsRoute.POST,
   )
+  .get(
+    "/system/proposals/:number/versions/:version",
+    ...systemProposalsNumberVersionsVersionRoute.GET,
+  )
   .get("/system/roles", ...systemRolesRoute.GET)
   .post("/system/roles", ...systemRolesRoute.POST)
   .get("/system/roles/:roleId", ...systemRolesRoleIdRoute.GET)
@@ -1227,9 +1232,9 @@ const routePart36 = createRouteApp()
   .delete("/training/training-courses/:code", ...trainingCoursesCodeRoute.DELETE)
   .get("/training/training-enrollments", ...trainingEnrollmentsRoute.GET)
   .post("/training/training-enrollments", ...trainingEnrollmentsRoute.POST)
-  .get("/training/training-enrollments/me", ...trainingEnrollmentsMeRoute.GET)
 
 const routePart37 = createRouteApp()
+  .get("/training/training-enrollments/me", ...trainingEnrollmentsMeRoute.GET)
   .get("/training/training-enrollments/:id", ...trainingEnrollmentsIdRoute.GET)
   .put("/training/training-enrollments/:id", ...trainingEnrollmentsIdRoute.PUT)
   .delete("/training/training-enrollments/:id", ...trainingEnrollmentsIdRoute.DELETE)
