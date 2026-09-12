@@ -78,6 +78,7 @@ test.each(["grade", "position"] as const)(
       const response = await request(`/${type}-definitions/list`, {
         "organization-id": "organization:example",
         "as-of": "2030-06-01",
+        "organization-revision": "4",
       })
       expect(response.status).toBe(200)
       expect(await response.json()).toEqual({
@@ -89,6 +90,7 @@ test.each(["grade", "position"] as const)(
       expect(sent.method).toBe("GET")
       expect(new URL(sent.url).pathname).toBe("/company/definitions")
       expect(new URL(sent.url).searchParams.get("effective_on")).toBe("2030-06-01")
+      expect(new URL(sent.url).searchParams.get("organization_revision")).toBe("4")
       expect(sent.headers.get("x-company-organization-id")).toBe("organization:example")
     } finally {
       f.interception.mockRestore()

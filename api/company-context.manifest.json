@@ -524,6 +524,7 @@
     "src/contexts/company/test/company-reporting-reference-periods.integration.test.ts",
     "src/contexts/company/test/company-reporting-reference.test-support.ts",
     "src/contexts/company/test/company-resource-read-limits.integration.test.ts",
+    "src/contexts/company/test/company-resource-snapshot.integration.test.ts",
     "src/contexts/company/test/company-workforce-account-batch.integration.test.ts",
     "src/contexts/company/test/company-workforce-organization-command.integration.test.ts",
     "src/contexts/company/test/company-workforce-resource-projection.integration.test.ts",

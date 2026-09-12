@@ -8,6 +8,7 @@ import {
   primaryKey,
   sqliteTable,
   text,
+  unique,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core"
 import { systemAccounts, systemIdentityBindings } from "@system/infrastructure/schema/system-core"
@@ -478,15 +479,8 @@ export const companyDefinitionResourceAdoptions = sqliteTable(
   },
   (table) => [
     primaryKey({ columns: [table.organizationId, table.commandId] }),
-    uniqueIndex("company_definition_adoptions_source_idx").on(
-      table.resourceType,
-      table.definitionId,
-    ),
-    uniqueIndex("company_definition_adoptions_resource_idx").on(
-      table.organizationId,
-      table.resourceType,
-      table.resourceId,
-    ),
+    unique().on(table.resourceType, table.definitionId),
+    unique().on(table.organizationId, table.resourceType, table.resourceId),
     foreignKey({
       columns: [table.organizationId, table.commandId],
       foreignColumns: [companyCommandReceipts.organizationId, companyCommandReceipts.commandId],
