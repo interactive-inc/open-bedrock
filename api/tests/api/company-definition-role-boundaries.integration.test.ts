@@ -74,7 +74,7 @@ test.each(["grade", "position"] as const)(
       expect((await requestWithContext({ ...common, path, headers })).status).toBe(403)
     }
     const originalEvents = await db
-      .prepare("SELECT * FROM company_employee_events ORDER BY id")
+      .prepare("SELECT * FROM company_personnel_annotations ORDER BY id")
       .all()
     const event = await requestWithContext({
       ...common,
@@ -83,9 +83,9 @@ test.each(["grade", "position"] as const)(
       body: { employee_code: "E001", kind: "join", effective_date: "2026-01-01" },
     })
     expect(event.status).toBe(404)
-    expect(await db.prepare("SELECT * FROM company_employee_events ORDER BY id").all()).toEqual(
-      originalEvents,
-    )
+    expect(
+      await db.prepare("SELECT * FROM company_personnel_annotations ORDER BY id").all(),
+    ).toEqual(originalEvents)
     await db
       .prepare("DELETE FROM system_iam_role_permissions WHERE role_id = 'definition-only'")
       .run()

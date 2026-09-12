@@ -90,7 +90,7 @@ Company が正本として持つ資源を読み取り専用で確認する画面
 - `/company/definitions` は職務(Job)、組織上の役職(OrganizationalOffice)、責任(Responsibility)、権限範囲(AuthorityScope)、合議体(CollectiveBody)の定義を確認する画面。等級と役職マスタは `/company/grades` と `/company/positions` が正本なので含めない。
 - `/company/account-employee-links` は System の Account と Company の Employee の対応を確認する画面。
 - `/company/personnel-actions` は人事発令(PersonnelAction)を確認する画面。
-- `/company/employee-events` は従業員コードを指定して入社、異動、休職、復職、退職の記録を確認する画面。API が従業員コードを必須で要求するため全社横断の一覧は持たない。
+- `/company/employee-events` は従業員コードを指定して入社、異動、休職、復職、退職の記録を確認する画面。従業員コードから原注記を参照し、全社横断の一覧は持たない。
 
 ## 人と組織
 

@@ -124,7 +124,7 @@ async function createTestDb(): Promise<D1Database> {
   })
 
   // 入社 2 件(直近 30 日以内)、退職 1 件(直近)、入社 1 件(30 日より前=数えない)。
-  await seedD1(db, "company_employee_events", [
+  await seedD1(db, "company_personnel_annotations", [
     {
       id: 1,
       employee_id: "2",
@@ -450,7 +450,13 @@ describe("GET /dashboard/management", () => {
 
 test("旧注記の削除後も正式な雇用履歴から同じ入退社件数を返す", async () => {
   const db = await createTestDb()
-  await db.prepare("DELETE FROM company_employee_events").run()
+  expect(
+    await db
+      .prepare(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'company_employee_events'",
+      )
+      .first(),
+  ).toBeNull()
   const response = await requestWithContext({
     db,
     jwtSecret,
