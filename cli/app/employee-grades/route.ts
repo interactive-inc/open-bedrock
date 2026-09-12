@@ -1,9 +1,8 @@
 import { factory } from "@/factory"
 
-export const help = `bedrock employee-grades — 従業員の等級割当
+export const help = `bedrock employee-grades — 公開Companyの期間付き等級割当
 
-usage:
-  bedrock employee-grades list [--employee-id <id>]               等級割当の履歴
-  bedrock employee-grades create --employee-code <c> --grade-code <g> --effective-on <d>  等級を割当（管理者）`
+  bedrock employee-grades list --organization-id <id> --employee-id <id> [--as-of <date>]
+  bedrock employee-grades create --data <confirmed-grade-assignment.json> --idempotency-key <key>`
 
 export default factory.createHandlers((c) => c.text(help))
