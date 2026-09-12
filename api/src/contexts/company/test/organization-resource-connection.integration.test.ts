@@ -70,6 +70,21 @@ async function fixture() {
       snapshotDigest: body.snapshotDigest,
       observedOn: body.observedOn,
       reason: "Confirmed organization history",
+      ...(id === root.id
+        ? {
+            initializationConfirmation: {
+              startsOn: "2020-01-01",
+              evidenceReferences: [
+                {
+                  context: "company",
+                  kind: "confirmed-test-history",
+                  id: "root-start",
+                  version: "1",
+                },
+              ],
+            },
+          }
+        : {}),
     }
   }
   const adopt = (input: Awaited<ReturnType<typeof preview>>, key: string) =>
@@ -155,14 +170,77 @@ async function fixture() {
 }
 
 describe("organization resources and the company period ledger", () => {
+  test("初期履歴の確認を省略すると書き込まず、証跡保存の失敗でも訂正全体を戻す", async () => {
+    const f = await fixture()
+    const input = await f.preview(f.root.id)
+    const before = await f.state()
+    const original = await f.legacy()
+    expect(
+      Number(
+        (await f.adopt({ ...input, initializationConfirmation: undefined }, "unconfirmed-root"))
+          .status,
+      ),
+    ).toBe(422)
+    expect(await f.state()).toEqual(before)
+    await f.database.exec(
+      "CREATE TRIGGER fail_root_adoption BEFORE INSERT ON company_organization_resource_adoptions BEGIN SELECT RAISE(ABORT, 'injected failure'); END;",
+    )
+    expect(Number((await f.adopt(input, "confirmed-root")).status)).toBe(503)
+    expect(await f.state()).toEqual(before)
+    expect(await f.legacy()).toEqual(original)
+    await f.database.exec("DROP TRIGGER fail_root_adoption")
+    expect(Number((await f.adopt(input, "confirmed-root")).status)).toBe(201)
+  })
+
+  test("初期の仮期間を保全し、確認した日より前には組織が存在したと推定しない", async () => {
+    const f = await fixture()
+    const original = await f.legacy()
+    const input = await f.preview(f.root.id)
+    expect(Number((await f.adopt(input, "confirmed-root")).status)).toBe(201)
+    expect((await f.snapshot("2019-12-31")).resources).toHaveLength(0)
+    expect((await f.snapshot("2020-01-01")).resources).toEqual([
+      expect.objectContaining({ revision: 2, state: "active", effectiveFrom: "2020-01-01" }),
+    ])
+    const periods = await f.database
+      .prepare(
+        "SELECT revision,starts_on FROM company_organization_unit_period_versions WHERE organization_unit_id=?1 ORDER BY revision",
+      )
+      .bind(f.root.id)
+      .all()
+    expect(periods.results).toEqual([
+      { revision: 1, starts_on: "1970-01-01" },
+      { revision: 2, starts_on: "2020-01-01" },
+    ])
+    expect(await f.legacy()).toEqual(expect.arrayContaining(original))
+    const state = await f.state()
+    expect(Number((await f.adopt(input, "confirmed-root")).status)).toBe(200)
+    expect(await f.state()).toEqual(state)
+    expect(
+      Number(
+        (
+          await f.adopt(
+            {
+              ...input,
+              initializationConfirmation: {
+                ...input.initializationConfirmation!,
+                startsOn: "2021-01-01",
+              },
+            },
+            "confirmed-root",
+          )
+        ).status,
+      ),
+    ).toBe(409)
+  })
+
   test("既存の全訂正履歴と元の台帳を保全し、公開履歴へ一回だけ接続する", async () => {
     const f = await fixture()
     const created = await f.create("HISTORY")
     expect(Number(created.status)).toBe(201)
     const unit = z.object({ id: z.string() }).parse(await created.json())
     expect(Number((await f.rename("HISTORY", "Corrected Name")).status)).toBe(200)
-    const before = await f.legacy()
     await f.connect()
+    const before = await f.legacy()
     const input = await f.preview(unit.id)
     expect(Number((await f.adopt(input, "history-adoption")).status)).toBe(201)
     expect(await f.legacy()).toEqual(before)

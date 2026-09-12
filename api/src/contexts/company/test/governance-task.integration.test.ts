@@ -109,6 +109,17 @@ describe("公開Companyから業務Taskへの接続", () => {
           snapshotDigest: snapshot.props.digest,
           observedOn: assignment.effectiveFrom,
           reason: "Confirmed company root history",
+          initializationConfirmation: {
+            startsOn: "2020-01-01",
+            evidenceReferences: [
+              {
+                context: "company",
+                kind: "confirmed-test-history",
+                id: "root-start",
+                version: "1",
+              },
+            ],
+          },
           actorAccountId: person.accountId,
           recordedAt: c.at.getTime(),
         })

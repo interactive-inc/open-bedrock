@@ -16,6 +16,10 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 import { drizzle } from "drizzle-orm/d1"
 import { z } from "zod"
+import { OrganizationWorkforceChangeEntity } from "@/contexts/company/domain/entities/organization-workforce-change.entity"
+import { OrganizationUnitChangeStatementAdapter } from "@/contexts/company/infrastructure/adapters/organization/organization-unit-change-statement.adapter"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 
 type Context = Readonly<{ env: Readonly<{ DB: D1Database; COMPANY_TIME_ZONE?: string }> }>
 export type OrganizationResourceAdoptionResult = Readonly<{
@@ -128,6 +132,34 @@ export class OrganizationResourceAdoptionRepository {
         { cause: invalid },
       )
     const statements: D1PreparedStatement[] = [snapshots.prepareGuard(snapshot)]
+    if (command.props.initializationConfirmation !== undefined) {
+      const confirmed = latest[0]?.toOrganizationUnitPeriod()
+      if (confirmed === null || confirmed === undefined)
+        return this.unavailable("missing confirmed period")
+      const operationId = restoreWorkforceId("personnel_action", `org-confirm:${fingerprint}`)
+      const correction = OrganizationWorkforceChangeEntity.restore({
+        operationId,
+        expectedRevision: snapshot.props.value.lifecycleRevision,
+        asOf: restoreCalendarDate(command.props.observedOn),
+        recordedAt: command.props.recordedAt,
+        actorAccountId: command.props.actorAccountId,
+        reason: command.props.reason,
+        evidenceReferences: command.props.initializationConfirmation.evidenceReferences,
+        organizationUnits: [],
+        unitPeriods: [
+          { ...confirmed, recordedByActionId: operationId, recordedAt: command.props.recordedAt },
+        ],
+        assignments: [],
+        responsibilities: [],
+      })
+      if (correction instanceof Error) return this.unavailable(correction)
+      statements.push(
+        ...new OrganizationUnitChangeStatementAdapter(this.c.env.DB).prepare(
+          correction,
+          fingerprint,
+        ),
+      )
+    }
     const journal = new CompanyResourceJournalAdapter({
       database: drizzle(this.c.env.DB),
       d1: this.c.env.DB,

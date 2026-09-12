@@ -43,7 +43,17 @@ test("実APIの認証とCompany管理資格を通して組織の履歴を接続�
       method: "POST",
       path: "/company/organization-resource-adoptions",
       headers: { "idempotency-key": "root-organization-adoption" },
-      body: { ...preview, organizationUnitId: root.id, reason: "Confirmed root history" },
+      body: {
+        ...preview,
+        organizationUnitId: root.id,
+        reason: "Confirmed root history",
+        initializationConfirmation: {
+          startsOn: "2020-01-01",
+          evidenceReferences: [
+            { context: "company", kind: "confirmed-test-history", id: "root-start", version: "1" },
+          ],
+        },
+      },
     })
   expect((await post(null)).status).toBe(401)
   expect((await post(member)).status).toBe(403)
