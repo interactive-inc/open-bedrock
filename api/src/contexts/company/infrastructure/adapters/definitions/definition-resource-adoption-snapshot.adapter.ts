@@ -1,8 +1,10 @@
 import { DefinitionResourceAdoptionSnapshotValue } from "@/contexts/company/domain/values/definition-resource-adoption-snapshot.value"
 
+type Context = D1Database
+
 /** 旧定義と会社版を一度に読み、保存直前にも同じ記録であることを検査する。 */
 export class DefinitionResourceAdoptionSnapshotAdapter {
-  constructor(private readonly database: D1Database) {
+  constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 
@@ -11,7 +13,7 @@ export class DefinitionResourceAdoptionSnapshotAdapter {
     id: number,
   ): Promise<DefinitionResourceAdoptionSnapshotValue | null | Error> {
     try {
-      const row = await this.database
+      const row = await this.c
         .prepare(this.query(type))
         .bind(id, type)
         .first<{ snapshot_json: string }>()
@@ -24,7 +26,7 @@ export class DefinitionResourceAdoptionSnapshotAdapter {
 
   prepareGuard(snapshot: DefinitionResourceAdoptionSnapshotValue): D1PreparedStatement {
     const definition = snapshot.props.value.definition
-    return this.database
+    return this.c
       .prepare(
         `SELECT CASE WHEN coalesce((${this.query(definition.type)}), '') = ?3
           THEN 1 ELSE json_extract('', '$') END`,

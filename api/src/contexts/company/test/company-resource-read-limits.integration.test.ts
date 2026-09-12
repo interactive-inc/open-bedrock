@@ -87,9 +87,15 @@ async function fixture(type: "person" | "grade") {
     return c.json({ code: error.code }, error.status)
   })
   app.get("/company/people", ...PEOPLE_GET).get("/company/definitions", ...DEFINITIONS_GET)
-  const request = (ids: string[], effectiveOn: string | null, company = organizationId) => {
+  const request = (
+    ids: string[],
+    effectiveOn: string | null,
+    company = organizationId,
+    revision?: string,
+  ) => {
     const query = new URLSearchParams(ids.map((id): [string, string] => ["id", id]))
     if (effectiveOn !== null) query.set("effective_on", effectiveOn)
+    if (revision !== undefined) query.set("organization_revision", revision)
     return app.request(
       `/company/${type === "person" ? "people" : "definitions"}?${query.toString()}`,
       {
@@ -123,3 +129,28 @@ test.each(["person", "grade"] as const)(
     expect((await f.request(ids, day, "organization:other")).status).toBe(403)
   },
 )
+
+test("公開定義APIで会社版を固定し、未知の版と不正な版を最新版へ置換しない", async () => {
+  const f = await fixture("grade")
+  const ids = [f.resources[0].id, "grade:excluded"]
+  for (const date of [null, day]) {
+    const historical = await f.request(ids, date, organizationId, "1")
+    expect(historical.status).toBe(200)
+    expect(historical.headers.get("etag")).toBe('"1"')
+    expect(await historical.json()).toEqual({
+      organizationId,
+      organizationRevision: 1,
+      resources: [f.resources[0]],
+    })
+    const current = await f.request(ids, date, organizationId, "2")
+    expect(current.status).toBe(200)
+    expect(await current.json()).toMatchObject({
+      organizationRevision: 2,
+      resources: [{ id: f.resources[0].id }, { id: "grade:excluded" }],
+    })
+  }
+  for (const revision of ["", "-1", "0.5", "3", "NaN", "1e0", "9007199254740992"]) {
+    expect((await f.request(ids, day, organizationId, revision)).status).toBe(400)
+  }
+  expect((await f.request(ids, day, "organization:other", "1")).status).toBe(403)
+})

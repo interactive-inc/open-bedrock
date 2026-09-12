@@ -372,3 +372,11 @@ Webは表示内容と確認条件を同じ組織行に保持し、再読み込�
 保存にはdataで指定したJSONとidempotency-keyが必要である。JSONはorganizationId・expectedRevision・reason・resourcesを持ち、各資源には同じ会社ID、公開ID、種類、版、状態、有効期間、属性を含める。createはactiveの初版、updateはactiveの後続版、deleteはvoidの後続版を一つの公開commandで保存する。取消も履歴を残す。
 
 CLIは保存直前に最新版を取得して確認条件を置き換えず、指定された会社版・資源版・再送キーを保持する。競合を自動で上書き・再試行しない。旧形式の数値IDやcode・name・rankだけを指定する保存は拒否する。
+
+## 定義の会社版指定
+
+`GET /company/definitions`のorganization_revisionは、参照する会社版を固定する。effective_onと併用すると、その会社版に記録されていた指定日の定義を返す。後日の改名、遡及訂正、取消を過去の会社版へ混入させない。日付未指定では、指定会社版までに記録された各資源の最終版を返す。
+
+応答のorganizationRevisionとETagは指定した会社版になる。負数、小数、存在しない将来の会社版は400で拒否し、現在の会社版へ置き換えない。会社範囲と閲覧資格の検査は過去の会社版でも必要である。会社版指定を省略した場合は現在の会社版を使う。
+
+等級・役職CLIのlistはorganization-revisionで同じ指定を渡せる。この指定は読み取りの条件であり、保存時のexpectedRevisionを書き換えない。

@@ -20,6 +20,11 @@ export function createCompanyDefinitionListHandlers(props: {
             .regex(/^\S{1,255}$/)
             .optional(),
           "as-of": z.string().date().optional(),
+          "organization-revision": z
+            .string()
+            .regex(/^(0|[1-9]\d*)$/)
+            .refine((value) => Number.isSafeInteger(Number(value)))
+            .optional(),
         })
         .strict(),
     ),
@@ -31,7 +36,12 @@ export function createCompanyDefinitionListHandlers(props: {
       const client = await createClient()
       const response = await client.company.definitions.$get({
         header: { "x-company-organization-id": input["organization-id"] },
-        query: input["as-of"] === undefined ? {} : { effective_on: input["as-of"] },
+        query: {
+          ...(input["as-of"] === undefined ? {} : { effective_on: input["as-of"] }),
+          ...(input["organization-revision"] === undefined
+            ? {}
+            : { organization_revision: input["organization-revision"] }),
+        },
       })
       const snapshot = await response.json()
       return context.json({

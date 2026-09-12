@@ -9,7 +9,10 @@ import {
   CompanyResourceJournalAdapter,
   type PreparedCompanyResourceJournal,
 } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
-import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
+import {
+  CompanyResourceValidationError,
+  CompanySnapshotRevisionError,
+} from "@/contexts/company/domain/errors"
 import { CompanyWorkforceResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-workforce-resource-projection.adapter"
 import { drizzle } from "drizzle-orm/d1"
 
@@ -18,6 +21,7 @@ export type CompanyResourceQuery = Readonly<{
   types: ReadonlyArray<CompanyResourceType>
   ids?: ReadonlyArray<string>
   effectiveOn?: CalendarDate
+  organizationRevision?: number
 }>
 
 export type CompanyResourceReadResult =
@@ -105,6 +109,13 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       return { ok: false, cause: new Error("Invalid Company resource query") }
     }
 
+    if (
+      query.organizationRevision !== undefined &&
+      (!Number.isSafeInteger(query.organizationRevision) || query.organizationRevision < 0)
+    ) {
+      return { ok: false, cause: new CompanySnapshotRevisionError() }
+    }
+
     try {
       const binds: unknown[] = []
       // ID と種別の上限をそれぞれ許容し、時点・会社の条件を足しても D1 の bind 上限を超えない。
@@ -116,21 +127,55 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       }
 
       const resourceStatement =
-        query.effectiveOn === undefined
+        query.organizationRevision !== undefined
           ? this.c
               .prepare(
-                `SELECT organization_id, resource_type, resource_id, revision, state,
+                `WITH ranked_resources AS (
+                 SELECT resource.*,
+                        row_number() OVER (
+                          PARTITION BY resource.resource_type, resource.resource_id
+                          ORDER BY CASE WHEN ? IS NULL OR resource.resource_type = 'organization-unit'
+                            THEN NULL ELSE resource.effective_from END DESC, resource.revision DESC
+                        ) AS effective_rank
+                   FROM company_resource_revisions resource
+                  WHERE resource.organization_id = ?
+                    AND resource.organization_revision <= ?
+                    AND (? IS NULL OR resource.resource_type = 'organization-unit' OR resource.effective_from <= ?)
+                    AND ${conditions.map((condition) => `resource.${condition}`).join(" AND ")}
+               )
+               SELECT organization_id, resource_type, resource_id, revision, state,
+                      effective_from, effective_to, attributes_json
+                 FROM ranked_resources
+                WHERE effective_rank = 1 AND state = 'active'
+                  AND (? IS NULL OR (effective_from <= ? AND (effective_to IS NULL OR effective_to > ?)))
+                ORDER BY resource_type, resource_id`,
+              )
+              .bind(
+                query.effectiveOn ?? null,
+                query.organizationId,
+                query.organizationRevision,
+                query.effectiveOn ?? null,
+                query.effectiveOn ?? null,
+                ...binds,
+                query.effectiveOn ?? null,
+                query.effectiveOn ?? null,
+                query.effectiveOn ?? null,
+              )
+          : query.effectiveOn === undefined
+            ? this.c
+                .prepare(
+                  `SELECT organization_id, resource_type, resource_id, revision, state,
                         effective_from, effective_to, attributes_json
                    FROM company_resource_heads
                   WHERE organization_id = ?
                     AND state = 'active'
                     AND ${conditions.join(" AND ")}
                   ORDER BY resource_type, resource_id`,
-              )
-              .bind(query.organizationId, ...binds)
-          : this.c
-              .prepare(
-                `WITH snapshot AS (
+                )
+                .bind(query.organizationId, ...binds)
+            : this.c
+                .prepare(
+                  `WITH snapshot AS (
                    SELECT revision
                      FROM company_organizations
                     WHERE id = ?
@@ -163,15 +208,15 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                     AND effective_from <= ?
                     AND (effective_to IS NULL OR effective_to > ?)
                   ORDER BY resource_type, resource_id`,
-              )
-              .bind(
-                query.organizationId,
-                query.organizationId,
-                query.effectiveOn,
-                ...binds,
-                query.effectiveOn,
-                query.effectiveOn,
-              )
+                )
+                .bind(
+                  query.organizationId,
+                  query.organizationId,
+                  query.effectiveOn,
+                  ...binds,
+                  query.effectiveOn,
+                  query.effectiveOn,
+                )
 
       const [revisionResult, resourceResult] = await this.c.batch([
         this.c
@@ -194,6 +239,13 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
         return { ok: false, cause: new Error("Invalid Company organization revision") }
       }
 
+      if (
+        query.organizationRevision !== undefined &&
+        (typeof revision !== "number" || query.organizationRevision > revision)
+      ) {
+        return { ok: false, cause: new CompanySnapshotRevisionError() }
+      }
+
       const resources: CompanyResourceEntity[] = []
       for (const row of resourceResult?.results ?? []) {
         const resource = toCompanyResource(row as CompanyResourceRow)
@@ -202,7 +254,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       }
       return {
         ok: true,
-        organizationRevision: revision === undefined ? 0 : revision,
+        organizationRevision: query.organizationRevision ?? (revision === undefined ? 0 : revision),
         resources,
       }
     } catch (cause) {
