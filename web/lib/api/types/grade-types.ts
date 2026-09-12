@@ -1,25 +1,35 @@
-/** GET /grade-definitions のレスポンス要素。api は snake_case で返す。 */
+/** 確認した公開等級の版と、操作ごとの再送キー。 */
 export type GradeResponse = {
-  id: number
+  id: string
   code: string
   name: string
-  rank: number
+  rank: number | null
   description: string | null
-  created_at: string
+  revision: number
+  organizationRevision: number
+  effectiveFrom: string
+  effectiveTo: string | null
+  commandId: string
+  cancelCommandId: string
 }
 
-/** POST /grade-definitions のリクエストボディ。description は未指定可。 */
-export type GradeCreateRequest = {
-  code: string
-  name: string
-  rank: number
-  description?: string
-}
-
-/** PUT /grade-definitions/:id のリクエストボディ。 */
-export type GradeUpdateRequest = {
-  code: string
-  name: string
-  rank: number
-  description?: string
+export type GradeDefinitionCommand = {
+  commandId: string
+  expectedRevision: number
+  reason: string
+  resource: {
+    organizationId: string
+    type: "grade"
+    id: string
+    revision: number
+    state: "active" | "void"
+    effectiveFrom: string
+    effectiveTo: string | null
+    attributes: {
+      code: string
+      officialName: string
+      rank: number | null
+      description: string | null
+    }
+  }
 }

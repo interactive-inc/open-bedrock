@@ -37,6 +37,7 @@ export function createCompanyDefinitionListHandlers(props: {
       const response = await client.company.definitions.$get({
         header: { "x-company-organization-id": input["organization-id"] },
         query: {
+          type: props.type,
           ...(input["as-of"] === undefined ? {} : { effective_on: input["as-of"] }),
           ...(input["organization-revision"] === undefined
             ? {}

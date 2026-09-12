@@ -7,6 +7,8 @@ test("Company権限キーは会社・組織・雇用の語彙だけを持つ", (
     "org:read",
     "org:write",
     "master:org:write",
+    "master:grade:write",
+    "master:position:write",
     "employee:read",
     "employee:attributes:read",
     "employee:write",

@@ -35,6 +35,7 @@ export function GradeList(props: Props) {
             <TableHead>名称</TableHead>
             <TableHead className="text-right">ランク</TableHead>
             <TableHead>説明</TableHead>
+            <TableHead>有効期間</TableHead>
             {props.canManage ? <TableHead className="text-right">操作</TableHead> : null}
           </TableRow>
         </TableHeader>
@@ -46,9 +47,12 @@ export function GradeList(props: Props) {
 
               <TableCell>{grade.name}</TableCell>
 
-              <TableCell className="text-right">{grade.rank}</TableCell>
+              <TableCell className="text-right">{grade.rank ?? "不明"}</TableCell>
 
               <TableCell>{grade.description ?? "-"}</TableCell>
+              <TableCell>
+                {grade.effectiveFrom} 〜 {grade.effectiveTo ?? "終了日なし"}
+              </TableCell>
 
               {props.canManage ? (
                 <TableCell className="text-right">

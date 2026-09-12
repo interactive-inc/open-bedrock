@@ -46,5 +46,5 @@ async function Grades(props: { canManage: boolean }) {
     return <FetchError message="等級の取得に失敗しました" />
   }
 
-  return <GradeList grades={grades} canManage={props.canManage} />
+  return <GradeList grades={grades.grades} canManage={props.canManage} />
 }

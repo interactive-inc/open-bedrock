@@ -7,7 +7,11 @@ import type { CompanyResourceList } from "@/lib/api/types/company-resource-types
  * OrganizationalOffice / Responsibility / AuthorityScope / CollectiveBody をまとめて返す。
  */
 export async function getCompanyDefinitionResources(
-  snapshot: { organizationRevision?: number; effectiveOn?: string } = {},
+  snapshot: {
+    organizationRevision?: number
+    effectiveOn?: string
+    type?: "grade" | "position"
+  } = {},
 ): Promise<CompanyResourceList | Error> {
   const client = await createClient()
 
@@ -16,6 +20,7 @@ export async function getCompanyDefinitionResources(
     query: {
       organization_revision: snapshot.organizationRevision?.toString(),
       effective_on: snapshot.effectiveOn,
+      type: snapshot.type,
     },
   })
 
