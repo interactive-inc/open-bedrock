@@ -1,6 +1,6 @@
 # 機能区分
 
-製品の機能は[会社基盤の機能区分](company-foundation.md)に従い、System、会社コア、会社共通モジュール、業務アプリの四つに分類する。コード上の所有者と既定の有効状態は別に定義する。
+製品の機能は[会社基盤の機能区分](company-foundation.md)に従い、System、Company、業務の三つに分類する。コード上の所有者と既定の有効状態は別に定義する。
 
 コードは `api/src/contexts/<context>/` 直下へすべてのコンテキストを対等に置く。`system` と `company` 以外の製品内コンテキストは削除可能な App であり、`apps/` という親ディレクトリは作らない。
 
@@ -37,9 +37,9 @@ System は Employee、Department、LegalEntity、経費、勤怠などの会社�
 
 Company は汎用の申請、承認、通知、監査、batch を再実装しない。規程文書、採用、onboarding、勤怠、経費など、その機能が無くても会社の同一性が保たれる機能は Company に含めない。
 
-## 会社共通モジュール
+## 業務
 
-知識や台帳に加え、勤怠・採用などの会社共通業務もこの区分に含める。実装上は以下のApp contextとして分離する。
+知識や台帳に加え、勤怠・採用などの会社共通業務もこの区分に含める。`system`と`company`以外はApp contextが所有し、補助会社機能という中間区分は設けない。
 
 業務目的と業務上の不変条件を所有し、削除または無効化できるコンテキスト。App は System と Company だけを利用でき、他の App を直接 import しない。
 
@@ -58,12 +58,6 @@ dashboard、inbox、directory、search は複数コンテキストの read model
 画面上の機能名と bounded context を機械的に一対一にはしない。同じ不変条件と transaction を共有し、片方だけを残すと意味が壊れる能力は一つの所有者へまとめる。現行実装では、部署予算を `expense`、棚卸しを `asset`、評価シートへ接続する目標を `performance-review`、契約を `partner`、会議上の判断記録を `meeting`、感謝pointを `thanks` が所有する。これは業務context間の直接依存を例外化しないための境界である。
 
 一方、routeの有効化は能力単位で維持できる。物理的に削除するときは所有context全体を削除するか、同じcontext内の集約を独立させる設計変更を先に行う。別contextのtableを直接読むだけの見かけ上の分離は行わない。
-
-## 業務アプリ
-
-会社基盤を利用する、業種・事業・製品ごとのアプリケーション。会社共通モジュールと同じく業務上の不変条件を独立して所有し、SystemとCompanyへ依存する。会社共通モジュールを利用する場合は公開契約を利用側のadapterまたはAPI compositionで接続する。共通基盤へ業種固有のtableや権限を追加しない。
-
-このリポジトリの既存の社内業務Appは会社共通モジュールとして分類する。事業固有アプリの実装は共通基盤の完成条件に含めない。
 
 ## 外部連携
 
@@ -85,8 +79,7 @@ dashboard、inbox、directory、search は複数コンテキストの read model
 
 - 会社や業務を知らずに同じ不変条件を適用できるなら System
 - 会社、従業員、雇用、組織、責任、権限の正本なら Company
-- 会社全体の共通情報・共通業務であり、無効化しても会社コアが成立するなら会社共通モジュール
-- 業種・事業・製品固有の対象と実施規則を持つなら業務アプリ
+- Companyの正本以外の対象と実施規則を持ち、無効化しても会社コアが成立するなら業務。社内共通か事業固有かは所有区分を変更しない
 - 専門的な最終計算、最終判断、資金移動、事業固有の実行なら外部連携
 
 同じ能力を複数の所有先へ分割しない。App の業務 record は App、汎用 case と decision は System、判断者の会社上の資格は Company が所有し、参照と snapshot で接続する。
@@ -101,7 +94,7 @@ System と Company は常に有効とする。App は `default` または `opt-i
 
 App は domain、application、infrastructure、interface のうち必要な層を持ち、対象、状態、遷移、認可、失敗、競合、訂正、監査、テストが揃うまで route registry へ登録しない。schema だけ、画面だけ、任意 JSON だけの実装を有効な App として扱わない。
 
-App を削除するときは対象 context のディレクトリ、route module 登録、所有 migration、seed、有効化 metadata、利用側の導線だけを削除する。他の App の変更を必要とする依存は追加しない。
+Appを除去するときは対象contextのコード、route module登録、seed、有効化metadata、利用側の導線を更新する。既存環境へ適用済みのmigrationとその適用履歴は書き換えない。他の App の変更を必要とする依存は追加しない。保存済み業務記録、承認対象の版と証跡の保全は[業務の無効化と除去](company-foundation.md#業務の無効化と除去)に従い、機能除去と同時に消去しない。
 
 ## 現行実装差分
 
