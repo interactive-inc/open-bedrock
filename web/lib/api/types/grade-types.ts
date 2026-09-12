@@ -23,18 +23,3 @@ export type GradeUpdateRequest = {
   rank: number
   description?: string
 }
-
-/** GET /employee-grades のレスポンス要素（従業員の等級付与履歴）。 */
-export type EmployeeGradeResponse = {
-  id: number
-  employee_id: string
-  grade_id: number
-  effective_date: string
-  reason: string | null
-  created_at: string
-}
-
-/** GET /employee-grades のクエリ。employee_code で対象を指定する。 */
-export type EmployeeGradeSearchQuery = {
-  employeeCode: string
-}
