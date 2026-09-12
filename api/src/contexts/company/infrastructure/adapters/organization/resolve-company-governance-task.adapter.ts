@@ -1,3 +1,5 @@
+import { CompanyDecisionParticipantsAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-decision-participants.adapter"
+import { CompanyDecisionHumanAccountsAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-decision-human-accounts.adapter"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { ApplicationWorkflowStep } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
@@ -9,10 +11,6 @@ import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrast
 import { CompanyGovernanceAuthorityResolutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-governance-authority-resolution.adapter"
 import { CompanyGovernanceProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-governance-procedure-task.adapter"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
-import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
-import { ResolveLiveEmployeeAccessAdapter } from "@/contexts/company/infrastructure/adapters/employee/resolve-live-employee-access.adapter"
-import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"
-import { SystemPrincipalRepository } from "@system/infrastructure/repositories/iam/system-principal.repository"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { StartSystemProcedureTask } from "@system/domain/policies/decision-task.policy"
 
@@ -55,7 +53,11 @@ export class ResolveCompanyGovernanceTaskAdapter {
     if (before instanceof Error) return before
     const resolved = await new CompanyGovernanceAuthorityResolutionAdapter({
       repository: new D1CompanyResourceRepository(this.c.env.DB),
-      readActiveAccountIds: (accountIds) => this.readHumanAccountIds(accountIds, input.resolvedAt),
+      readActiveAccountIds: (accountIds) =>
+        new CompanyDecisionHumanAccountsAdapter({ database: this.c.env.DB }).findMany(
+          accountIds,
+          input.resolvedAt,
+        ),
     }).resolve({
       organizationId: authority.organization_id,
       asOf: restoreCalendarDate(asOf),
@@ -76,28 +78,12 @@ export class ResolveCompanyGovernanceTaskAdapter {
       accountIds: candidates.map((candidate) => zAccountId.parse(candidate.accountId)),
     })
     if (after instanceof Error) return after
-    const links = await new CompanyAccountEmployeeLinksReadAdapter(this.c).findMany({
-      asOf,
-      accountIds: candidates.map((candidate) => candidate.accountId),
+    const participants = await new CompanyDecisionParticipantsAdapter(this.c).validate({
+      candidates,
+      asOf: restoreCalendarDate(asOf),
+      resolvedAt: input.resolvedAt,
     })
-    if (links instanceof Error) return links
-    const linksByAccount = new Map(
-      links.map((link) => [String(link.accountId), String(link.employeeId)]),
-    )
-    const accesses = await new ResolveLiveEmployeeAccessAdapter({
-      env: { ...this.c.env, NOW: input.resolvedAt.toISOString() },
-    }).resolveMany(
-      candidates.map((candidate) => restoreWorkforceId("employee", candidate.employeeId)),
-    )
-    if (accesses instanceof Error) return accesses
-    for (const candidate of candidates) {
-      if (linksByAccount.get(candidate.accountId) !== candidate.employeeId) {
-        return new Error("public Company authority does not match the canonical Account link")
-      }
-      const access = accesses.get(restoreWorkforceId("employee", candidate.employeeId))
-      if (access === undefined || access === null || access.status !== "ACTIVE")
-        return new Error("Company decision participant is inactive")
-    }
+    if (participants instanceof Error) return participants
     const task = await new CompanyGovernanceProcedureTaskAdapter().prepare({
       resolution: { ...resolved.resolution, candidates },
       criterionIndex: 0,
@@ -120,29 +106,6 @@ export class ResolveCompanyGovernanceTaskAdapter {
       },
       guards: [before, after],
     }
-  }
-
-  private async readHumanAccountIds(
-    accountIds: ReadonlyArray<string>,
-    resolvedAt: Date,
-  ): Promise<ReadonlySet<string> | Error> {
-    const accounts = await new SystemAccountRepository({ database: this.c.env.DB }).findMany(
-      accountIds.map((id) => zAccountId.parse(id)),
-    )
-    if (accounts instanceof Error) return accounts
-    const active = accounts.filter(
-      (account) =>
-        account.status === "active" && account.closedAt === null && account.createdAt <= resolvedAt,
-    )
-    const principals = await new SystemPrincipalRepository({ env: { DB: this.c.env.DB } }).findMany(
-      { accountIds: active.map((account) => account.id) },
-    )
-    if (principals instanceof Error) return principals
-    return new Set(
-      principals
-        .filter((principal) => principal.kind === "human" && principal.createdAt <= resolvedAt)
-        .map((principal) => String(principal.accountId)),
-    )
   }
 
   private scope(input: Input): CompanyGovernanceScope | null | Error {
