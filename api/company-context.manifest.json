@@ -345,6 +345,8 @@
     "src/contexts/company/infrastructure/adapters/organization/company-assignment-resource-history.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/company-assignment-resource-projection.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter.ts",
+    "src/contexts/company/infrastructure/adapters/organization/company-decision-human-accounts.adapter.ts",
+    "src/contexts/company/infrastructure/adapters/organization/company-decision-participants.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/company-governance-authority-resolution.adapter.test.ts",
     "src/contexts/company/infrastructure/adapters/organization/company-governance-authority-resolution.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/company-governance-procedure-task.adapter.test.ts",

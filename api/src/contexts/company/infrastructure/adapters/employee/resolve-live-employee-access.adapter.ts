@@ -1,3 +1,4 @@
+import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
@@ -35,12 +36,15 @@ export class ResolveLiveEmployeeAccessAdapter {
 
   async resolveMany(
     employeeIds: ReadonlyArray<EmployeeId>,
+    asOf?: CalendarDate,
   ): Promise<ReadonlyMap<EmployeeId, LiveEmployeeAccess | null> | CompanyOperationError> {
     if (employeeIds.length === 0) return new Map()
-    const businessDate = resolveCompanyBusinessDate({
-      now: this.c.env.NOW ?? new Date().toISOString(),
-      timeZone: this.c.env.COMPANY_TIME_ZONE,
-    })
+    const businessDate =
+      asOf ??
+      resolveCompanyBusinessDate({
+        now: this.c.env.NOW ?? new Date().toISOString(),
+        timeZone: this.c.env.COMPANY_TIME_ZONE,
+      })
     if (businessDate instanceof Error) {
       return new CompanyUnavailableError(
         "会社営業日を解決できません",

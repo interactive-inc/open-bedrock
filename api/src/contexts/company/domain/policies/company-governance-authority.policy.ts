@@ -401,7 +401,8 @@ function findEligibleEmployment(
       (text(resource, "status") === "ACTIVE" || text(resource, "status") === "ON_LEAVE"),
   )
   if (employments.length > 1) return error("governance_authority_resource_ambiguous")
-  return employments[0] ?? null
+  const employment = employments[0]
+  return employment !== undefined && text(employment, "status") === "ACTIVE" ? employment : null
 }
 
 function resourceKey(type: string, id: string): string {

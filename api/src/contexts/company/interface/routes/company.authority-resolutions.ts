@@ -1,6 +1,8 @@
+import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
+import { CompanyDecisionParticipantsAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-decision-participants.adapter"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CompanyGovernanceAuthorityResolutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-governance-authority-resolution.adapter"
-import { ResolveActiveSystemAccountIdAdapter } from "@/contexts/company/infrastructure/adapters/account-profile/resolve-active-system-account-id.adapter"
+import { CompanyDecisionHumanAccountsAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-decision-human-accounts.adapter"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import {
   CompanyAccessDeniedError,
@@ -89,22 +91,17 @@ export const POST = factory.createHandlers(
       throw new CompanyAccessDeniedError()
     }
     const body = context.req.valid("json")
+    const snapshotGuard = new CompanyAuthoritySnapshotGuardAdapter({ database })
+    const before = await snapshotGuard.findSnapshot()
+    if (before instanceof Error) throw new CompanyReadUnavailableError(before)
+    const resolvedAt = context.var.companyClock?.() ?? new Date(context.env.NOW ?? Date.now())
     const result = await new CompanyGovernanceAuthorityResolutionAdapter({
       repository: new D1CompanyResourceRepository(database),
       readActiveAccountIds: async (accountIds) => {
-        return new ResolveActiveSystemAccountIdAdapter({
-          env: {
-            DB: database,
-            ...(context.env.COMPANY_TIME_ZONE === undefined
-              ? {}
-              : { COMPANY_TIME_ZONE: context.env.COMPANY_TIME_ZONE }),
-            ...(context.env.NOW === undefined ? {} : { NOW: context.env.NOW }),
-          },
-          var: {
-            database: context.var.database,
-            auditContext: context.var.auditContext,
-          },
-        }).findActiveSystemAccountIds(accountIds)
+        return new CompanyDecisionHumanAccountsAdapter({ database }).findMany(
+          accountIds,
+          resolvedAt,
+        )
       },
     }).resolve({
       organizationId,
@@ -136,6 +133,23 @@ export const POST = factory.createHandlers(
     if (result.kind === "invalid") {
       throw new CompanyApplicationConflictError(result.error.code, result.error.message)
     }
+
+    const participants = await new CompanyDecisionParticipantsAdapter({
+      env: { DB: database },
+    }).validate({
+      candidates: result.resolution.candidates,
+      asOf: restoreCalendarDate(body.as_of),
+      resolvedAt,
+    })
+    if (participants instanceof Error) throw new CompanyReadUnavailableError(participants)
+
+    const after = await snapshotGuard.findSnapshot()
+    if (after instanceof Error) throw new CompanyReadUnavailableError(after)
+    if (before !== after)
+      throw new CompanyApplicationConflictError(
+        "company_authority_snapshot_changed",
+        "会社の資格情報が変更されました。再度照会してください",
+      )
 
     context.header("etag", `"${result.resolution.snapshot.organizationRevision}"`)
     return context.json(result.resolution, 200)
