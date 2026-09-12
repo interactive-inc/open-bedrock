@@ -120,6 +120,14 @@ ReportingRelationの本人・上司・組織は、同じorganizationの有効期
 
 移行時に既存の期間不整合があれば、制約の追加前に移行を停止する。正常な履歴、rowid、記録者、理由とcommandの再送結果は変更しない。在籍・所属との連動は[組織上の判断資格](company-organizational-authority.md)の制約も満たす必要がある。
 
+## 雇用主法人の履歴
+
+Employmentの`employerLegalEntityId`は、同じorganizationのLegalEntityを参照する。省略またはnullは雇用主の未記録を表し、既存の履歴へ法人を推測して補わない。雇用主は公開Employmentの改訂に保存し、有効日と会社版を指定して取得する。将来の変更を現在値へ先に反映しない。
+
+在職中と休職中の雇用期間は、参照する法人の有効期間で切れ目なく覆われなければならない。法人の終了・期間短縮や雇用期間の訂正がこの条件を破る場合、会社版の確定時に変更全体を取り消す。関連する法人と雇用の変更は同一commandで確定できる。退職後の雇用記録は雇用主との対応を保持するが、法人が無期限に存続することを要求しない。
+
+休職・復職・退職とその訂正では、既存の雇用主と将来発効する変更を保持する。再入社は別のEmploymentであり、以前の雇用主を自動で引き継がない。変更履歴の保存に失敗した場合も法人・雇用・会社版を全て取り消し、同じ依頼を再試行できる。
+
 ## 人と雇用の参照整合性
 
 Employeeは同じorganizationのactiveなPersonを参照し、Employmentは同じorganizationのactiveなEmployeeを参照する。EmployeeのpersonId、EmploymentのemployeeIdは初回登録後に変更できず、取消時にも付け替えを拒否する。

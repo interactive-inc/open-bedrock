@@ -504,6 +504,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
     while (cause instanceof Error && !visited.has(cause)) {
       visited.add(cause)
       if (
+        cause.message.includes("company_employment_employer_reference_invalid") ||
         cause.message.includes("company_grade_assignment_invalid") ||
         cause.message.includes("company_grade_assignment_owner_changed") ||
         cause.message.endsWith(

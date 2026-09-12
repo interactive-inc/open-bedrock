@@ -181,6 +181,11 @@ export const POST = factory.createHandlers(
                 employeeId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/),
                 status: z.enum(["ACTIVE", "ON_LEAVE", "TERMINATED"]),
                 employmentType: z.enum(["FULL_TIME", "PART_TIME"]),
+                employerLegalEntityId: z
+                  .string()
+                  .regex(/^\S{1,255}$/)
+                  .nullable()
+                  .optional(),
                 officialName: z.string().trim().min(1).max(200).optional(),
               })
               .strict(),
