@@ -102,7 +102,13 @@ export class ResponsibilityResourceAdoptionRepository {
       .prepare(`SELECT 1 AS present FROM company_resource_heads
       WHERE organization_id = 'organization:default' AND resource_type = 'responsibility-assignment'
         AND resource_id IN (SELECT value FROM json_each(?1)) LIMIT 1`)
-      .bind(JSON.stringify(responsibilities.map((entry) => entry.resource.id)))
+      .bind(
+        JSON.stringify(
+          responsibilities
+            .filter((entry) => entry.resource.revision === 1)
+            .map((entry) => entry.resource.id),
+        ),
+      )
       .first()
     if (occupied !== null) return this.conflict()
     const first = responsibilities[0]
@@ -175,29 +181,39 @@ export class ResponsibilityResourceAdoptionRepository {
       if (prepared instanceof Error) return this.unavailable(prepared)
       statements.push(...prepared.statements, prepared.commit)
     }
+    const insertedResources = new Set<string>()
     for (const entry of responsibilities) {
-      statements.push(
-        database
-          .prepare(`INSERT INTO company_responsibility_resource_bindings
+      if (!insertedResources.has(entry.resource.id)) {
+        insertedResources.add(entry.resource.id)
+        statements.push(
+          database
+            .prepare(`INSERT INTO company_responsibility_resource_bindings
         (resource_id, organization_id, employee_id, employment_id, organization_unit_id, responsibility_type, responsibility_id, authority_scope_id, resource_revision, recorded_at)
-        VALUES (?1, 'organization:default', ?2, ?3, ?4, ?5, ?6, ?7, 1, ?8)`)
-          .bind(
-            entry.resource.id,
-            entry.period.employeeId,
-            entry.period.employmentId,
-            entry.period.organizationUnitId,
-            entry.period.responsibilityType,
-            entry.resource.readText("responsibilityId"),
-            entry.resource.readText("authorityScopeId"),
-            command.props.recordedAt,
-          ),
-      )
+        VALUES (?1, 'organization:default', ?2, ?3, ?4, ?5, ?6, ?7, ?9, ?8)`)
+            .bind(
+              entry.resource.id,
+              entry.period.employeeId,
+              entry.period.employmentId,
+              entry.period.organizationUnitId,
+              entry.period.responsibilityType,
+              entry.resource.readText("responsibilityId"),
+              entry.resource.readText("authorityScopeId"),
+              command.props.recordedAt,
+              entry.resource.revision,
+            ),
+        )
+      }
       statements.push(
         database
           .prepare(
-            `INSERT INTO company_responsibility_period_bindings (period_id, resource_id, period_revision, source_revision) VALUES (?1, ?2, ?3, 1)`,
+            `INSERT INTO company_responsibility_period_bindings (period_id, resource_id, period_revision, source_revision) VALUES (?1, ?2, ?3, ?4)`,
           )
-          .bind(entry.period.periodId, entry.resource.id, entry.period.revision),
+          .bind(
+            entry.period.periodId,
+            entry.resource.id,
+            entry.period.revision,
+            entry.resource.revision,
+          ),
       )
     }
     const organizationRevision = command.props.expectedRevision + changes.length

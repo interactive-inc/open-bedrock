@@ -283,6 +283,267 @@ async function fixture(
   }
 }
 
+test("移行の確認対象に既存公開責務の全版と来歴を含め、確認後の変更を拒否する", async () => {
+  const f = await fixture()
+  const existing: CompanyResourceProps = {
+    organizationId: "organization:default",
+    type: "responsibility-assignment",
+    id: "existing:responsibility",
+    revision: 1,
+    state: "active",
+    effectiveFrom: restoreCalendarDate("2030-02-01"),
+    effectiveTo: restoreCalendarDate("2030-04-01"),
+    attributes: {
+      responsibilityId: "responsibility:manager",
+      authorityScopeId: "scope:team",
+      holderType: "employee",
+      holderId: f.creator.employeeId,
+      delegationAllowed: false,
+    },
+  }
+  expect(await f.define([existing], "existing:initial")).toMatchObject({ kind: "applied" })
+  const adapter = new ResponsibilityResourceAdoptionSnapshotAdapter(f.database)
+  const before = await adapter.find(f.creator.employeeId)
+  if (before === null || before instanceof Error) throw new Error("snapshot missing")
+  expect(before.props.value.publicResponsibilities).toMatchObject([
+    {
+      resourceId: existing.id,
+      revision: 1,
+      commandId: "existing:initial",
+      bindingEmployeeId: null,
+    },
+  ])
+  expect(
+    await f.define([{ ...existing, revision: 2, state: "void" }], "existing:cancel"),
+  ).toMatchObject({ kind: "applied" })
+  const after = await adapter.find(f.creator.employeeId)
+  if (after === null || after instanceof Error) throw new Error("snapshot missing")
+  expect(
+    after.props.value.publicResponsibilities.map((entry) => ({
+      revision: entry.revision,
+      state: entry.state,
+    })),
+  ).toEqual([
+    { revision: 1, state: "active" },
+    { revision: 2, state: "void" },
+  ])
+  expect(after.props.digest).not.toBe(before.props.digest)
+  const guarded = await f.database
+    .batch([adapter.prepareGuard(before)])
+    .catch((cause: unknown) => cause)
+  expect(guarded).toBeInstanceOf(Error)
+})
+
+test.each([false, true])(
+  "複数の旧期間を既存責務へ統合し、失敗と再送でもID・履歴を保全する: %s",
+  async (failReceipt) => {
+    const f = await fixture()
+    const existing: CompanyResourceProps = {
+      organizationId: "organization:default",
+      type: "responsibility-assignment",
+      id: "existing:manager",
+      revision: 1,
+      state: "active",
+      effectiveFrom: restoreCalendarDate("2030-02-01"),
+      effectiveTo: restoreCalendarDate("2030-04-01"),
+      attributes: {
+        responsibilityId: "responsibility:manager",
+        authorityScopeId: "scope:team",
+        holderType: "employee",
+        holderId: f.creator.employeeId,
+        delegationAllowed: false,
+      },
+    }
+    expect(await f.define([existing], "existing:first")).toMatchObject({ kind: "applied" })
+    expect(
+      await f.define(
+        [
+          {
+            ...existing,
+            revision: 2,
+            effectiveFrom: restoreCalendarDate("2030-06-01"),
+            effectiveTo: restoreCalendarDate("2030-09-01"),
+          },
+        ],
+        "existing:second",
+      ),
+    ).toMatchObject({ kind: "applied" })
+    const preview = await f.preview()
+    const input = {
+      ...f.body,
+      expectedRevision: preview.expectedRevision,
+      snapshotDigest: preview.snapshotDigest,
+      mappings: f.body.mappings.map((mapping) => ({
+        ...mapping,
+        ...(["responsibility:legacy-one", "responsibility:legacy-two"].includes(mapping.periodId)
+          ? { existingResourceId: existing.id }
+          : {}),
+      })),
+    }
+    const before = await f.state()
+    const original = (
+      await f.database
+        .prepare(
+          "SELECT * FROM company_resource_revisions WHERE resource_id = ?1 ORDER BY revision",
+        )
+        .bind(existing.id)
+        .all()
+    ).results
+    for (const mappings of [
+      input.mappings.map((mapping) => ({
+        ...mapping,
+        existingResourceId: "missing:responsibility",
+      })),
+      input.mappings.map((mapping) => ({
+        ...mapping,
+        existingResourceId:
+          mapping.periodId === "responsibility:legacy-one" ? existing.id : undefined,
+      })),
+      input.mappings.map((mapping) => ({ ...mapping, authorityScopeId: "scope:root" })),
+    ]) {
+      expect(Number((await f.adopt("existing:invalid", { ...input, mappings })).status)).toBe(422)
+      expect(await f.state()).toEqual(before)
+    }
+    for (const replacement of [
+      {
+        placeholder: "?12",
+        expression: "json_set(?12, '$[0].existingResourceId', 'different:target')",
+      },
+      { placeholder: "?12", expression: "json_remove(?12, '$[0].existingResourceId')" },
+      { placeholder: "?11", expression: "json_remove(?11, '$.publicResponsibilities')" },
+    ]) {
+      const prepare = f.database.prepare.bind(f.database)
+      const interception = spyOn(f.database, "prepare").mockImplementation((sql) =>
+        prepare(
+          sql.startsWith("INSERT INTO company_responsibility_resource_adoptions")
+            ? sql.replace(replacement.placeholder, replacement.expression)
+            : sql,
+        ),
+      )
+      try {
+        expect(Number((await f.adopt("existing:corrupt-receipt", input)).status)).toBe(503)
+      } finally {
+        interception.mockRestore()
+      }
+      expect(await f.state()).toEqual(before)
+    }
+    if (failReceipt) {
+      await f.database.exec(
+        "CREATE TRIGGER reject_existing_connection BEFORE INSERT ON company_responsibility_resource_adoptions BEGIN SELECT RAISE(ABORT, 'injected failure'); END;",
+      )
+      expect(Number((await f.adopt("existing:connect", input)).status)).toBe(503)
+      expect(await f.state()).toEqual(before)
+      await f.database.exec("DROP TRIGGER reject_existing_connection")
+    }
+    expect(Number((await f.adopt("existing:connect", input)).status)).toBe(201)
+    expect(
+      (
+        await f.database
+          .prepare(
+            "SELECT * FROM company_resource_revisions WHERE resource_id = ?1 AND revision <= 2 ORDER BY revision",
+          )
+          .bind(existing.id)
+          .all()
+      ).results,
+    ).toEqual(original)
+    expect(
+      (
+        await f.database
+          .prepare(
+            "SELECT resource_id, resource_revision FROM company_responsibility_resource_bindings WHERE resource_id = ?1",
+          )
+          .bind(existing.id)
+          .all()
+      ).results,
+    ).toEqual([{ resource_id: existing.id, resource_revision: 3 }])
+    expect(
+      (
+        await f.database
+          .prepare(
+            "SELECT period_id, source_revision FROM company_responsibility_period_bindings WHERE resource_id = ?1 ORDER BY period_id",
+          )
+          .bind(existing.id)
+          .all()
+      ).results,
+    ).toEqual([
+      { period_id: "responsibility:legacy-one", source_revision: 3 },
+      { period_id: "responsibility:legacy-two", source_revision: 3 },
+    ])
+    expect(
+      (await f.publicOn("2030-03-15")).filter((resource) => resource.id === existing.id),
+    ).toHaveLength(1)
+    expect(
+      (await f.publicOn("2030-05-15")).filter((resource) => resource.id === existing.id),
+    ).toHaveLength(0)
+    expect(
+      (await f.publicOn("2030-07-15")).filter((resource) => resource.id === existing.id),
+    ).toHaveLength(1)
+    const completed = await f.state()
+    expect(Number((await f.adopt("existing:connect", input)).status)).toBe(200)
+    expect(await f.state()).toEqual(completed)
+    expect(
+      await f.define(
+        [
+          {
+            ...existing,
+            revision: 4,
+            effectiveFrom: restoreCalendarDate("2030-06-01"),
+            effectiveTo: restoreCalendarDate("2030-08-01"),
+          },
+        ],
+        "existing:shorten-after-connection",
+      ),
+    ).toMatchObject({ kind: "applied" })
+    expect(
+      (await f.publicOn("2030-08-15")).filter((resource) => resource.id === existing.id),
+    ).toHaveLength(0)
+    expect(
+      (await f.publicOn("2030-03-15")).filter((resource) => resource.id === existing.id),
+    ).toHaveLength(1)
+    expect(
+      await f.personnel(
+        {
+          kind: "retired",
+          employeeCode: "EMPLOYEE-001",
+          retirementOn: restoreCalendarDate("2030-06-15"),
+        },
+        "existing:retire-after-connection",
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(await f.publicOn("2030-06-16")).toHaveLength(0)
+    expect((await f.database.prepare("PRAGMA foreign_key_check").all()).results).toEqual([])
+  },
+)
+
+test("新しい接続制約を適用しても旧制約で保存した移行証跡と再送結果を保全する", async () => {
+  const f = await fixture()
+  const previous = readdirSync(COMPANY_TEST_MIGRATIONS_DIR).find((file) =>
+    file.endsWith("_record_company_responsibility_resource_adoptions.sql"),
+  )
+  const next = readdirSync(COMPANY_TEST_MIGRATIONS_DIR).find((file) =>
+    file.endsWith("_connect_existing_company_responsibilities.sql"),
+  )
+  if (previous === undefined || next === undefined) throw new Error("migration missing")
+  const previousSql = readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, previous), "utf8")
+  const start = previousSql.indexOf(
+    "DROP TRIGGER IF EXISTS company_responsibility_adoption_insert_guard;",
+  )
+  const end = previousSql.indexOf(
+    "DROP TRIGGER IF EXISTS company_responsibility_adoption_update_guard;",
+  )
+  await f.database.batch(
+    splitSqlStatements(previousSql.slice(start, end)).map((sql) => f.database.prepare(sql)),
+  )
+  expect(Number((await f.adopt()).status)).toBe(201)
+  const before = await f.state()
+  const migration = readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, next), "utf8")
+  for (const application of [migration, migration]) {
+    await f.database.batch(splitSqlStatements(application).map((sql) => f.database.prepare(sql)))
+    expect(await f.state()).toEqual(before)
+    expect(Number((await f.adopt()).status)).toBe(200)
+  }
+})
+
 describe("確認済みの既存責務を公開履歴へ接続する", () => {
   test("全改訂・取消・空白を保持し、資格解決・公開更新・人事発令へ接続する", async () => {
     const f = await fixture()
