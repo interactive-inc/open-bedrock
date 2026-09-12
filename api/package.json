@@ -34,7 +34,8 @@
     "db:seed:local": "bash scripts/seed.sh --local",
     "db:seed": "bash scripts/seed.sh --remote",
     "build:types:bundle": "tsc -p tsconfig.build.json && dts-bundle-generator -o dist/app.bundle.d.ts dist/api/app.d.ts --project tsconfig.dts.json --no-check --external-inlines drizzle-orm --external-inlines zod",
-    "db:check:remote": "bun scripts/check-remote-migration-journal.ts --config wrangler.jsonc"
+    "db:check:remote": "bun scripts/check-remote-migration-journal.ts --config wrangler.jsonc",
+    "verify:core-route-isolation": "bash scripts/verify-core-route-isolation.sh"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.6",
