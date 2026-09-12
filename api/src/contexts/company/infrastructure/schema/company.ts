@@ -521,7 +521,55 @@ export const companyDefinitionResourceAdoptions = sqliteTable(
   ],
 )
 
+/** 旧等級付与の元記録と、保全時の確認者・会社版。付与当時の判断者とは区別する。 */
+export const companyGradeAwardArchives = sqliteTable(
+  "company_grade_award_archives",
+  {
+    organizationId: text("organization_id")
+      .notNull()
+      .references(() => companyOrganizations.id),
+    commandId: text("command_id").notNull(),
+    employeeId: text("employee_id")
+      .notNull()
+      .references(() => employees.id),
+    fingerprint: text("fingerprint").notNull(),
+    actorAccountId: text("actor_account_id")
+      .notNull()
+      .references(() => systemAccounts.id),
+    reason: text("reason").notNull(),
+    observedOn: text("observed_on").notNull(),
+    observedCompanyRevision: integer("observed_company_revision").notNull(),
+    snapshotDigest: text("snapshot_digest").notNull(),
+    sourceJson: text("source_json").notNull(),
+    recordedAt: integer("recorded_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.organizationId, table.commandId] }),
+    unique().on(table.organizationId, table.employeeId),
+    check(
+      "grade_award_archive_organization",
+      sql`${table.organizationId} = 'organization:default'`,
+    ),
+    check("grade_award_archive_fingerprint", sql`length(${table.fingerprint}) = 64`),
+    check("grade_award_archive_reason", sql`length(trim(${table.reason})) BETWEEN 1 AND 2000`),
+    check("grade_award_archive_observed_on", sql`length(${table.observedOn}) = 10`),
+    check("grade_award_archive_revision", sql`${table.observedCompanyRevision} >= 0`),
+    check("grade_award_archive_digest", sql`length(${table.snapshotDigest}) = 64`),
+    check("grade_award_archive_json", sql`json_valid(${table.sourceJson})`),
+    check("grade_award_archive_time", sql`${table.recordedAt} >= 0`),
+    check(
+      "grade_award_archive_employee",
+      sql`json_extract(${table.sourceJson}, '$.employeeId') IS ${table.employeeId}`,
+    ),
+    check(
+      "grade_award_archive_source_revision",
+      sql`json_extract(${table.sourceJson}, '$.organizationRevision') IS ${table.observedCompanyRevision}`,
+    ),
+  ],
+)
+
 export const companySchema = {
+  companyGradeAwardArchives,
   companyDefinitionResourceAdoptions,
   companyProfileChangeReceipts,
   companyBootstrapReceipts,

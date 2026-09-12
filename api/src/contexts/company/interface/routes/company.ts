@@ -19,6 +19,8 @@ import * as employeeResourceAdoptions from "@/contexts/company/interface/routes/
 import * as employees from "@/contexts/company/interface/routes/company.employees"
 import * as employments from "@/contexts/company/interface/routes/company.employments"
 import * as externalIdentityImports from "@/contexts/company/interface/routes/company.external-identity-imports"
+import * as gradeAwardArchives from "@/contexts/company/interface/routes/company.grade-award-archives"
+import * as gradeAwardArchivesCommandId from "@/contexts/company/interface/routes/company.grade-award-archives.$commandId"
 import * as gradeDefinitions from "@/contexts/company/interface/routes/company.grade-definitions"
 import * as gradeDefinitionsId from "@/contexts/company/interface/routes/company.grade-definitions.$id"
 import * as legacyPersonnelActionRecords from "@/contexts/company/interface/routes/company.legacy-personnel-action-records"
@@ -67,6 +69,8 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/employee-resource-adoptions", ...employeeResourceAdoptions.GET)
   .get("/employees", ...employees.GET)
   .get("/employments", ...employments.GET)
+  .get("/grade-award-archives", ...gradeAwardArchives.GET)
+  .get("/grade-award-archives/:commandId", ...gradeAwardArchivesCommandId.GET)
   .get("/grade-definitions", ...gradeDefinitions.GET)
   .get("/legacy-personnel-action-records", ...legacyPersonnelActionRecords.GET)
   .get("/my-direct-reports", ...myDirectReports.GET)
@@ -98,6 +102,7 @@ export const companyAuditedRoutes = new Hono<CompanyHttpEnvironment>()
   .post("/employee-resource-adoptions", ...employeeResourceAdoptions.POST)
   .post("/employees", ...employees.POST)
   .post("/employments", ...employments.POST)
+  .post("/grade-award-archives", ...gradeAwardArchives.POST)
   .post("/grade-definitions", ...gradeDefinitions.POST)
   .put("/grade-definitions/:id", ...gradeDefinitionsId.PUT)
   .delete("/grade-definitions/:id", ...gradeDefinitionsId.DELETE)

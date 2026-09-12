@@ -2,6 +2,36 @@
 export const companyRouteManifest = [
   {
     method: "GET",
+    path: "/company/grade-award-archives",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.grade-award-archives",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/company/grade-award-archives",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.grade-award-archives",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/grade-award-archives/:commandId",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.grade-award-archives.$commandId",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
     path: "/company/definition-resource-adoptions",
     phase: "authenticated",
     handler: {
