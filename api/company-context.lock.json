@@ -156,7 +156,7 @@
     "src/contexts/company/domain/entities/company-resource.entity.ts": "fa3bea67a3ef70a88cab7630df72f56c54dafceb664bd4401bc8c90bf27358ca",
     "src/contexts/company/domain/entities/definition-resource-adoption.entity.test.ts": "a8f4febf161bed1130f56d455c16d4f54f8241303cbc6ad0939364934bd7c75e",
     "src/contexts/company/domain/entities/definition-resource-adoption.entity.ts": "4d3775f4c312b444187a678e3f78af2bdb534d695e178d58756c141500cbc99d",
-    "src/contexts/company/domain/entities/employee-event.entity.test.ts": "3b91a2e88c2a28128d96328da3dc920e7253dc8cfc23ea4d130d4657aefc1c58",
+    "src/contexts/company/domain/entities/employee-event.entity.test.ts": "47cb6c54735cf521d9e61b2212d3db662e7641d7b88c61acbd3f53c0a0376845",
     "src/contexts/company/domain/entities/employee-event.entity.ts": "f56fc9c900f11a15f4ac1735f277791959f5badec1e9e37e5e4189e1c89a2555",
     "src/contexts/company/domain/entities/employee-grade.entity.ts": "eb1e4156f569411f77931d75704a833287a75109f8abeec42df78c66c60f670e",
     "src/contexts/company/domain/entities/employee-profile-change.entity.ts": "2f7ab6bbbecfc96e60504934fe7432f0bf2f463e3d6d7b7f6a15ea321fbbac0c",
