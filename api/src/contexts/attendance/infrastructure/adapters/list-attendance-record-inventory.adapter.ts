@@ -2,12 +2,14 @@ import type { AttendanceRecordSourceContext } from "@/contexts/attendance/config
 import { AttendanceRecordSourceAuthorizationAdapter } from "@/contexts/attendance/infrastructure/adapters/attendance-record-source-authorization.adapter"
 import { z } from "zod"
 
+type Context = AttendanceRecordSourceContext
+
 const inventorySql =
   "SELECT json_group_array(id) AS ids_json FROM (SELECT id FROM attendance_records ORDER BY id)"
 
 /** 状態で除外せず全打刻IDを取得し、対象の追加と削除を検出する。 */
 export class ListAttendanceRecordInventoryAdapter {
-  constructor(private readonly c: AttendanceRecordSourceContext) {
+  constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 

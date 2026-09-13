@@ -1,9 +1,11 @@
 import type { AttendanceRecordSourceContext } from "@/contexts/attendance/configuration/attendance-record-source-context"
 import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
 
+type Context = AttendanceRecordSourceContext
+
 /** 全打刻の収集資格と発行元を確認し、取得・確定時にも失効を検出する。 */
 export class AttendanceRecordSourceAuthorizationAdapter {
-  constructor(private readonly c: AttendanceRecordSourceContext) {
+  constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 

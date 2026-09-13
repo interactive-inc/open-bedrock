@@ -4,6 +4,8 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 import { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
+type Context = AttendanceRecordSourceContext
+
 const snapshotSql = `SELECT json_object(
   'format', 'attendance-record', 'version', 1,
   'record', json_object('id', id, 'employee_id', employee_id, 'work_date', work_date,
@@ -13,7 +15,7 @@ const snapshotSql = `SELECT json_object(
 
 /** 元行の全項目を取得し、存在しない改訂番号や記録日時を生成しない。 */
 export class CaptureAttendanceRecordAdapter {
-  constructor(private readonly c: AttendanceRecordSourceContext) {
+  constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 
