@@ -1,5 +1,5 @@
 import { CompanyNotFoundError } from "@/contexts/company/domain/errors"
-import { GradeAwardArchiveRepository } from "@/contexts/company/infrastructure/repositories/definitions/grade-award-archive.repository"
+import { GradeAwardArchiveReadAdapter } from "@/contexts/company/infrastructure/adapters/definitions/grade-award-archive-read.adapter"
 import {
   CompanyAuthenticationRequiredError,
   CompanyAccessDeniedError,
@@ -29,7 +29,7 @@ export const GET = factory.createHandlers(
     )
       throw new CompanyAccessDeniedError()
     if (context.env.DB === undefined) throw new CompanyDatabaseUnavailableError()
-    const archive = await new GradeAwardArchiveRepository({
+    const archive = await new GradeAwardArchiveReadAdapter({
       env: { DB: context.env.DB },
     }).findByEmployee(context.req.valid("param").employeeId)
     if (archive instanceof Error) throw new CompanyReadUnavailableError(archive)

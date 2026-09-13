@@ -8,7 +8,7 @@ export const help = `bedrock employee-grades list --organization-id <id> --emplo
 
 公開Companyの等級割当を、会社版・資源版・雇用ID・有効期間とともに返します。
 as-ofを省略すると将来予約を含む資源版、指定するとその日に有効な割当を返します。
-未確定の旧付与記録はgrade-award-archives APIで保全・参照します。`
+未確定の旧付与記録はgrade-award-archives APIで参照します。`
 
 export default factory.createHandlers(
   zValidator(

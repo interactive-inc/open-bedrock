@@ -6,7 +6,6 @@ import * as authorityResolutions from "@/contexts/company/interface/routes/compa
 import * as bootstrap from "@/contexts/company/interface/routes/company.bootstrap"
 import * as capabilities from "@/contexts/company/interface/routes/company.capabilities"
 import * as changes from "@/contexts/company/interface/routes/company.changes"
-import * as definitionResourceAdoptions from "@/contexts/company/interface/routes/company.definition-resource-adoptions"
 import * as definitionResourceAdoptionsCommandId from "@/contexts/company/interface/routes/company.definition-resource-adoptions.$commandId"
 import * as definitions from "@/contexts/company/interface/routes/company.definitions"
 import * as employeeDirectory from "@/contexts/company/interface/routes/company.employee-directory"
@@ -19,7 +18,6 @@ import * as employees from "@/contexts/company/interface/routes/company.employee
 import * as employments from "@/contexts/company/interface/routes/company.employments"
 import * as externalIdentityImports from "@/contexts/company/interface/routes/company.external-identity-imports"
 import * as gradeAssignmentHistory from "@/contexts/company/interface/routes/company.grade-assignment-history"
-import * as gradeAwardArchives from "@/contexts/company/interface/routes/company.grade-award-archives"
 import * as gradeAwardArchivesCommandId from "@/contexts/company/interface/routes/company.grade-award-archives.$commandId"
 import * as gradeAwardArchivesByEmployeeEmployeeId from "@/contexts/company/interface/routes/company.grade-award-archives.by-employee.$employeeId"
 import * as legacyPersonnelActionRecords from "@/contexts/company/interface/routes/company.legacy-personnel-action-records"
@@ -56,7 +54,6 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .post("/bootstrap", ...bootstrap.POST)
   .get("/capabilities", ...capabilities.GET)
   .get("/changes", ...changes.GET)
-  .get("/definition-resource-adoptions", ...definitionResourceAdoptions.GET)
   .get("/definition-resource-adoptions/:commandId", ...definitionResourceAdoptionsCommandId.GET)
   .get("/definitions", ...definitions.GET)
   .get("/employee-directory", ...employeeDirectory.GET)
@@ -67,7 +64,6 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/employees", ...employees.GET)
   .get("/employments", ...employments.GET)
   .get("/grade-assignment-history", ...gradeAssignmentHistory.GET)
-  .get("/grade-award-archives", ...gradeAwardArchives.GET)
   .get(
     "/grade-award-archives/by-employee/:employeeId",
     ...gradeAwardArchivesByEmployeeEmployeeId.GET,
@@ -94,14 +90,12 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
 export const companyAuditedRoutes = new Hono<CompanyHttpEnvironment>()
   .post("/account-employee-links", ...accountEmployeeLinks.POST)
   .post("/assignment-resource-adoptions", ...assignmentResourceAdoptions.POST)
-  .post("/definition-resource-adoptions", ...definitionResourceAdoptions.POST)
   .post("/definitions", ...definitions.POST)
   .put("/employee-directory/:code", ...employeeDirectoryCode.PUT)
   .post("/employee-resource-adoption-batches", ...employeeResourceAdoptionBatches.POST)
   .post("/employee-resource-adoptions", ...employeeResourceAdoptions.POST)
   .post("/employees", ...employees.POST)
   .post("/employments", ...employments.POST)
-  .post("/grade-award-archives", ...gradeAwardArchives.POST)
   .put("/my-profile", ...myProfile.PUT)
   .post("/organization-changes", ...organizationChanges.POST)
   .put("/organization-profile", ...organizationProfile.PUT)

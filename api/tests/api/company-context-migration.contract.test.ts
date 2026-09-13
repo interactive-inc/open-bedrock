@@ -4,9 +4,7 @@ import * as employeeEventSchema from "@/contexts/company/infrastructure/schema/p
 import * as employeeLifecycleSchema from "@/contexts/company/infrastructure/schema/employee-lifecycle"
 import * as employeeSchema from "@/contexts/company/infrastructure/schema/employee"
 import * as employmentSchema from "@/contexts/company/infrastructure/schema/employment"
-import * as gradeSchema from "@/contexts/company/infrastructure/schema/grade"
 import * as organizationSchema from "@/contexts/company/infrastructure/schema/organization"
-import * as positionSchema from "@/contexts/company/infrastructure/schema/position"
 import { Database } from "bun:sqlite"
 import { describe, expect, test } from "bun:test"
 import { readFileSync, readdirSync } from "node:fs"
@@ -119,9 +117,7 @@ test("Company cutover preserves records and matches every shared Company table",
     employeeLifecycleSchema,
     employeeSchema,
     employmentSchema,
-    gradeSchema,
     organizationSchema,
-    positionSchema,
   ].flatMap((schemaModule) =>
     Object.values(schemaModule).flatMap((declaration) => {
       try {
