@@ -55,6 +55,13 @@ import * as stocktakesIdRoute from "@/contexts/asset/interface/routes/stocktakes
 import * as stocktakesIdAssetsCodeCheckRoute from "@/contexts/asset/interface/routes/stocktakes.$id.assets.$code.check"
 import * as stocktakesIdCloseRoute from "@/contexts/asset/interface/routes/stocktakes.$id.close"
 import * as attendanceRecordsRoute from "@/contexts/attendance/interface/routes/attendance-records"
+import * as attendanceRecordsIdPreservationRequestsRoute from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests"
+import * as attendanceRecordsIdPreservationRequestsNumberRoute from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number"
+import * as attendanceRecordsIdPreservationRequestsNumberApproveRoute from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.approve"
+import * as attendanceRecordsIdPreservationRequestsNumberExecuteRoute from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.execute"
+import * as attendanceRecordsIdPreservationRequestsNumberRejectRoute from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.reject"
+import * as attendanceRecordsIdPreservationRequestsNumberResubmitRoute from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.resubmit"
+import * as attendanceRecordsIdPreservationRequestsNumberWithdrawRoute from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.withdraw"
 import * as attendanceRecordsClockInRoute from "@/contexts/attendance/interface/routes/attendance-records.clock-in"
 import * as attendanceRecordsClockOutRoute from "@/contexts/attendance/interface/routes/attendance-records.clock-out"
 import * as attendanceRecordsMeRoute from "@/contexts/attendance/interface/routes/attendance-records.me"
@@ -436,6 +443,34 @@ const routePart0 = createRouteApp()
     "/attendance/attendance-records/overtime-summary",
     ...attendanceAttendanceRecordsOvertimeSummaryRoute.GET,
   )
+  .post(
+    "/attendance/attendance-records/:id/preservation-requests",
+    ...attendanceRecordsIdPreservationRequestsRoute.POST,
+  )
+  .get(
+    "/attendance/attendance-records/:id/preservation-requests/:number",
+    ...attendanceRecordsIdPreservationRequestsNumberRoute.GET,
+  )
+  .post(
+    "/attendance/attendance-records/:id/preservation-requests/:number/approve",
+    ...attendanceRecordsIdPreservationRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/attendance/attendance-records/:id/preservation-requests/:number/execute",
+    ...attendanceRecordsIdPreservationRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/attendance/attendance-records/:id/preservation-requests/:number/reject",
+    ...attendanceRecordsIdPreservationRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/attendance/attendance-records/:id/preservation-requests/:number/resubmit",
+    ...attendanceRecordsIdPreservationRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/attendance/attendance-records/:id/preservation-requests/:number/withdraw",
+    ...attendanceRecordsIdPreservationRequestsNumberWithdrawRoute.POST,
+  )
   .post("/business-trip/business-trips", ...businessTripsRoute.POST)
   .get("/business-trip/business-trips/admin", ...businessTripsAdminRoute.GET)
   .get("/business-trip/business-trips/me", ...businessTripsMeRoute.GET)
@@ -444,6 +479,8 @@ const routePart0 = createRouteApp()
   .delete("/business-trip/business-trips/:id", ...businessTripsIdRoute.DELETE)
   .post("/business-trip/business-trips/:id/approve", ...businessTripsIdApproveRoute.POST)
   .post("/business-trip/business-trips/:id/reject", ...businessTripsIdRejectRoute.POST)
+
+const routePart1 = createRouteApp()
   .get("/career/career-applications/me", ...careerApplicationsMeRoute.GET)
   .get("/career/career-applications/:id", ...careerApplicationsIdRoute.GET)
   .put("/career/career-applications/:id", ...careerApplicationsIdRoute.PUT)
@@ -451,8 +488,6 @@ const routePart0 = createRouteApp()
   .get("/career/career-postings", ...careerPostingsRoute.GET)
   .post("/career/career-postings", ...careerPostingsRoute.POST)
   .get("/career/career-postings/:postingId", ...careerPostingsPostingIdRoute.GET)
-
-const routePart1 = createRouteApp()
   .put("/career/career-postings/:postingId", ...careerPostingsPostingIdRoute.PUT)
   .delete("/career/career-postings/:postingId", ...careerPostingsPostingIdRoute.DELETE)
   .post("/career/career-postings/:postingId/apply", ...careerPostingsPostingIdApplyRoute.POST)

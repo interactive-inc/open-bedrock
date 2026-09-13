@@ -1,24 +1,21 @@
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
-import { softwareLicenseFactory } from "@/contexts/software-license/interface/request-environment/software-license-factory"
-import { ensureLicenseEnabled } from "@/contexts/software-license/interface/middlewares/ensure-license-enabled"
-import { licenseIdSchema } from "@/contexts/software-license/interface/http/license-input-schemas"
+import { attendanceFactory } from "@/contexts/attendance/interface/request-environment/attendance-factory"
 import { PrepareRecordPreservationDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-record-preservation-decision.adapter"
 import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 import { DecideRecordPreservationAdapter } from "@system/infrastructure/adapters/records/decide-record-preservation.adapter"
 import { RecordPreservationDecisionError } from "@system/infrastructure/adapters/records/errors"
-import {
-  SoftwareLicenseForbiddenError,
-  SoftwareLicenseInputError,
-  SoftwareLicenseNotFoundError,
-  SoftwareLicenseConflictError,
-  SoftwareLicenseUnavailableError,
-} from "@/contexts/software-license/interface/errors"
+import { SystemForbiddenError, SystemHTTPException } from "@system/interface/errors"
 /** 保全の肯定・否定判断に同じ認証、会社資格、対象照合を適用する。 */
-export function createLicensePreservationDecisionHandlers(action: "approve" | "reject") {
-  return softwareLicenseFactory.createHandlers(
-    ensureLicenseEnabled,
-    zValidator("param", z.strictObject({ id: licenseIdSchema, number: licenseIdSchema })),
+export function createAttendancePreservationDecisionHandlers(action: "approve" | "reject") {
+  return attendanceFactory.createHandlers(
+    zValidator(
+      "param",
+      z.strictObject({
+        id: z.coerce.number().int().positive().safe(),
+        number: z.coerce.number().int().positive().safe(),
+      }),
+    ),
     zValidator(
       "json",
       z.strictObject({
@@ -34,13 +31,13 @@ export function createLicensePreservationDecisionHandlers(action: "approve" | "r
     async (c) => {
       c.header("Cache-Control", "no-store")
       const authentication = c.var.bearerReadAuthentication
-      if (authentication === undefined) throw new SoftwareLicenseForbiddenError()
+      if (authentication === undefined) throw new SystemForbiddenError()
       const result = await new DecideRecordPreservationAdapter({
         env: c.env,
         var: c.var,
         source: {
-          ownerContext: "software-license",
-          recordKind: "license-record",
+          ownerContext: "attendance",
+          recordKind: "attendance-record",
           recordId: String(c.req.valid("param").id),
           sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
         },
@@ -59,18 +56,14 @@ export function createLicensePreservationDecisionHandlers(action: "approve" | "r
         body: c.req.valid("json"),
       })
       if (result instanceof RecordPreservationDecisionError) {
-        switch (result.code) {
-          case "invalid":
-            throw new SoftwareLicenseInputError({ message: result.message })
-          case "forbidden":
-            throw new SoftwareLicenseForbiddenError()
-          case "not_found":
-            throw new SoftwareLicenseNotFoundError()
-          case "conflict":
-            throw new SoftwareLicenseConflictError()
-          case "unavailable":
-            throw new SoftwareLicenseUnavailableError()
-        }
+        const statuses: Readonly<
+          Record<RecordPreservationDecisionError["code"], 400 | 403 | 404 | 409 | 503>
+        > = { invalid: 400, forbidden: 403, not_found: 404, conflict: 409, unavailable: 503 }
+        throw new SystemHTTPException({
+          status: statuses[result.code],
+          code: `record_preservation_${result.code}`,
+          detail: result.message,
+        })
       }
       return c.json(result, 200)
     },
