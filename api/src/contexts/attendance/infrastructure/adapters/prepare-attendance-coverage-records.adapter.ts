@@ -58,6 +58,7 @@ export class PrepareAttendanceCoverageRecordsAdapter {
     }
     return {
       records,
+      assertions: Object.freeze(assertions),
       repository: new RecordCoveragePageRepository({ env: this.c.env, assertions }),
     }
   }
