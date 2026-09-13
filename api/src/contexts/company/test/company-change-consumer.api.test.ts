@@ -15,7 +15,6 @@ import { GET as people } from "@/contexts/company/interface/routes/company.peopl
 import { GET as employees } from "@/contexts/company/interface/routes/company.employees"
 import { GET as employments } from "@/contexts/company/interface/routes/company.employments"
 import { GET as profile } from "@/contexts/company/interface/routes/company.profile"
-
 import { GET as organizationSnapshots } from "@/contexts/company/interface/routes/company.organization-snapshots"
 import { GET as definitions } from "@/contexts/company/interface/routes/company.definitions"
 

@@ -507,7 +507,7 @@
     "src/contexts/company/test/company-assignment-resource.test-support.ts": "2760d88f109d831c8c3179bc142f0724fd7a1e38b60aaa5c54ffe2ea73a94853",
     "src/contexts/company/test/company-authority-employment.integration.test.ts": "a07aeb9739555c8d0bd4008cf7c39523516474bb64332e26c9b28d67484c69ad",
     "src/contexts/company/test/company-authority-employment.test-support.ts": "bf2f6eb84a75509c90f66cd3f944022d4f7588d96961d0a6f71c6f2a216e0dd4",
-    "src/contexts/company/test/company-change-consumer.api.test.ts": "002c30a1529934ba0bf812da426ae0706133442a890884cf666776c12a66841a",
+    "src/contexts/company/test/company-change-consumer.api.test.ts": "0d6efcff943b62b3c6fc9a4c278d9fb06a98f0cec509f384fefce3840478e5b0",
     "src/contexts/company/test/company-definition-permissions.api.test.ts": "31d854465811d5ea5beaac674c4e9b42db70ad722b053168d88c77f984ed92be",
     "src/contexts/company/test/company-domain-structure.contract.test.ts": "de082f69d47d72408fe2121df1e3cd9c8bfdd427759caa0e12800044fb4b4d9f",
     "src/contexts/company/test/company-employer-migration.contract.test.ts": "1a3b78401c73f78bfcb6128f6d6e7e2b17535b18a1fe218c429493d0447690ef",
