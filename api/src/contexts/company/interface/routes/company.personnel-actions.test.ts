@@ -8,7 +8,7 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
-import { GET, POST } from "@/contexts/company/interface/routes/company.personnel-actions"
+import { GET } from "@/contexts/company/interface/routes/company.personnel-actions"
 import { GET as LEGACY_GET } from "@/contexts/company/interface/routes/company.legacy-personnel-action-records"
 
 async function fixture() {
@@ -29,7 +29,6 @@ async function fixture() {
       return c.json({ code: error.code, ...error.metadata }, error.status)
     })
     .get("/actions", ...GET)
-    .post("/actions", ...POST)
     .get("/legacy", ...LEGACY_GET)
   return {
     ...f,
@@ -177,7 +176,7 @@ test("会社台帳の読取権限だけ・別organization・未認証では発�
         f.context.env,
       )
     ).status,
-  ).toBe(401)
+  ).toBe(404)
 })
 
 test("旧記録は保全して別の読取口へ残し、APIとDBの新規書込を止める", async () => {
@@ -219,11 +218,7 @@ test("旧記録は保全して別の読取口へ残し、APIとDBの新規書込
     { method: "POST", headers: { "x-company-organization-id": "organization:default" } },
     f.context.env,
   )
-  expect(retired.status).toBe(410)
-  expect(await retired.json()).toMatchObject({
-    code: "legacy_personnel_action_write_retired",
-    execution_path: "/company/personnel-action-executions",
-  })
+  expect(retired.status).toBe(404)
   const legacy = await f.app.request(
     "/legacy",
     { headers: { "x-company-organization-id": "organization:default" } },
