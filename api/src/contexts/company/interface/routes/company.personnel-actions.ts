@@ -9,9 +9,6 @@ import {
   CompanyQueryInvalidError,
   CompanyReadForbiddenError,
   CompanyReadUnavailableError,
-  CompanyHeadersInvalidError,
-  CompanyAccessDeniedError,
-  CompanyLegacyPersonnelActionWriteRetiredError,
 } from "@/contexts/company/interface/errors"
 import { createFactory } from "hono/factory"
 import { zValidator } from "@hono/zod-validator"
@@ -106,26 +103,5 @@ export const GET = factory.createHandlers(
       },
       200,
     )
-  },
-)
-
-// @authorization service - 旧記録の書込権限を検査したうえで廃止を通知する
-export const POST = factory.createHandlers(
-  zValidator(
-    "header",
-    z.object({ "x-company-organization-id": z.string().regex(/^\S{1,255}$/) }),
-    (validation) => {
-      if (!validation.success) throw new CompanyHeadersInvalidError(validation.error)
-    },
-  ),
-  (context): Response => {
-    const actor = context.var.companyActor
-    if (actor === undefined) throw new CompanyAuthenticationRequiredError()
-    if (
-      !actor.canAccessOrganization(context.req.valid("header")["x-company-organization-id"]) ||
-      !actor.hasCapability("company:write")
-    )
-      throw new CompanyAccessDeniedError()
-    throw new CompanyLegacyPersonnelActionWriteRetiredError()
   },
 )

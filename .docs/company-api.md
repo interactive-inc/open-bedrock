@@ -67,7 +67,7 @@ JSON envelopeはCompany coreの版・期間・原子性を一つに揃えるた�
 - `GET|POST /company/definitions`: Position、Grade、Responsibility、CollectiveBody
 - `GET|POST /company/account-employee-links`: System AccountとEmployeeの対応
 - `GET /company/personnel-actions`: 確定した人事発令の履歴
-- `POST /company/personnel-actions`: 旧台帳への書込は廃止し、権限確認後に410を返す
+- `POST /company/personnel-actions`は提供しない。人事変更は`POST /company/personnel-action-executions`を使用する
 - `GET /company/legacy-personnel-action-records`: 種別だけを保存した旧台帳の読取
 - `GET|POST /company/responsibility-resource-adoptions`: 確認した既存責務履歴の接続
 - `GET /company/personnel-action-events`: 追記された人事発令の配送元
@@ -361,7 +361,7 @@ CLIの`employees responsibility-adoption`も同じ確認・保存APIを使う。
 
 各記録には対象Employee ID、発令種別、発効日、記録日時、記録者Account ID、申請者Employee ID、発生元、申請ID、訂正元と訂正先、型付き要約がある。`current_employee`の氏名・コードは現在の会社台帳から取得し、発令当時の氏名を推測しない。該当する現在の台帳がない場合も、発令と対象IDを保持する。履歴の応答はキャッシュしない。
 
-種別だけを保存する旧台帳は実際の人事発令へ変換しない。既存の版と有効期間は`GET /company/legacy-personnel-action-records`で従来のorganization指定と台帳読取権限により参照できる。`POST /company/personnel-actions`は書込権限を確認したうえで410を返し、実行APIと旧記録の参照先を示す。DBも旧台帳への新しいrevisionを拒否する。実際の発令は`POST /company/personnel-action-executions`または承認申請の既存契約で確定する。
+種別だけを保存する旧台帳は実際の人事発令へ変換しない。既存の版と有効期間は`GET /company/legacy-personnel-action-records`で従来のorganization指定と台帳読取権限により参照できる。`POST /company/personnel-actions`は提供しない。DBも旧台帳への新しいrevisionを拒否する。実際の発令は`POST /company/personnel-action-executions`または承認申請の既存契約で確定する。
 
 ## 組織編集時の確認条件
 

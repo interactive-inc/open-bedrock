@@ -13,7 +13,6 @@ const companyProblemTitleByStatus: Readonly<Record<CompanyHTTPExceptionStatus, s
   403: "Forbidden",
   404: "Not Found",
   409: "Conflict",
-  410: "Gone",
   413: "Content Too Large",
   415: "Unsupported Media Type",
   422: "Unprocessable Content",
