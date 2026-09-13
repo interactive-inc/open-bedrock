@@ -3,7 +3,7 @@ import type { SystemD1Context } from "@system/configuration/system-context"
 type Context = SystemD1Context
 
 /** 再送を受理する直前に、現在の資格と判断対象の検査をまとめて実行する。 */
-export class VerifyLicensePreservationReplayAdapter {
+export class VerifyRecordPreservationReplayAdapter {
   constructor(private readonly c: Context) {
     Object.freeze(this)
   }
