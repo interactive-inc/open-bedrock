@@ -46,6 +46,7 @@ import * as oauthToken from "@system/interface/routes/system.oauth.token"
 import * as oauthUserinfo from "@system/interface/routes/system.oauth.userinfo"
 import * as preservedRecords from "@system/interface/routes/system.preserved-records"
 import * as preservedRecordsRecordIdContent from "@system/interface/routes/system.preserved-records.$recordId.content"
+import * as preservedRecordsRecordIdDossier from "@system/interface/routes/system.preserved-records.$recordId.dossier"
 import * as principals from "@system/interface/routes/system.principals"
 import * as principalsPrincipalId from "@system/interface/routes/system.principals.$principalId"
 import * as principalsPrincipalIdMachineCredentials from "@system/interface/routes/system.principals.$principalId.machine-credentials"
@@ -145,6 +146,7 @@ export const systemPublicRoutes = new Hono<SystemHonoEnv>()
   .get("/oauth/userinfo", ...oauthUserinfo.GET)
   .get("/preserved-records", ...preservedRecords.GET)
   .get("/preserved-records/:recordId/content", ...preservedRecordsRecordIdContent.GET)
+  .get("/preserved-records/:recordId/dossier", ...preservedRecordsRecordIdDossier.GET)
   .get("/principals", ...principals.GET)
   .post("/principals", ...principals.POST)
   .get("/principals/:principalId", ...principalsPrincipalId.GET)

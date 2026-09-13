@@ -377,6 +377,7 @@ import * as systemOauthTokenRoute from "@system/interface/routes/system.oauth.to
 import * as systemOauthUserinfoRoute from "@system/interface/routes/system.oauth.userinfo"
 import * as systemPreservedRecordsRoute from "@system/interface/routes/system.preserved-records"
 import * as systemPreservedRecordsRecordIdContentRoute from "@system/interface/routes/system.preserved-records.$recordId.content"
+import * as systemPreservedRecordsRecordIdDossierRoute from "@system/interface/routes/system.preserved-records.$recordId.dossier"
 import * as systemPrincipalsRoute from "@system/interface/routes/system.principals"
 import * as systemPrincipalsPrincipalIdRoute from "@system/interface/routes/system.principals.$principalId"
 import * as systemPrincipalsPrincipalIdMachineCredentialsRoute from "@system/interface/routes/system.principals.$principalId.machine-credentials"
@@ -1204,6 +1205,10 @@ const routePart36 = createRouteApp()
     "/system/preserved-records/:recordId/content",
     ...systemPreservedRecordsRecordIdContentRoute.GET,
   )
+  .get(
+    "/system/preserved-records/:recordId/dossier",
+    ...systemPreservedRecordsRecordIdDossierRoute.GET,
+  )
   .get("/system/principals", ...systemPrincipalsRoute.GET)
   .post("/system/principals", ...systemPrincipalsRoute.POST)
   .get("/system/principals/:principalId", ...systemPrincipalsPrincipalIdRoute.GET)
@@ -1258,9 +1263,9 @@ const routePart36 = createRouteApp()
   .post("/thanks/thanks-redemptions/:id/approve", ...thanksRedemptionsIdApproveRoute.POST)
   .post("/thanks/thanks-redemptions/:id/reject", ...thanksRedemptionsIdRejectRoute.POST)
   .get("/thanks/thanks-rewards", ...thanksRewardsRoute.GET)
-  .post("/thanks/thanks-rewards", ...thanksRewardsRoute.POST)
 
 const routePart37 = createRouteApp()
+  .post("/thanks/thanks-rewards", ...thanksRewardsRoute.POST)
   .patch("/thanks/thanks-rewards/:id", ...thanksRewardsIdRoute.PATCH)
   .get("/training/training-courses", ...trainingCoursesRoute.GET)
   .post("/training/training-courses", ...trainingCoursesRoute.POST)
