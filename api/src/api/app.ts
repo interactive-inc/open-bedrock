@@ -55,6 +55,8 @@ import * as stocktakesIdRoute from "@/contexts/asset/interface/routes/stocktakes
 import * as stocktakesIdAssetsCodeCheckRoute from "@/contexts/asset/interface/routes/stocktakes.$id.assets.$code.check"
 import * as stocktakesIdCloseRoute from "@/contexts/asset/interface/routes/stocktakes.$id.close"
 import * as attendanceRecordsRoute from "@/contexts/attendance/interface/routes/attendance-records"
+import * as attendanceRecordsIdPreservationRequestsRoute from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests"
+import * as attendanceRecordsIdPreservationRequestsNumberResubmitRoute from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.resubmit"
 import * as attendanceRecordsClockInRoute from "@/contexts/attendance/interface/routes/attendance-records.clock-in"
 import * as attendanceRecordsClockOutRoute from "@/contexts/attendance/interface/routes/attendance-records.clock-out"
 import * as attendanceRecordsMeRoute from "@/contexts/attendance/interface/routes/attendance-records.me"
@@ -436,6 +438,14 @@ const routePart0 = createRouteApp()
     "/attendance/attendance-records/overtime-summary",
     ...attendanceAttendanceRecordsOvertimeSummaryRoute.GET,
   )
+  .post(
+    "/attendance/attendance-records/:id/preservation-requests",
+    ...attendanceRecordsIdPreservationRequestsRoute.POST,
+  )
+  .post(
+    "/attendance/attendance-records/:id/preservation-requests/:number/resubmit",
+    ...attendanceRecordsIdPreservationRequestsNumberResubmitRoute.POST,
+  )
   .post("/business-trip/business-trips", ...businessTripsRoute.POST)
   .get("/business-trip/business-trips/admin", ...businessTripsAdminRoute.GET)
   .get("/business-trip/business-trips/me", ...businessTripsMeRoute.GET)
@@ -449,10 +459,10 @@ const routePart0 = createRouteApp()
   .put("/career/career-applications/:id", ...careerApplicationsIdRoute.PUT)
   .delete("/career/career-applications/:id", ...careerApplicationsIdRoute.DELETE)
   .get("/career/career-postings", ...careerPostingsRoute.GET)
-  .post("/career/career-postings", ...careerPostingsRoute.POST)
-  .get("/career/career-postings/:postingId", ...careerPostingsPostingIdRoute.GET)
 
 const routePart1 = createRouteApp()
+  .post("/career/career-postings", ...careerPostingsRoute.POST)
+  .get("/career/career-postings/:postingId", ...careerPostingsPostingIdRoute.GET)
   .put("/career/career-postings/:postingId", ...careerPostingsPostingIdRoute.PUT)
   .delete("/career/career-postings/:postingId", ...careerPostingsPostingIdRoute.DELETE)
   .post("/career/career-postings/:postingId/apply", ...careerPostingsPostingIdApplyRoute.POST)
