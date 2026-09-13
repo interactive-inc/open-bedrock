@@ -1,23 +1,20 @@
+import { SystemForbiddenError, SystemHTTPException } from "@system/interface/errors"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
-import { softwareLicenseFactory } from "@/contexts/software-license/interface/request-environment/software-license-factory"
-import { ensureLicenseEnabled } from "@/contexts/software-license/interface/middlewares/ensure-license-enabled"
-import { licenseIdSchema } from "@/contexts/software-license/interface/http/license-input-schemas"
+import { attendanceFactory } from "@/contexts/attendance/interface/request-environment/attendance-factory"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { WithdrawRecordPreservationAdapter } from "@system/infrastructure/adapters/records/withdraw-record-preservation.adapter"
 import { RecordPreservationWithdrawalError } from "@system/infrastructure/adapters/records/errors"
-import {
-  SoftwareLicenseForbiddenError,
-  SoftwareLicenseInputError,
-  SoftwareLicenseNotFoundError,
-  SoftwareLicenseConflictError,
-  SoftwareLicenseUnavailableError,
-} from "@/contexts/software-license/interface/errors"
 // @authorization owner - 認証された申請者だけが指定した未完了提案を理由とともに取り下げる
-export const POST = softwareLicenseFactory.createHandlers(
-  ensureLicenseEnabled,
+export const POST = attendanceFactory.createHandlers(
   authenticateSystemAccessToken,
-  zValidator("param", z.strictObject({ id: licenseIdSchema, number: licenseIdSchema })),
+  zValidator(
+    "param",
+    z.strictObject({
+      id: z.coerce.number().int().positive().safe(),
+      number: z.coerce.number().int().positive().safe(),
+    }),
+  ),
   zValidator(
     "json",
     z.strictObject({
@@ -28,13 +25,13 @@ export const POST = softwareLicenseFactory.createHandlers(
   async (c) => {
     c.header("Cache-Control", "no-store")
     const authentication = c.var.bearerReadAuthentication
-    if (authentication === undefined) throw new SoftwareLicenseForbiddenError()
+    if (authentication === undefined) throw new SystemForbiddenError()
     const result = await new WithdrawRecordPreservationAdapter({
       env: c.env,
       var: c.var,
       source: {
-        ownerContext: "software-license",
-        recordKind: "license-record",
+        ownerContext: "attendance",
+        recordKind: "attendance-record",
         recordId: String(c.req.valid("param").id),
         sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
       },
@@ -45,18 +42,14 @@ export const POST = softwareLicenseFactory.createHandlers(
       reason: c.req.valid("json").reason,
     })
     if (result instanceof RecordPreservationWithdrawalError) {
-      switch (result.code) {
-        case "invalid":
-          throw new SoftwareLicenseInputError({ message: result.message })
-        case "forbidden":
-          throw new SoftwareLicenseForbiddenError()
-        case "not_found":
-          throw new SoftwareLicenseNotFoundError()
-        case "conflict":
-          throw new SoftwareLicenseConflictError()
-        case "unavailable":
-          throw new SoftwareLicenseUnavailableError()
-      }
+      const statuses: Readonly<
+        Record<RecordPreservationWithdrawalError["code"], 400 | 403 | 404 | 409 | 503>
+      > = { invalid: 400, forbidden: 403, not_found: 404, conflict: 409, unavailable: 503 }
+      throw new SystemHTTPException({
+        status: statuses[result.code],
+        code: `record_preservation_${result.code}`,
+        detail: result.message,
+      })
     }
     return c.json(result, 200)
   },

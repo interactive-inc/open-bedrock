@@ -16,7 +16,11 @@ Systemは所有業務を識別した原記録、内容digest、暗号化した�
 
 Systemの共通提出処理は、所有業務から現在の取得資格と原文を受け取り、外部で解決された判断候補を固定する。Systemが会社上の資格や所有業務のtableを解釈することはない。取得資格・保全操作権限・判断資格のいずれかを確認できない場合は提出しない。
 
-打刻には`POST /attendance/attendance-records/:id/preservation-requests`と`POST /attendance/attendance-records/:id/preservation-requests/:number/resubmit`がある。サービス利用台帳と同じ保持・開示条件、初回の冪等キー、再提出の元版・元digestを使用する。原記録はサーバー側で取得し、会社の判断候補を解決してから提案を保存する。取得から保存までに元行が更新された場合は提出を拒否する。打刻の判断対象確認と取下げの公開経路は未接続であり、打刻業務の撤去を完了できない。
+打刻には`POST /attendance/attendance-records/:id/preservation-requests`と`POST /attendance/attendance-records/:id/preservation-requests/:number/resubmit`がある。サービス利用台帳と同じ保持・開示条件、初回の冪等キー、再提出の元版・元digestを使用する。原記録はサーバー側で取得し、会社の判断候補を解決してから提案を保存する。取得から保存までに元行が更新された場合は提出を拒否する。
+
+打刻の`GET /attendance/attendance-records/:id/preservation-requests/:number`は、現在の提案閲覧権限と会社上の判断資格を要求する。`include_original=true`の場合は、提案に固定された暗号化原文を取得する。対象・資格・原文の条件を開示監査の保存時にも再検査し、監査を保存できない場合は内容を返さない。
+
+打刻の`POST /attendance/attendance-records/:id/preservation-requests/:number/withdraw`は、認証された申請者だけが、digestの一致する未完了提案を理由とともに取り下げられる。取消と理由の監査を同時に保存し、完了済み・取下げ済みの提案は変更しない。取下げ・否決後の再提出は前の版とdigestを要求し、古い判断対象で新しい版を承認できない。
 
 打刻の`POST /attendance/attendance-records/:id/preservation-requests/:number/approve`と`reject`は、Systemの共通判断処理へ接続する。Companyは判断者のAccount対応と現在の会社資格を固定し、Systemは表示対象の版・digest・タスク・段階を照合して人間の判断を保存する。同じ判断者・対象・コメントの再送は既存の結果を返し、判断票を増やさない。
 
@@ -84,7 +88,7 @@ preservationsは同じ原文への保持と解除を含む。disclosurePolicies�
 
 ## 現行の制約
 
-サービス利用台帳は原記録の取得から保全確定までを公開し、打刻は提出・再提出・承認・否定判断・確定を接続しているが、判断対象確認と取下げ、および業務撤去後の参照までの打刻固有の通し検証は揃っていない。他業務の必要記録・添付の収集、保全対象全体の網羅確認、撤去の確定操作は揃っていない。
+サービス利用台帳と打刻は、原記録の取得・提出・参照・判断・取下げ・再提出・保全確定を共通Systemへ接続する。保全済みの原文と承認証跡は、元の業務テーブルと公開経路がなくてもSystemの権限・開示条件に従って参照・出力できる。他業務の必要記録・添付の収集、保全対象全体の網羅確認、撤去の確定操作は揃っていない。
 
 packageは原文と出所を含むが、過去の承認・監査・保持履歴をまとめた一括出力ではない。承認待ちのGETは終了済み案件の履歴取得や全提案の発見を代替しない。却下・取消した準備済み本体の最終的な処分を決める公開経路も持たない。
 

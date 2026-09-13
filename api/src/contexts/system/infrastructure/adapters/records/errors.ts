@@ -30,3 +30,25 @@ export class RecordPreservationDecisionError extends Error {
     this.name = "RecordPreservationDecisionError"
   }
 }
+
+/** 記録保全の判断対象の参照に失敗した理由。 */
+export class RecordPreservationReviewError extends Error {
+  constructor(
+    readonly code: "invalid" | "forbidden" | "not_found" | "conflict" | "unavailable",
+    options?: ErrorOptions,
+  ) {
+    super(`record preservation review ${code}`, options)
+    this.name = "RecordPreservationReviewError"
+  }
+}
+
+/** 記録保全の取下げに失敗した理由。 */
+export class RecordPreservationWithdrawalError extends Error {
+  constructor(
+    readonly code: "invalid" | "forbidden" | "not_found" | "conflict" | "unavailable",
+    options?: ErrorOptions,
+  ) {
+    super(`record preservation withdrawal ${code}`, options)
+    this.name = "RecordPreservationWithdrawalError"
+  }
+}

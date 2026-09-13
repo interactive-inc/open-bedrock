@@ -3,6 +3,8 @@ import { HTTPException } from "hono/http-exception"
 import { attendanceFactory } from "@/contexts/attendance/interface/request-environment/attendance-factory"
 import { POST as submit } from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { GET as review } from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number"
+import { POST as withdraw } from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.withdraw"
 import { POST as approve } from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.approve"
 import { POST as reject } from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.reject"
 import { POST as execute } from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.execute"
@@ -107,10 +109,12 @@ export async function createAttendancePreservationFixture() {
     .post("/attendance-records/:id/preservation-requests/:number/execute", ...execute)
     .post("/attendance-records/:id/preservation-requests/:number/approve", ...approve)
     .post("/attendance-records/:id/preservation-requests/:number/reject", ...reject)
+    .get("/attendance-records/:id/preservation-requests/:number", ...review)
+    .post("/attendance-records/:id/preservation-requests/:number/withdraw", ...withdraw)
   const keys = createSystemAttachmentTestKekEnvironment(1)
   const request = async (
     path: string,
-    input: Readonly<{ body: unknown; key?: string; anonymous?: boolean; accountId?: AccountId }>,
+    input: Readonly<{ body?: unknown; key?: string; anonymous?: boolean; accountId?: AccountId }>,
   ) => {
     const token = await new SystemAccessTokenIssuer(secret).issue({
       accountId: input.accountId ?? governance.creator.accountId,
@@ -121,7 +125,7 @@ export async function createAttendancePreservationFixture() {
     return app.request(
       path,
       {
-        method: "POST",
+        method: input.body === undefined ? "GET" : "POST",
         headers: {
           "content-type": "application/json",
           ...(input.anonymous ? {} : { authorization: `Bearer ${token}` }),
@@ -147,6 +151,7 @@ export async function createAttendancePreservationFixture() {
   return {
     database,
     bucket,
+    recordStorage: { ATTACHMENTS: bucket, ATTACHMENT_KEKS: keys },
     governance,
     reviewer,
     definition,
