@@ -56,6 +56,9 @@ import * as stocktakesIdAssetsCodeCheckRoute from "@/contexts/asset/interface/ro
 import * as stocktakesIdCloseRoute from "@/contexts/asset/interface/routes/stocktakes.$id.close"
 import * as attendanceRecordsRoute from "@/contexts/attendance/interface/routes/attendance-records"
 import * as attendanceRecordsIdPreservationRequestsRoute from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests"
+import * as attendanceRecordsIdPreservationRequestsNumberApproveRoute from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.approve"
+import * as attendanceRecordsIdPreservationRequestsNumberExecuteRoute from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.execute"
+import * as attendanceRecordsIdPreservationRequestsNumberRejectRoute from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.reject"
 import * as attendanceRecordsIdPreservationRequestsNumberResubmitRoute from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.resubmit"
 import * as attendanceRecordsClockInRoute from "@/contexts/attendance/interface/routes/attendance-records.clock-in"
 import * as attendanceRecordsClockOutRoute from "@/contexts/attendance/interface/routes/attendance-records.clock-out"
@@ -443,6 +446,18 @@ const routePart0 = createRouteApp()
     ...attendanceRecordsIdPreservationRequestsRoute.POST,
   )
   .post(
+    "/attendance/attendance-records/:id/preservation-requests/:number/approve",
+    ...attendanceRecordsIdPreservationRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/attendance/attendance-records/:id/preservation-requests/:number/execute",
+    ...attendanceRecordsIdPreservationRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/attendance/attendance-records/:id/preservation-requests/:number/reject",
+    ...attendanceRecordsIdPreservationRequestsNumberRejectRoute.POST,
+  )
+  .post(
     "/attendance/attendance-records/:id/preservation-requests/:number/resubmit",
     ...attendanceRecordsIdPreservationRequestsNumberResubmitRoute.POST,
   )
@@ -456,11 +471,11 @@ const routePart0 = createRouteApp()
   .post("/business-trip/business-trips/:id/reject", ...businessTripsIdRejectRoute.POST)
   .get("/career/career-applications/me", ...careerApplicationsMeRoute.GET)
   .get("/career/career-applications/:id", ...careerApplicationsIdRoute.GET)
+
+const routePart1 = createRouteApp()
   .put("/career/career-applications/:id", ...careerApplicationsIdRoute.PUT)
   .delete("/career/career-applications/:id", ...careerApplicationsIdRoute.DELETE)
   .get("/career/career-postings", ...careerPostingsRoute.GET)
-
-const routePart1 = createRouteApp()
   .post("/career/career-postings", ...careerPostingsRoute.POST)
   .get("/career/career-postings/:postingId", ...careerPostingsPostingIdRoute.GET)
   .put("/career/career-postings/:postingId", ...careerPostingsPostingIdRoute.PUT)

@@ -8,7 +8,9 @@ import { LicenseActorReadAdapter } from "@/contexts/software-license/infrastruct
 import {
   SoftwareLicenseForbiddenError,
   SoftwareLicenseInputError,
-  SoftwareLicenseHTTPException,
+  SoftwareLicenseNotFoundError,
+  SoftwareLicenseConflictError,
+  SoftwareLicenseUnavailableError,
 } from "@/contexts/software-license/interface/errors"
 import { PrepareRecordPreservationTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-record-preservation-task.adapter"
 import { recordPreservationRequestSchema } from "@system/domain/schemas/records/record-preservation-input.schema"
@@ -88,18 +90,18 @@ export function createLicensePreservationSubmissionHandlers(mode: "create" | "re
       }
       const submitted = await submit()
       if (submitted instanceof RecordPreservationSubmissionError) {
-        const statuses: Readonly<
-          Record<RecordPreservationSubmissionError["code"], 400 | 403 | 404 | 409 | 503>
-        > = {
-          invalid: 400,
-          forbidden: 403,
-          not_found: 404,
-          conflict: 409,
-          unavailable: 503,
+        switch (submitted.code) {
+          case "invalid":
+            throw new SoftwareLicenseInputError({ message: submitted.message })
+          case "forbidden":
+            throw new SoftwareLicenseForbiddenError()
+          case "not_found":
+            throw new SoftwareLicenseNotFoundError()
+          case "conflict":
+            throw new SoftwareLicenseConflictError()
+          case "unavailable":
+            throw new SoftwareLicenseUnavailableError()
         }
-        throw new SoftwareLicenseHTTPException(statuses[submitted.code], {
-          message: submitted.message,
-        })
       }
       return c.json(submitted.body, submitted.httpStatus)
     },

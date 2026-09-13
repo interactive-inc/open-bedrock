@@ -2,6 +2,10 @@ import { drizzle } from "drizzle-orm/d1"
 import { HTTPException } from "hono/http-exception"
 import { attendanceFactory } from "@/contexts/attendance/interface/request-environment/attendance-factory"
 import { POST as submit } from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { POST as approve } from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.approve"
+import { POST as reject } from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.reject"
+import { POST as execute } from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.execute"
 import { POST as resubmit } from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.resubmit"
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
@@ -100,13 +104,16 @@ export async function createAttendancePreservationFixture() {
     })
     .post("/attendance-records/:id/preservation-requests", ...submit)
     .post("/attendance-records/:id/preservation-requests/:number/resubmit", ...resubmit)
+    .post("/attendance-records/:id/preservation-requests/:number/execute", ...execute)
+    .post("/attendance-records/:id/preservation-requests/:number/approve", ...approve)
+    .post("/attendance-records/:id/preservation-requests/:number/reject", ...reject)
   const keys = createSystemAttachmentTestKekEnvironment(1)
   const request = async (
     path: string,
-    input: Readonly<{ body: unknown; key?: string; anonymous?: boolean }>,
+    input: Readonly<{ body: unknown; key?: string; anonymous?: boolean; accountId?: AccountId }>,
   ) => {
     const token = await new SystemAccessTokenIssuer(secret).issue({
-      accountId: governance.creator.accountId,
+      accountId: input.accountId ?? governance.creator.accountId,
       tokenVersion: 0,
       now: new Date(),
     })
