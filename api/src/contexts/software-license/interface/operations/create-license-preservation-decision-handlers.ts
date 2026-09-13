@@ -3,7 +3,7 @@ import { zValidator } from "@hono/zod-validator"
 import { softwareLicenseFactory } from "@/contexts/software-license/interface/request-environment/software-license-factory"
 import { ensureLicenseEnabled } from "@/contexts/software-license/interface/middlewares/ensure-license-enabled"
 import { licenseIdSchema } from "@/contexts/software-license/interface/http/license-input-schemas"
-import { PrepareRecordPreservationDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-record-preservation-decision.adapter"
+import { PrepareCompanyRecordProcedureDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-decision.adapter"
 import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 import { DecideRecordPreservationAdapter } from "@system/infrastructure/adapters/records/decide-record-preservation.adapter"
 import { RecordPreservationDecisionError } from "@system/infrastructure/adapters/records/errors"
@@ -45,7 +45,7 @@ export function createLicensePreservationDecisionHandlers(action: "approve" | "r
           sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
         },
         prepareDecision: async (input) => {
-          const decision = await new PrepareRecordPreservationDecisionAdapter(c).prepare(input)
+          const decision = await new PrepareCompanyRecordProcedureDecisionAdapter(c).prepare(input)
           if (decision instanceof CompanyConflictError)
             return new RecordPreservationDecisionError("conflict")
           if (decision instanceof CompanyUnexpectedError)

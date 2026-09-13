@@ -1,3 +1,4 @@
+import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
 import { PrepareExpenseApprovalScopeAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-approval-scope.adapter"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
@@ -55,6 +56,11 @@ export class SubmitExpenseProcedure {
   }
 
   async run(command: Command): Promise<Result | ApplicationError> {
+    const result = await this.runWithWriteGuards(command)
+    return new PrepareExpenseWriteGuardAdapter(this.c).failure(result) ?? result
+  }
+
+  private async runWithWriteGuards(command: Command): Promise<Result | ApplicationError> {
     if (
       !z.string().uuid().safeParse(command.requestKey).success ||
       !expenseCategorySchema.safeParse(command.category).success ||
@@ -67,6 +73,7 @@ export class SubmitExpenseProcedure {
       (command.existingExpenseId != null && command.previousExpenseId != null)
     )
       return new ValidationError("経費の入力が不正です", "invalid_expense")
+    const writeGuard = new PrepareExpenseWriteGuardAdapter(this.c).prepare()
     const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
       accountId: command.session.accountId,
       tokenVersion: command.tokenVersion,
@@ -125,7 +132,7 @@ export class SubmitExpenseProcedure {
     )
       return new ConflictError("確認した既存経費が変わっています", "legacy_expense_changed")
     const expense = original ?? requested
-    const guards = [...human.assertions, companyGuard]
+    const guards = [...human.assertions, writeGuard, companyGuard]
     if (existing !== null)
       return this.replay({
         command,
@@ -313,7 +320,9 @@ export class SubmitExpenseProcedure {
       return new ConflictError("再送キーは別の経費に使用されています", "idempotency_conflict")
     const receipt = await input.verifyReceipt()
     if (receipt !== true)
-      return new ForbiddenError("再送結果の取得資格を確認できません", "forbidden")
+      return new ForbiddenError("再送結果の取得資格を確認できません", "forbidden", {
+        cause: receipt,
+      })
     return { request: input.existing, replayed: true }
   }
 }

@@ -1,3 +1,4 @@
+import { AttendanceRecordSourceFrozenError } from "@/contexts/attendance/infrastructure/repositories/errors"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendance-record.entity"
 import type { Context } from "@/env"
@@ -52,6 +53,13 @@ export class ClockOut {
         note: command.note,
       }),
     )
+
+    if (record instanceof AttendanceRecordSourceFrozenError) {
+      return new ConflictError(
+        "Attendance record writes are frozen for preservation",
+        "attendance_record_source_frozen",
+      )
+    }
 
     if (record instanceof Error) {
       return new UnexpectedError("failed to update attendance record", { cause: record })

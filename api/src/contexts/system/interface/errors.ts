@@ -689,6 +689,16 @@ export class SystemSessionUnavailableError extends SystemHTTPException {
   }
 }
 
+export class SystemPreservedRecordNotAttachmentError extends SystemHTTPException {
+  constructor() {
+    super({
+      status: 400,
+      code: "record_is_not_attachment",
+      detail: "The preserved record is not an attachment",
+    })
+  }
+}
+
 export class SystemPreservedRecordUnavailableError extends SystemHTTPException {
   constructor() {
     super({

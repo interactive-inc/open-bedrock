@@ -56,6 +56,13 @@ export class DisclosePreservedRecordContent {
       occurredAt: at,
     })
     if (audit instanceof Error) return audit
+    const guards = this.c.persistence.prepareGuards({
+      policy,
+      request: { ...request, at },
+      attachment: verified.attachment,
+      at,
+    })
+    if (guards instanceof Error) return guards
     const written = await this.c.persistence.write({
       policy,
       request: { ...request, at },
@@ -65,6 +72,7 @@ export class DisclosePreservedRecordContent {
     })
     if (written instanceof Error) return written
     return Object.freeze({
+      assertions: guards,
       recordId: record.snapshot.id,
       source: record.source.props,
       content: verified.payload.content.toBytes(),

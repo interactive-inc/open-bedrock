@@ -1,3 +1,5 @@
+import { RECORD_BINARY_CONTENT_TYPE } from "@system/domain/catalogs/records/record-payload-format.catalog"
+import { VerifyAttachmentContentAdapter } from "@system/infrastructure/adapters/attachments/verify-attachment-content.adapter"
 import type {
   SystemAttachmentStorageContext,
   SystemDatabaseContext,
@@ -5,10 +7,6 @@ import type {
 import type { PreservedRecordEntity } from "@system/domain/entities/preserved-record.entity"
 import { PreservedRecordPayloadValue } from "@system/domain/values/records/preserved-record-payload.value"
 import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
-import { AttachmentObjectAdapter } from "@system/infrastructure/adapters/attachments/attachment-object.adapter"
-import { AttachmentKekRegistry } from "@system/application/attachments/lib/attachment-kek-registry"
-import { decryptAttachment } from "@system/application/attachments/lib/decrypt-attachment"
-import { toSha256Hex } from "@system/application/attachments/lib/to-sha256-hex"
 
 type Context = SystemDatabaseContext & SystemAttachmentStorageContext
 
@@ -25,36 +23,24 @@ export class VerifyPreservedRecordContentAdapter {
       !attachment ||
       attachment.status !== expectedStatus ||
       attachment.ownerAccountId !== record.snapshot.actorAccountId ||
-      attachment.contentType !== "application/vnd.record-preservation+json" ||
+      (attachment.contentType !== "application/vnd.record-preservation+json" &&
+        attachment.contentType !== RECORD_BINARY_CONTENT_TYPE) ||
       attachment.plaintextSha256 !== record.snapshot.attachmentDigest ||
       attachment.createdAt.getTime() > Date.parse(record.snapshot.finalizedAt) ||
       attachment.wrappedDek === null ||
       attachment.wrappedDekIv === null
     )
       return new Error("prepared record attachment is unavailable or mismatched")
-    const registry = AttachmentKekRegistry.fromEnv(this.c.env.ATTACHMENT_KEKS)
-    if (registry instanceof Error) return registry
-    const key = registry.resolve(attachment.kekVersion)
-    if (key instanceof Error) return key
-    const ciphertext = await new AttachmentObjectAdapter(this.c).get(attachment.objectKey)
-    if (ciphertext instanceof Error) return ciphertext
-    const bytes = await decryptAttachment(
-      ciphertext,
-      {
-        wrappedDek: attachment.wrappedDek,
-        wrappedDekIv: attachment.wrappedDekIv,
-        contentIv: attachment.contentIv,
-        kekVersion: attachment.kekVersion,
-      },
-      key,
+    const bytes = await new VerifyAttachmentContentAdapter(this.c).execute(
+      attachment,
+      expectedStatus,
     )
     if (bytes instanceof Error) return bytes
-    if (
-      bytes.byteLength !== attachment.byteSize ||
-      (await toSha256Hex(bytes)) !== record.snapshot.attachmentDigest
+    const payload = await PreservedRecordPayloadValue.restore(
+      bytes,
+      record.source,
+      attachment.contentType === RECORD_BINARY_CONTENT_TYPE ? "binary" : "json",
     )
-      return new Error("prepared record payload digest or size does not match")
-    const payload = await PreservedRecordPayloadValue.restore(bytes, record.source)
     if (payload instanceof Error) return payload
     return Object.freeze({ attachment, payload })
   }

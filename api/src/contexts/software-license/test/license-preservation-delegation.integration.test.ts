@@ -1,3 +1,5 @@
+import { PrepareCompanyRecordDecisionReplayAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-decision-replay.adapter"
+import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { expect, test } from "bun:test"
 import { z } from "zod"
 import { createLicensePreservationFixture } from "@/contexts/software-license/test/create-license-preservation-fixture.test-support"
@@ -124,12 +126,47 @@ test("代理承認で保存した記録は業務撤去後も委任条件を返�
   await database.batch([history.delegationsGuard])
   const decision = history.attestations[0]
   if (decision === undefined) throw new Error("attestation missing")
+  const replayProposal = await new SystemD1ProposalAdapter({
+    env: { DB: database },
+    visibleCompletionOperationKeys: ["system.record.preserve"],
+  }).findByNumber(receipt.number)
+  if (replayProposal instanceof Error || replayProposal === null)
+    throw new Error("replay proposal missing")
+  const replayQualification = new PrepareCompanyRecordDecisionReplayAdapter(
+    fixture.governance.context,
+  )
+  const qualifiedReplay = await replayQualification.prepare({
+    proposal: replayProposal,
+    attestation: decision,
+    at: new Date(),
+  })
+  expect(qualifiedReplay).not.toBeInstanceOf(Error)
+  await database
+    .prepare(`INSERT INTO system_delegations
+    (id,delegator_account_id,delegate_account_id,scope_context,scope_kind,scope_id,scope_version,starts_at,ends_at,created_at,revoked_at)
+    VALUES ('newer-record-delegation',?1,?2,NULL,NULL,NULL,NULL,?3,?4,?3,NULL)`)
+    .bind(fixture.reviewer.accountId, delegate.accountId, startsAt + 1, endsAt)
+    .run()
+  expect(
+    await replayQualification.prepare({
+      proposal: replayProposal,
+      attestation: decision,
+      at: new Date(),
+    }),
+  ).not.toBeInstanceOf(Error)
   await database
     .prepare("UPDATE system_delegations SET revoked_at=?1 WHERE id='record-delegation'")
     .bind(decision.decidedAt.getTime() + 1)
     .run()
   expect(
     await database.batch([history.delegationsGuard]).catch((cause: unknown) => cause),
+  ).toBeInstanceOf(Error)
+  expect(
+    await replayQualification.prepare({
+      proposal: replayProposal,
+      attestation: decision,
+      at: new Date(),
+    }),
   ).toBeInstanceOf(Error)
   const afterRevocation = await reader.prepare(input)
   if (afterRevocation instanceof Error) throw afterRevocation

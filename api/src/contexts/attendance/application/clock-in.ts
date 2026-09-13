@@ -1,3 +1,4 @@
+import { AttendanceRecordSourceFrozenError } from "@/contexts/attendance/infrastructure/repositories/errors"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendance-record.entity"
 import type { Context } from "@/env"
@@ -45,6 +46,13 @@ export class ClockIn {
     // insert の UNIQUE 違反は二重打刻と確定できるため、再読込に依存せず重複を返す（TOCTOU 競合対策）。
     if (record instanceof UniqueConstraintError) {
       return new ConflictError("already clocked in", "already_clocked_in")
+    }
+
+    if (record instanceof AttendanceRecordSourceFrozenError) {
+      return new ConflictError(
+        "Attendance record writes are frozen for preservation",
+        "attendance_record_source_frozen",
+      )
     }
 
     if (record instanceof Error) {

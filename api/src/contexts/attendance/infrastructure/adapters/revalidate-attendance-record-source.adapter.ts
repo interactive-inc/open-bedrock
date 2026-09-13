@@ -17,7 +17,11 @@ export class RevalidateAttendanceRecordSourceAdapter {
       source.props.recordKind !== "attendance-record"
     )
       return new Error("record source does not belong to this attendance registry")
+    const formatVersion = source.props.formatVersion
+    if (formatVersion !== 1 && formatVersion !== 2)
+      return new Error("unsupported attendance record format")
     const current = await new CaptureAttendanceRecordAdapter(this.c).prepare({
+      formatVersion,
       recordId: Number(source.props.recordId),
       sourceNamespace: this.c.sourceNamespace,
     })

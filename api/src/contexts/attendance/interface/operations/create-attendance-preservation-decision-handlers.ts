@@ -1,7 +1,7 @@
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { attendanceFactory } from "@/contexts/attendance/interface/request-environment/attendance-factory"
-import { PrepareRecordPreservationDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-record-preservation-decision.adapter"
+import { PrepareCompanyRecordProcedureDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-decision.adapter"
 import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 import { DecideRecordPreservationAdapter } from "@system/infrastructure/adapters/records/decide-record-preservation.adapter"
 import { RecordPreservationDecisionError } from "@system/infrastructure/adapters/records/errors"
@@ -42,7 +42,7 @@ export function createAttendancePreservationDecisionHandlers(action: "approve" |
           sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
         },
         prepareDecision: async (input) => {
-          const decision = await new PrepareRecordPreservationDecisionAdapter(c).prepare(input)
+          const decision = await new PrepareCompanyRecordProcedureDecisionAdapter(c).prepare(input)
           if (decision instanceof CompanyConflictError)
             return new RecordPreservationDecisionError("conflict")
           if (decision instanceof CompanyUnexpectedError)
