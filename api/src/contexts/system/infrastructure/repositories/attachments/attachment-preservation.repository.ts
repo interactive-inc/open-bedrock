@@ -68,10 +68,10 @@ export class AttachmentPreservationRepository {
     }
   }
 
-  async write(
+  prepareWrite(
     entity: AttachmentPreservationEntity,
     audit: SystemAuditEventEntity,
-  ): Promise<"written" | "conflict" | Error> {
+  ): ReadonlyArray<D1PreparedStatement> {
     const value = entity.snapshot
     const release = value.release
     const statement =
@@ -99,13 +99,20 @@ export class AttachmentPreservationRepository {
             release.reason,
             release.auditEventId,
           )
+    return [
+      ...this.c.assertions,
+      ...new SystemAuditEventRepository(this.c).prepareAppend(audit),
+      statement,
+      abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
+    ]
+  }
+
+  async write(
+    entity: AttachmentPreservationEntity,
+    audit: SystemAuditEventEntity,
+  ): Promise<"written" | "conflict" | Error> {
     try {
-      const statements = [
-        ...this.c.assertions,
-        ...new SystemAuditEventRepository(this.c).prepareAppend(audit),
-        statement,
-        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
-      ]
+      const statements = [...this.prepareWrite(entity, audit)]
       const results = await this.c.env.DB.batch(statements)
       return results.length === statements.length && results.every((result) => result.success)
         ? "written"

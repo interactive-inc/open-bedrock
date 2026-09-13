@@ -273,6 +273,14 @@ WHEN NOT EXISTS (
         AND workflow_case.subject_id = proposal.series_id
         AND workflow_case.subject_version = CAST(proposal.version AS TEXT)
       )
+      OR (
+        workflow_case.subject_context = 'system'
+        AND workflow_case.subject_kind = 'record-preservation'
+        AND workflow_case.subject_version = '1'
+        AND json_extract(proposal.body_json, '$.operation') IS 'system.record.preserve'
+        AND json_extract(proposal.body_json, '$.version') IS 1
+        AND json_extract(proposal.body_json, '$.recordId') IS workflow_case.subject_id
+      )
     )
     AND workflow_case.proposal_digest = proposal.digest
     AND workflow_case.created_by_account_id = proposal.created_by_account_id

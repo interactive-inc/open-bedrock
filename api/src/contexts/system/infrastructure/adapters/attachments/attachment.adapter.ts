@@ -157,6 +157,7 @@ export class AttachmentAdapter {
             inArray(systemAttachments.status, ["uploading", "pending", "erased"]),
             isNull(systemAttachments.linkedAt),
             lt(systemAttachments.createdAt, threshold),
+            this.unreferencedByPreservationProposal(),
             sql`NOT EXISTS (SELECT 1 FROM system_attachment_preservations preservation
               WHERE preservation.attachment_id = ${systemAttachments.id}
                 AND ((preservation.kind = 'hold' AND preservation.released_at IS NULL)
@@ -190,6 +191,7 @@ export class AttachmentAdapter {
             inArray(systemAttachments.status, ["uploading", "pending", "erased"]),
             isNull(systemAttachments.linkedAt),
             lt(systemAttachments.createdAt, threshold),
+            this.unreferencedByPreservationProposal(),
             sql`NOT EXISTS (SELECT 1 FROM system_attachment_preservations preservation
               WHERE preservation.attachment_id = ${systemAttachments.id}
                 AND ((preservation.kind = 'hold' AND preservation.released_at IS NULL)
@@ -206,6 +208,19 @@ export class AttachmentAdapter {
         { cause },
       )
     }
+  }
+
+  /** 判断済みの案件も証跡として残るため、状態にかかわらず保全提案の本文を自動削除しない。 */
+  private unreferencedByPreservationProposal() {
+    return sql`NOT EXISTS (
+      SELECT 1 FROM system_proposals proposal
+      JOIN system_proposal_cases association ON association.proposal_id = proposal.id
+      JOIN system_cases workflow_case ON workflow_case.id = association.case_id
+      WHERE workflow_case.subject_context = 'system'
+        AND workflow_case.subject_kind = 'record-preservation'
+        AND json_extract(proposal.body_json, '$.operation') = 'system.record.preserve'
+        AND json_extract(proposal.body_json, '$.attachmentId') = ${systemAttachments.id}
+    )`
   }
 
   /** 本体削除に成功した消去済み行だけを落とし、実際に削除したかを返す。 */

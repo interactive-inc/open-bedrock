@@ -13,6 +13,24 @@ type PermissionEntry = {
  */
 export const SYSTEM_FEATURE_PERMISSION_ENTRIES = [
   {
+    key: "system:record:preserve",
+    category: "records",
+    featureKey: null,
+    description: "承認済み内容と移管元の権限を検査して記録を保全する",
+  },
+  {
+    key: "system:record:read",
+    category: "records",
+    featureKey: null,
+    description: "個別の開示設定で許可された保全記録を閲覧する",
+  },
+  {
+    key: "system:record:export",
+    category: "records",
+    featureKey: null,
+    description: "個別の開示設定で許可された保全記録を出力する",
+  },
+  {
     key: "system:procedure:read",
     category: "procedure",
     featureKey: null,

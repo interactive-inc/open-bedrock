@@ -15,8 +15,9 @@ interface -> application -> infrastructure
 - Domain contains only `entities/`, `values/`, `policies/`, and `errors.ts`; it is pure company policy.
 - Application contains only write services that create or mutate Domain models before persistence.
   Reads, queries, simple CRUD, and HTTP conversion stay directly in Hono route handlers.
-- Infrastructure contains only `*.repository.ts` production implementations, plus owned schema/SQL
-  and tests. Repositories may know the database SDK.
+- Infrastructureの`repositories/`にはDomain Entityを永続化する`*.repository.ts`を置く。
+  資格解決や複数の保存先を接続する処理は`adapters/`の`*.adapter.ts`へ置く。
+  所有schema/SQLとtestもInfrastructureへ置き、RepositoryとAdapterはdatabase SDKを利用できる。
 - Application must not contain Repository, Persistence, Gateway, or Port definition files.
 - Interface owns Hono, route-local Zod request schemas, and semantic HTTP exceptions. Only the API
   root `onError` serializes those exceptions into response JSON.

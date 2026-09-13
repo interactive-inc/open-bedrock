@@ -39,6 +39,20 @@ export class RevalidateCompanyProcedureExecutionAdapter {
   }
 
   async prepare(input: Input): Promise<ReadonlyArray<D1PreparedStatement> | CompanyOperationError> {
+    return this.prepareEvidence(input, true)
+  }
+
+  /** 人間の承認資格だけを検査する。実行者の認証・操作権限はSystem側で別途要求する。 */
+  async prepareApprovedEvidence(
+    input: Omit<Input, "executorEmployeeId">,
+  ): Promise<ReadonlyArray<D1PreparedStatement> | CompanyOperationError> {
+    return this.prepareEvidence(input, false)
+  }
+
+  private async prepareEvidence(
+    input: Omit<Input, "executorEmployeeId"> & Readonly<{ executorEmployeeId?: EmployeeId }>,
+    executorMustApprove: boolean,
+  ): Promise<ReadonlyArray<D1PreparedStatement> | CompanyOperationError> {
     const proposal = await new SystemD1ProposalAdapter(this.c).findByNumber(input.applicationId)
     if (proposal instanceof Error)
       return new CompanyUnexpectedError("承認証跡を取得できません", { cause: proposal })
@@ -165,9 +179,11 @@ export class RevalidateCompanyProcedureExecutionAdapter {
         return new CompanyForbiddenError("実行時点で承認の必要人数を満たしません")
       }
     }
-    const executor = await this.activeEmployee(input.executorAccountId, input.executedAt)
-    if (executor !== input.executorEmployeeId || !validExecutors.has(input.executorAccountId)) {
-      return new CompanyForbiddenError("有効な承認者だけが業務の実行を確定できます")
+    if (executorMustApprove) {
+      const executor = await this.activeEmployee(input.executorAccountId, input.executedAt)
+      if (executor !== input.executorEmployeeId || !validExecutors.has(input.executorAccountId)) {
+        return new CompanyForbiddenError("有効な承認者だけが業務の実行を確定できます")
+      }
     }
     return [guard, evidence.guard]
   }

@@ -32,7 +32,17 @@ export class AttachmentObjectAdapter {
     if (bucket instanceof Error) return bucket
 
     try {
-      await bucket.put(objectKey, ciphertext)
+      const stored = await bucket.put(objectKey, ciphertext, {
+        onlyIf: { etagDoesNotMatch: "*" },
+      })
+
+      if (stored === null) {
+        return new SystemAttachmentError(
+          "validation",
+          "attachment_object_exists",
+          "保存済みの添付は上書きできません",
+        )
+      }
 
       return undefined
     } catch (error) {

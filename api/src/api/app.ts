@@ -297,6 +297,13 @@ import * as softwareLicenseSoftwareLicensesIdRoute from "@/contexts/software-lic
 import * as softwareLicenseSoftwareLicensesIdAssignmentsRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.assignments"
 import * as softwareLicenseSoftwareLicensesIdCancelRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.cancel"
 import * as softwareLicenseSoftwareLicensesIdHistoryRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.history"
+import * as softwareLicenseSoftwareLicensesIdPreservationRequestsRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests"
+import * as softwareLicenseSoftwareLicensesIdPreservationRequestsNumberRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number"
+import * as softwareLicenseSoftwareLicensesIdPreservationRequestsNumberApproveRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.approve"
+import * as softwareLicenseSoftwareLicensesIdPreservationRequestsNumberExecuteRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.execute"
+import * as softwareLicenseSoftwareLicensesIdPreservationRequestsNumberRejectRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.reject"
+import * as softwareLicenseSoftwareLicensesIdPreservationRequestsNumberResubmitRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.resubmit"
+import * as softwareLicenseSoftwareLicensesIdPreservationRequestsNumberWithdrawRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.withdraw"
 import * as softwareLicenseSoftwareLicensesAssignmentsRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.assignments"
 import * as softwareLicenseSoftwareLicensesAssignmentsAssignmentIdReleaseRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.assignments.$assignmentId.release"
 import * as surveysRoute from "@/contexts/survey/interface/routes/surveys"
@@ -370,6 +377,7 @@ import * as systemOauthAuthorizationsRoute from "@system/interface/routes/system
 import * as systemOauthMcpGrantsRoute from "@system/interface/routes/system.oauth.mcp-grants"
 import * as systemOauthTokenRoute from "@system/interface/routes/system.oauth.token"
 import * as systemOauthUserinfoRoute from "@system/interface/routes/system.oauth.userinfo"
+import * as systemPreservedRecordsRecordIdContentRoute from "@system/interface/routes/system.preserved-records.$recordId.content"
 import * as systemPrincipalsRoute from "@system/interface/routes/system.principals"
 import * as systemPrincipalsPrincipalIdRoute from "@system/interface/routes/system.principals.$principalId"
 import * as systemPrincipalsPrincipalIdMachineCredentialsRoute from "@system/interface/routes/system.principals.$principalId.machine-credentials"
@@ -1050,6 +1058,34 @@ const routePart34 = createRouteApp()
     "/software-license/software-licenses/:id/history",
     ...softwareLicenseSoftwareLicensesIdHistoryRoute.GET,
   )
+  .post(
+    "/software-license/software-licenses/:id/preservation-requests",
+    ...softwareLicenseSoftwareLicensesIdPreservationRequestsRoute.POST,
+  )
+  .get(
+    "/software-license/software-licenses/:id/preservation-requests/:number",
+    ...softwareLicenseSoftwareLicensesIdPreservationRequestsNumberRoute.GET,
+  )
+  .post(
+    "/software-license/software-licenses/:id/preservation-requests/:number/approve",
+    ...softwareLicenseSoftwareLicensesIdPreservationRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/software-license/software-licenses/:id/preservation-requests/:number/execute",
+    ...softwareLicenseSoftwareLicensesIdPreservationRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/software-license/software-licenses/:id/preservation-requests/:number/reject",
+    ...softwareLicenseSoftwareLicensesIdPreservationRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/software-license/software-licenses/:id/preservation-requests/:number/resubmit",
+    ...softwareLicenseSoftwareLicensesIdPreservationRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/software-license/software-licenses/:id/preservation-requests/:number/withdraw",
+    ...softwareLicenseSoftwareLicensesIdPreservationRequestsNumberWithdrawRoute.POST,
+  )
   .get("/survey/surveys", ...surveysRoute.GET)
   .post("/survey/surveys", ...surveysRoute.POST)
   .get("/survey/surveys/responses/me", ...surveysResponsesMeRoute.GET)
@@ -1080,6 +1116,8 @@ const routePart34 = createRouteApp()
     ...systemAccountsAccountIdPasswordCredentialsRoute.PATCH,
   )
   .get("/system/accounts/:accountId/role-bindings", ...systemAccountsAccountIdRoleBindingsRoute.GET)
+
+const routePart35 = createRouteApp()
   .post(
     "/system/accounts/:accountId/role-bindings",
     ...systemAccountsAccountIdRoleBindingsRoute.POST,
@@ -1099,8 +1137,6 @@ const routePart34 = createRouteApp()
     "/system/attachments/:attachmentId/preservations",
     ...systemAttachmentsAttachmentIdPreservationsRoute.POST,
   )
-
-const routePart35 = createRouteApp()
   .post(
     "/system/attachments/:attachmentId/preservations/:preservationId/release",
     ...systemAttachmentsAttachmentIdPreservationsPreservationIdReleaseRoute.POST,
@@ -1163,15 +1199,19 @@ const routePart35 = createRouteApp()
   .patch("/system/notifications/:id", ...systemNotificationsIdRoute.PATCH)
   .delete("/system/notifications/:id", ...systemNotificationsIdRoute.DELETE)
   .post("/system/oauth/authorizations", ...systemOauthAuthorizationsRoute.POST)
+
+const routePart36 = createRouteApp()
   .post("/system/oauth/mcp-grants", ...systemOauthMcpGrantsRoute.POST)
   .post("/system/oauth/token", ...systemOauthTokenRoute.POST)
   .get("/system/oauth/userinfo", ...systemOauthUserinfoRoute.GET)
   .get("/system/permission-definitions", ...systemPermissionDefinitionsRoute.GET)
+  .get(
+    "/system/preserved-records/:recordId/content",
+    ...systemPreservedRecordsRecordIdContentRoute.GET,
+  )
   .get("/system/principals", ...systemPrincipalsRoute.GET)
   .post("/system/principals", ...systemPrincipalsRoute.POST)
   .get("/system/principals/:principalId", ...systemPrincipalsPrincipalIdRoute.GET)
-
-const routePart36 = createRouteApp()
   .patch("/system/principals/:principalId", ...systemPrincipalsPrincipalIdRoute.PATCH)
   .get(
     "/system/principals/:principalId/machine-credentials",
@@ -1224,6 +1264,8 @@ const routePart36 = createRouteApp()
   .post("/thanks/thanks-redemptions/:id/reject", ...thanksRedemptionsIdRejectRoute.POST)
   .get("/thanks/thanks-rewards", ...thanksRewardsRoute.GET)
   .post("/thanks/thanks-rewards", ...thanksRewardsRoute.POST)
+
+const routePart37 = createRouteApp()
   .patch("/thanks/thanks-rewards/:id", ...thanksRewardsIdRoute.PATCH)
   .get("/training/training-courses", ...trainingCoursesRoute.GET)
   .post("/training/training-courses", ...trainingCoursesRoute.POST)
@@ -1232,8 +1274,6 @@ const routePart36 = createRouteApp()
   .delete("/training/training-courses/:code", ...trainingCoursesCodeRoute.DELETE)
   .get("/training/training-enrollments", ...trainingEnrollmentsRoute.GET)
   .post("/training/training-enrollments", ...trainingEnrollmentsRoute.POST)
-
-const routePart37 = createRouteApp()
   .get("/training/training-enrollments/me", ...trainingEnrollmentsMeRoute.GET)
   .get("/training/training-enrollments/:id", ...trainingEnrollmentsIdRoute.GET)
   .put("/training/training-enrollments/:id", ...trainingEnrollmentsIdRoute.PUT)

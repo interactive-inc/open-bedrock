@@ -1,3 +1,11 @@
+import { POST as resubmitPreservation } from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.resubmit"
+import { POST as withdrawPreservation } from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.withdraw"
+import { POST as rejectPreservation } from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.reject"
+import { GET as readPreservation } from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number"
+import { POST as approvePreservation } from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.approve"
+import { POST as executePreservation } from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.execute"
+import { POST as preserveRecord } from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests"
+import type { SystemAttachmentStorageContext } from "@system/configuration/system-context"
 import { DirectPersonnelActionAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/direct-personnel-action.adapter"
 import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
@@ -34,9 +42,15 @@ const schema = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
 const secret = "software-license-integration-test-secret"
 
 /** 両製品のmigrationと実認証・Company履歴を使う台帳fixture。 */
-export async function createLicenseFixture() {
-  const database = createSystemD1TestDatabase(schema)
-  const settings: { enabled?: string; hiddenBindings?: boolean } = {}
+export async function createLicenseFixture(databaseOverride?: D1Database) {
+  const database = databaseOverride ?? createSystemD1TestDatabase(schema)
+  const settings: {
+    enabled?: string
+    hiddenBindings?: boolean
+    liveClock?: boolean
+    recordSourceNamespace?: string
+    recordStorage?: SystemAttachmentStorageContext["env"]
+  } = {}
   const clock = { now: new Date("2026-09-08T01:00:00Z") }
   const env = { DB: database, JWT_SECRET: secret, COMPANY_TIME_ZONE: "Asia/Tokyo" }
   await database.exec(`PRAGMA foreign_keys=ON;
@@ -92,7 +106,14 @@ export async function createLicenseFixture() {
   const app = softwareLicenseFactory
     .createApp()
     .use("*", async (c, next) => {
-      c.set("now", () => clock.now)
+      c.set("now", () => (settings.liveClock ? new Date() : clock.now))
+      c.set("database", drizzle(database))
+      c.set("auditContext", {
+        requestId: crypto.randomUUID(),
+        clientName: "api",
+        clientIp: null,
+        externalRequestId: null,
+      })
       await next()
     })
     .onError((error, c) => {
@@ -108,12 +129,20 @@ export async function createLicenseFixture() {
     .put("/software-licenses/:id", ...update)
     .post("/software-licenses/:id/cancel", ...cancel)
     .post("/software-licenses/:id/assignments", ...assign)
+    .post("/software-licenses/:id/preservation-requests", ...preserveRecord)
+    .post("/software-licenses/:id/preservation-requests/:number/resubmit", ...resubmitPreservation)
+    .post("/software-licenses/:id/preservation-requests/:number/withdraw", ...withdrawPreservation)
+    .post("/software-licenses/:id/preservation-requests/:number/reject", ...rejectPreservation)
+    .get("/software-licenses/:id/preservation-requests/:number", ...readPreservation)
+    .post("/software-licenses/:id/preservation-requests/:number/approve", ...approvePreservation)
+    .post("/software-licenses/:id/preservation-requests/:number/execute", ...executePreservation)
   const request = async (
     path: string,
     options: Readonly<{
       method?: string
       body?: unknown
       actor?: string | null
+      accountId?: string
       headers?: Record<string, string>
     }> = {},
   ) => {
@@ -121,12 +150,19 @@ export async function createLicenseFixture() {
       options.actor === null
         ? null
         : await new SystemAccessTokenIssuer(secret).issue({
-            accountId: zAccountId.parse(`account:${options.actor ?? "manager"}`),
+            accountId: zAccountId.parse(
+              options.accountId ?? `account:${options.actor ?? "manager"}`,
+            ),
             tokenVersion: 0,
             now: new Date(),
           })
     if (token instanceof Error) throw token
-    const requestEnvironment = { ...env, SOFTWARE_LICENSE_ENABLED: settings.enabled }
+    const requestEnvironment = {
+      ...env,
+      ...settings.recordStorage,
+      RECORD_SOURCE_NAMESPACE: settings.recordSourceNamespace,
+      SOFTWARE_LICENSE_ENABLED: settings.enabled,
+    }
     if (settings.hiddenBindings) {
       for (const key of ["DB", "COMPANY_TIME_ZONE"] as const)
         Object.defineProperty(requestEnvironment, key, { value: env[key], enumerable: false })
