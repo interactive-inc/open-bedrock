@@ -53,3 +53,14 @@ export const zAppAttendanceRetirementPlan = z.strictObject({
   recordKinds: z.array(z.literal("attendance-record")),
   createdAt: z.iso.datetime(),
 })
+
+/** 固定した計画のページを再検証した結果。撤去許可は含めない。 */
+export const zAppAttendanceRetirementVerificationReceipt = z.strictObject({
+  id: z.uuid(),
+  planId: z.uuid(),
+  planDigest: z.string().regex(/^[0-9a-f]{64}$/),
+  ordinal: z.number().int().positive().safe(),
+  digest: z.string().regex(/^[0-9a-f]{64}$/),
+  coveragePageId: z.uuid(),
+  checkedAt: z.iso.datetime(),
+})
