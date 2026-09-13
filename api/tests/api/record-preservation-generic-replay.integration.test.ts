@@ -45,7 +45,10 @@ test("共通承認APIでも前段階の同一承認を再送でき、次段階�
   const attestations = await query.listAttestations(receipt.case_id)
   if (attestations instanceof Error) throw attestations
   expect(attestations).toHaveLength(1)
-  const changed = await request({ ...body, comment: "Different first review" })
+  const changed = await request({
+    decision_target: z.object({ decision_target: z.unknown() }).parse(body).decision_target,
+    comment: "Different first review",
+  })
   expect(changed.status).toBe(409)
   const nextBody = await withCurrentDecisionTarget(fixture.f.database, path, {
     comment: "Second review",
