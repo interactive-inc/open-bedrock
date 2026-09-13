@@ -684,7 +684,6 @@ const routePart28 = createRouteApp().post(
 
 const routePart29 = createRouteApp()
   .get("/company/personnel-actions", ...companyPersonnelActionsRoute.GET)
-  .post("/company/personnel-actions", ...companyPersonnelActionsRoute.POST)
   .get("/company/personnel-annotations", ...companyPersonnelAnnotationsRoute.GET)
   .get("/company/profile", ...companyProfileRoute.GET)
   .post("/company/profile", ...companyProfileRoute.POST)
@@ -740,9 +739,9 @@ const routePart29 = createRouteApp()
   .get("/governance/governance-documents", ...governanceDocumentsRoute.GET)
   .get("/governance/governance-documents/impact", ...governanceGovernanceDocumentsImpactRoute.GET)
   .post("/governance/governance-documents/sync", ...governanceGovernanceDocumentsSyncRoute.POST)
+  .get("/governance/governance-documents/:code", ...governanceDocumentsCodeRoute.GET)
 
 const routePart30 = createRouteApp()
-  .get("/governance/governance-documents/:code", ...governanceDocumentsCodeRoute.GET)
   .post(
     "/governance/governance-documents/:code/acknowledge",
     ...governanceDocumentsCodeAcknowledgeRoute.POST,
@@ -814,9 +813,9 @@ const routePart30 = createRouteApp()
   .delete("/life-event/life-events/:id", ...lifeEventsIdRoute.DELETE)
   .post("/life-event/life-events/:id/approve", ...lifeEventsIdApproveRoute.POST)
   .post("/life-event/life-events/:id/reject", ...lifeEventsIdRejectRoute.POST)
+  .get("/meeting/decision-records", ...decisionRecordsRoute.GET)
 
 const routePart31 = createRouteApp()
-  .get("/meeting/decision-records", ...decisionRecordsRoute.GET)
   .post("/meeting/decision-records", ...decisionRecordsRoute.POST)
   .get("/meeting/decision-records/:id", ...decisionRecordsIdRoute.GET)
   .put("/meeting/decision-records/:id", ...decisionRecordsIdRoute.PUT)
@@ -876,9 +875,9 @@ const routePart31 = createRouteApp()
   .get("/performance-review/evaluation-sheets", ...evaluationSheetsRoute.GET)
   .post("/performance-review/evaluation-sheets", ...evaluationSheetsRoute.POST)
   .get("/performance-review/evaluation-sheets/me", ...evaluationSheetsMeRoute.GET)
+  .get("/performance-review/evaluation-sheets/:sheetId", ...evaluationSheetsSheetIdRoute.GET)
 
 const routePart32 = createRouteApp()
-  .get("/performance-review/evaluation-sheets/:sheetId", ...evaluationSheetsSheetIdRoute.GET)
   .put(
     "/performance-review/evaluation-sheets/:sheetId/evaluators",
     ...evaluationSheetsSheetIdEvaluatorsRoute.PUT,
@@ -965,9 +964,9 @@ const routePart32 = createRouteApp()
   .post("/rental/rental-reservations", ...rentalReservationsRoute.POST)
   .get("/rental/rental-reservations/admin", ...rentalReservationsAdminRoute.GET)
   .get("/rental/rental-reservations/me", ...rentalReservationsMeRoute.GET)
+  .get("/rental/rental-reservations/:id", ...rentalReservationsIdRoute.GET)
 
 const routePart33 = createRouteApp()
-  .get("/rental/rental-reservations/:id", ...rentalReservationsIdRoute.GET)
   .put("/rental/rental-reservations/:id", ...rentalReservationsIdRoute.PUT)
   .delete("/rental/rental-reservations/:id", ...rentalReservationsIdRoute.DELETE)
   .post("/rental/rental-reservations/:id/lend", ...rentalReservationsIdLendRoute.POST)
@@ -1015,9 +1014,9 @@ const routePart33 = createRouteApp()
   .put("/shift/shift-patterns/:id", ...shiftPatternsIdRoute.PUT)
   .delete("/shift/shift-patterns/:id", ...shiftPatternsIdRoute.DELETE)
   .get("/shift/shift-swap-requests", ...shiftSwapRequestsRoute.GET)
+  .post("/shift/shift-swap-requests", ...shiftSwapRequestsRoute.POST)
 
 const routePart34 = createRouteApp()
-  .post("/shift/shift-swap-requests", ...shiftSwapRequestsRoute.POST)
   .get("/shift/shift-swap-requests/admin", ...shiftSwapRequestsAdminRoute.GET)
   .get("/shift/shift-swap-requests/me", ...shiftSwapRequestsMeRoute.GET)
   .get("/shift/shift-swap-requests/:id", ...shiftSwapRequestsIdRoute.GET)
@@ -1110,12 +1109,12 @@ const routePart34 = createRouteApp()
     ...systemAccountsAccountIdPasswordCredentialsRoute.PATCH,
   )
   .get("/system/accounts/:accountId/role-bindings", ...systemAccountsAccountIdRoleBindingsRoute.GET)
-
-const routePart35 = createRouteApp()
   .post(
     "/system/accounts/:accountId/role-bindings",
     ...systemAccountsAccountIdRoleBindingsRoute.POST,
   )
+
+const routePart35 = createRouteApp()
   .delete(
     "/system/accounts/:accountId/role-bindings/:bindingId",
     ...systemAccountsAccountIdRoleBindingsBindingIdRoute.DELETE,
@@ -1193,9 +1192,9 @@ const routePart35 = createRouteApp()
   .patch("/system/notifications/:id", ...systemNotificationsIdRoute.PATCH)
   .delete("/system/notifications/:id", ...systemNotificationsIdRoute.DELETE)
   .post("/system/oauth/authorizations", ...systemOauthAuthorizationsRoute.POST)
+  .post("/system/oauth/mcp-grants", ...systemOauthMcpGrantsRoute.POST)
 
 const routePart36 = createRouteApp()
-  .post("/system/oauth/mcp-grants", ...systemOauthMcpGrantsRoute.POST)
   .post("/system/oauth/token", ...systemOauthTokenRoute.POST)
   .get("/system/oauth/userinfo", ...systemOauthUserinfoRoute.GET)
   .get("/system/permission-definitions", ...systemPermissionDefinitionsRoute.GET)
@@ -1258,9 +1257,9 @@ const routePart36 = createRouteApp()
   .post("/thanks/thanks-redemptions/:id/reject", ...thanksRedemptionsIdRejectRoute.POST)
   .get("/thanks/thanks-rewards", ...thanksRewardsRoute.GET)
   .post("/thanks/thanks-rewards", ...thanksRewardsRoute.POST)
+  .patch("/thanks/thanks-rewards/:id", ...thanksRewardsIdRoute.PATCH)
 
 const routePart37 = createRouteApp()
-  .patch("/thanks/thanks-rewards/:id", ...thanksRewardsIdRoute.PATCH)
   .get("/training/training-courses", ...trainingCoursesRoute.GET)
   .post("/training/training-courses", ...trainingCoursesRoute.POST)
   .get("/training/training-courses/:code", ...trainingCoursesCodeRoute.GET)
