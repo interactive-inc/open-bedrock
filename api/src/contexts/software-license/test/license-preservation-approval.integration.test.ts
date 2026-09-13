@@ -1,6 +1,18 @@
 import { GET as proposalHistory } from "@system/interface/routes/system.proposals.$number.versions.$version"
 import { GET as preservedContent } from "@system/interface/routes/system.preserved-records.$recordId.content"
 import { GET as preservedRecords } from "@system/interface/routes/system.preserved-records"
+import { FindPreservedRecordExecutionProofAdapter } from "@system/infrastructure/adapters/records/find-preserved-record-execution-proof.adapter"
+import { PreparePreservedRecordApprovalHistoryAdapter } from "@system/infrastructure/adapters/records/prepare-preserved-record-approval-history.adapter"
+import { PreparePreservedRecordRetentionHistoryAdapter } from "@system/infrastructure/adapters/records/prepare-preserved-record-retention-history.adapter"
+import { PreservedRecordRepository } from "@system/infrastructure/repositories/records/preserved-record.repository"
+import { AttachmentPreservationRepository } from "@system/infrastructure/repositories/attachments/attachment-preservation.repository"
+import { AttachmentPreservationEntity } from "@system/domain/entities/attachment-preservation.entity"
+import { PreparePreservedRecordAuditReceiptsAdapter } from "@system/infrastructure/adapters/records/prepare-preserved-record-audit-receipts.adapter"
+import { SystemAuditDisclosureValue } from "@system/domain/values/audit/system-audit-disclosure.value"
+import { SystemAuditDisclosurePolicyEntity } from "@system/domain/entities/system-audit-disclosure-policy.entity"
+import { auditDisclosureFieldSchema } from "@system/domain/schemas/audit/system-audit-disclosure-policy.schema"
+import { PreparePreservedRecordDossierAdapter } from "@system/infrastructure/adapters/records/prepare-preserved-record-dossier.adapter"
+import { GET as preservedDossier } from "@system/interface/routes/system.preserved-records.$recordId.dossier"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
@@ -139,6 +151,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     })
     .get("/system/preserved-records", ...preservedRecords)
     .get("/system/preserved-records/:recordId/content", ...preservedContent)
+    .get("/system/preserved-records/:recordId/dossier", ...preservedDossier)
     .get("/system/proposals/:number/versions/:version", ...proposalHistory)
   const token = await new SystemAccessTokenIssuer("preservation-isolated-export-test").issue({
     accountId: zAccountId.parse("account:manager"),
@@ -152,6 +165,330 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     ...fixture.f.settings.recordStorage,
   }
   const headers = { authorization: `Bearer ${token}` }
+  const dossierPath = `/system/preserved-records/${receipt.record_id}/dossier?purpose=archive`
+  expect((await core.request(dossierPath, {}, environment)).status).toBe(401)
+  expect((await core.request(dossierPath, { headers }, environment)).status).toBe(403)
+  await fixture.f.database.exec(
+    "INSERT INTO system_iam_role_permissions(role_id, permission_key) VALUES ('license-test-manager', 'system:admin')",
+  )
+  const dossierResponse = await core.request(dossierPath, { headers }, environment)
+  if (dossierResponse.status !== 200)
+    throw new Error(`dossier failed ${dossierResponse.status}: ${await dossierResponse.text()}`)
+  expect(dossierResponse.headers.get("cache-control")).toBe("no-store")
+  const exportedDossier = z
+    .object({
+      version: z.literal(1),
+      contentBase64: z.string(),
+      exportAuditEventId: z.string(),
+      execution: z.object({ caseId: z.string() }),
+      approval: z.object({
+        candidates: z.array(
+          z.object({
+            accountId: z.string(),
+            evidenceContext: z.string(),
+            evidenceId: z.string().min(1),
+            evidenceVersion: z.string().min(1),
+            eligibilityDigest: z.string().length(64),
+          }),
+        ),
+        exclusions: z.array(z.object({ accountId: z.string(), reason: z.string() })),
+      }),
+      auditReceipts: z.array(z.unknown()),
+    })
+    .parse(await dossierResponse.json())
+  expect(exportedDossier.execution.caseId).toBe(receipt.case_id)
+  expect(exportedDossier.approval.candidates).toEqual(
+    expect.arrayContaining([
+      expect.objectContaining({
+        accountId: fixture.reviewer.accountId,
+        evidenceContext: "company",
+      }),
+    ]),
+  )
+  expect(exportedDossier.auditReceipts).toHaveLength(3)
+  expect(
+    JSON.parse(Buffer.from(exportedDossier.contentBase64, "base64").toString("utf8")),
+  ).toMatchObject({ license: { name: "Example Service", plan_name: "Team" } })
+  expect(
+    await fixture.f.database
+      .prepare("SELECT action FROM system_audit_events WHERE event_id = ?1")
+      .bind(exportedDossier.exportAuditEventId)
+      .first<string>("action"),
+  ).toBe("system.record.dossier.exported")
+  expect(
+    (
+      await core.request(
+        dossierPath.replace("purpose=archive", "purpose=unapproved"),
+        { headers },
+        environment,
+      )
+    ).status,
+  ).toBe(403)
+  const exportAuditFailure = spyOn(
+    SystemAuditEventRepository.prototype,
+    "append",
+  ).mockResolvedValueOnce(new Error("simulated audit failure"))
+  try {
+    const failedExport = await core.request(dossierPath, { headers }, environment)
+    expect(failedExport.status).toBe(503)
+    expect(await failedExport.text()).not.toContain("contentBase64")
+  } finally {
+    exportAuditFailure.mockRestore()
+  }
+  expect(
+    await fixture.f.database
+      .prepare(
+        "SELECT COUNT(*) AS count FROM system_audit_events WHERE action = 'system.record.dossier.exported'",
+      )
+      .first<number>("count"),
+  ).toBe(1)
+  const originalGet = fixture.bucket.get.bind(fixture.bucket)
+  const revokeDuringRead = spyOn(fixture.bucket, "get").mockImplementationOnce(async (key) => {
+    await fixture.f.database.exec(
+      "DELETE FROM system_iam_role_permissions WHERE role_id = 'license-test-manager' AND permission_key = 'system:admin'",
+    )
+    return originalGet(key)
+  })
+  try {
+    const revokedExport = await core.request(dossierPath, { headers }, environment)
+    expect(revokedExport.status).toBe(403)
+    expect(await revokedExport.text()).not.toContain("contentBase64")
+  } finally {
+    revokeDuringRead.mockRestore()
+  }
+  expect(
+    await fixture.f.database
+      .prepare(
+        "SELECT COUNT(*) AS count FROM system_audit_events WHERE action = 'system.record.dossier.exported'",
+      )
+      .first<number>("count"),
+  ).toBe(1)
+  const proof = await new FindPreservedRecordExecutionProofAdapter({
+    env: environment,
+    assertions: [fixture.f.database.prepare("SELECT 1")],
+  }).find(receipt.record_id)
+  if (proof === null || proof instanceof Error)
+    throw new Error("execution proof missing", { cause: proof })
+  expect(proof.props).toMatchObject({
+    recordId: receipt.record_id,
+    caseId: receipt.case_id,
+    proposalDigest: proposal.decision_target.proposal_digest,
+    executedByAccountId: "account:manager",
+  })
+  const approvalReader = new PreparePreservedRecordApprovalHistoryAdapter({ env: environment })
+  const approvalInput = {
+    proof,
+    accountId: "account:manager",
+    permissionKeys: new Set(["system:procedure:read"]),
+    at: new Date(),
+  }
+  const approvalHistory = await approvalReader.prepare(approvalInput)
+  if (approvalHistory instanceof Error) throw approvalHistory
+  expect(approvalHistory.proposal.proposalId).toBe(proof.props.proposalId)
+  expect(approvalHistory.attestations).toMatchObject([
+    {
+      actorAccountId: fixture.reviewer.accountId,
+      action: "approve",
+      proposalDigest: proof.props.proposalDigest,
+    },
+  ])
+  expect(
+    await approvalReader.prepare({
+      ...approvalInput,
+      permissionKeys: new Set(["system:record:export"]),
+    }),
+  ).toBeInstanceOf(Error)
+  expect(
+    await approvalReader.prepare({ ...approvalInput, accountId: "unrelated-reader" }),
+  ).toBeInstanceOf(Error)
+  expect(
+    await approvalReader.prepare({ ...approvalInput, accountId: fixture.reviewer.accountId }),
+  ).not.toBeInstanceOf(Error)
+  expect(
+    await approvalReader.prepare({
+      ...approvalInput,
+      accountId: "unrelated-reader",
+      permissionKeys: new Set(["system:procedure:read", "system:procedure:read:all"]),
+    }),
+  ).not.toBeInstanceOf(Error)
+  await fixture.f.database.batch([approvalHistory.guard(new Date())])
+  const retentionContext = {
+    env: environment,
+    assertions: [fixture.f.database.prepare("SELECT 1")],
+  }
+  const storedRecord = await new PreservedRecordRepository(retentionContext).find(receipt.record_id)
+  if (storedRecord === null || storedRecord instanceof Error) throw new Error("record missing")
+  const retentionReader = new PreparePreservedRecordRetentionHistoryAdapter(retentionContext)
+  const retentionHistory = await retentionReader.prepare(storedRecord)
+  if (retentionHistory instanceof Error) throw retentionHistory
+  expect(retentionHistory.preservations).toHaveLength(1)
+  expect(retentionHistory.preservations[0]?.release).toBeNull()
+  await fixture.f.database.batch([retentionHistory.guard])
+  expect(
+    await new PreparePreservedRecordRetentionHistoryAdapter({
+      env: environment,
+      assertions: [],
+    }).prepare(storedRecord),
+  ).toBeInstanceOf(Error)
+  const holdRepository = new AttachmentPreservationRepository(retentionContext)
+  const originalHold = await holdRepository.find(storedRecord.snapshot.preservationId)
+  if (originalHold === null || originalHold instanceof Error) throw new Error("hold missing")
+  const releasedHold = originalHold.release({
+    operationId: crypto.randomUUID(),
+    actorAccountId: "account:manager",
+    at: new Date().toISOString(),
+    reason: "Release after archive review",
+    auditEventId: crypto.randomUUID(),
+  })
+  if (releasedHold instanceof Error) throw releasedHold
+  const releaseAudit = releasedHold.audit(originalHold)
+  if (releaseAudit instanceof Error) throw releaseAudit
+  expect(await holdRepository.write(releasedHold, releaseAudit)).toBe("written")
+  const changedRetention = await fixture.f.database.batch([retentionHistory.guard]).then(
+    () => null,
+    (cause: unknown) => cause,
+  )
+  expect(changedRetention).toBeInstanceOf(Error)
+  const releasedHistory = await retentionReader.prepare(storedRecord)
+  if (releasedHistory instanceof Error) throw releasedHistory
+  expect(releasedHistory.preservations[0]).toEqual(releasedHold.snapshot)
+  await fixture.f.database.batch([releasedHistory.guard])
+  for (const index of Array.from({ length: 100 }, (_, index) => index)) {
+    const additionalHold = AttachmentPreservationEntity.create({
+      ...originalHold.snapshot,
+      id: crypto.randomUUID(),
+      reason: `Additional retention ${index}`,
+      createdAt: new Date().toISOString(),
+      auditEventId: crypto.randomUUID(),
+    })
+    if (additionalHold instanceof Error) throw additionalHold
+    const additionalAudit = additionalHold.audit(null)
+    if (additionalAudit instanceof Error) throw additionalAudit
+    const written = await holdRepository.write(additionalHold, additionalAudit)
+    if (written !== "written") throw new Error("additional hold failed", { cause: written })
+  }
+  const addedRetention = await fixture.f.database.batch([releasedHistory.guard]).then(
+    () => null,
+    (cause: unknown) => cause,
+  )
+  expect(addedRetention).toBeInstanceOf(Error)
+  const completeRetention = await retentionReader.prepare(storedRecord)
+  if (completeRetention instanceof Error) throw completeRetention
+  expect(completeRetention.preservations).toHaveLength(101)
+  expect(new Set(completeRetention.preservations.map((preservation) => preservation.id)).size).toBe(
+    101,
+  )
+  await fixture.f.database.batch([completeRetention.guard])
+  const auditValue = SystemAuditDisclosureValue.evaluate({
+    policies: [],
+    accountId: "account:manager",
+    purpose: "archive",
+    at: new Date(),
+  })
+  if (auditValue instanceof Error) throw auditValue
+  const auditDisclosure = { value: auditValue, assertions: retentionContext.assertions }
+  const auditReader = new PreparePreservedRecordAuditReceiptsAdapter({ env: environment })
+  const auditIds = [
+    storedRecord.snapshot.auditEventId,
+    ...completeRetention.preservations.flatMap((preservation) =>
+      preservation.release === null
+        ? [preservation.auditEventId]
+        : [preservation.auditEventId, preservation.release.auditEventId],
+    ),
+  ]
+  const auditReceipts = await auditReader.prepare(
+    [...auditIds, storedRecord.snapshot.auditEventId],
+    auditDisclosure,
+  )
+  if (auditReceipts instanceof Error) throw auditReceipts
+  expect(auditReceipts.events).toHaveLength(103)
+  expect(new Set(auditReceipts.events.map((event) => event.eventId))).toEqual(new Set(auditIds))
+  await fixture.f.database.batch([...auditReceipts.guards])
+  const dossierReader = new PreparePreservedRecordDossierAdapter(retentionContext)
+  const dossierInput = {
+    record: storedRecord,
+    accountId: "account:manager",
+    permissionKeys: new Set(["system:procedure:read"]),
+    at: new Date(),
+    auditDisclosure,
+  }
+  const dossier = await dossierReader.prepare(dossierInput)
+  if (dossier instanceof Error) throw dossier
+  expect(dossier.history.execution.caseId).toBe(receipt.case_id)
+  expect(dossier.history.preservations).toHaveLength(101)
+  expect(dossier.history.disclosurePolicies).toHaveLength(1)
+  expect(dossier.history.auditReceipts).toHaveLength(104)
+  await fixture.f.database.batch(dossier.guards(new Date()))
+  expect(
+    await dossierReader.prepare({
+      ...dossierInput,
+      permissionKeys: new Set(["system:record:export"]),
+    }),
+  ).toBeInstanceOf(Error)
+  expect(
+    await auditReader.prepare([...auditIds, crypto.randomUUID()], auditDisclosure),
+  ).toBeInstanceOf(Error)
+  expect(
+    await auditReader.prepare(auditIds, { ...auditDisclosure, assertions: [] }),
+  ).toBeInstanceOf(Error)
+  for (const restrictions of [
+    {
+      allowedFields: auditDisclosureFieldSchema.options.filter(
+        (field) => field !== "actor_account_id",
+      ),
+      allowedTargetTypes: null,
+    },
+    {
+      allowedFields: auditDisclosureFieldSchema.options,
+      allowedTargetTypes: ["system:preserved-record"],
+    },
+  ]) {
+    const restrictedPolicy = SystemAuditDisclosurePolicyEntity.create({
+      scope: "account:manager",
+      commandId: crypto.randomUUID(),
+      revision: 1,
+      enabled: true,
+      ...restrictions,
+      allowedPurposes: ["archive"],
+      expiresAt: null,
+      reason: "Restrict archive disclosure",
+      actorAccountId: "account:manager",
+      recordedAt: new Date().toISOString(),
+      auditEventId: crypto.randomUUID(),
+    })
+    if (restrictedPolicy instanceof Error) throw restrictedPolicy
+    const restrictedValue = SystemAuditDisclosureValue.evaluate({
+      policies: [restrictedPolicy],
+      accountId: "account:manager",
+      purpose: "archive",
+      at: new Date(),
+    })
+    if (restrictedValue instanceof Error) throw restrictedValue
+    expect(
+      await auditReader.prepare(auditIds, { ...auditDisclosure, value: restrictedValue }),
+    ).toBeInstanceOf(Error)
+  }
+  expect(
+    await new FindPreservedRecordExecutionProofAdapter(retentionContext).find(receipt.record_id),
+  ).not.toBeInstanceOf(Error)
+  expect(
+    await new FindPreservedRecordExecutionProofAdapter({
+      env: environment,
+      assertions: [],
+    }).find(receipt.record_id),
+  ).toBeInstanceOf(Error)
+  expect(
+    await new FindPreservedRecordExecutionProofAdapter({
+      env: environment,
+      assertions: [fixture.f.database.prepare("SELECT json_extract('', '$')")],
+    }).find(receipt.record_id),
+  ).toBeInstanceOf(Error)
+  expect(
+    await new FindPreservedRecordExecutionProofAdapter({
+      env: environment,
+      assertions: [fixture.f.database.prepare("SELECT 1")],
+    }).find(crypto.randomUUID()),
+  ).toBeNull()
   expect((await core.request(fixture.path, { headers }, environment)).status).toBe(404)
   const searchPath =
     "/system/preserved-records?action=export&purpose=archive&owner_context=software-license"
@@ -282,6 +619,156 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     "DELETE FROM system_iam_role_permissions WHERE role_id='license-test-manager' AND permission_key='system:record:export'",
   )
   expect((await core.request(searchPath, { headers }, environment)).status).toBe(403)
+  /** 移入済みDBの欠損を再現し、本文が残っていても承認との対応を推測しない。 */
+  await fixture.f.database.exec("DROP TRIGGER system_decision_tasks_monotonic_lifecycle")
+  await fixture.f.database
+    .prepare("UPDATE system_decision_tasks SET required_approvals=2 WHERE case_id=?1")
+    .bind(receipt.case_id)
+    .run()
+  expect(
+    await fixture.f.database.batch([approvalHistory.tasksGuard]).catch((cause: unknown) => cause),
+  ).toBeInstanceOf(Error)
+  expect(await approvalReader.prepare(approvalInput)).toBeInstanceOf(Error)
+  await fixture.f.database
+    .prepare("UPDATE system_decision_tasks SET required_approvals=1 WHERE case_id=?1")
+    .bind(receipt.case_id)
+    .run()
+  await fixture.f.database.batch([approvalHistory.tasksGuard])
+  await fixture.f.database.exec(
+    "DROP TRIGGER system_human_attestations_prevent_delete; DROP TRIGGER system_human_attestations_valid_insert; CREATE TEMP TABLE preserved_test_attestations AS SELECT * FROM system_human_attestations;",
+  )
+  await fixture.f.database
+    .prepare("DELETE FROM system_human_attestations WHERE case_id=?1")
+    .bind(receipt.case_id)
+    .run()
+  expect(await approvalReader.prepare(approvalInput)).toBeInstanceOf(Error)
+  await fixture.f.database
+    .prepare(
+      "INSERT INTO system_human_attestations SELECT * FROM preserved_test_attestations WHERE case_id=?1",
+    )
+    .bind(receipt.case_id)
+    .run()
+  await fixture.f.database.exec("DROP TRIGGER system_decision_task_candidates_prevent_update")
+  const candidateEvidence = approvalHistory.candidates.find(
+    (candidate) => candidate.accountId === fixture.reviewer.accountId,
+  )
+  if (candidateEvidence === undefined) throw new Error("candidate evidence missing")
+  await fixture.f.database
+    .prepare(
+      "UPDATE system_decision_task_candidates SET evidence_version = 'changed' WHERE case_id = ?1 AND candidate_account_id = ?2",
+    )
+    .bind(receipt.case_id, fixture.reviewer.accountId)
+    .run()
+  expect(
+    await fixture.f.database
+      .batch([approvalHistory.candidatesGuard])
+      .catch((cause: unknown) => cause),
+  ).toBeInstanceOf(Error)
+  await fixture.f.database
+    .prepare(
+      "UPDATE system_decision_task_candidates SET evidence_version = ?1 WHERE case_id = ?2 AND candidate_account_id = ?3",
+    )
+    .bind(candidateEvidence.evidenceVersion, receipt.case_id, fixture.reviewer.accountId)
+    .run()
+  await fixture.f.database.batch([approvalHistory.candidatesGuard])
+  await fixture.f.database.exec("DROP TRIGGER system_decision_task_candidates_prevent_delete")
+  await fixture.f.database.exec("DROP TRIGGER system_decision_task_candidates_valid_insert")
+  await fixture.f.database.exec(
+    "CREATE TEMP TABLE preserved_test_candidates AS SELECT * FROM system_decision_task_candidates",
+  )
+  await fixture.f.database
+    .prepare(
+      "DELETE FROM system_decision_task_candidates WHERE case_id = ?1 AND candidate_account_id = ?2",
+    )
+    .bind(receipt.case_id, fixture.reviewer.accountId)
+    .run()
+  expect(await approvalReader.prepare(approvalInput)).toBeInstanceOf(Error)
+  await fixture.f.database
+    .prepare(
+      "INSERT INTO system_decision_task_candidates SELECT * FROM preserved_test_candidates WHERE case_id = ?1 AND candidate_account_id = ?2",
+    )
+    .bind(receipt.case_id, fixture.reviewer.accountId)
+    .run()
+  await fixture.f.database.batch([approvalHistory.candidatesGuard])
+  const excludedHistory = await approvalReader.prepare(approvalInput)
+  if (excludedHistory instanceof Error) throw excludedHistory
+  expect(excludedHistory.exclusions).toContainEqual({
+    taskKey: candidateEvidence.taskKey,
+    round: candidateEvidence.round,
+    accountId: zAccountId.parse("account:manager"),
+    reason: "creator",
+  })
+  await fixture.f.database.batch([excludedHistory.candidatesGuard])
+  await fixture.f.database.exec("DROP TRIGGER system_decision_task_exclusions_prevent_update")
+  await fixture.f.database
+    .prepare(
+      "UPDATE system_decision_task_exclusions SET reason='policy' WHERE case_id=?1 AND excluded_account_id=?2",
+    )
+    .bind(receipt.case_id, "account:manager")
+    .run()
+  expect(
+    await fixture.f.database
+      .batch([excludedHistory.candidatesGuard])
+      .catch((cause: unknown) => cause),
+  ).toBeInstanceOf(Error)
+  await fixture.f.database.exec("DROP TRIGGER system_human_attestations_prevent_update")
+  await fixture.f.database
+    .prepare("UPDATE system_human_attestations SET proposal_digest = ?1 WHERE case_id = ?2")
+    .bind("f".repeat(64), receipt.case_id)
+    .run()
+  expect(await approvalReader.prepare(approvalInput)).toBeInstanceOf(Error)
+  expect(
+    await fixture.f.database
+      .batch([approvalHistory.attestationsGuard])
+      .catch((cause: unknown) => cause),
+  ).toBeInstanceOf(Error)
+  await fixture.f.database
+    .prepare(
+      "UPDATE system_human_attestations SET proposal_digest = ?1, comment = 'changed after read' WHERE case_id = ?2",
+    )
+    .bind(proof.props.proposalDigest, receipt.case_id)
+    .run()
+  expect(
+    await fixture.f.database
+      .batch([approvalHistory.attestationsGuard])
+      .catch((cause: unknown) => cause),
+  ).toBeInstanceOf(Error)
+  await fixture.f.database.exec("DROP TRIGGER system_proposal_cases_prevent_delete")
+  await fixture.f.database
+    .prepare("DELETE FROM system_proposal_cases WHERE case_id = ?1")
+    .bind(receipt.case_id)
+    .run()
+  const missingLink = await new FindPreservedRecordExecutionProofAdapter({
+    env: environment,
+    assertions: [fixture.f.database.prepare("SELECT 1")],
+  }).find(receipt.record_id)
+  expect(missingLink).toBeInstanceOf(Error)
+  expect(
+    await fixture.f.database.batch(dossier.guards(new Date())).catch((cause: unknown) => cause),
+  ).toBeInstanceOf(Error)
+  expect(await dossierReader.prepare(dossierInput)).toBeInstanceOf(Error)
+  const changedApproval = await fixture.f.database.batch([approvalHistory.guard(new Date())]).then(
+    () => null,
+    (cause: unknown) => cause,
+  )
+  expect(changedApproval).toBeInstanceOf(Error)
+  expect(await approvalReader.prepare(approvalInput)).toBeInstanceOf(Error)
+  await fixture.f.database
+    .prepare(`INSERT INTO system_cases
+    (id, subject_context, subject_kind, subject_id, subject_version, proposal_digest,
+     created_by_account_id, status, created_at, updated_at)
+    SELECT 'duplicate-executed-case', subject_context, subject_kind, subject_id, subject_version,
+      proposal_digest, created_by_account_id, status, created_at, updated_at
+    FROM system_cases WHERE id = ?1`)
+    .bind(receipt.case_id)
+    .run()
+  const ambiguous = await new FindPreservedRecordExecutionProofAdapter({
+    env: environment,
+    assertions: [fixture.f.database.prepare("SELECT 1")],
+  }).find(receipt.record_id)
+  expect(ambiguous).toBeInstanceOf(Error)
+  if (ambiguous instanceof Error)
+    expect(ambiguous.message).toBe("record execution proof is ambiguous")
 })
 
 test.each(["company", "permission"])(

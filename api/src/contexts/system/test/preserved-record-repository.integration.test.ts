@@ -16,8 +16,120 @@ import { PreservedRecordRepository } from "@system/infrastructure/repositories/r
 import { PreservedRecordDisclosurePolicyRepository } from "@system/infrastructure/repositories/records/preserved-record-disclosure-policy.repository"
 import { AttachmentPreservationRepository } from "@system/infrastructure/repositories/attachments/attachment-preservation.repository"
 import { wrapSystemD1TestDatabase } from "@system/test/wrap-system-d1-test-database.test-support"
+import { PreparePreservedRecordDisclosureHistoryAdapter } from "@system/infrastructure/adapters/records/prepare-preserved-record-disclosure-history.adapter"
+import { PreparePreservedRecordExportPeriodGuardAdapter } from "@system/infrastructure/adapters/records/prepare-preserved-record-export-period-guard.adapter"
 
 const now = new Date(Date.now() - 60000).toISOString()
+
+test("原文出力の最終検査は開始時点を含み終了時点を含めず、読取だけの許可を流用しない", async () => {
+  const f = fixture()
+  try {
+    await f.db.batch([...f.policyStatements, ...f.holdStatements, ...f.finalizeStatements])
+    const starts = Math.floor(Date.now() / 1000) * 1000 + 60007
+    const ends = starts + 1000
+    await publishSearchGrant(f, [
+      {
+        accountId: "reader",
+        actions: ["read", "export"],
+        purposes: ["archive"],
+        validFrom: new Date(starts).toISOString(),
+        validUntil: new Date(ends).toISOString(),
+      },
+    ])
+    const policy = await new PreservedRecordDisclosurePolicyRepository({
+      env: { DB: f.db },
+      assertions: [],
+    }).findCurrent(f.policy.snapshot.id)
+    if (policy === null || policy instanceof Error) throw new Error("policy missing")
+    const guard = new PreparePreservedRecordExportPeriodGuardAdapter({ env: { DB: f.db } })
+    for (const at of [starts, ends - 1]) {
+      await f.db.batch([
+        guard.prepare({ policy, accountId: "reader", purpose: "archive", at: new Date(at) }),
+      ])
+    }
+    for (const at of [starts - 1, ends, ends + 1]) {
+      expect(
+        await f.db
+          .batch([
+            guard.prepare({ policy, accountId: "reader", purpose: "archive", at: new Date(at) }),
+          ])
+          .catch((cause: unknown) => cause),
+      ).toBeInstanceOf(Error)
+    }
+    await publishSearchGrant(
+      f,
+      [
+        {
+          accountId: "reader",
+          actions: ["read"],
+          purposes: ["archive"],
+          validFrom: now,
+          validUntil: null,
+        },
+      ],
+      3,
+    )
+    const readOnly = await new PreservedRecordDisclosurePolicyRepository({
+      env: { DB: f.db },
+      assertions: [],
+    }).findCurrent(f.policy.snapshot.id)
+    if (readOnly === null || readOnly instanceof Error) throw new Error("policy missing")
+    expect(
+      await f.db
+        .batch([
+          guard.prepare({
+            policy: readOnly,
+            accountId: "reader",
+            purpose: "archive",
+            at: new Date(),
+          }),
+        ])
+        .catch((cause: unknown) => cause),
+    ).toBeInstanceOf(Error)
+  } finally {
+    f.sqlite.close()
+  }
+})
+
+test("開示設定の全版を取得し、取得後の追加と移入履歴の欠損を拒否する", async () => {
+  const f = fixture()
+  try {
+    await f.db.batch([...f.policyStatements, ...f.holdStatements, ...f.finalizeStatements])
+    const reader = new PreparePreservedRecordDisclosureHistoryAdapter({
+      env: { DB: f.db },
+      assertions: [f.db.prepare("SELECT 1")],
+    })
+    const initial = await reader.prepare(f.record)
+    if (initial instanceof Error) throw initial
+    expect(initial.policies).toEqual([f.policy.snapshot])
+    await f.db.batch([initial.guard])
+    expect(
+      await new PreparePreservedRecordDisclosureHistoryAdapter({
+        env: { DB: f.db },
+        assertions: [],
+      }).prepare(f.record),
+    ).toBeInstanceOf(Error)
+    await publishSearchGrant(f, [], 2)
+    const changed = await f.db.batch([initial.guard]).catch((cause: unknown) => cause)
+    expect(changed).toBeInstanceOf(Error)
+    await publishSearchGrant(f, [], 3)
+    const complete = await reader.prepare(f.record)
+    if (complete instanceof Error) throw complete
+    expect(complete.policies.map((policy) => policy.revision)).toEqual([1, 2, 3])
+    expect(new Set(complete.policies.map((policy) => policy.auditEventId)).size).toBe(3)
+    await f.db.batch([complete.guard])
+    f.sqlite.exec("DROP TRIGGER system_record_disclosure_prevent_delete")
+    f.sqlite
+      .query("DELETE FROM system_record_disclosure_policies WHERE id = ?1 AND revision = 2")
+      .run(f.policy.snapshot.id)
+    expect(await reader.prepare(f.record)).toBeInstanceOf(Error)
+    expect(await f.db.batch([complete.guard]).catch((cause: unknown) => cause)).toBeInstanceOf(
+      Error,
+    )
+  } finally {
+    f.sqlite.close()
+  }
+})
 
 function audit(
   snapshot: { id: string; auditEventId: string; actorAccountId: string },
