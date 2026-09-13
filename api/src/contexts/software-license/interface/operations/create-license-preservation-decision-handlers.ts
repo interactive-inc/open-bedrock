@@ -1,3 +1,4 @@
+import { VerifyLicensePreservationReplayAdapter } from "@/contexts/software-license/infrastructure/adapters/verify-license-preservation-replay.adapter"
 import { PrepareSystemCaseReadGuardAdapter } from "@system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
@@ -113,16 +114,11 @@ export function createLicensePreservationDecisionHandlers(action: "approve" | "r
           const now = c.var.now()
           const assertions = proof.assertions(now)
           if (assertions instanceof Error) throw new SoftwareLicenseForbiddenError()
-          try {
-            const verified = await c.env.DB.batch([...assertions, guard(now)])
-            if (
-              verified.length !== assertions.length + 1 ||
-              verified.some((result) => !result.success)
-            )
-              throw new SoftwareLicenseConflictError()
-          } catch {
-            throw new SoftwareLicenseConflictError()
-          }
+          const verified = await new VerifyLicensePreservationReplayAdapter(c).execute([
+            ...assertions,
+            guard(now),
+          ])
+          if (verified instanceof Error) throw new SoftwareLicenseConflictError()
           return c.json(
             { status: proposal.status === "executed" ? "approved" : proposal.status },
             200,
