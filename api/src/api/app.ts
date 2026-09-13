@@ -91,7 +91,6 @@ import * as companyAuthorityResolutionsRoute from "@/contexts/company/interface/
 import * as companyBootstrapRoute from "@/contexts/company/interface/routes/company.bootstrap"
 import * as companyCapabilitiesRoute from "@/contexts/company/interface/routes/company.capabilities"
 import * as companyChangesRoute from "@/contexts/company/interface/routes/company.changes"
-import * as companyDefinitionResourceAdoptionsRoute from "@/contexts/company/interface/routes/company.definition-resource-adoptions"
 import * as companyDefinitionResourceAdoptionsCommandIdRoute from "@/contexts/company/interface/routes/company.definition-resource-adoptions.$commandId"
 import * as companyDefinitionsRoute from "@/contexts/company/interface/routes/company.definitions"
 import * as companyEmployeeDirectoryRoute from "@/contexts/company/interface/routes/company.employee-directory"
@@ -104,7 +103,6 @@ import * as companyEmployeesRoute from "@/contexts/company/interface/routes/comp
 import * as companyEmploymentsRoute from "@/contexts/company/interface/routes/company.employments"
 import * as companyExternalIdentityImportsRoute from "@/contexts/company/interface/routes/company.external-identity-imports"
 import * as companyGradeAssignmentHistoryRoute from "@/contexts/company/interface/routes/company.grade-assignment-history"
-import * as companyGradeAwardArchivesRoute from "@/contexts/company/interface/routes/company.grade-award-archives"
 import * as companyGradeAwardArchivesCommandIdRoute from "@/contexts/company/interface/routes/company.grade-award-archives.$commandId"
 import * as companyGradeAwardArchivesByEmployeeEmployeeIdRoute from "@/contexts/company/interface/routes/company.grade-award-archives.by-employee.$employeeId"
 import * as companyLegacyPersonnelActionRecordsRoute from "@/contexts/company/interface/routes/company.legacy-personnel-action-records"
@@ -614,8 +612,6 @@ const routePart25 = createRouteApp()
   .get("/company/current-profile", ...companyCurrentProfileRoute.GET)
   .get("/company/dashboard", ...companyDashboardRoute.GET)
   .get("/company/dashboard/management", ...companyDashboardManagementRoute.GET)
-  .get("/company/definition-resource-adoptions", ...companyDefinitionResourceAdoptionsRoute.GET)
-  .post("/company/definition-resource-adoptions", ...companyDefinitionResourceAdoptionsRoute.POST)
   .get(
     "/company/definition-resource-adoptions/:commandId",
     ...companyDefinitionResourceAdoptionsCommandIdRoute.GET,
@@ -641,8 +637,6 @@ const routePart25 = createRouteApp()
   .post("/company/external-identity-imports", ...companyExternalIdentityImportsRoute.POST)
   .get("/company/features", ...companyFeaturesRoute.GET)
   .get("/company/grade-assignment-history", ...companyGradeAssignmentHistoryRoute.GET)
-  .get("/company/grade-award-archives", ...companyGradeAwardArchivesRoute.GET)
-  .post("/company/grade-award-archives", ...companyGradeAwardArchivesRoute.POST)
   .get(
     "/company/grade-award-archives/by-employee/:employeeId",
     ...companyGradeAwardArchivesByEmployeeEmployeeIdRoute.GET,
@@ -659,8 +653,6 @@ const routePart25 = createRouteApp()
   .get("/company/organization-profile", ...companyOrganizationProfileRoute.GET)
   .put("/company/organization-profile", ...companyOrganizationProfileRoute.PUT)
   .get("/company/organization-resource-adoptions", ...companyOrganizationResourceAdoptionsRoute.GET)
-
-const routePart26 = createRouteApp()
   .post(
     "/company/organization-resource-adoptions",
     ...companyOrganizationResourceAdoptionsRoute.POST,
@@ -668,6 +660,8 @@ const routePart26 = createRouteApp()
   .get("/company/organization-snapshots", ...companyOrganizationSnapshotsRoute.GET)
   .get("/company/organization-tree", ...companyOrganizationTreeRoute.GET)
   .get("/company/organization-units", ...companyOrganizationUnitsRoute.GET)
+
+const routePart26 = createRouteApp()
   .post("/company/organization-units", ...companyOrganizationUnitsRoute.POST)
   .get("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.GET)
   .put("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.PUT)

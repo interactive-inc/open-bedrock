@@ -238,7 +238,13 @@ describe("Company公開責務による人事発令", () => {
       .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
       .first<number>("revision")
     if (companyRevision === null) throw new Error("Company revision missing")
-    await c.database.exec("DROP TABLE company_position_definitions")
+    expect(
+      await c.database
+        .prepare(
+          "SELECT count(*) AS count FROM sqlite_master WHERE type = 'table' AND name = 'company_position_definitions'",
+        )
+        .first<number>("count"),
+    ).toBe(0)
     const submitted = await c.request(
       0,
       "/company/personnel-action-requests",

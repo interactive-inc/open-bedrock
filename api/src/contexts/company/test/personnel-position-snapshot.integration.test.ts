@@ -39,7 +39,13 @@ test("旧役職台帳の撤去後も確認した会社版と発効日の役職�
     expect(await repository.write(change)).toMatchObject({ kind: "applied" })
   }
   const latest = await f.companyRevision()
-  await f.database.exec("DROP TABLE company_position_definitions")
+  expect(
+    await f.database
+      .prepare(
+        "SELECT count(*) AS count FROM sqlite_master WHERE type = 'table' AND name = 'company_position_definitions'",
+      )
+      .first<number>("count"),
+  ).toBe(0)
   const action = {
     kind: "position_changed" as const,
     employeeCode: "EMPLOYEE-001",

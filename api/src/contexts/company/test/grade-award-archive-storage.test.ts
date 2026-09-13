@@ -1,7 +1,5 @@
 import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
-import { GradeAwardArchiveEntity } from "@/contexts/company/domain/entities/grade-award-archive.entity"
-import { GradeAwardSourceSnapshotValue } from "@/contexts/company/domain/values/grade-award-source-snapshot.value"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 
 const companySql = readFileSync(
@@ -56,35 +54,4 @@ test("保全記録の所属・参照先と不変性をDBで強制し、元台帳
       .prepare("SELECT source_json FROM company_grade_award_archives")
       .first<string>("source_json"),
   ).toBe(sourceJson)
-})
-
-test("保全依頼は確認済みの人・会社版・digestと一致し、記録日時を過去の付与日時に読み替えない", async () => {
-  const snapshot = await GradeAwardSourceSnapshotValue.create(
-    JSON.stringify({ employeeId: "employee:one", organizationRevision: 8, awards: [] }),
-  )
-  if (snapshot instanceof Error) throw snapshot
-  const props = {
-    commandId: "archive:one",
-    employeeId: "employee:one",
-    expectedRevision: 8,
-    snapshotDigest: snapshot.props.digest,
-    observedOn: "2030-01-01",
-    actorAccountId: "account:reviewer",
-    reason: "Preserve original records",
-    recordedAt: Date.parse("2030-01-01T00:00:00Z"),
-  }
-  const command = GradeAwardArchiveEntity.create(props)
-  if (command instanceof Error) throw command
-  expect(command.validateSource(snapshot)).toBeNull()
-  expect(command.props.recordedAt).toBe(props.recordedAt)
-  for (const override of [
-    { employeeId: "employee:other" },
-    { expectedRevision: 9 },
-    { snapshotDigest: "b".repeat(64) },
-  ]) {
-    const changed = GradeAwardArchiveEntity.create({ ...props, ...override })
-    if (changed instanceof Error) throw changed
-    expect(changed.validateSource(snapshot)).toBeInstanceOf(Error)
-  }
-  expect(GradeAwardArchiveEntity.create({ ...props, reason: " " })).toBeInstanceOf(Error)
 })

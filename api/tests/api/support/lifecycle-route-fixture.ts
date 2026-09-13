@@ -2,11 +2,9 @@ import { seedDepartments } from "@tests/api/support/company/seed-departments.tes
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { seedOrgDepartments } from "@tests/api/support/company/seed-org-departments.test-support"
 import { seedOrgMemberships } from "@tests/api/support/company/seed-org-memberships.test-support"
-import { seedPositions } from "@tests/api/support/company/seed-positions.test-support"
 import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
 import { initializeCompanyTestFixture } from "@tests/api/support/initialize-company-test-fixture"
 import { loadSchema } from "@tests/api/support/load-schema"
-import { seedD1 } from "@tests/api/support/seed-d1"
 import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 
 export const lifecycleRouteJwtSecret = "lifecycle-route-test-secret"
@@ -46,18 +44,6 @@ export async function createLifecycleRouteDb(
     })),
     memberships: seedOrgMemberships,
   })
-  await seedD1(
-    db,
-    "company_position_definitions",
-    seedPositions.map((position) => ({
-      id: position.id,
-      code: position.code,
-      name: position.name,
-      rank: position.rank,
-      description: position.description,
-      created_at: position.createdAt,
-    })),
-  )
   await seedIamForEmployees(db)
   const expectedRevision = await readOrganizationRevision(db)
   const operationId = `test:lifecycle-route:${expectedRevision}`

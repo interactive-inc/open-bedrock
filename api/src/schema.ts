@@ -25,8 +25,6 @@ import * as ownedSchema12 from "@/contexts/commendation/infrastructure/schema/co
 import * as ownedSchema13 from "@/contexts/company-calendar/infrastructure/schema/company-calendar"
 import * as ownedSchema14 from "@/contexts/company/infrastructure/schema/audit"
 import * as ownedSchema15 from "@/contexts/company/infrastructure/schema/personnel-annotation"
-import * as ownedSchema16 from "@/contexts/company/infrastructure/schema/grade"
-import * as ownedSchema17 from "@/contexts/company/infrastructure/schema/position"
 import * as ownedSchema18 from "@/contexts/compensation-change/infrastructure/schema/compensation-change"
 import * as ownedSchema19 from "@/contexts/disciplinary-action/infrastructure/schema/disciplinary-action"
 import * as ownedSchema20 from "@/contexts/document/infrastructure/schema/document"
@@ -89,8 +87,6 @@ export const schema = {
   ...ownedSchema13,
   ...ownedSchema14,
   ...ownedSchema15,
-  ...ownedSchema16,
-  ...ownedSchema17,
   ...ownedSchema18,
   ...ownedSchema19,
   ...ownedSchema20,
