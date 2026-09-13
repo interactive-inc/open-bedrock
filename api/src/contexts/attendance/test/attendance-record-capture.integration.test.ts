@@ -2,6 +2,8 @@ import { expect, test } from "bun:test"
 import { createAttendanceRecordSourceFixture } from "@/contexts/attendance/test/create-attendance-record-source-fixture.test-support"
 import { CaptureAttendanceRecordAdapter } from "@/contexts/attendance/infrastructure/adapters/capture-attendance-record.adapter"
 import { PreservedRecordContentValue } from "@system/domain/values/records/preserved-record-content.value"
+import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
+import { toSha256Hex } from "@system/application/attachments/lib/to-sha256-hex"
 import { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
 
 test("all original fields survive capture without invented revision or recorded time", async () => {
@@ -14,7 +16,7 @@ test("all original fields survive capture without invented revision or recorded 
     ).not.toBeInstanceOf(Error)
     expect(JSON.parse(new TextDecoder().decode(captured.content))).toEqual({
       format: "attendance-record",
-      version: 1,
+      version: 2,
       record: await f.database
         .prepare("SELECT * FROM attendance_records WHERE id=?1")
         .bind(recordId)
@@ -76,7 +78,7 @@ test("revalidation retains capture time and rejects altered provenance or conten
     { recordKind: "other-record" },
     { recordId: "01" },
     { formatId: "other-format" },
-    { formatVersion: 2 },
+    { formatVersion: 3 },
     { sourceRevision: "1" },
     { sourceRecordedAt: "2026-09-01T00:00:00Z" },
     { capturedAt: new Date(f.clock.now.getTime() + 1000).toISOString() },
@@ -185,3 +187,54 @@ test("a token that expires after capture cannot authorize a later finalization b
       .first<number>("count"),
   ).toBe(0)
 }, 15_000)
+
+test("DBの整数を丸めず保存し、隣接する大きな整数の変更も識別する", async () => {
+  const f = await createAttendanceRecordSourceFixture()
+  await f.database.exec("UPDATE attendance_records SET work_minutes=9007199254740993 WHERE id=1")
+  const first = await f.capture.prepare(f.input)
+  if (first instanceof Error) throw first
+  expect(first.source.props.formatVersion).toBe(2)
+  expect(new TextDecoder().decode(first.content)).toContain('"work_minutes":9007199254740993')
+  expect(await PreservedRecordContentValue.create(first.source, first.content)).not.toBeInstanceOf(
+    Error,
+  )
+  const revalidated = await f.revalidate.prepare(first.source)
+  if (revalidated instanceof Error) throw revalidated
+  expect(revalidated.content).toEqual(first.content)
+  expect(await f.capture.prepare({ ...f.input, formatVersion: 1 })).toBeInstanceOf(Error)
+  await f.database.exec("UPDATE attendance_records SET work_minutes=9007199254740992 WHERE id=1")
+  const second = await f.capture.prepare(f.input)
+  if (second instanceof Error) throw second
+  expect(new TextDecoder().decode(second.content)).toContain('"work_minutes":9007199254740992')
+  expect(second.source.props.contentDigest).not.toBe(first.source.props.contentDigest)
+  expect(await f.revalidate.prepare(first.source)).toBeInstanceOf(Error)
+  expect(
+    await f.database.batch([...first.assertions]).catch((cause: unknown) => cause),
+  ).toBeInstanceOf(Error)
+})
+
+test("既存の版1の承認対象は元の本文とdigestで再検証する", async () => {
+  const f = await createAttendanceRecordSourceFixture()
+  const current = await f.capture.prepare(f.input)
+  if (current instanceof Error) throw current
+  const original = CanonicalSystemJsonValue.create({
+    format: "attendance-record",
+    version: 1,
+    record: await f.database.prepare("SELECT * FROM attendance_records WHERE id=1").first(),
+  })
+  if (original instanceof Error) throw original
+  const content = new TextEncoder().encode(original.toString())
+  const source = PreservedRecordSourceValue.create({
+    ...current.source.props,
+    formatVersion: 1,
+    contentDigest: await toSha256Hex(content),
+  })
+  if (source instanceof Error) throw source
+  const revalidated = await f.revalidate.prepare(source)
+  if (revalidated instanceof Error) throw revalidated
+  expect(revalidated.source.props).toEqual(source.props)
+  expect(revalidated.content).toEqual(content)
+  await f.database.batch([...revalidated.assertions])
+  await f.database.exec("UPDATE attendance_records SET note='Corrected' WHERE id=1")
+  expect(await f.revalidate.prepare(source)).toBeInstanceOf(Error)
+})

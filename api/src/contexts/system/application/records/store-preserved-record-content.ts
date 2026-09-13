@@ -1,9 +1,11 @@
 import { StoreEncryptedAttachmentAdapter } from "@system/infrastructure/adapters/attachments/store-encrypted-attachment.adapter"
-import { toBase64 } from "@system/application/attachments/lib/to-base64"
-import { ATTACHMENT_MAX_BYTE_SIZE } from "@system/domain/catalogs/attachments/attachment-content.catalog"
+import {
+  RECORD_BINARY_CONTENT_TYPE,
+  RECORD_CONTENT_MAX_SIZE,
+} from "@system/domain/catalogs/records/record-payload-format.catalog"
 import type { AttachmentBytes } from "@system/domain/definitions/attachments/attachment-bytes.definition"
 import { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
-import { PreservedRecordContentValue } from "@system/domain/values/records/preserved-record-content.value"
+import { PreservedRecordPayloadValue } from "@system/domain/values/records/preserved-record-payload.value"
 import type {
   SystemAttachmentStorageContext,
   SystemDatabaseContext,
@@ -30,22 +32,17 @@ export class StorePreservedRecordContent {
     if (
       !Number.isSafeInteger(command.now.getTime()) ||
       Date.parse(source.props.capturedAt) > command.now.getTime() ||
-      command.content.byteLength > Math.floor(ATTACHMENT_MAX_BYTE_SIZE / 4) * 3
+      command.content.byteLength > RECORD_CONTENT_MAX_SIZE
     )
       return new Error("invalid record capture time or payload size")
-    const content = await PreservedRecordContentValue.create(source, command.content)
-    if (content instanceof Error) return content
-    const payload = new TextEncoder().encode(
-      JSON.stringify({
-        version: 1,
-        source: source.props,
-        contentBase64: toBase64(new Uint8Array(content.toBytes())),
-      }),
-    )
+    const record = await PreservedRecordPayloadValue.create(source, command.content)
+    if (record instanceof Error) return record
+    const payload = record.toBinary()
+    if (payload instanceof Error) return payload
     const attachment = await new StoreEncryptedAttachmentAdapter(this.c).run({
       ownerAccountId: command.ownerAccountId,
-      fileName: "preserved-record.json",
-      contentType: "application/vnd.record-preservation+json",
+      fileName: "preserved-record.bin",
+      contentType: RECORD_BINARY_CONTENT_TYPE,
       content: payload,
       now: command.now,
     })

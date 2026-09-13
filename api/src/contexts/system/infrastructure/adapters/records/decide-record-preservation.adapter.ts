@@ -1,7 +1,7 @@
 import type { RecordPreservationDecisionContext } from "@system/configuration/record-preservation-decision-context"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
 import { RecordPreservationDecisionError } from "@system/infrastructure/adapters/records/errors"
-import { VerifyRecordPreservationReplayAdapter } from "@system/infrastructure/adapters/records/verify-record-preservation-replay.adapter"
+import { VerifyRecordProcedureReplayAdapter } from "@system/infrastructure/adapters/records/verify-record-procedure-replay.adapter"
 import { PrepareSystemCaseReadGuardAdapter } from "@system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter"
 import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
 import { recordPreservationIntentSchema } from "@system/domain/schemas/records/record-preservation-input.schema"
@@ -111,7 +111,7 @@ export class DecideRecordPreservationAdapter {
         const now = this.c.var.now()
         const assertions = proof.assertions(now)
         if (assertions instanceof Error) return new RecordPreservationDecisionError("forbidden")
-        const verified = await new VerifyRecordPreservationReplayAdapter(this.c).execute([
+        const verified = await new VerifyRecordProcedureReplayAdapter(this.c).execute([
           ...assertions,
           guard(now),
         ])

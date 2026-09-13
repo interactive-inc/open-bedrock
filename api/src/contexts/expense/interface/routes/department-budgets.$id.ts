@@ -1,3 +1,4 @@
+import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
 import { BudgetRepository } from "@/contexts/expense/infrastructure/repositories/budget/budget.repository"
 import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 import { UpdateBudget } from "@/contexts/expense/application/budget/update-budget"
@@ -156,7 +157,10 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     const result = await repository.delete(command.budgetId)
 
     if (result instanceof Error) {
-      return new UnexpectedError("failed to delete budget", { cause: result })
+      return (
+        new PrepareExpenseWriteGuardAdapter(c).failure(result) ??
+        new UnexpectedError("failed to delete budget", { cause: result })
+      )
     }
 
     if (result === null) {

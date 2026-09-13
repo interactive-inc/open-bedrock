@@ -1,3 +1,5 @@
+import { AttachmentRecordContentValue } from "@system/domain/values/records/attachment-record-content.value"
+import { ATTACHMENT_RECORD_FORMAT_ID } from "@system/domain/catalogs/records/attachment-record-format.catalog"
 import { DisclosePreservedRecordPersistenceAdapter } from "@system/infrastructure/adapters/records/disclose-preserved-record-persistence.adapter"
 import { toBase64 } from "@system/application/attachments/lib/to-base64"
 import { z } from "zod"
@@ -9,6 +11,7 @@ import { DisclosePreservedRecordContent } from "@system/application/records/disc
 import { PreservedRecordDisclosureDeniedError } from "@system/domain/errors"
 import {
   SystemForbiddenError,
+  SystemPreservedRecordNotAttachmentError,
   SystemPreservedRecordUnavailableError,
 } from "@system/interface/errors"
 
@@ -22,7 +25,7 @@ export const GET = systemFactory.createHandlers(
       .strictObject({
         action: z.enum(["read", "export"]),
         purpose: z.string().min(1).max(255),
-        format: z.enum(["original", "package"]).default("original"),
+        format: z.enum(["original", "package", "attachment"]).default("original"),
       })
       .refine(
         (value) => value.format !== "package" || value.action === "export",
@@ -61,6 +64,38 @@ export const GET = systemFactory.createHandlers(
     })
     if (content instanceof PreservedRecordDisclosureDeniedError) throw new SystemForbiddenError()
     if (content instanceof Error) throw new SystemPreservedRecordUnavailableError()
+    if (query.format === "attachment") {
+      if (
+        content.source.formatId !== ATTACHMENT_RECORD_FORMAT_ID ||
+        content.source.formatVersion !== 1
+      )
+        throw new SystemPreservedRecordNotAttachmentError()
+      const attachment = await AttachmentRecordContentValue.restore(content.content)
+      if (attachment instanceof Error || attachment.metadata.id !== content.source.recordId)
+        throw new SystemPreservedRecordUnavailableError()
+      try {
+        const checked = await context.env.DB.batch([...content.assertions])
+        if (
+          checked.length !== content.assertions.length ||
+          checked.some((result) => !result.success)
+        )
+          throw new SystemPreservedRecordUnavailableError()
+      } catch {
+        throw new SystemPreservedRecordUnavailableError()
+      }
+      const fileName = encodeURIComponent(
+        new TextDecoder().decode(new TextEncoder().encode(attachment.metadata.fileName)),
+      ).replace(/[!'()*]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`)
+      const contentType = /^[a-z0-9!#$&^_.+-]+\/[a-z0-9!#$&^_.+-]+$/i.test(
+        attachment.metadata.contentType,
+      )
+        ? attachment.metadata.contentType
+        : "application/octet-stream"
+      context.header("Content-Type", contentType)
+      context.header("Content-Disposition", `attachment; filename*=UTF-8''${fileName}`)
+      context.header("X-Content-Type-Options", "nosniff")
+      return context.body(attachment.contentBytes().buffer)
+    }
     if (query.format === "package") {
       context.header("Content-Type", "application/vnd.record-preservation+json")
       context.header("Content-Disposition", 'attachment; filename="preserved-record.json"')

@@ -78,7 +78,7 @@ BEFORE INSERT ON system_preserved_records
 WHEN NOT EXISTS (
   SELECT 1 FROM system_attachments a JOIN system_attachment_preservations h ON h.attachment_id = a.id
   WHERE a.id = NEW.attachment_id AND h.id = NEW.preservation_id
-    AND a.status = 'linked' AND a.content_type = 'application/vnd.record-preservation+json'
+    AND a.status = 'linked' AND a.content_type IN ('application/vnd.record-preservation+json', 'application/vnd.record-preservation+binary')
     AND a.plaintext_sha256 = json_extract(NEW.snapshot_json, '$.attachmentDigest')
     AND h.plaintext_sha256 = a.plaintext_sha256 AND h.released_at IS NULL
     AND h.created_by_account_id = json_extract(NEW.snapshot_json, '$.actorAccountId')

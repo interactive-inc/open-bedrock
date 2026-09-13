@@ -1,3 +1,6 @@
+import { z } from "zod"
+import { CaptureLinkedAttachmentRecordAdapter } from "@system/infrastructure/adapters/records/capture-linked-attachment-record.adapter"
+import { AttachmentRecordContentValue } from "@system/domain/values/records/attachment-record-content.value"
 import { PrepareAttachmentContentReadGuardAdapter } from "@system/infrastructure/adapters/attachments/prepare-attachment-content-read-guard.adapter"
 import { preparePreservedRecordWriteAuthorization } from "@system/interface/authorization/prepare-preserved-record-write-authorization"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
@@ -257,14 +260,11 @@ test("原記録の本文と不足する来歴を暗号化保存し、空の元�
     )
     if (decoded instanceof Error) throw decoded
     expect(new TextDecoder().decode(ciphertext)).not.toContain("source-tenant-1")
-    const restored = await PreservedRecordPayloadValue.restore(decoded, prepared.source)
+    const restored = await PreservedRecordPayloadValue.restore(decoded, prepared.source, "binary")
     if (restored instanceof Error) throw restored
     expect(new TextDecoder().decode(restored.content.toBytes())).toBe(fixture.text)
-    expect(JSON.parse(new TextDecoder().decode(decoded))).toEqual({
-      version: 1,
-      source,
-      contentBase64: fixture.base64,
-    })
+    expect(new TextDecoder().decode(decoded.subarray(0, 4))).toBe("RCP2")
+    expect(restored.source.props).toEqual(source)
     const ordinaryUpload = await new StoreAttachment(context).run({
       ownerAccountId,
       fileName: "record.json",
@@ -290,11 +290,12 @@ test("encrypted original is verified before atomic finalization and failed sourc
     "purge-before-submission",
     "denied",
     "allowed",
+    "allowed-attachment",
     "revoked-during-read",
     "reviewer-suspended-during-read",
     "permission-revoked-during-read",
   ]) {
-    const allowed = scenario === "allowed"
+    const allowed = scenario === "allowed" || scenario === "allowed-attachment"
     const bucket = new SystemAttachmentTestBucket()
     const context = createContext(bucket)
     await context.env.DB.exec(
@@ -306,20 +307,44 @@ test("encrypted original is verified before atomic finalization and failed sourc
     await context.env.DB.exec(
       `CREATE TABLE test_source_authority (allowed INTEGER); INSERT INTO test_source_authority VALUES (${Number(scenario !== "denied")})`,
     )
+    const captureBytes = await (async () => {
+      const bytes = new TextEncoder().encode("abc")
+      if (scenario !== "allowed-attachment") return bytes
+      const attachment = await AttachmentRecordContentValue.create(
+        {
+          id: "source-1",
+          fileName: "原本 '件'.pdf",
+          contentType: "application/pdf",
+          byteSize: bytes.byteLength,
+          sha256: "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+          ownerAccountId,
+          createdAt: now.toISOString(),
+          linkedAt: now.toISOString(),
+        },
+        bytes,
+      )
+      if (attachment instanceof Error) throw attachment
+      const encoded = attachment.toBytes()
+      if (encoded instanceof Error) throw encoded
+      return encoded
+    })()
+    const captureDigest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", captureBytes))]
+      .map((byte) => byte.toString(16).padStart(2, "0"))
+      .join("")
     const prepared = await new StorePreservedRecordContent(context).execute({
       source: {
         sourceNamespace: "sample-source",
         ownerContext: "sample-records",
         recordKind: "record",
         recordId: "source-1",
-        formatId: "sample-record",
+        formatId: scenario === "allowed-attachment" ? "system-attachment-record" : "sample-record",
         formatVersion: 1,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: now.toISOString(),
-        contentDigest: "ba7816bf8f01cfea414140de5dae2223b00361a396177a9cb410ff61f20015ad",
+        contentDigest: captureDigest,
       },
-      content: new TextEncoder().encode("abc"),
+      content: captureBytes,
       ownerAccountId,
       now,
     })
@@ -673,7 +698,7 @@ test("encrypted original is verified before atomic finalization and failed sourc
       expect(await reader.execute({ ...request, purpose: "other" })).toBeInstanceOf(Error)
       const original = await reader.execute(request)
       if (original instanceof Error) throw original
-      expect(new TextDecoder().decode(original.content)).toBe("abc")
+      expect(original.content).toEqual(captureBytes)
       expect(original.source.sourceRecordedAt).toBeNull()
       const exporter = new DisclosePreservedRecordContent({
         ...context,
@@ -695,7 +720,7 @@ test("encrypted original is verified before atomic finalization and failed sourc
         purpose: "archive",
       })
       if (exported instanceof Error) throw exported
-      expect(new TextDecoder().decode(exported.content)).toBe("abc")
+      expect(exported.content).toEqual(captureBytes)
       await context.env.DB.exec(
         "INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('viewer','active',0,100,100); INSERT INTO system_principals(id,account_id,kind,name,revision,created_at,updated_at) VALUES ('viewer-principal','viewer','human','Viewer',1,100,100); INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('record-reader','record:reader','custom','Reader',100,100); INSERT INTO system_iam_role_permissions VALUES ('record-reader','system:record:read'); INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('record-binding','viewer','record-reader',100)",
       )
@@ -746,7 +771,48 @@ test("encrypted original is verified before atomic finalization and failed sourc
       expect(response.headers.get("cache-control")).toBe("no-store")
       expect(response.headers.get("content-type")).toBe("application/octet-stream")
       expect(response.headers.get("x-content-type-options")).toBe("nosniff")
-      expect(await response.text()).toBe("abc")
+      expect(new Uint8Array(await response.arrayBuffer())).toEqual(captureBytes)
+      const file = await http.request(`${endpoint}&format=attachment`, { headers }, environment)
+      if (scenario === "allowed-attachment") {
+        expect(file.status).toBe(200)
+        expect(file.headers.get("content-type")).toBe("application/pdf")
+        expect(file.headers.get("content-disposition")).toBe(
+          "attachment; filename*=UTF-8''%E5%8E%9F%E6%9C%AC%20%27%E4%BB%B6%27.pdf",
+        )
+        expect(file.headers.get("cache-control")).toBe("no-store")
+        expect(file.headers.get("x-content-type-options")).toBe("nosniff")
+        expect(await file.text()).toBe("abc")
+        const restoreAttachment = AttachmentRecordContentValue.restore.bind(
+          AttachmentRecordContentValue,
+        )
+        const revoke = spyOn(AttachmentRecordContentValue, "restore").mockImplementation(
+          async (bytes) => {
+            const decoded = await restoreAttachment(bytes)
+            await context.env.DB.exec(
+              "DELETE FROM system_iam_role_permissions WHERE role_id='record-reader' AND permission_key='system:record:read'",
+            )
+            return decoded
+          },
+        )
+        try {
+          const denied = await http.request(
+            `${endpoint}&format=attachment`,
+            { headers },
+            environment,
+          )
+          expect(denied.status).toBe(503)
+          expect(z.strictObject({ error: z.string() }).parse(await denied.json())).toEqual({
+            error: "preserved_record_unavailable",
+          })
+        } finally {
+          revoke.mockRestore()
+          await context.env.DB.exec(
+            "INSERT INTO system_iam_role_permissions VALUES ('record-reader','system:record:read')",
+          )
+        }
+      } else {
+        expect(file.status).toBe(400)
+      }
       for (const kind of ["agent", "service", "connector"]) {
         const accountId = `reader-${kind}`
         const credentialId = `credential-${kind}`
@@ -794,7 +860,7 @@ test("encrypted original is verified before atomic finalization and failed sourc
           environment,
         )
         expect(machineResponse.status).toBe(200)
-        expect(await machineResponse.text()).toBe("abc")
+        expect(new Uint8Array(await machineResponse.arrayBuffer())).toEqual(captureBytes)
         await context.env.DB.prepare(
           "UPDATE system_machine_credentials SET status='revoked', revoked_at=?1 WHERE id=?2",
         )
@@ -830,7 +896,7 @@ test("encrypted original is verified before atomic finalization and failed sourc
       const packageBytes = new Uint8Array(await exportResponse.arrayBuffer())
       const restoredPackage = await PreservedRecordPayloadValue.restore(packageBytes, record.source)
       if (restoredPackage instanceof Error) throw restoredPackage
-      expect(new TextDecoder().decode(restoredPackage.content.toBytes())).toBe("abc")
+      expect(restoredPackage.content.toBytes()).toEqual(captureBytes)
       expect(restoredPackage.source.props.sourceRevision).toBeNull()
       expect(restoredPackage.source.props.sourceRecordedAt).toBeNull()
       expect(
@@ -929,6 +995,137 @@ test("encrypted original is verified before atomic finalization and failed sourc
       await context.env.DB.prepare("SELECT count(*) AS count FROM system_audit_events").first<{
         count: number
       }>(),
-    ).toEqual({ count: allowed ? 11 : 0 })
+    ).toEqual({ count: allowed ? (scenario === "allowed-attachment" ? 13 : 12) : 0 })
   }
+})
+
+test("25MiBの原記録を暗号化して準備し、保存実体から完全に読み戻せる", async () => {
+  const bucket = new SystemAttachmentTestBucket()
+  const context = createContext(bucket)
+  const content = new Uint8Array(25 * 1024 * 1024)
+  content[0] = 255
+  content[content.length - 1] = 128
+  const digest = [...new Uint8Array(await crypto.subtle.digest("SHA-256", content))]
+    .map((byte) => byte.toString(16).padStart(2, "0"))
+    .join("")
+  const prepared = await new StorePreservedRecordContent(context).execute({
+    source: {
+      sourceNamespace: "example-source",
+      ownerContext: "sample-records",
+      recordKind: "attachment",
+      recordId: "original",
+      formatId: "application/pdf",
+      formatVersion: 1,
+      sourceRevision: null,
+      sourceRecordedAt: null,
+      capturedAt: now.toISOString(),
+      contentDigest: digest,
+    },
+    content,
+    ownerAccountId,
+    now,
+  })
+  if (prepared instanceof Error) throw prepared
+  expect(prepared.attachment.byteSize).toBeGreaterThan(content.byteLength)
+  expect(prepared.attachment.byteSize).toBeLessThan(content.byteLength + 16 * 1024 + 8)
+  const record = PreservedRecordEntity.create({
+    id: crypto.randomUUID(),
+    source: prepared.source.props,
+    attachmentId: prepared.attachment.id,
+    attachmentDigest: prepared.attachment.plaintextSha256,
+    preservationId: crypto.randomUUID(),
+    disclosurePolicyId: crypto.randomUUID(),
+    disclosurePolicyRevision: 1,
+    sourceAuthorizationRef: {
+      context: "sample-records",
+      kind: "export-grant",
+      id: "grant",
+      version: "1",
+    },
+    actorAccountId: ownerAccountId,
+    finalizedAt: now.toISOString(),
+    reason: "Preserve original",
+    auditEventId: crypto.randomUUID(),
+  })
+  if (record instanceof Error) throw record
+  const verified = await new VerifyPreservedRecordContentAdapter(context).execute(record, "pending")
+  if (verified instanceof Error) throw verified
+  const restored = verified.payload.content.toBytes()
+  expect(restored.byteLength).toBe(content.byteLength)
+  expect(restored[0]).toBe(255)
+  expect(restored[restored.length - 1]).toBe(128)
+  expect(bucket.size()).toBe(1)
+})
+
+test("添付の名前と実体を一緒に保全候補へ固定し、取得後の変更で保存を戻す", async () => {
+  const context = createContext(new SystemAttachmentTestBucket())
+  const stored = await new StoreAttachment(context).run({
+    ownerAccountId,
+    fileName: "original.pdf",
+    contentType: "application/pdf",
+    content: receiptBytes(),
+    now,
+  })
+  if (stored instanceof Error) throw stored
+  const input = {
+    attachmentId: stored.id,
+    sourceNamespace: "example-source",
+    ownerContext: "sample-records",
+    recordKind: "attachment",
+  }
+  const capture = new CaptureLinkedAttachmentRecordAdapter({
+    ...context,
+    now: () => now,
+    assertions: [context.env.DB.prepare("SELECT 1")],
+  })
+  expect(await capture.prepare(input)).toBeInstanceOf(Error)
+  const linked = await new AttachmentAdapter(context).markLinked(stored.id, now)
+  if (linked instanceof Error) throw linked
+  expect(
+    await new CaptureLinkedAttachmentRecordAdapter({
+      ...context,
+      now: () => now,
+      assertions: [],
+    }).prepare(input),
+  ).toBeInstanceOf(Error)
+  const captured = await capture.prepare(input)
+  if (captured instanceof Error) throw captured
+  const original = await AttachmentRecordContentValue.restore(captured.content.toBytes())
+  if (original instanceof Error) throw original
+  expect(original.metadata).toMatchObject({
+    id: stored.id,
+    fileName: "original.pdf",
+    contentType: "application/pdf",
+    ownerAccountId,
+    createdAt: now.toISOString(),
+    linkedAt: now.toISOString(),
+  })
+  expect(original.contentBytes()).toEqual(receiptBytes())
+  const preserved = await new StorePreservedRecordContent(context).execute({
+    source: captured.source.props,
+    content: captured.content.toBytes(),
+    ownerAccountId,
+    now,
+  })
+  if (preserved instanceof Error) throw preserved
+  expect(preserved.source.props.contentDigest).toBe(captured.source.props.contentDigest)
+  await context.env.DB.exec("CREATE TABLE attachment_capture_test_receipts (id TEXT PRIMARY KEY)")
+  await context.env.DB.prepare("UPDATE system_attachments SET file_name='renamed.pdf' WHERE id=?1")
+    .bind(stored.id)
+    .run()
+  expect(
+    await context.env.DB.batch([
+      context.env.DB.prepare("INSERT INTO attachment_capture_test_receipts VALUES ('stale')"),
+      ...captured.assertions,
+    ]).catch((error: unknown) => error),
+  ).toBeInstanceOf(Error)
+  expect(
+    await context.env.DB.prepare(
+      "SELECT count(*) AS n FROM attachment_capture_test_receipts",
+    ).first<number>("n"),
+  ).toBe(0)
+  const renamed = await capture.prepare(input)
+  if (renamed instanceof Error) throw renamed
+  expect(renamed.source.props.contentDigest).not.toBe(captured.source.props.contentDigest)
+  expect(original.metadata.fileName).toBe("original.pdf")
 })

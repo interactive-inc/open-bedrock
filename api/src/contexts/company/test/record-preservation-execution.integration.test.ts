@@ -4,7 +4,7 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { expect, test } from "bun:test"
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
 import { RevalidateRecordPreservationExecutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/revalidate-record-preservation-execution.adapter"
-import { PrepareRecordPreservationTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-record-preservation-task.adapter"
+import { PrepareCompanyRecordProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-task.adapter"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { RecordPreservationProposalValue } from "@system/domain/values/records/record-preservation-proposal.value"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
@@ -118,7 +118,7 @@ test.each(["approver", "service"])(
     })
     if (proposal instanceof Error) throw proposal
     const body = JSON.parse(proposal.props.canonical.toString())
-    const taskAdapter = new PrepareRecordPreservationTaskAdapter(c.context)
+    const taskAdapter = new PrepareCompanyRecordProcedureTaskAdapter(c.context)
     const taskInput = {
       procedureKey: definition.key,
       proposal,
@@ -164,7 +164,7 @@ test.each(["approver", "service"])(
       }),
     }
     expect(
-      await new PrepareRecordPreservationTaskAdapter(hiddenDatabaseContext).prepare(taskInput),
+      await new PrepareCompanyRecordProcedureTaskAdapter(hiddenDatabaseContext).prepare(taskInput),
     ).not.toBeInstanceOf(Error)
     const preparedTask = await taskAdapter.prepare(taskInput)
     if (preparedTask instanceof Error) throw preparedTask

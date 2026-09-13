@@ -1,3 +1,4 @@
+import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
 import type { Budget } from "@/contexts/expense/domain/entities/budget.entity"
 import type { Context } from "@/env"
 import { BudgetRepository } from "@/contexts/expense/infrastructure/repositories/budget/budget.repository"
@@ -41,7 +42,10 @@ export class UpdateBudget {
     const saved = await repository.update(updated)
 
     if (saved instanceof Error) {
-      return new UnexpectedError("failed to update budget", { cause: saved })
+      return (
+        new PrepareExpenseWriteGuardAdapter(this.c).failure(saved) ??
+        new UnexpectedError("failed to update budget", { cause: saved })
+      )
     }
 
     if (saved === null) {

@@ -1,3 +1,4 @@
+import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import {
@@ -33,6 +34,13 @@ export class PublishExpenseProcedure {
     Object.freeze(this)
   }
   async run(command: Command): Promise<ProcedureDefinitionEntity | ApplicationError> {
+    const result = await this.runWithWriteGuards(command)
+    return new PrepareExpenseWriteGuardAdapter(this.c).failure(result) ?? result
+  }
+
+  private async runWithWriteGuards(
+    command: Command,
+  ): Promise<ProcedureDefinitionEntity | ApplicationError> {
     const workflow = zApplicationWorkflow.safeParse(command.workflow)
     if (
       !workflow.success ||
@@ -51,6 +59,7 @@ export class PublishExpenseProcedure {
         "会社上の責務・役職・合議体を指定してください",
         "invalid_authority",
       )
+    const writeGuard = new PrepareExpenseWriteGuardAdapter(this.c).prepare()
     const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
       accountId: command.session.accountId,
       tokenVersion: command.tokenVersion,
@@ -106,7 +115,7 @@ export class PublishExpenseProcedure {
       return new UnexpectedError("規程の監査を作成できません", { cause: audit })
     const saved = await new SystemD1ProcedureRepository({
       ...this.c,
-      publishGuards: human.assertions,
+      publishGuards: [...human.assertions, writeGuard],
       publishEffects: new SystemAuditEventRepository(this.c).prepareAppend(audit),
     }).publish(definition, command.expectedRevision)
     if (saved === "revision_conflict")

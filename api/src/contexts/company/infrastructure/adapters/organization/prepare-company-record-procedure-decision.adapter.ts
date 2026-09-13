@@ -1,5 +1,5 @@
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
-import type { RecordPreservationDecisionContext } from "@system/configuration/record-preservation-decision-context"
+import type { RecordProcedureDecisionContext } from "@system/configuration/record-procedure-decision-context"
 import {
   CompanyConflictError,
   CompanyForbiddenError,
@@ -10,14 +10,14 @@ import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrast
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 
 type Context = CompanyContext
-/** 記録保全を判断する人間のAccount対応と会社資格を固定する。 */
-export class PrepareRecordPreservationDecisionAdapter {
+/** 記録の手続きを判断する人間のAccount対応と会社資格を固定する。 */
+export class PrepareCompanyRecordProcedureDecisionAdapter {
   constructor(private readonly c: Context) {
     Object.freeze(this)
   }
   async prepare(
-    input: Parameters<RecordPreservationDecisionContext["prepareDecision"]>[0],
-  ): ReturnType<RecordPreservationDecisionContext["prepareDecision"]> {
+    input: Parameters<RecordProcedureDecisionContext["prepareDecision"]>[0],
+  ): ReturnType<RecordProcedureDecisionContext["prepareDecision"]> {
     const at = input.decidedAt
     const accountGuard = await new CompanyAuthoritySnapshotGuardAdapter({
       database: this.c.env.DB,
