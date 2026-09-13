@@ -5,7 +5,7 @@ import { attendanceFactory } from "@/contexts/attendance/interface/request-envir
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { ReviewRecordPreservationAdapter } from "@system/infrastructure/adapters/records/review-record-preservation.adapter"
 import { RecordPreservationReviewError } from "@system/infrastructure/adapters/records/errors"
-import { PrepareRecordPreservationDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-record-preservation-decision.adapter"
+import { PrepareCompanyRecordProcedureDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-decision.adapter"
 import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 // @authorization service - 明示した提案閲覧権限と現在のCompany承認資格で判断対象を取得する
 export const GET = attendanceFactory.createHandlers(
@@ -35,7 +35,7 @@ export const GET = attendanceFactory.createHandlers(
         sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
       },
       prepareDecision: async (input) => {
-        const decision = await new PrepareRecordPreservationDecisionAdapter(c).prepare(input)
+        const decision = await new PrepareCompanyRecordProcedureDecisionAdapter(c).prepare(input)
         if (decision instanceof CompanyConflictError)
           return new RecordPreservationReviewError("conflict")
         if (decision instanceof CompanyUnexpectedError)

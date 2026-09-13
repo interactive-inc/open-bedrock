@@ -1,3 +1,7 @@
+import {
+  RECORD_BINARY_CONTENT_TYPE,
+  RECORD_BINARY_MAX_SIZE,
+} from "@system/domain/catalogs/records/record-payload-format.catalog"
 import { encryptAttachment } from "@system/application/attachments/lib/encrypt-attachment"
 import { AttachmentKekRegistry } from "@system/application/attachments/lib/attachment-kek-registry"
 import { AttachmentObjectAdapter } from "@system/infrastructure/adapters/attachments/attachment-object.adapter"
@@ -26,7 +30,10 @@ export class StoreEncryptedAttachmentAdapter {
   async run(command: AttachmentStorageCommand): Promise<StoredAttachment | Error> {
     if (
       command.content.byteLength <= 0 ||
-      command.content.byteLength > ATTACHMENT_MAX_BYTE_SIZE ||
+      command.content.byteLength >
+        (command.contentType === RECORD_BINARY_CONTENT_TYPE
+          ? RECORD_BINARY_MAX_SIZE
+          : ATTACHMENT_MAX_BYTE_SIZE) ||
       command.fileName.trim().length === 0 ||
       command.fileName.trim().length > ATTACHMENT_MAX_FILE_NAME_LENGTH ||
       command.ownerAccountId.trim().length === 0 ||

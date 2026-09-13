@@ -1,3 +1,6 @@
+import { ReleaseRecordSourceFreeze } from "@system/application/records/release-record-source-freeze"
+import { CreateRecordSourceFreeze } from "@system/application/records/create-record-source-freeze"
+import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
 import { expect, test } from "bun:test"
 import { createExpenseProcedureTestContext } from "@/contexts/expense/test/expense-procedure.test-support"
 import { requestWithContext } from "@tests/api/support/request-with-context"
@@ -444,4 +447,116 @@ test("経費専用の規程公開は表示版と設定権限を要求し、提�
   expect(
     (await c.request(c.requester, path, "PUT", { ...body, expected_revision: 2 })).status,
   ).toBe(403)
+})
+
+test("実認証APIは書込み停止を409で返し、参照と認証失効を区別する", async () => {
+  const c = await fixture()
+  const view = zExpenseProcedureView.parse(await (await c.request(c.first, c.path)).json())
+  const frozen = await new CreateRecordSourceFreeze({
+    repository: new RecordSourceFreezeRepository({ env: c.context.env, assertions: [] }),
+  }).execute(
+    {
+      id: crypto.randomUUID(),
+      sourceNamespace: "example-source",
+      ownerContext: "expense",
+      actorAccountId: c.requester.accountId,
+      reason: "Preserve original expense records",
+    },
+    c.at,
+  )
+  expect(frozen).toMatchObject({ kind: "created" })
+  const responses = [
+    await c.request(c.requester, "/expense/expenses", "POST", c.body),
+    await c.request(c.first, c.path + "/approve", "POST", {
+      decision_target: view.decision_target,
+      comment: "Reviewed",
+    }),
+    await c.request(c.requester, c.path + "/cancel", "POST", {
+      decision_target: view.decision_target,
+    }),
+  ]
+  for (const response of responses) {
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({ code: "expense_record_source_frozen" })
+  }
+  expect((await c.request(c.first, c.path)).status).toBe(200)
+  await c.database
+    .prepare("UPDATE system_accounts SET token_version=1 WHERE id=?1")
+    .bind(c.requester.accountId)
+    .run()
+  expect((await c.request(c.requester, "/expense/expenses", "POST", c.body)).status).toBe(401)
+})
+
+test("部署予算の実認証APIは停止中の全書込みを409で拒否し、解除後に再開する", async () => {
+  const c = await fixture()
+  const grant = () =>
+    c.database
+      .prepare(`INSERT OR IGNORE INTO system_iam_role_permissions
+    (role_id,permission_key) SELECT role_id,'budget:manage' FROM system_role_bindings WHERE account_id=?1`)
+      .bind(c.requester.accountId)
+      .run()
+  await grant()
+  const organizationUnitId = await c.database
+    .prepare("SELECT organization_unit_id FROM expenses WHERE id=?1")
+    .bind(c.id)
+    .first<string>("organization_unit_id")
+  const body = {
+    organization_unit_id: organizationUnitId,
+    fiscal_period: "2026",
+    period_start: "2026-04-01",
+    period_end: "2027-03-31",
+    amount: 100000,
+    name: "Annual budget",
+    note: null,
+  }
+  const path = "/expense/department-budgets"
+  const created = await c.request(c.requester, path, "POST", body)
+  expect(created.status).toBe(201)
+  const id = z.object({ id: z.number() }).parse(await created.json()).id
+  const original = await c.database
+    .prepare("SELECT * FROM expense_budgets WHERE id=?1")
+    .bind(id)
+    .first()
+  if (original === null) throw new Error("created budget is missing")
+  const repository = new RecordSourceFreezeRepository({ env: c.context.env, assertions: [] })
+  const command = {
+    id: crypto.randomUUID(),
+    sourceNamespace: "example-source",
+    ownerContext: "expense",
+    actorAccountId: c.requester.accountId,
+    reason: "Preserve budget records",
+  }
+  expect(await new CreateRecordSourceFreeze({ repository }).execute(command, c.at)).toMatchObject({
+    kind: "created",
+  })
+  for (const response of [
+    await c.request(c.requester, path, "POST", { ...body, fiscal_period: "Additional budget" }),
+    await c.request(c.requester, `${path}/${id}`, "PATCH", { amount: 200000, name: "Changed" }),
+    await c.request(c.requester, `${path}/${id}`, "DELETE"),
+  ]) {
+    expect(response.status).toBe(409)
+    expect(await response.json()).toMatchObject({ code: "expense_record_source_frozen" })
+  }
+  expect(
+    (await c.database.prepare("SELECT * FROM expense_budgets ORDER BY id").all()).results,
+  ).toEqual([original])
+  expect((await c.request(c.requester, path)).status).toBe(200)
+  expect((await c.request(c.requester, `${path}/${id}`)).status).toBe(200)
+  await c.database.exec(
+    "DELETE FROM system_iam_role_permissions WHERE permission_key='budget:manage'",
+  )
+  expect((await c.request(c.requester, `${path}/${id}`, "DELETE")).status).toBe(403)
+  await grant()
+  expect(
+    await new ReleaseRecordSourceFreeze({ repository }).execute(
+      { ...command, reason: "Resume budget updates" },
+      c.at,
+    ),
+  ).toMatchObject({ kind: "released" })
+  expect(
+    (await c.request(c.requester, `${path}/${id}`, "PATCH", { amount: 200000, name: "Changed" }))
+      .status,
+  ).toBe(200)
+  expect((await c.request(c.requester, `${path}/${id}`, "DELETE")).status).toBe(204)
+  expect((await c.request(c.requester, path, "POST", body)).status).toBe(201)
 })

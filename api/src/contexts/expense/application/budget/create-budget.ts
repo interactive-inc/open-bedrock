@@ -1,3 +1,4 @@
+import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
 import { Budget } from "@/contexts/expense/domain/entities/budget.entity"
 import type { Context } from "@/env"
 import { BudgetRepository } from "@/contexts/expense/infrastructure/repositories/budget/budget.repository"
@@ -60,7 +61,10 @@ export class CreateBudget {
     const created = await repository.create(budget)
 
     if (created instanceof Error) {
-      return new UnexpectedError("failed to create budget", { cause: created })
+      return (
+        new PrepareExpenseWriteGuardAdapter(this.c).failure(created) ??
+        new UnexpectedError("failed to create budget", { cause: created })
+      )
     }
 
     return created
