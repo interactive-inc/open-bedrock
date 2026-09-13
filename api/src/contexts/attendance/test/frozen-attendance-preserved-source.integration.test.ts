@@ -362,7 +362,12 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
   const requestRecordOperation = async (
     input: unknown,
     database: D1Database = f.database,
-    options: Readonly<{ anonymous?: boolean; withoutStepUp?: boolean; plan?: boolean }> = {},
+    options: Readonly<{
+      anonymous?: boolean
+      withoutStepUp?: boolean
+      plan?: boolean
+      at?: Date
+    }> = {},
   ) => {
     const command = z
       .object({ id: z.uuid(), freezeId: z.uuid(), sourceNamespace: z.string() })
@@ -384,7 +389,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
       .createApp()
       .use("*", async (c, next) => {
         c.set("database", drizzle(database))
-        c.set("now", context.var.now)
+        c.set("now", () => options.at ?? context.var.now())
         await next()
       })
       .onError((error, c) => {
@@ -505,7 +510,12 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
       .first<number>("n"),
   ).toBe(1)
   await f.database.exec("DROP TRIGGER revoke_attendance_plan_authority")
-  const concurrentPlans = await Promise.all([requestPlan(planCommand), requestPlan(planCommand)])
+  // 両要求を同じ認証時点で実行し、再認証grantの時計逆行拒否と計画の同時作成を分ける。
+  const concurrentAt = new Date()
+  const concurrentPlans = await Promise.all([
+    requestPlan(planCommand, { at: concurrentAt }),
+    requestPlan(planCommand, { at: concurrentAt }),
+  ])
   const planned = concurrentPlans[0]
   const concurrentPlan = concurrentPlans[1]
   if (planned === undefined || concurrentPlan === undefined)
