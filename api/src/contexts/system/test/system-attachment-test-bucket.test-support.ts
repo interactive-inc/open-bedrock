@@ -2,7 +2,12 @@
 export class SystemAttachmentTestBucket {
   private readonly objects = new Map<string, Uint8Array>()
 
-  async put(key: string, value: unknown): Promise<{ key: string }> {
+  async put(
+    key: string,
+    value: unknown,
+    options?: { onlyIf?: { etagDoesNotMatch?: string } },
+  ): Promise<{ key: string } | null> {
+    if (options?.onlyIf?.etagDoesNotMatch === "*" && this.objects.has(key)) return null
     this.objects.set(key, SystemAttachmentTestBucket.toBytes(value))
 
     return { key }

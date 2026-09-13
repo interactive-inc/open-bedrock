@@ -214,6 +214,42 @@ type Context = SystemD1Context &
 export class SystemD1ProposalAdapter implements SystemProposalQuery {
   constructor(private readonly c: Context) {}
 
+  /** 再送された依頼を申請者・series・版で照合し、別の版や別の申請者へ置き換えない。 */
+  async findBySeriesVersion(
+    input: Readonly<{
+      seriesId: string
+      version: number
+      creatorAccountId: AccountId
+    }>,
+  ): Promise<SystemProposalView | null | Error> {
+    if (
+      input.seriesId.trim().length === 0 ||
+      !Number.isSafeInteger(input.version) ||
+      input.version <= 0
+    )
+      return new Error("invalid System proposal series or version")
+    try {
+      const row = await this.c.env.DB.prepare(
+        `${proposalSelect}
+         WHERE proposal.series_id = ?1 AND proposal.version = ?2
+           AND proposal.created_by_account_id = ?3`,
+      )
+        .bind(input.seriesId, input.version, input.creatorAccountId)
+        .first<ProposalRow>()
+      if (row === null) return null
+      if (
+        this.c.visibleCompletionOperationKeys !== undefined &&
+        !this.c.visibleCompletionOperationKeys.includes(row.completion_operation_key)
+      )
+        return null
+      return this.restoreProposal(row)
+    } catch (cause) {
+      return cause instanceof Error
+        ? cause
+        : new Error("failed to load System proposal version", { cause })
+    }
+  }
+
   async findByNumber(number: number, version?: number): Promise<SystemProposalView | null | Error> {
     if (
       !Number.isSafeInteger(number) ||

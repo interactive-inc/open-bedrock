@@ -44,6 +44,7 @@ import * as oauthAuthorizations from "@system/interface/routes/system.oauth.auth
 import * as oauthMcpGrants from "@system/interface/routes/system.oauth.mcp-grants"
 import * as oauthToken from "@system/interface/routes/system.oauth.token"
 import * as oauthUserinfo from "@system/interface/routes/system.oauth.userinfo"
+import * as preservedRecordsRecordIdContent from "@system/interface/routes/system.preserved-records.$recordId.content"
 import * as principals from "@system/interface/routes/system.principals"
 import * as principalsPrincipalId from "@system/interface/routes/system.principals.$principalId"
 import * as principalsPrincipalIdMachineCredentials from "@system/interface/routes/system.principals.$principalId.machine-credentials"
@@ -141,6 +142,7 @@ export const systemPublicRoutes = new Hono<SystemHonoEnv>()
   .delete("/notifications/:id", ...notificationsId.DELETE)
   .post("/oauth/token", ...oauthToken.POST)
   .get("/oauth/userinfo", ...oauthUserinfo.GET)
+  .get("/preserved-records/:recordId/content", ...preservedRecordsRecordIdContent.GET)
   .get("/principals", ...principals.GET)
   .post("/principals", ...principals.POST)
   .get("/principals/:principalId", ...principalsPrincipalId.GET)

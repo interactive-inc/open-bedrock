@@ -688,3 +688,13 @@ export class SystemSessionUnavailableError extends SystemHTTPException {
     })
   }
 }
+
+export class SystemPreservedRecordUnavailableError extends SystemHTTPException {
+  constructor() {
+    super({
+      status: 503,
+      code: "preserved_record_unavailable",
+      detail: "保全記録の整合性・閲覧資格・開示監査を確認できません",
+    })
+  }
+}

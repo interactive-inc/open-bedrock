@@ -1,3 +1,4 @@
+import { RecordPreservationProposalValue } from "@system/domain/values/records/record-preservation-proposal.value"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
 import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active-system-account-id"
@@ -63,7 +64,11 @@ export type SystemApplicationResult = Readonly<{
 export function systemProposalQuery(c: Context): SystemD1ProposalAdapter {
   return new SystemD1ProposalAdapter({
     env: { DB: c.env.DB },
-    visibleCompletionOperationKeys: [null, "company.personnel-action.apply"],
+    visibleCompletionOperationKeys: [
+      null,
+      "company.personnel-action.apply",
+      "system.record.preserve",
+    ],
   })
 }
 
@@ -246,6 +251,24 @@ export async function decideSystemApplication(
     input.action === "approve" &&
     (proposal.status === "approved" || proposal.status === "executed")
   ) {
+    if (proposal.completionOperationKey === "system.record.preserve") {
+      const session = c.var.session
+      if (session === null || session.employeeId !== input.actorEmployeeId)
+        return new ForbiddenError("cannot replay another employee's decision", "forbidden")
+      const attestations = await query.listAttestations(proposal.caseId)
+      if (attestations instanceof Error)
+        return new UnexpectedError("failed to verify original decision", { cause: attestations })
+      const original = attestations.find(
+        (attestation) =>
+          attestation.actorAccountId === session.accountId &&
+          attestation.taskKey === input.decisionTarget.taskKey &&
+          attestation.round === input.decisionTarget.taskRound &&
+          attestation.action === "approve" &&
+          attestation.comment === input.comment,
+      )
+      if (original === undefined)
+        return new ForbiddenError("original approval does not belong to this actor", "forbidden")
+    }
     const completed = await completeSystemApplicationIfRequired(c, proposal, input.decidedAt)
     return completed instanceof ApplicationError ? completed : { status: "approved" }
   }
@@ -366,6 +389,13 @@ export async function decideSystemApplication(
   let authoritySubjectEmployeeId: EmployeeId | null | undefined
   let targetDepartmentCode: string | null | undefined
   let excludedEmployeeIds: ReadonlySet<EmployeeId> | undefined
+  if (proposal.completionOperationKey === "system.record.preserve") {
+    const intent = await RecordPreservationProposalValue.restore(payload.value)
+    if (intent instanceof Error)
+      return new UnexpectedError("invalid record preservation proposal", { cause: intent })
+    authoritySubjectEmployeeId = null
+    targetDepartmentCode = null
+  }
   if (proposal.completionOperationKey === "company.personnel-action.apply") {
     const personnelRequest = await new FindPersonnelActionRequestAdapter(
       c,
@@ -504,6 +534,8 @@ async function completeSystemApplicationIfRequired(
   completedAt: Date,
 ): Promise<true | ApplicationError> {
   if (proposal.completionOperationKey === null) return true
+  // 保全実行には原記録の再検査が必要なため、承認後は専用の実行操作へ進む。
+  if (proposal.completionOperationKey === "system.record.preserve") return true
   if (proposal.completionOperationKey !== "company.personnel-action.apply") {
     return new UnexpectedError("unknown System completion operation")
   }

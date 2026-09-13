@@ -63,7 +63,18 @@ describe("System procedure schema", () => {
   test("released migrationをcanonical DDLと完全一致させる", () => {
     const releasedMigrationSql = readReleasedSystemMigration("system_procedure")
 
-    expect(releasedMigrationSql).toBe(procedureSchemaSql)
+    const released = new Database(":memory:")
+    const canonical = new Database(":memory:")
+    try {
+      released.exec(releasedMigrationSql)
+      released.exec(readReleasedSystemMigration("allow_system_record_preservation_proposals"))
+      canonical.exec(procedureSchemaSql)
+      const query = "SELECT type, name, tbl_name, sql FROM sqlite_master ORDER BY type, name"
+      expect(released.query(query).all()).toEqual(canonical.query(query).all())
+    } finally {
+      released.close()
+      canonical.close()
+    }
   })
 
   test("Drizzle宣言とDDLのtable・column・indexを一致させ、System外FKを持たない", () => {
@@ -205,4 +216,40 @@ describe("System procedure schema", () => {
     ).toThrow()
     database.close()
   })
+})
+
+test("record preservation Case requires the exact operation, subject and body version", () => {
+  for (const scenario of ["allowed", "operation", "record", "version", "missing", "kind"]) {
+    const database = createDatabase()
+    try {
+      insertDefinition(database)
+      database.run(
+        "INSERT INTO system_proposal_series(id,procedure_key,created_by_account_id,created_at) VALUES ('series-1','change','creator',100)",
+      )
+      const body =
+        scenario === "missing"
+          ? {}
+          : {
+              operation: scenario === "operation" ? "other" : "system.record.preserve",
+              version: scenario === "version" ? 2 : 1,
+              recordId: scenario === "record" ? "other" : "record-1",
+            }
+      database.run(
+        `INSERT INTO system_proposals(id,series_id,version,procedure_key,procedure_revision,body_json,digest,created_by_account_id,created_at) VALUES ('proposal-1','series-1',1,'change',1,?1,?2,'creator',100)`,
+        [JSON.stringify(body), digest],
+      )
+      database.run(
+        `INSERT INTO system_cases(id,subject_context,subject_kind,subject_id,subject_version,proposal_digest,created_by_account_id,status,created_at,updated_at) VALUES ('case-1','system',?1,'record-1','1',?2,'creator','pending',100,100)`,
+        [scenario === "kind" ? "other" : "record-preservation", digest],
+      )
+      const link = () =>
+        database.run(
+          "INSERT INTO system_proposal_cases(proposal_id,case_id,linked_at) VALUES ('proposal-1','case-1',100)",
+        )
+      if (scenario === "allowed") expect(link).not.toThrow()
+      else expect(link).toThrow()
+    } finally {
+      database.close()
+    }
+  }
 })

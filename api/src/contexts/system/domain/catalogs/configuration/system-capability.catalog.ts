@@ -12,6 +12,7 @@ export const SYSTEM_CAPABILITY_NAMES = [
   "integration",
   "notifications",
   "oauth",
+  "records",
   "work",
   "workflow",
 ] as const

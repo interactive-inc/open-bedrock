@@ -12,6 +12,7 @@
     "identity",
     "integration",
     "notifications",
+    "records",
     "work",
     "workflow"
   ],
@@ -89,6 +90,7 @@
     "integration",
     "notifications",
     "oauth",
+    "records",
     "work",
     "workflow"
   ]
