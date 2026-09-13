@@ -959,6 +959,7 @@ test.each(["release", "permission", "erasure"])(
   },
 )
 
+// 全件保全から撤去後の取得まで実HTTP・DBで検査するため、CIの実行時間を個別に確保する。
 test("経費の全6種別を実認証で保全し、業務全テーブル撤去後も元の列と領収書原文を取得できる", async () => {
   const c = await fixture()
   const keyMap = (version: number) =>
@@ -1603,4 +1604,4 @@ test("経費の全6種別を実認証で保全し、業務全テーブル撤去�
       expect(content.record).toEqual(record.original)
     }
   }
-})
+}, 15_000)

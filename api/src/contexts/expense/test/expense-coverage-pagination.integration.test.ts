@@ -27,6 +27,7 @@ import {
 } from "@/contexts/expense/interface/http/response-schemas"
 import { zAppExpenseCoveragePageReceipt } from "@/contexts/expense/interface/http/response-schemas"
 
+// 全件保全から撤去後の取得まで実HTTP・DBで検査するため、CIの実行時間を個別に確保する。
 test("経費照合は保存済みの続きから12件を照合し、飛越しと再認証失効を拒否する", async () => {
   const f = await createExpensePreservationFixture()
   await f.database.exec(`INSERT INTO system_iam_role_permissions VALUES
@@ -1361,4 +1362,4 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
       )
       .first<number>("n"),
   ).toBe(7)
-})
+}, 15_000)
