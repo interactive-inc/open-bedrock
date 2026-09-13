@@ -1,3 +1,4 @@
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 /** /company/employee-lifecycle/:code/state */
 import { GetLifecycleState } from "@/contexts/company/interface/operations/employee-lifecycle/get-lifecycle-state"
 import { CompanyOperationError } from "@/contexts/company/domain/errors"
@@ -37,8 +38,10 @@ export const GET = factory.createHandlers(
       },
       var: { database: context.var.database, auditContext: context.var.auditContext },
     }
+    const asOf = context.req.valid("query").as_of
     const employee = await new EmployeeRepository(companyContext).find({
       code: context.req.valid("param").code,
+      asOf: asOf === undefined ? undefined : restoreCalendarDate(asOf),
     })
     if (employee instanceof Error) throw new CompanyReadUnavailableError(employee)
     if (employee === null) {

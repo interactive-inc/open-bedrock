@@ -1,3 +1,4 @@
+import { companyEmploymentStateSql } from "@/contexts/company/infrastructure/adapters/employee/lib/company-employment-state-sql"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { CompanyOperationError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
@@ -75,16 +76,16 @@ export class EmployeeLifecycleReadAdapter {
       const [employeeRows, employmentRows, statusRows, assignmentRows, responsibilityRows] =
         await Promise.all([
           this.c.env.DB.prepare(
-            `SELECT employee.id, employee.employee_code AS code,
+            `${companyEmploymentStateSql()} SELECT employee.id, employee.employee_code AS code,
                       COALESCE(revision.revision, 0) AS employee_revision,
                       COALESCE((SELECT revision FROM company_organization_lifecycle_states WHERE id = 1), 0)
                         AS organization_revision
-               FROM company_employees AS employee
+               FROM current_employees AS employee
                LEFT JOIN company_employee_lifecycle_revisions AS revision
                  ON revision.employee_id = employee.id
-               WHERE employee.id IN (${idList})`,
+               WHERE employee.id IN (SELECT value FROM json_each(?2))`,
           )
-            .bind(...ids)
+            .bind(asOf, JSON.stringify(ids))
             .all<EmployeeRow>(),
           this.c.env.DB.prepare(
             `SELECT current.period_id, current.employee_id, current.starts_on, current.ends_on
