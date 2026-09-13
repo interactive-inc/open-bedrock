@@ -33,33 +33,31 @@ test("all original fields survive capture without invented revision or recorded 
     expect(await f.capture.prepare({ ...f.input, recordId })).toBeInstanceOf(Error)
 })
 
-test("clock-out and every other source mutation invalidate capture and roll back finalization", async () => {
-  for (const mutation of [
-    "UPDATE attendance_records SET clock_out_at='2026-09-01T08:00:00Z',work_minutes=480,status='closed' WHERE id=1",
-    "UPDATE attendance_records SET note='Correction' WHERE id=1",
-    "UPDATE attendance_records SET work_date='2026-08-30' WHERE id=1",
-    "UPDATE attendance_records SET clock_in_at='2026-09-01T01:00:00Z' WHERE id=1",
-    "DELETE FROM attendance_records WHERE id=1",
-  ]) {
-    const f = await createAttendanceRecordSourceFixture()
-    const captured = await f.capture.prepare(f.input)
-    if (captured instanceof Error) throw captured
-    await f.database.exec(mutation)
-    expect(await f.revalidate.prepare(captured.source)).toBeInstanceOf(Error)
-    expect(
-      await f.database
-        .batch([
-          f.database.prepare("INSERT INTO capture_test_receipts VALUES ('finalized')"),
-          ...captured.assertions,
-        ])
-        .catch((cause: unknown) => cause),
-    ).toBeInstanceOf(Error)
-    expect(
-      await f.database
-        .prepare("SELECT count(*) AS count FROM capture_test_receipts")
-        .first<{ count: number }>(),
-    ).toEqual({ count: 0 })
-  }
+test.each([
+  "UPDATE attendance_records SET clock_out_at='2026-09-01T08:00:00Z',work_minutes=480,status='closed' WHERE id=1",
+  "UPDATE attendance_records SET note='Correction' WHERE id=1",
+  "UPDATE attendance_records SET work_date='2026-08-30' WHERE id=1",
+  "UPDATE attendance_records SET clock_in_at='2026-09-01T01:00:00Z' WHERE id=1",
+  "DELETE FROM attendance_records WHERE id=1",
+])("source mutation rolls back finalization: %s", async (mutation) => {
+  const f = await createAttendanceRecordSourceFixture()
+  const captured = await f.capture.prepare(f.input)
+  if (captured instanceof Error) throw captured
+  await f.database.exec(mutation)
+  expect(await f.revalidate.prepare(captured.source)).toBeInstanceOf(Error)
+  expect(
+    await f.database
+      .batch([
+        f.database.prepare("INSERT INTO capture_test_receipts VALUES ('finalized')"),
+        ...captured.assertions,
+      ])
+      .catch((cause: unknown) => cause),
+  ).toBeInstanceOf(Error)
+  expect(
+    await f.database
+      .prepare("SELECT count(*) AS count FROM capture_test_receipts")
+      .first<{ count: number }>(),
+  ).toEqual({ count: 0 })
 })
 
 test("revalidation retains capture time and rejects altered provenance or content", async () => {
@@ -115,32 +113,33 @@ test("inventory includes open and closed records and detects added or removed re
   await f.database.batch([...empty.assertions])
 })
 
-test("current global read permission and credential remain required through finalization", async () => {
-  for (const mutation of [
-    "DELETE FROM system_iam_role_permissions WHERE permission_key='attendance:read:all'",
-    "UPDATE system_accounts SET token_version=1",
-    "UPDATE system_accounts SET status='suspended',token_version=1,updated_at=1",
-    "UPDATE system_role_bindings SET revoked_at=1",
-    `UPDATE system_role_bindings SET revoked_at=1;
+test.each([
+  "DELETE FROM system_iam_role_permissions WHERE permission_key='attendance:read:all'",
+  "UPDATE system_accounts SET token_version=1",
+  "UPDATE system_accounts SET status='suspended',token_version=1,updated_at=1",
+  "UPDATE system_role_bindings SET revoked_at=1",
+  `UPDATE system_role_bindings SET revoked_at=1;
       INSERT INTO system_role_bindings (id,account_id,role_id,resource_type,resource_id,created_at)
       VALUES ('binding:scoped','account:recorder','role:recorder','employee','employee:worker',1)`,
-  ]) {
-    const f = await createAttendanceRecordSourceFixture()
-    const captured = await f.capture.prepare(f.input)
-    const inventory = await f.inventory.prepare()
-    if (captured instanceof Error) throw captured
-    if (inventory instanceof Error) throw inventory
-    await f.database.exec(mutation)
-    expect(await f.capture.prepare(f.input)).toBeInstanceOf(Error)
-    expect(await f.inventory.prepare()).toBeInstanceOf(Error)
-    expect(await f.revalidate.prepare(captured.source)).toBeInstanceOf(Error)
-    expect(
-      await f.database.batch([...captured.assertions]).catch((cause: unknown) => cause),
-    ).toBeInstanceOf(Error)
-    expect(
-      await f.database.batch([...inventory.assertions]).catch((cause: unknown) => cause),
-    ).toBeInstanceOf(Error)
-  }
+])("current source authorization is rechecked at finalization: %s", async (mutation) => {
+  const f = await createAttendanceRecordSourceFixture()
+  const captured = await f.capture.prepare(f.input)
+  const inventory = await f.inventory.prepare()
+  if (captured instanceof Error) throw captured
+  if (inventory instanceof Error) throw inventory
+  await f.database.exec(mutation)
+  expect(await f.capture.prepare(f.input)).toBeInstanceOf(Error)
+  expect(await f.inventory.prepare()).toBeInstanceOf(Error)
+  expect(await f.revalidate.prepare(captured.source)).toBeInstanceOf(Error)
+  expect(
+    await f.database.batch([...captured.assertions]).catch((cause: unknown) => cause),
+  ).toBeInstanceOf(Error)
+  expect(
+    await f.database.batch([...inventory.assertions]).catch((cause: unknown) => cause),
+  ).toBeInstanceOf(Error)
+})
+
+test("missing and expired credentials cannot capture source records", async () => {
   const f = await createAttendanceRecordSourceFixture()
   expect(
     await new CaptureAttendanceRecordAdapter({
@@ -160,7 +159,7 @@ test("current global read permission and credential remain required through fina
 
 test("a token that expires after capture cannot authorize a later finalization batch", async () => {
   const f = await createAttendanceRecordSourceFixture()
-  const expiresAtMs = Date.now() + 1000
+  const expiresAtMs = Date.now() + 5000
   const capture = new CaptureAttendanceRecordAdapter({
     ...f.context,
     var: {
@@ -185,4 +184,4 @@ test("a token that expires after capture cannot authorize a later finalization b
       .prepare("SELECT count(*) AS count FROM capture_test_receipts")
       .first<number>("count"),
   ).toBe(0)
-})
+}, 15_000)

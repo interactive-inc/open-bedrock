@@ -511,6 +511,7 @@
     "src/contexts/company/test/company-change-consumer.api.test.ts",
     "src/contexts/company/test/company-definition-permissions.api.test.ts",
     "src/contexts/company/test/company-domain-structure.contract.test.ts",
+    "src/contexts/company/test/company-employee-code-snapshot.integration.test.ts",
     "src/contexts/company/test/company-employer-migration.contract.test.ts",
     "src/contexts/company/test/company-employer.integration.test.ts",
     "src/contexts/company/test/company-employer.test-support.ts",
