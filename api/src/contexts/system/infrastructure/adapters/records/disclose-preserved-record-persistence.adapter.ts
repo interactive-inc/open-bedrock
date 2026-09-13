@@ -72,6 +72,19 @@ export class DisclosePreservedRecordPersistenceAdapter {
     ])
   }
 
+  /** 添付原文への変換後にも、開示時に固定した条件が現在も有効か確認する。 */
+  async revalidate(guards: ReadonlyArray<D1PreparedStatement>): Promise<true | Error> {
+    if (guards.length === 0) return new Error("record disclosure guards required")
+    try {
+      const checked = await this.c.env.DB.batch([...guards])
+      if (checked.length !== guards.length || checked.some((result) => !result.success))
+        return new Error("record disclosure conditions changed")
+      return true
+    } catch (cause) {
+      return new Error("record disclosure conditions changed", { cause })
+    }
+  }
+
   async write(
     input: Readonly<{
       policy: PreservedRecordDisclosurePolicyEntity

@@ -48,15 +48,16 @@ export const GET = systemFactory.createHandlers(
     if (assertions instanceof Error) throw new SystemPreservedRecordUnavailableError()
     const first = assertions.at(0)
     if (first === undefined) throw new SystemPreservedRecordUnavailableError()
+    const persistence = new DisclosePreservedRecordPersistenceAdapter({
+      env: context.env,
+      assertions: [first, ...assertions.slice(1)],
+    })
     const content = await new DisclosePreservedRecordContent({
       env: context.env,
       var: context.var,
       accountId: authentication.accountId,
       now: () => context.var.now(),
-      persistence: new DisclosePreservedRecordPersistenceAdapter({
-        env: context.env,
-        assertions: [first, ...assertions.slice(1)],
-      }),
+      persistence,
     }).execute({
       recordId: context.req.valid("param").recordId,
       action: query.action,
@@ -73,16 +74,8 @@ export const GET = systemFactory.createHandlers(
       const attachment = await AttachmentRecordContentValue.restore(content.content)
       if (attachment instanceof Error || attachment.metadata.id !== content.source.recordId)
         throw new SystemPreservedRecordUnavailableError()
-      try {
-        const checked = await context.env.DB.batch([...content.assertions])
-        if (
-          checked.length !== content.assertions.length ||
-          checked.some((result) => !result.success)
-        )
-          throw new SystemPreservedRecordUnavailableError()
-      } catch {
-        throw new SystemPreservedRecordUnavailableError()
-      }
+      const checked = await persistence.revalidate(content.assertions)
+      if (checked instanceof Error) throw new SystemPreservedRecordUnavailableError()
       const fileName = encodeURIComponent(
         new TextDecoder().decode(new TextEncoder().encode(attachment.metadata.fileName)),
       ).replace(/[!'()*]/g, (character) => `%${character.charCodeAt(0).toString(16).toUpperCase()}`)
