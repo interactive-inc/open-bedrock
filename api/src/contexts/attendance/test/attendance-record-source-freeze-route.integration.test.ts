@@ -174,6 +174,7 @@ test("生成APIの署名検証から停止・参照・解除まで通し、失�
     [`/${id}`, "GET"],
     [`/${id}/release`, "POST"],
     [`/${id}/coverage-pages`, "POST"],
+    [`/${id}/retirement-plans`, "POST"],
   ]) {
     const disabled = await generatedApp.request(
       path + suffix,

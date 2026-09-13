@@ -2,6 +2,7 @@ import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapter
 import { PreparePreservedRecordRetentionGuardAdapter } from "@system/infrastructure/adapters/records/prepare-preserved-record-retention-guard.adapter"
 import { PreservedRecordRepository } from "@system/infrastructure/repositories/records/preserved-record.repository"
 import { AttachmentPreservationRepository } from "@system/infrastructure/repositories/attachments/attachment-preservation.repository"
+import { POST as createRetirementPlan } from "@/contexts/attendance/interface/routes/attendance.record-source-freezes.$freezeId.retirement-plans"
 import { POST as verifyCoverage } from "@/contexts/attendance/interface/routes/attendance.record-source-freezes.$freezeId.coverage-pages"
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
 import { HTTPException } from "hono/http-exception"
@@ -358,10 +359,10 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
     )
     .bind(creator, hash, issuedAt, issuedAt + 60000)
     .run()
-  const requestCoverage = async (
+  const requestRecordOperation = async (
     input: unknown,
     database: D1Database = f.database,
-    options: Readonly<{ anonymous?: boolean; withoutStepUp?: boolean }> = {},
+    options: Readonly<{ anonymous?: boolean; withoutStepUp?: boolean; plan?: boolean }> = {},
   ) => {
     const command = z
       .object({ id: z.uuid(), freezeId: z.uuid(), sourceNamespace: z.string() })
@@ -391,8 +392,9 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
         throw error
       })
       .post("/freezes/:freezeId/coverage-pages", ...verifyCoverage)
+      .post("/freezes/:freezeId/retirement-plans", ...createRetirementPlan)
     return app.request(
-      `/freezes/${command.freezeId}/coverage-pages`,
+      `/freezes/${command.freezeId}/${options.plan ? "retirement-plans" : "coverage-pages"}`,
       {
         method: "POST",
         headers: {
@@ -411,6 +413,24 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
       },
     )
   }
+  const requestCoverage = (input: unknown, database = f.database, options = {}) =>
+    requestRecordOperation(input, database, options)
+  const requestPlan = (input: unknown, options = {}) =>
+    requestRecordOperation(input, f.database, { ...options, plan: true })
+  const planCommand = {
+    id: crypto.randomUUID(),
+    freezeId: freshFreeze,
+    sourceNamespace: f.settings.sourceNamespace,
+    purpose: "archive",
+  }
+  expect((await requestPlan(planCommand, { anonymous: true })).status).toBe(401)
+  expect((await requestPlan(planCommand, { withoutStepUp: true })).status).toBe(403)
+  expect((await requestPlan(planCommand)).status).toBe(503)
+  expect(
+    await f.database
+      .prepare("SELECT count(*) AS n FROM system_record_retirement_plans")
+      .first<number>("n"),
+  ).toBe(0)
   const coverageCommand = {
     id: crypto.randomUUID(),
     freezeId: freshFreeze,
@@ -455,6 +475,81 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
       .bind(freshFreeze)
       .first<number>("n"),
   ).toBe(1)
+  await f.database.exec(`CREATE TRIGGER reject_attendance_retirement_plan BEFORE INSERT
+    ON system_record_retirement_plans BEGIN
+    SELECT RAISE(ABORT,'test retirement plan failure'); END`)
+  expect((await requestPlan(planCommand)).status).toBe(503)
+  expect(
+    await f.database
+      .prepare(
+        "SELECT count(*) AS n FROM system_audit_events WHERE action='system.record.retirement.plan.created'",
+      )
+      .first<number>("n"),
+  ).toBe(0)
+  await f.database.exec("DROP TRIGGER reject_attendance_retirement_plan")
+  await f.database.exec(`CREATE TRIGGER revoke_attendance_plan_authority AFTER INSERT
+    ON system_audit_events WHEN NEW.action='system.record.retirement.plan.created' BEGIN
+    DELETE FROM system_iam_role_permissions WHERE role_id='role:attendance-archive'
+      AND permission_key='system:admin'; END`)
+  expect((await requestPlan(planCommand)).status).toBe(503)
+  expect(
+    await f.database
+      .prepare("SELECT count(*) AS n FROM system_record_retirement_plans")
+      .first<number>("n"),
+  ).toBe(0)
+  expect(
+    await f.database
+      .prepare(
+        "SELECT count(*) AS n FROM system_iam_role_permissions WHERE role_id='role:attendance-archive' AND permission_key='system:admin'",
+      )
+      .first<number>("n"),
+  ).toBe(1)
+  await f.database.exec("DROP TRIGGER revoke_attendance_plan_authority")
+  const concurrentPlans = await Promise.all([requestPlan(planCommand), requestPlan(planCommand)])
+  const planned = concurrentPlans[0]
+  const concurrentPlan = concurrentPlans[1]
+  if (planned === undefined || concurrentPlan === undefined)
+    throw new Error("missing plan responses")
+  expect(concurrentPlan.status).toBe(200)
+  if (planned.status !== 200) throw new Error(await planned.text())
+  const planResponse = await planned.json()
+  expect(await concurrentPlan.json()).toEqual(planResponse)
+  expect(planResponse).toMatchObject({
+    id: planCommand.id,
+    freezeId: freshFreeze,
+    totalPages: 1,
+    recordKinds: ["attendance-record"],
+  })
+  expect(planned.headers.get("Cache-Control")).toBe("no-store")
+  const replayedPlan = await requestPlan(planCommand)
+  expect(replayedPlan.status).toBe(200)
+  expect(await replayedPlan.json()).toEqual(planResponse)
+  expect((await requestPlan({ ...planCommand, purpose: "different" })).status).toBe(503)
+  expect((await requestPlan({ ...planCommand, recordKinds: [] })).status).toBe(400)
+  await f.database.exec(
+    "DELETE FROM system_iam_role_permissions WHERE role_id='role:attendance-archive' AND permission_key='system:admin'",
+  )
+  expect((await requestPlan(planCommand)).status).toBe(403)
+  await f.database.exec(
+    "INSERT INTO system_iam_role_permissions VALUES ('role:attendance-archive','system:admin')",
+  )
+  expect(
+    await f.database
+      .prepare(
+        "SELECT count(*) AS n FROM system_audit_events WHERE action='system.record.retirement.plan.created'",
+      )
+      .first<number>("n"),
+  ).toBe(1)
+  expect(
+    await f.database
+      .prepare("SELECT count(*) AS n FROM system_record_retirement_plans")
+      .first<number>("n"),
+  ).toBe(1)
+  expect(
+    await f.database
+      .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
+      .first<number>("n"),
+  ).toBe(0)
   await new ReleaseRecordSourceFreeze({
     repository: new RecordSourceFreezeRepository({ env, assertions: [] }),
   }).execute(
@@ -467,6 +562,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
     },
     new Date(),
   )
+  expect((await requestPlan(planCommand)).status).toBe(503)
   const raceFreeze = crypto.randomUUID()
   await new CreateRecordSourceFreeze({
     repository: new RecordSourceFreezeRepository({ env, assertions: [] }),
