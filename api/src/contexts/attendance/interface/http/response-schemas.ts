@@ -43,3 +43,13 @@ export const zAppAttendanceCoveragePageReceipt = z.strictObject({
   checkedAt: z.string().datetime(),
   recordCount: z.number().int().min(0).max(10),
 })
+
+/** 照合終端を固定した計画。原文の再検証や撤去の承認・実行は別操作とする。 */
+export const zAppAttendanceRetirementPlan = z.strictObject({
+  id: z.uuid(),
+  freezeId: z.uuid(),
+  digest: z.string().regex(/^[0-9a-f]{64}$/),
+  totalPages: z.number().int().positive().safe(),
+  recordKinds: z.array(z.literal("attendance-record")),
+  createdAt: z.iso.datetime(),
+})

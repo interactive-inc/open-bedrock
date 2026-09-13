@@ -70,6 +70,7 @@ import * as attendanceRecordSourceFreezesRoute from "@/contexts/attendance/inter
 import * as attendanceRecordSourceFreezesFreezeIdRoute from "@/contexts/attendance/interface/routes/attendance.record-source-freezes.$freezeId"
 import * as attendanceRecordSourceFreezesFreezeIdCoveragePagesRoute from "@/contexts/attendance/interface/routes/attendance.record-source-freezes.$freezeId.coverage-pages"
 import * as attendanceRecordSourceFreezesFreezeIdReleaseRoute from "@/contexts/attendance/interface/routes/attendance.record-source-freezes.$freezeId.release"
+import * as attendanceRecordSourceFreezesFreezeIdRetirementPlansRoute from "@/contexts/attendance/interface/routes/attendance.record-source-freezes.$freezeId.retirement-plans"
 import * as businessTripsRoute from "@/contexts/business-trip/interface/routes/business-trips"
 import * as businessTripsIdRoute from "@/contexts/business-trip/interface/routes/business-trips.$id"
 import * as businessTripsIdApproveRoute from "@/contexts/business-trip/interface/routes/business-trips.$id.approve"
@@ -508,12 +509,16 @@ const routePart0 = createRouteApp()
     "/attendance/record-source-freezes/:freezeId/release",
     ...attendanceRecordSourceFreezesFreezeIdReleaseRoute.POST,
   )
+  .post(
+    "/attendance/record-source-freezes/:freezeId/retirement-plans",
+    ...attendanceRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
+  )
   .post("/business-trip/business-trips", ...businessTripsRoute.POST)
   .get("/business-trip/business-trips/admin", ...businessTripsAdminRoute.GET)
   .get("/business-trip/business-trips/me", ...businessTripsMeRoute.GET)
-  .get("/business-trip/business-trips/:id", ...businessTripsIdRoute.GET)
 
 const routePart1 = createRouteApp()
+  .get("/business-trip/business-trips/:id", ...businessTripsIdRoute.GET)
   .put("/business-trip/business-trips/:id", ...businessTripsIdRoute.PUT)
   .delete("/business-trip/business-trips/:id", ...businessTripsIdRoute.DELETE)
   .post("/business-trip/business-trips/:id/approve", ...businessTripsIdApproveRoute.POST)
