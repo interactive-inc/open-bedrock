@@ -14,7 +14,7 @@ Systemは所有業務を識別した原記録、内容digest、暗号化した�
 
 - 基点へのPOSTは`procedure_key`と`conditions`を受け取る。初回提出にはUUIDの`idempotency-key`が必要であり、同じ主体・キー・条件の再送は既存の受付結果を返す。
 - `/:number`へのGETは現在の承認待ちの提案と`decision_target`を返す。`include_original=true`の場合は検証済みの原文をsourceとcontentBase64で返す。原文を要求しなければoriginalはnullになる。
-- `/:number/approve`と`/:number/reject`へのPOSTは、確認した`decision_target`とcommentを受け取る。却下と差戻しの区別は設定された手続きに従う。
+- `/:number/approve`と`/:number/reject`へのPOSTは、確認した`decision_target`とcommentを受け取る。却下と差戻しの区別は設定された手続きに従う。 同じ主体・対象・判断・commentの再送では既存の判断を照合し、次段階へ進んでいても票を追加しない。照合中に案件状態が変わった場合は409で再試行を要求する。
 - `/:number/withdraw`へのPOSTは申請者本人の承認待ち提案だけを取り消す。確認したproposal_digestとreasonが必要であり、取消済みの再取消は409になる。
 - `/:number/resubmit`へのPOSTは却下・差戻し・取消済みの本人の提案を、同じ番号の次版として提出する。procedure_key、conditions、previous_version、previous_digestを要求し、元記録を再取得する。旧版の本文・判断・本体は残す。
 
