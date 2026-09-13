@@ -145,7 +145,7 @@
     "src/contexts/system/domain/entities/system-step-up-grant.entity.ts": "f6b9e56614b6e459c53c8cee2337ec75e001a422b7be6d6ca6dba1af19eade5c",
     "src/contexts/system/domain/entities/system-work-item.entity.test.ts": "fa0d367331c3c0f26aa613a6c13c17ec4dd963eebbea494e5465d580ed720224",
     "src/contexts/system/domain/entities/system-work-item.entity.ts": "f3b348942bd70edb9aa9e3633963f5c02424d83e5e12f62b612d90bcc93918d9",
-    "src/contexts/system/domain/errors.ts": "b3d8522fbdd27c60be7ecfcb9a44df64f919b9480b6140a4bf109c522ee43d0e",
+    "src/contexts/system/domain/errors.ts": "b6c0869a833a63d00b7c77ba1f0365f9883a6c027f71cc2ddeda7567664a1c0d",
     "src/contexts/system/domain/policies/account-session.policy.test.ts": "52ee3a1638fb90ec1b4b0a8e6d8606d7554149a2d7d431187c5b23885c26a809",
     "src/contexts/system/domain/policies/account-session.policy.ts": "2e963660df45ec1e41d4cabbba98ddf07baa983d8b09ecc9e242ae4be05500ee",
     "src/contexts/system/domain/policies/attachment-content.policy.ts": "734f7364f481ad566d10513b2c64f4f9b5afd9e3c239c00e16ffea5e4f1e3dd2",

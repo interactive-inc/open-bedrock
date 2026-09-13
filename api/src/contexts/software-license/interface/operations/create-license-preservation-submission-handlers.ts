@@ -5,7 +5,13 @@ import { ensureLicenseEnabled } from "@/contexts/software-license/interface/midd
 import { licenseIdSchema } from "@/contexts/software-license/interface/http/license-input-schemas"
 import { CaptureLicenseRecordAdapter } from "@/contexts/software-license/infrastructure/adapters/capture-license-record.adapter"
 import { LicenseActorReadAdapter } from "@/contexts/software-license/infrastructure/adapters/license-actor-read.adapter"
-import { SoftwareLicenseHTTPException } from "@/contexts/software-license/interface/errors"
+import {
+  SoftwareLicenseConflictError,
+  SoftwareLicenseForbiddenError,
+  SoftwareLicenseInputError,
+  SoftwareLicenseNotFoundError,
+  SoftwareLicenseUnavailableError,
+} from "@/contexts/software-license/interface/errors"
 import { PrepareRecordPreservationTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-record-preservation-task.adapter"
 import { preparePreservedRecordWriteAuthorization } from "@system/interface/authorization/prepare-preserved-record-write-authorization"
 import {
@@ -48,23 +54,23 @@ export function createLicensePreservationSubmissionHandlers(mode: "create" | "re
     async (c) => {
       c.header("Cache-Control", "no-store")
       const authentication = c.var.bearerReadAuthentication
-      if (authentication === undefined) throw new SoftwareLicenseHTTPException(403)
+      if (authentication === undefined) throw new SoftwareLicenseForbiddenError()
       const namespace = z
         .string()
         .regex(/^\S{1,255}$/)
         .safeParse(c.env.RECORD_SOURCE_NAMESPACE)
       if (!namespace.success)
-        throw new SoftwareLicenseHTTPException(503, {
+        throw new SoftwareLicenseUnavailableError({
           message: "record source namespace is not configured",
         })
       const proof = await preparePreservedRecordWriteAuthorization(c, {
         authentication,
         at: c.var.now(),
       })
-      if (proof instanceof Error) throw new SoftwareLicenseHTTPException(503)
-      if (proof === null) throw new SoftwareLicenseHTTPException(403)
+      if (proof instanceof Error) throw new SoftwareLicenseUnavailableError()
+      if (proof === null) throw new SoftwareLicenseForbiddenError()
       const actor = await new LicenseActorReadAdapter(c).prepare()
-      if (actor instanceof Error) throw new SoftwareLicenseHTTPException(403)
+      if (actor instanceof Error) throw new SoftwareLicenseForbiddenError()
       const request = c.req.valid("json")
       const licenseId = c.req.valid("param").id
       const query = new SystemD1ProposalAdapter({
@@ -74,15 +80,18 @@ export function createLicensePreservationSubmissionHandlers(mode: "create" | "re
       const resolveVersion = async () => {
         if (mode === "create") {
           const key = c.req.valid("header")["idempotency-key"]
-          if (key === undefined) throw new SoftwareLicenseHTTPException(400)
+          if (key === undefined)
+            throw new SoftwareLicenseInputError({ message: "invalid preservation request" })
           const identity = CanonicalSystemJsonValue.create({
             operation: "software-license.record-preservation.request",
             accountId: authentication.accountId,
             key,
           })
-          if (identity instanceof Error) throw new SoftwareLicenseHTTPException(400)
+          if (identity instanceof Error)
+            throw new SoftwareLicenseInputError({ message: "invalid preservation request" })
           const digest = await ProposalDigestValue.create(identity)
-          if (digest instanceof Error) throw new SoftwareLicenseHTTPException(400)
+          if (digest instanceof Error)
+            throw new SoftwareLicenseInputError({ message: "invalid preservation request" })
           return {
             seriesId: `record-preservation:${digest.toString()}`,
             version: 1,
@@ -95,29 +104,29 @@ export function createLicensePreservationSubmissionHandlers(mode: "create" | "re
           !("previous_version" in request) ||
           !("previous_digest" in request)
         )
-          throw new SoftwareLicenseHTTPException(400)
+          throw new SoftwareLicenseInputError({ message: "invalid preservation request" })
         const previous = await query.findByNumber(number, request.previous_version)
-        if (previous instanceof Error) throw new SoftwareLicenseHTTPException(503)
-        if (previous === null) throw new SoftwareLicenseHTTPException(404)
+        if (previous instanceof Error) throw new SoftwareLicenseUnavailableError()
+        if (previous === null) throw new SoftwareLicenseNotFoundError()
         if (previous.createdByAccountId !== authentication.accountId)
-          throw new SoftwareLicenseHTTPException(403)
+          throw new SoftwareLicenseForbiddenError()
         if (
           previous.digest !== request.previous_digest ||
           !["returned", "rejected", "cancelled"].includes(previous.status)
         )
-          throw new SoftwareLicenseHTTPException(409)
+          throw new SoftwareLicenseConflictError()
         const oldIntent = recordPreservationIntentSchema.safeParse(JSON.parse(previous.bodyJson))
-        if (!oldIntent.success) throw new SoftwareLicenseHTTPException(503)
+        if (!oldIntent.success) throw new SoftwareLicenseUnavailableError()
         const source = PreservedRecordSourceValue.create(oldIntent.data.source)
-        if (source instanceof Error) throw new SoftwareLicenseHTTPException(503)
+        if (source instanceof Error) throw new SoftwareLicenseUnavailableError()
         if (
           source.props.sourceNamespace !== namespace.data ||
           source.props.ownerContext !== "software-license" ||
           source.props.recordKind !== "license-record" ||
           source.props.recordId !== String(licenseId)
         )
-          throw new SoftwareLicenseHTTPException(409)
-        if (!Number.isSafeInteger(previous.version + 1)) throw new SoftwareLicenseHTTPException(409)
+          throw new SoftwareLicenseConflictError()
+        if (!Number.isSafeInteger(previous.version + 1)) throw new SoftwareLicenseConflictError()
         return {
           seriesId: previous.seriesId,
           version: previous.version + 1,
@@ -131,13 +140,13 @@ export function createLicensePreservationSubmissionHandlers(mode: "create" | "re
           version: revision.version,
           creatorAccountId: authentication.accountId,
         })
-        if (existing instanceof Error) throw new SoftwareLicenseHTTPException(503)
+        if (existing instanceof Error) throw new SoftwareLicenseUnavailableError()
         if (existing === null) return null
         const stored = await RecordPreservationProposalValue.restore(JSON.parse(existing.bodyJson))
         const body = recordPreservationIntentSchema.safeParse(JSON.parse(existing.bodyJson))
-        if (stored instanceof Error || !body.success) throw new SoftwareLicenseHTTPException(503)
+        if (stored instanceof Error || !body.success) throw new SoftwareLicenseUnavailableError()
         const source = PreservedRecordSourceValue.create(body.data.source)
-        if (source instanceof Error) throw new SoftwareLicenseHTTPException(503)
+        if (source instanceof Error) throw new SoftwareLicenseUnavailableError()
         if (
           existing.supersedesProposalId !== revision.supersedesProposalId ||
           existing.procedureKey !== request.procedure_key ||
@@ -148,15 +157,15 @@ export function createLicensePreservationSubmissionHandlers(mode: "create" | "re
           source.props.recordKind !== "license-record" ||
           source.props.recordId !== String(licenseId)
         )
-          throw new SoftwareLicenseHTTPException(409, {
+          throw new SoftwareLicenseConflictError({
             message: "preservation request differs from original",
           })
         const guards = proof.assertions(c.var.now())
-        if (guards instanceof Error) throw new SoftwareLicenseHTTPException(403)
+        if (guards instanceof Error) throw new SoftwareLicenseForbiddenError()
         try {
           await c.env.DB.batch([...guards, ...actor.assertions])
         } catch {
-          throw new SoftwareLicenseHTTPException(403)
+          throw new SoftwareLicenseForbiddenError()
         }
         return {
           number: existing.number,
@@ -171,14 +180,14 @@ export function createLicensePreservationSubmissionHandlers(mode: "create" | "re
         licenseId,
         sourceNamespace: namespace.data,
       })
-      if (captured instanceof Error) throw new SoftwareLicenseHTTPException(403)
+      if (captured instanceof Error) throw new SoftwareLicenseForbiddenError()
       const stored = await new StorePreservedRecordContent(c).execute({
         source: captured.source.props,
         content: captured.content,
         ownerAccountId: authentication.accountId,
         now: c.var.now(),
       })
-      if (stored instanceof Error) throw new SoftwareLicenseHTTPException(503)
+      if (stored instanceof Error) throw new SoftwareLicenseUnavailableError()
       const recordId = crypto.randomUUID()
       const proposal = await RecordPreservationProposalValue.fromRequest({
         request: request.conditions,
@@ -191,7 +200,8 @@ export function createLicensePreservationSubmissionHandlers(mode: "create" | "re
         preservationId: crypto.randomUUID(),
         disclosurePolicyId: crypto.randomUUID(),
       })
-      if (proposal instanceof Error) throw new SoftwareLicenseHTTPException(400)
+      if (proposal instanceof Error)
+        throw new SoftwareLicenseInputError({ message: "invalid preservation request" })
       const at = c.var.now()
       const task = await new PrepareRecordPreservationTaskAdapter(c).prepare({
         procedureKey: request.procedure_key,
@@ -199,16 +209,17 @@ export function createLicensePreservationSubmissionHandlers(mode: "create" | "re
         applicantAccountId: authentication.accountId,
         at,
       })
-      if (task instanceof Error) throw new SoftwareLicenseHTTPException(403)
+      if (task instanceof Error) throw new SoftwareLicenseForbiddenError()
       const finalization = proposal.toFinalization({ actorAccountId: authentication.accountId, at })
-      if (finalization instanceof Error) throw new SoftwareLicenseHTTPException(400)
+      if (finalization instanceof Error)
+        throw new SoftwareLicenseInputError({ message: "invalid preservation request" })
       const verified = await new VerifyPreservedRecordContentAdapter(c).execute(
         finalization.record,
         "pending",
       )
-      if (verified instanceof Error) throw new SoftwareLicenseHTTPException(503)
+      if (verified instanceof Error) throw new SoftwareLicenseUnavailableError()
       const guards = proof.assertions(c.var.now())
-      if (guards instanceof Error) throw new SoftwareLicenseHTTPException(403)
+      if (guards instanceof Error) throw new SoftwareLicenseForbiddenError()
       const started = await new StartSystemProcedure({
         writer: new SystemD1WorkflowAdapter({
           env: c.env,
@@ -238,7 +249,7 @@ export function createLicensePreservationSubmissionHandlers(mode: "create" | "re
       if (started instanceof Error) {
         const concurrent = await replay()
         if (concurrent !== null) return c.json(concurrent, 200)
-        throw new SoftwareLicenseHTTPException(409, {
+        throw new SoftwareLicenseConflictError({
           message: "preservation submission changed or failed",
         })
       }
