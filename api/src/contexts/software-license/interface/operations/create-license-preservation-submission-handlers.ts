@@ -1,3 +1,4 @@
+import { VerifyLicensePreservationReplayAdapter } from "@/contexts/software-license/infrastructure/adapters/verify-license-preservation-replay.adapter"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { softwareLicenseFactory } from "@/contexts/software-license/interface/request-environment/software-license-factory"
@@ -162,11 +163,11 @@ export function createLicensePreservationSubmissionHandlers(mode: "create" | "re
           })
         const guards = proof.assertions(c.var.now())
         if (guards instanceof Error) throw new SoftwareLicenseForbiddenError()
-        try {
-          await c.env.DB.batch([...guards, ...actor.assertions])
-        } catch {
-          throw new SoftwareLicenseForbiddenError()
-        }
+        const verified = await new VerifyLicensePreservationReplayAdapter(c).execute([
+          ...guards,
+          ...actor.assertions,
+        ])
+        if (verified instanceof Error) throw new SoftwareLicenseForbiddenError()
         return {
           number: existing.number,
           case_id: existing.caseId,
