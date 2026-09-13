@@ -8,6 +8,7 @@ import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-sy
 
 export async function createLicensePreservationFixture(
   rejectionBehavior: "reject" | "return" = "reject",
+  hasSecondStep = false,
 ) {
   const governance = await createGovernanceTaskTestContext()
   const f = await createLicenseFixture(governance.database)
@@ -28,21 +29,20 @@ export async function createLicensePreservationFixture(
       },
     },
   ])
+  const step: typeof governance.step = {
+    ...governance.step,
+    rejection_behavior: rejectionBehavior,
+    governance_authority: {
+      organization_id: "organization:default",
+      responsibility_code: "APPROVE",
+      scope: null,
+    },
+  }
   const policy = createCompanyProcedureDecisionPolicy({
     approverRoles: [],
     workflow: {
       version: 1,
-      steps: [
-        {
-          ...governance.step,
-          rejection_behavior: rejectionBehavior,
-          governance_authority: {
-            organization_id: "organization:default",
-            responsibility_code: "APPROVE",
-            scope: null,
-          },
-        },
-      ],
+      steps: [step, ...(hasSecondStep ? [{ ...step, key: "second-review" }] : [])],
     },
   })
   if (policy instanceof Error) throw policy

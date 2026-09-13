@@ -1,3 +1,4 @@
+import { PrepareSystemCaseReadGuardAdapter } from "@system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { softwareLicenseFactory } from "@/contexts/software-license/interface/request-environment/software-license-factory"
@@ -71,6 +72,7 @@ export function createLicensePreservationDecisionHandlers(action: "approve" | "r
       )
         throw new SoftwareLicenseHTTPException(409)
       if (
+        proposal.status === "pending" ||
         (action === "approve" &&
           (proposal.status === "approved" || proposal.status === "executed")) ||
         (action === "reject" && (proposal.status === "rejected" || proposal.status === "returned"))
@@ -86,12 +88,42 @@ export function createLicensePreservationDecisionHandlers(action: "approve" | "r
               (action === "reject" && attestation.action === "return")) &&
             attestation.comment === body.comment,
         )
-        if (original === undefined) throw new SoftwareLicenseHTTPException(403)
-        await c.env.DB.batch([...technical])
-        return c.json(
-          { status: proposal.status === "executed" ? "approved" : proposal.status },
-          200,
-        )
+        if (original !== undefined) {
+          const guard = await new PrepareSystemCaseReadGuardAdapter(c).prepare({
+            caseId: proposal.caseId,
+            accountId: authentication.accountId,
+            at: c.var.now(),
+          })
+          if (guard instanceof Error) throw new SoftwareLicenseHTTPException(503)
+          const current = await query.findByNumber(proposal.number)
+          if (
+            current === null ||
+            current instanceof Error ||
+            current.proposalId !== proposal.proposalId ||
+            current.status !== proposal.status ||
+            current.currentTaskKey !== proposal.currentTaskKey ||
+            current.currentTaskRound !== proposal.currentTaskRound
+          )
+            throw new SoftwareLicenseHTTPException(409)
+          const now = c.var.now()
+          const assertions = proof.assertions(now)
+          if (assertions instanceof Error) throw new SoftwareLicenseHTTPException(403)
+          try {
+            const verified = await c.env.DB.batch([...assertions, guard(now)])
+            if (
+              verified.length !== assertions.length + 1 ||
+              verified.some((result) => !result.success)
+            )
+              throw new SoftwareLicenseHTTPException(409)
+          } catch {
+            throw new SoftwareLicenseHTTPException(409)
+          }
+          return c.json(
+            { status: proposal.status === "executed" ? "approved" : proposal.status },
+            200,
+          )
+        }
+        if (proposal.status !== "pending") throw new SoftwareLicenseHTTPException(403)
       }
       const accountGuard = await new CompanyAuthoritySnapshotGuardAdapter({
         database: c.env.DB,
