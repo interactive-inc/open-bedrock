@@ -28,7 +28,7 @@ export class PreservedRecordContentValue {
     }
   }
 
-  toBytes(): Uint8Array {
+  toBytes(): Uint8Array<ArrayBuffer> {
     return new Uint8Array(this.#bytes)
   }
 }

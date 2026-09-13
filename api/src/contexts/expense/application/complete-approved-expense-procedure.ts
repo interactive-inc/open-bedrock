@@ -1,3 +1,4 @@
+import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
 import { PrepareExpenseApprovalScopeAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-approval-scope.adapter"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
@@ -36,6 +37,14 @@ export class CompleteApprovedExpenseProcedure {
   async run(
     command: Command,
   ): Promise<Readonly<{ status: "approved"; replayed: boolean }> | ApplicationError> {
+    const result = await this.runWithWriteGuards(command)
+    return new PrepareExpenseWriteGuardAdapter(this.c).failure(result) ?? result
+  }
+
+  private async runWithWriteGuards(
+    command: Command,
+  ): Promise<Readonly<{ status: "approved"; replayed: boolean }> | ApplicationError> {
+    const writeGuard = new PrepareExpenseWriteGuardAdapter(this.c).prepare()
     const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
       accountId: command.session.accountId,
       tokenVersion: command.tokenVersion,
@@ -64,7 +73,7 @@ export class CompleteApprovedExpenseProcedure {
           repository.readExecutionReceipt({
             binding,
             actorAccountId: command.session.accountId,
-            guards: human.assertions,
+            guards: [...human.assertions, writeGuard],
           }),
       })
     if (request.status !== "pending")
@@ -137,7 +146,7 @@ export class CompleteApprovedExpenseProcedure {
     const executed = await repository.executeAuthorized({
       binding,
       authorization,
-      guards: [...human.assertions, scope.guard, ...guards, ...evidenceGuards],
+      guards: [...human.assertions, writeGuard, scope.guard, ...guards, ...evidenceGuards],
       audit,
       decidedAt: command.completedAt,
       comment: null,
@@ -152,7 +161,7 @@ export class CompleteApprovedExpenseProcedure {
           repository.readExecutionReceipt({
             binding,
             actorAccountId: command.session.accountId,
-            guards: human.assertions,
+            guards: [...human.assertions, writeGuard],
           }),
       })
     return new ConflictError("保存までに経費の実行条件が変わりました", "execution_changed", {

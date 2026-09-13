@@ -14,6 +14,7 @@ export class SystemD1AuthorizedExecutionAdapter {
       proposalDigest: ProposalDigest
       executedAt: Date
       operationStatements: ReadonlyArray<D1PreparedStatement>
+      completionStatements?: ReadonlyArray<D1PreparedStatement>
     }>,
   ): Promise<true | Error> {
     const used = input.authorization.use(input.proposalDigest, input.executedAt)
@@ -61,6 +62,7 @@ export class SystemD1AuthorizedExecutionAdapter {
           )
           .bind(used.caseId, input.proposalDigest, input.executedAt.getTime()),
         abortWhenPreviousStatementChangedNoRows(database),
+        ...(input.completionStatements ?? []),
       ])
       return true
     } catch (cause) {

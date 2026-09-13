@@ -107,6 +107,7 @@ export type SystemProposalQuery = Readonly<{
       caseId: string
       actorAccountId: AccountId
       candidateAccountIds: ReadonlyArray<AccountId>
+      delegationId?: string
       at: Date
     }>,
   ): Promise<Readonly<{ id: string; representedAccountId: AccountId }> | null | Error>
@@ -507,11 +508,16 @@ export class SystemD1ProposalAdapter implements SystemProposalQuery {
     if (input.candidateAccountIds.length === 0) return null
     try {
       const placeholders = input.candidateAccountIds.map((_, index) => `?${index + 4}`)
+      const exactDelegation =
+        input.delegationId === undefined
+          ? ""
+          : `AND delegation.id = ?${input.candidateAccountIds.length + 4}`
       const row = await this.c.env.DB.prepare(
         `SELECT delegation.id, delegation.delegator_account_id
          FROM system_delegations AS delegation
          JOIN system_cases AS workflow_case ON workflow_case.id = ?1
          WHERE delegation.delegate_account_id = ?2
+           ${exactDelegation}
            AND delegation.starts_at <= ?3
            AND delegation.ends_at > ?3
            AND (delegation.revoked_at IS NULL OR delegation.revoked_at > ?3)
@@ -543,7 +549,13 @@ export class SystemD1ProposalAdapter implements SystemProposalQuery {
          ORDER BY delegation.starts_at DESC, delegation.id
          LIMIT 1`,
       )
-        .bind(input.caseId, input.actorAccountId, input.at.getTime(), ...input.candidateAccountIds)
+        .bind(
+          input.caseId,
+          input.actorAccountId,
+          input.at.getTime(),
+          ...input.candidateAccountIds,
+          ...(input.delegationId === undefined ? [] : [input.delegationId]),
+        )
         .first<{ id: string; delegator_account_id: string }>()
       if (row === null) return null
       const representedAccountId = zAccountId.safeParse(row.delegator_account_id)

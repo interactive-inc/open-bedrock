@@ -12,7 +12,7 @@ import {
   SoftwareLicenseConflictError,
   SoftwareLicenseUnavailableError,
 } from "@/contexts/software-license/interface/errors"
-import { PrepareRecordPreservationTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-record-preservation-task.adapter"
+import { PrepareCompanyRecordProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-task.adapter"
 import { recordPreservationRequestSchema } from "@system/domain/schemas/records/record-preservation-input.schema"
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
 import { SubmitRecordPreservationAdapter } from "@system/infrastructure/adapters/records/submit-record-preservation.adapter"
@@ -57,7 +57,7 @@ export function createLicensePreservationSubmissionHandlers(mode: "create" | "re
           authorize: () => new LicenseActorReadAdapter(c).prepare(),
           capture: () => new CaptureLicenseRecordAdapter(c).prepare({ licenseId, sourceNamespace }),
         },
-        prepareTask: (input) => new PrepareRecordPreservationTaskAdapter(c).prepare(input),
+        prepareTask: (input) => new PrepareCompanyRecordProcedureTaskAdapter(c).prepare(input),
       })
       const common = {
         authentication,

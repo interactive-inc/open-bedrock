@@ -28,7 +28,7 @@ export class PreservedRecordRepository {
       db
         .prepare(`UPDATE system_attachments SET status = 'linked', linked_at = ?1
         WHERE id = ?2 AND status = 'pending' AND owner_account_id = ?3
-          AND plaintext_sha256 = ?4 AND content_type = 'application/vnd.record-preservation+json'
+          AND plaintext_sha256 = ?4 AND content_type IN ('application/vnd.record-preservation+json', 'application/vnd.record-preservation+binary')
           AND wrapped_dek IS NOT NULL AND created_at <= ?1
           AND id = ?5 AND owner_account_id = ?6 AND object_key = ?7
           AND file_name = ?8 AND content_type = ?9 AND byte_size = ?10

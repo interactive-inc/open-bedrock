@@ -1,3 +1,4 @@
+import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
 import { PrepareExpenseApprovalScopeAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-approval-scope.adapter"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
@@ -49,6 +50,12 @@ export class RecordExpenseDecision {
   }
 
   async run(command: Command): Promise<Result | ApplicationError> {
+    const result = await this.runWithWriteGuards(command)
+    return new PrepareExpenseWriteGuardAdapter(this.c).failure(result) ?? result
+  }
+
+  private async runWithWriteGuards(command: Command): Promise<Result | ApplicationError> {
+    const writeGuard = new PrepareExpenseWriteGuardAdapter(this.c).prepare()
     const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
       accountId: command.session.accountId,
       tokenVersion: command.tokenVersion,
@@ -93,7 +100,7 @@ export class RecordExpenseDecision {
       decisionTarget: command.decisionTarget,
       action: command.action,
       comment: command.comment,
-      guards: [...human.assertions, ...evidenceGuards],
+      guards: [...human.assertions, writeGuard, ...evidenceGuards],
     }
     const receipt = await repository.findDecisionReceipt(receiptInput)
     if (receipt instanceof Error)
@@ -177,7 +184,7 @@ export class RecordExpenseDecision {
       binding,
       attestation,
       nextTask: prepared.nextTask,
-      guards: [...human.assertions, scope.guard, ...prepared.guards, ...evidenceGuards],
+      guards: [...human.assertions, writeGuard, scope.guard, ...prepared.guards, ...evidenceGuards],
       audit,
     })
     if (saved instanceof Error) {

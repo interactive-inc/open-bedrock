@@ -1,3 +1,4 @@
+import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
@@ -30,6 +31,14 @@ export class CancelExpenseProcedure {
   async run(
     command: Command,
   ): Promise<Readonly<{ status: "cancelled"; replayed: boolean }> | ApplicationError> {
+    const result = await this.runWithWriteGuards(command)
+    return new PrepareExpenseWriteGuardAdapter(this.c).failure(result) ?? result
+  }
+
+  private async runWithWriteGuards(
+    command: Command,
+  ): Promise<Readonly<{ status: "cancelled"; replayed: boolean }> | ApplicationError> {
+    const writeGuard = new PrepareExpenseWriteGuardAdapter(this.c).prepare()
     const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
       accountId: command.session.accountId,
       tokenVersion: command.tokenVersion,
@@ -67,9 +76,10 @@ export class CancelExpenseProcedure {
       expenseId: binding.expenseId,
       actorAccountId: command.session.accountId,
       previousExpenseId: binding.previousExpenseId,
-      guards: [...human.assertions, companyGuard],
+      guards: [...human.assertions, writeGuard, companyGuard],
     })
-    if (owned !== true) return new ForbiddenError("本人の経費だけを取り消せます", "forbidden")
+    if (owned !== true)
+      return new ForbiddenError("本人の経費だけを取り消せます", "forbidden", { cause: owned })
     const expected = SystemDecisionTargetValue.create(command.decisionTarget)
     const target = SystemDecisionTargetValue.create({
       proposalVersion: proposal.version,
@@ -103,7 +113,7 @@ export class CancelExpenseProcedure {
       taskKey: command.decisionTarget.taskKey,
       taskRound: command.decisionTarget.taskRound,
       cancelledAt: command.cancelledAt,
-      guards: [...human.assertions, companyGuard],
+      guards: [...human.assertions, writeGuard, companyGuard],
       audit,
     })
     if (cancelled !== true) {
@@ -112,7 +122,7 @@ export class CancelExpenseProcedure {
         expenseId: binding.expenseId,
         actorAccountId: command.session.accountId,
         previousExpenseId: binding.previousExpenseId,
-        guards: [...human.assertions, companyGuard],
+        guards: [...human.assertions, writeGuard, companyGuard],
       })
       if (
         !(current instanceof Error) &&

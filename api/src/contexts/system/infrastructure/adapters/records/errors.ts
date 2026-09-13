@@ -52,3 +52,36 @@ export class RecordPreservationWithdrawalError extends Error {
     this.name = "RecordPreservationWithdrawalError"
   }
 }
+
+/** 撤去の判断対象を開示できない理由。内部原因はHTTP応答へ渡さない。 */
+export class RecordRetirementReviewError extends Error {
+  constructor(
+    readonly code: "invalid" | "forbidden" | "not_found" | "conflict" | "unavailable",
+    options?: ErrorOptions,
+  ) {
+    super(`record retirement review ${code}`, options)
+    this.name = "RecordRetirementReviewError"
+  }
+}
+
+/** 撤去の判断を確定できない理由。内部原因はHTTP応答へ渡さない。 */
+export class RecordRetirementDecisionError extends Error {
+  constructor(
+    readonly code: "invalid" | "forbidden" | "not_found" | "conflict" | "unavailable",
+    options?: ErrorOptions,
+  ) {
+    super(`record retirement decision ${code}`, options)
+    this.name = "RecordRetirementDecisionError"
+  }
+}
+
+/** 撤去申請を取り下げられない理由。 */
+export class RecordRetirementWithdrawalError extends Error {
+  constructor(
+    readonly code: "invalid" | "forbidden" | "not_found" | "conflict" | "unavailable",
+    options?: ErrorOptions,
+  ) {
+    super(`record retirement withdrawal ${code}`, options)
+    this.name = "RecordRetirementWithdrawalError"
+  }
+}

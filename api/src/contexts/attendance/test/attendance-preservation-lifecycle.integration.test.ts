@@ -126,7 +126,7 @@ test("打刻の取下げ・否決・再提出・承認・確定後、業務テ�
   const original = JSON.parse(Buffer.from(final.original.contentBase64, "base64").toString("utf8"))
   expect(original).toMatchObject({
     format: "attendance-record",
-    version: 1,
+    version: 2,
     record: { id: 1, note: "Corrected before approval" },
   })
   const approved = await f.request(`${finalPath}/approve`, {

@@ -1,3 +1,5 @@
+import { AttendanceRecordSourceFrozenError } from "@/contexts/attendance/infrastructure/repositories/errors"
+import { isAttendanceRecordSourceFrozenError } from "@/contexts/attendance/infrastructure/repositories/lib/is-attendance-record-source-frozen-error"
 import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendance-record.entity"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
@@ -49,6 +51,8 @@ export class AttendanceRecordRepository {
         ? new Error("failed to insert attendance record")
         : AttendanceRecord.fromRow(row)
     } catch (error) {
+      if (isAttendanceRecordSourceFrozenError(error))
+        return new AttendanceRecordSourceFrozenError(error)
       // (employee_id) WHERE status = 'open' の UNIQUE 索引違反 = 二重打刻。
       // 型付きで返し、application 層が再読込に依存せず重複として扱えるようにする。
       if (isUniqueConstraintError(error)) {
@@ -84,6 +88,8 @@ export class AttendanceRecordRepository {
 
       return row === undefined ? null : AttendanceRecord.fromRow(row)
     } catch (error) {
+      if (isAttendanceRecordSourceFrozenError(error))
+        return new AttendanceRecordSourceFrozenError(error)
       return error instanceof Error ? error : new Error("failed to update attendance record")
     }
   }

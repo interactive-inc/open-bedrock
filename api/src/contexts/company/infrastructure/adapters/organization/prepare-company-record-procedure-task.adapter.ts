@@ -8,11 +8,12 @@ import { CompanyForbiddenError } from "@/contexts/company/domain/errors"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
 import { ResolveCompanyProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task.adapter"
 import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { RecordRetirementProposalValue } from "@system/domain/values/records/record-retirement-proposal.value"
 
 type Context = CompanyContext
 
-/** 公開された保全用手続きから会社上の判断候補を解決する。申請者の認証と原記録の権限は別途検査する。 */
-export class PrepareRecordPreservationTaskAdapter {
+/** 提案の操作と一致する公開手続きから会社上の判断候補を解決する。認証と原記録の権限は別途検査する。 */
+export class PrepareCompanyRecordProcedureTaskAdapter {
   constructor(private readonly c: Context) {
     Object.freeze(this)
   }
@@ -20,17 +21,21 @@ export class PrepareRecordPreservationTaskAdapter {
   async prepare(
     input: Readonly<{
       procedureKey: ProcedureKey
-      proposal: RecordPreservationProposalValue
+      proposal: RecordPreservationProposalValue | RecordRetirementProposalValue
       applicantAccountId: AccountId
       at: Date
     }>,
   ) {
     if (!Number.isSafeInteger(input.at.getTime()))
-      return new CompanyForbiddenError("記録保全の申請時点を確認できません", "forbidden")
+      return new CompanyForbiddenError("記録手続きの申請時点を確認できません", "forbidden")
+    const operation =
+      input.proposal instanceof RecordRetirementProposalValue
+        ? "system.record.retire"
+        : "system.record.preserve"
     const definition = await new SystemD1ProcedureRepository(this.c).find(input.procedureKey)
     if (definition instanceof Error) return definition
-    if (definition === null || definition.completionOperationKey !== "system.record.preserve")
-      return new CompanyForbiddenError("記録保全用の手続きが公開されていません", "forbidden")
+    if (definition === null || definition.completionOperationKey !== operation)
+      return new CompanyForbiddenError("対象操作の手続きが公開されていません", "forbidden")
     const policy = parseCompanyProcedureDecisionPolicy(JSON.parse(definition.decisionPolicyJson))
     if (policy instanceof Error) return policy
     const applicantGuard = await new CompanyAuthoritySnapshotGuardAdapter({
@@ -47,7 +52,7 @@ export class PrepareRecordPreservationTaskAdapter {
     if (applicants instanceof Error) return applicants
     const applicant = applicants[0]?.employee
     if (applicant === undefined)
-      return new CompanyForbiddenError("記録保全の申請者をCompanyで確認できません", "forbidden")
+      return new CompanyForbiddenError("記録手続きの申請者をCompanyで確認できません", "forbidden")
     const resolved = await new ResolveCompanyProcedureTaskAdapter({
       c: this.c,
       policy,
@@ -68,7 +73,7 @@ export class PrepareRecordPreservationTaskAdapter {
     }).resolveCompanyProcedureTask()
     if (resolved instanceof Error) return resolved
     if (resolved === null)
-      return new CompanyForbiddenError("記録保全の判断候補を確認できません", "forbidden")
+      return new CompanyForbiddenError("記録手続きの判断候補を確認できません", "forbidden")
     return Object.freeze({
       definition,
       applicant,
