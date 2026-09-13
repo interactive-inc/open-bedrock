@@ -500,7 +500,7 @@ export class SystemAuditJsonError extends DomainError {
 }
 
 /** 保全記録の個別開示設定が対象・主体・操作・用途を許可していない。 */
-export class PreservedRecordDisclosureDeniedError extends Error {
+export class PreservedRecordDisclosureDeniedError extends DomainError {
   constructor() {
     super("preserved record disclosure is not permitted")
   }

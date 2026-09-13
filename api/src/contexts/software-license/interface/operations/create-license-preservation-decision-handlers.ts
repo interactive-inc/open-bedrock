@@ -4,7 +4,12 @@ import { zValidator } from "@hono/zod-validator"
 import { softwareLicenseFactory } from "@/contexts/software-license/interface/request-environment/software-license-factory"
 import { ensureLicenseEnabled } from "@/contexts/software-license/interface/middlewares/ensure-license-enabled"
 import { licenseIdSchema } from "@/contexts/software-license/interface/http/license-input-schemas"
-import { SoftwareLicenseHTTPException } from "@/contexts/software-license/interface/errors"
+import {
+  SoftwareLicenseConflictError,
+  SoftwareLicenseForbiddenError,
+  SoftwareLicenseNotFoundError,
+  SoftwareLicenseUnavailableError,
+} from "@/contexts/software-license/interface/errors"
 import { PrepareCompanyProcedureDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-procedure-decision.adapter"
 import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
@@ -39,38 +44,38 @@ export function createLicensePreservationDecisionHandlers(action: "approve" | "r
       c.header("Cache-Control", "no-store")
       const authentication = c.var.bearerReadAuthentication
       if (authentication === undefined || authentication.machineCredentialId !== null)
-        throw new SoftwareLicenseHTTPException(403)
+        throw new SoftwareLicenseForbiddenError()
       const at = c.var.now()
       const proof = await new PrepareSystemReadAuthorizationAdapter(c).prepare(authentication, at)
-      if (proof instanceof Error) throw new SoftwareLicenseHTTPException(503)
-      if (proof === null) throw new SoftwareLicenseHTTPException(403)
+      if (proof instanceof Error) throw new SoftwareLicenseUnavailableError()
+      if (proof === null) throw new SoftwareLicenseForbiddenError()
       const technical = proof.assertions(at)
-      if (technical instanceof Error) throw new SoftwareLicenseHTTPException(403)
+      if (technical instanceof Error) throw new SoftwareLicenseForbiddenError()
       const query = new SystemD1ProposalAdapter({
         env: c.env,
         visibleCompletionOperationKeys: ["system.record.preserve"],
       })
       const proposal = await query.findByNumber(c.req.valid("param").number)
-      if (proposal instanceof Error) throw new SoftwareLicenseHTTPException(503)
-      if (proposal === null) throw new SoftwareLicenseHTTPException(404)
+      if (proposal instanceof Error) throw new SoftwareLicenseUnavailableError()
+      if (proposal === null) throw new SoftwareLicenseNotFoundError()
       const intent = recordPreservationIntentSchema.safeParse(JSON.parse(proposal.bodyJson))
-      if (!intent.success) throw new SoftwareLicenseHTTPException(503)
+      if (!intent.success) throw new SoftwareLicenseUnavailableError()
       const source = PreservedRecordSourceValue.create(intent.data.source)
-      if (source instanceof Error) throw new SoftwareLicenseHTTPException(503)
+      if (source instanceof Error) throw new SoftwareLicenseUnavailableError()
       if (
         source.props.ownerContext !== "software-license" ||
         source.props.recordKind !== "license-record" ||
         source.props.recordId !== String(c.req.valid("param").id) ||
         source.props.sourceNamespace !== c.env.RECORD_SOURCE_NAMESPACE
       )
-        throw new SoftwareLicenseHTTPException(404)
+        throw new SoftwareLicenseNotFoundError()
       const body = c.req.valid("json")
       const target = body.decision_target
       if (
         proposal.version !== target.proposal_version ||
         proposal.digest !== target.proposal_digest
       )
-        throw new SoftwareLicenseHTTPException(409)
+        throw new SoftwareLicenseConflictError()
       if (
         proposal.status === "pending" ||
         (action === "approve" &&
@@ -78,7 +83,7 @@ export function createLicensePreservationDecisionHandlers(action: "approve" | "r
         (action === "reject" && (proposal.status === "rejected" || proposal.status === "returned"))
       ) {
         const attestations = await query.listAttestations(proposal.caseId)
-        if (attestations instanceof Error) throw new SoftwareLicenseHTTPException(503)
+        if (attestations instanceof Error) throw new SoftwareLicenseUnavailableError()
         const original = attestations.find(
           (attestation) =>
             attestation.actorAccountId === authentication.accountId &&
@@ -94,7 +99,7 @@ export function createLicensePreservationDecisionHandlers(action: "approve" | "r
             accountId: authentication.accountId,
             at: c.var.now(),
           })
-          if (guard instanceof Error) throw new SoftwareLicenseHTTPException(503)
+          if (guard instanceof Error) throw new SoftwareLicenseUnavailableError()
           const current = await query.findByNumber(proposal.number)
           if (
             current === null ||
@@ -104,26 +109,26 @@ export function createLicensePreservationDecisionHandlers(action: "approve" | "r
             current.currentTaskKey !== proposal.currentTaskKey ||
             current.currentTaskRound !== proposal.currentTaskRound
           )
-            throw new SoftwareLicenseHTTPException(409)
+            throw new SoftwareLicenseConflictError()
           const now = c.var.now()
           const assertions = proof.assertions(now)
-          if (assertions instanceof Error) throw new SoftwareLicenseHTTPException(403)
+          if (assertions instanceof Error) throw new SoftwareLicenseForbiddenError()
           try {
             const verified = await c.env.DB.batch([...assertions, guard(now)])
             if (
               verified.length !== assertions.length + 1 ||
               verified.some((result) => !result.success)
             )
-              throw new SoftwareLicenseHTTPException(409)
+              throw new SoftwareLicenseConflictError()
           } catch {
-            throw new SoftwareLicenseHTTPException(409)
+            throw new SoftwareLicenseConflictError()
           }
           return c.json(
             { status: proposal.status === "executed" ? "approved" : proposal.status },
             200,
           )
         }
-        if (proposal.status !== "pending") throw new SoftwareLicenseHTTPException(403)
+        if (proposal.status !== "pending") throw new SoftwareLicenseForbiddenError()
       }
       const accountGuard = await new CompanyAuthoritySnapshotGuardAdapter({
         database: c.env.DB,
@@ -131,7 +136,7 @@ export function createLicensePreservationDecisionHandlers(action: "approve" | "r
         accountIds: [authentication.accountId],
         employeeCodes: [],
       })
-      if (accountGuard instanceof Error) throw new SoftwareLicenseHTTPException(503)
+      if (accountGuard instanceof Error) throw new SoftwareLicenseUnavailableError()
       const employees = await new CompanyEmployeeDirectoryReadAdapter({
         env: {
           DB: c.env.DB,
@@ -139,9 +144,9 @@ export function createLicensePreservationDecisionHandlers(action: "approve" | "r
           NOW: at.toISOString(),
         },
       }).findForAccountIds([authentication.accountId])
-      if (employees instanceof Error) throw new SoftwareLicenseHTTPException(503)
+      if (employees instanceof Error) throw new SoftwareLicenseUnavailableError()
       const employee = employees[0]?.employee
-      if (employee === undefined) throw new SoftwareLicenseHTTPException(403)
+      if (employee === undefined) throw new SoftwareLicenseForbiddenError()
       const decision = await new PrepareCompanyProcedureDecisionAdapter(c).prepare({
         proposal,
         decisionTarget: {
@@ -158,8 +163,8 @@ export function createLicensePreservationDecisionHandlers(action: "approve" | "r
         action,
         decidedAt: at,
       })
-      if (decision instanceof CompanyConflictError) throw new SoftwareLicenseHTTPException(409)
-      if (decision instanceof Error) throw new SoftwareLicenseHTTPException(403)
+      if (decision instanceof CompanyConflictError) throw new SoftwareLicenseConflictError()
+      if (decision instanceof Error) throw new SoftwareLicenseForbiddenError()
       const writer = new SystemD1WorkflowAdapter({
         env: c.env,
         decisionGuards: [...technical, accountGuard, ...decision.guards],
@@ -170,9 +175,9 @@ export function createLicensePreservationDecisionHandlers(action: "approve" | "r
         reject: new RejectSystemTask(writer),
         return: new ReturnSystemTask(writer),
       }[decision.action]
-      if (operation === undefined) throw new SoftwareLicenseHTTPException(503)
+      if (operation === undefined) throw new SoftwareLicenseUnavailableError()
       const approved = await operation.execute(command)
-      if (approved instanceof Error) throw new SoftwareLicenseHTTPException(409)
+      if (approved instanceof Error) throw new SoftwareLicenseConflictError()
       return c.json({ status: approved.caseStatus }, 200)
     },
   )
