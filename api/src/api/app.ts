@@ -375,6 +375,7 @@ import * as systemOauthAuthorizationsRoute from "@system/interface/routes/system
 import * as systemOauthMcpGrantsRoute from "@system/interface/routes/system.oauth.mcp-grants"
 import * as systemOauthTokenRoute from "@system/interface/routes/system.oauth.token"
 import * as systemOauthUserinfoRoute from "@system/interface/routes/system.oauth.userinfo"
+import * as systemPreservedRecordsRoute from "@system/interface/routes/system.preserved-records"
 import * as systemPreservedRecordsRecordIdContentRoute from "@system/interface/routes/system.preserved-records.$recordId.content"
 import * as systemPrincipalsRoute from "@system/interface/routes/system.principals"
 import * as systemPrincipalsPrincipalIdRoute from "@system/interface/routes/system.principals.$principalId"
@@ -1198,6 +1199,7 @@ const routePart36 = createRouteApp()
   .post("/system/oauth/token", ...systemOauthTokenRoute.POST)
   .get("/system/oauth/userinfo", ...systemOauthUserinfoRoute.GET)
   .get("/system/permission-definitions", ...systemPermissionDefinitionsRoute.GET)
+  .get("/system/preserved-records", ...systemPreservedRecordsRoute.GET)
   .get(
     "/system/preserved-records/:recordId/content",
     ...systemPreservedRecordsRecordIdContentRoute.GET,
@@ -1257,9 +1259,9 @@ const routePart36 = createRouteApp()
   .post("/thanks/thanks-redemptions/:id/reject", ...thanksRedemptionsIdRejectRoute.POST)
   .get("/thanks/thanks-rewards", ...thanksRewardsRoute.GET)
   .post("/thanks/thanks-rewards", ...thanksRewardsRoute.POST)
-  .patch("/thanks/thanks-rewards/:id", ...thanksRewardsIdRoute.PATCH)
 
 const routePart37 = createRouteApp()
+  .patch("/thanks/thanks-rewards/:id", ...thanksRewardsIdRoute.PATCH)
   .get("/training/training-courses", ...trainingCoursesRoute.GET)
   .post("/training/training-courses", ...trainingCoursesRoute.POST)
   .get("/training/training-courses/:code", ...trainingCoursesCodeRoute.GET)

@@ -1,4 +1,6 @@
+import { DisclosePreservedRecordIndexPersistenceAdapter } from "@system/infrastructure/adapters/records/disclose-preserved-record-index-persistence.adapter"
 import { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
+import { DisclosePreservedRecordIndex } from "@system/application/records/disclose-preserved-record-index"
 import { RecordPreservationProposalValue } from "@system/domain/values/records/record-preservation-proposal.value"
 import { FinalizePreservedRecordPersistenceAdapter } from "@system/infrastructure/adapters/records/finalize-preserved-record-persistence.adapter"
 import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
@@ -40,17 +42,19 @@ function audit(
   return entity
 }
 
-function fixture() {
-  const sqlite = new Database(":memory:")
-  sqlite.exec("PRAGMA foreign_keys = ON")
-  for (const name of ["system-core", "system-attachment", "system-record-preservation"]) {
+function fixture(existing: Database | null = null) {
+  const sqlite = existing ?? new Database(":memory:")
+  if (existing === null) {
+    sqlite.exec("PRAGMA foreign_keys = ON")
+    for (const name of ["system-core", "system-attachment", "system-record-preservation"]) {
+      sqlite.exec(
+        readFileSync(new URL(`../infrastructure/schema/${name}.sql`, import.meta.url), "utf8"),
+      )
+    }
     sqlite.exec(
-      readFileSync(new URL(`../infrastructure/schema/${name}.sql`, import.meta.url), "utf8"),
+      "CREATE TABLE test_source_revision (revision INTEGER); INSERT INTO test_source_revision VALUES (1)",
     )
   }
-  sqlite.exec(
-    "CREATE TABLE test_source_revision (revision INTEGER); INSERT INTO test_source_revision VALUES (1)",
-  )
   const db = wrapSystemD1TestDatabase(sqlite)
   const context = {
     env: { DB: db },
@@ -430,5 +434,254 @@ test("approved record execution binds intent and actor and atomically consumes a
     } finally {
       f.sqlite.close()
     }
+  }
+})
+
+const searchInput = {
+  action: "read",
+  purpose: "company-retention",
+  sourceNamespace: null,
+  ownerContext: null,
+  recordKind: null,
+  sourceRecordId: null,
+  after: null,
+  limit: 1,
+}
+
+async function publishSearchGrant(
+  f: ReturnType<typeof fixture>,
+  grants: PreservedRecordDisclosurePolicyEntity["snapshot"]["grants"],
+  revision = 2,
+) {
+  const policy = PreservedRecordDisclosurePolicyEntity.create({
+    ...f.policy.snapshot,
+    revision,
+    auditEventId: crypto.randomUUID(),
+    grants,
+  })
+  if (policy instanceof Error) throw policy
+  await f.db.batch([
+    ...new PreservedRecordDisclosurePolicyRepository({
+      env: { DB: f.db },
+      assertions: [],
+    }).preparePublish(
+      policy,
+      audit(
+        policy.snapshot,
+        "system.record.disclosure_policy.published",
+        "system:record-disclosure-policy",
+      ),
+    ),
+  ])
+}
+
+function searchService(f: ReturnType<typeof fixture>, clock = () => new Date(now)) {
+  return new DisclosePreservedRecordIndex({
+    accountId: "reader",
+    now: clock,
+    persistence: new DisclosePreservedRecordIndexPersistenceAdapter({
+      env: { DB: f.db },
+      authorizationAssertions: () => [
+        f.db.prepare(
+          "SELECT CASE WHEN (SELECT revision FROM test_source_revision) = 1 THEN 1 ELSE json_extract('', '$') END",
+        ),
+      ],
+    }),
+  })
+}
+
+const searchGrant = {
+  accountId: "reader",
+  actions: ["read" as const],
+  purposes: ["company-retention"],
+  validFrom: now,
+  validUntil: null,
+}
+
+test("Systemだけで保全物を探し、未許可の記録をcursorや件数へ混ぜない", async () => {
+  const f = fixture()
+  try {
+    const others = [fixture(f.sqlite), fixture(f.sqlite)]
+    for (const item of [f, ...others]) {
+      await item.db.batch([
+        ...item.policyStatements,
+        ...item.holdStatements,
+        ...item.finalizeStatements,
+      ])
+    }
+    for (const item of others) await publishSearchGrant(item, [searchGrant])
+    const service = searchService(f)
+    const first = await service.execute(searchInput)
+    if (first instanceof Error) throw first
+    const ids = others.map((item) => item.record.snapshot.id).sort()
+    expect(first.records.map((record) => record.recordId)).toEqual(ids.slice(0, 1))
+    expect(first.nextCursor).toBe(ids[0])
+    expect(first.records[0]?.source.sourceRevision).toBeNull()
+    expect(first.records[0]?.source.sourceRecordedAt).toBeNull()
+    expect(JSON.stringify(first)).not.toContain(f.record.snapshot.id)
+    expect(first).not.toHaveProperty("total")
+    const second = await service.execute({ ...searchInput, after: first.nextCursor })
+    if (second instanceof Error) throw second
+    expect(second.records.map((record) => record.recordId)).toEqual(ids.slice(1))
+    expect(second.nextCursor).toBeNull()
+    for (const filter of [
+      { action: "export" },
+      { purpose: "other-purpose" },
+      { sourceNamespace: "another-source" },
+      { ownerContext: "another-context" },
+      { recordKind: "another-kind" },
+      { sourceRecordId: "another-record" },
+    ]) {
+      expect(await service.execute({ ...searchInput, ...filter })).toEqual({
+        records: [],
+        nextCursor: null,
+      })
+    }
+    expect(
+      f.sqlite
+        .query(
+          "SELECT count(*) AS count FROM system_audit_events WHERE action = 'system.record.searched'",
+        )
+        .get(),
+    ).toEqual({ count: 8 })
+  } finally {
+    f.sqlite.close()
+  }
+})
+
+test("期限到来・資格変更・監査失敗では保全物の一覧を返さない", async () => {
+  for (const failure of ["expiry", "authority", "audit", "policy"]) {
+    const f = fixture()
+    try {
+      await f.db.batch([...f.policyStatements, ...f.holdStatements, ...f.finalizeStatements])
+      await publishSearchGrant(f, [
+        { ...searchGrant, validUntil: new Date(Date.parse(now) + 1000).toISOString() },
+      ])
+      const calls: Date[] = []
+      const service = searchService(f, () => {
+        calls.push(new Date(now))
+        if (calls.length === 2) {
+          if (failure === "expiry") return new Date(Date.parse(now) + 1000)
+          if (failure === "authority") f.sqlite.exec("UPDATE test_source_revision SET revision = 2")
+          if (failure === "audit")
+            f.sqlite.exec(
+              "CREATE TRIGGER reject_search_audit BEFORE INSERT ON system_audit_events WHEN NEW.action = 'system.record.searched' BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END",
+            )
+          if (failure === "policy") {
+            f.sqlite.exec("DROP TRIGGER system_record_disclosure_prevent_update")
+            f.sqlite.exec(
+              "UPDATE system_record_disclosure_policies SET snapshot_json = json_set(snapshot_json, '$.status', 'revoked') WHERE revision = 2",
+            )
+          }
+        }
+        return new Date(now)
+      })
+      expect(await service.execute(searchInput)).toBeInstanceOf(Error)
+      expect(
+        f.sqlite
+          .query(
+            "SELECT count(*) AS count FROM system_audit_events WHERE action = 'system.record.searched'",
+          )
+          .get(),
+      ).toEqual({ count: 0 })
+    } finally {
+      f.sqlite.close()
+    }
+  }
+})
+
+test("期限外の候補が一取得分を超えても許可済み記録まで走査し、元版を推測しない", async () => {
+  const f = fixture()
+  try {
+    const fixtures = [f, ...Array.from({ length: 52 }, () => fixture(f.sqlite))]
+    fixtures.sort((left, right) => left.record.snapshot.id.localeCompare(right.record.snapshot.id))
+    const allowed = fixtures.slice(-2)
+    for (const item of fixtures) {
+      await item.db.batch([
+        ...item.policyStatements,
+        ...item.holdStatements,
+        ...item.finalizeStatements,
+      ])
+      const grants = allowed.includes(item)
+        ? [searchGrant]
+        : [
+            {
+              ...searchGrant,
+              validFrom: new Date(Date.parse(now) - 1000).toISOString(),
+              validUntil: now,
+            },
+          ]
+      await publishSearchGrant(item, grants)
+    }
+    const service = searchService(f)
+    const first = await service.execute({ ...searchInput, sourceRecordId: "original-1" })
+    if (first instanceof Error) throw first
+    expect(first.records.map((record) => record.recordId)).toEqual([allowed[0]?.record.snapshot.id])
+    expect(first.nextCursor).toBe(allowed[0]?.record.snapshot.id)
+    const second = await service.execute({ ...searchInput, after: first.nextCursor })
+    if (second instanceof Error) throw second
+    expect(second.records.map((record) => record.recordId)).toEqual([
+      allowed[1]?.record.snapshot.id,
+    ])
+    expect(second.nextCursor).toBeNull()
+    expect(second.records[0]?.source.sourceRevision).toBeNull()
+    expect(second.records[0]?.source.sourceRecordedAt).toBeNull()
+    expect(await service.execute({ ...searchInput, limit: 51 })).toBeInstanceOf(Error)
+    expect(
+      await new DisclosePreservedRecordIndex({
+        accountId: "reader",
+        now: () => new Date(now),
+        persistence: new DisclosePreservedRecordIndexPersistenceAdapter({
+          env: { DB: f.db },
+          authorizationAssertions: () => [],
+        }),
+      }).execute(searchInput),
+    ).toBeInstanceOf(Error)
+  } finally {
+    f.sqlite.close()
+  }
+})
+
+test("過去のcursorで開示設定の最新版を迂回せず、将来の許可を先取りしない", async () => {
+  const f = fixture()
+  try {
+    const records = [f, fixture(f.sqlite)].sort((left, right) =>
+      left.record.snapshot.id.localeCompare(right.record.snapshot.id),
+    )
+    for (const item of records) {
+      await item.db.batch([
+        ...item.policyStatements,
+        ...item.holdStatements,
+        ...item.finalizeStatements,
+      ])
+      await publishSearchGrant(item, [searchGrant])
+    }
+    const page = await searchService(f).execute(searchInput)
+    if (page instanceof Error) throw page
+    const later = records[1]
+    if (later === undefined || page.nextCursor === null) throw new Error("second page missing")
+    await publishSearchGrant(later, [], 3)
+    expect(await searchService(f).execute({ ...searchInput, after: page.nextCursor })).toEqual({
+      records: [],
+      nextCursor: null,
+    })
+    await publishSearchGrant(
+      later,
+      [{ ...searchGrant, validFrom: new Date(Date.parse(now) + 60000).toISOString() }],
+      4,
+    )
+    expect(await searchService(f).execute({ ...searchInput, after: page.nextCursor })).toEqual({
+      records: [],
+      nextCursor: null,
+    })
+    const effective = await searchService(f, () => new Date(Date.parse(now) + 60000)).execute({
+      ...searchInput,
+      after: page.nextCursor,
+    })
+    if (effective instanceof Error) throw effective
+    expect(effective.records.map((record) => record.recordId)).toEqual([later.record.snapshot.id])
+    expect(effective.nextCursor).toBeNull()
+  } finally {
+    f.sqlite.close()
   }
 })

@@ -1,5 +1,6 @@
 import { GET as proposalHistory } from "@system/interface/routes/system.proposals.$number.versions.$version"
 import { GET as preservedContent } from "@system/interface/routes/system.preserved-records.$recordId.content"
+import { GET as preservedRecords } from "@system/interface/routes/system.preserved-records"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
@@ -136,6 +137,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
       context.set("database", drizzle(fixture.f.database))
       await next()
     })
+    .get("/system/preserved-records", ...preservedRecords)
     .get("/system/preserved-records/:recordId/content", ...preservedContent)
     .get("/system/proposals/:number/versions/:version", ...proposalHistory)
   const token = await new SystemAccessTokenIssuer("preservation-isolated-export-test").issue({
@@ -151,6 +153,39 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   }
   const headers = { authorization: `Bearer ${token}` }
   expect((await core.request(fixture.path, { headers }, environment)).status).toBe(404)
+  const searchPath =
+    "/system/preserved-records?action=export&purpose=archive&owner_context=software-license"
+  const discovered = await core.request(searchPath, { headers }, environment)
+  expect(discovered.status).toBe(200)
+  expect(discovered.headers.get("cache-control")).toBe("no-store")
+  expect(await discovered.json()).toMatchObject({
+    records: [
+      {
+        recordId: receipt.record_id,
+        source: { ownerContext: "software-license", sourceRevision: null, sourceRecordedAt: null },
+      },
+    ],
+    nextCursor: null,
+  })
+  expect((await core.request(searchPath, {}, environment)).status).toBe(401)
+  expect(
+    (
+      await core.request(
+        "/system/preserved-records?action=read&purpose=archive",
+        { headers },
+        environment,
+      )
+    ).status,
+  ).toBe(403)
+  expect((await core.request(`${searchPath}&limit=51`, { headers }, environment)).status).toBe(400)
+  const wrongPurpose = await core.request(
+    "/system/preserved-records?action=export&purpose=unapproved",
+    { headers },
+    environment,
+  )
+  expect(wrongPurpose.status).toBe(200)
+  const wrongPurposeBody: unknown = await wrongPurpose.json()
+  expect(wrongPurposeBody).toEqual({ records: [], nextCursor: null })
   const exported = await core.request(
     `/system/preserved-records/${receipt.record_id}/content?action=export&purpose=archive&format=package`,
     { headers },
@@ -217,6 +252,9 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   })
   if (reviewerToken instanceof Error) throw reviewerToken
   const reviewerHeaders = { authorization: `Bearer ${reviewerToken}` }
+  expect((await core.request(searchPath, { headers: reviewerHeaders }, environment)).status).toBe(
+    403,
+  )
   expect((await core.request(historyPath, { headers: reviewerHeaders }, environment)).status).toBe(
     200,
   )
@@ -229,6 +267,21 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
       )
     ).status,
   ).toBe(403)
+  await fixture.f.database.exec(
+    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('preservation-review-reader','system:record:export')",
+  )
+  const qualifiedWithoutDisclosure = await core.request(
+    searchPath,
+    { headers: reviewerHeaders },
+    environment,
+  )
+  expect(qualifiedWithoutDisclosure.status).toBe(200)
+  const qualifiedWithoutDisclosureBody: unknown = await qualifiedWithoutDisclosure.json()
+  expect(qualifiedWithoutDisclosureBody).toEqual({ records: [], nextCursor: null })
+  await fixture.f.database.exec(
+    "DELETE FROM system_iam_role_permissions WHERE role_id='license-test-manager' AND permission_key='system:record:export'",
+  )
+  expect((await core.request(searchPath, { headers }, environment)).status).toBe(403)
 })
 
 test.each(["company", "permission"])(
