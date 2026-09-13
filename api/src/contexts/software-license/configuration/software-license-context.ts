@@ -10,6 +10,11 @@ export type SoftwareLicenseContext = SystemD1Context &
   SystemClockContext &
   SystemAuthorizationContext &
   Readonly<{
-    env: { COMPANY_TIME_ZONE?: string; NOW?: string; SOFTWARE_LICENSE_ENABLED?: string }
+    env: {
+      COMPANY_TIME_ZONE?: string
+      NOW?: string
+      SOFTWARE_LICENSE_ENABLED?: string
+      RECORD_SOURCE_NAMESPACE?: string
+    }
     var: { licenseSession: CompanySessionValue | null }
   }>

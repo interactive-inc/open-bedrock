@@ -367,6 +367,7 @@
     "src/contexts/company/infrastructure/adapters/organization/organization-unit-change-statement.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/prepare-company-procedure-decision.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/prepare-employee-management-authority.adapter.ts",
+    "src/contexts/company/infrastructure/adapters/organization/prepare-record-preservation-task.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/read-active-headcount.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/read-company-snapshot-employees.adapter.ts",
@@ -382,6 +383,7 @@
     "src/contexts/company/infrastructure/adapters/organization/responsibility-resource-adoption-snapshot.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-authority.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-execution.adapter.ts",
+    "src/contexts/company/infrastructure/adapters/organization/revalidate-record-preservation-execution.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/validate-employee-active.adapter.ts",
     "src/contexts/company/infrastructure/adapters/workforce/account-employee-link-read.adapter.ts",
     "src/contexts/company/infrastructure/adapters/workforce/canonical-organization-authority-evidence.adapter.test.ts",
@@ -582,6 +584,7 @@
     "src/contexts/company/test/personnel-company-revision.integration.test.ts",
     "src/contexts/company/test/personnel-execution.integration.test.ts",
     "src/contexts/company/test/personnel-position-snapshot.integration.test.ts",
+    "src/contexts/company/test/record-preservation-execution.integration.test.ts",
     "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts"
   ],
   "implementedCapabilities": [

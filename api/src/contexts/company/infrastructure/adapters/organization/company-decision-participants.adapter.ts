@@ -28,7 +28,11 @@ export class CompanyDecisionParticipantsAdapter {
       links.map((link) => [String(link.accountId), String(link.employeeId)]),
     )
     const accesses = await new ResolveLiveEmployeeAccessAdapter({
-      env: { ...this.c.env, NOW: input.resolvedAt.toISOString() },
+      env: {
+        DB: this.c.env.DB,
+        COMPANY_TIME_ZONE: this.c.env.COMPANY_TIME_ZONE,
+        NOW: input.resolvedAt.toISOString(),
+      },
     }).resolveMany(
       input.candidates.map((candidate) => restoreWorkforceId("employee", candidate.employeeId)),
       input.asOf,

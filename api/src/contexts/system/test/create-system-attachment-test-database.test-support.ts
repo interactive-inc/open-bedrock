@@ -20,7 +20,15 @@ export function createSystemAttachmentTestDatabase(): D1Database {
     "utf8",
   )
 
+  const workflowSchema = readFileSync(
+    new URL("../infrastructure/schema/system-workflow.sql", import.meta.url),
+    "utf8",
+  )
+  const procedureSchema = readFileSync(
+    new URL("../infrastructure/schema/system-procedure.sql", import.meta.url),
+    "utf8",
+  )
   return createSystemD1TestDatabase(
-    `${coreSchema}\n${integrationSchema}\n${principalSchema}\n${attachmentSchema}`,
+    `${coreSchema}\n${integrationSchema}\n${principalSchema}\n${attachmentSchema}\n${workflowSchema}\n${procedureSchema}`,
   )
 }

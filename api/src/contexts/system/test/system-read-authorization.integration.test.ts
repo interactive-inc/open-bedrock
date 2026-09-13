@@ -1,3 +1,5 @@
+import { preparePreservedRecordWriteAuthorization } from "@system/interface/authorization/prepare-preserved-record-write-authorization"
+import { preparePreservedRecordReadAuthorization } from "@system/interface/authorization/prepare-preserved-record-read-authorization"
 import { expect, test } from "bun:test"
 import { createSystemAttachmentTestDatabase } from "@system/test/create-system-attachment-test-database.test-support"
 import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
@@ -153,3 +155,55 @@ test("外部認証は確認したidentityを固定し、別Accountのidentityと
   expect(await f.db.batch([...assertions]).catch((error: unknown) => error)).toBeInstanceOf(Error)
   expect(await f.adapter.prepare(authentication, at)).toBeNull()
 })
+
+test.each(["human", "agent", "service", "connector"] as const)(
+  "%s requires the explicit record operation permission",
+  async (kind) => {
+    const f = await fixture(kind)
+    const input = { authentication: f.authentication, action: "read" as const, at }
+    expect(await preparePreservedRecordReadAuthorization({ env: { DB: f.db } }, input)).toBeNull()
+    await f.db.exec(
+      "DELETE FROM system_iam_role_permissions; INSERT INTO system_iam_role_permissions VALUES ('reader-role', 'system:record:read')",
+    )
+    const proof = await preparePreservedRecordReadAuthorization({ env: { DB: f.db } }, input)
+    if (proof === null || proof instanceof Error)
+      throw new Error("missing explicit read permission")
+    expect(
+      await preparePreservedRecordReadAuthorization(
+        { env: { DB: f.db } },
+        { ...input, action: "export" },
+      ),
+    ).toBeNull()
+    const assertions = proof.assertions(at)
+    if (assertions instanceof Error) throw assertions
+    await f.db.exec("DELETE FROM system_iam_role_permissions")
+    expect(await f.db.batch([...assertions]).catch((cause: unknown) => cause)).toBeInstanceOf(Error)
+  },
+)
+
+test.each(["human", "agent", "service", "connector"] as const)(
+  "%s needs explicit preservation permission and loses it at commit after revocation",
+  async (kind) => {
+    const f = await fixture(kind)
+    const input = { authentication: f.authentication, at }
+    const context = { env: { DB: f.db } }
+    await f.db.exec(
+      "DELETE FROM system_iam_role_permissions; INSERT INTO system_iam_role_permissions VALUES ('reader-role','system:record:read'),('reader-role','system:record:export')",
+    )
+    expect(await preparePreservedRecordWriteAuthorization(context, input)).toBeNull()
+    await f.db.exec(
+      "DELETE FROM system_iam_role_permissions; INSERT INTO system_iam_role_permissions VALUES ('reader-role','system:record:preserve')",
+    )
+    const proof = await preparePreservedRecordWriteAuthorization(context, input)
+    if (proof === null || proof instanceof Error) throw new Error("missing preservation permission")
+    expect(
+      await preparePreservedRecordReadAuthorization(context, { ...input, action: "read" }),
+    ).toBeNull()
+    const guards = proof.assertions(at)
+    if (guards instanceof Error) throw guards
+    await f.db.batch([...guards])
+    await f.db.exec("DELETE FROM system_iam_role_permissions")
+    expect(await f.db.batch([...guards]).catch((cause: unknown) => cause)).toBeInstanceOf(Error)
+    expect(await preparePreservedRecordWriteAuthorization(context, input)).toBeNull()
+  },
+)

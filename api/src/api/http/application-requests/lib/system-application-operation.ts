@@ -1,3 +1,6 @@
+import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
+import { PrepareSystemCaseReadGuardAdapter } from "@system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter"
+import { RecordPreservationProposalValue } from "@system/domain/values/records/record-preservation-proposal.value"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
 import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active-system-account-id"
@@ -19,7 +22,7 @@ import {
   CompanyNotFoundError,
 } from "@/contexts/company/domain/errors"
 import { FindPersonnelActionRequestAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/find-personnel-action-request.adapter"
-import type { Context } from "@/env"
+import type { Context, Variables } from "@/env"
 import { canRepairWorkflow } from "@/api/http/application-requests/lib/can-repair-workflow"
 import { parseJsonValue } from "@/api/http/application-requests/lib/parse-json-value"
 import { isUniqueConstraintError } from "@/lib/d1/is-unique-constraint-error"
@@ -63,7 +66,11 @@ export type SystemApplicationResult = Readonly<{
 export function systemProposalQuery(c: Context): SystemD1ProposalAdapter {
   return new SystemD1ProposalAdapter({
     env: { DB: c.env.DB },
-    visibleCompletionOperationKeys: [null, "company.personnel-action.apply"],
+    visibleCompletionOperationKeys: [
+      null,
+      "company.personnel-action.apply",
+      "system.record.preserve",
+    ],
   })
 }
 
@@ -209,7 +216,7 @@ export async function withdrawSystemApplication(
 }
 
 export async function decideSystemApplication(
-  c: Context,
+  c: Context & { readonly var: Pick<Variables, "bearerReadAuthentication"> },
   input: Readonly<{
     number: number
     actorEmployeeId: EmployeeId
@@ -239,7 +246,86 @@ export async function decideSystemApplication(
     taskKey: proposal.currentTaskKey ?? proposal.lastTaskKey,
     taskRound: proposal.currentTaskRound ?? proposal.lastTaskRound,
   })
-  if (expected instanceof Error || current instanceof Error || !expected.equals(current)) {
+  if (
+    expected instanceof Error ||
+    proposal.version !== input.decisionTarget.proposalVersion ||
+    proposal.digest !== input.decisionTarget.proposalDigest
+  ) {
+    return new ConflictError("application decision target changed", "decision_target_changed")
+  }
+  if (
+    proposal.completionOperationKey === "system.record.preserve" &&
+    input.action === "approve" &&
+    (proposal.status === "pending" ||
+      proposal.status === "approved" ||
+      proposal.status === "executed")
+  ) {
+    const session = c.var.session
+    const authentication = c.var.bearerReadAuthentication
+    if (
+      session === null ||
+      session.employeeId !== input.actorEmployeeId ||
+      authentication === undefined ||
+      authentication.accountId !== session.accountId ||
+      authentication.machineCredentialId !== null
+    )
+      return new ForbiddenError("cannot replay another employee's decision", "forbidden")
+    const attestations = await query.listAttestations(proposal.caseId)
+    if (attestations instanceof Error)
+      return new UnexpectedError("failed to verify original decision", { cause: attestations })
+    const original = attestations.find(
+      (attestation) =>
+        attestation.actorAccountId === session.accountId &&
+        attestation.taskKey === input.decisionTarget.taskKey &&
+        attestation.round === input.decisionTarget.taskRound &&
+        attestation.action === "approve" &&
+        attestation.comment === input.comment,
+    )
+    if (original !== undefined) {
+      const proof = await new PrepareSystemReadAuthorizationAdapter(c).prepare(
+        authentication,
+        input.decidedAt,
+      )
+      if (proof instanceof Error)
+        return new UnexpectedError("failed to verify replay authorization", { cause: proof })
+      if (proof === null) return new ForbiddenError("replay authorization changed", "forbidden")
+      const guard = await new PrepareSystemCaseReadGuardAdapter(c).prepare({
+        caseId: proposal.caseId,
+        accountId: session.accountId,
+        at: input.decidedAt,
+      })
+      if (guard instanceof Error)
+        return new UnexpectedError("failed to prepare replay guard", { cause: guard })
+      const latest = await query.findByNumber(input.number)
+      if (latest instanceof Error)
+        return new UnexpectedError("failed to verify replay target", { cause: latest })
+      if (
+        latest === null ||
+        latest.proposalId !== proposal.proposalId ||
+        latest.status !== proposal.status ||
+        latest.currentTaskKey !== proposal.currentTaskKey ||
+        latest.currentTaskRound !== proposal.currentTaskRound
+      )
+        return new ConflictError("application decision target changed", "decision_target_changed")
+      const now = new Date(c.env.NOW ?? Date.now())
+      const assertions = proof.assertions(now)
+      if (assertions instanceof Error)
+        return new ForbiddenError("replay authorization changed", "forbidden")
+      try {
+        const verified = await c.env.DB.batch([...assertions, guard(now)])
+        if (verified.length !== assertions.length + 1 || verified.some((result) => !result.success))
+          return new ConflictError("application decision target changed", "decision_target_changed")
+      } catch (cause) {
+        return new ConflictError("application decision target changed", "decision_target_changed", {
+          cause,
+        })
+      }
+      return { status: proposal.status === "pending" ? "pending" : "approved" }
+    }
+    if (proposal.status !== "pending")
+      return new ForbiddenError("original approval does not belong to this actor", "forbidden")
+  }
+  if (current instanceof Error || !expected.equals(current)) {
     return new ConflictError("application decision target changed", "decision_target_changed")
   }
   if (
@@ -366,6 +452,13 @@ export async function decideSystemApplication(
   let authoritySubjectEmployeeId: EmployeeId | null | undefined
   let targetDepartmentCode: string | null | undefined
   let excludedEmployeeIds: ReadonlySet<EmployeeId> | undefined
+  if (proposal.completionOperationKey === "system.record.preserve") {
+    const intent = await RecordPreservationProposalValue.restore(payload.value)
+    if (intent instanceof Error)
+      return new UnexpectedError("invalid record preservation proposal", { cause: intent })
+    authoritySubjectEmployeeId = null
+    targetDepartmentCode = null
+  }
   if (proposal.completionOperationKey === "company.personnel-action.apply") {
     const personnelRequest = await new FindPersonnelActionRequestAdapter(
       c,
@@ -504,6 +597,8 @@ async function completeSystemApplicationIfRequired(
   completedAt: Date,
 ): Promise<true | ApplicationError> {
   if (proposal.completionOperationKey === null) return true
+  // 保全実行には原記録の再検査が必要なため、承認後は専用の実行操作へ進む。
+  if (proposal.completionOperationKey === "system.record.preserve") return true
   if (proposal.completionOperationKey !== "company.personnel-action.apply") {
     return new UnexpectedError("unknown System completion operation")
   }

@@ -2,6 +2,16 @@
 export const systemRouteManifest = [
   {
     method: "GET",
+    path: "/system/preserved-records/:recordId/content",
+    phase: "public",
+    handler: {
+      kind: "module",
+      module: "@system/interface/routes/system.preserved-records.$recordId.content",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
     path: "/system/proposals/:number/versions/:version",
     phase: "public",
     handler: {

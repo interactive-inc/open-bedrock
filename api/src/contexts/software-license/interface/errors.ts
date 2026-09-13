@@ -48,3 +48,10 @@ export class SoftwareLicenseOperationError extends SoftwareLicenseHTTPException 
     super(statuses[error.code], { message: error.message, cause: error })
   }
 }
+
+/** 確認した台帳・提案・資格が処理中に変わり、同じ判断を確定できない。 */
+export class SoftwareLicenseConflictError extends SoftwareLicenseHTTPException {
+  constructor(options?: Readonly<{ message?: string; cause?: unknown }>) {
+    super(409, options ?? { message: "license operation changed or conflicted" })
+  }
+}

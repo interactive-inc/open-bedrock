@@ -1,8 +1,8 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "f41f3d8b871a55f3a1690513b8e7d4268d732f407b02b28583945e7499f905d6",
-    "src/contexts/company/CLAUDE.md": "80247089a24770a7dbfcbaf9151ac962b21b8dc36d6ef6244dc4eb50bb866412",
+    "company-context.manifest.json": "a27844bff328eff1745ed5b3c446172f15b8025ea9a01054d3b437cd20de3c2c",
+    "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
     "src/contexts/company/application/account-employee-links/update-account-employee-links.ts": "3c6de5c90c577523702ce687410d13b9b5f267cf269dd6f85008c6c0bb53301a",
@@ -348,7 +348,7 @@
     "src/contexts/company/infrastructure/adapters/organization/company-assignment-resource-projection.adapter.ts": "45889e093bfcc80e2cdf6888a01b47fb617b222ccdbf9e79d4f94090dbe9e850",
     "src/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter.ts": "b072af4b8a6f8df1e6abc5a82cc2ddee86d35be78666ef0baaf6a959736444c4",
     "src/contexts/company/infrastructure/adapters/organization/company-decision-human-accounts.adapter.ts": "e211d43b44506266743e338f689f84fb4f8db683c42dc7cb96f0f915b8757b34",
-    "src/contexts/company/infrastructure/adapters/organization/company-decision-participants.adapter.ts": "d3e7b7754114f618aa700052ab9abb3727ff9560a1114c6f81a35b1434d73c3c",
+    "src/contexts/company/infrastructure/adapters/organization/company-decision-participants.adapter.ts": "1280e07dc6ed22cb40df0fe7e79b2a238ec7d567a80f43a353b8c4a450ffcec5",
     "src/contexts/company/infrastructure/adapters/organization/company-governance-authority-resolution.adapter.test.ts": "41a9d1474836356360bf355d89b45e430fb0bf50a33e901304020a3a837fd899",
     "src/contexts/company/infrastructure/adapters/organization/company-governance-authority-resolution.adapter.ts": "a3cdbda8352934c9afc2c15645086c1c75db0aa5b481678182ab15296443b7ac",
     "src/contexts/company/infrastructure/adapters/organization/company-governance-procedure-task.adapter.test.ts": "022eb1640b91741666678f61981f1e4947fcca4f52c96fb9ec310090116c60f9",
@@ -367,6 +367,7 @@
     "src/contexts/company/infrastructure/adapters/organization/organization-unit-change-statement.adapter.ts": "e4344f89174a32fddf6d640a545fe2a97a1ef0ea016bc685611afcb062b7ac01",
     "src/contexts/company/infrastructure/adapters/organization/prepare-company-procedure-decision.adapter.ts": "2a4b6ce55a59612791c2dbd89f0c15011d4294ee23745d0697760b33a05c90b5",
     "src/contexts/company/infrastructure/adapters/organization/prepare-employee-management-authority.adapter.ts": "f5285c3a63c7f98179363a82302426c87b9be9f997e293b08f2faacfd3e26b15",
+    "src/contexts/company/infrastructure/adapters/organization/prepare-record-preservation-task.adapter.ts": "1c24f52bf82281efd0d04a1e103a6a0e1b5607d34099820992eb807963df0216",
     "src/contexts/company/infrastructure/adapters/organization/read-active-headcount.adapter.ts": "3cf33dc4bcd4fcafc91964446be7abe484a2288c038ddafa56773b913ef88af9",
     "src/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter.ts": "4e17d2f618ed093d7acd20866e1b1b32c803288b191e6bf70cc6ebcc8085bf4b",
     "src/contexts/company/infrastructure/adapters/organization/read-company-snapshot-employees.adapter.ts": "f6bea41aa6cfe1527962e7d29dab5b3845e06fd5bfe55f8a94ad5d5a037c5e8f",
@@ -381,7 +382,8 @@
     "src/contexts/company/infrastructure/adapters/organization/resolve-organizational-authority-candidates.adapter.ts": "02ecfe80ac173d274509b08564fb184e5493801a5747eff0103ec635b684848d",
     "src/contexts/company/infrastructure/adapters/organization/responsibility-resource-adoption-snapshot.adapter.ts": "68bb2e5b26b46ebaefd4060eaab5692958c153974263aef55e193c4da4dce6a6",
     "src/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-authority.adapter.ts": "ec8f4a292065291c6864088553793448bb85e083edd53d92c5467c9681411906",
-    "src/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-execution.adapter.ts": "4622ac40a09fa8553f15a3bfe451707bdc342ba900937d7f03ddf5742971d729",
+    "src/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-execution.adapter.ts": "913d3cef120002935ebbe8dd273e7aba13dcd7b59a72b2a5df40b73e153fccf6",
+    "src/contexts/company/infrastructure/adapters/organization/revalidate-record-preservation-execution.adapter.ts": "c24e018a1c8687e2bf4a5ae8b47a385325c300244f754b476528a269578dd04e",
     "src/contexts/company/infrastructure/adapters/organization/validate-employee-active.adapter.ts": "fb3fc3e31a9536b126c3e6efe74c3eb25cd4158f2217f6095bec0c96ce50a240",
     "src/contexts/company/infrastructure/adapters/workforce/account-employee-link-read.adapter.ts": "88ad622e2887ad4b4199689a175af0f110381e4b4399f758e96543dd076f9e8d",
     "src/contexts/company/infrastructure/adapters/workforce/canonical-organization-authority-evidence.adapter.test.ts": "6f753d6e3e27cfa967aab18304cd126ef954b72881814f9e1d7c2672acf2f8f4",
@@ -582,6 +584,7 @@
     "src/contexts/company/test/personnel-company-revision.integration.test.ts": "2bef414b4ce8e8a4d2887fdcb8389607c2ee9a7c7d0a407894a5bb2071f89243",
     "src/contexts/company/test/personnel-execution.integration.test.ts": "092ca01afe971b1a39f4f2e68dcdb0dd3121ddf40d5c59073d7ceb5cdb1f0cea",
     "src/contexts/company/test/personnel-position-snapshot.integration.test.ts": "d37ea062045c2ae698affdc3523c7c1c4d9d04c7c3fe0a9ef969756af3f55c71",
+    "src/contexts/company/test/record-preservation-execution.integration.test.ts": "e965b7fe704b91ec70a0e65731ff010b1512323f7fbbd3b3cdc17a61ba192b78",
     "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts": "b715ab26e87b73d92d24766a6507fcec28a0ac69b3ebf022c04517e299d6b1dd"
   }
 }

@@ -1,6 +1,17 @@
 /** 台帳の公開routeを宣言する。 */
 export const softwareLicenseRouteManifest = [
   {
+    method: "POST",
+    path: "/software-license/software-licenses/:id/preservation-requests",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module:
+        "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests",
+      exportName: "POST",
+    },
+  },
+  {
     method: "GET",
     path: "/software-license/software-licenses",
     phase: "audited",
@@ -92,6 +103,72 @@ export const softwareLicenseRouteManifest = [
       kind: "module",
       module:
         "@/contexts/software-license/interface/routes/software-license.software-licenses.assignments.$assignmentId.release",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
+    path: "/software-license/software-licenses/:id/preservation-requests/:number/execute",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module:
+        "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.execute",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
+    path: "/software-license/software-licenses/:id/preservation-requests/:number/approve",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module:
+        "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.approve",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "GET",
+    path: "/software-license/software-licenses/:id/preservation-requests/:number",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module:
+        "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/software-license/software-licenses/:id/preservation-requests/:number/reject",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module:
+        "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.reject",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
+    path: "/software-license/software-licenses/:id/preservation-requests/:number/withdraw",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module:
+        "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.withdraw",
+      exportName: "POST",
+    },
+  },
+  {
+    method: "POST",
+    path: "/software-license/software-licenses/:id/preservation-requests/:number/resubmit",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module:
+        "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.resubmit",
       exportName: "POST",
     },
   },
