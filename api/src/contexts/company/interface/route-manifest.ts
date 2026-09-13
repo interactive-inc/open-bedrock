@@ -555,16 +555,6 @@ export const companyRouteManifest = [
   },
   {
     method: "POST",
-    path: "/company/personnel-actions",
-    phase: "audited",
-    handler: {
-      kind: "module",
-      module: "@/contexts/company/interface/routes/company.personnel-actions",
-      exportName: "POST",
-    },
-  },
-  {
-    method: "POST",
     path: "/company/personnel-action-executions",
     phase: "audited",
     handler: {
