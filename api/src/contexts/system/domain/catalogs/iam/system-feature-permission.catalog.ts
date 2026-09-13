@@ -3,6 +3,9 @@ import { PermissionValue } from "@system/domain/values/iam/permission.value"
 /** Company roleから利用できる、System IAM最小核以外の機能権限。 */
 export const SystemFeaturePermission = Object.freeze({
   ACCOUNT_MANAGE: PermissionValue.known("account:manage"),
+  RECORD_PRESERVE: PermissionValue.known("system:record:preserve"),
+  RECORD_READ: PermissionValue.known("system:record:read"),
+  RECORD_EXPORT: PermissionValue.known("system:record:export"),
   AUDIT_READ: PermissionValue.known("audit:read"),
   AUDIT_EXPORT: PermissionValue.known("audit:export"),
   NOTIFICATION_SEND: PermissionValue.known("notification:send"),

@@ -1,3 +1,4 @@
+import { AttachmentPreservationEntity } from "@system/domain/entities/attachment-preservation.entity"
 import { expect, spyOn, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
 import { z } from "zod"
@@ -526,4 +527,50 @@ test("解除直前に再認証が失効したら削除停止を残す", async ()
   } finally {
     write.mockRestore()
   }
+})
+
+test("保全と監査を外側の保存と一緒に確定し、後続失敗ではすべて取り消す", async () => {
+  const f = await fixture()
+  const entity = AttachmentPreservationEntity.create({
+    ...f.command(),
+    attachmentId: f.attachment.id,
+    actorAccountId: "admin",
+    createdAt: at.toISOString(),
+    auditEventId: crypto.randomUUID(),
+    revision: 1,
+    release: null,
+  })
+  if (entity instanceof Error) throw entity
+  const audit = entity.audit(null)
+  if (audit instanceof Error) throw audit
+  const repository = new AttachmentPreservationRepository({ env: { DB: f.db }, assertions: [] })
+  const failure = await f.db
+    .batch([
+      ...repository.prepareWrite(entity, audit),
+      f.db.prepare("SELECT json_extract('{}', 'reject_outer_record')"),
+    ])
+    .then(
+      () => null,
+      (cause: unknown) => cause,
+    )
+  expect(failure).toBeInstanceOf(Error)
+  expect(await repository.find(entity.snapshot.id)).toBeNull()
+  expect(
+    await f.db
+      .prepare(
+        "SELECT count(*) AS count FROM system_audit_events WHERE action LIKE 'system.attachment.preservation.%'",
+      )
+      .first<{ count: number }>(),
+  ).toEqual({ count: 0 })
+  await f.db.batch(repository.prepareWrite(entity, audit).slice())
+  const saved = await repository.find(entity.snapshot.id)
+  if (saved === null || saved instanceof Error) throw new Error("preservation missing after retry")
+  expect(saved.snapshot.id).toBe(entity.snapshot.id)
+  expect(
+    await f.db
+      .prepare(
+        "SELECT count(*) AS count FROM system_audit_events WHERE action LIKE 'system.attachment.preservation.%'",
+      )
+      .first<{ count: number }>(),
+  ).toEqual({ count: 1 })
 })
