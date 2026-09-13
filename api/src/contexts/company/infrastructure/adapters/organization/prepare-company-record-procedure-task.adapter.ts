@@ -8,7 +8,6 @@ import { CompanyForbiddenError } from "@/contexts/company/domain/errors"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
 import { ResolveCompanyProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task.adapter"
 import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-
 import { RecordRetirementProposalValue } from "@system/domain/values/records/record-retirement-proposal.value"
 
 type Context = CompanyContext
