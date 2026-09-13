@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "53c0fb6d5e2a01d8caeddb7453e73b8a90c73f15bb697ed53ab3bba7d29ba8c2",
+    "company-context.manifest.json": "35fac2f9acc1e0b6995a805fe4c01ad7fc30ba5a2eebd374fa6c48e44f5f356e",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -507,6 +507,7 @@
     "src/contexts/company/test/company-assignment-resource.test-support.ts": "2760d88f109d831c8c3179bc142f0724fd7a1e38b60aaa5c54ffe2ea73a94853",
     "src/contexts/company/test/company-authority-employment.integration.test.ts": "a07aeb9739555c8d0bd4008cf7c39523516474bb64332e26c9b28d67484c69ad",
     "src/contexts/company/test/company-authority-employment.test-support.ts": "bf2f6eb84a75509c90f66cd3f944022d4f7588d96961d0a6f71c6f2a216e0dd4",
+    "src/contexts/company/test/company-change-consumer.api.test.ts": "0d6efcff943b62b3c6fc9a4c278d9fb06a98f0cec509f384fefce3840478e5b0",
     "src/contexts/company/test/company-definition-permissions.api.test.ts": "31d854465811d5ea5beaac674c4e9b42db70ad722b053168d88c77f984ed92be",
     "src/contexts/company/test/company-domain-structure.contract.test.ts": "de082f69d47d72408fe2121df1e3cd9c8bfdd427759caa0e12800044fb4b4d9f",
     "src/contexts/company/test/company-employer-migration.contract.test.ts": "1a3b78401c73f78bfcb6128f6d6e7e2b17535b18a1fe218c429493d0447690ef",
