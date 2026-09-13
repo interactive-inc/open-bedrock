@@ -2,7 +2,7 @@ import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { createFactory } from "hono/factory"
 import { CompanyNotFoundError } from "@/contexts/company/domain/errors"
-import { DefinitionResourceAdoptionRepository } from "@/contexts/company/infrastructure/repositories/definitions/definition-resource-adoption.repository"
+import { DefinitionResourceAdoptionReadAdapter } from "@/contexts/company/infrastructure/adapters/definitions/definition-resource-adoption-read.adapter"
 import {
   CompanyAuthenticationRequiredError,
   CompanyAccessDeniedError,
@@ -29,7 +29,7 @@ export const GET = factory.createHandlers(
     )
       throw new CompanyAccessDeniedError()
     if (context.env.DB === undefined) throw new CompanyDatabaseUnavailableError()
-    const record = await new DefinitionResourceAdoptionRepository({
+    const record = await new DefinitionResourceAdoptionReadAdapter({
       env: { DB: context.env.DB },
     }).find(context.req.valid("param").commandId)
     if (record instanceof Error) throw new CompanyReadUnavailableError(record)
