@@ -507,6 +507,7 @@
     "src/contexts/company/test/company-assignment-resource.test-support.ts",
     "src/contexts/company/test/company-authority-employment.integration.test.ts",
     "src/contexts/company/test/company-authority-employment.test-support.ts",
+    "src/contexts/company/test/company-change-consumer.api.test.ts",
     "src/contexts/company/test/company-definition-permissions.api.test.ts",
     "src/contexts/company/test/company-domain-structure.contract.test.ts",
     "src/contexts/company/test/company-employer-migration.contract.test.ts",
