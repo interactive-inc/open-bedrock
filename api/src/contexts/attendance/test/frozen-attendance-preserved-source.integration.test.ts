@@ -1,3 +1,4 @@
+import { POST as verifyRetirement } from "@/contexts/attendance/interface/routes/attendance.retirement-plans.$planId.verification-receipts"
 import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
 import { PreparePreservedRecordRetentionGuardAdapter } from "@system/infrastructure/adapters/records/prepare-preserved-record-retention-guard.adapter"
 import { PreservedRecordRepository } from "@system/infrastructure/repositories/records/preserved-record.repository"
@@ -366,6 +367,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
       anonymous?: boolean
       withoutStepUp?: boolean
       plan?: boolean
+      verification?: boolean
       at?: Date
     }> = {},
   ) => {
@@ -398,8 +400,11 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
       })
       .post("/freezes/:freezeId/coverage-pages", ...verifyCoverage)
       .post("/freezes/:freezeId/retirement-plans", ...createRetirementPlan)
+      .post("/retirement-plans/:planId/verification-receipts", ...verifyRetirement)
     return app.request(
-      `/freezes/${command.freezeId}/${options.plan ? "retirement-plans" : "coverage-pages"}`,
+      options.verification
+        ? `/retirement-plans/${command.freezeId}/verification-receipts`
+        : `/freezes/${command.freezeId}/${options.plan ? "retirement-plans" : "coverage-pages"}`,
       {
         method: "POST",
         headers: {
@@ -531,6 +536,67 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
     recordKinds: ["attendance-record"],
   })
   expect(planned.headers.get("Cache-Control")).toBe("no-store")
+  const verificationCommand = {
+    id: crypto.randomUUID(),
+    freezeId: planCommand.id,
+    sourceNamespace: f.settings.sourceNamespace,
+  }
+  const requestVerification = (input: unknown, options = {}) =>
+    requestRecordOperation(input, f.database, { ...options, verification: true })
+  expect((await requestVerification(verificationCommand, { anonymous: true })).status).toBe(401)
+  expect((await requestVerification(verificationCommand, { withoutStepUp: true })).status).toBe(403)
+  expect((await requestVerification({ ...verificationCommand, ordinal: 2 })).status).toBe(400)
+  expect(
+    (await requestVerification({ ...verificationCommand, freezeId: crypto.randomUUID() })).status,
+  ).toBe(409)
+  await f.database.exec(`CREATE TRIGGER reject_attendance_verification BEFORE INSERT
+    ON system_record_retirement_receipts BEGIN SELECT RAISE(ABORT,'test verification failure'); END`)
+  expect((await requestVerification(verificationCommand)).status).toBe(503)
+  expect(
+    await f.database
+      .prepare("SELECT count(*) AS n FROM system_record_retirement_receipts")
+      .first<number>("n"),
+  ).toBe(0)
+  await f.database.exec("DROP TRIGGER reject_attendance_verification")
+  await f.database.exec(`CREATE TRIGGER revoke_attendance_verification_authority AFTER INSERT
+    ON system_audit_events WHEN NEW.action='system.record.retirement.page.verified' BEGIN
+    DELETE FROM system_iam_role_permissions WHERE role_id='role:attendance-archive'
+      AND permission_key='system:record:read'; END`)
+  expect((await requestVerification(verificationCommand)).status).toBe(503)
+  expect(
+    await f.database
+      .prepare("SELECT count(*) AS n FROM system_record_retirement_receipts")
+      .first<number>("n"),
+  ).toBe(0)
+  expect(
+    await f.database
+      .prepare(
+        "SELECT count(*) AS n FROM system_audit_events WHERE action='system.record.retirement.page.verified'",
+      )
+      .first<number>("n"),
+  ).toBe(0)
+  await f.database.exec("DROP TRIGGER revoke_attendance_verification_authority")
+  const verification = await requestVerification(verificationCommand)
+  if (verification.status !== 200) throw new Error(await verification.text())
+  const verificationResponse = await verification.json()
+  expect(verificationResponse).toMatchObject({
+    id: verificationCommand.id,
+    planId: planCommand.id,
+    ordinal: 1,
+  })
+  expect(verification.headers.get("Cache-Control")).toBe("no-store")
+  const verificationReplay = await requestVerification(verificationCommand)
+  expect(verificationReplay.status).toBe(200)
+  expect(await verificationReplay.json()).toEqual(verificationResponse)
+  expect(
+    (await requestVerification({ ...verificationCommand, id: crypto.randomUUID() })).status,
+  ).toBe(409)
+  expect(
+    await f.database
+      .prepare("SELECT count(*) AS n FROM system_record_retirement_receipts")
+      .first<number>("n"),
+  ).toBe(1)
+
   const replayedPlan = await requestPlan(planCommand)
   expect(replayedPlan.status).toBe(200)
   expect(await replayedPlan.json()).toEqual(planResponse)
@@ -540,6 +606,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
     "DELETE FROM system_iam_role_permissions WHERE role_id='role:attendance-archive' AND permission_key='system:admin'",
   )
   expect((await requestPlan(planCommand)).status).toBe(403)
+  expect((await requestVerification(verificationCommand)).status).toBe(403)
   await f.database.exec(
     "INSERT INTO system_iam_role_permissions VALUES ('role:attendance-archive','system:admin')",
   )
@@ -573,6 +640,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
     new Date(),
   )
   expect((await requestPlan(planCommand)).status).toBe(503)
+  expect((await requestVerification(verificationCommand)).status).toBe(503)
   const raceFreeze = crypto.randomUUID()
   await new CreateRecordSourceFreeze({
     repository: new RecordSourceFreezeRepository({ env, assertions: [] }),
@@ -628,6 +696,21 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
   await f.database.exec(
     "INSERT INTO system_iam_role_permissions VALUES ('role:attendance-archive','system:record:read')",
   )
+  const activePlanId = crypto.randomUUID()
+  const activeCoverageId = crypto.randomUUID()
+  expect(
+    (await requestCoverage({ ...coverageCommand, id: activeCoverageId, freezeId: raceFreeze }))
+      .status,
+  ).toBe(200)
+  expect(
+    (await requestPlan({ ...planCommand, id: activePlanId, freezeId: raceFreeze })).status,
+  ).toBe(200)
+  const heldVerification = {
+    ...verificationCommand,
+    id: crypto.randomUUID(),
+    freezeId: activePlanId,
+  }
+  expect((await requestVerification(heldVerification)).status).toBe(200)
   const originalReceipt = await new PreservedRecordRepository({ env, assertions: [] }).find(
     receipt.record_id,
   )
@@ -653,6 +736,12 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
   const releaseAudit = released.audit(held)
   if (releaseAudit instanceof Error) throw releaseAudit
   expect(await holds.write(released, releaseAudit)).toBe("written")
+  expect((await requestVerification(heldVerification)).status).toBe(503)
+  expect(
+    await f.database
+      .prepare("SELECT count(*) AS n FROM system_record_retirement_receipts")
+      .first<number>("n"),
+  ).toBe(2)
   expect(await retentionAdapter.prepare(originalReceipt, new Date())).toBeInstanceOf(Error)
   await f.database.exec("CREATE TABLE retention_test_receipts(id TEXT PRIMARY KEY)")
   expect(
@@ -669,7 +758,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
       .first<number>("n"),
   ).toBe(0)
   expect(
-    (await requestCoverage({ ...coverageCommand, id: crypto.randomUUID(), freezeId: raceFreeze }))
+    (await requestCoverage({ ...coverageCommand, id: activeCoverageId, freezeId: raceFreeze }))
       .status,
   ).toBe(503)
 })

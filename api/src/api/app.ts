@@ -71,6 +71,14 @@ import * as attendanceRecordSourceFreezesFreezeIdRoute from "@/contexts/attendan
 import * as attendanceRecordSourceFreezesFreezeIdCoveragePagesRoute from "@/contexts/attendance/interface/routes/attendance.record-source-freezes.$freezeId.coverage-pages"
 import * as attendanceRecordSourceFreezesFreezeIdReleaseRoute from "@/contexts/attendance/interface/routes/attendance.record-source-freezes.$freezeId.release"
 import * as attendanceRecordSourceFreezesFreezeIdRetirementPlansRoute from "@/contexts/attendance/interface/routes/attendance.record-source-freezes.$freezeId.retirement-plans"
+import * as attendanceRetirementPlansPlanIdRequestsRoute from "@/contexts/attendance/interface/routes/attendance.retirement-plans.$planId.requests"
+import * as attendanceRetirementPlansPlanIdRequestsNumberRoute from "@/contexts/attendance/interface/routes/attendance.retirement-plans.$planId.requests.$number"
+import * as attendanceRetirementPlansPlanIdRequestsNumberApproveRoute from "@/contexts/attendance/interface/routes/attendance.retirement-plans.$planId.requests.$number.approve"
+import * as attendanceRetirementPlansPlanIdRequestsNumberExecuteRoute from "@/contexts/attendance/interface/routes/attendance.retirement-plans.$planId.requests.$number.execute"
+import * as attendanceRetirementPlansPlanIdRequestsNumberRejectRoute from "@/contexts/attendance/interface/routes/attendance.retirement-plans.$planId.requests.$number.reject"
+import * as attendanceRetirementPlansPlanIdRequestsNumberResubmitRoute from "@/contexts/attendance/interface/routes/attendance.retirement-plans.$planId.requests.$number.resubmit"
+import * as attendanceRetirementPlansPlanIdRequestsNumberWithdrawRoute from "@/contexts/attendance/interface/routes/attendance.retirement-plans.$planId.requests.$number.withdraw"
+import * as attendanceRetirementPlansPlanIdVerificationReceiptsRoute from "@/contexts/attendance/interface/routes/attendance.retirement-plans.$planId.verification-receipts"
 import * as businessTripsRoute from "@/contexts/business-trip/interface/routes/business-trips"
 import * as businessTripsIdRoute from "@/contexts/business-trip/interface/routes/business-trips.$id"
 import * as businessTripsIdApproveRoute from "@/contexts/business-trip/interface/routes/business-trips.$id.approve"
@@ -513,11 +521,43 @@ const routePart0 = createRouteApp()
     "/attendance/record-source-freezes/:freezeId/retirement-plans",
     ...attendanceRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
   )
+  .post(
+    "/attendance/retirement-plans/:planId/requests",
+    ...attendanceRetirementPlansPlanIdRequestsRoute.POST,
+  )
+  .get(
+    "/attendance/retirement-plans/:planId/requests/:number",
+    ...attendanceRetirementPlansPlanIdRequestsNumberRoute.GET,
+  )
+  .post(
+    "/attendance/retirement-plans/:planId/requests/:number/approve",
+    ...attendanceRetirementPlansPlanIdRequestsNumberApproveRoute.POST,
+  )
+
+const routePart1 = createRouteApp()
+  .post(
+    "/attendance/retirement-plans/:planId/requests/:number/execute",
+    ...attendanceRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/attendance/retirement-plans/:planId/requests/:number/reject",
+    ...attendanceRetirementPlansPlanIdRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/attendance/retirement-plans/:planId/requests/:number/resubmit",
+    ...attendanceRetirementPlansPlanIdRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/attendance/retirement-plans/:planId/requests/:number/withdraw",
+    ...attendanceRetirementPlansPlanIdRequestsNumberWithdrawRoute.POST,
+  )
+  .post(
+    "/attendance/retirement-plans/:planId/verification-receipts",
+    ...attendanceRetirementPlansPlanIdVerificationReceiptsRoute.POST,
+  )
   .post("/business-trip/business-trips", ...businessTripsRoute.POST)
   .get("/business-trip/business-trips/admin", ...businessTripsAdminRoute.GET)
   .get("/business-trip/business-trips/me", ...businessTripsMeRoute.GET)
-
-const routePart1 = createRouteApp()
   .get("/business-trip/business-trips/:id", ...businessTripsIdRoute.GET)
   .put("/business-trip/business-trips/:id", ...businessTripsIdRoute.PUT)
   .delete("/business-trip/business-trips/:id", ...businessTripsIdRoute.DELETE)

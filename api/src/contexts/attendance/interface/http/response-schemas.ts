@@ -53,3 +53,29 @@ export const zAppAttendanceRetirementPlan = z.strictObject({
   recordKinds: z.array(z.literal("attendance-record")),
   createdAt: z.iso.datetime(),
 })
+
+/** 固定した計画のページを再検証した結果。撤去許可は含めない。 */
+export const zAppAttendanceRetirementVerificationReceipt = z.strictObject({
+  id: z.uuid(),
+  planId: z.uuid(),
+  planDigest: z.string().regex(/^[0-9a-f]{64}$/),
+  ordinal: z.number().int().positive().safe(),
+  digest: z.string().regex(/^[0-9a-f]{64}$/),
+  coveragePageId: z.uuid(),
+  checkedAt: z.iso.datetime(),
+})
+
+/** 人の判断待ちとして保存した撤去申請。 */
+export const zAppAttendanceRetirementRequest = z.strictObject({
+  number: z.number().int().positive().safe(),
+  caseId: z.string().min(1),
+  planId: z.uuid(),
+  proposalDigest: z.string().regex(/^[0-9a-f]{64}$/),
+  status: z.string().min(1),
+})
+
+/** 原記録を残したまま停止世代を撤去確定した結果。 */
+export const zAppAttendanceRetirementExecution = z.strictObject({
+  retirement_id: z.uuid(),
+  finalized_at: z.iso.datetime(),
+})
