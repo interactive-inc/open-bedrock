@@ -186,6 +186,18 @@ test("生成APIの署名検証から停止・参照・解除まで通し、失�
     )
     expect(disabled.status).toBe(404)
   }
+  expect(
+    (
+      await generatedApp.request(
+        `/attendance/retirement-plans/${id}/verification-receipts`,
+        {
+          method: "POST",
+          headers: { authorization: `Bearer ${token}` },
+        },
+        { ...bindings, DISABLED_DEFAULT_APPS: "attendance" },
+      )
+    ).status,
+  ).toBe(404)
   const active = await read()
   expect(active.status).toBe(200)
   expect(await active.json()).toMatchObject({ freeze: { id, revision: 1, release: null } })
