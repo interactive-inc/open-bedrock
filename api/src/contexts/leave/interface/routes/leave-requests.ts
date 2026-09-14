@@ -30,7 +30,7 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { readCompanyEmployeeNames } from "@/contexts/company/interface/operations/read-company-employee-names"
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
 import { and, count, desc, eq, inArray } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
@@ -172,7 +172,6 @@ export const GET = factory.createHandlers(
       .select({
         id: leaveRequests.id,
         employeeId: leaveRequests.employeeId,
-        applicantName: employees.officialName,
         leaveType: leaveRequests.leaveType,
         startDate: leaveRequests.startDate,
         endDate: leaveRequests.endDate,
@@ -184,7 +183,6 @@ export const GET = factory.createHandlers(
         createdAt: leaveRequests.createdAt,
       })
       .from(leaveRequests)
-      .leftJoin(employees, eq(employees.id, leaveRequests.employeeId))
       .where(where)
       .orderBy(desc(leaveRequests.id))
       .limit(limit)
@@ -195,19 +193,23 @@ export const GET = factory.createHandlers(
       .from(leaveRequests)
       .where(where)
 
-    const currentDepartments = await loadCurrentEmployeeDepartmentNames(
-      c,
-      rows.map((row) => row.employeeId),
-    )
+    const employeeIds = rows.map((row) => row.employeeId)
+    const [currentDepartments, employeeNames] = await Promise.all([
+      loadCurrentEmployeeDepartmentNames(c, employeeIds),
+      readCompanyEmployeeNames(c, employeeIds),
+    ])
     if (currentDepartments instanceof Error) {
       throw new InternalError("failed to load current departments")
+    }
+    if (employeeNames instanceof Error) {
+      throw new InternalError("failed to load current employee names")
     }
 
     const responseBody = zAppLeaveRequestAdminList.parse({
       data: rows.map((row) => ({
         id: row.id,
         applicant_id: row.employeeId,
-        applicant_name: row.applicantName ?? "",
+        applicant_name: employeeNames.get(row.employeeId) ?? "",
         applicant_dept_name: currentDepartments.get(row.employeeId) ?? null,
         leave_type: row.leaveType,
         start_date: row.startDate,
