@@ -1,6 +1,6 @@
-import Link from "next/link"
 import { Badge } from "@/components/ui/badge"
 import type { OrgTreeNode } from "@/lib/api/types/org-types"
+import Link from "next/link"
 
 type Props = {
   node: OrgTreeNode
@@ -20,7 +20,10 @@ export function OrgTreeNodeItem(props: Props) {
         className="flex items-center gap-2 rounded-md py-2 hover:bg-muted/50"
         style={indentStyle}
       >
-        <Link href={`/teams/${props.node.code}`} className="text-sm font-medium hover:underline">
+        <Link
+          href={`/company/departments/${props.node.code}`}
+          className="text-sm font-medium hover:underline"
+        >
           {props.node.name}
         </Link>
 

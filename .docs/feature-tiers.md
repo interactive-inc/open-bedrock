@@ -104,4 +104,8 @@ Appを除去するときは対象contextのコード、route module登録、seed
 
 `/dashboard`、`/inbox/counts`、認証、通知、監査、Account管理など、SystemとCompanyまたは複数業務contextを合成するrouteは `api/src/api/routes` が所有する。route総数とURLは生成検査で固定し、単一所有routeは `api/context-ownership.json` の所有者と実配置を一致させる。
 
-受信箱の集約タブ、種類別カード、サイドバーの合計件数は、技術権限とAPIが返す有効化状態の両方に従う。無効なAppの受信箱URLを直接開いた場合も、業務画面の代わりに無効状態を表示する。Systemが所有する汎用申請はAppの無効化に影響されない。
+管理画面のサイドバーと機能検索は、System、Company、業務の所有区分に従い、技術権限とAPIが返す有効化状態の両方で項目を絞る。個人ホーム、本人専用ページ、マイチームの導線は設けない。入口は閲覧可能な管理メニューへ転送し、対象がなければ管理機能がない旨を表示する。従業員別の記録は管理一覧の検索条件で指定し、データの参照範囲はAPIの認可に従う。GUIの整理によってAPIやCLIの本人向け操作は廃止しない。
+
+受信箱の集約タブと種類別カードも、技術権限とAPIが返す有効化状態の両方に従う。無効なAppの受信箱URLを直接開いた場合も、業務画面の代わりに無効状態を表示する。Systemが所有する汎用申請はAppの無効化に影響されない。
+
+受信箱 `/inbox` と申請テンプレート `/application-templates` は複数contextを組み合わせる画面であり、システムタブ内の「横断管理」に置く。この配置はSystem contextへの実装配置を意味しない。申請テンプレートのHTTP APIも `/application-templates` を使用し、`api/src/api/routes` がSystemの手続き定義とCompanyの承認資格を組み合わせる。旧API `/company/application-templates` は同じhandlerを使用する互換入口とし、旧画面 `/system/application-templates` と `/company/application-templates` は中立URLへ転送する。SystemとCompanyの相互呼び出しを追加せず、保存・版管理・認可の規則をURLの変更で変えない。

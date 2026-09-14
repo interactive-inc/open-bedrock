@@ -1,13 +1,13 @@
 "use client"
 
-import { useActionState } from "react"
+import type { CertificateRequestActionState } from "@/app/(app)/certificate-request/certificate-requests/actions"
 import {
   issueCertificateRequestAction,
   rejectCertificateRequestAction,
-} from "@/app/(app)/my/certificate-requests/actions"
-import type { CertificateRequestActionState } from "@/app/(app)/my/certificate-requests/actions"
+} from "@/app/(app)/certificate-request/certificate-requests/actions"
 import { Button } from "@/components/ui/button"
 import { FieldError } from "@/components/ui/field"
+import { useActionState } from "react"
 
 type Props = {
   certificateRequestId: string

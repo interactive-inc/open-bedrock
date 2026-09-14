@@ -1,11 +1,11 @@
-import { notFound } from "next/navigation"
-import { ShiftAssignmentCreateForm } from "@/app/(app)/my/shifts/_components/shift-assignment-create-form"
+import { ShiftAssignmentCreateForm } from "@/app/(app)/shift/_components/shift-assignment-create-form"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent } from "@/components/ui/card"
 import { getEmployeeDirectory } from "@/lib/api/get-employee-directory"
 import { getMe } from "@/lib/api/get-me"
 import { canManageShift } from "@/lib/shift/can-manage-shift"
+import { notFound } from "next/navigation"
 
 export const metadata = { title: "シフトを割り当て" }
 

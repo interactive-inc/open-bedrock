@@ -1,8 +1,6 @@
 "use client"
 
-import { Bell, LogOut, Settings, User } from "lucide-react"
-import Link from "next/link"
-import { useState } from "react"
+import { SettingsDialog } from "@/components/settings-dialog"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -14,8 +12,7 @@ import {
   AlertDialogTitle,
 } from "@/components/ui/alert-dialog"
 import { Avatar, AvatarFallback } from "@/components/ui/avatar"
-import { Badge } from "@/components/ui/badge"
-import { Button, buttonVariants } from "@/components/ui/button"
+import { buttonVariants } from "@/components/ui/button"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -25,19 +22,19 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { SettingsDialog } from "@/components/settings-dialog"
 import type { MeResponse } from "@/lib/api/types/auth-types"
 import type { Locale } from "@/lib/i18n/locale"
+import { LogOut, Settings } from "lucide-react"
+import { useState } from "react"
 
 type Props = {
   currentUser: MeResponse
   locale: Locale
   onLogout: () => void
-  unreadNotificationCount: number
 }
 
 /**
- * サイドバー下部に置く通知ベルとユーザーメニュー。
+ * 管理画面のセッション確認・表示設定・ログアウト。
  */
 export function SidebarUserMenu(props: Props) {
   const initial = props.currentUser.name.slice(0, 1).toUpperCase()
@@ -48,27 +45,6 @@ export function SidebarUserMenu(props: Props) {
 
   return (
     <div className="flex items-center gap-2">
-      <Button
-        variant="ghost"
-        size="icon"
-        nativeButton={false}
-        className="relative"
-        aria-label={
-          props.unreadNotificationCount > 0
-            ? `通知（未読 ${props.unreadNotificationCount} 件）`
-            : "通知"
-        }
-        render={<Link href="/notifications" />}
-      >
-        <Bell />
-
-        {props.unreadNotificationCount > 0 ? (
-          <Badge className="absolute -top-1 -right-1 justify-center">
-            {props.unreadNotificationCount}
-          </Badge>
-        ) : null}
-      </Button>
-
       <DropdownMenu>
         <DropdownMenuTrigger
           aria-label="ユーザーメニュー"
@@ -92,11 +68,6 @@ export function SidebarUserMenu(props: Props) {
 
           <DropdownMenuSeparator />
 
-          <DropdownMenuItem render={<Link href="/" />}>
-            <User />
-            <span>プロフィール</span>
-          </DropdownMenuItem>
-
           <DropdownMenuItem onClick={() => setSettingsOpen(true)}>
             <Settings />
             <span>設定</span>
@@ -111,14 +82,7 @@ export function SidebarUserMenu(props: Props) {
         </DropdownMenuContent>
       </DropdownMenu>
 
-      <SettingsDialog
-        locale={props.locale}
-        phone={props.currentUser.phone}
-        profile={props.currentUser.profile}
-        profileCommandId={props.currentUser.profileCommandId}
-        open={settingsOpen}
-        onOpenChange={setSettingsOpen}
-      />
+      <SettingsDialog locale={props.locale} open={settingsOpen} onOpenChange={setSettingsOpen} />
 
       <AlertDialog open={logoutOpen} onOpenChange={setLogoutOpen}>
         <AlertDialogContent>

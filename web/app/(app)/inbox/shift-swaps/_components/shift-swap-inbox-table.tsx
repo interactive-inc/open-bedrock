@@ -1,8 +1,6 @@
 "use client"
 
-import { useActionState } from "react"
-import { toast } from "sonner"
-import { approveShiftSwapRequestAction, type ShiftFormState } from "@/app/(app)/my/shifts/actions"
+import { approveShiftSwapRequestAction, type ShiftFormState } from "@/app/(app)/shift/actions"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import { EmptyState } from "@/components/empty-state"
 import { FieldError } from "@/components/ui/field"
@@ -15,6 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { ShiftSwapRequestInboxResponse } from "@/lib/api/types/shift-types"
+import { useActionState } from "react"
+import { toast } from "sonner"
 
 const initialState: ShiftFormState = { ok: false, error: null }
 

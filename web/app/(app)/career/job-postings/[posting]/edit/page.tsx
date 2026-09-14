@@ -1,5 +1,4 @@
-import { notFound } from "next/navigation"
-import { EditPostingForm } from "@/app/(app)/my/career/_components/edit-posting-form"
+import { EditPostingForm } from "@/app/(app)/career/job-postings/_components/edit-posting-form"
 import { BackButton } from "@/components/back-button"
 import { FetchError } from "@/components/fetch-error"
 import { PageHeader } from "@/components/page-header"
@@ -7,6 +6,7 @@ import { Card } from "@/components/ui/card"
 import { getCareerPosting } from "@/lib/api/get-career-posting"
 import { getMe } from "@/lib/api/get-me"
 import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
+import { notFound } from "next/navigation"
 
 export const metadata = { title: "公募の編集" }
 

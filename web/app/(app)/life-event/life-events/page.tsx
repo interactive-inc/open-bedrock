@@ -1,13 +1,9 @@
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { Suspense } from "react"
 import { LifeEventAdminFilterForm } from "@/app/(app)/life-event/life-events/_components/life-event-admin-filter-form"
 import { LifeEventAdminTable } from "@/app/(app)/life-event/life-events/_components/life-event-admin-table"
 import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { TablePagination } from "@/components/table-pagination"
-import { Button } from "@/components/ui/button"
 import {
   getLifeEventAdminList,
   type LifeEventAdminFilter,
@@ -15,6 +11,8 @@ import {
 import { getMe } from "@/lib/api/get-me"
 import { canManageLifeEvents } from "@/lib/life-event/can-manage-life-events"
 import { canViewAllLifeEvents } from "@/lib/life-event/can-view-all-life-events"
+import { notFound } from "next/navigation"
+import { Suspense } from "react"
 
 export const metadata = { title: "ライフイベントの横断" }
 
@@ -60,15 +58,7 @@ export default async function AdminLifeEventsPage(props: { searchParams: SearchP
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="ライフイベントの横断">
-        <Button
-          variant="secondary"
-          nativeButton={false}
-          render={<Link href="/life-event/life-events" />}
-        >
-          自分の届出
-        </Button>
-      </PageHeader>
+      <PageHeader title="ライフイベントの横断"></PageHeader>
 
       <LifeEventAdminFilterForm
         statusValue={filter.status ?? ""}

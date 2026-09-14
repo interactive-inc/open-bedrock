@@ -1,9 +1,7 @@
-import { FetchError } from "@/components/fetch-error"
-import { formatDateTime } from "@/lib/format-date-time"
-import { Suspense } from "react"
-import { toReviewerTypeLabel } from "@/app/(app)/my/reviews/_lib/to-reviewer-type-label"
+import { toReviewerTypeLabel } from "@/app/(app)/performance-review/review-cycles/_lib/to-reviewer-type-label"
 import { BackButton } from "@/components/back-button"
 import { EmptyState } from "@/components/empty-state"
+import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Badge } from "@/components/ui/badge"
@@ -18,6 +16,8 @@ import {
 } from "@/components/ui/table"
 import { getReviewResults } from "@/lib/api/get-review-results"
 import type { ReviewFormResponse } from "@/lib/api/types/review-types"
+import { formatDateTime } from "@/lib/format-date-time"
+import { Suspense } from "react"
 
 export const metadata = { title: "評価結果" }
 
@@ -40,7 +40,7 @@ export default async function ReviewResultsPage(props: Props) {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="評価結果">
-        <BackButton href="/my/reviews" label="評価に戻る" />
+        <BackButton href="/performance-review/review-cycles" label="評価に戻る" />
       </PageHeader>
 
       <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-16 w-full" />}>

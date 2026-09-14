@@ -1,20 +1,20 @@
-import { ExpenseResubmission } from "@/app/(app)/expense/expenses/_components/expense-resubmission"
-import { ExpenseProcedureControls } from "@/app/(app)/expense/expenses/_components/expense-procedure-controls"
 import { ExpenseDecisionHistory } from "@/app/(app)/expense/expenses/_components/expense-decision-history"
-import Link from "next/link"
-import { formatDate } from "@/lib/format-date"
-import { formatDateTime } from "@/lib/format-date-time"
-import { Suspense } from "react"
+import { ExpenseProcedureControls } from "@/app/(app)/expense/expenses/_components/expense-procedure-controls"
+import { ExpenseResubmission } from "@/app/(app)/expense/expenses/_components/expense-resubmission"
 import { BackButton } from "@/components/back-button"
 import { DetailField } from "@/components/detail-field"
+import { DetailSkeleton } from "@/components/detail-skeleton"
 import { ExpenseStatusBadge } from "@/components/expense-status-badge"
 import { FetchError } from "@/components/fetch-error"
 import { PageHeader } from "@/components/page-header"
-import { DetailSkeleton } from "@/components/detail-skeleton"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getExpenseDetail } from "@/lib/api/get-expense-detail"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
 import { toExpenseCategoryLabel } from "@/lib/expense/to-expense-category-label"
+import { formatDate } from "@/lib/format-date"
+import { formatDateTime } from "@/lib/format-date-time"
+import Link from "next/link"
+import { Suspense } from "react"
 
 export const metadata = { title: "経費詳細" }
 
@@ -31,7 +31,7 @@ export default async function ExpenseDetailPage(props: Props) {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="経費詳細">
-        <BackButton href="/my/expenses" label="経費一覧に戻る" />
+        <BackButton href="/expense/expenses" label="経費一覧に戻る" />
       </PageHeader>
 
       <Suspense fallback={<DetailSkeleton fields={5} />}>

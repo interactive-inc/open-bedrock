@@ -1,6 +1,6 @@
-import { beforeEach, describe, expect, test, vi } from "vite-plus/test"
 import { updateEmployeeAction } from "@/app/(app)/company/employees/actions"
-import { updatePhoneAction } from "@/app/(app)/my/settings/actions"
+import { updatePhoneAction } from "@/app/(app)/settings/actions"
+import { beforeEach, describe, expect, test, vi } from "vite-plus/test"
 
 const mocks = vi.hoisted(() => ({ put: vi.fn(), requireAuth: vi.fn(), revalidatePath: vi.fn() }))
 vi.mock("@/lib/auth/require-auth", () => ({ requireAuth: mocks.requireAuth }))

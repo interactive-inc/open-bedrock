@@ -52,7 +52,7 @@ describe("CompanyAccountEmployeeLinkSection", () => {
 
     render(await CompanyAccountEmployeeLinkSection())
 
-    expect(screen.getByText("Account の対応が登録されていません")).toBeDefined()
+    expect(screen.getByText("アカウントと従業員の紐付けが登録されていません")).toBeDefined()
     expect(screen.queryByRole("table")).toBeNull()
   })
 
@@ -61,7 +61,7 @@ describe("CompanyAccountEmployeeLinkSection", () => {
 
     render(await CompanyAccountEmployeeLinkSection())
 
-    expect(screen.getByText("Account の対応の取得に失敗しました")).toBeDefined()
+    expect(screen.getByText("アカウントと従業員の紐付けの取得に失敗しました")).toBeDefined()
     expect(screen.queryByRole("table")).toBeNull()
   })
 })

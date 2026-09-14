@@ -1,14 +1,10 @@
-import { FetchError } from "@/components/fetch-error"
-import { formatDateTime } from "@/lib/format-date-time"
-import Link from "next/link"
-import { Suspense } from "react"
-import { TablePagination } from "@/components/table-pagination"
-import { PAGE_SIZE_OPTIONS, parsePageSize } from "@/lib/pagination/parse-page-size"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { EmptyState } from "@/components/empty-state"
+import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
-import { SubPageHeader } from "@/components/sub-page-header"
 import { SortableTableHead } from "@/components/sortable-table-head"
+import { SubPageHeader } from "@/components/sub-page-header"
+import { TablePagination } from "@/components/table-pagination"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -21,6 +17,10 @@ import {
 import { getApplicationInbox, type ApplicationInboxSort } from "@/lib/api/get-application-inbox"
 import { getMe } from "@/lib/api/get-me"
 import { canViewAllApplications } from "@/lib/application/can-view-all-applications"
+import { formatDateTime } from "@/lib/format-date-time"
+import { PAGE_SIZE_OPTIONS, parsePageSize } from "@/lib/pagination/parse-page-size"
+import Link from "next/link"
+import { Suspense } from "react"
 
 export const metadata = { title: "承認待ちの申請" }
 
@@ -62,7 +62,7 @@ export default async function ApplicationInboxPage(props: { searchParams: Search
             <Button
               variant="secondary"
               nativeButton={false}
-              render={<Link href="/teams/approval-delegations" />}
+              render={<Link href="/system/approval-delegations" />}
             >
               代理承認
             </Button>
@@ -75,14 +75,6 @@ export default async function ApplicationInboxPage(props: { searchParams: Search
                 申請管理
               </Button>
             ) : null}
-
-            <Button
-              variant="secondary"
-              nativeButton={false}
-              render={<Link href="/my/applications" />}
-            >
-              申請一覧へ
-            </Button>
           </>
         }
       />

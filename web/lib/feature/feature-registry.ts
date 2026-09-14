@@ -1,3 +1,10 @@
+import type {
+  FeatureDefinition,
+  FeatureGroup,
+  FeatureNavigationVisibility,
+  FeatureStatus,
+  FeatureTier,
+} from "@/lib/feature/feature-types"
 import {
   Activity,
   ArrowLeftRight,
@@ -45,13 +52,6 @@ import {
   Wallet,
   Wrench,
 } from "lucide-react"
-import type {
-  FeatureDefinition,
-  FeatureGroup,
-  FeatureNavigationVisibility,
-  FeatureStatus,
-  FeatureTier,
-} from "@/lib/feature/feature-types"
 
 const everyone: FeatureNavigationVisibility = { kind: "everyone" }
 
@@ -76,11 +76,11 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     group: "overview",
     icon: LayoutDashboard,
     prefetch: null,
-    routes: [{ label: "ホーム", href: "/", visibility: everyone }],
+    routes: [],
   },
   {
     slug: "inbox",
-    tier: "company",
+    tier: "system",
     status: "available",
     group: "overview",
     icon: Inbox,
@@ -94,7 +94,13 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     group: "overview",
     icon: Bell,
     prefetch: null,
-    routes: [{ label: "通知", href: "/notifications", visibility: everyone }],
+    routes: [
+      {
+        label: "通知を作成",
+        href: "/notifications/new",
+        visibility: { kind: "permission", permission: "notification:send" },
+      },
+    ],
   },
   {
     slug: "attendance",
@@ -104,15 +110,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     icon: TimerReset,
     prefetch: null,
     routes: [
-      { label: "勤怠", href: "/my/attendances", visibility: everyone },
-      {
-        label: "部署の勤怠",
-        href: "/teams/:team/attendances",
-        visibility: {
-          kind: "any-permission",
-          permissions: ["attendance:read:department", "attendance:read:all"],
-        },
-      },
       {
         label: "全社の勤怠",
         href: "/attendance/attendances",
@@ -133,15 +130,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     icon: CalendarOff,
     prefetch: null,
     routes: [
-      { label: "休暇", href: "/my/leaves", visibility: everyone },
-      {
-        label: "部署の休暇",
-        href: "/teams/:team/leaves",
-        visibility: {
-          kind: "any-permission",
-          permissions: ["leave:read:department", "leave:read:all"],
-        },
-      },
       {
         label: "全社の休暇",
         href: "/leave/leaves",
@@ -157,7 +145,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     icon: CalendarDays,
     prefetch: null,
     routes: [
-      { label: "シフト", href: "/my/shifts", visibility: everyone },
       {
         label: "シフト割当",
         href: "/shift/shift-assignments",
@@ -198,15 +185,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     icon: FileText,
     prefetch: null,
     routes: [
-      { label: "申請", href: "/my/applications", visibility: everyone },
-      {
-        label: "部署の申請",
-        href: "/teams/:team/applications",
-        visibility: {
-          kind: "any-permission",
-          permissions: ["application:read:department", "application:read:all"],
-        },
-      },
       {
         label: "全社の申請",
         href: "/system/applications",
@@ -214,7 +192,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
       },
       {
         label: "申請テンプレート",
-        href: "/system/application-templates",
+        href: "/application-templates",
         visibility: { kind: "permission", permission: "application_template:manage" },
       },
       {
@@ -235,7 +213,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     icon: Coins,
     prefetch: null,
     routes: [
-      { label: "経費", href: "/my/expenses", visibility: everyone },
       {
         label: "全社の経費",
         href: "/expense/expenses",
@@ -251,7 +228,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     icon: Plane,
     prefetch: null,
     routes: [
-      { label: "出張", href: "/my/business-trips", visibility: everyone },
       {
         label: "出張の横断",
         href: "/business-trip/business-trips",
@@ -268,11 +244,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     prefetch: null,
     routes: [
       {
-        label: "証明書",
-        href: "/my/certificate-requests",
-        visibility: everyone,
-      },
-      {
         label: "証明書の横断",
         href: "/certificate-request/certificate-requests",
         visibility: { kind: "permission", permission: "certificate_request:read:all" },
@@ -287,7 +258,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     icon: PartyPopper,
     prefetch: null,
     routes: [
-      { label: "ライフイベント", href: "/my/life-events", visibility: everyone },
       {
         label: "ライフイベントの横断",
         href: "/life-event/life-events",
@@ -304,11 +274,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     prefetch: null,
     routes: [
       {
-        label: "休業",
-        href: "/my/family-care-leaves",
-        visibility: everyone,
-      },
-      {
         label: "休業の横断",
         href: "/family-care-leave/family-care-leaves",
         visibility: { kind: "permission", permission: "family_care_leave:read:all" },
@@ -323,7 +288,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     icon: UserMinus,
     prefetch: null,
     routes: [
-      { label: "退職", href: "/my/resignations", visibility: everyone },
       {
         label: "退職の横断",
         href: "/resignation/resignations",
@@ -339,7 +303,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     icon: FileText,
     prefetch: null,
     routes: [
-      { label: "稟議", href: "/my/ringis", visibility: everyone },
       {
         label: "稟議の横断",
         href: "/ringi/ringis",
@@ -354,13 +317,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     group: "requests",
     icon: ShieldCheck,
     prefetch: null,
-    routes: [
-      {
-        label: "反社チェック",
-        href: "/my/antisocial-checks",
-        visibility: everyone,
-      },
-    ],
+    routes: [],
   },
   {
     slug: "approval-delegations",
@@ -372,7 +329,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     routes: [
       {
         label: "代理承認の設定",
-        href: "/teams/approval-delegations",
+        href: "/system/approval-delegations",
         visibility: {
           kind: "any-permission",
           permissions: ["goal:read:reports", "attendance:read:reports", "leave:read:reports"],
@@ -494,7 +451,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     prefetch: null,
     routes: [
       {
-        label: "Account の対応",
+        label: "アカウントと従業員の紐付け",
         href: "/company/account-employee-links",
         visibility: companyReadVisibility,
       },
@@ -537,16 +494,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     group: "team",
     icon: Users,
     prefetch: null,
-    routes: [
-      {
-        label: "マイチーム",
-        href: "/my/direct-reports",
-        visibility: {
-          kind: "any-permission",
-          permissions: ["goal:read:reports", "attendance:read:reports", "leave:read:reports"],
-        },
-      },
-    ],
+    routes: [],
   },
   {
     slug: "team-management",
@@ -555,13 +503,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     group: "people",
     icon: Users,
     prefetch: null,
-    routes: [
-      {
-        label: "メンバー",
-        href: "/teams/:team/members",
-        visibility: everyone,
-      },
-    ],
+    routes: [],
   },
   {
     slug: "onboarding",
@@ -571,11 +513,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     icon: ClipboardList,
     prefetch: null,
     routes: [
-      {
-        label: "オンボーディング",
-        href: "/my/onboarding-tasks",
-        visibility: everyone,
-      },
       {
         label: "オンボーディング設計",
         href: "/onboarding/onboarding-templates",
@@ -701,7 +638,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     icon: ClipboardCheck,
     prefetch: null,
     routes: [
-      { label: "評価", href: "/my/reviews", visibility: everyone },
       {
         label: "評価サイクル",
         href: "/performance-review/review-cycles",
@@ -723,14 +659,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     prefetch: null,
     routes: [
       {
-        label: "部署の目標",
-        href: "/teams/:team/goals",
-        visibility: {
-          kind: "any-permission",
-          permissions: ["goal:read:department", "goal:read:all"],
-        },
-      },
-      {
         label: "全社の目標",
         href: "/performance-review/goals",
         visibility: everyone,
@@ -745,7 +673,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     icon: Sparkles,
     prefetch: null,
     routes: [
-      { label: "スキル", href: "/my/skills", visibility: everyone },
       {
         label: "スキル一覧",
         href: "/skill/skills",
@@ -761,7 +688,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     icon: Briefcase,
     prefetch: null,
     routes: [
-      { label: "キャリア", href: "/my/career", visibility: everyone },
       {
         label: "社内公募",
         href: "/career/job-postings",
@@ -777,7 +703,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     icon: GraduationCap,
     prefetch: null,
     routes: [
-      { label: "研修", href: "/my/trainings", visibility: everyone },
       {
         label: "研修コース",
         href: "/training/trainings",
@@ -792,17 +717,7 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     group: "growth",
     icon: CalendarClock,
     prefetch: null,
-    routes: [
-      { label: "1on1", href: "/my/oneonones", visibility: everyone },
-      {
-        label: "部署の1on1",
-        href: "/teams/:team/oneonones",
-        visibility: {
-          kind: "any-permission",
-          permissions: ["oneonone:read:department"],
-        },
-      },
-    ],
+    routes: [],
   },
   {
     slug: "thanks",
@@ -813,19 +728,14 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     prefetch: null,
     routes: [
       {
-        label: "サンクス履歴",
-        href: "/my/thanks",
-        visibility: everyone,
-      },
-      {
         label: "サンクス",
         href: "/thanks/thanks",
         visibility: everyone,
       },
       {
-        label: "景品",
-        href: "/thanks/rewards",
-        visibility: everyone,
+        label: "景品の管理",
+        href: "/thanks/rewards/manage",
+        visibility: { kind: "permission", permission: "thanks_reward:manage" },
       },
       {
         label: "サンクス交換の横断",
@@ -845,11 +755,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
       {
         label: "サーベイ",
         href: "/survey/surveys",
-        visibility: everyone,
-      },
-      {
-        label: "自分の回答",
-        href: "/my/survey-responses",
         visibility: everyone,
       },
     ],
@@ -922,7 +827,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     icon: Boxes,
     prefetch: null,
     routes: [
-      { label: "貸与品", href: "/my/assets", visibility: everyone },
       {
         label: "備品",
         href: "/asset/assets",
@@ -944,11 +848,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     prefetch: null,
     routes: [
       {
-        label: "会議室の予約",
-        href: "/my/room-reservations",
-        visibility: everyone,
-      },
-      {
         label: "会議室",
         href: "/room/rooms",
         visibility: everyone,
@@ -968,7 +867,6 @@ export const featureRegistry: ReadonlyArray<FeatureDefinition> = [
     icon: Package,
     prefetch: null,
     routes: [
-      { label: "レンタル", href: "/my/rentals", visibility: everyone },
       {
         label: "レンタルの横断",
         href: "/rental/rentals",
@@ -1291,6 +1189,7 @@ export const featureGroupOrder: ReadonlyArray<FeatureGroup> = [
   "system-principal",
   "system-authorization",
   "system-case",
+  "cross-context",
   "system-record",
   "system-async",
   "system-integration",
@@ -1317,6 +1216,7 @@ export const featureGroupLabels: Record<FeatureGroup, string> = {
   "system-principal": "主体と認証",
   "system-authorization": "技術的認可",
   "system-case": "案件と判断",
+  "cross-context": "横断管理",
   "system-record": "記録と証拠",
   "system-async": "非同期実行と通知",
   "system-integration": "外部接続",

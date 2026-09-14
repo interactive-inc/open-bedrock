@@ -1,6 +1,5 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { archiveTrainingCourse } from "@/lib/api/archive-training-course"
 import { cancelTrainingEnrollment } from "@/lib/api/cancel-training-enrollment"
 import { completeTrainingEnrollment } from "@/lib/api/complete-training-enrollment"
@@ -10,6 +9,7 @@ import { getMe } from "@/lib/api/get-me"
 import { updateTrainingCourse } from "@/lib/api/update-training-course"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canManageTraining } from "@/lib/training/can-manage-training"
+import { revalidatePath } from "next/cache"
 
 /** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type TrainingFormState = {
@@ -37,7 +37,7 @@ export async function createTrainingEnrollmentAction(
   }
 
   revalidatePath("/training/trainings")
-  revalidatePath("/my/trainings")
+  revalidatePath("/training/trainings")
 
   return { ok: true, error: null }
 }
@@ -68,7 +68,7 @@ export async function completeTrainingEnrollmentAction(
   }
 
   revalidatePath("/training/trainings")
-  revalidatePath("/my/trainings")
+  revalidatePath("/training/trainings")
 
   return { ok: true, error: null }
 }
@@ -171,7 +171,7 @@ export async function cancelTrainingEnrollmentAction(
   }
 
   revalidatePath("/training/trainings")
-  revalidatePath("/my/trainings")
+  revalidatePath("/training/trainings")
 
   return { ok: true, error: null }
 }

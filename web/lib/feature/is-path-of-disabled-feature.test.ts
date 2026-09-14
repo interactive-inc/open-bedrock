@@ -1,11 +1,11 @@
-import { describe, expect, test } from "vite-plus/test"
 import { getFeatureNavigationItems } from "@/lib/feature/get-feature-navigation-items"
 import { isPathOfDisabledFeature } from "@/lib/feature/is-path-of-disabled-feature"
+import { describe, expect, test } from "vite-plus/test"
 
 describe("isPathOfDisabledFeature", () => {
   test("matches the feature page and its sub paths", () => {
     expect(isPathOfDisabledFeature("/thanks/thanks", ["thanks"])).toBe(true)
-    expect(isPathOfDisabledFeature("/my/thanks", ["thanks"])).toBe(true)
+    expect(isPathOfDisabledFeature("/thanks/rewards/manage", ["thanks"])).toBe(true)
     expect(isPathOfDisabledFeature("/thanks/thanks-redemptions", ["thanks"])).toBe(true)
   })
 

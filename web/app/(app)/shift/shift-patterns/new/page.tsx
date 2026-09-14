@@ -1,10 +1,10 @@
-import { notFound } from "next/navigation"
-import { ShiftPatternCreateForm } from "@/app/(app)/my/shifts/_components/shift-pattern-create-form"
+import { ShiftPatternCreateForm } from "@/app/(app)/shift/_components/shift-pattern-create-form"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent } from "@/components/ui/card"
 import { getMe } from "@/lib/api/get-me"
 import { canManageShift } from "@/lib/shift/can-manage-shift"
+import { notFound } from "next/navigation"
 
 export const metadata = { title: "シフトパターンを作成" }
 

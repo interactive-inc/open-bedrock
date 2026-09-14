@@ -53,7 +53,7 @@ const appViews: ReadonlyArray<{ context: string; resources: ReadonlyArray<string
  * 残りは App の `/<context>/<resource>`。
  */
 const organizationMoves: ReadonlyArray<{ resource: string; destination: string }> = [
-  { resource: "application-templates", destination: "system/application-templates" },
+  { resource: "application-templates", destination: "application-templates" },
   { resource: "applications", destination: "system/applications" },
   { resource: "workflow-repairs", destination: "system/workflow-repairs" },
   { resource: "departments", destination: "company/departments" },
@@ -115,7 +115,22 @@ const flatResourceMoves: ReadonlyArray<{ source: string; destination: string }> 
  * 揃えた第3世代が現行で、それ以前の 2 世代分をここで最新へ寄せる。
  * 配列は先頭一致なので、具体パスを base より前に置く。
  */
-export const urlRedirects: ReadonlyArray<Redirect> = [
+const legacyRedirects: ReadonlyArray<Redirect> = [
+  {
+    source: "/system/application-templates",
+    destination: "/application-templates",
+    permanent: false,
+  },
+  {
+    source: "/company/application-templates",
+    destination: "/application-templates",
+    permanent: false,
+  },
+  {
+    source: "/system/application-templates/:path*",
+    destination: "/application-templates/:path*",
+    permanent: false,
+  },
   // --- admin 系 ---
   {
     source: "/admin/audit-events/:path*",
@@ -137,7 +152,7 @@ export const urlRedirects: ReadonlyArray<Redirect> = [
   },
   { source: "/oneonone/:path*", destination: "/my/oneonones/:path*", permanent: false },
   { source: "/oneonone", destination: "/my/oneonones", permanent: false },
-  { source: "/training/me", destination: "/my/trainings", permanent: false },
+  { source: "/training/me", destination: "/training/trainings", permanent: false },
   // --- attendance ---
   { source: "/attendance/all", destination: "/attendance/attendances", permanent: false },
   {
@@ -145,28 +160,28 @@ export const urlRedirects: ReadonlyArray<Redirect> = [
     destination: "/attendance/attendances/overtime",
     permanent: false,
   },
-  { source: "/attendance", destination: "/my/attendances", permanent: false },
+  { source: "/attendance", destination: "/attendance/attendances", permanent: false },
   // --- leave ---
   { source: "/leave/admin", destination: "/leave/leaves", permanent: false },
   { source: "/leave/inbox", destination: "/inbox/leaves", permanent: false },
   { source: "/leave/new", destination: "/my/leaves/new", permanent: false },
-  { source: "/leave", destination: "/my/leaves", permanent: false },
+  { source: "/leave", destination: "/leave/leaves", permanent: false },
   // --- expense ---
   { source: "/expense/admin", destination: "/expense/expenses", permanent: false },
   { source: "/expense/inbox", destination: "/inbox/expenses", permanent: false },
   { source: "/expense/new", destination: "/my/expenses/new", permanent: false },
-  { source: "/expense", destination: "/my/expenses", permanent: false },
+  { source: "/expense", destination: "/expense/expenses", permanent: false },
   // --- applications ---
   { source: "/applications/admin", destination: "/system/applications", permanent: false },
   { source: "/applications/inbox", destination: "/inbox/applications", permanent: false },
   {
     source: "/applications/templates/new",
-    destination: "/system/application-templates/new",
+    destination: "/application-templates/new",
     permanent: false,
   },
   {
     source: "/applications/templates/:path*",
-    destination: "/system/application-templates/:path*",
+    destination: "/application-templates/:path*",
     permanent: false,
   },
   {
@@ -179,12 +194,12 @@ export const urlRedirects: ReadonlyArray<Redirect> = [
     destination: "/system/workflow-repairs",
     permanent: false,
   },
-  { source: "/applications", destination: "/my/applications", permanent: false },
+  { source: "/applications", destination: "/system/applications", permanent: false },
   // --- ringi ---
   { source: "/ringi/admin", destination: "/ringi/ringis", permanent: false },
   { source: "/ringi/inbox", destination: "/inbox/ringis", permanent: false },
   { source: "/ringi/new", destination: "/my/ringis/new", permanent: false },
-  { source: "/ringi", destination: "/my/ringis", permanent: false },
+  { source: "/ringi", destination: "/ringi/ringis", permanent: false },
   // --- 本人ビューへ寄せた App の旧 base（context prefix は現行 URL でも使う） ---
   {
     source: "/business-trip/business-trips/admin",
@@ -238,7 +253,7 @@ export const urlRedirects: ReadonlyArray<Redirect> = [
   },
   { source: "/rentals/admin", destination: "/rental/rentals", permanent: false },
   { source: "/rentals/new", destination: "/my/rentals/new", permanent: false },
-  { source: "/rentals", destination: "/my/rentals", permanent: false },
+  { source: "/rentals", destination: "/rental/rentals", permanent: false },
   // --- antisocial-checks ---
   {
     source: "/antisocial-check/antisocial-checks/admin",
@@ -252,7 +267,7 @@ export const urlRedirects: ReadonlyArray<Redirect> = [
   },
   {
     source: "/antisocial-check/antisocial-checks",
-    destination: "/my/antisocial-checks",
+    destination: "/inbox/antisocial-checks",
     permanent: false,
   },
   // --- shift ---
@@ -266,13 +281,13 @@ export const urlRedirects: ReadonlyArray<Redirect> = [
   { source: "/shift/manage", destination: "/shift/shift-assignments", permanent: false },
   { source: "/shift/patterns/new", destination: "/shift/shift-patterns/new", permanent: false },
   { source: "/shift/patterns", destination: "/shift/shift-patterns", permanent: false },
-  { source: "/shift", destination: "/my/shifts", permanent: false },
+  { source: "/shift", destination: "/shift/shift-assignments", permanent: false },
   // --- thanks ---
   { source: "/thanks/admin", destination: "/thanks/thanks-redemptions", permanent: false },
   { source: "/thanks/inbox", destination: "/inbox/thanks-redemptions", permanent: false },
   // context 名と resource 名が同じなので `/thanks/:path*` は作れない。
   // 現行 URL を食わないよう、旧 base だけを exact で転送する。
-  { source: "/thanks", destination: "/my/thanks", permanent: false },
+  { source: "/thanks", destination: "/thanks/thanks", permanent: false },
   { source: "/governance", destination: "/governance/governance-documents", permanent: false },
   // --- review ---
   {
@@ -281,7 +296,7 @@ export const urlRedirects: ReadonlyArray<Redirect> = [
     permanent: false,
   },
   { source: "/review/results", destination: "/performance-review/reviews", permanent: false },
-  { source: "/review", destination: "/my/reviews", permanent: false },
+  { source: "/review", destination: "/performance-review/review-cycles", permanent: false },
   // --- career ---
   { source: "/career/postings/new", destination: "/career/job-postings/new", permanent: false },
   {
@@ -290,17 +305,17 @@ export const urlRedirects: ReadonlyArray<Redirect> = [
     permanent: false,
   },
   { source: "/career/postings", destination: "/career/job-postings", permanent: false },
-  { source: "/career", destination: "/my/career", permanent: false },
+  { source: "/career", destination: "/career/job-postings", permanent: false },
   // --- skills / surveys ---
-  { source: "/skills/me", destination: "/my/skills", permanent: false },
+  { source: "/skills/me", destination: "/skill/skills", permanent: false },
   {
     source: "/survey/surveys/responses",
-    destination: "/my/survey-responses",
+    destination: "/survey/surveys",
     permanent: false,
   },
   // --- assets / rooms ---
-  { source: "/asset/assets/lent/me", destination: "/my/assets", permanent: false },
-  { source: "/room/rooms/me", destination: "/my/room-reservations", permanent: false },
+  { source: "/asset/assets/lent/me", destination: "/asset/assets", permanent: false },
+  { source: "/room/rooms/me", destination: "/room/rooms", permanent: false },
   // --- onboarding ---
   {
     source: "/onboarding/employee/:code",
@@ -317,7 +332,7 @@ export const urlRedirects: ReadonlyArray<Redirect> = [
     destination: "/onboarding/onboarding-assignments/new",
     permanent: false,
   },
-  { source: "/onboarding/me", destination: "/my/onboarding-tasks", permanent: false },
+  { source: "/onboarding/me", destination: "/onboarding/onboarding-assignments", permanent: false },
   {
     source: "/onboarding/templates/new",
     destination: "/onboarding/onboarding-templates/new",
@@ -400,7 +415,7 @@ export const urlRedirects: ReadonlyArray<Redirect> = [
   },
   {
     source: "/company/application-templates/:path*",
-    destination: "/system/application-templates/:path*",
+    destination: "/application-templates/:path*",
     permanent: false,
   },
   {
@@ -416,3 +431,13 @@ export const urlRedirects: ReadonlyArray<Redirect> = [
   // /applications/inbox 等の具体パスが先取りされて壊れる）。
   ...toRedirects(flatResourceMoves),
 ]
+
+/** 廃止した個人画面への転送は提供しない。 */
+export const urlRedirects: ReadonlyArray<Redirect> = legacyRedirects.filter(
+  (redirect) =>
+    !redirect.destination.startsWith("/my/") &&
+    !redirect.destination.startsWith("/teams/") &&
+    redirect.destination !== "/notifications" &&
+    redirect.destination !== "/thanks/rewards" &&
+    redirect.source !== redirect.destination,
+)

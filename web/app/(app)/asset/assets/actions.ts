@@ -1,15 +1,15 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { createAsset } from "@/lib/api/create-asset"
 import { deleteAsset } from "@/lib/api/delete-asset"
 import { disposeAsset } from "@/lib/api/dispose-asset"
 import { getMe } from "@/lib/api/get-me"
 import { lendAsset } from "@/lib/api/lend-asset"
 import { returnAsset } from "@/lib/api/return-asset"
-import { updateAsset } from "@/lib/api/update-asset"
 import type { AssetKind } from "@/lib/api/types/asset-types"
+import { updateAsset } from "@/lib/api/update-asset"
 import { canManageAssets } from "@/lib/asset/can-manage-assets"
+import { revalidatePath } from "next/cache"
 
 export type AssetCreateFormState = {
   ok: boolean
@@ -154,7 +154,7 @@ export async function lendAssetAction(
 
   revalidatePath(`/asset/assets/${code}`)
 
-  revalidatePath("/my/assets")
+  revalidatePath("/asset/assets")
 
   return { ok: true, error: null }
 }
@@ -188,7 +188,7 @@ export async function returnAssetAction(
 
   revalidatePath(`/asset/assets/${code}`)
 
-  revalidatePath("/my/assets")
+  revalidatePath("/asset/assets")
 
   return { ok: true, error: null }
 }

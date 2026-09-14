@@ -49,7 +49,7 @@ export default function RootError(props: Props) {
         <Button onClick={props.reset}>再試行</Button>
 
         <Button variant="secondary" nativeButton={false} render={<Link href="/" />}>
-          ホームへ戻る
+          管理画面へ戻る
         </Button>
       </div>
     </main>

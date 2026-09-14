@@ -1,5 +1,3 @@
-import Link from "next/link"
-import { EnrollButton } from "@/app/(app)/training/trainings/_components/enroll-button"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Badge } from "@/components/ui/badge"
@@ -9,6 +7,7 @@ import { getMe } from "@/lib/api/get-me"
 import { getTrainingCourse } from "@/lib/api/get-training-course"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
 import { canManageTraining } from "@/lib/training/can-manage-training"
+import Link from "next/link"
 
 type Props = {
   params: Promise<{ training: string }>
@@ -91,8 +90,6 @@ export default async function TrainingCourseDetailPage(props: Props) {
           ) : (
             <p className="text-sm text-muted-foreground">-</p>
           )}
-
-          {course.status === "active" ? <EnrollButton courseCode={course.code} /> : null}
         </CardContent>
       </Card>
     </div>

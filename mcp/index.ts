@@ -374,7 +374,7 @@ server.tool(
     category: z.string().optional().describe("Filter by template category"),
   },
   async (args) => {
-    const data = await apiRequest("/company/application-templates", {
+    const data = await apiRequest("/application-templates", {
       query: { category: args.category },
     })
 

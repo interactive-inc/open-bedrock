@@ -2,6 +2,16 @@
   "version": 2,
   "groups": [
     {
+      "routePrefix": "application-templates",
+      "participants": ["company", "system"],
+      "routes": [
+        "application-templates",
+        "application-templates.$code",
+        "application-templates.$code.workflow"
+      ],
+      "reason": "Systemの手続き定義とCompanyの承認資格を合成する中立URL"
+    },
+    {
       "routePrefix": "attendance.attendance-records",
       "participants": ["attendance", "company", "company-calendar"],
       "routes": ["attendance.attendance-records.overtime-summary"],

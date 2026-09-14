@@ -1,15 +1,15 @@
-import { FetchError } from "@/components/fetch-error"
-import { Plus } from "lucide-react"
-import Link from "next/link"
-import { Suspense } from "react"
-import { ShiftPatternList } from "@/app/(app)/my/shifts/_components/shift-pattern-list"
+import { ShiftPatternList } from "@/app/(app)/shift/_components/shift-pattern-list"
 import { BackButton } from "@/components/back-button"
+import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
 import { getShiftPatterns } from "@/lib/api/get-shift-patterns"
 import { canManageShift } from "@/lib/shift/can-manage-shift"
+import { Plus } from "lucide-react"
+import Link from "next/link"
+import { Suspense } from "react"
 
 export const metadata = { title: "シフトパターン" }
 
@@ -25,7 +25,7 @@ export default async function ShiftPatternsPage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="シフトパターン">
-        <BackButton href="/my/shifts" label="シフトに戻る" />
+        <BackButton href="/shift/shift-assignments" label="シフトに戻る" />
 
         {canManage ? (
           <Button nativeButton={false} render={<Link href="/shift/shift-patterns/new" />}>

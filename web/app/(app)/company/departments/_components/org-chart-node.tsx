@@ -1,6 +1,6 @@
-import Link from "next/link"
 import { OrgChartMemberBox } from "@/app/(app)/company/departments/_components/org-chart-member-box"
 import type { OrgMember, OrgTreeNode } from "@/lib/api/types/org-types"
+import Link from "next/link"
 
 type Props = {
   node: OrgTreeNode
@@ -20,7 +20,7 @@ export function OrgChartNode(props: Props) {
   return (
     <li className="flex flex-col gap-4">
       <Link
-        href={`/teams/${props.node.code}`}
+        href={`/company/departments/${props.node.code}`}
         className="inline-flex w-fit items-center gap-2 rounded-md bg-primary px-4 py-2 text-sm font-medium text-primary-foreground hover:opacity-90"
       >
         {props.node.name}

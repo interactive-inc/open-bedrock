@@ -14,7 +14,7 @@ export function FeatureDisabledScreen() {
       </div>
 
       <Button nativeButton={false} render={<Link href="/" />}>
-        ホームへ戻る
+        管理画面へ戻る
       </Button>
     </main>
   )

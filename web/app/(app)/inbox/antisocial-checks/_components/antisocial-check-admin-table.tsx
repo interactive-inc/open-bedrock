@@ -1,11 +1,9 @@
 "use client"
 
-import { useActionState } from "react"
-import { toast } from "sonner"
 import {
   completeAntisocialCheckAction,
   type AntisocialCheckActionState,
-} from "@/app/(app)/my/antisocial-checks/actions"
+} from "@/app/(app)/inbox/antisocial-checks/actions"
 import { EmptyState } from "@/components/empty-state"
 import { Button } from "@/components/ui/button"
 import { FieldError, FieldLabel } from "@/components/ui/field"
@@ -19,6 +17,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { AntisocialCheckAdminResponse } from "@/lib/api/types/antisocial-check-types"
+import { useActionState } from "react"
+import { toast } from "sonner"
 
 const initialState: AntisocialCheckActionState = { ok: false, error: null }
 

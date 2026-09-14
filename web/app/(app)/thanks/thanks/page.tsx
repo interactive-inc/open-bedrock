@@ -1,20 +1,17 @@
-import { Gift, Plus } from "lucide-react"
-import Link from "next/link"
-import { Suspense } from "react"
 import { ThanksList } from "@/app/(app)/thanks/thanks/_components/thanks-list"
-import { ThanksSummary } from "@/app/(app)/thanks/thanks/_components/thanks-summary"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
-import { Skeleton } from "@/components/ui/skeleton"
 import { getMe } from "@/lib/api/get-me"
 import { canViewAllRedemptions } from "@/lib/thanks/can-view-all-redemptions"
+import { Gift } from "lucide-react"
+import Link from "next/link"
+import { Suspense } from "react"
 
 export const metadata = { title: "サンクス" }
 
 /**
- * 感謝（サンクス）のメイン画面。サマリと公開タイムラインだけを並べる読み取り専用画面。
- * 送付は /thanks/send、景品は /thanks/rewards に分離。
+ * 感謝メッセージと交換処理の管理画面。
  */
 export default async function ThanksPage() {
   const currentUser = await getMe()
@@ -50,38 +47,26 @@ export default async function ThanksPage() {
           </Button>
         ) : null}
 
-        <Button variant="secondary" nativeButton={false} render={<Link href="/thanks/rewards" />}>
-          <Gift />
-          景品を見る
-        </Button>
-
-        <Button nativeButton={false} render={<Link href="/thanks/thanks/send" />}>
-          <Plus />
-          感謝を送る
-        </Button>
+        {!(currentUser instanceof Error) &&
+        currentUser.permissions.includes("thanks_reward:manage") ? (
+          <Button
+            variant="secondary"
+            nativeButton={false}
+            render={<Link href="/thanks/rewards/manage" />}
+          >
+            <Gift />
+            景品の管理
+          </Button>
+        ) : null}
       </PageHeader>
 
-      <Suspense fallback={<SummarySkeleton />}>
-        <ThanksSummary />
-      </Suspense>
-
       <section className="flex flex-col gap-4">
-        <h2 className="text-lg font-medium">みんなの感謝</h2>
+        <h2 className="text-lg font-medium">感謝メッセージ</h2>
 
         <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-24 w-full" />}>
           <ThanksList />
         </Suspense>
       </section>
-    </div>
-  )
-}
-
-function SummarySkeleton() {
-  return (
-    <div className="grid gap-4 sm:grid-cols-2">
-      <Skeleton className="w-full" />
-
-      <Skeleton className="w-full" />
     </div>
   )
 }

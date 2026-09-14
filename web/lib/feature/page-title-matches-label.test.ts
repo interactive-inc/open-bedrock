@@ -1,7 +1,7 @@
+import { featureRegistry } from "@/lib/feature/feature-registry"
 import { existsSync, readFileSync } from "node:fs"
 import path from "node:path"
 import { describe, expect, test } from "vite-plus/test"
-import { featureRegistry } from "@/lib/feature/feature-registry"
 
 /**
  * サイドバーの label が画面タイトルの正本（CLAUDE.md 参照）。
@@ -38,7 +38,7 @@ function findMetadataTitle(source: string): string | null {
 
 /**
  * page.tsx に PageHeader が無ければ、見出しを共有する親 layout.tsx を辿る
- * （例: /teams/:team/attendances の見出しは /teams/[team]/layout.tsx ではなく
+ * （例: /teams/:team/attendances の見出しは /company/departments/[team]/layout.tsx ではなく
  * 自身の page.tsx が持つ。逆に本人領域の /my/layout.tsx のような薄いラッパは
  * 見出しを持たないので、そこで見つからなければ「無い」ままにする）。
  */

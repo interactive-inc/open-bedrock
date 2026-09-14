@@ -1,13 +1,12 @@
-import { Plus } from "lucide-react"
-import Link from "next/link"
-import { Suspense } from "react"
-import { CareerPostingsSection } from "@/app/(app)/my/career/_components/career-postings-section"
-import { BackButton } from "@/components/back-button"
+import { CareerPostingsSection } from "@/app/(app)/career/job-postings/_components/career-postings-section"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
 import { Skeleton } from "@/components/ui/skeleton"
 import { getMe } from "@/lib/api/get-me"
 import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
+import { Plus } from "lucide-react"
+import Link from "next/link"
+import { Suspense } from "react"
 
 export const metadata = { title: "社内公募" }
 
@@ -27,8 +26,6 @@ export default async function CareerPostingsPage() {
     <div className="flex flex-col gap-8">
       <PageHeader title="社内公募">
         <div className="flex items-center gap-2">
-          <BackButton href="/my/career" label="キャリアに戻る" />
-
           {canManage ? (
             <Button nativeButton={false} render={<Link href="/career/job-postings/new" />}>
               <Plus />

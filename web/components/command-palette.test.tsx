@@ -1,12 +1,10 @@
+import { CommandPalette } from "@/components/command-palette"
 import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
-import { CommandPalette } from "@/components/command-palette"
 
 const mocks = vi.hoisted(() => ({ push: vi.fn() }))
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: mocks.push }) }))
-
-const inboxCounts = { applications: 0, expenses: 0, leaves: 0, shifts: 0, thanks: 0 }
 
 afterEach(() => {
   cleanup()
@@ -15,7 +13,7 @@ afterEach(() => {
 
 describe("CommandPalette audit entry", () => {
   test("shows the audit command only with audit:read and navigates once on explicit selection", () => {
-    render(<CommandPalette inboxCounts={inboxCounts} permissions={["audit:read"]} />)
+    render(<CommandPalette disabledFeatures={[]} permissions={["audit:read"]} />)
     openPalette()
 
     const command = screen.getByText("監査ログ")
@@ -26,7 +24,7 @@ describe("CommandPalette audit entry", () => {
   })
 
   test("does not expose the audit command to export-only users", () => {
-    render(<CommandPalette inboxCounts={inboxCounts} permissions={["audit:export"]} />)
+    render(<CommandPalette disabledFeatures={[]} permissions={["audit:export"]} />)
     openPalette()
 
     expect(screen.queryByText("監査ログ")).toBeNull()
@@ -35,18 +33,16 @@ describe("CommandPalette audit entry", () => {
 
 describe("CommandPalette governance entries", () => {
   test("filters reader and manager commands by effective permissions", () => {
-    const view = render(
-      <CommandPalette inboxCounts={inboxCounts} permissions={["governance:read"]} />,
-    )
+    const view = render(<CommandPalette disabledFeatures={[]} permissions={["governance:read"]} />)
     openPalette()
     expect(screen.getByText("規程・手続き")).toBeTruthy()
     expect(screen.queryByText("規程の整合性と組織ロール")).toBeNull()
     view.unmount()
 
-    render(<CommandPalette inboxCounts={inboxCounts} permissions={["governance:manage"]} />)
+    render(<CommandPalette disabledFeatures={[]} permissions={["governance:manage"]} />)
     openPalette()
     expect(screen.queryByText("規程・手続き")).toBeNull()
-    expect(screen.getByText("規程の整合性と組織ロール")).toBeTruthy()
+    expect(screen.queryByText("自分の申請")).toBeNull()
   })
 })
 

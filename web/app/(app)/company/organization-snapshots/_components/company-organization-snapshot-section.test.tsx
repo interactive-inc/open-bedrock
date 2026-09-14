@@ -81,7 +81,9 @@ describe("CompanyOrganizationSnapshotSection", () => {
 
     render(await CompanyOrganizationSnapshotSection({ effectiveOn: null }))
 
-    expect(screen.getByRole("link", { name: "D001" }).getAttribute("href")).toBe("/teams/D001")
+    expect(screen.getByRole("link", { name: "D001" }).getAttribute("href")).toBe(
+      "/company/departments/D001",
+    )
   })
 
   test("コードを持たない組織単位はリンクにしない", async () => {

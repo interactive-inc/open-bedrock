@@ -1,13 +1,13 @@
 "use client"
 
-import { useActionState } from "react"
+import type { ResignationActionState } from "@/app/(app)/resignation/resignations/actions"
 import {
   acceptResignationAction,
   rejectResignationAction,
-} from "@/app/(app)/my/resignations/actions"
-import type { ResignationActionState } from "@/app/(app)/my/resignations/actions"
+} from "@/app/(app)/resignation/resignations/actions"
 import { Button } from "@/components/ui/button"
 import { FieldError } from "@/components/ui/field"
+import { useActionState } from "react"
 
 type Props = {
   resignationId: string

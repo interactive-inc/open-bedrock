@@ -9,24 +9,24 @@ export async function CompanyAccountEmployeeLinkSection() {
   const links = await getCompanyAccountEmployeeLinkResources()
 
   if (links instanceof Error) {
-    return <FetchError message="Account の対応の取得に失敗しました" />
+    return <FetchError message="アカウントと従業員の紐付けの取得に失敗しました" />
   }
 
   const accountEmployeeLinks = filterResourcesByType(links.resources, "account-employee-link")
 
   return (
     <CompanyResourceTable
-      caption="Account と Employee の対応の一覧"
+      caption="アカウントと従業員の紐付け一覧"
       resources={accountEmployeeLinks}
-      emptyTitle="Account の対応が登録されていません"
+      emptyTitle="アカウントと従業員の紐付けが登録されていません"
       emptyDescription="対応の正本は API と CLI が持ちます。まだ登録がありません。"
       columns={[
         {
-          header: "Account",
+          header: "アカウント ID",
           toValue: (resource) => readResourceText(resource, "accountId") ?? "-",
         },
         {
-          header: "Employee",
+          header: "従業員 ID",
           toValue: (resource) => readResourceText(resource, "employeeId") ?? "-",
         },
       ]}

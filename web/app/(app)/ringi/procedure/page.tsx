@@ -1,12 +1,12 @@
-import Link from "next/link"
-import { notFound } from "next/navigation"
+import { saveRingiProcedureAction } from "@/app/(app)/ringi/procedure/actions"
+import { WorkflowEditor } from "@/app/(app)/application-templates/[template]/workflow/_components/workflow-editor"
+import { FetchError } from "@/components/fetch-error"
+import { PageHeader } from "@/components/page-header"
 import { getMe } from "@/lib/api/get-me"
 import { getRingiProcedure } from "@/lib/api/get-ringi-procedure"
-import { WorkflowEditor } from "@/app/(app)/system/application-templates/[template]/workflow/_components/workflow-editor"
-import { saveRingiProcedureAction } from "@/app/(app)/ringi/procedure/actions"
-import { PageHeader } from "@/components/page-header"
-import { FetchError } from "@/components/fetch-error"
 import type { ApplicationWorkflow } from "@/lib/api/types/application-workflow-types"
+import Link from "next/link"
+import { notFound } from "next/navigation"
 
 export const metadata = { title: "稟議の承認規程" }
 
@@ -42,7 +42,7 @@ export default async function RingiProcedurePage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="稟議の承認規程">
-        <Link href="/my/ringis">稟議一覧へ</Link>
+        <Link href="/ringi/ringis">稟議一覧へ</Link>
       </PageHeader>
       <p>新しく提出する稟議に適用します。提出済みの稟議には、提出時の規程が残ります。</p>
       <WorkflowEditor

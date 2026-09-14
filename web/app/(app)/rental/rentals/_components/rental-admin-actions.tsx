@@ -1,13 +1,13 @@
 "use client"
 
-import { useActionState } from "react"
+import type { RentalReservationActionState } from "@/app/(app)/rental/rentals/actions"
 import {
   lendRentalReservationAction,
   returnRentalReservationAction,
-} from "@/app/(app)/my/rentals/actions"
-import type { RentalReservationActionState } from "@/app/(app)/my/rentals/actions"
+} from "@/app/(app)/rental/rentals/actions"
 import { Button } from "@/components/ui/button"
 import { FieldError } from "@/components/ui/field"
+import { useActionState } from "react"
 
 type Props = {
   reservationId: string

@@ -1,23 +1,23 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
 import { cancelOnboardingAssignment } from "@/lib/api/cancel-onboarding-assignment"
 import { createOnboardingTemplate } from "@/lib/api/create-onboarding-template"
 import { deleteOnboardingTemplate } from "@/lib/api/delete-onboarding-template"
 import { postOnboardingAssign } from "@/lib/api/post-onboarding-assign"
 import { postOnboardingTaskComplete } from "@/lib/api/post-onboarding-task-complete"
 import { postOnboardingTaskUncomplete } from "@/lib/api/post-onboarding-task-uncomplete"
-import { updateOnboardingAssignment } from "@/lib/api/update-onboarding-assignment"
-import { updateOnboardingTemplate } from "@/lib/api/update-onboarding-template"
+import { removeLifecycleTemplateBinding } from "@/lib/api/remove-lifecycle-template-binding"
+import type { OnboardingKind } from "@/lib/api/types/onboarding-types"
 import {
   type LifecycleEffect,
   updateLifecycleTemplateBinding,
 } from "@/lib/api/update-lifecycle-template-binding"
-import { removeLifecycleTemplateBinding } from "@/lib/api/remove-lifecycle-template-binding"
-import type { OnboardingKind } from "@/lib/api/types/onboarding-types"
+import { updateOnboardingAssignment } from "@/lib/api/update-onboarding-assignment"
+import { updateOnboardingTemplate } from "@/lib/api/update-onboarding-template"
+import { requireAuth } from "@/lib/auth/require-auth"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
-import { requireAuth } from "@/lib/auth/require-auth"
+import { revalidatePath } from "next/cache"
 
 export type AssignState = {
   ok: boolean
@@ -99,7 +99,7 @@ export async function completeOnboardingTaskAction(
     return { ok: false, message: task.message }
   }
 
-  revalidatePath("/my/onboarding-tasks")
+  revalidatePath("/onboarding/onboarding-assignments")
 
   revalidatePath("/onboarding/onboarding-assignments")
 
@@ -134,7 +134,7 @@ export async function uncompleteOnboardingTaskAction(
     return { ok: false, message: task.message }
   }
 
-  revalidatePath("/my/onboarding-tasks")
+  revalidatePath("/onboarding/onboarding-assignments")
 
   revalidatePath("/onboarding/onboarding-assignments")
 

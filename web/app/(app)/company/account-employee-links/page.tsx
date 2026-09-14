@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/page-header"
 import { ReadOnlyNotice } from "@/components/read-only-notice"
 import { requireAnyPermission } from "@/lib/auth/require-any-permission"
 
-export const metadata = { title: "Account の対応" }
+export const metadata = { title: "アカウントと従業員の紐付け" }
 
 /**
  * System の Account と Company の Employee の対応を読む画面。
@@ -16,7 +16,7 @@ export default async function CompanyAccountEmployeeLinksPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="Account の対応" />
+      <PageHeader title="アカウントと従業員の紐付け" />
 
       <ReadOnlyNotice command={null} />
 

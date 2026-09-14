@@ -1,4 +1,3 @@
-import { notFound } from "next/navigation"
 import { NotificationCreateForm } from "@/app/(app)/notifications/_components/notification-create-form"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
@@ -6,6 +5,7 @@ import { Card, CardContent } from "@/components/ui/card"
 import { getEmployeeDirectory } from "@/lib/api/get-employee-directory"
 import { getMe } from "@/lib/api/get-me"
 import { canManageNotifications } from "@/lib/notifications/can-manage-notifications"
+import { notFound } from "next/navigation"
 
 export const metadata = { title: "通知を作成" }
 
@@ -32,7 +32,7 @@ export default async function NotificationNewPage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="通知を作成">
-        <BackButton href="/notifications" label="一覧に戻る" />
+        <BackButton href="/system/deliveries" label="一覧に戻る" />
       </PageHeader>
 
       <Card>

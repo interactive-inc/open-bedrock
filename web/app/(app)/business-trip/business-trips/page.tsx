@@ -1,13 +1,9 @@
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { Suspense } from "react"
 import { BusinessTripAdminFilterForm } from "@/app/(app)/business-trip/business-trips/_components/business-trip-admin-filter-form"
 import { BusinessTripAdminTable } from "@/app/(app)/business-trip/business-trips/_components/business-trip-admin-table"
 import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { TablePagination } from "@/components/table-pagination"
-import { Button } from "@/components/ui/button"
 import {
   getBusinessTripAdminList,
   type BusinessTripAdminFilter,
@@ -15,6 +11,8 @@ import {
 import { getMe } from "@/lib/api/get-me"
 import { canManageBusinessTrips } from "@/lib/business-trip/can-manage-business-trips"
 import { canViewAllBusinessTrips } from "@/lib/business-trip/can-view-all-business-trips"
+import { notFound } from "next/navigation"
+import { Suspense } from "react"
 
 export const metadata = { title: "出張の横断" }
 
@@ -60,15 +58,7 @@ export default async function AdminBusinessTripsPage(props: { searchParams: Sear
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="出張の横断">
-        <Button
-          variant="secondary"
-          nativeButton={false}
-          render={<Link href="/business-trip/business-trips" />}
-        >
-          自分の申請
-        </Button>
-      </PageHeader>
+      <PageHeader title="出張の横断"></PageHeader>
 
       <BusinessTripAdminFilterForm
         statusValue={filter.status ?? ""}

@@ -1,13 +1,13 @@
 "use server"
 
-import { z } from "zod"
-import type { LeaveRequestInboxResponse } from "@/lib/api/types/leave-types"
-import { revalidatePath } from "next/cache"
 import { approveLeaveRequest } from "@/lib/api/approve-leave-request"
 import { getMe } from "@/lib/api/get-me"
 import { rejectLeaveRequest } from "@/lib/api/reject-leave-request"
+import type { LeaveRequestInboxResponse } from "@/lib/api/types/leave-types"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { canDecideLeave } from "@/lib/leave/can-decide-leave"
+import { revalidatePath } from "next/cache"
+import { z } from "zod"
 
 export type LeaveDecisionState = {
   ok: boolean
@@ -102,7 +102,7 @@ export async function decideLeaveRequestAction(
   }
 
   revalidatePath("/inbox/leaves")
-  revalidatePath("/my/leaves")
+  revalidatePath("/leave/leaves")
 
   return result
 }

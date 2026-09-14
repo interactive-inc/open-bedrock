@@ -1,13 +1,9 @@
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { Suspense } from "react"
 import { CertificateRequestAdminFilterForm } from "@/app/(app)/certificate-request/certificate-requests/_components/certificate-request-admin-filter-form"
 import { CertificateRequestAdminTable } from "@/app/(app)/certificate-request/certificate-requests/_components/certificate-request-admin-table"
 import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { TablePagination } from "@/components/table-pagination"
-import { Button } from "@/components/ui/button"
 import {
   getCertificateRequestAdminList,
   type CertificateRequestAdminFilter,
@@ -15,6 +11,8 @@ import {
 import { getMe } from "@/lib/api/get-me"
 import { canManageCertificateRequests } from "@/lib/certificate-request/can-manage-certificate-requests"
 import { canViewAllCertificateRequests } from "@/lib/certificate-request/can-view-all-certificate-requests"
+import { notFound } from "next/navigation"
+import { Suspense } from "react"
 
 export const metadata = { title: "証明書の横断" }
 
@@ -63,15 +61,7 @@ export default async function AdminCertificateRequestsPage(props: { searchParams
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="証明書の横断">
-        <Button
-          variant="secondary"
-          nativeButton={false}
-          render={<Link href="/certificate-request/certificate-requests" />}
-        >
-          自分の依頼
-        </Button>
-      </PageHeader>
+      <PageHeader title="証明書の横断"></PageHeader>
 
       <CertificateRequestAdminFilterForm
         statusValue={filter.status ?? ""}
