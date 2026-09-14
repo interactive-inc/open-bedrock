@@ -1,10 +1,8 @@
-import { Suspense } from "react"
-import Link from "next/link"
 import { SkillSearchForm } from "@/app/(app)/skill/skills/_components/skill-search-form"
 import { SkillTable } from "@/app/(app)/skill/skills/_components/skill-table"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { Button } from "@/components/ui/button"
+import { Suspense } from "react"
 
 export const metadata = { title: "スキル一覧" }
 
@@ -25,11 +23,7 @@ export default async function SkillsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="スキル一覧">
-        <Button nativeButton={false} render={<Link href="/my/skills" />}>
-          自分のスキル
-        </Button>
-      </PageHeader>
+      <PageHeader title="スキル一覧"></PageHeader>
 
       <SkillSearchForm q={q} category={category} />
 

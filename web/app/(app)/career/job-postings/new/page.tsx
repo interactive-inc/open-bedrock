@@ -1,10 +1,10 @@
-import { notFound } from "next/navigation"
-import { CreatePostingForm } from "@/app/(app)/my/career/_components/create-posting-form"
+import { CreatePostingForm } from "@/app/(app)/career/job-postings/_components/create-posting-form"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Card } from "@/components/ui/card"
 import { getMe } from "@/lib/api/get-me"
 import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
+import { notFound } from "next/navigation"
 
 export const metadata = { title: "公募の新規作成" }
 

@@ -1,21 +1,21 @@
 import type { FeatureGroup } from "@/lib/feature/feature-types"
+import { toFeatureSpace } from "@/lib/routing/to-feature-space"
 
 /**
  * サイドバーの表示グループを決める。
- * group は feature 単位だが、部署スコープの route は同じ feature の本人スコープ
- * （`/my/attendances` と `/teams/:team/attendances`）と別のセクションへ並べたい。
- * href が `/teams` で始まる route だけ部署セクションへ寄せ、残りは feature の group を使う。
- * 汎用手続き（`requests`）の全社ビューは `/system` 配下にあり、System 空間では
- * capability-map の章「案件と判断」に並べる。本人スコープの `/my/applications` は
- * 「申請と手続き」のまま残す。
+ * System の汎用手続きは「案件と判断」、通知は「非同期処理」に置く。
+ * 会社の部署情報は組織、各業務のデータはその業務のグループに置く。
  * 導出はここだけに置き、registry と sidebar の両方がこれを通す。
  */
 export function toNavigationGroup(href: string, featureGroup: FeatureGroup): FeatureGroup {
   const segment = href.split("/")[1] ?? ""
 
-  if (segment === "teams") return "team"
-
-  if (segment === "system" && featureGroup === "requests") return "system-case"
+  const owner = toFeatureSpace(href)
+  if (segment === "inbox" || segment === "application-templates") return "cross-context"
+  if (owner === "system" && featureGroup === "requests") return "system-case"
+  if (owner === "system" && segment === "notifications") return "system-async"
+  if (owner === "company" && segment === "teams") return "company-organization"
+  if (owner === "company" && featureGroup === "team") return "company-organization"
 
   return featureGroup
 }

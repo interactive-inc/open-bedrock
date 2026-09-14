@@ -1,11 +1,9 @@
-import Link from "next/link"
-import { Suspense } from "react"
-import { AttendanceAdminList } from "@/app/(app)/my/attendances/_components/attendance-admin-list"
-import { AttendanceFilterForm } from "@/app/(app)/my/attendances/_components/attendance-filter-form"
+import { AttendanceAdminList } from "@/app/(app)/attendance/attendances/_components/attendance-admin-list"
+import { AttendanceFilterForm } from "@/app/(app)/attendance/attendances/_components/attendance-filter-form"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { Button } from "@/components/ui/button"
 import { requirePermission } from "@/lib/auth/require-permission"
+import { Suspense } from "react"
 
 export const metadata = { title: "全社の勤怠" }
 
@@ -30,11 +28,7 @@ export default async function AttendanceAllPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="全社の勤怠">
-        <Button variant="secondary" nativeButton={false} render={<Link href="/my/attendances" />}>
-          自分の勤怠へ
-        </Button>
-      </PageHeader>
+      <PageHeader title="全社の勤怠"></PageHeader>
 
       <AttendanceFilterForm withEmployeeId={true} employeeId={employeeId} from={from} to={to} />
 

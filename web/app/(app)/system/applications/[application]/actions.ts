@@ -1,12 +1,12 @@
 "use server"
 
-import { z } from "zod"
-import type { ApplicationDecisionTarget } from "@/lib/api/types/application-types"
-import { revalidatePath } from "next/cache"
 import { approveApplication } from "@/lib/api/approve-application"
 import { getMe } from "@/lib/api/get-me"
 import { rejectApplication } from "@/lib/api/reject-application"
+import type { ApplicationDecisionTarget } from "@/lib/api/types/application-types"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { revalidatePath } from "next/cache"
+import { z } from "zod"
 
 export type DecisionState = {
   ok: boolean
@@ -106,7 +106,7 @@ export async function decideApplicationAction(
 
   revalidatePath("/inbox/applications")
 
-  revalidatePath("/my/applications")
+  revalidatePath("/system/applications")
 
   return result
 }

@@ -2,8 +2,8 @@ import { AntisocialCheckAdminTable } from "@/app/(app)/inbox/antisocial-checks/_
 import { BackButton } from "@/components/back-button"
 import { FetchError } from "@/components/fetch-error"
 import { SubPageHeader } from "@/components/sub-page-header"
-import { requirePermission } from "@/lib/auth/require-permission"
 import { listAntisocialCheckAdmin } from "@/lib/api/list-antisocial-check-admin"
+import { requirePermission } from "@/lib/auth/require-permission"
 
 export const metadata = { title: "反社チェック判定" }
 
@@ -17,7 +17,7 @@ export default async function AntisocialCheckAdminPage() {
       <SubPageHeader
         title="反社チェック判定"
         description="他の従業員から提出された申請を確認し、判定結果を記録します。"
-        actions={<BackButton href="/my/antisocial-checks" label="自分の申請へ戻る" />}
+        actions={<BackButton href="/inbox/antisocial-checks" label="申請一覧へ戻る" />}
       />
 
       {checks instanceof Error ? (

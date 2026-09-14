@@ -17,7 +17,7 @@ export default async function ShiftSwapInboxPage() {
       <SubPageHeader
         title="シフト交代承認"
         description="当事者ではない申請の内容を確認し、シフト割当を入れ替えます。"
-        actions={<BackButton href="/my/shifts" label="シフトへ戻る" />}
+        actions={<BackButton href="/shift/shift-assignments" label="シフトへ戻る" />}
       />
 
       {requests instanceof Error ? (

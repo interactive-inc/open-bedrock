@@ -1,10 +1,10 @@
-import Link from "next/link"
 import { CompanyResourceTable } from "@/components/company-resource-table"
 import { FetchError } from "@/components/fetch-error"
 import { getCompanyOrganizationSnapshot } from "@/lib/api/get-company-organization-snapshot"
 import { filterResourcesByType } from "@/lib/company/filter-resources-by-type"
 import { readResourceBoolean } from "@/lib/company/read-resource-boolean"
 import { readResourceText } from "@/lib/company/read-resource-text"
+import Link from "next/link"
 
 type Props = {
   effectiveOn: string | null
@@ -54,7 +54,10 @@ export async function CompanyOrganizationSnapshotSection(props: Props) {
                 if (code === null) return "-"
 
                 return (
-                  <Link href={`/teams/${code}`} className="underline underline-offset-4">
+                  <Link
+                    href={`/company/departments/${code}`}
+                    className="underline underline-offset-4"
+                  >
                     {code}
                   </Link>
                 )

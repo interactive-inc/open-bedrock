@@ -1,16 +1,18 @@
-import { CheckCircle2, Circle, Clock3, RotateCcw, XCircle } from "lucide-react"
-import { notFound } from "next/navigation"
-import { formatDateTime } from "@/lib/format-date-time"
+import { ApplicationDecisionForm } from "@/app/(app)/system/applications/[application]/_components/application-decision-form"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
 import { BackButton } from "@/components/back-button"
 import { DetailField } from "@/components/detail-field"
 import { PageHeader } from "@/components/page-header"
-import { ApplicationDecisionForm } from "@/app/(app)/system/applications/[application]/_components/application-decision-form"
 import { Card } from "@/components/ui/card"
 import { getApplicationDetail } from "@/lib/api/get-application-detail"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
-import type { ApplicationApprovalEntry } from "@/lib/api/types/application-types"
-import type { ApplicationWorkflowProgress } from "@/lib/api/types/application-types"
+import type {
+  ApplicationApprovalEntry,
+  ApplicationWorkflowProgress,
+} from "@/lib/api/types/application-types"
+import { formatDateTime } from "@/lib/format-date-time"
+import { CheckCircle2, Circle, Clock3, RotateCcw, XCircle } from "lucide-react"
+import { notFound } from "next/navigation"
 
 export const metadata = { title: "申請詳細" }
 
@@ -51,7 +53,7 @@ export default async function ApplicationDetailPage(props: Props) {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title={application.template_name}>
-        <BackButton href="/my/applications" label="一覧に戻る" />
+        <BackButton href="/system/applications" label="一覧に戻る" />
       </PageHeader>
 
       <ApplicationStatusBadge

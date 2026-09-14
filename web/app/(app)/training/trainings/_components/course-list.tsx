@@ -1,5 +1,3 @@
-import Link from "next/link"
-import { EnrollButton } from "@/app/(app)/training/trainings/_components/enroll-button"
 import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
 import {
@@ -11,10 +9,10 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { TrainingCourseResponse } from "@/lib/api/types/training-types"
+import Link from "next/link"
 
 type Props = {
   courses: Array<TrainingCourseResponse>
-  enrolledCourseIds: ReadonlyArray<number>
 }
 
 /**
@@ -41,14 +39,11 @@ export function CourseList(props: Props) {
             <TableHead>カテゴリ</TableHead>
             <TableHead>必須</TableHead>
             <TableHead>状態</TableHead>
-            <TableHead className="text-right">操作</TableHead>
           </TableRow>
         </TableHeader>
 
         <TableBody>
           {props.courses.map((course) => {
-            const isEnrolled = course.id !== null && props.enrolledCourseIds.includes(course.id)
-
             return (
               <TableRow key={course.id}>
                 <TableCell>{course.code}</TableCell>
@@ -72,16 +67,6 @@ export function CourseList(props: Props) {
                   <Badge variant={course.status === "active" ? "outline" : "secondary"}>
                     {course.status === "active" ? "公開中" : "アーカイブ"}
                   </Badge>
-                </TableCell>
-
-                <TableCell className="text-right">
-                  {isEnrolled ? (
-                    <Badge variant="secondary">申込済み</Badge>
-                  ) : course.status === "active" ? (
-                    <EnrollButton courseCode={course.code} />
-                  ) : (
-                    <span className="text-xs text-muted-foreground">—</span>
-                  )}
                 </TableCell>
               </TableRow>
             )

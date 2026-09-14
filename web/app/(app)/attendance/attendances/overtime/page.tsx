@@ -1,14 +1,12 @@
-import Link from "next/link"
-import { Suspense } from "react"
 import { OvertimeFilterForm } from "@/app/(app)/attendance/attendances/overtime/_components/overtime-filter-form"
 import { OvertimeSummarySection } from "@/app/(app)/attendance/attendances/overtime/_components/overtime-summary-section"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
+import type { OvertimeScope } from "@/lib/api/types/overtime-types"
 import { canReadAllOvertime } from "@/lib/attendance/can-read-all-overtime"
 import { canReadReportsOvertime } from "@/lib/attendance/can-read-reports-overtime"
-import type { OvertimeScope } from "@/lib/api/types/overtime-types"
+import { Suspense } from "react"
 
 export const metadata = { title: "時間外の集計" }
 
@@ -37,11 +35,7 @@ export default async function OvertimeSummaryPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="時間外の集計">
-        <Button variant="secondary" nativeButton={false} render={<Link href="/my/attendances" />}>
-          勤怠へ
-        </Button>
-      </PageHeader>
+      <PageHeader title="時間外の集計"></PageHeader>
 
       <OvertimeFilterForm
         month={month}

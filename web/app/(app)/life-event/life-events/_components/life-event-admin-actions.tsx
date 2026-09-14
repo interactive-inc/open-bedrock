@@ -1,10 +1,13 @@
 "use client"
 
-import { useActionState } from "react"
-import { approveLifeEventAction, rejectLifeEventAction } from "@/app/(app)/my/life-events/actions"
-import type { LifeEventActionState } from "@/app/(app)/my/life-events/actions"
+import type { LifeEventActionState } from "@/app/(app)/life-event/life-events/actions"
+import {
+  approveLifeEventAction,
+  rejectLifeEventAction,
+} from "@/app/(app)/life-event/life-events/actions"
 import { Button } from "@/components/ui/button"
 import { FieldError } from "@/components/ui/field"
+import { useActionState } from "react"
 
 type Props = {
   lifeEventId: string

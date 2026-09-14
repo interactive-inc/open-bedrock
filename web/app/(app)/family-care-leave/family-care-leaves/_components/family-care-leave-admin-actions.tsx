@@ -1,13 +1,13 @@
 "use client"
 
-import { useActionState } from "react"
+import type { FamilyCareLeaveActionState } from "@/app/(app)/family-care-leave/family-care-leaves/actions"
 import {
   approveFamilyCareLeaveAction,
   cancelFamilyCareLeaveApprovalAction,
-} from "@/app/(app)/my/family-care-leaves/actions"
-import type { FamilyCareLeaveActionState } from "@/app/(app)/my/family-care-leaves/actions"
+} from "@/app/(app)/family-care-leave/family-care-leaves/actions"
 import { Button } from "@/components/ui/button"
 import { FieldError } from "@/components/ui/field"
+import { useActionState } from "react"
 
 type Props = {
   familyCareLeaveId: string

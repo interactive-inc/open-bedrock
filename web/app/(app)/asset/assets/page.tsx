@@ -1,10 +1,8 @@
-import { FetchError } from "@/components/fetch-error"
-import Link from "next/link"
-import { Suspense } from "react"
 import { AssetFilterForm } from "@/app/(app)/asset/assets/_components/asset-filter-form"
 import { AssetKindLabel } from "@/components/asset-kind-label"
 import { AssetStatusBadge } from "@/components/asset-status-badge"
 import { EmptyState } from "@/components/empty-state"
+import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Button } from "@/components/ui/button"
@@ -17,9 +15,11 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getAssetList } from "@/lib/api/get-asset-list"
-import type { AssetKind, AssetStatus } from "@/lib/api/types/asset-types"
 import { getMe } from "@/lib/api/get-me"
+import type { AssetKind, AssetStatus } from "@/lib/api/types/asset-types"
 import { canManageAssets } from "@/lib/asset/can-manage-assets"
+import Link from "next/link"
+import { Suspense } from "react"
 
 export const metadata = { title: "備品" }
 
@@ -51,10 +51,6 @@ export default async function AssetsPage(props: Props) {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="備品">
-        <Button variant="secondary" nativeButton={false} render={<Link href="/my/assets" />}>
-          自分の貸与品
-        </Button>
-
         {canManage ? (
           <>
             <Button

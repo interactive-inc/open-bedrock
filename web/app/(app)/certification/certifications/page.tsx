@@ -1,4 +1,3 @@
-import { Suspense } from "react"
 import { CertificationsSection } from "@/app/(app)/certification/certifications/_components/certifications-section"
 import { EmployeeCertificationsSection } from "@/app/(app)/certification/certifications/_components/employee-certifications-section"
 import { ListSkeleton } from "@/components/list-skeleton"
@@ -6,15 +5,18 @@ import { PageHeader } from "@/components/page-header"
 import { getMe } from "@/lib/api/get-me"
 import { canManageCertifications } from "@/lib/certification/can-manage-certifications"
 import { canViewAllCertifications } from "@/lib/certification/can-view-all-certifications"
+import { Suspense } from "react"
 
 export const metadata = { title: "資格・免許" }
 
 /**
- * 資格・免許の台帳。マスタ一覧と自分の保有記録を表示する。
+ * 資格・免許の台帳。マスタ一覧と指定従業員の保有記録を表示する。
  * 管理操作（マスタ作成・保有記録の登録/削除）は certification:manage を持つロールにのみ出す。
  */
-export default async function CertificationsPage() {
-  const currentUser = await getMe()
+export default async function CertificationsPage(props: {
+  searchParams: Promise<{ employee_id?: string }>
+}) {
+  const [params, currentUser] = await Promise.all([props.searchParams, getMe()])
 
   const canManage =
     currentUser instanceof Error ? false : canManageCertifications(currentUser.permissions)
@@ -31,7 +33,10 @@ export default async function CertificationsPage() {
       </Suspense>
 
       <Suspense fallback={<ListSkeleton rows={3} rowClassName="h-10 w-full" />}>
-        <EmployeeCertificationsSection canViewAll={canViewAll} />
+        <EmployeeCertificationsSection
+          canViewAll={canViewAll}
+          employeeId={params.employee_id ?? ""}
+        />
       </Suspense>
     </div>
   )

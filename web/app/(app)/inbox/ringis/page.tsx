@@ -1,12 +1,9 @@
-import { RingiProcedureActionForm } from "@/app/(app)/my/ringis/_components/ringi-procedure-action-form"
-import { FetchError } from "@/components/fetch-error"
-import Link from "next/link"
-import { Suspense } from "react"
-import { RingiDecisionForm } from "@/app/(app)/my/ringis/_components/ringi-decision-form"
+import { RingiDecisionForm } from "@/app/(app)/ringi/ringis/_components/ringi-decision-form"
+import { RingiProcedureActionForm } from "@/app/(app)/ringi/ringis/_components/ringi-procedure-action-form"
 import { EmptyState } from "@/components/empty-state"
+import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { SubPageHeader } from "@/components/sub-page-header"
-import { Button } from "@/components/ui/button"
 import {
   Table,
   TableBody,
@@ -16,6 +13,8 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getRingiInbox } from "@/lib/api/get-ringi-inbox"
+import Link from "next/link"
+import { Suspense } from "react"
 
 export const metadata = { title: "承認待ちの稟議" }
 
@@ -32,14 +31,7 @@ export default async function RingiInboxPage(props: {
   const offset = Math.max(0, Number.parseInt(params.offset ?? "0", 10) || 0)
   return (
     <div className="flex flex-col gap-8">
-      <SubPageHeader
-        title="承認待ちの稟議"
-        actions={
-          <Button variant="secondary" nativeButton={false} render={<Link href="/my/ringis" />}>
-            自分の稟議へ
-          </Button>
-        }
-      />
+      <SubPageHeader title="承認待ちの稟議" actions={null} />
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <RingiInboxTable offset={offset} />
@@ -89,7 +81,7 @@ async function RingiInboxTable(props: { offset: number }) {
               <TableCell>{ringi.applicant_name}</TableCell>
 
               <TableCell>
-                <Link href={`/my/ringis/${ringi.id}`}>{ringi.title}</Link>
+                <Link href={`/ringi/ringis/${ringi.id}`}>{ringi.title}</Link>
                 <p>
                   {ringi.approvals} / {ringi.required_approvals ?? "—"} 名の承認
                 </p>

@@ -1,9 +1,6 @@
-import { FetchError } from "@/components/fetch-error"
-import { formatDate } from "@/lib/format-date"
-import Link from "next/link"
-import { Suspense } from "react"
 import { EmptyState } from "@/components/empty-state"
 import { ExpenseStatusBadge } from "@/components/expense-status-badge"
+import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { SubPageHeader } from "@/components/sub-page-header"
 import { Button } from "@/components/ui/button"
@@ -16,8 +13,11 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getExpenseInbox } from "@/lib/api/get-expense-inbox"
-import { toExpenseCategoryLabel } from "@/lib/expense/to-expense-category-label"
 import { requirePermission } from "@/lib/auth/require-permission"
+import { toExpenseCategoryLabel } from "@/lib/expense/to-expense-category-label"
+import { formatDate } from "@/lib/format-date"
+import Link from "next/link"
+import { Suspense } from "react"
 
 export const metadata = { title: "承認待ちの経費" }
 
@@ -34,14 +34,7 @@ export default async function ExpenseInboxPage(props: {
 
   return (
     <div className="flex flex-col gap-8">
-      <SubPageHeader
-        title="承認待ちの経費"
-        actions={
-          <Button variant="secondary" nativeButton={false} render={<Link href="/my/expenses" />}>
-            自分の経費へ
-          </Button>
-        }
-      />
+      <SubPageHeader title="承認待ちの経費" actions={null} />
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <ExpenseInboxTable offset={offset} />

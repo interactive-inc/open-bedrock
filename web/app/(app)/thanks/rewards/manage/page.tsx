@@ -1,10 +1,10 @@
-import { notFound } from "next/navigation"
 import { RewardCreateForm } from "@/app/(app)/thanks/thanks/_components/reward-create-form"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent } from "@/components/ui/card"
 import { getMe } from "@/lib/api/get-me"
 import { canManageRewards } from "@/lib/thanks/can-manage-rewards"
+import { notFound } from "next/navigation"
 
 export const metadata = { title: "景品の管理" }
 
@@ -21,7 +21,7 @@ export default async function ThanksRewardsManagePage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="景品の管理">
-        <BackButton href="/thanks/rewards" label="景品に戻る" />
+        <BackButton href="/thanks/thanks" label="景品に戻る" />
       </PageHeader>
 
       <Card>

@@ -1,8 +1,8 @@
+import { featureRegistry } from "@/lib/feature/feature-registry"
+import { urlRedirects } from "@/lib/routing/url-redirects"
 import { existsSync, readdirSync } from "node:fs"
 import path from "node:path"
 import { describe, expect, test } from "vite-plus/test"
-import { featureRegistry } from "@/lib/feature/feature-registry"
-import { urlRedirects } from "@/lib/routing/url-redirects"
 
 /**
  * Next の redirect source を照合用の正規表現にする。
@@ -51,6 +51,18 @@ const registryHrefs = featureRegistry.flatMap((feature) =>
 )
 
 describe("urlRedirects", () => {
+  test("旧申請テンプレートURLは横断URLへ一度で転送する", () => {
+    expect(applyOnce("/system/application-templates")).toBe("/application-templates")
+    expect(applyOnce("/company/application-templates")).toBe("/application-templates")
+    expect(applyOnce("/system/application-templates/demo/workflow")).toBe(
+      "/application-templates/demo/workflow",
+    )
+    expect(applyOnce("/company/application-templates/demo/workflow")).toBe(
+      "/application-templates/demo/workflow",
+    )
+    expect(applyOnce("/application-templates")).toBeNull()
+    expect(applyOnce("/application-templates/demo/workflow")).toBeNull()
+  })
   test("現行 URL がどの転送元にも食われない", () => {
     const eaten = registryHrefs
       .map((href) => ({ href, destination: applyOnce(href) }))
@@ -80,8 +92,8 @@ describe("urlRedirects", () => {
     expect(applyOnce("/system/licenses")).toBe("/software-license/licenses")
     expect(applyOnce("/system/it-incidents")).toBe("/it-incident/it-incidents")
     expect(applyOnce("/company/inbox")).toBe("/inbox")
-    expect(applyOnce("/company/notifications")).toBe("/notifications")
-    expect(applyOnce("/teams/reports")).toBe("/my/direct-reports")
+    expect(applyOnce("/company/notifications")).toBe(null)
+    expect(applyOnce("/teams/reports")).toBe(null)
     expect(applyOnce("/my")).toBe("/")
   })
 
@@ -92,7 +104,7 @@ describe("urlRedirects", () => {
   })
 
   test("本人スコープの配下は転送しない", () => {
-    expect(applyOnce("/my/expenses")).toBe(null)
+    expect(applyOnce("/expense/expenses")).toBe(null)
     expect(applyOnce("/my/leaves/new")).toBe(null)
   })
 

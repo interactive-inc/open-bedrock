@@ -1,17 +1,15 @@
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { Suspense } from "react"
 import { RentalAdminFilterForm } from "@/app/(app)/rental/rentals/_components/rental-admin-filter-form"
 import { RentalAdminTable } from "@/app/(app)/rental/rentals/_components/rental-admin-table"
 import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { TablePagination } from "@/components/table-pagination"
-import { Button } from "@/components/ui/button"
-import { getRentalAdminList, type RentalAdminFilter } from "@/lib/api/get-rental-admin-list"
 import { getMe } from "@/lib/api/get-me"
+import { getRentalAdminList, type RentalAdminFilter } from "@/lib/api/get-rental-admin-list"
 import { canManageRentals } from "@/lib/rental/can-manage-rentals"
 import { canViewAllRentalReservations } from "@/lib/rental/can-view-all-rental-reservations"
+import { notFound } from "next/navigation"
+import { Suspense } from "react"
 
 export const metadata = { title: "レンタルの横断" }
 
@@ -60,11 +58,7 @@ export default async function AdminRentalsPage(props: { searchParams: SearchPara
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="レンタルの横断">
-        <Button variant="secondary" nativeButton={false} render={<Link href="/rental/rentals" />}>
-          自分の予約
-        </Button>
-      </PageHeader>
+      <PageHeader title="レンタルの横断"></PageHeader>
 
       <RentalAdminFilterForm
         statusValue={filter.status ?? ""}

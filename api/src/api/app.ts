@@ -4,6 +4,9 @@
 
 import { hc } from "hono/client"
 import { appBase, createRouteApp } from "@/api/app-base"
+import * as applicationTemplatesRoute from "@/api/routes/application-templates"
+import * as applicationTemplatesCodeRoute from "@/api/routes/application-templates.$code"
+import * as applicationTemplatesCodeWorkflowRoute from "@/api/routes/application-templates.$code.workflow"
 import * as attendanceAttendanceRecordsOvertimeSummaryRoute from "@/api/routes/attendance.attendance-records.overtime-summary"
 import * as companyAccountDirectoryRoute from "@/api/routes/company.account-directory"
 import * as companyApplicationRequestsRoute from "@/api/routes/company.application-requests"
@@ -397,6 +400,13 @@ const routePart0 = createRouteApp()
   .get("/antisocial-check/antisocial-checks/:id", ...antisocialChecksIdRoute.GET)
   .put("/antisocial-check/antisocial-checks/:id", ...antisocialChecksIdRoute.PUT)
   .delete("/antisocial-check/antisocial-checks/:id", ...antisocialChecksIdRoute.DELETE)
+  .get("/application-templates", ...applicationTemplatesRoute.GET)
+  .post("/application-templates", ...applicationTemplatesRoute.POST)
+  .get("/application-templates/:code", ...applicationTemplatesCodeRoute.GET)
+  .put("/application-templates/:code", ...applicationTemplatesCodeRoute.PUT)
+  .delete("/application-templates/:code", ...applicationTemplatesCodeRoute.DELETE)
+  .get("/application-templates/:code/workflow", ...applicationTemplatesCodeWorkflowRoute.GET)
+  .put("/application-templates/:code/workflow", ...applicationTemplatesCodeWorkflowRoute.PUT)
   .get("/asset/assets", ...assetsRoute.GET)
   .post("/asset/assets", ...assetsRoute.POST)
   .get("/asset/assets/holdings", ...assetsHoldingsRoute.GET)
@@ -429,6 +439,8 @@ const routePart0 = createRouteApp()
   .delete("/business-trip/business-trips/:id", ...businessTripsIdRoute.DELETE)
   .post("/business-trip/business-trips/:id/approve", ...businessTripsIdApproveRoute.POST)
   .post("/business-trip/business-trips/:id/reject", ...businessTripsIdRejectRoute.POST)
+
+const routePart1 = createRouteApp()
   .get("/career/career-applications/me", ...careerApplicationsMeRoute.GET)
   .get("/career/career-applications/:id", ...careerApplicationsIdRoute.GET)
   .put("/career/career-applications/:id", ...careerApplicationsIdRoute.PUT)
@@ -436,8 +448,6 @@ const routePart0 = createRouteApp()
   .get("/career/career-postings", ...careerPostingsRoute.GET)
   .post("/career/career-postings", ...careerPostingsRoute.POST)
   .get("/career/career-postings/:postingId", ...careerPostingsPostingIdRoute.GET)
-
-const routePart1 = createRouteApp()
   .put("/career/career-postings/:postingId", ...careerPostingsPostingIdRoute.PUT)
   .delete("/career/career-postings/:postingId", ...careerPostingsPostingIdRoute.DELETE)
   .post("/career/career-postings/:postingId/apply", ...careerPostingsPostingIdApplyRoute.POST)

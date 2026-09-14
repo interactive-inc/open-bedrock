@@ -1,9 +1,9 @@
 "use server"
 
-import { revalidatePath } from "next/cache"
+import { parseWorkflowDefinitionJson } from "@/app/(app)/application-templates/[template]/workflow/_lib/workflow-definition"
+import type { WorkflowFormState } from "@/app/(app)/application-templates/[template]/workflow/actions"
 import { publishExpenseProcedure } from "@/lib/api/publish-expense-procedure"
-import { parseWorkflowDefinitionJson } from "@/app/(app)/system/application-templates/[template]/workflow/_lib/workflow-definition"
-import type { WorkflowFormState } from "@/app/(app)/system/application-templates/[template]/workflow/actions"
+import { revalidatePath } from "next/cache"
 
 /** 確認した規程の版を経費専用の設定権限で保存する。 */
 export async function saveExpenseProcedureAction(
@@ -19,6 +19,6 @@ export async function saveExpenseProcedureAction(
   const saved = await publishExpenseProcedure(parsed.workflow, revision)
   if (saved instanceof Error) return { ...previous, ok: false, error: saved.message }
   revalidatePath("/expense/procedure")
-  revalidatePath("/my/expenses/new")
+  revalidatePath("/expense/expenses")
   return { ok: true, error: null, revision: saved.revision }
 }

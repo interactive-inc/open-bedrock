@@ -3,58 +3,13 @@
 import { revalidatePath } from "next/cache"
 import { createNotification } from "@/lib/api/create-notification"
 import { getMe } from "@/lib/api/get-me"
-import { markAllNotificationsRead } from "@/lib/api/mark-all-notifications-read"
-import { markNotificationRead } from "@/lib/api/mark-notification-read"
 import type { NotificationKind } from "@/lib/api/types/notification-types"
-import { requireAuth } from "@/lib/auth/require-auth"
 import { canManageNotifications } from "@/lib/notifications/can-manage-notifications"
 
 /** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
 export type NotificationFormState = {
   ok: boolean
   error: string | null
-}
-
-/** 指定通知の既読化 Server Action。hidden input の notification_id を受け取る。 */
-export async function markNotificationReadAction(
-  _previousState: NotificationFormState,
-  formData: FormData,
-): Promise<NotificationFormState> {
-  await requireAuth()
-
-  const notificationIdValue = formData.get("notification_id")
-  const notificationId = typeof notificationIdValue === "string" ? notificationIdValue.trim() : ""
-
-  if (notificationId === "") {
-    return { ok: false, error: "通知 ID が不正です" }
-  }
-
-  const result = await markNotificationRead(notificationId)
-
-  if (result instanceof Error) {
-    return { ok: false, error: "既読化に失敗しました" }
-  }
-
-  revalidatePath("/notifications")
-
-  return { ok: true, error: null }
-}
-
-/** 全件既読化 Server Action。 */
-export async function markAllNotificationsReadAction(
-  _previousState: NotificationFormState,
-): Promise<NotificationFormState> {
-  await requireAuth()
-
-  const result = await markAllNotificationsRead()
-
-  if (result instanceof Error) {
-    return { ok: false, error: "全件既読化に失敗しました" }
-  }
-
-  revalidatePath("/notifications")
-
-  return { ok: true, error: null }
 }
 
 /** FormData の kind を NotificationKind に正規化する。未知の値は announcement。 */
@@ -127,7 +82,7 @@ export async function createNotificationAction(
     return { ok: false, error: "通知の作成に失敗しました" }
   }
 
-  revalidatePath("/notifications")
+  revalidatePath("/system/deliveries")
 
   // redirect() せず ok:true を返す。クライアント側で遷移を処理し、
   // 成功フィードバック（toast等）が握り潰されるのを防ぐ。

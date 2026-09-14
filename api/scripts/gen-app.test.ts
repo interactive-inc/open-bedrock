@@ -185,7 +185,7 @@ describe("collectRegistrations", () => {
     expect(invalidDynamicParameters).toEqual([])
   })
 
-  test("全URLをcontext/resource以下に置き、所有contextと先頭segmentを一致させる", async () => {
+  test("contextのURLは所有者と一致し、宣言済みの横断URLだけを例外にする", async () => {
     const registrations = await collectRegistrations()
     const knownContexts = new Set(
       ROUTE_MODULE_REGISTRY.filter((module) => module.tier !== "composition").map(
@@ -199,7 +199,12 @@ describe("collectRegistrations", () => {
       const owner = ROUTE_MODULE_REGISTRY.find((module) =>
         registration.module.startsWith(`${module.routeImportPrefix}/`),
       )
-      if (segments.length < 2 || !knownContexts.has(segments[0] ?? "")) {
+      const isNeutralTemplateRoute =
+        owner?.tier === "composition" && segments[0] === "application-templates"
+      if (
+        !isNeutralTemplateRoute &&
+        (segments.length < 2 || !knownContexts.has(segments[0] ?? ""))
+      ) {
         violations.push(
           `${registration.method} ${registration.url}: context/resourceではありません`,
         )

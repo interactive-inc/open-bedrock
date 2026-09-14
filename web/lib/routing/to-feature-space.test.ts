@@ -1,17 +1,17 @@
-import { describe, expect, test } from "vite-plus/test"
 import { toFeatureSpace } from "@/lib/routing/to-feature-space"
+import { describe, expect, test } from "vite-plus/test"
 
 describe("toFeatureSpace", () => {
   test("ホームは本人の空間にする", () => {
-    expect(toFeatureSpace("/")).toBe("my")
+    expect(toFeatureSpace("/")).toBe("apps")
   })
 
   test("本人スコープと部署スコープ、受信箱と通知を本人の空間にする", () => {
-    expect(toFeatureSpace("/my/expenses")).toBe("my")
-    expect(toFeatureSpace("/teams/D001/members")).toBe("my")
-    expect(toFeatureSpace("/teams/approval-delegations")).toBe("my")
-    expect(toFeatureSpace("/inbox")).toBe("my")
-    expect(toFeatureSpace("/notifications")).toBe("my")
+    expect(toFeatureSpace("/expense/expenses")).toBe("apps")
+    expect(toFeatureSpace("/company/departments/D001")).toBe("company")
+    expect(toFeatureSpace("/system/approval-delegations")).toBe("system")
+    expect(toFeatureSpace("/inbox")).toBe("system")
+    expect(toFeatureSpace("/notifications/new")).toBe("system")
   })
 
   test("所有者 prefix を持つ URL はその所有者の空間にする", () => {

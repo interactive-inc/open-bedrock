@@ -1,16 +1,12 @@
-import { FetchError } from "@/components/fetch-error"
-import Link from "next/link"
-import { Suspense } from "react"
 import { LeaveInboxDecisionForm } from "@/app/(app)/inbox/leaves/_components/leave-inbox-decision-form"
 import { EmptyState } from "@/components/empty-state"
+import { FetchError } from "@/components/fetch-error"
 import { LeaveStatusBadge } from "@/components/leave-status-badge"
 import { LeaveTypeLabel } from "@/components/leave-type-label"
 import { ListSkeleton } from "@/components/list-skeleton"
-import { SubPageHeader } from "@/components/sub-page-header"
 import { SortableTableHead } from "@/components/sortable-table-head"
+import { SubPageHeader } from "@/components/sub-page-header"
 import { TablePagination } from "@/components/table-pagination"
-import { PAGE_SIZE_OPTIONS, parsePageSize } from "@/lib/pagination/parse-page-size"
-import { Button } from "@/components/ui/button"
 import {
   Table,
   TableBody,
@@ -21,6 +17,8 @@ import {
 } from "@/components/ui/table"
 import { getLeaveInbox, type LeaveInboxSort } from "@/lib/api/get-leave-inbox"
 import { requirePermission } from "@/lib/auth/require-permission"
+import { PAGE_SIZE_OPTIONS, parsePageSize } from "@/lib/pagination/parse-page-size"
+import { Suspense } from "react"
 
 export const metadata = { title: "承認待ちの休暇" }
 
@@ -57,14 +55,7 @@ export default async function LeaveInboxPage(props: { searchParams: SearchParams
 
   return (
     <div className="flex flex-col gap-8">
-      <SubPageHeader
-        title="承認待ちの休暇"
-        actions={
-          <Button variant="secondary" nativeButton={false} render={<Link href="/my/leaves" />}>
-            休暇へ戻る
-          </Button>
-        }
-      />
+      <SubPageHeader title="承認待ちの休暇" actions={null} />
 
       <Suspense fallback={<ListSkeleton rows={4} rowClassName="h-16 w-full" />}>
         <LeaveInboxTable offset={offset} pageSize={pageSize} sort={sort} />

@@ -1,20 +1,18 @@
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { Suspense } from "react"
 import { ResignationAdminFilterForm } from "@/app/(app)/resignation/resignations/_components/resignation-admin-filter-form"
 import { ResignationAdminTable } from "@/app/(app)/resignation/resignations/_components/resignation-admin-table"
 import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { TablePagination } from "@/components/table-pagination"
-import { Button } from "@/components/ui/button"
+import { getMe } from "@/lib/api/get-me"
 import {
   getResignationAdminList,
   type ResignationAdminFilter,
 } from "@/lib/api/get-resignation-admin-list"
-import { getMe } from "@/lib/api/get-me"
 import { canManageResignations } from "@/lib/resignation/can-manage-resignations"
 import { canViewAllResignations } from "@/lib/resignation/can-view-all-resignations"
+import { notFound } from "next/navigation"
+import { Suspense } from "react"
 
 export const metadata = { title: "退職の横断" }
 
@@ -60,15 +58,7 @@ export default async function AdminResignationsPage(props: { searchParams: Searc
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="退職の横断">
-        <Button
-          variant="secondary"
-          nativeButton={false}
-          render={<Link href="/resignation/resignations" />}
-        >
-          自分の手続き
-        </Button>
-      </PageHeader>
+      <PageHeader title="退職の横断"></PageHeader>
 
       <ResignationAdminFilterForm
         statusValue={filter.status ?? ""}

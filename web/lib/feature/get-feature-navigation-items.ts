@@ -5,7 +5,7 @@ import { toFeatureSpace } from "@/lib/routing/to-feature-space"
 
 /**
  * 空間に属する表示可能な経路を、部署コードを解決して返す。
- * 空間は href の第 1 セグメントから導出する。
+ * 空間は機能レジストリの所有区分から導出する。
  * disabledFeatureSlugs（機能ゲートで無効な機能）は表示から除く。
  */
 export function getFeatureNavigationItems(
@@ -22,6 +22,8 @@ export function getFeatureNavigationItems(
     if (disabledSlugSet.has(feature.slug)) continue
 
     for (const route of feature.routes) {
+      if (route.href.startsWith("/my/") || route.href.startsWith("/teams/")) continue
+      if (route.href === "/notifications" || route.href === "/thanks/rewards") continue
       if (toFeatureSpace(route.href) !== space) continue
       if (route.href.includes(":team") && teamCode === null) continue
 
@@ -32,7 +34,7 @@ export function getFeatureNavigationItems(
         group: toNavigationGroup(route.href, feature.group),
         icon: feature.icon,
         prefetch: feature.prefetch,
-        label: route.label,
+        label: route.label.replace(/^全社の/, ""),
         href: route.href.replace(":team", teamCode ?? ""),
         visibility: route.visibility,
       })

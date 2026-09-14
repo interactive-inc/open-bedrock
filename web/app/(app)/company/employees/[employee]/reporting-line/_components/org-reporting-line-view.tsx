@@ -1,8 +1,8 @@
-import { FetchError } from "@/components/fetch-error"
-import Link from "next/link"
-import { getOrgReportingLine } from "@/lib/api/get-org-reporting-line"
 import { EmptyState } from "@/components/empty-state"
+import { FetchError } from "@/components/fetch-error"
 import { Card } from "@/components/ui/card"
+import { getOrgReportingLine } from "@/lib/api/get-org-reporting-line"
+import Link from "next/link"
 
 type Props = {
   code: string
@@ -36,7 +36,7 @@ export async function OrgReportingLineView(props: Props) {
 
               {node.department_code !== null && (
                 <Link
-                  href={`/teams/${node.department_code}/members`}
+                  href={`/company/departments/${node.department_code}`}
                   className="text-xs text-muted-foreground hover:underline"
                 >
                   {node.department_code}

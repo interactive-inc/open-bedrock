@@ -1,3 +1,4 @@
+import { toDurationLabel } from "@/app/(app)/attendance/attendances/_lib/to-duration-label"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
 import {
@@ -10,7 +11,6 @@ import {
 } from "@/components/ui/table"
 import { getOvertimeSummary } from "@/lib/api/get-overtime-summary"
 import type { OvertimeScope } from "@/lib/api/types/overtime-types"
-import { toDurationLabel } from "@/app/(app)/my/attendances/_lib/to-duration-label"
 
 type Props = {
   month: string | null

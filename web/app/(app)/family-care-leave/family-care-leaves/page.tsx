@@ -1,13 +1,9 @@
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { Suspense } from "react"
 import { FamilyCareLeaveAdminFilterForm } from "@/app/(app)/family-care-leave/family-care-leaves/_components/family-care-leave-admin-filter-form"
 import { FamilyCareLeaveAdminTable } from "@/app/(app)/family-care-leave/family-care-leaves/_components/family-care-leave-admin-table"
 import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { TablePagination } from "@/components/table-pagination"
-import { Button } from "@/components/ui/button"
 import {
   getFamilyCareLeaveAdminList,
   type FamilyCareLeaveAdminFilter,
@@ -15,6 +11,8 @@ import {
 import { getMe } from "@/lib/api/get-me"
 import { canManageFamilyCareLeaves } from "@/lib/family-care-leave/can-manage-family-care-leaves"
 import { canViewAllFamilyCareLeaves } from "@/lib/family-care-leave/can-view-all-family-care-leaves"
+import { notFound } from "next/navigation"
+import { Suspense } from "react"
 
 export const metadata = { title: "休業の横断" }
 
@@ -63,15 +61,7 @@ export default async function AdminFamilyCareLeavesPage(props: { searchParams: S
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="休業の横断">
-        <Button
-          variant="secondary"
-          nativeButton={false}
-          render={<Link href="/family-care-leave/family-care-leaves" />}
-        >
-          自分の申出
-        </Button>
-      </PageHeader>
+      <PageHeader title="休業の横断"></PageHeader>
 
       <FamilyCareLeaveAdminFilterForm
         statusValue={filter.status ?? ""}

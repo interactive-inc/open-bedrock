@@ -1,5 +1,4 @@
 import { RoomAvailabilityTable } from "@/app/(app)/room/rooms/_components/room-availability-table"
-import { RoomReservationCreateForm } from "@/app/(app)/room/rooms/_components/room-reservation-create-form"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
 import { getRoomAvailability } from "@/lib/api/get-room-availability"
@@ -39,12 +38,6 @@ export async function RoomAvailabilitySection(props: Props) {
 
         <RoomAvailabilityTable availabilities={availabilities} />
       </div>
-
-      <RoomReservationCreateForm
-        availabilities={availabilities}
-        startAt={props.search.startAt}
-        endAt={props.search.endAt}
-      />
     </div>
   )
 }

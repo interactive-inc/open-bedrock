@@ -1,12 +1,12 @@
+import { saveExpenseProcedureAction } from "@/app/(app)/expense/procedure/actions"
+import { WorkflowEditor } from "@/app/(app)/application-templates/[template]/workflow/_components/workflow-editor"
+import { FetchError } from "@/components/fetch-error"
+import { PageHeader } from "@/components/page-header"
+import { getExpenseProcedure } from "@/lib/api/get-expense-procedure"
+import { getMe } from "@/lib/api/get-me"
+import type { ApplicationWorkflow } from "@/lib/api/types/application-workflow-types"
 import Link from "next/link"
 import { notFound } from "next/navigation"
-import { getMe } from "@/lib/api/get-me"
-import { getExpenseProcedure } from "@/lib/api/get-expense-procedure"
-import { WorkflowEditor } from "@/app/(app)/system/application-templates/[template]/workflow/_components/workflow-editor"
-import { saveExpenseProcedureAction } from "@/app/(app)/expense/procedure/actions"
-import { PageHeader } from "@/components/page-header"
-import { FetchError } from "@/components/fetch-error"
-import type { ApplicationWorkflow } from "@/lib/api/types/application-workflow-types"
 
 export const metadata = { title: "経費の承認規程" }
 
@@ -42,7 +42,7 @@ export default async function ExpenseProcedurePage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="経費の承認規程">
-        <Link href="/my/expenses">経費一覧へ</Link>
+        <Link href="/expense/expenses">経費一覧へ</Link>
       </PageHeader>
       <p>新しく提出する経費に適用します。提出済みの経費には、提出時の規程が残ります。</p>
       <WorkflowEditor

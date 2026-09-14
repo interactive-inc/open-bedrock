@@ -1,6 +1,6 @@
-import { ExpenseProcedureActionForm } from "@/app/(app)/my/expenses/_components/expense-procedure-action-form"
-import { ExpenseDecisionForm } from "@/app/(app)/my/expenses/_components/expense-decision-form"
-import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
+import { ExpenseDecisionForm } from "@/app/(app)/expense/expenses/_components/expense-decision-form"
+import { ExpenseProcedureActionForm } from "@/app/(app)/expense/expenses/_components/expense-procedure-action-form"
+import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import type { ExpenseDecisionTarget } from "@/lib/api/types/expense-types"
 type Props = {
   expense: {

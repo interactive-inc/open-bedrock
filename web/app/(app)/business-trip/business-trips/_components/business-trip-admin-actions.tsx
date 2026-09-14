@@ -1,13 +1,13 @@
 "use client"
 
-import { useActionState } from "react"
+import type { BusinessTripActionState } from "@/app/(app)/business-trip/business-trips/actions"
 import {
   approveBusinessTripAction,
   rejectBusinessTripAction,
-} from "@/app/(app)/my/business-trips/actions"
-import type { BusinessTripActionState } from "@/app/(app)/my/business-trips/actions"
+} from "@/app/(app)/business-trip/business-trips/actions"
 import { Button } from "@/components/ui/button"
 import { FieldError } from "@/components/ui/field"
+import { useActionState } from "react"
 
 type Props = {
   businessTripId: string

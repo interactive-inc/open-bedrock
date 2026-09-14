@@ -1,14 +1,14 @@
+import { CareerPostingDetailSection } from "@/app/(app)/career/job-postings/_components/career-posting-detail-section"
+import { BackButton } from "@/components/back-button"
+import { DetailSkeleton } from "@/components/detail-skeleton"
+import { PageHeader } from "@/components/page-header"
+import { Button } from "@/components/ui/button"
+import { getMe } from "@/lib/api/get-me"
+import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
 import { Pencil } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
-import { CareerPostingDetailSection } from "@/app/(app)/my/career/_components/career-posting-detail-section"
-import { BackButton } from "@/components/back-button"
-import { PageHeader } from "@/components/page-header"
-import { DetailSkeleton } from "@/components/detail-skeleton"
-import { Button } from "@/components/ui/button"
-import { getMe } from "@/lib/api/get-me"
-import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
 
 export const metadata = { title: "公募の詳細" }
 

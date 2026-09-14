@@ -1,14 +1,14 @@
-import { notFound } from "next/navigation"
-import { ReviewCycleCreateForm } from "@/app/(app)/my/reviews/_components/review-cycle-create-form"
-import { ReviewDiscloseForm } from "@/app/(app)/my/reviews/_components/review-disclose-form"
-import { ReviewFormsBulkCreateForm } from "@/app/(app)/my/reviews/_components/review-forms-bulk-create-form"
-import { ReviewResultsSearchForm } from "@/app/(app)/my/reviews/_components/review-results-search-form"
+import { ReviewCycleCreateForm } from "@/app/(app)/performance-review/review-cycles/_components/review-cycle-create-form"
+import { ReviewDiscloseForm } from "@/app/(app)/performance-review/review-cycles/_components/review-disclose-form"
+import { ReviewFormsBulkCreateForm } from "@/app/(app)/performance-review/review-cycles/_components/review-forms-bulk-create-form"
+import { ReviewResultsSearchForm } from "@/app/(app)/performance-review/review-cycles/_components/review-results-search-form"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getMe } from "@/lib/api/get-me"
 import { getReviewCycles } from "@/lib/api/get-review-cycles"
 import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
+import { notFound } from "next/navigation"
 
 export const metadata = { title: "評価サイクル" }
 
@@ -30,7 +30,7 @@ export default async function ReviewManagePage() {
   return (
     <div className="flex flex-col gap-8">
       <PageHeader title="評価サイクル">
-        <BackButton href="/my/reviews" label="評価に戻る" />
+        <BackButton href="/performance-review/review-cycles" label="評価に戻る" />
       </PageHeader>
 
       <Card>

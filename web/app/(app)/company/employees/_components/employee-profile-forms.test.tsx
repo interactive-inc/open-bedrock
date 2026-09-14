@@ -1,9 +1,8 @@
-import { afterEach, describe, expect, test, vi } from "vite-plus/test"
-import { cleanup, fireEvent, render, screen } from "@testing-library/react"
 import { EmployeeEditForm } from "@/app/(app)/company/employees/_components/employee-edit-form"
-import { PhoneField } from "@/app/(app)/my/settings/_components/phone-field"
+import { cleanup, fireEvent, render, screen } from "@testing-library/react"
+import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 vi.mock("@/app/(app)/company/employees/actions", () => ({ updateEmployeeAction: vi.fn() }))
-vi.mock("@/app/(app)/my/settings/actions", () => ({ updatePhoneAction: vi.fn() }))
+vi.mock("@/app/(app)/settings/actions", () => ({ updatePhoneAction: vi.fn() }))
 afterEach(cleanup)
 const profile = {
   employeeId: "employee:profile",
@@ -38,12 +37,6 @@ describe("人物編集フォームの版と再送キー", () => {
     fireEvent.change(input, { target: { value: "Changed Person" } })
     expect(fields(input).get("name")).toBe("Changed Person")
   })
-  test("電話フォームは電話番号と同じsnapshotの版を送る", () => {
-    render(<PhoneField phone="010-1000-1000" profile={profile} commandId={commandId} />)
-    const input = screen.getByRole("textbox", { name: "電話番号" })
-    fireEvent.change(input, { target: { value: "" } })
-    expect(fields(input).get("phone")).toBe("")
-  })
   test("公開人物との対応がない場合は保存入口を表示しない", () => {
     render(
       <>
@@ -53,10 +46,9 @@ describe("人物編集フォームの版と再送キー", () => {
           profile={null}
           commandId={commandId}
         />
-        <PhoneField phone={null} profile={null} commandId={commandId} />
       </>,
     )
     expect(screen.queryByRole("button")).toBeNull()
-    expect(screen.getAllByText(/人物情報の対応確認/)).toHaveLength(2)
+    expect(screen.getAllByText(/人物情報の対応確認/)).toHaveLength(1)
   })
 })

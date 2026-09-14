@@ -1,21 +1,19 @@
-import Link from "next/link"
-import { notFound } from "next/navigation"
-import { Suspense } from "react"
 import { ShiftSwapAdminFilterForm } from "@/app/(app)/shift/shift-swaps/_components/shift-swap-admin-filter-form"
 import { ShiftSwapAdminTable } from "@/app/(app)/shift/shift-swaps/_components/shift-swap-admin-table"
 import { FetchError } from "@/components/fetch-error"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { TablePagination } from "@/components/table-pagination"
-import { PAGE_SIZE_OPTIONS, parsePageSize } from "@/lib/pagination/parse-page-size"
-import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
 import {
   getShiftSwapAdminList,
   type ShiftSwapAdminFilter,
   type ShiftSwapAdminSort,
 } from "@/lib/api/get-shift-swap-admin-list"
+import { PAGE_SIZE_OPTIONS, parsePageSize } from "@/lib/pagination/parse-page-size"
 import { canViewAllShiftSwaps } from "@/lib/shift/can-view-all-shift-swaps"
+import { notFound } from "next/navigation"
+import { Suspense } from "react"
 
 export const metadata = { title: "シフト交代の横断" }
 
@@ -89,11 +87,7 @@ export default async function AdminShiftSwapsPage(props: { searchParams: SearchP
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="シフト交代の横断">
-        <Button variant="secondary" nativeButton={false} render={<Link href="/my/shifts" />}>
-          自分のシフトへ
-        </Button>
-      </PageHeader>
+      <PageHeader title="シフト交代の横断"></PageHeader>
 
       <ShiftSwapAdminFilterForm
         statusValue={filter.status ?? ""}

@@ -1,11 +1,9 @@
-import Link from "next/link"
-import { Suspense } from "react"
 import { RoomAvailabilitySearchForm } from "@/app/(app)/room/rooms/_components/room-availability-search-form"
 import { RoomAvailabilitySection } from "@/app/(app)/room/rooms/_components/room-availability-section"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { Button } from "@/components/ui/button"
 import type { RoomAvailabilitySearch } from "@/lib/api/types/room-types"
+import { Suspense } from "react"
 
 export const metadata = { title: "会議室" }
 
@@ -14,7 +12,7 @@ type Props = {
 }
 
 /**
- * 会議室の空き状況検索と予約導線。自分の予約は /rooms/me に分離。
+ * 会議室の管理と空き状況検索。
  */
 export default async function RoomsPage(props: Props) {
   const params = await props.searchParams
@@ -25,15 +23,7 @@ export default async function RoomsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="会議室">
-        <Button
-          variant="secondary"
-          nativeButton={false}
-          render={<Link href="/my/room-reservations" />}
-        >
-          自分の予約
-        </Button>
-      </PageHeader>
+      <PageHeader title="会議室"></PageHeader>
 
       <RoomAvailabilitySearchForm search={search} />
 

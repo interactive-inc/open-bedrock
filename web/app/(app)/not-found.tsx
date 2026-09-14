@@ -16,7 +16,7 @@ export default function AppNotFound() {
       </div>
 
       <Button nativeButton={false} render={<Link href="/" />}>
-        ダッシュボードへ戻る
+        管理画面へ戻る
       </Button>
     </div>
   )
