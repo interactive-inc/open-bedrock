@@ -64,3 +64,18 @@ export const zAppAttendanceRetirementVerificationReceipt = z.strictObject({
   coveragePageId: z.uuid(),
   checkedAt: z.iso.datetime(),
 })
+
+/** 人の判断待ちとして保存した撤去申請。 */
+export const zAppAttendanceRetirementRequest = z.strictObject({
+  number: z.number().int().positive().safe(),
+  caseId: z.string().min(1),
+  planId: z.uuid(),
+  proposalDigest: z.string().regex(/^[0-9a-f]{64}$/),
+  status: z.string().min(1),
+})
+
+/** 原記録を残したまま停止世代を撤去確定した結果。 */
+export const zAppAttendanceRetirementExecution = z.strictObject({
+  retirement_id: z.uuid(),
+  finalized_at: z.iso.datetime(),
+})

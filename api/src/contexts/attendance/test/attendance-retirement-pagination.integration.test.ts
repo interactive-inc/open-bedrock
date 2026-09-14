@@ -1,3 +1,5 @@
+import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
+import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
 import { expect, test } from "bun:test"
 import { z } from "zod"
 import { app } from "@/api/app"
@@ -7,13 +9,22 @@ import { SystemPrincipalSecretService } from "@system/lib/auth/system-principal-
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
-test("11件の打刻を保全し、固定した計画の2ページを順序どおり再検証する", async () => {
+test("11件の打刻を全件保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
   const f = await createAttendancePreservationFixture()
   const creator = f.governance.creator.accountId
   await f.database.exec(`INSERT INTO system_iam_role_permissions VALUES
     ('role:attendance-archive','system:admin'),
     ('role:attendance-archive','system:record:preserve'),
-    ('role:attendance-archive','system:record:read')`)
+    ('role:attendance-archive','system:record:read'),
+    ('role:attendance-archive','system:procedure:read')`)
+  await f.database.exec(`INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
+    VALUES ('role:retirement-review','retirement:review','custom','Record reviewer',0,0);
+    INSERT INTO system_iam_role_permissions VALUES ('role:retirement-review','system:procedure:read')`)
+  await f.database
+    .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
+    VALUES ('binding:retirement-review',?1,'role:retirement-review',0)`)
+    .bind(f.reviewer.accountId)
+    .run()
   for (const id of [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
     await f.database
       .prepare(`INSERT INTO attendance_records
@@ -152,7 +163,34 @@ test("11件の打刻を保全し、固定した計画の2ページを順序ど�
   expect(await lastCoverage.json()).toMatchObject({ sequence: 2, nextCursor: null, recordCount: 1 })
   const planned = await post(`${sourcePath}/retirement-plans`, planId, { purpose: "archive" })
   if (planned.status !== 200) throw new Error(await planned.text())
-  expect(await planned.json()).toMatchObject({ totalPages: 2, recordKinds: ["attendance-record"] })
+  const publicPlan = z
+    .object({ digest: z.string(), totalPages: z.number(), recordKinds: z.array(z.string()) })
+    .parse(await planned.json())
+  expect(publicPlan).toMatchObject({ totalPages: 2, recordKinds: ["attendance-record"] })
+  const retirementPath = `/attendance/retirement-plans/${planId}/requests`
+  const retirementDefinition = ProcedureDefinitionEntity.create({
+    key: "attendance-retirement",
+    revision: 1,
+    title: "Retire preserved attendance",
+    category: "system",
+    description: null,
+    inputSchema: { fields: [] },
+    decisionPolicy: JSON.parse(f.definition.decisionPolicyJson),
+    completionOperationKey: "system.record.retire",
+    createdByAccountId: creator,
+    createdAt: at,
+  })
+  if (retirementDefinition instanceof Error) throw retirementDefinition
+  expect(
+    await new SystemD1ProcedureRepository(f.governance.context).publish(retirementDefinition, 0),
+  ).toBe(true)
+  const requestBody = {
+    plan_digest: publicPlan.digest,
+    procedure_key: retirementDefinition.key,
+    reason: "Keep company records after removal",
+  }
+  const requestId = crypto.randomUUID()
+  expect((await post(retirementPath, requestId, requestBody)).status).toBe(503)
   const verificationPath = `/attendance/retirement-plans/${planId}/verification-receipts`
   expect((await post(verificationPath, crypto.randomUUID(), { ordinal: 2 })).status).toBe(400)
   const firstId = crypto.randomUUID()
@@ -191,4 +229,176 @@ test("11件の打刻を保全し、固定した計画の2ページを順序ど�
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
       .first<number>("n"),
   ).toBe(0)
+  const submitted = await post(retirementPath, requestId, requestBody)
+  if (submitted.status !== 201) throw new Error(await submitted.text())
+  const request = z
+    .object({ number: z.number(), proposalDigest: z.string(), status: z.string() })
+    .parse(await submitted.json())
+  expect(request.status).toBe("pending")
+  expect((await post(retirementPath, requestId, requestBody)).status).toBe(200)
+  expect(
+    (await post(retirementPath, requestId, { ...requestBody, reason: "Changed intent" })).status,
+  ).toBe(409)
+  const proposalReader = new SystemD1ProposalAdapter({
+    env: { DB: f.database },
+    visibleCompletionOperationKeys: ["system.record.retire"],
+  })
+  const saved = await proposalReader.findByNumber(request.number)
+  if (saved === null || saved instanceof Error) throw new Error("missing retirement proposal")
+  const executePath = `${retirementPath}/${request.number}/execute`
+  const executeBody = {
+    proposal_version: saved.version,
+    proposal_digest: saved.digest,
+    plan_digest: publicPlan.digest,
+  }
+  expect((await post(executePath, crypto.randomUUID(), executeBody)).status).toBe(409)
+  const decisionBody = {
+    decision_target: {
+      proposal_version: saved.version,
+      proposal_digest: saved.digest,
+      task_key: saved.currentTaskKey,
+      task_round: saved.currentTaskRound,
+    },
+    comment: "Reviewed preserved attendance",
+  }
+  expect(
+    (await post(`${retirementPath}/${request.number}/approve`, crypto.randomUUID(), decisionBody))
+      .status,
+  ).toBe(403)
+  const reviewerToken = await new SystemAccessTokenIssuer(secret).issue({
+    accountId: f.reviewer.accountId,
+    tokenVersion: 0,
+    now: new Date(),
+  })
+  if (reviewerToken instanceof Error) throw reviewerToken
+  const decide = (action: string, body: unknown) =>
+    app.request(
+      `${retirementPath}/${request.number}/${action}`,
+      {
+        method: "POST",
+        headers: { authorization: `Bearer ${reviewerToken}`, "content-type": "application/json" },
+        body: JSON.stringify(body),
+      },
+      bindings,
+    )
+  expect((await decide("reject", decisionBody)).status).toBe(200)
+  expect((await post(executePath, crypto.randomUUID(), executeBody)).status).toBe(409)
+  const resubmitted = await post(
+    `${retirementPath}/${request.number}/resubmit`,
+    crypto.randomUUID(),
+    {
+      ...requestBody,
+      previous_version: saved.version,
+      previous_digest: saved.digest,
+    },
+  )
+  if (resubmitted.status !== 201) throw new Error(await resubmitted.text())
+  expect(await resubmitted.json()).toMatchObject({ number: request.number, status: "pending" })
+  const second = await proposalReader.findByNumber(request.number)
+  if (second === null || second instanceof Error) throw new Error("missing retirement revision")
+  expect(second.version).toBe(2)
+  const withdrawal = {
+    proposal_version: second.version,
+    proposal_digest: second.digest,
+    reason: "Recheck source removal",
+  }
+  expect((await decide("withdraw", withdrawal)).status).toBe(403)
+  expect(
+    (await post(`${retirementPath}/${request.number}/withdraw`, crypto.randomUUID(), withdrawal))
+      .status,
+  ).toBe(200)
+  expect(
+    (
+      await post(`${retirementPath}/${request.number}/resubmit`, crypto.randomUUID(), {
+        ...requestBody,
+        previous_version: second.version,
+        previous_digest: second.digest,
+      })
+    ).status,
+  ).toBe(201)
+  const latest = await proposalReader.findByNumber(request.number)
+  if (latest === null || latest instanceof Error)
+    throw new Error("missing final retirement proposal")
+  expect(latest.version).toBe(3)
+  expect((await decide("approve", decisionBody)).status).toBe(409)
+  const latestDecision = {
+    ...decisionBody,
+    decision_target: {
+      proposal_version: latest.version,
+      proposal_digest: latest.digest,
+      task_key: latest.currentTaskKey,
+      task_round: latest.currentTaskRound,
+    },
+  }
+  const approved = await decide("approve", latestDecision)
+  if (approved.status !== 200) throw new Error(await approved.text())
+  const finalBody = {
+    proposal_version: latest.version,
+    proposal_digest: latest.digest,
+    plan_digest: publicPlan.digest,
+  }
+  const assignment = f.governance.resources.find(
+    (resource) => resource.type === "responsibility-assignment",
+  )
+  if (assignment === undefined) throw new Error("missing company qualification")
+  const reviewerAssignment = {
+    ...assignment,
+    attributes: {
+      ...assignment.attributes,
+      holderType: "employee",
+      holderId: f.reviewer.employeeId,
+      authorityScopeId: null,
+    },
+  }
+  await f.governance.write([{ ...reviewerAssignment, revision: 3, state: "void" }])
+  expect((await post(executePath, crypto.randomUUID(), finalBody)).status).toBe(403)
+  expect(
+    await f.database
+      .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
+      .first<number>("n"),
+  ).toBe(0)
+  await f.governance.write([{ ...reviewerAssignment, revision: 4 }])
+  bindings.ATTACHMENT_KEKS = "{}"
+  expect((await post(executePath, crypto.randomUUID(), finalBody)).status).toBe(503)
+  bindings.ATTACHMENT_KEKS = originalKeys
+  await f.database.exec(
+    "CREATE TRIGGER fail_attendance_retirement BEFORE INSERT ON system_record_source_retirements BEGIN SELECT RAISE(ABORT,'injected finalization failure'); END;",
+  )
+  expect((await post(executePath, crypto.randomUUID(), finalBody)).status).toBe(409)
+  expect(
+    await f.database
+      .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
+      .first<number>("n"),
+  ).toBe(0)
+  expect(
+    await f.database
+      .prepare(
+        "SELECT count(*) AS n FROM system_execution_authorizations WHERE case_id=?1 AND used_at IS NOT NULL",
+      )
+      .bind(latest.caseId)
+      .first<number>("n"),
+  ).toBe(0)
+  expect(await proposalReader.findByNumber(request.number)).toMatchObject({ status: "approved" })
+  await f.database.exec("DROP TRIGGER fail_attendance_retirement")
+  const finalized = await post(executePath, crypto.randomUUID(), finalBody)
+  if (finalized.status !== 200) throw new Error(await finalized.text())
+  const finalReceipt = await finalized.json()
+  expect(await (await post(executePath, crypto.randomUUID(), finalBody)).json()).toEqual(
+    finalReceipt,
+  )
+  expect(
+    await f.database
+      .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
+      .first<number>("n"),
+  ).toBe(1)
+  expect(
+    await f.database.prepare("SELECT count(*) AS n FROM attendance_records").first<number>("n"),
+  ).toBe(11)
+  expect(
+    (
+      await post(`${sourcePath}/release`, crypto.randomUUID(), {
+        reason: "Cannot restart retired source",
+      })
+    ).status,
+  ).toBe(409)
 }, 30_000)
