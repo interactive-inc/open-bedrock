@@ -10,7 +10,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { toEmployeeNameMap } from "@/api/http/company-employees/to-employee-name-map"
+import { readCompanyEmployeeNames } from "@/contexts/company/interface/operations/read-company-employee-names"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zAppThanksList } from "@/contexts/thanks/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
@@ -71,7 +71,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(thanksTable)
     .where(eq(thanksTable.senderEmployeeId, session.employeeId))
 
-  const nameById = await toEmployeeNameMap(
+  const nameById = await readCompanyEmployeeNames(
     c,
     thanksList.flatMap((thanksItem) => [
       thanksItem.senderEmployeeId,
