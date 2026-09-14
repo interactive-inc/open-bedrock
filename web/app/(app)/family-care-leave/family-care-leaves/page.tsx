@@ -14,7 +14,7 @@ import { canViewAllFamilyCareLeaves } from "@/lib/family-care-leave/can-view-all
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
-export const metadata = { title: "休業の横断" }
+export const metadata = { title: "休業申請" }
 
 const PAGE_SIZE = 20
 
@@ -61,7 +61,7 @@ export default async function AdminFamilyCareLeavesPage(props: { searchParams: S
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="休業の横断"></PageHeader>
+      <PageHeader title="休業申請"></PageHeader>
 
       <FamilyCareLeaveAdminFilterForm
         statusValue={filter.status ?? ""}

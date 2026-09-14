@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/page-header"
 import { requirePermission } from "@/lib/auth/require-permission"
 import { Suspense } from "react"
 
-export const metadata = { title: "全社の勤怠" }
+export const metadata = { title: "勤怠記録" }
 
 type Props = {
   searchParams: Promise<{ employee_id?: string; from?: string; to?: string }>
@@ -28,7 +28,7 @@ export default async function AttendanceAllPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="全社の勤怠"></PageHeader>
+      <PageHeader title="勤怠記録"></PageHeader>
 
       <AttendanceFilterForm withEmployeeId={true} employeeId={employeeId} from={from} to={to} />
 

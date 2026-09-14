@@ -8,7 +8,7 @@ import { ReadOnlyNotice } from "@/components/read-only-notice"
 import type { EmployeeEventKind } from "@/lib/api/types/employee-event-types"
 import { requireAnyPermission } from "@/lib/auth/require-any-permission"
 
-export const metadata = { title: "雇用事実" }
+export const metadata = { title: "雇用の変更履歴" }
 
 type Props = {
   searchParams: Promise<{ [key: string]: string | Array<string> | undefined }>
@@ -29,7 +29,7 @@ export default async function CompanyEmployeeEventsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="雇用事実" />
+      <PageHeader title="雇用の変更履歴" />
 
       <ReadOnlyNotice command="bedrock employee-events record" />
 

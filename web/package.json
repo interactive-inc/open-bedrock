@@ -3,6 +3,7 @@
   "version": "0.1.0",
   "private": true,
   "scripts": {
+    "gen:composition-catalog": "bun run scripts/gen-composition-api-catalog.ts",
     "dev": "next dev",
     "build": "opennextjs-cloudflare build --skipWranglerConfigCheck",
     "deploy": "wrangler deploy .open-next/worker.js --name bedrock --compatibility-date 2026-05-24 --compatibility-flag nodejs_compat --assets .open-next/assets --keep-vars",

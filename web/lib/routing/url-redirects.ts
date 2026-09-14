@@ -54,10 +54,10 @@ const appViews: ReadonlyArray<{ context: string; resources: ReadonlyArray<string
  */
 const organizationMoves: ReadonlyArray<{ resource: string; destination: string }> = [
   { resource: "application-templates", destination: "application-templates" },
-  { resource: "applications", destination: "system/applications" },
-  { resource: "workflow-repairs", destination: "system/workflow-repairs" },
+  { resource: "applications", destination: "applications" },
+  { resource: "workflow-repairs", destination: "workflow-repairs" },
   { resource: "departments", destination: "company/departments" },
-  { resource: "employees", destination: "company/employees" },
+  { resource: "employees", destination: "company/employee-directory" },
   { resource: "grades", destination: "company/grades" },
   { resource: "positions", destination: "company/positions" },
   { resource: "dashboards", destination: "dashboards" },
@@ -96,7 +96,7 @@ function toRedirects(
 const flatResourceMoves: ReadonlyArray<{ source: string; destination: string }> = [
   { source: "oneonones", destination: "my/oneonones" },
   { source: "accounts", destination: "system/accounts" },
-  { source: "audit-events", destination: "system/audit-events" },
+  { source: "audit-events", destination: "audit-events" },
   { source: "batches", destination: "system/batches" },
   { source: "roles", destination: "system/roles" },
   ...organizationMoves
@@ -116,6 +116,28 @@ const flatResourceMoves: ReadonlyArray<{ source: string; destination: string }> 
  * 配列は先頭一致なので、具体パスを base より前に置く。
  */
 const legacyRedirects: ReadonlyArray<Redirect> = [
+  ...toRedirects([
+    { source: "system/applications", destination: "applications" },
+    { source: "system/workflow-repairs", destination: "workflow-repairs" },
+    { source: "system/approval-delegations", destination: "approval-delegations" },
+    { source: "system/permission-definitions", destination: "permission-definitions" },
+    { source: "attendance/attendances/overtime", destination: "overtime-summary" },
+  ]),
+  { source: "/system/resources", destination: "/system", permanent: false },
+  { source: "/company/resources", destination: "/company", permanent: false },
+  { source: "/composition/resources", destination: "/composition", permanent: false },
+  { source: "/system/resources/:resource", destination: "/system/:resource", permanent: false },
+  { source: "/company/resources/:resource", destination: "/company/:resource", permanent: false },
+  {
+    source: "/company/employees/:employee/:path*",
+    destination: "/company/employee-directory/:employee/:path*",
+    permanent: false,
+  },
+  {
+    source: "/system/audit-events/:eventId/:path*",
+    destination: "/audit-events/:eventId/:path*",
+    permanent: false,
+  },
   {
     source: "/system/application-templates",
     destination: "/application-templates",
@@ -134,7 +156,7 @@ const legacyRedirects: ReadonlyArray<Redirect> = [
   // --- admin 系 ---
   {
     source: "/admin/audit-events/:path*",
-    destination: "/system/audit-events/:path*",
+    destination: "/audit-events/:path*",
     permanent: false,
   },
   // --- 単純リネーム ---
@@ -157,7 +179,7 @@ const legacyRedirects: ReadonlyArray<Redirect> = [
   { source: "/attendance/all", destination: "/attendance/attendances", permanent: false },
   {
     source: "/attendance/overtime",
-    destination: "/attendance/attendances/overtime",
+    destination: "/overtime-summary",
     permanent: false,
   },
   { source: "/attendance", destination: "/attendance/attendances", permanent: false },
@@ -172,7 +194,7 @@ const legacyRedirects: ReadonlyArray<Redirect> = [
   { source: "/expense/new", destination: "/my/expenses/new", permanent: false },
   { source: "/expense", destination: "/expense/expenses", permanent: false },
   // --- applications ---
-  { source: "/applications/admin", destination: "/system/applications", permanent: false },
+  { source: "/applications/admin", destination: "/applications", permanent: false },
   { source: "/applications/inbox", destination: "/inbox/applications", permanent: false },
   {
     source: "/applications/templates/new",
@@ -191,10 +213,10 @@ const legacyRedirects: ReadonlyArray<Redirect> = [
   },
   {
     source: "/applications/workflow-repairs",
-    destination: "/system/workflow-repairs",
+    destination: "/workflow-repairs",
     permanent: false,
   },
-  { source: "/applications", destination: "/system/applications", permanent: false },
+  { source: "/applications", destination: "/applications", permanent: false },
   // --- ringi ---
   { source: "/ringi/admin", destination: "/ringi/ringis", permanent: false },
   { source: "/ringi/inbox", destination: "/inbox/ringis", permanent: false },
@@ -319,7 +341,7 @@ const legacyRedirects: ReadonlyArray<Redirect> = [
   // --- onboarding ---
   {
     source: "/onboarding/employee/:code",
-    destination: "/company/employees/:code/onboarding",
+    destination: "/company/employee-directory/:code/onboarding",
     permanent: false,
   },
   {
@@ -351,7 +373,7 @@ const legacyRedirects: ReadonlyArray<Redirect> = [
   // --- org ---
   {
     source: "/org/reporting-line/:code",
-    destination: "/company/employees/:code/reporting-line",
+    destination: "/company/employee-directory/:code/reporting-line",
     permanent: false,
   },
   {
@@ -389,7 +411,7 @@ const legacyRedirects: ReadonlyArray<Redirect> = [
       destination: move.destination,
     })),
   ),
-  { source: "/organization", destination: "/company/employees", permanent: false },
+  { source: "/organization", destination: "/company/employee-directory", permanent: false },
   { source: "/system/licenses", destination: "/software-license/licenses", permanent: false },
   {
     source: "/system/licenses/:path*",
@@ -420,7 +442,7 @@ const legacyRedirects: ReadonlyArray<Redirect> = [
   },
   {
     source: "/company/audit-events/:path*",
-    destination: "/system/audit-events/:path*",
+    destination: "/audit-events/:path*",
     permanent: false,
   },
   // マイページはホームへ統合した。`/my/:path*`（本人スコープ）は現行なので転送しない。

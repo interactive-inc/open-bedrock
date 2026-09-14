@@ -5,8 +5,8 @@ import {
   getAssignmentBaseRevisionsAction,
   searchTeamMemberCandidatesAction,
 } from "@/app/(app)/company/departments/[team]/actions"
-import type { PersonnelActionFormState } from "@/app/(app)/company/employees/[employee]/actions"
-import { submitPersonnelAction } from "@/app/(app)/company/employees/[employee]/actions"
+import type { PersonnelActionFormState } from "@/app/(app)/company/employee-directory/[employee]/actions"
+import { submitPersonnelAction } from "@/app/(app)/company/employee-directory/[employee]/actions"
 import { Button } from "@/components/ui/button"
 import {
   Dialog,

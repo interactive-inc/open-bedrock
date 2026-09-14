@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/page-header"
 import { getMe } from "@/lib/api/get-me"
 import { canManageCalendar } from "@/lib/calendar/can-manage-calendar"
 
-export const metadata = { title: "カレンダー" }
+export const metadata = { title: "会社カレンダー" }
 
 type Props = {
   searchParams: Promise<{ year?: string }>
@@ -26,7 +26,7 @@ export default async function CalendarPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="カレンダー" />
+      <PageHeader title="会社カレンダー" />
 
       <CalendarYearForm year={year} />
 

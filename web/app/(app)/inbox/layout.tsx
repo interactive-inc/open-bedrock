@@ -47,7 +47,7 @@ export default async function InboxLayout(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="受信箱" />
+      <PageHeader title="承認・確認待ち" />
 
       <p className="text-sm text-muted-foreground">
         各業務の承認・確認待ちをまとめて表示します。権限と担当範囲に応じた項目が表示されます。

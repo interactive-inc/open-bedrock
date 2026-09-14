@@ -11,7 +11,7 @@ describe("isPathOfDisabledFeature", () => {
 
   test("does not match other features or plain prefixes", () => {
     expect(isPathOfDisabledFeature("/thanks/thanks", ["one-on-ones"])).toBe(false)
-    expect(isPathOfDisabledFeature("/company/employees", ["thanks"])).toBe(false)
+    expect(isPathOfDisabledFeature("/company/employee-directory", ["thanks"])).toBe(false)
     expect(isPathOfDisabledFeature("/", ["thanks", "one-on-ones"])).toBe(false)
   })
 

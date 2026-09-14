@@ -14,7 +14,7 @@ import { canViewAllLifeEvents } from "@/lib/life-event/can-view-all-life-events"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
-export const metadata = { title: "ライフイベントの横断" }
+export const metadata = { title: "身上変更届" }
 
 const PAGE_SIZE = 20
 
@@ -58,7 +58,7 @@ export default async function AdminLifeEventsPage(props: { searchParams: SearchP
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="ライフイベントの横断"></PageHeader>
+      <PageHeader title="身上変更届"></PageHeader>
 
       <LifeEventAdminFilterForm
         statusValue={filter.status ?? ""}

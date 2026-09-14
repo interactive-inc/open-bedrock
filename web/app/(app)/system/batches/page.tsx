@@ -4,7 +4,7 @@ import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { requirePermission } from "@/lib/auth/require-permission"
 
-export const metadata = { title: "バッチ" }
+export const metadata = { title: "バッチ実行履歴" }
 
 /**
  * バッチジョブ状況一覧（/batch）画面。ジョブ名 / 状態 / 最終実行を一覧表示する RSC。
@@ -16,7 +16,7 @@ export default async function BatchPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="バッチ" />
+      <PageHeader title="バッチ実行履歴" />
 
       <Suspense fallback={<ListSkeleton rows={5} />}>
         <BatchJobList />

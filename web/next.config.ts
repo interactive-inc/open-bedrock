@@ -28,7 +28,7 @@ const nextConfig: NextConfig = {
   },
 
   /**
-   * 旧 URL から現行 URL（横断画面の中立 URL を含む）への転送。定義は url-redirects.ts が持つ。
+   * 旧 URL から現行 URL への転送。横断画面はコンテキスト中立の URL に揃える。
    * next.config は Next 自身のローダが読むため tsconfig の `@/` alias が効かない。
    * ここだけ相対 import にする。
    */

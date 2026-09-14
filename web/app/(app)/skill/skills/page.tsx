@@ -4,7 +4,7 @@ import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { Suspense } from "react"
 
-export const metadata = { title: "スキル一覧" }
+export const metadata = { title: "スキル" }
 
 type Props = {
   searchParams: Promise<{ q?: string; category?: string }>
@@ -23,7 +23,7 @@ export default async function SkillsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="スキル一覧"></PageHeader>
+      <PageHeader title="スキル"></PageHeader>
 
       <SkillSearchForm q={q} category={category} />
 

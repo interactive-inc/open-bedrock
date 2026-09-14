@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/page-header"
 import { ReadOnlyNotice } from "@/components/read-only-notice"
 import { requirePermission } from "@/lib/auth/require-permission"
 
-export const metadata = { title: "dead letter" }
+export const metadata = { title: "配信失敗" }
 
 /**
  * 再試行の上限に達した配信の一覧。再投入は API と CLI が持つので、
@@ -16,7 +16,7 @@ export default async function SystemDeadLettersPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="dead letter" />
+      <PageHeader title="配信失敗" />
 
       <ReadOnlyNotice command={null} />
 

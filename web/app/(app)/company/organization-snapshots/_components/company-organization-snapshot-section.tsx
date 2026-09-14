@@ -10,7 +10,7 @@ type Props = {
   effectiveOn: string | null
 }
 
-const emptyDescription = "組織の正本は API と CLI が持ちます。この時点の登録がありません。"
+const emptyDescription = "この時点の登録がありません。"
 
 /** 指定時点の組織構造を種別ごとに読み取り専用で並べる。 */
 export async function CompanyOrganizationSnapshotSection(props: Props) {

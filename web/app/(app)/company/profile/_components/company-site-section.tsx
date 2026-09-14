@@ -4,7 +4,7 @@ import { getCompanyDefinitionResources } from "@/lib/api/get-company-definition-
 import { filterResourcesByType } from "@/lib/company/filter-resources-by-type"
 import { readResourceText } from "@/lib/company/read-resource-text"
 
-const emptyDescription = "会社の正本は API と CLI が持ちます。まだ登録がありません。"
+const emptyDescription = "まだ登録がありません。"
 
 /** 事業所（Site）と勤務場所（Workplace）を読み取り専用で並べる。 */
 export async function CompanySiteSection() {

@@ -8,7 +8,7 @@ import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
 import { canManageMeetings } from "@/lib/meeting/can-manage-meetings"
 
-export const metadata = { title: "会議体" }
+export const metadata = { title: "会議" }
 
 type Props = {
   searchParams: Promise<{ page?: string }>
@@ -28,7 +28,7 @@ export default async function MeetingsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="会議体">
+      <PageHeader title="会議">
         {canManage ? (
           <Button nativeButton={false} render={<Link href="/meeting/meetings/new" />}>
             <Plus />

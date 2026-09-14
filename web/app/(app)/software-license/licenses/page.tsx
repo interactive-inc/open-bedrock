@@ -10,7 +10,7 @@ import { getMe } from "@/lib/api/get-me"
 import { canManageLicenses } from "@/lib/license/can-manage-licenses"
 import { canViewAllLicenses } from "@/lib/license/can-view-all-licenses"
 
-export const metadata = { title: "ライセンス" }
+export const metadata = { title: "ソフトウェアライセンス" }
 
 type Props = {
   searchParams: Promise<{ page?: string }>
@@ -34,7 +34,7 @@ export default async function LicensesPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="ライセンス">
+      <PageHeader title="ソフトウェアライセンス">
         {canManage ? (
           <Button nativeButton={false} render={<Link href="/software-license/licenses/new" />}>
             <Plus />

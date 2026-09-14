@@ -15,7 +15,7 @@ import { canViewAllShiftSwaps } from "@/lib/shift/can-view-all-shift-swaps"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
-export const metadata = { title: "シフト交代の横断" }
+export const metadata = { title: "シフト交代申請" }
 
 const SORT_VALUES: ReadonlyArray<ShiftSwapAdminSort> = [
   "date_desc",
@@ -87,7 +87,7 @@ export default async function AdminShiftSwapsPage(props: { searchParams: SearchP
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="シフト交代の横断"></PageHeader>
+      <PageHeader title="シフト交代申請"></PageHeader>
 
       <ShiftSwapAdminFilterForm
         statusValue={filter.status ?? ""}

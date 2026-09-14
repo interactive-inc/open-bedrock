@@ -18,7 +18,7 @@ import {
 import { getBudgetList } from "@/lib/api/get-budget-list"
 import { requirePermission } from "@/lib/auth/require-permission"
 
-export const metadata = { title: "予算" }
+export const metadata = { title: "予算管理" }
 
 const amountFormatter = new Intl.NumberFormat("ja-JP")
 
@@ -31,7 +31,7 @@ export default async function BudgetsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="予算">
+      <PageHeader title="予算管理">
         <Button
           variant="secondary"
           nativeButton={false}

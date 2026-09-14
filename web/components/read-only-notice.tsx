@@ -1,5 +1,7 @@
 import { Terminal } from "lucide-react"
 
+import { Alert, AlertDescription } from "@/components/ui/alert"
+
 type Props = {
   command: string | null
 }
@@ -11,21 +13,21 @@ type Props = {
  */
 export function ReadOnlyNotice(props: Props) {
   return (
-    <div className="flex items-start gap-2 rounded-2xl border border-dashed bg-muted/40 p-4">
-      <Terminal className="mt-2 size-4 shrink-0 text-muted-foreground" />
+    <Alert>
+      <Terminal aria-hidden="true" />
 
-      <p className="text-sm text-muted-foreground">
+      <AlertDescription>
         この画面は読み取り専用です。変更は
         {props.command === null ? (
           " CLI から行います。"
         ) : (
           <>
             {" CLI の "}
-            <code className="rounded bg-muted px-2 py-2 font-mono text-xs">{props.command}</code>
+            <code>{props.command}</code>
             {" で行います。"}
           </>
         )}
-      </p>
-    </div>
+      </AlertDescription>
+    </Alert>
   )
 }

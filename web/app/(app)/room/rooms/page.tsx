@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/page-header"
 import type { RoomAvailabilitySearch } from "@/lib/api/types/room-types"
 import { Suspense } from "react"
 
-export const metadata = { title: "会議室" }
+export const metadata = { title: "会議室予約" }
 
 type Props = {
   searchParams: Promise<{ [key: string]: string | Array<string> | undefined }>
@@ -23,7 +23,7 @@ export default async function RoomsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="会議室"></PageHeader>
+      <PageHeader title="会議室予約"></PageHeader>
 
       <RoomAvailabilitySearchForm search={search} />
 

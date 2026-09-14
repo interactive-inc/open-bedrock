@@ -14,7 +14,7 @@ import { canViewAllCertificateRequests } from "@/lib/certificate-request/can-vie
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
-export const metadata = { title: "証明書の横断" }
+export const metadata = { title: "証明書発行申請" }
 
 const PAGE_SIZE = 20
 
@@ -61,7 +61,7 @@ export default async function AdminCertificateRequestsPage(props: { searchParams
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="証明書の横断"></PageHeader>
+      <PageHeader title="証明書発行申請"></PageHeader>
 
       <CertificateRequestAdminFilterForm
         statusValue={filter.status ?? ""}

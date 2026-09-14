@@ -7,7 +7,7 @@ import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
-export const metadata = { title: "ロール" }
+export const metadata = { title: "権限ロール" }
 
 /**
  * ロール画面。managed role と custom role の一覧を表示する（iam:read が必要）。
@@ -26,7 +26,7 @@ export default async function AdminRolesPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="ロール">
+      <PageHeader title="権限ロール">
         {currentUser.permissions.includes("system:admin") ||
         currentUser.permissions.includes("iam:write") ? (
           <Link href="/system/roles/new" className={buttonVariants({ variant: "default" })}>

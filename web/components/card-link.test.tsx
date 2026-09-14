@@ -31,7 +31,7 @@ describe("CardLink", () => {
 
   test("監査導線のために prefetch を渡せる", () => {
     render(
-      <CardLink href="/system/audit-events" prefetch={false}>
+      <CardLink href="/audit-events" prefetch={false}>
         監査ログ
       </CardLink>,
     )

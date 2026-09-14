@@ -33,7 +33,7 @@ export function OrgTreeNodeItem(props: Props) {
 
         {props.node.manager_employee_code !== null && (
           <Link
-            href={`/company/employees/${props.node.manager_employee_code}/reporting-line`}
+            href={`/company/employee-directory/${props.node.manager_employee_code}/reporting-line`}
             className="text-xs text-muted-foreground hover:underline"
           >
             長: {props.node.manager_employee_code}

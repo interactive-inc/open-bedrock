@@ -22,7 +22,7 @@ import { getMe } from "@/lib/api/get-me"
 import { getRoomList } from "@/lib/api/get-room-list"
 import { canManageRooms } from "@/lib/room/can-manage-rooms"
 
-export const metadata = { title: "会議室マスタ" }
+export const metadata = { title: "会議室設定" }
 
 /**
  * 会議室マスタの管理（特権ロールのみ）。会議室一覧の編集・削除に集中させ、
@@ -37,7 +37,7 @@ export default async function RoomManagePage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="会議室マスタ">
+      <PageHeader title="会議室設定">
         <Button variant="secondary" nativeButton={false} render={<Link href="/room/rooms" />}>
           予約・空き状況へ
         </Button>

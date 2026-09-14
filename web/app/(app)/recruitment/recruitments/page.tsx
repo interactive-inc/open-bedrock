@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/page-header"
 import { getMe } from "@/lib/api/get-me"
 import { canManageRecruitment } from "@/lib/recruitment/can-manage-recruitment"
 
-export const metadata = { title: "採用" }
+export const metadata = { title: "採用選考" }
 
 /** /recruitment 募集と応募者のパイプライン。recruitment:manage が無ければ notFound（社外個人情報のため公開しない）。 */
 export default async function RecruitmentPage() {
@@ -19,7 +19,7 @@ export default async function RecruitmentPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="採用" />
+      <PageHeader title="採用選考" />
 
       <PositionNewForm />
 

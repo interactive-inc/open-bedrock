@@ -14,7 +14,7 @@ import { canViewAllBusinessTrips } from "@/lib/business-trip/can-view-all-busine
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
-export const metadata = { title: "出張の横断" }
+export const metadata = { title: "出張申請" }
 
 const PAGE_SIZE = 20
 
@@ -58,7 +58,7 @@ export default async function AdminBusinessTripsPage(props: { searchParams: Sear
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="出張の横断"></PageHeader>
+      <PageHeader title="出張申請"></PageHeader>
 
       <BusinessTripAdminFilterForm
         statusValue={filter.status ?? ""}

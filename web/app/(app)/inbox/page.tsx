@@ -9,7 +9,7 @@ import { inboxCountFor } from "@/lib/inbox/inbox-count-for"
 import { visibleInboxTypes } from "@/lib/inbox/visible-inbox-types"
 import { Inbox } from "lucide-react"
 
-export const metadata = { title: "受信箱" }
+export const metadata = { title: "承認・確認待ち" }
 
 /**
  * 受信箱トップ。種類別の対応待ち件数カードを並べる。件数 API を持つ種類は件数を、

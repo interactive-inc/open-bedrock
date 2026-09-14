@@ -51,6 +51,28 @@ const registryHrefs = featureRegistry.flatMap((feature) =>
 )
 
 describe("urlRedirects", () => {
+  test("横断画面の旧URLから中立のURLへ一度で転送する", () => {
+    for (const resource of [
+      "applications",
+      "workflow-repairs",
+      "approval-delegations",
+      "permission-definitions",
+    ]) {
+      expect(applyOnce(`/system/${resource}`)).toBe(`/${resource}`)
+      expect(applyOnce(`/system/${resource}/example`)).toBe(`/${resource}/example`)
+      expect(applyOnce(`/${resource}`)).toBeNull()
+    }
+    expect(applyOnce("/attendance/attendances/overtime")).toBe("/overtime-summary")
+    expect(applyOnce("/overtime-summary")).toBeNull()
+  })
+  test("リソースの正規URLにはresources階層を挟まない", () => {
+    expect(applyOnce("/system/resources")).toBe("/system")
+    expect(applyOnce("/company/resources")).toBe("/company")
+    expect(applyOnce("/composition/resources")).toBe("/composition")
+    expect(applyOnce("/system/sessions")).toBeNull()
+    expect(applyOnce("/company/employee-directory")).toBeNull()
+    expect(applyOnce("/audit-events")).toBeNull()
+  })
   test("旧申請テンプレートURLは横断URLへ一度で転送する", () => {
     expect(applyOnce("/system/application-templates")).toBe("/application-templates")
     expect(applyOnce("/company/application-templates")).toBe("/application-templates")
@@ -84,10 +106,10 @@ describe("urlRedirects", () => {
   })
 
   test("旧 URL が現行 URL へ転送される", () => {
-    expect(applyOnce("/organization/employees")).toBe("/company/employees")
+    expect(applyOnce("/organization/employees")).toBe("/company/employee-directory")
     expect(applyOnce("/organization/expenses")).toBe("/expense/expenses")
     expect(applyOnce("/organization/departments")).toBe("/company/departments")
-    expect(applyOnce("/organization/applications")).toBe("/system/applications")
+    expect(applyOnce("/organization/applications")).toBe("/applications")
     expect(applyOnce("/organization/governance")).toBe("/governance/governance-documents")
     expect(applyOnce("/system/licenses")).toBe("/software-license/licenses")
     expect(applyOnce("/system/it-incidents")).toBe("/it-incident/it-incidents")
@@ -98,7 +120,7 @@ describe("urlRedirects", () => {
   })
 
   test("旧 URL の配下も転送される", () => {
-    expect(applyOnce("/organization/employees/E001")).toBe("/company/employees/E001")
+    expect(applyOnce("/organization/employees/E001")).toBe("/company/employee-directory/E001")
     expect(applyOnce("/organization/assets/new")).toBe("/asset/assets/new")
     expect(applyOnce("/company/inbox/expenses")).toBe("/inbox/expenses")
   })

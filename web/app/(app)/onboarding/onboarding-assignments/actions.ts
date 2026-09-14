@@ -57,7 +57,7 @@ export async function assignOnboardingAction(
     return { ok: false, message: assignment.message }
   }
 
-  revalidatePath(`/company/employees/${employeeCode}/onboarding`)
+  revalidatePath(`/company/employee-directory/${employeeCode}/onboarding`)
 
   revalidatePath("/onboarding/onboarding-assignments")
 
@@ -188,7 +188,7 @@ export async function rescheduleOnboardingAssignmentAction(
   }
 
   if (typeof employeeCode === "string" && employeeCode !== "") {
-    revalidatePath(`/company/employees/${employeeCode}/onboarding`)
+    revalidatePath(`/company/employee-directory/${employeeCode}/onboarding`)
   }
 
   revalidatePath("/onboarding/onboarding-assignments")
@@ -231,7 +231,7 @@ export async function cancelOnboardingAssignmentAction(
   }
 
   if (typeof employeeCode === "string" && employeeCode !== "") {
-    revalidatePath(`/company/employees/${employeeCode}/onboarding`)
+    revalidatePath(`/company/employee-directory/${employeeCode}/onboarding`)
   }
 
   revalidatePath("/onboarding/onboarding-assignments")
