@@ -262,28 +262,39 @@ export class ExternalIdentityImportRepository {
     if (links instanceof Error) return { kind: "unavailable", cause: links }
     const currentLink = links[0]
     if (currentLink === undefined) return { kind: "conflict", reason: "unbound_workforce" }
-    const link = await this.c.env.DB.prepare(`SELECT binding.resource_id AS employee_id,
-      json_extract(employee.attributes_json, '$.personId') AS person_id
-      FROM company_workforce_resource_bindings binding
-      JOIN company_resource_heads employee ON employee.organization_id = binding.organization_id
-        AND employee.resource_type = 'employee' AND employee.resource_id = binding.resource_id AND employee.state = 'active'
-      WHERE binding.resource_type = 'employee' AND binding.employee_id = ?1 AND binding.organization_id = ?2`)
+    const link = await this.c.env.DB.prepare(`SELECT resource_id AS employee_id
+      FROM company_workforce_resource_bindings
+      WHERE resource_type = 'employee' AND employee_id = ?1 AND organization_id = ?2`)
       .bind(currentLink.employeeId, organizationId)
-      .first<{ employee_id: string; person_id: string }>()
+      .first<{ employee_id: string }>()
     if (link === null) return { kind: "conflict", reason: "unbound_workforce" }
-    const people = await new D1CompanyResourceRepository(this.c.env.DB).findMany({
+    const repository = new D1CompanyResourceRepository(this.c.env.DB)
+    const employees = await repository.findMany({
+      organizationId,
+      types: ["employee"],
+      ids: [link.employee_id],
+      effectiveOn: context.effectiveOn,
+      organizationRevision: context.command.props.expectedRevision,
+    })
+    if (!employees.ok) return { kind: "unavailable", cause: employees.cause }
+    const personId = employees.resources[0]?.readText("personId")
+    if (personId === undefined || personId === null)
+      return { kind: "conflict", reason: "unbound_workforce" }
+    const people = await repository.findMany({
       organizationId,
       types: ["person"],
-      ids: [link.person_id],
+      ids: [personId],
+      effectiveOn: context.effectiveOn,
+      organizationRevision: context.command.props.expectedRevision,
     })
     if (!people.ok) return { kind: "unavailable", cause: people.cause }
     const person = people.resources[0]
-    if (
-      person === undefined ||
-      person.effectiveFrom > context.effectiveOn ||
-      (person.effectiveTo !== null && person.effectiveTo <= context.effectiveOn)
-    )
-      return { kind: "conflict", reason: "person_period" }
+    if (person === undefined) return { kind: "conflict", reason: "person_period" }
+    const latestRevision = await this.c.env.DB.prepare(`SELECT revision FROM company_resource_heads
+      WHERE organization_id = ?1 AND resource_type = 'person' AND resource_id = ?2`)
+      .bind(organizationId, person.id)
+      .first<number>("revision")
+    if (latestRevision === null) return { kind: "conflict", reason: "person_period" }
     const before: D1PreparedStatement[] = [
       identityAdapter.prepareTargetGuard(accountId, account.tokenVersion),
     ]
@@ -315,7 +326,7 @@ export class ExternalIdentityImportRepository {
         organizationId,
         type: "person",
         id: person.id,
-        revision: person.revision + 1,
+        revision: latestRevision + 1,
         state: "active",
         effectiveFrom: context.effectiveOn,
         effectiveTo: person.effectiveTo,
