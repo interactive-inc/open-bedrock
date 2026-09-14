@@ -68,6 +68,25 @@ const resourceAttributeSchemas = {
       employeeId: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/),
       status: z.enum(["ACTIVE", "ON_LEAVE", "TERMINATED"]),
       employmentType: z.enum(["FULL_TIME", "PART_TIME"]),
+      contractTerm: z
+        .discriminatedUnion("kind", [
+          z
+            .object({
+              kind: z.literal("FIXED_TERM"),
+              startsOn: z.string().date(),
+              endsBefore: z.string().date(),
+            })
+            .strict(),
+          z
+            .object({
+              kind: z.literal("INDEFINITE"),
+              startsOn: z.string().date(),
+            })
+            .strict(),
+        ])
+        .refine((term) => term.kind !== "FIXED_TERM" || term.startsOn < term.endsBefore)
+        .nullable()
+        .optional(),
       employerLegalEntityId: z
         .string()
         .regex(/^\S{1,255}$/)
