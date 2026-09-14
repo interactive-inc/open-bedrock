@@ -579,6 +579,37 @@ export const systemNotificationMessages = sqliteTable(
 
 export type SystemNotificationMessageRow = InferSelectModel<typeof systemNotificationMessages>
 
+/** 業務語彙を解釈せず、通知の開示範囲を外部resource識別子へ結び付ける1:1 scope。 */
+export const systemNotificationResourceScopes = sqliteTable(
+  "system_notification_resource_scopes",
+  {
+    messageId: text("message_id")
+      .primaryKey()
+      .references(() => systemNotificationMessages.id, { onDelete: "cascade" }),
+    resourceType: text("resource_type").notNull(),
+    resourceId: text("resource_id").notNull(),
+  },
+  (table) => [
+    index("system_notification_resource_scopes_resource_idx").on(
+      table.resourceType,
+      table.resourceId,
+      table.messageId,
+    ),
+    check(
+      "system_notification_resource_scopes_type_length",
+      sql`length(${table.resourceType}) BETWEEN 3 AND 100`,
+    ),
+    check(
+      "system_notification_resource_scopes_id_length",
+      sql`length(${table.resourceId}) BETWEEN 1 AND 512`,
+    ),
+  ],
+)
+
+export type SystemNotificationResourceScopeRow = InferSelectModel<
+  typeof systemNotificationResourceScopes
+>
+
 /** concrete AccountEntity宛てのdeliveryと単調なread receipt。 */
 export const systemNotificationDeliveries = sqliteTable(
   "system_notification_deliveries",
@@ -767,6 +798,7 @@ export const systemCoreSchema = {
   systemIamRolePermissions,
   systemRoleBindings,
   systemNotificationMessages,
+  systemNotificationResourceScopes,
   systemNotificationDeliveries,
   systemAccountInvitations,
   systemBatchJobs,
