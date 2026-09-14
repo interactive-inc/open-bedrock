@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "4537acc83e19d1063b4a4f93557fa72bc88e6e8e32d40e946181a45e2b8e695a",
+    "company-context.manifest.json": "ad7b9e93cf9b71e1dcf25a2469be0b73aa5d9184f5c671bd40c1260aa0fa0e8b",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -408,7 +408,7 @@
     "src/contexts/company/infrastructure/repositories/employee/employee-profile.repository.ts": "d8ad1a06efc91838a9e67c1f0846e0850e80ea6f866c657d5234b4f501bb96b4",
     "src/contexts/company/infrastructure/repositories/employee/employee.repository.ts": "e212274010daf6b8e15b8b9bd3ce4a91744cc676ad52ba4786a638db8dbf0442",
     "src/contexts/company/infrastructure/repositories/employee/lib/is-company-unique-constraint-error.ts": "9f537c07d467c2d9d67cb840c05f51a4ce87c59244d084f8d3bb60d2f1bd3645",
-    "src/contexts/company/infrastructure/repositories/external-identities/external-identity-import.repository.ts": "edcc1448865bd7a20a7f9b807809feedd64c58ee7b3a8c4d748ddf2bc8e624ca",
+    "src/contexts/company/infrastructure/repositories/external-identities/external-identity-import.repository.ts": "d48481c23f3d2f1b7c181be653a7ff7e630910a660afb2aaa2b4e73c8383a615",
     "src/contexts/company/infrastructure/repositories/organization/assignment-resource-adoption.repository.ts": "518c0d55b13b6cb1d4fc7168e857dde69181d903e707f0b85494aba15090a87e",
     "src/contexts/company/infrastructure/repositories/organization/company-bootstrap.repository.ts": "fbe16a21705bc97c764fbe4bb934380033925b6933bed68736eae8e3555b04bd",
     "src/contexts/company/infrastructure/repositories/organization/organization-profile-change.repository.ts": "6d4158815038a90e3e97c13aeb4778650e06efe0ff86e15f9c49bba025739b1a",
@@ -551,6 +551,7 @@
     "src/contexts/company/test/employee-resource-adoption.integration.test.ts": "0a9b075c61a7a2094adb7f5446904b45f9c2cc4094515d8faa68bed90d77084c",
     "src/contexts/company/test/employee-resource-adoption.test-support.ts": "9e85ac02aa1cb7b0d6aad7841f73a1a8c3011445cfcbca1bb0d1c565747e429c",
     "src/contexts/company/test/existing-employee-resource-adoption.integration.test.ts": "c8322029b529f72cb1a2f4afa3f72200c157e27a44e75254501b32843ac4937a",
+    "src/contexts/company/test/external-identity-effective-person.integration.test.ts": "8dee5b53d69e28b612eae23b03c98c2d8a7dba37c8dedacd4c05c30f4634a8e0",
     "src/contexts/company/test/external-identity-import.integration.test.ts": "77684cbd77ac82895291bfed6bcc6285ee08549aa50b3742cf7eb2e3d968231d",
     "src/contexts/company/test/external-identity-import.test-support.ts": "8829dacdb36260a1317b45b446d81885c4b140358977ceda1593625a6c546f2a",
     "src/contexts/company/test/governance-task.integration.test.ts": "190c9ea77cfb4c107c6a23b901d542722f59431a3967e5e00279f411dea7804c",
