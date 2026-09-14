@@ -35,7 +35,7 @@ AuthorizationのBearerには、Systemのmachine sessionで発行したaccess tok
 
 ## 保存と再送
 
-新規登録はSystem Account、Identity、role binding、Company Person・Employee・Employment、業務台帳、期間履歴、Account対応、監査を同じtransactionで保存する。氏名・email変更は公開Person、業務台帳、Account表示、System identity profileへ同時に反映する。既存Personの最新改訂が未発効または失効済みなら、同期で上書きせず競合を返す。
+新規登録はSystem Account、Identity、role binding、Company Person・Employee・Employment、業務台帳、期間履歴、Account対応、監査を同じtransactionで保存する。氏名・email変更は公開Person、業務台帳、Account表示、System identity profileへ同時に反映する。既存EmployeeとPersonは指定した会社版と会社営業日に有効な改訂から解決する。将来の改訂があっても現在の人物を同期し、改訂番号だけは最新の記録版から進める。予約済みの将来改訂と過去会社版の内容は維持する。現在有効なEmployeeまたはPersonが存在しない場合は競合を返す。
 
 commandはCompanyの版を一つ進める。更新対象がなくても、操作Account、credential、理由、期待版、結果版、結果件数を変更不能なcommand receiptへ記録する。全件の保存、監査、receiptのいずれかが失敗した場合は全件を取り消す。
 
