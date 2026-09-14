@@ -16,7 +16,7 @@ import { getEmployeeDirectory } from "@/lib/api/get-employee-directory"
 import { requirePermission } from "@/lib/auth/require-permission"
 import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
 
-export const metadata = { title: "オンボーディング進捗" }
+export const metadata = { title: "入社手続きの進捗" }
 
 export default async function OnboardingEmployeesPage() {
   const currentUser = await requirePermission("onboarding:view:all")
@@ -27,7 +27,7 @@ export default async function OnboardingEmployeesPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="オンボーディング進捗">
+      <PageHeader title="入社手続きの進捗">
         {canManage ? (
           <Button
             nativeButton={false}
@@ -61,7 +61,7 @@ export default async function OnboardingEmployeesPage() {
                 <TableRow key={employee.code}>
                   <TableCell>
                     <Link
-                      href={`/company/employees/${employee.code}/onboarding`}
+                      href={`/company/employee-directory/${employee.code}/onboarding`}
                       className="font-medium underline-offset-4 hover:underline"
                     >
                       {employee.code}

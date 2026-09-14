@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/page-header"
 import { ReadOnlyNotice } from "@/components/read-only-notice"
 import { requirePermission } from "@/lib/auth/require-permission"
 
-export const metadata = { title: "外部交換" }
+export const metadata = { title: "外部連携記録" }
 
 type Props = {
   searchParams: Promise<{ [key: string]: string | Array<string> | undefined }>
@@ -27,7 +27,7 @@ export default async function SystemIntegrationExchangesPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="外部交換" />
+      <PageHeader title="外部連携記録" />
 
       <ReadOnlyNotice command={null} />
 

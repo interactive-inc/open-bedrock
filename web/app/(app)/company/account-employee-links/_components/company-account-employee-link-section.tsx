@@ -19,7 +19,7 @@ export async function CompanyAccountEmployeeLinkSection() {
       caption="アカウントと従業員の紐付け一覧"
       resources={accountEmployeeLinks}
       emptyTitle="アカウントと従業員の紐付けが登録されていません"
-      emptyDescription="対応の正本は API と CLI が持ちます。まだ登録がありません。"
+      emptyDescription="まだ登録がありません。"
       columns={[
         {
           header: "アカウント ID",

@@ -19,7 +19,7 @@ export async function CompanyPeopleSection() {
       caption="人の一覧"
       resources={persons}
       emptyTitle="人が登録されていません"
-      emptyDescription="Person の正本は API と CLI が持ちます。まだ登録がありません。"
+      emptyDescription="まだ登録がありません。"
       columns={[
         {
           header: "正式氏名",

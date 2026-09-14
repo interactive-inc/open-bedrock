@@ -34,7 +34,7 @@ export function getFeatureNavigationItems(
         group: toNavigationGroup(route.href, feature.group),
         icon: feature.icon,
         prefetch: feature.prefetch,
-        label: route.label.replace(/^全社の/, ""),
+        label: route.label,
         href: route.href.replace(":team", teamCode ?? ""),
         visibility: route.visibility,
       })

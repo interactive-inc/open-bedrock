@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/page-header"
 import { ReadOnlyNotice } from "@/components/read-only-notice"
 import { requireAnyPermission } from "@/lib/auth/require-any-permission"
 
-export const metadata = { title: "雇用" }
+export const metadata = { title: "雇用情報" }
 
 type Props = {
   searchParams: Promise<{ [key: string]: string | Array<string> | undefined }>
@@ -25,7 +25,7 @@ export default async function CompanyEmploymentsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="雇用" />
+      <PageHeader title="雇用情報" />
 
       <ReadOnlyNotice command={null} />
 

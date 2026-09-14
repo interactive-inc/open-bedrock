@@ -7,7 +7,7 @@ import { getMe } from "@/lib/api/get-me"
 import { canManageNotifications } from "@/lib/notifications/can-manage-notifications"
 import { notFound } from "next/navigation"
 
-export const metadata = { title: "通知を作成" }
+export const metadata = { title: "通知送信" }
 
 /**
  * 通知作成画面（特権ロールのみ）。作成後は /notifications へ redirect する。
@@ -31,7 +31,7 @@ export default async function NotificationNewPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="通知を作成">
+      <PageHeader title="通知送信">
         <BackButton href="/system/deliveries" label="一覧に戻る" />
       </PageHeader>
 

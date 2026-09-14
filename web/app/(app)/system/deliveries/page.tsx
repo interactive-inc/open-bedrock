@@ -10,7 +10,7 @@ import type {
   SystemDeliveryStatus,
 } from "@/lib/api/types/system-operation-types"
 
-export const metadata = { title: "配信" }
+export const metadata = { title: "ジョブと送信キュー" }
 
 type Props = {
   searchParams: Promise<{ [key: string]: string | Array<string> | undefined }>
@@ -30,7 +30,7 @@ export default async function SystemDeliveriesPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="配信" />
+      <PageHeader title="ジョブと送信キュー" />
 
       <ReadOnlyNotice command={null} />
 

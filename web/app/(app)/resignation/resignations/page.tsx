@@ -14,7 +14,7 @@ import { canViewAllResignations } from "@/lib/resignation/can-view-all-resignati
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
-export const metadata = { title: "退職の横断" }
+export const metadata = { title: "退職届" }
 
 const PAGE_SIZE = 20
 
@@ -58,7 +58,7 @@ export default async function AdminResignationsPage(props: { searchParams: Searc
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="退職の横断"></PageHeader>
+      <PageHeader title="退職届"></PageHeader>
 
       <ResignationAdminFilterForm
         statusValue={filter.status ?? ""}

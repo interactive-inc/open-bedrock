@@ -10,7 +10,7 @@ import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
 import { getReviewPeriods } from "@/lib/api/get-review-periods"
 
-export const metadata = { title: "全社の目標" }
+export const metadata = { title: "目標管理" }
 
 type Props = {
   searchParams: Promise<{ period?: string; employee_id?: string }>
@@ -42,7 +42,7 @@ export default async function GoalsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="全社の目標">
+      <PageHeader title="目標管理">
         <div className="flex gap-2">
           <Button
             variant="secondary"

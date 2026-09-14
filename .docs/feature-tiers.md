@@ -108,4 +108,8 @@ Appを除去するときは対象contextのコード、route module登録、seed
 
 受信箱の集約タブと種類別カードも、技術権限とAPIが返す有効化状態の両方に従う。無効なAppの受信箱URLを直接開いた場合も、業務画面の代わりに無効状態を表示する。Systemが所有する汎用申請はAppの無効化に影響されない。
 
-受信箱 `/inbox` と申請テンプレート `/application-templates` は複数contextを組み合わせる画面であり、システムタブ内の「横断管理」に置く。この配置はSystem contextへの実装配置を意味しない。申請テンプレートのHTTP APIも `/application-templates` を使用し、`api/src/api/routes` がSystemの手続き定義とCompanyの承認資格を組み合わせる。旧API `/company/application-templates` は同じhandlerを使用する互換入口とし、旧画面 `/system/application-templates` と `/company/application-templates` は中立URLへ転送する。SystemとCompanyの相互呼び出しを追加せず、保存・版管理・認可の規則をURLの変更で変えない。
+管理メニューはシステム、会社、横断、業務の4タブとし、アイコンで表示する。SystemとCompanyの管理対象は所有contextのドメインモデルに対応づけ、実データを参照できる画面だけをホームとサイドメニューへ同じ名前で掲載する。認証フロー、callback、初期設定、移行操作、本人専用の検索、状態別の抽出を独立したリソースとして並べない。画面のないモデルをAPI定義のページで代用しない。現在の管理画面は全ドメインモデルの参照を網羅していない。SystemのCase、Proposal、Sessionなどの独立した一覧画面は未提供である。権限と機能ゲートは一覧・サイドメニュー・検索で維持する。管理対象とdomain定義、画面、メニューの対応をテストで検査する。
+
+ホームのURLは `/system`、`/company`、`/composition` とする。個別リソースのURLに `resources` という分類階層を挟まない。従業員の参照画面は `/company/employee-directory`、会社の可視範囲を組み合わせる監査ログは `/audit-events` に置く。横断画面の申請、承認経路の修復、承認の委任、権限カタログ、時間外集計はそれぞれ `/applications`、`/workflow-repairs`、`/approval-delegations`、`/permission-definitions`、`/overtime-summary` に置く。これらの画面URL変更はHTTP APIのURLを変更しない。
+
+受信箱、申請テンプレート、会社資格を組み合わせる申請・代理承認・通知作成、会社の可視範囲を組み合わせる監査ログ、権限定義の横断カタログ、経営ダッシュボード、時間外集計は横断タブに置く。横断API一覧は`api/src/api/routes`の合成対象を表示し、URLの接頭辞だけでSystemやCompanyの所有物と扱わない。申請テンプレートのHTTP APIは `/application-templates` を使用し、Systemの手続き定義とCompanyの承認資格を組み合わせる。旧API `/company/application-templates` は同じhandlerを使用する互換入口とし、旧画面 `/system/application-templates` と `/company/application-templates` は中立URLへ転送する。SystemとCompanyの相互呼び出しを追加せず、保存・版管理・認可の規則を分類の変更で変えない。

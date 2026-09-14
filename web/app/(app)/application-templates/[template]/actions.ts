@@ -64,5 +64,5 @@ export async function submitApplicationAction(
     return { ok: false, error: created.message }
   }
 
-  redirect(`/system/applications/${created.id}`)
+  redirect(`/applications/${created.id}`)
 }

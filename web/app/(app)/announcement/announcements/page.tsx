@@ -17,7 +17,7 @@ import { getMe } from "@/lib/api/get-me"
 import { getAnnouncementList } from "@/lib/api/get-announcement-list"
 import { canManageAnnouncements } from "@/lib/announcement/can-manage-announcements"
 
-export const metadata = { title: "アナウンス" }
+export const metadata = { title: "お知らせ" }
 
 /** アナウンス一覧画面。全員は公開分を閲覧し、管理者は下書き作成もできる。 */
 export default async function AnnouncementsPage() {
@@ -28,7 +28,7 @@ export default async function AnnouncementsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="アナウンス" />
+      <PageHeader title="お知らせ" />
 
       {canManage ? <AnnouncementCreateForm /> : null}
 

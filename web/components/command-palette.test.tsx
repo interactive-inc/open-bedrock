@@ -12,6 +12,15 @@ afterEach(() => {
 })
 
 describe("CommandPalette audit entry", () => {
+  test("各領域のホームを区別して選べる", () => {
+    render(<CommandPalette disabledFeatures={[]} permissions={["system:admin"]} />)
+    openPalette()
+    expect(screen.queryByText("概要")).toBeNull()
+    expect(screen.getByText("システムのホーム")).toBeTruthy()
+    expect(screen.getByText("横断のホーム")).toBeTruthy()
+    fireEvent.click(screen.getByText("会社のホーム"))
+    expect(mocks.push).toHaveBeenCalledWith("/company")
+  })
   test("shows the audit command only with audit:read and navigates once on explicit selection", () => {
     render(<CommandPalette disabledFeatures={[]} permissions={["audit:read"]} />)
     openPalette()
@@ -20,7 +29,7 @@ describe("CommandPalette audit entry", () => {
     expect(command).toBeTruthy()
     fireEvent.click(command)
     expect(mocks.push).toHaveBeenCalledTimes(1)
-    expect(mocks.push).toHaveBeenCalledWith("/system/audit-events")
+    expect(mocks.push).toHaveBeenCalledWith("/audit-events")
   })
 
   test("does not expose the audit command to export-only users", () => {

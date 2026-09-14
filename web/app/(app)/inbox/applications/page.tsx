@@ -62,7 +62,7 @@ export default async function ApplicationInboxPage(props: { searchParams: Search
             <Button
               variant="secondary"
               nativeButton={false}
-              render={<Link href="/system/approval-delegations" />}
+              render={<Link href="/approval-delegations" />}
             >
               代理承認
             </Button>
@@ -70,7 +70,7 @@ export default async function ApplicationInboxPage(props: { searchParams: Search
               <Button
                 variant="secondary"
                 nativeButton={false}
-                render={<Link href="/system/applications" />}
+                render={<Link href="/applications" />}
               >
                 申請管理
               </Button>
@@ -127,7 +127,7 @@ async function InboxTable(props: { offset: number; pageSize: number; sort: Appli
               <TableRow key={application.id}>
                 <TableCell>
                   <Link
-                    href={`/system/applications/${application.id}`}
+                    href={`/applications/${application.id}`}
                     className="font-medium underline-offset-4 hover:underline"
                   >
                     {application.template_name}
@@ -146,7 +146,7 @@ async function InboxTable(props: { offset: number; pageSize: number; sort: Appli
 
                 <TableCell>
                   <Link
-                    href={`/system/applications/${application.id}`}
+                    href={`/applications/${application.id}`}
                     className="underline underline-offset-4"
                   >
                     内容を確認

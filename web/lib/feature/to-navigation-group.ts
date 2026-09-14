@@ -11,7 +11,7 @@ export function toNavigationGroup(href: string, featureGroup: FeatureGroup): Fea
   const segment = href.split("/")[1] ?? ""
 
   const owner = toFeatureSpace(href)
-  if (segment === "inbox" || segment === "application-templates") return "cross-context"
+  if (owner === "composition") return "cross-context"
   if (owner === "system" && featureGroup === "requests") return "system-case"
   if (owner === "system" && segment === "notifications") return "system-async"
   if (owner === "company" && segment === "teams") return "company-organization"

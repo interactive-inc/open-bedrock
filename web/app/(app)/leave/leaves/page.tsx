@@ -18,7 +18,7 @@ import { getMe } from "@/lib/api/get-me"
 import type { LeaveStatus, LeaveType } from "@/lib/api/types/leave-types"
 import { canViewAllLeaves } from "@/lib/leave/can-view-all-leaves"
 
-export const metadata = { title: "全社の休暇" }
+export const metadata = { title: "休暇申請" }
 
 const SORT_VALUES: ReadonlyArray<LeaveAdminSort> = [
   "created_at_desc",
@@ -88,7 +88,7 @@ export default async function AdminLeavesPage(props: { searchParams: SearchParam
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="全社の休暇">
+      <PageHeader title="休暇申請">
         {currentUser.permissions.includes("leave:approve") ? (
           <Button variant="secondary" nativeButton={false} render={<Link href="/inbox/leaves" />}>
             承認受信箱

@@ -5,7 +5,7 @@ import { filterResourcesByType } from "@/lib/company/filter-resources-by-type"
 import { readResourceNumber } from "@/lib/company/read-resource-number"
 import { readResourceText } from "@/lib/company/read-resource-text"
 
-const emptyDescription = "会社の正本は API と CLI が持ちます。まだ登録がありません。"
+const emptyDescription = "まだ登録がありません。"
 
 /** 法人（LegalEntity）と会社 profile を読み取り専用で並べる。 */
 export async function CompanyProfileSection() {

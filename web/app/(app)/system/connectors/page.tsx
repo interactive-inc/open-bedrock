@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/page-header"
 import { ReadOnlyNotice } from "@/components/read-only-notice"
 import { requirePermission } from "@/lib/auth/require-permission"
 
-export const metadata = { title: "コネクタ" }
+export const metadata = { title: "外部接続設定" }
 
 /**
  * Connector 一覧。外部境界の主体と transport の定義を読む。
@@ -19,7 +19,7 @@ export default async function SystemConnectorsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="コネクタ" />
+      <PageHeader title="外部接続設定" />
 
       <ReadOnlyNotice command={null} />
 

@@ -11,7 +11,7 @@ import { canViewAllRentalReservations } from "@/lib/rental/can-view-all-rental-r
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 
-export const metadata = { title: "レンタルの横断" }
+export const metadata = { title: "貸出予約" }
 
 const PAGE_SIZE = 20
 
@@ -58,7 +58,7 @@ export default async function AdminRentalsPage(props: { searchParams: SearchPara
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="レンタルの横断"></PageHeader>
+      <PageHeader title="貸出予約"></PageHeader>
 
       <RentalAdminFilterForm
         statusValue={filter.status ?? ""}

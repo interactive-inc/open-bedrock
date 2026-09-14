@@ -17,7 +17,8 @@ export function getFeatureNavigationSections(
     if (groupItems.length === 0) continue
 
     navigationSections.push({
-      heading: featureGroupLabels[featureGroup],
+      group: featureGroup,
+      heading: featureGroup === "overview" ? null : featureGroupLabels[featureGroup],
       items: groupItems,
     })
   }

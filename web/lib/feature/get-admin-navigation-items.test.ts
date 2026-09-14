@@ -31,8 +31,9 @@ describe("管理ナビゲーション", () => {
     ).toBe(false)
   })
 
-  test("所有区分はシステム・会社・業務の3つだけ", () => {
-    expect(toFeatureSpace("/system/approval-delegations")).toBe("system")
+  test("System・Company・業務と横断を分離する", () => {
+    expect(toFeatureSpace("/system/accounts")).toBe("system")
+    expect(toFeatureSpace("/approval-delegations")).toBe("composition")
     expect(toFeatureSpace("/company/departments/D001")).toBe("company")
     expect(toFeatureSpace("/attendance/attendances")).toBe("apps")
   })

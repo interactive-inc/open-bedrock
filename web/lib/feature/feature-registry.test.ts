@@ -31,7 +31,16 @@ describe("featureRegistry のラベル", () => {
   test("context別URLと明示した横断URLだけを登録する", () => {
     const hrefs = featureRegistry.flatMap((feature) => feature.routes.map((route) => route.href))
 
-    const compositionHrefs = new Set(["/inbox", "/application-templates"])
+    const compositionHrefs = new Set([
+      "/inbox",
+      "/application-templates",
+      "/audit-events",
+      "/applications",
+      "/workflow-repairs",
+      "/approval-delegations",
+      "/permission-definitions",
+      "/overtime-summary",
+    ])
 
     const invalid = hrefs.filter((href) => {
       if (compositionHrefs.has(href)) return false

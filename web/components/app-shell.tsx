@@ -4,14 +4,7 @@ import { CommandPalette } from "@/components/command-palette"
 import { FeatureDisabledScreen } from "@/components/feature-disabled-screen"
 import { SidebarNav } from "@/components/sidebar-nav"
 import { SidebarUserMenu } from "@/components/sidebar-user-menu"
-import {
-  Sidebar,
-  SidebarContent,
-  SidebarFooter,
-  SidebarHeader,
-  SidebarInset,
-  SidebarProvider,
-} from "@/components/ui/sidebar"
+import { Sidebar, SidebarFooter, SidebarInset, SidebarProvider } from "@/components/ui/sidebar"
 import type { MeResponse } from "@/lib/api/types/auth-types"
 import { isPathOfDisabledFeature } from "@/lib/feature/is-path-of-disabled-feature"
 import type { Locale } from "@/lib/i18n/locale"
@@ -45,22 +38,10 @@ export function AppShell(props: Props) {
       </a>
 
       <Sidebar collapsible="offcanvas">
-        <SidebarHeader>
-          <div className="flex flex-col gap-2 rounded-md px-2 py-2 hover:bg-sidebar-accent">
-            <span className="text-base font-semibold tracking-wider">
-              {process.env.NEXT_PUBLIC_APP_NAME ?? "BEDROCK"}
-            </span>
-
-            <span className="text-xs text-muted-foreground">管理</span>
-          </div>
-        </SidebarHeader>
-
-        <SidebarContent>
-          <SidebarNav
-            permissions={props.currentUser.permissions}
-            disabledFeatures={props.disabledFeatures}
-          />
-        </SidebarContent>
+        <SidebarNav
+          permissions={props.currentUser.permissions}
+          disabledFeatures={props.disabledFeatures}
+        />
 
         <SidebarFooter>
           <div className="flex items-center gap-2">
@@ -82,7 +63,7 @@ export function AppShell(props: Props) {
         </SidebarFooter>
       </Sidebar>
 
-      <SidebarInset>
+      <SidebarInset className="min-w-0">
         <main id="main-content" className="flex flex-1 flex-col gap-4 p-4 md:p-8" tabIndex={-1}>
           {isFeatureDisabledPath ? <FeatureDisabledScreen /> : props.children}
         </main>

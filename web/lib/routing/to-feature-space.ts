@@ -1,5 +1,6 @@
 import { featureRegistry } from "@/lib/feature/feature-registry"
 import type { FeatureSpace } from "@/lib/feature/feature-types"
+import { compositionNavigationPaths } from "@/lib/feature/composition-navigation-paths"
 
 /**
  * 最も具体的に一致する登録ルートの管理領域でタブを決める。
@@ -7,6 +8,12 @@ import type { FeatureSpace } from "@/lib/feature/feature-types"
  * 本人・部署の閲覧範囲は所有区分を変えない。未登録ルートは URL prefix で補完する。
  */
 export function toFeatureSpace(href: string): FeatureSpace {
+  const pathname = href.split("?")[0].split("#")[0]
+  if (pathname === "/composition" || pathname.startsWith("/composition/")) return "composition"
+  if (
+    compositionNavigationPaths.some((path) => pathname === path || pathname.startsWith(path + "/"))
+  )
+    return "composition"
   const segments = href.split("?")[0].split("#")[0].split("/").filter(Boolean)
   let matchedLength = -1
   let owner: FeatureSpace | null = null

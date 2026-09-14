@@ -21,7 +21,7 @@ import { canManageAssets } from "@/lib/asset/can-manage-assets"
 import Link from "next/link"
 import { Suspense } from "react"
 
-export const metadata = { title: "備品" }
+export const metadata = { title: "備品台帳" }
 
 const VALID_KINDS = ["pc", "monitor", "furniture", "other"] as const
 const VALID_STATUSES = ["in_stock", "lent"] as const
@@ -50,7 +50,7 @@ export default async function AssetsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="備品">
+      <PageHeader title="備品台帳">
         {canManage ? (
           <>
             <Button

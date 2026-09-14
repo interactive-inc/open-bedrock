@@ -6,7 +6,7 @@ import { PageHeader } from "@/components/page-header"
 import { ReadOnlyNotice } from "@/components/read-only-notice"
 import { requireAnyPermission } from "@/lib/auth/require-any-permission"
 
-export const metadata = { title: "組織の時点断面" }
+export const metadata = { title: "所属・報告関係・責任割当" }
 
 type Props = {
   searchParams: Promise<{ [key: string]: string | Array<string> | undefined }>
@@ -25,7 +25,7 @@ export default async function CompanyOrganizationSnapshotsPage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="組織の時点断面" />
+      <PageHeader title="所属・報告関係・責任割当" />
 
       <ReadOnlyNotice command={null} />
 

@@ -8,7 +8,7 @@ import { PageHeader } from "@/components/page-header"
 import { parsePageSize } from "@/lib/pagination/parse-page-size"
 import { Button } from "@/components/ui/button"
 
-export const metadata = { title: "ナレッジ" }
+export const metadata = { title: "ナレッジ記事" }
 
 type Props = {
   searchParams: Promise<{ q?: string; category?: string; page?: string; size?: string }>
@@ -33,7 +33,7 @@ export default async function KnowledgePage(props: Props) {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="ナレッジ">
+      <PageHeader title="ナレッジ記事">
         <Button nativeButton={false} render={<Link href="/knowledge/knowledge-articles/new" />}>
           <Plus />
           新規記事

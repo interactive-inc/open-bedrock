@@ -34,8 +34,10 @@ export type FeatureGroup =
   | "company-responsibility"
   | "company-system-link"
   | "company-employment-fact"
+  | "company-data-transition"
+  | "company-operation"
 
-export type FeatureSpace = "system" | "company" | "apps"
+export type FeatureSpace = "system" | "company" | "apps" | "composition"
 
 export type FeatureNavigationVisibility =
   | { kind: "everyone" }
@@ -72,6 +74,7 @@ export type FeatureNavigationItem = {
 }
 
 export type FeatureNavigationSection = {
-  heading: string
+  group: FeatureGroup
+  heading: string | null
   items: ReadonlyArray<FeatureNavigationItem>
 }

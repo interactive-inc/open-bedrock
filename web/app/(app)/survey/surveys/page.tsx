@@ -7,7 +7,7 @@ import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
 import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
 
-export const metadata = { title: "サーベイ" }
+export const metadata = { title: "アンケート" }
 
 /**
  * アンケート一覧画面 (/surveys)。
@@ -20,7 +20,7 @@ export default async function SurveysPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="サーベイ">
+      <PageHeader title="アンケート">
         {canManage ? (
           <Button
             variant="secondary"

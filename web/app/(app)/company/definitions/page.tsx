@@ -5,7 +5,7 @@ import { PageHeader } from "@/components/page-header"
 import { ReadOnlyNotice } from "@/components/read-only-notice"
 import { requireAnyPermission } from "@/lib/auth/require-any-permission"
 
-export const metadata = { title: "職務と責任" }
+export const metadata = { title: "職務・責任の定義" }
 
 /**
  * 職務（Job）、組織上の役職（OrganizationalOffice）、責任（Responsibility）、
@@ -17,7 +17,7 @@ export default async function CompanyDefinitionsPage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="職務と責任" />
+      <PageHeader title="職務・責任の定義" />
 
       <ReadOnlyNotice command={null} />
 

@@ -6,7 +6,7 @@ import { getMe } from "@/lib/api/get-me"
 import { canManageRewards } from "@/lib/thanks/can-manage-rewards"
 import { notFound } from "next/navigation"
 
-export const metadata = { title: "景品の管理" }
+export const metadata = { title: "交換景品" }
 
 /**
  * 景品の管理（特権ロールのみ）。新規登録に集中させ、交換カタログとは分離する。
@@ -20,7 +20,7 @@ export default async function ThanksRewardsManagePage() {
 
   return (
     <div className="flex flex-col gap-8">
-      <PageHeader title="景品の管理">
+      <PageHeader title="交換景品">
         <BackButton href="/thanks/thanks" label="景品に戻る" />
       </PageHeader>
 

@@ -11,6 +11,7 @@ import {
 } from "@/components/ui/command"
 import { getAdminNavigationItems } from "@/lib/feature/get-admin-navigation-items"
 import { getFeatureNavigationSections } from "@/lib/feature/get-feature-navigation-sections"
+import { toFeatureSpace } from "@/lib/routing/to-feature-space"
 import { useRouter } from "next/navigation"
 import { useEffect, useState } from "react"
 
@@ -18,6 +19,8 @@ type Props = {
   permissions: ReadonlyArray<string>
   disabledFeatures: ReadonlyArray<string>
 }
+
+const spaceLabels = { system: "システム", company: "会社", composition: "横断", apps: "業務" }
 
 /** 管理ナビゲーションと同じ項目だけを検索する。 */
 export function CommandPalette(props: Props) {
@@ -48,17 +51,22 @@ export function CommandPalette(props: Props) {
         <CommandList>
           <CommandEmpty>見つかりません</CommandEmpty>
           {sections.map((section) => (
-            <CommandGroup key={section.heading} heading={section.heading}>
+            <CommandGroup key={section.group} heading={section.heading ?? undefined}>
               {section.items.map((item) => (
                 <CommandItem
                   key={item.href}
+                  value={`${spaceLabels[toFeatureSpace(item.href)]} ${item.label} ${item.href}`}
                   onSelect={() => {
                     setOpen(false)
                     router.push(item.href)
                   }}
                 >
                   <item.icon aria-hidden="true" />
-                  <span>{item.label}</span>
+                  <span>
+                    {item.group === "overview"
+                      ? `${spaceLabels[toFeatureSpace(item.href)]}のホーム`
+                      : item.label}
+                  </span>
                 </CommandItem>
               ))}
             </CommandGroup>
