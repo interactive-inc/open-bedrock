@@ -9,7 +9,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { toEmployeeNameMap } from "@/api/http/company-employees/to-employee-name-map"
+import { readCompanyEmployeeNames } from "@/contexts/company/interface/operations/read-company-employee-names"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zAppThanks, zAppThanksList } from "@/contexts/thanks/interface/http/response-schemas"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
@@ -55,7 +55,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const thanksList = dataRows.map((row) => Thanks.fromRow(row))
 
-  const nameById = await toEmployeeNameMap(
+  const nameById = await readCompanyEmployeeNames(
     c,
     thanksList.flatMap((thanks) => [thanks.senderEmployeeId, thanks.recipientEmployeeId]),
   )
@@ -117,7 +117,10 @@ export const POST = factory.createHandlers(
       throw toHttpException(result)
     }
 
-    const names = await toEmployeeNameMap(c, [result.senderEmployeeId, result.recipientEmployeeId])
+    const names = await readCompanyEmployeeNames(c, [
+      result.senderEmployeeId,
+      result.recipientEmployeeId,
+    ])
     // 氏名の参照に失敗しても保存済みの感謝を再送させない。
     const nameById = names instanceof Error ? new Map() : names
 
