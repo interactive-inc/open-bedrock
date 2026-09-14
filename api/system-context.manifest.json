@@ -53,6 +53,7 @@
     "systemMachineCredentials",
     "systemNotificationDeliveries",
     "systemNotificationMessages",
+    "systemNotificationResourceScopes",
     "systemOidcAccessTokens",
     "systemOidcAuthorizationCodes",
     "systemOperationReceipts",
