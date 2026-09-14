@@ -92,6 +92,7 @@ describe("canonical System core schema", () => {
       "system_identity_profiles",
       "system_notification_deliveries",
       "system_notification_messages",
+      "system_notification_resource_scopes",
       "system_oidc_access_tokens",
       "system_oidc_authorization_codes",
       "system_password_credentials",
@@ -338,6 +339,25 @@ describe("canonical System core schema", () => {
     expect(() =>
       database.run(
         "UPDATE system_notification_messages SET title = 'Changed' WHERE id = 'message-1'",
+      ),
+    ).toThrow()
+    database.run(
+      `INSERT INTO system_notification_resource_scopes
+         (message_id, resource_type, resource_id)
+       VALUES ('message-1', 'example:resource', 'resource-1')`,
+    )
+    expect(() =>
+      database.run(
+        `INSERT INTO system_notification_resource_scopes
+           (message_id, resource_type, resource_id)
+         VALUES ('message-1', 'example:other', 'resource-2')`,
+      ),
+    ).toThrow()
+    expect(() =>
+      database.run(
+        `INSERT INTO system_notification_resource_scopes
+           (message_id, resource_type, resource_id)
+         VALUES ('missing', 'example:resource', 'resource-1')`,
       ),
     ).toThrow()
 
