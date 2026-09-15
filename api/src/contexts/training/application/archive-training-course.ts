@@ -1,5 +1,6 @@
+import { isTrainingRecordSourceFrozenError } from "@/contexts/training/infrastructure/repositories/lib/is-training-record-source-frozen-error"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
-import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
@@ -40,6 +41,8 @@ export class ArchiveTrainingCourse {
     const updated = await courseRepository.update(current.archive())
 
     if (updated instanceof Error) {
+      if (isTrainingRecordSourceFrozenError(updated))
+        return new ConflictError("training writes are frozen", "record_source_frozen", { cause: updated })
       return new UnexpectedError("failed to update training course", { cause: updated })
     }
 

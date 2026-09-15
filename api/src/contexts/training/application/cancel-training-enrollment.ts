@@ -1,3 +1,4 @@
+import { isTrainingRecordSourceFrozenError } from "@/contexts/training/infrastructure/repositories/lib/is-training-record-source-frozen-error"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { canModifyEnrollment } from "@/contexts/training/domain/policies/enrollment-modification.policy"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -47,6 +48,8 @@ export class CancelTrainingEnrollment {
     const deleted = await enrollmentRepository.delete(command.enrollmentId)
 
     if (deleted instanceof Error) {
+      if (isTrainingRecordSourceFrozenError(deleted))
+        return new ConflictError("training writes are frozen", "record_source_frozen", { cause: deleted })
       return new UnexpectedError("failed to delete training enrollment", { cause: deleted })
     }
 
