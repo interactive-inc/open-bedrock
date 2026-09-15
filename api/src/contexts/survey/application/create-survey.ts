@@ -2,7 +2,8 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import { Survey } from "@/contexts/survey/domain/entities/survey.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
-import { ForbiddenError, UnexpectedError } from "@/lib/errors"
+import { isSurveyRecordSourceFrozenError } from "@/contexts/survey/infrastructure/repositories/lib/is-survey-record-source-frozen-error"
+import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
@@ -36,6 +37,9 @@ export class CreateSurvey {
     const created = await surveyRepository.create(survey)
 
     if (created instanceof Error) {
+      if (isSurveyRecordSourceFrozenError(created)) {
+        return new ConflictError("survey writes are frozen", "record_source_frozen", { cause: created })
+      }
       return new UnexpectedError("failed to create survey", { cause: created })
     }
 
