@@ -139,7 +139,7 @@ test("将来の等級定義の改名でも割当期間を保ち、終了と後�
   expect(
     Number((await f.write([changedGrade], await f.companyRevision(), "grade:rename")).status),
   ).toBe(201)
-  const repository = new D1CompanyResourceRepository(f.database)
+  const repository = new D1CompanyResourceRepository({ database: f.database })
   const past = await repository.findMany({
     organizationId: "organization:default",
     types: ["grade"],

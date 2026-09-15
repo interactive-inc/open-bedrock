@@ -45,7 +45,7 @@ export async function createExpenseProcedureTestContext(
       ],
     })
     if (change instanceof Error) throw change
-    const changed = await new D1CompanyResourceRepository(c.database).write(change)
+    const changed = await new D1CompanyResourceRepository({ database: c.database }).write(change)
     if (changed.kind !== "applied")
       throw new Error("return authority setup failed", { cause: changed })
   }
@@ -152,7 +152,7 @@ export async function createExpenseProcedureTestContext(
       ],
     })
     if (change instanceof Error) throw change
-    const saved = await new D1CompanyResourceRepository(c.database).write(change)
+    const saved = await new D1CompanyResourceRepository({ database: c.database }).write(change)
     if (saved.kind !== "applied") throw new Error("membership change failed", { cause: saved })
   }
   return {

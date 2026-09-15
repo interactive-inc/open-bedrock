@@ -28,7 +28,7 @@ async function createFixture() {
   const target = c.people[1]
   if (assignment === undefined || target === undefined)
     throw new Error("personnel fixture is missing")
-  const employees = await new D1CompanyResourceRepository(c.database).findMany({
+  const employees = await new D1CompanyResourceRepository({ database: c.database }).findMany({
     organizationId: "organization:default",
     types: ["employee"],
     effectiveOn: assignment.effectiveFrom,
@@ -296,7 +296,9 @@ describe("Company公開責務による人事発令", () => {
     expect(
       await c.database.prepare("SELECT status FROM system_cases").first<string>("status"),
     ).toBe("executed")
-    const publicAssignments = await new D1CompanyResourceRepository(c.database).findMany({
+    const publicAssignments = await new D1CompanyResourceRepository({
+      database: c.database,
+    }).findMany({
       organizationId: "organization:default",
       types: ["assignment"],
       effectiveOn: c.input.action.eventOn,
@@ -452,7 +454,7 @@ describe("Company公開責務による人事発令", () => {
       .prepare("SELECT id FROM company_employees WHERE employee_code = 'NEW-PT'")
       .first<{ id: string }>()
     if (employee === null) throw new Error("employee was not created")
-    const assignments = await new D1CompanyResourceRepository(c.database).findMany({
+    const assignments = await new D1CompanyResourceRepository({ database: c.database }).findMany({
       organizationId: "organization:default",
       types: ["assignment"],
       effectiveOn: c.input.action.eventOn,
@@ -473,7 +475,7 @@ describe("Company公開責務による人事発令", () => {
         .first<number>("count(*)"),
     ).toBe(1)
 
-    const reporting = await new D1CompanyResourceRepository(c.database).findMany({
+    const reporting = await new D1CompanyResourceRepository({ database: c.database }).findMany({
       organizationId: "organization:default",
       types: ["reporting-relation"],
       effectiveOn: c.input.action.eventOn,
@@ -844,7 +846,7 @@ describe("Company公開責務による人事発令", () => {
 test("人事申請の一覧は改名と従業員番号の発効日を公開Company履歴から読む", async () => {
   const c = await createFixture()
   expect((await c.submit()).status).toBe(201)
-  const repository = new D1CompanyResourceRepository(c.database)
+  const repository = new D1CompanyResourceRepository({ database: c.database })
   const resources = await repository.findMany({
     organizationId: "organization:default",
     types: ["person", "employee"],

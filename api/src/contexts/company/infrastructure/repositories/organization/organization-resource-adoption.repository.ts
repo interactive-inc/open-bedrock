@@ -90,7 +90,7 @@ export class OrganizationResourceAdoptionRepository {
     const changes = command.toChanges(snapshot)
     if (changes instanceof Error) return changes
     if (await this.hasResources(command.props.organizationUnitId, changes)) return this.conflict()
-    const repository = new D1CompanyResourceRepository(this.c.env.DB)
+    const repository = new D1CompanyResourceRepository({ database: this.c.env.DB })
     const current = await repository.findMany({
       organizationId: "organization:default",
       types: ["organization-unit"],

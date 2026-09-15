@@ -82,7 +82,7 @@ function command(
 
 function fixture() {
   const database = createCompanyD1TestDatabase(schema)
-  return { database, repository: new D1CompanyResourceRepository(database) }
+  return { database, repository: new D1CompanyResourceRepository({ database }) }
 }
 
 test.each(["organization-reference", "employment-authority"] as const)(

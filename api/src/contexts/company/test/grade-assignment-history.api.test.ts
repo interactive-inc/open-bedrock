@@ -20,7 +20,7 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
       "\n" +
       readFileSync(new URL("../infrastructure/schema/company.sql", import.meta.url), "utf8"),
   )
-  const repository = new D1CompanyResourceRepository(database)
+  const repository = new D1CompanyResourceRepository({ database })
   const specifications: Pick<CompanyResourceProps, "type" | "id" | "attributes">[] = [
     { type: "person", id: "person:test", attributes: { officialName: "Person" } },
     { type: "employee", id: "employee:test", attributes: { personId: "person:test" } },

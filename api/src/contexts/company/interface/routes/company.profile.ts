@@ -138,7 +138,7 @@ export const GET = factory.createHandlers(
       throw new CompanyAccessDeniedError()
     }
 
-    const result = await new D1CompanyResourceRepository(database).findMany(query)
+    const result = await new D1CompanyResourceRepository({ database }).findMany(query)
     if (!result.ok) {
       if (result.cause instanceof CompanySnapshotRevisionError)
         throw new CompanyQueryInvalidError(result.cause)
@@ -259,7 +259,7 @@ export const POST = factory.createHandlers(
     }
     const applicationContext = {
       actor,
-      repository: new D1CompanyResourceRepository(database),
+      repository: new D1CompanyResourceRepository({ database }),
     }
     let operation: CreateCompanyProfile | UpdateCompanyProfile | DeleteCompanyProfile | null = null
     if (

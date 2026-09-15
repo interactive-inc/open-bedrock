@@ -25,7 +25,7 @@ const day = restoreCalendarDate("2026-01-01")
 /** HTTP の100件契約を実DBと同じパラメータ上限で検査する。 */
 async function fixture(type: "person" | "grade") {
   const database = createCompanyD1TestDatabase(schema)
-  const repository = new D1CompanyResourceRepository(database)
+  const repository = new D1CompanyResourceRepository({ database })
   const resources: CompanyResourceProps[] = Array.from(
     { length: 100 },
     (_, index): CompanyResourceProps => ({

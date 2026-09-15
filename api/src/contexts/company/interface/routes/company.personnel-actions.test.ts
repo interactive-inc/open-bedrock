@@ -208,7 +208,9 @@ test("旧記録は保全して別の読取口へ残し、APIとDBの新規書込
     ],
   })
   if (change instanceof Error) throw change
-  expect(await new D1CompanyResourceRepository(f.database).write(change)).toMatchObject({
+  expect(
+    await new D1CompanyResourceRepository({ database: f.database }).write(change),
+  ).toMatchObject({
     kind: "applied",
   })
   await f.database.exec(guard)
@@ -240,7 +242,9 @@ test("旧記録は保全して別の読取口へ残し、APIとDBの新規書込
     resources: change.resources.map((row) => ({ ...row, id: "legacy:2" })),
   })
   if (attempted instanceof Error) throw attempted
-  expect(await new D1CompanyResourceRepository(f.database).write(attempted)).toMatchObject({
+  expect(
+    await new D1CompanyResourceRepository({ database: f.database }).write(attempted),
+  ).toMatchObject({
     kind: "unavailable",
   })
   expect(await f.persisted()).toEqual(before)

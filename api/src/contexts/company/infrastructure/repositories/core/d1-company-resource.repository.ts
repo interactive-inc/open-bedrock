@@ -98,8 +98,10 @@ function toCompanyResource(row: CompanyResourceRow): CompanyResourceEntity | Err
     attributes: attributes as CompanyJsonObject,
   })
 }
-type D1CompanyResourceRepositoryContext = D1Database
-type Context = D1CompanyResourceRepositoryContext
+type Context = Readonly<{
+  database: D1Database
+  atomicStatements?: ReadonlyArray<D1PreparedStatement>
+}>
 
 /** Company resource revisions の D1 永続化。 */
 export class D1CompanyResourceRepository implements CompanyResourceRepository {
@@ -141,7 +143,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
 
       const resourceStatement =
         query.organizationRevision !== undefined
-          ? this.c
+          ? this.c.database
               .prepare(
                 `WITH ranked_resources AS (
                  SELECT resource.*,
@@ -177,7 +179,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                 ...codeBinds,
               )
           : query.effectiveOn === undefined
-            ? this.c
+            ? this.c.database
                 .prepare(
                   `SELECT organization_id, resource_type, resource_id, revision, state,
                         effective_from, effective_to, attributes_json
@@ -189,7 +191,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                   ORDER BY resource_type, resource_id`,
                 )
                 .bind(query.organizationId, ...binds, ...codeBinds)
-            : this.c
+            : this.c.database
                 .prepare(
                   `WITH snapshot AS (
                    SELECT revision
@@ -236,8 +238,8 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                   ...codeBinds,
                 )
 
-      const [revisionResult, resourceResult] = await this.c.batch([
-        this.c
+      const [revisionResult, resourceResult] = await this.c.database.batch([
+        this.c.database
           .prepare("SELECT revision FROM company_organizations WHERE id = ?")
           .bind(query.organizationId),
         resourceStatement,
@@ -299,8 +301,8 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       return { kind: "unavailable", cause: new Error("Empty change") }
     }
     const journal = await new CompanyResourceJournalAdapter({
-      database: drizzle(this.c),
-      d1: this.c,
+      database: drizzle(this.c.database),
+      d1: this.c.database,
     }).prepare(change)
     if (journal instanceof Error) return { kind: "unavailable", cause: journal }
     const commandFingerprint = journal.fingerprint
@@ -350,7 +352,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       if (invalid !== null) return invalid
     }
 
-    const projection = await new CompanyWorkforceResourceProjectionAdapter(this.c)
+    const projection = await new CompanyWorkforceResourceProjectionAdapter(this.c.database)
       .prepare(change, commandFingerprint)
       .catch((cause: unknown) =>
         cause instanceof Error
@@ -366,7 +368,9 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       return { kind: "invalid", error: projection }
     if (projection instanceof Error) return { kind: "unavailable", cause: projection }
 
-    const organizationProjection = await new CompanyOrganizationResourceProjectionAdapter(this.c)
+    const organizationProjection = await new CompanyOrganizationResourceProjectionAdapter(
+      this.c.database,
+    )
       .prepare(change, commandFingerprint)
       .catch((cause: unknown) =>
         cause instanceof Error
@@ -388,11 +392,12 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       ...organizationProjection.beforeWorkforce,
       ...projection,
       ...organizationProjection.statements,
+      ...(this.c.atomicStatements ?? []),
       journal.commit,
     ]
 
     try {
-      await this.c.batch(statements)
+      await this.c.database.batch(statements)
       return { kind: "applied", organizationRevision, replayed: false }
     } catch (cause) {
       const concurrentRevision = await this.readOrganizationRevision(organizationId)
@@ -480,7 +485,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
     types: ReadonlyArray<CompanyResourceType>,
     revision: number,
   ): Promise<ReadonlyArray<CompanyResourceEntity> | Error> {
-    const history = await this.c
+    const history = await this.c.database
       .prepare(`SELECT organization_id, resource_type, resource_id, revision, state,
                       effective_from, effective_to, attributes_json
                  FROM company_resource_revisions
@@ -545,7 +550,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
     organizationId: string,
     commandId: string,
   ): Promise<CompanyCommandReceiptRow | null> {
-    return this.c
+    return this.c.database
       .prepare(
         "SELECT fingerprint, organization_revision FROM company_command_receipts WHERE organization_id = ? AND command_id = ?",
       )
@@ -556,7 +561,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
   private async readOrganizationRevision(organizationId: string): Promise<number> {
     return (
       (
-        await this.c
+        await this.c.database
           .prepare("SELECT revision FROM company_organizations WHERE id = ?")
           .bind(organizationId)
           .first<{ revision: number }>()
@@ -567,20 +572,26 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
   private async findResourceConflict(
     change: CompanyResourceChangeEntity,
   ): Promise<Extract<CompanyResourceWriteResult, { kind: "resource_conflict" }> | null> {
+    const observed = new Map<string, number>()
     for (const resource of change.resources) {
-      const actualRevision =
-        (
-          await this.c
-            .prepare(
-              `SELECT revision FROM company_resource_heads
+      const key = `${resource.organizationId}\u0000${resource.type}\u0000${resource.id}`
+      let actualRevision = observed.get(key)
+      if (actualRevision === undefined) {
+        actualRevision =
+          (
+            await this.c.database
+              .prepare(
+                `SELECT revision FROM company_resource_heads
                WHERE organization_id = ? AND resource_type = ? AND resource_id = ?`,
-            )
-            .bind(resource.organizationId, resource.type, resource.id)
-            .first<{ revision: number }>()
-        )?.revision ?? 0
+              )
+              .bind(resource.organizationId, resource.type, resource.id)
+              .first<{ revision: number }>()
+          )?.revision ?? 0
+      }
       if (resource.revision !== actualRevision + 1) {
         return { kind: "resource_conflict", type: resource.type, id: resource.id, actualRevision }
       }
+      observed.set(key, resource.revision)
     }
     return null
   }

@@ -620,7 +620,7 @@ export class PersonnelActionPersistenceAdapter {
         : props.command.input
     if (!("positionReference" in action) || action.positionReference === undefined) return null
     const reference = action.positionReference
-    const snapshot = await new D1CompanyResourceRepository(this.c.env.DB).findMany({
+    const snapshot = await new D1CompanyResourceRepository({ database: this.c.env.DB }).findMany({
       organizationId: reference.organizationId,
       organizationRevision: reference.organizationRevision,
       effectiveOn: restoreCalendarDate(reference.effectiveOn),

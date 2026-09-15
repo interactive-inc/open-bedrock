@@ -44,6 +44,8 @@ export type Bindings = {
   CORS_ORIGIN?: string
   // テストで現在時刻を固定するための注入点（本番では未設定 = 実時計）。
   NOW?: string
+  // 外部業務台帳の停止世代を、同じデータ集合へ束縛する環境固有namespace。
+  RECORD_SOURCE_NAMESPACE?: string
   // 有効化する opt-in App 機能。"all" か機能キーのカンマ区切り（例: "thanks,one-on-ones"）。
   // 未設定・空・"none" は全 opt-in App 機能を無効にする（.docs/feature-tiers.md の既定）。
   ENABLED_OPT_IN_APPS?: string

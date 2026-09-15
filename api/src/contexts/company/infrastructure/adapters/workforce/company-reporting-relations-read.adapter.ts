@@ -17,7 +17,7 @@ export class CompanyReportingRelationsReadAdapter implements CompanyReportingRel
 
   async readSnapshot(asOf: CalendarDate): Promise<CompanyReportingRelationsReadResult> {
     try {
-      const result = await new D1CompanyResourceRepository(this.c).findMany({
+      const result = await new D1CompanyResourceRepository({ database: this.c }).findMany({
         organizationId: "organization:default",
         types: ["reporting-relation"],
         effectiveOn: asOf,

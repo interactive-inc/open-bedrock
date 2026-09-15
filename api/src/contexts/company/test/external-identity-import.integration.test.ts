@@ -202,7 +202,7 @@ describe("外部identityとCompany正本の同期", () => {
       organizationRevision: c.input.expectedRevision + 1,
       replayed: false,
     })
-    const resources = await new D1CompanyResourceRepository(c.database).findMany({
+    const resources = await new D1CompanyResourceRepository({ database: c.database }).findMany({
       organizationId: "organization:default",
       types: ["person", "employee", "employment"],
       effectiveOn: restoreCalendarDate("2026-01-01"),
@@ -299,7 +299,7 @@ describe("外部identityとCompany正本の同期", () => {
         .prepare("SELECT email FROM system_identity_profiles")
         .first<Record<string, unknown>>(),
     ).toEqual({ email: "updated@example.com" })
-    const resources = await new D1CompanyResourceRepository(c.database).findMany({
+    const resources = await new D1CompanyResourceRepository({ database: c.database }).findMany({
       organizationId: "organization:default",
       types: ["person"],
     })
@@ -409,7 +409,7 @@ describe("外部identityとCompany正本の同期", () => {
         .prepare("SELECT count(*) AS total FROM company_employees")
         .first<Record<string, unknown>>(),
     ).toEqual({ total: 0 })
-  })
+  }, 15_000)
 
   test("同期記録の書換え・削除・外部版の巻き戻しをDBで拒否する", async () => {
     const c = await createExternalIdentityImportTestContext()

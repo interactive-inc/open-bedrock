@@ -85,7 +85,7 @@ describe("POST /company/employee-registrations", () => {
   test("新規登録のAccount対応を公開し、取消後は同じtokenで従業員情報へアクセスできない", async () => {
     const db = await createTestDb()
     expect((await post(db, body)).status).toBe(201)
-    const links = await new D1CompanyResourceRepository(db).findMany({
+    const links = await new D1CompanyResourceRepository({ database: db }).findMany({
       organizationId: "organization:default",
       types: ["account-employee-link"],
     })
