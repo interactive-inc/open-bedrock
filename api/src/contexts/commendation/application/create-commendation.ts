@@ -1,10 +1,11 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { Commendation } from "@/contexts/commendation/domain/entities/commendation.entity"
-import { ForbiddenError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { CommendationRepository } from "@/contexts/commendation/infrastructure/repositories/commendation.repository"
+import { isCommendationRecordSourceFrozenError } from "@/contexts/commendation/infrastructure/repositories/lib/is-commendation-record-source-frozen-error"
 
 export type Command = {
   session: CompanySessionValue
@@ -41,6 +42,10 @@ export class CreateCommendation {
     const created = await repository.create(commendation)
 
     if (created instanceof Error) {
+      if (isCommendationRecordSourceFrozenError(created))
+        return new ConflictError("commendation writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       return new UnexpectedError("failed to create commendation", { cause: created })
     }
 

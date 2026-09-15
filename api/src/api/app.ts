@@ -121,6 +121,26 @@ import * as certificationDefinitionsRoute from "@/contexts/certification/interfa
 import * as certificationDefinitionsIdRoute from "@/contexts/certification/interface/routes/certification-definitions.$id"
 import * as employeeCertificationsRoute from "@/contexts/certification/interface/routes/employee-certifications"
 import * as employeeCertificationsIdRoute from "@/contexts/certification/interface/routes/employee-certifications.$id"
+import * as commendationCommendationsIdPreservationRequestsRoute from "@/contexts/commendation/interface/routes/commendation.commendations.$id.preservation-requests"
+import * as commendationCommendationsIdPreservationRequestsNumberRoute from "@/contexts/commendation/interface/routes/commendation.commendations.$id.preservation-requests.$number"
+import * as commendationCommendationsIdPreservationRequestsNumberApproveRoute from "@/contexts/commendation/interface/routes/commendation.commendations.$id.preservation-requests.$number.approve"
+import * as commendationCommendationsIdPreservationRequestsNumberExecuteRoute from "@/contexts/commendation/interface/routes/commendation.commendations.$id.preservation-requests.$number.execute"
+import * as commendationCommendationsIdPreservationRequestsNumberRejectRoute from "@/contexts/commendation/interface/routes/commendation.commendations.$id.preservation-requests.$number.reject"
+import * as commendationCommendationsIdPreservationRequestsNumberResubmitRoute from "@/contexts/commendation/interface/routes/commendation.commendations.$id.preservation-requests.$number.resubmit"
+import * as commendationCommendationsIdPreservationRequestsNumberWithdrawRoute from "@/contexts/commendation/interface/routes/commendation.commendations.$id.preservation-requests.$number.withdraw"
+import * as commendationRecordSourceFreezesRoute from "@/contexts/commendation/interface/routes/commendation.record-source-freezes"
+import * as commendationRecordSourceFreezesFreezeIdRoute from "@/contexts/commendation/interface/routes/commendation.record-source-freezes.$freezeId"
+import * as commendationRecordSourceFreezesFreezeIdCoveragePagesRoute from "@/contexts/commendation/interface/routes/commendation.record-source-freezes.$freezeId.coverage-pages"
+import * as commendationRecordSourceFreezesFreezeIdReleaseRoute from "@/contexts/commendation/interface/routes/commendation.record-source-freezes.$freezeId.release"
+import * as commendationRecordSourceFreezesFreezeIdRetirementPlansRoute from "@/contexts/commendation/interface/routes/commendation.record-source-freezes.$freezeId.retirement-plans"
+import * as commendationRetirementPlansPlanIdRequestsRoute from "@/contexts/commendation/interface/routes/commendation.retirement-plans.$planId.requests"
+import * as commendationRetirementPlansPlanIdRequestsNumberRoute from "@/contexts/commendation/interface/routes/commendation.retirement-plans.$planId.requests.$number"
+import * as commendationRetirementPlansPlanIdRequestsNumberApproveRoute from "@/contexts/commendation/interface/routes/commendation.retirement-plans.$planId.requests.$number.approve"
+import * as commendationRetirementPlansPlanIdRequestsNumberExecuteRoute from "@/contexts/commendation/interface/routes/commendation.retirement-plans.$planId.requests.$number.execute"
+import * as commendationRetirementPlansPlanIdRequestsNumberRejectRoute from "@/contexts/commendation/interface/routes/commendation.retirement-plans.$planId.requests.$number.reject"
+import * as commendationRetirementPlansPlanIdRequestsNumberResubmitRoute from "@/contexts/commendation/interface/routes/commendation.retirement-plans.$planId.requests.$number.resubmit"
+import * as commendationRetirementPlansPlanIdRequestsNumberWithdrawRoute from "@/contexts/commendation/interface/routes/commendation.retirement-plans.$planId.requests.$number.withdraw"
+import * as commendationRetirementPlansPlanIdVerificationReceiptsRoute from "@/contexts/commendation/interface/routes/commendation.retirement-plans.$planId.verification-receipts"
 import * as commendationsRoute from "@/contexts/commendation/interface/routes/commendations"
 import * as commendationsIdRoute from "@/contexts/commendation/interface/routes/commendations.$id"
 import * as companyCalendarDaysRoute from "@/contexts/company-calendar/interface/routes/company-calendar-days"
@@ -711,6 +731,83 @@ const routePart2 = createRouteApp()
   .get("/commendation/commendations", ...commendationsRoute.GET)
   .post("/commendation/commendations", ...commendationsRoute.POST)
   .delete("/commendation/commendations/:id", ...commendationsIdRoute.DELETE)
+  .post(
+    "/commendation/commendations/:id/preservation-requests",
+    ...commendationCommendationsIdPreservationRequestsRoute.POST,
+  )
+  .get(
+    "/commendation/commendations/:id/preservation-requests/:number",
+    ...commendationCommendationsIdPreservationRequestsNumberRoute.GET,
+  )
+  .post(
+    "/commendation/commendations/:id/preservation-requests/:number/approve",
+    ...commendationCommendationsIdPreservationRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/commendation/commendations/:id/preservation-requests/:number/execute",
+    ...commendationCommendationsIdPreservationRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/commendation/commendations/:id/preservation-requests/:number/reject",
+    ...commendationCommendationsIdPreservationRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/commendation/commendations/:id/preservation-requests/:number/resubmit",
+    ...commendationCommendationsIdPreservationRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/commendation/commendations/:id/preservation-requests/:number/withdraw",
+    ...commendationCommendationsIdPreservationRequestsNumberWithdrawRoute.POST,
+  )
+  .post("/commendation/record-source-freezes", ...commendationRecordSourceFreezesRoute.POST)
+  .get(
+    "/commendation/record-source-freezes/:freezeId",
+    ...commendationRecordSourceFreezesFreezeIdRoute.GET,
+  )
+  .post(
+    "/commendation/record-source-freezes/:freezeId/coverage-pages",
+    ...commendationRecordSourceFreezesFreezeIdCoveragePagesRoute.POST,
+  )
+  .post(
+    "/commendation/record-source-freezes/:freezeId/release",
+    ...commendationRecordSourceFreezesFreezeIdReleaseRoute.POST,
+  )
+  .post(
+    "/commendation/record-source-freezes/:freezeId/retirement-plans",
+    ...commendationRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
+  )
+  .post(
+    "/commendation/retirement-plans/:planId/requests",
+    ...commendationRetirementPlansPlanIdRequestsRoute.POST,
+  )
+  .get(
+    "/commendation/retirement-plans/:planId/requests/:number",
+    ...commendationRetirementPlansPlanIdRequestsNumberRoute.GET,
+  )
+  .post(
+    "/commendation/retirement-plans/:planId/requests/:number/approve",
+    ...commendationRetirementPlansPlanIdRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/commendation/retirement-plans/:planId/requests/:number/execute",
+    ...commendationRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/commendation/retirement-plans/:planId/requests/:number/reject",
+    ...commendationRetirementPlansPlanIdRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/commendation/retirement-plans/:planId/requests/:number/resubmit",
+    ...commendationRetirementPlansPlanIdRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/commendation/retirement-plans/:planId/requests/:number/withdraw",
+    ...commendationRetirementPlansPlanIdRequestsNumberWithdrawRoute.POST,
+  )
+  .post(
+    "/commendation/retirement-plans/:planId/verification-receipts",
+    ...commendationRetirementPlansPlanIdVerificationReceiptsRoute.POST,
+  )
   .get("/company/account-directory", ...companyAccountDirectoryRoute.GET)
   .get("/company/account-employee-links", ...companyAccountEmployeeLinksRoute.GET)
   .post("/company/account-employee-links", ...companyAccountEmployeeLinksRoute.POST)
