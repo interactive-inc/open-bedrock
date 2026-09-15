@@ -1,5 +1,6 @@
 import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
-import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { isOneOnOneRecordSourceFrozenError } from "@/contexts/one-on-one/infrastructure/repositories/lib/is-one-on-one-record-source-frozen-error"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { UpdateOneOnOne } from "@/contexts/one-on-one/application/oneonone/update-one-on-one"
 import type { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"
 import type { Context } from "@/env"
@@ -167,6 +168,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     const deleted = await oneOnOneRepository.delete(command.oneOnOneId)
 
     if (deleted instanceof Error) {
+      if (isOneOnOneRecordSourceFrozenError(deleted)) {
+        return new ConflictError("one-on-one writes are frozen", "record_source_frozen", { cause: deleted })
+      }
       return new UnexpectedError("failed to delete one-on-one", { cause: deleted })
     }
 

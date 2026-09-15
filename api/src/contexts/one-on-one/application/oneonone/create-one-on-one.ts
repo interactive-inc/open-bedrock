@@ -3,6 +3,7 @@ import { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entit
 import type { Context } from "@/env"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
+import { isOneOnOneRecordSourceFrozenError } from "@/contexts/one-on-one/infrastructure/repositories/lib/is-one-on-one-record-source-frozen-error"
 import { UniqueConstraintError } from "@/lib/d1/errors"
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -60,6 +61,9 @@ export class CreateOneOnOne {
     }
 
     if (saved instanceof Error) {
+      if (isOneOnOneRecordSourceFrozenError(saved)) {
+        return new ConflictError("one-on-one writes are frozen", "record_source_frozen", { cause: saved })
+      }
       return new UnexpectedError("failed to save one-on-one", { cause: saved })
     }
 

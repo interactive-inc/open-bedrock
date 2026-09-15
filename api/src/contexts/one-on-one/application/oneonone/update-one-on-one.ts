@@ -2,7 +2,8 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import type { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"
 import type { Context } from "@/env"
 import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
-import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { isOneOnOneRecordSourceFrozenError } from "@/contexts/one-on-one/infrastructure/repositories/lib/is-one-on-one-record-source-frozen-error"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
@@ -47,6 +48,9 @@ export class UpdateOneOnOne {
     const result = await oneOnOneRepository.update(updated)
 
     if (result instanceof Error) {
+      if (isOneOnOneRecordSourceFrozenError(result)) {
+        return new ConflictError("one-on-one writes are frozen", "record_source_frozen", { cause: result })
+      }
       return new UnexpectedError("failed to update one-on-one", { cause: result })
     }
 
