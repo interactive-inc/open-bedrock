@@ -6,6 +6,7 @@ import type { KnowledgeContext as Context } from "@/contexts/knowledge/configura
 import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/repositories/knowledge-article.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+import { isKnowledgeRecordSourceFrozenError } from "@/contexts/knowledge/infrastructure/repositories/lib/is-knowledge-article-record-source-frozen-error"
 
 export type Command = {
   expectedRevision: number
@@ -79,6 +80,8 @@ export class WithdrawKnowledgeArticle {
     })
 
     if (result instanceof Error) {
+      if (isKnowledgeRecordSourceFrozenError(result))
+        return new ConflictError("knowledge writes are frozen", "record_source_frozen", { cause: result })
       return new UnexpectedError("failed to update knowledge article", { cause: result })
     }
 
