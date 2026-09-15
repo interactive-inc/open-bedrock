@@ -1,8 +1,9 @@
 import { CertificationRepository } from "@/contexts/certification/infrastructure/repositories/certification.repository"
-import { NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Certification } from "@/contexts/certification/domain/entities/certification.entity"
 import type { Context } from "@/env"
+import { isCertificationRecordSourceFrozenError } from "@/contexts/certification/infrastructure/repositories/lib/is-certification-record-source-frozen-error"
 
 /**
  * 資格マスタの名称・発行元・説明を更新する。対象が無ければ not found を返す。
@@ -39,6 +40,8 @@ export class UpdateCertification {
     )
 
     if (updated instanceof Error) {
+      if (isCertificationRecordSourceFrozenError(updated))
+        return new ConflictError("certification writes are frozen", "record_source_frozen", { cause: updated })
       return new UnexpectedError("failed to update certification", { cause: updated })
     }
 

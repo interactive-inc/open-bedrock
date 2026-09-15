@@ -5,6 +5,7 @@ import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { EmployeeCertification } from "@/contexts/certification/domain/entities/employee-certification.entity"
 import type { Context } from "@/env"
+import { isCertificationRecordSourceFrozenError } from "@/contexts/certification/infrastructure/repositories/lib/is-certification-record-source-frozen-error"
 
 /**
  * 従業員の資格保有記録を作成する。資格マスタが存在しない場合は not found、
@@ -40,6 +41,8 @@ export class CreateEmployeeCertification {
     const created = await repository.create(props)
 
     if (created instanceof Error) {
+      if (isCertificationRecordSourceFrozenError(created))
+        return new ConflictError("certification writes are frozen", "record_source_frozen", { cause: created })
       return new UnexpectedError("failed to save employee_certification", { cause: created })
     }
 
