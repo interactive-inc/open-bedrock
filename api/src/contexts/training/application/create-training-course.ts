@@ -1,3 +1,4 @@
+import { isTrainingRecordSourceFrozenError } from "@/contexts/training/infrastructure/repositories/lib/is-training-record-source-frozen-error"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -57,6 +58,8 @@ export class CreateTrainingCourse {
     }
 
     if (result instanceof Error) {
+      if (isTrainingRecordSourceFrozenError(result))
+        return new ConflictError("training writes are frozen", "record_source_frozen", { cause: result })
       return new UnexpectedError("failed to create training course", { cause: result })
     }
 

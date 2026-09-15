@@ -1,3 +1,4 @@
+import { isTrainingRecordSourceFrozenError } from "@/contexts/training/infrastructure/repositories/lib/is-training-record-source-frozen-error"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import {
@@ -65,6 +66,8 @@ export class EnrollTraining {
     const created = await enrollmentRepository.create(enrollment)
 
     if (created instanceof Error) {
+      if (isTrainingRecordSourceFrozenError(created))
+        return new ConflictError("training writes are frozen", "record_source_frozen", { cause: created })
       return new UnexpectedError("failed to create training enrollment", { cause: created })
     }
 
