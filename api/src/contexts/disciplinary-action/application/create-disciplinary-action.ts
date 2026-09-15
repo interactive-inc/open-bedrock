@@ -1,10 +1,11 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { DisciplinaryAction } from "@/contexts/disciplinary-action/domain/entities/disciplinary-action.entity"
-import { ForbiddenError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { DisciplinaryActionRepository } from "@/contexts/disciplinary-action/infrastructure/repositories/disciplinary-action.repository"
+import { isDisciplinaryActionRecordSourceFrozenError } from "@/contexts/disciplinary-action/infrastructure/repositories/lib/is-disciplinary-action-record-source-frozen-error"
 
 export type Command = {
   session: CompanySessionValue
@@ -41,6 +42,11 @@ export class CreateDisciplinaryAction {
     const created = await repository.create(action)
 
     if (created instanceof Error) {
+      if (isDisciplinaryActionRecordSourceFrozenError(created)) {
+        return new ConflictError("disciplinary action writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
+      }
       return new UnexpectedError("failed to create disciplinary action", { cause: created })
     }
 
