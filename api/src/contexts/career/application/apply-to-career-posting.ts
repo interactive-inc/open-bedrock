@@ -1,5 +1,6 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { CareerApplication } from "@/contexts/career/domain/entities/career-application.entity"
+import { isCareerRecordSourceFrozenError } from "@/contexts/career/infrastructure/repositories/lib/is-career-record-source-frozen-error"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
@@ -57,6 +58,9 @@ export class ApplyToCareerPosting {
     )
 
     if (created instanceof Error) {
+      if (isCareerRecordSourceFrozenError(created)) {
+        return new ConflictError("career writes are frozen", "record_source_frozen", { cause: created })
+      }
       return new UnexpectedError("failed to create career application", { cause: created })
     }
 
