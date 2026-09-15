@@ -131,6 +131,26 @@ import * as careerPostingsRoute from "@/contexts/career/interface/routes/career-
 import * as careerPostingsPostingIdRoute from "@/contexts/career/interface/routes/career-postings.$postingId"
 import * as careerPostingsPostingIdApplyRoute from "@/contexts/career/interface/routes/career-postings.$postingId.apply"
 import * as careerSheetsMeRoute from "@/contexts/career/interface/routes/career-sheets.me"
+import * as certificateRequestCertificateRequestsIdPreservationRequestsRoute from "@/contexts/certificate-request/interface/routes/certificate-request.certificate-requests.$id.preservation-requests"
+import * as certificateRequestCertificateRequestsIdPreservationRequestsNumberRoute from "@/contexts/certificate-request/interface/routes/certificate-request.certificate-requests.$id.preservation-requests.$number"
+import * as certificateRequestCertificateRequestsIdPreservationRequestsNumberApproveRoute from "@/contexts/certificate-request/interface/routes/certificate-request.certificate-requests.$id.preservation-requests.$number.approve"
+import * as certificateRequestCertificateRequestsIdPreservationRequestsNumberExecuteRoute from "@/contexts/certificate-request/interface/routes/certificate-request.certificate-requests.$id.preservation-requests.$number.execute"
+import * as certificateRequestCertificateRequestsIdPreservationRequestsNumberRejectRoute from "@/contexts/certificate-request/interface/routes/certificate-request.certificate-requests.$id.preservation-requests.$number.reject"
+import * as certificateRequestCertificateRequestsIdPreservationRequestsNumberResubmitRoute from "@/contexts/certificate-request/interface/routes/certificate-request.certificate-requests.$id.preservation-requests.$number.resubmit"
+import * as certificateRequestCertificateRequestsIdPreservationRequestsNumberWithdrawRoute from "@/contexts/certificate-request/interface/routes/certificate-request.certificate-requests.$id.preservation-requests.$number.withdraw"
+import * as certificateRequestRecordSourceFreezesRoute from "@/contexts/certificate-request/interface/routes/certificate-request.record-source-freezes"
+import * as certificateRequestRecordSourceFreezesFreezeIdRoute from "@/contexts/certificate-request/interface/routes/certificate-request.record-source-freezes.$freezeId"
+import * as certificateRequestRecordSourceFreezesFreezeIdCoveragePagesRoute from "@/contexts/certificate-request/interface/routes/certificate-request.record-source-freezes.$freezeId.coverage-pages"
+import * as certificateRequestRecordSourceFreezesFreezeIdReleaseRoute from "@/contexts/certificate-request/interface/routes/certificate-request.record-source-freezes.$freezeId.release"
+import * as certificateRequestRecordSourceFreezesFreezeIdRetirementPlansRoute from "@/contexts/certificate-request/interface/routes/certificate-request.record-source-freezes.$freezeId.retirement-plans"
+import * as certificateRequestRetirementPlansPlanIdRequestsRoute from "@/contexts/certificate-request/interface/routes/certificate-request.retirement-plans.$planId.requests"
+import * as certificateRequestRetirementPlansPlanIdRequestsNumberRoute from "@/contexts/certificate-request/interface/routes/certificate-request.retirement-plans.$planId.requests.$number"
+import * as certificateRequestRetirementPlansPlanIdRequestsNumberApproveRoute from "@/contexts/certificate-request/interface/routes/certificate-request.retirement-plans.$planId.requests.$number.approve"
+import * as certificateRequestRetirementPlansPlanIdRequestsNumberExecuteRoute from "@/contexts/certificate-request/interface/routes/certificate-request.retirement-plans.$planId.requests.$number.execute"
+import * as certificateRequestRetirementPlansPlanIdRequestsNumberRejectRoute from "@/contexts/certificate-request/interface/routes/certificate-request.retirement-plans.$planId.requests.$number.reject"
+import * as certificateRequestRetirementPlansPlanIdRequestsNumberResubmitRoute from "@/contexts/certificate-request/interface/routes/certificate-request.retirement-plans.$planId.requests.$number.resubmit"
+import * as certificateRequestRetirementPlansPlanIdRequestsNumberWithdrawRoute from "@/contexts/certificate-request/interface/routes/certificate-request.retirement-plans.$planId.requests.$number.withdraw"
+import * as certificateRequestRetirementPlansPlanIdVerificationReceiptsRoute from "@/contexts/certificate-request/interface/routes/certificate-request.retirement-plans.$planId.verification-receipts"
 import * as certificateRequestsRoute from "@/contexts/certificate-request/interface/routes/certificate-requests"
 import * as certificateRequestsIdRoute from "@/contexts/certificate-request/interface/routes/certificate-requests.$id"
 import * as certificateRequestsIdIssueRoute from "@/contexts/certificate-request/interface/routes/certificate-requests.$id.issue"
@@ -976,11 +996,93 @@ const routePart2 = createRouteApp()
     ...certificateRequestsIdIssueRoute.POST,
   )
   .post(
+    "/certificate-request/certificate-requests/:id/preservation-requests",
+    ...certificateRequestCertificateRequestsIdPreservationRequestsRoute.POST,
+  )
+  .get(
+    "/certificate-request/certificate-requests/:id/preservation-requests/:number",
+    ...certificateRequestCertificateRequestsIdPreservationRequestsNumberRoute.GET,
+  )
+  .post(
+    "/certificate-request/certificate-requests/:id/preservation-requests/:number/approve",
+    ...certificateRequestCertificateRequestsIdPreservationRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/certificate-request/certificate-requests/:id/preservation-requests/:number/execute",
+    ...certificateRequestCertificateRequestsIdPreservationRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/certificate-request/certificate-requests/:id/preservation-requests/:number/reject",
+    ...certificateRequestCertificateRequestsIdPreservationRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/certificate-request/certificate-requests/:id/preservation-requests/:number/resubmit",
+    ...certificateRequestCertificateRequestsIdPreservationRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/certificate-request/certificate-requests/:id/preservation-requests/:number/withdraw",
+    ...certificateRequestCertificateRequestsIdPreservationRequestsNumberWithdrawRoute.POST,
+  )
+  .post(
     "/certificate-request/certificate-requests/:id/reject",
     ...certificateRequestsIdRejectRoute.POST,
   )
+  .post(
+    "/certificate-request/record-source-freezes",
+    ...certificateRequestRecordSourceFreezesRoute.POST,
+  )
+  .get(
+    "/certificate-request/record-source-freezes/:freezeId",
+    ...certificateRequestRecordSourceFreezesFreezeIdRoute.GET,
+  )
+  .post(
+    "/certificate-request/record-source-freezes/:freezeId/coverage-pages",
+    ...certificateRequestRecordSourceFreezesFreezeIdCoveragePagesRoute.POST,
+  )
+  .post(
+    "/certificate-request/record-source-freezes/:freezeId/release",
+    ...certificateRequestRecordSourceFreezesFreezeIdReleaseRoute.POST,
+  )
+  .post(
+    "/certificate-request/record-source-freezes/:freezeId/retirement-plans",
+    ...certificateRequestRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
+  )
+  .post(
+    "/certificate-request/retirement-plans/:planId/requests",
+    ...certificateRequestRetirementPlansPlanIdRequestsRoute.POST,
+  )
+  .get(
+    "/certificate-request/retirement-plans/:planId/requests/:number",
+    ...certificateRequestRetirementPlansPlanIdRequestsNumberRoute.GET,
+  )
+  .post(
+    "/certificate-request/retirement-plans/:planId/requests/:number/approve",
+    ...certificateRequestRetirementPlansPlanIdRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/certificate-request/retirement-plans/:planId/requests/:number/execute",
+    ...certificateRequestRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/certificate-request/retirement-plans/:planId/requests/:number/reject",
+    ...certificateRequestRetirementPlansPlanIdRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/certificate-request/retirement-plans/:planId/requests/:number/resubmit",
+    ...certificateRequestRetirementPlansPlanIdRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/certificate-request/retirement-plans/:planId/requests/:number/withdraw",
+    ...certificateRequestRetirementPlansPlanIdRequestsNumberWithdrawRoute.POST,
+  )
+  .post(
+    "/certificate-request/retirement-plans/:planId/verification-receipts",
+    ...certificateRequestRetirementPlansPlanIdVerificationReceiptsRoute.POST,
+  )
   .get("/certification/certification-definitions", ...certificationDefinitionsRoute.GET)
   .post("/certification/certification-definitions", ...certificationDefinitionsRoute.POST)
+
+const routePart3 = createRouteApp()
   .put("/certification/certification-definitions/:id", ...certificationDefinitionsIdRoute.PUT)
   .get("/certification/employee-certifications", ...employeeCertificationsRoute.GET)
   .post("/certification/employee-certifications", ...employeeCertificationsRoute.POST)
@@ -1037,8 +1139,6 @@ const routePart2 = createRouteApp()
     "/commendation/retirement-plans/:planId/requests",
     ...commendationRetirementPlansPlanIdRequestsRoute.POST,
   )
-
-const routePart3 = createRouteApp()
   .get(
     "/commendation/retirement-plans/:planId/requests/:number",
     ...commendationRetirementPlansPlanIdRequestsNumberRoute.GET,

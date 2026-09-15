@@ -1,9 +1,10 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { CertificateRequest } from "@/contexts/certificate-request/domain/entities/certificate-request.entity"
-import { UnexpectedError } from "@/lib/errors"
+import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/repositories/certificate-request.repository"
+import { isCertificateRequestRecordSourceFrozenError } from "@/contexts/certificate-request/infrastructure/repositories/lib/is-certificate-request-record-source-frozen-error"
 
 export type Command = {
   requesterId: EmployeeId
@@ -37,6 +38,9 @@ export class CreateCertificateRequest {
     const created = await certificateRequestRepository.create(certificateRequest)
 
     if (created instanceof Error) {
+      if (isCertificateRequestRecordSourceFrozenError(created)) {
+        return new ConflictError("certificate request writes are frozen", "record_source_frozen", { cause: created })
+      }
       return new UnexpectedError("failed to create certificate request", { cause: created })
     }
 

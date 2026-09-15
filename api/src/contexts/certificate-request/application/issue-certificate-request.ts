@@ -4,6 +4,7 @@ import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/repositories/certificate-request.repository"
+import { isCertificateRequestRecordSourceFrozenError } from "@/contexts/certificate-request/infrastructure/repositories/lib/is-certificate-request-record-source-frozen-error"
 
 export type Command = {
   session: CompanySessionValue
@@ -46,6 +47,9 @@ export class IssueCertificateRequest {
     })
 
     if (updated instanceof Error) {
+      if (isCertificateRequestRecordSourceFrozenError(updated)) {
+        return new ConflictError("certificate request writes are frozen", "record_source_frozen", { cause: updated })
+      }
       return new UnexpectedError("failed to update certificate request status", { cause: updated })
     }
 
