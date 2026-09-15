@@ -1,6 +1,7 @@
 import { LicenseAssignmentEntity } from "@/contexts/software-license/domain/entities/license-assignment.entity"
 import type { SoftwareLicenseContext } from "@/contexts/software-license/configuration/software-license-context"
 import { LicenseError } from "@/contexts/software-license/domain/errors"
+import { isSoftwareLicenseRecordSourceFrozenError } from "@/contexts/software-license/infrastructure/repositories/is-software-license-record-source-frozen-error"
 import type { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
 
@@ -114,6 +115,8 @@ export class LicenseAssignmentRepository {
       if (writes.length !== statements.length || writes.some((write) => !write.success))
         return new LicenseError("license_unavailable", "assignment write is unavailable")
     } catch (cause) {
+      if (isSoftwareLicenseRecordSourceFrozenError(cause))
+        return new LicenseError("license_conflict", "service register writes are frozen", { cause })
       if (
         cause instanceof Error &&
         /software_license_capacity_conflict|UNIQUE constraint failed: software_license_assignments|license_revision_changed|license_assignment_changed/.test(
