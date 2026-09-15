@@ -2,7 +2,7 @@ import type { SurveyContext } from "@/contexts/survey/configuration/survey-conte
 import type { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
 import { CaptureSurveyRecordAdapter } from "@/contexts/survey/infrastructure/adapters/capture-survey-record.adapter"
 import { SurveyError } from "@/contexts/survey/domain/errors"
-import { surveyRecordKindSchema } from "@/contexts/survey/domain/survey-record-kind"
+import { surveyRecordKindSchema } from "@/contexts/survey/domain/definitions/survey-record-kind.definition"
 
 type Context = SurveyContext & Readonly<{ sourceNamespace: string }>
 
@@ -20,8 +20,7 @@ export class RevalidateSurveyRecordSourceAdapter {
       return new SurveyError("forbidden", "record source does not belong to this survey registry")
 
     const recordKind = surveyRecordKindSchema.safeParse(source.props.recordKind)
-    if (!recordKind.success)
-      return new SurveyError("forbidden", "invalid survey record kind")
+    if (!recordKind.success) return new SurveyError("forbidden", "invalid survey record kind")
     const current = await new CaptureSurveyRecordAdapter(this.c).prepare({
       recordKind: recordKind.data,
       recordId: source.props.recordId,
@@ -32,10 +31,7 @@ export class RevalidateSurveyRecordSourceAdapter {
       !source.matchesSource(current.source) ||
       Date.parse(source.props.capturedAt) > Date.parse(current.source.props.capturedAt)
     )
-      return new SurveyError(
-        "survey_conflict",
-        "survey record differs from preservation proposal",
-      )
+      return new SurveyError("survey_conflict", "survey record differs from preservation proposal")
 
     return Object.freeze({
       source,

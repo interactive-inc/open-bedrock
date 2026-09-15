@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { surveyRecordKindSchema } from "@/contexts/survey/domain/survey-record-kind"
+import { surveyRecordKindSchema } from "@/contexts/survey/domain/definitions/survey-record-kind.definition"
 
 export const surveyCoveragePageCommandSchema = z.strictObject({
   id: z.uuid(),

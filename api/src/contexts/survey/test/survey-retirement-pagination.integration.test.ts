@@ -10,7 +10,10 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { GET as preservedDossier } from "@system/interface/routes/system.preserved-records.$recordId.dossier"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
-import { surveyRecordKinds, type SurveyRecordKind } from "@/contexts/survey/domain/survey-record-kind"
+import {
+  surveyRecordKinds,
+  type SurveyRecordKind,
+} from "@/contexts/survey/domain/definitions/survey-record-kind.definition"
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("アンケート・回答記録を全件保全し、人の承認を経て2台帳を撤去確定する", async () => {
@@ -78,21 +81,24 @@ test("アンケート・回答記録を全件保全し、人の承認を経て2�
     )
   const freezeId = crypto.randomUUID()
   expect(
-    (await post("/survey/record-source-freezes", freezeId, { reason: "Preserve survey" }))
-      .status,
+    (await post("/survey/record-source-freezes", freezeId, { reason: "Preserve survey" })).status,
   ).toBe(201)
   expect(
-    await database.prepare("SELECT count(*) AS n FROM system_procedure_definitions WHERE key=?1")
-      .bind(definition.key).first<number>("n"),
+    await database
+      .prepare("SELECT count(*) AS n FROM system_procedure_definitions WHERE key=?1")
+      .bind(definition.key)
+      .first<number>("n"),
   ).toBe(1)
   await expect(
     database.prepare("UPDATE surveys SET title='Must not change' WHERE id=1").run(),
   ).rejects.toThrow("survey_record_source_frozen")
   await expect(
-    database.prepare(`INSERT INTO survey_responses
+    database
+      .prepare(`INSERT INTO survey_responses
       (survey_id,respondent_id,answers_json,submitted_at)
       VALUES (2,?1,'{}','2026-01-03T00:00:00.000Z')`)
-      .bind(creatorPerson.employeeId).run(),
+      .bind(creatorPerson.employeeId)
+      .run(),
   ).rejects.toThrow("survey_record_source_frozen")
   const blockedWrites = [
     await apiRequest("/survey/surveys", {
@@ -118,13 +124,14 @@ test("アンケート・回答記録を全件保全し、人の承認を経て2�
   for (const response of blockedWrites) {
     expect(await response.json()).toMatchObject({ code: "record_source_frozen" })
   }
-  const sourceRecords: ReadonlyArray<Readonly<{ recordKind: SurveyRecordKind; recordId: string }>> = [
-    ...Array.from({ length: 11 }, (_, index) => ({
-      recordKind: "survey-record" as const,
-      recordId: String(index + 1),
-    })),
-    { recordKind: "survey-response-record", recordId: "1" },
-  ]
+  const sourceRecords: ReadonlyArray<Readonly<{ recordKind: SurveyRecordKind; recordId: string }>> =
+    [
+      ...Array.from({ length: 11 }, (_, index) => ({
+        recordKind: "survey-record" as const,
+        recordId: String(index + 1),
+      })),
+      { recordKind: "survey-response-record", recordId: "1" },
+    ]
   const mappings: Array<{
     recordKind: SurveyRecordKind
     sourceRecordId: string
@@ -141,36 +148,53 @@ test("アンケート・回答記録を全件保全し、人の承認を経て2�
           ...conditions,
           disclosure: {
             reason: "Archive verification",
-            grants: [{
-              accountId: creator,
-              actions: ["read", "export"],
-              purposes: ["archive"],
-              validFrom: at.toISOString(),
-              validUntil: null,
-            }],
+            grants: [
+              {
+                accountId: creator,
+                actions: ["read", "export"],
+                purposes: ["archive"],
+                validFrom: at.toISOString(),
+                validUntil: null,
+              },
+            ],
           },
         },
       },
     })
     if (submitted.status !== 201) throw new Error(await submitted.text())
-    const record = z.object({ number: z.number(), record_id: z.string() }).parse(await submitted.json())
-    const proposal = await new SystemD1ProposalAdapter({ env: { DB: database } }).findByNumber(record.number)
-    if (proposal === null || proposal instanceof Error) throw new Error("missing preservation proposal")
-    expect((await apiRequest(`${path}/${record.number}/approve`, {
-      method: "POST", accountId: reviewer.accountId,
-      body: {
-        decision_target: {
-          proposal_version: proposal.version,
-          proposal_digest: proposal.digest,
-          task_key: proposal.currentTaskKey,
-          task_round: proposal.currentTaskRound,
-        },
-        comment: "Reviewed original",
-      },
-    })).status).toBe(200)
-    expect((await apiRequest(`${path}/${record.number}/execute`, {
-      method: "POST", body: { proposal_digest: proposal.digest },
-    })).status).toBe(200)
+    const record = z
+      .object({ number: z.number(), record_id: z.string() })
+      .parse(await submitted.json())
+    const proposal = await new SystemD1ProposalAdapter({ env: { DB: database } }).findByNumber(
+      record.number,
+    )
+    if (proposal === null || proposal instanceof Error)
+      throw new Error("missing preservation proposal")
+    expect(
+      (
+        await apiRequest(`${path}/${record.number}/approve`, {
+          method: "POST",
+          accountId: reviewer.accountId,
+          body: {
+            decision_target: {
+              proposal_version: proposal.version,
+              proposal_digest: proposal.digest,
+              task_key: proposal.currentTaskKey,
+              task_round: proposal.currentTaskRound,
+            },
+            comment: "Reviewed original",
+          },
+        })
+      ).status,
+    ).toBe(200)
+    expect(
+      (
+        await apiRequest(`${path}/${record.number}/execute`, {
+          method: "POST",
+          body: { proposal_digest: proposal.digest },
+        })
+      ).status,
+    ).toBe(200)
     mappings.push({
       recordKind: sourceRecord.recordKind,
       sourceRecordId: sourceRecord.recordId,
@@ -183,22 +207,32 @@ test("アンケート・回答記録を全件保全し、人の承認を経て2�
   const coverageRecords = (records: typeof mappings) =>
     records.map(({ sourceRecordId, preservedRecordId }) => ({ sourceRecordId, preservedRecordId }))
   const firstCoverage = await post(`${sourcePath}/coverage-pages`, crypto.randomUUID(), {
-    purpose: "archive", recordKind: "survey-record", records: coverageRecords(surveyMappings.slice(0, 10)),
+    purpose: "archive",
+    recordKind: "survey-record",
+    records: coverageRecords(surveyMappings.slice(0, 10)),
   })
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
-    sequence: 1, nextCursor: "10", recordCount: 10,
+    sequence: 1,
+    nextCursor: "10",
+    recordCount: 10,
   })
-  expect((await post(`${sourcePath}/retirement-plans`, planId, { purpose: "archive" })).status).toBe(503)
+  expect(
+    (await post(`${sourcePath}/retirement-plans`, planId, { purpose: "archive" })).status,
+  ).toBe(503)
   const lastCoverage = await post(`${sourcePath}/coverage-pages`, crypto.randomUUID(), {
-    purpose: "archive", recordKind: "survey-record", records: coverageRecords(surveyMappings.slice(10)),
+    purpose: "archive",
+    recordKind: "survey-record",
+    records: coverageRecords(surveyMappings.slice(10)),
   })
   if (lastCoverage.status !== 200) throw new Error(await lastCoverage.text())
   expect(await lastCoverage.json()).toMatchObject({ sequence: 2, nextCursor: null, recordCount: 1 })
   for (const recordKind of surveyRecordKinds.slice(1)) {
     const records = mappings.filter((mapping) => mapping.recordKind === recordKind)
     const covered = await post(`${sourcePath}/coverage-pages`, crypto.randomUUID(), {
-      purpose: "archive", recordKind, records: coverageRecords(records),
+      purpose: "archive",
+      recordKind,
+      records: coverageRecords(records),
     })
     if (covered.status !== 200) throw new Error(await covered.text())
     expect(await covered.json()).toMatchObject({ sequence: 1, nextCursor: null, recordCount: 1 })
@@ -265,10 +299,10 @@ test("アンケート・回答記録を全件保全し、人の承認を経て2�
       .bind(planId)
       .first<number>("n"),
   ).toBe(3)
+  expect(await database.prepare("SELECT count(*) AS n FROM surveys").first<number>("n")).toBe(11)
   expect(
-    await database.prepare("SELECT count(*) AS n FROM surveys").first<number>("n"),
-  ).toBe(11)
-  expect(await database.prepare("SELECT count(*) AS n FROM survey_responses").first<number>("n")).toBe(1)
+    await database.prepare("SELECT count(*) AS n FROM survey_responses").first<number>("n"),
+  ).toBe(1)
   expect(
     await database
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
@@ -431,9 +465,7 @@ test("アンケート・回答記録を全件保全し、人の承認を経て2�
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
       .first<number>("n"),
   ).toBe(1)
-  expect(
-    await database.prepare("SELECT count(*) AS n FROM surveys").first<number>("n"),
-  ).toBe(11)
+  expect(await database.prepare("SELECT count(*) AS n FROM surveys").first<number>("n")).toBe(11)
   expect(
     (
       await post(`${sourcePath}/release`, crypto.randomUUID(), {

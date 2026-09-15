@@ -1,4 +1,4 @@
-import { surveyRecordKindSchema } from "@/contexts/survey/domain/survey-record-kind"
+import { surveyRecordKindSchema } from "@/contexts/survey/domain/definitions/survey-record-kind.definition"
 import { z } from "zod"
 
 export const surveyRecordRouteSchema = z.strictObject({

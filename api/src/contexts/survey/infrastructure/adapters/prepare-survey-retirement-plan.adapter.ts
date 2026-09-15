@@ -5,7 +5,7 @@ import { SurveyActorReadAdapter } from "@/contexts/survey/infrastructure/adapter
 import { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
 import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
-import { surveyRecordKinds } from "@/contexts/survey/domain/survey-record-kind"
+import { surveyRecordKinds } from "@/contexts/survey/domain/definitions/survey-record-kind.definition"
 
 type Context = SurveyContext
 
@@ -60,12 +60,12 @@ export class PrepareSurveyRetirementPlanAdapter {
         ownerContext: "survey",
         capability: { revision: 1, recordKinds: surveyRecordKinds },
         coverage: chains.map(({ summary }) => ({
-            recordKind: summary.recordKind,
-            terminalPageId: summary.terminalPageId,
-            terminalDigest: summary.terminalDigest,
-            pageCount: summary.pageCount,
-            recordCount: summary.recordCount,
-          })),
+          recordKind: summary.recordKind,
+          terminalPageId: summary.terminalPageId,
+          terminalDigest: summary.terminalDigest,
+          pageCount: summary.pageCount,
+          recordCount: summary.recordCount,
+        })),
         actorAccountId: authentication.accountId,
         createdAt: this.c.var.now().toISOString(),
         auditEventId: crypto.randomUUID(),
