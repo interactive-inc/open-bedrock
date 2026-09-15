@@ -162,6 +162,9 @@ async function authorFixture(accountId = "1", now = new Date()) {
       var: {
         ...fixture.context.var,
         userId: accountId,
+        accountTokenVersion: 0,
+        permissions: new Set<string>(),
+        role: "authenticated",
         now: () => now,
         bearerReadAuthentication: {
           accountId: zAccountId.parse(accountId),
