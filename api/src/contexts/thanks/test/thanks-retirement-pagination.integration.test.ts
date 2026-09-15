@@ -10,7 +10,10 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { GET as preservedDossier } from "@system/interface/routes/system.preserved-records.$recordId.dossier"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
-import { thanksRecordKinds, type ThanksRecordKind } from "@/contexts/thanks/domain/thanks-record-kind"
+import {
+  thanksRecordKinds,
+  type ThanksRecordKind,
+} from "@/contexts/thanks/domain/definitions/thanks-record-kind.definition"
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("感謝・原資・景品・交換申請を全件保全し、人の承認を経て4台帳を撤去確定する", async () => {
@@ -39,20 +42,28 @@ test("感謝・原資・景品・交換申請を全件保全し、人の承認�
     .bind(reviewer.accountId)
     .run()
   for (let id = 1; id <= 11; id++) {
-    await database.prepare(`INSERT INTO thanks_messages
+    await database
+      .prepare(`INSERT INTO thanks_messages
       (id,sender_employee_id,recipient_employee_id,message,points,created_at)
       VALUES (?1,?2,?3,?4,0,'2026-01-01T00:00:00.000Z')`)
-      .bind(id, creatorPerson.employeeId, reviewer.employeeId, `Thanks ${id}`).run()
+      .bind(id, creatorPerson.employeeId, reviewer.employeeId, `Thanks ${id}`)
+      .run()
   }
-  await database.prepare(`INSERT INTO thanks_point_budgets
+  await database
+    .prepare(`INSERT INTO thanks_point_budgets
     (id,employee_id,period,granted_points,consumed_points,created_at)
-    VALUES (1,?1,'2026-01',100,0,'2026-01-01T00:00:00.000Z')`).bind(creatorPerson.employeeId).run()
+    VALUES (1,?1,'2026-01',100,0,'2026-01-01T00:00:00.000Z')`)
+    .bind(creatorPerson.employeeId)
+    .run()
   await database.exec(`INSERT INTO thanks_rewards
     (id,name,point_cost,is_active,stock,created_at)
     VALUES (1,'Reward',10,1,5,'2026-01-01T00:00:00.000Z')`)
-  await database.prepare(`INSERT INTO thanks_redemptions
+  await database
+    .prepare(`INSERT INTO thanks_redemptions
     (id,employee_id,reward_id,point_cost,status,created_at,decided_at,decider_id)
-    VALUES (1,?1,1,10,'pending','2026-01-02T00:00:00.000Z',NULL,NULL)`).bind(creatorPerson.employeeId).run()
+    VALUES (1,?1,1,10,'pending','2026-01-02T00:00:00.000Z',NULL,NULL)`)
+    .bind(creatorPerson.employeeId)
+    .run()
   const at = new Date()
   const token = await tokenFor(creator)
   const stepUpToken = "e".repeat(64)
@@ -80,12 +91,13 @@ test("感謝・原資・景品・交換申請を全件保全し、人の承認�
     )
   const freezeId = crypto.randomUUID()
   expect(
-    (await post("/thanks/record-source-freezes", freezeId, { reason: "Preserve thanks" }))
-      .status,
+    (await post("/thanks/record-source-freezes", freezeId, { reason: "Preserve thanks" })).status,
   ).toBe(201)
   expect(
-    await database.prepare("SELECT count(*) AS n FROM system_procedure_definitions WHERE key=?1")
-      .bind(definition.key).first<number>("n"),
+    await database
+      .prepare("SELECT count(*) AS n FROM system_procedure_definitions WHERE key=?1")
+      .bind(definition.key)
+      .first<number>("n"),
   ).toBe(1)
   await expect(
     database.prepare("UPDATE thanks_messages SET message='Must not change' WHERE id=1").run(),
@@ -99,15 +111,16 @@ test("感謝・原資・景品・交換申請を全件保全し、人の承認�
   await expect(
     database.prepare("UPDATE thanks_redemptions SET status='rejected' WHERE id=1").run(),
   ).rejects.toThrow("thanks_record_source_frozen")
-  const sourceRecords: ReadonlyArray<Readonly<{ recordKind: ThanksRecordKind; recordId: string }>> = [
-    ...Array.from({ length: 11 }, (_, index) => ({
-      recordKind: "thanks-message-record" as const,
-      recordId: String(index + 1),
-    })),
-    { recordKind: "thanks-point-budget-record", recordId: "1" },
-    { recordKind: "thanks-reward-record", recordId: "1" },
-    { recordKind: "thanks-redemption-record", recordId: "1" },
-  ]
+  const sourceRecords: ReadonlyArray<Readonly<{ recordKind: ThanksRecordKind; recordId: string }>> =
+    [
+      ...Array.from({ length: 11 }, (_, index) => ({
+        recordKind: "thanks-message-record" as const,
+        recordId: String(index + 1),
+      })),
+      { recordKind: "thanks-point-budget-record", recordId: "1" },
+      { recordKind: "thanks-reward-record", recordId: "1" },
+      { recordKind: "thanks-redemption-record", recordId: "1" },
+    ]
   const mappings: Array<{
     recordKind: ThanksRecordKind
     sourceRecordId: string
@@ -124,36 +137,53 @@ test("感謝・原資・景品・交換申請を全件保全し、人の承認�
           ...conditions,
           disclosure: {
             reason: "Archive verification",
-            grants: [{
-              accountId: creator,
-              actions: ["read", "export"],
-              purposes: ["archive"],
-              validFrom: at.toISOString(),
-              validUntil: null,
-            }],
+            grants: [
+              {
+                accountId: creator,
+                actions: ["read", "export"],
+                purposes: ["archive"],
+                validFrom: at.toISOString(),
+                validUntil: null,
+              },
+            ],
           },
         },
       },
     })
     if (submitted.status !== 201) throw new Error(await submitted.text())
-    const record = z.object({ number: z.number(), record_id: z.string() }).parse(await submitted.json())
-    const proposal = await new SystemD1ProposalAdapter({ env: { DB: database } }).findByNumber(record.number)
-    if (proposal === null || proposal instanceof Error) throw new Error("missing preservation proposal")
-    expect((await apiRequest(`${path}/${record.number}/approve`, {
-      method: "POST", accountId: reviewer.accountId,
-      body: {
-        decision_target: {
-          proposal_version: proposal.version,
-          proposal_digest: proposal.digest,
-          task_key: proposal.currentTaskKey,
-          task_round: proposal.currentTaskRound,
-        },
-        comment: "Reviewed original",
-      },
-    })).status).toBe(200)
-    expect((await apiRequest(`${path}/${record.number}/execute`, {
-      method: "POST", body: { proposal_digest: proposal.digest },
-    })).status).toBe(200)
+    const record = z
+      .object({ number: z.number(), record_id: z.string() })
+      .parse(await submitted.json())
+    const proposal = await new SystemD1ProposalAdapter({ env: { DB: database } }).findByNumber(
+      record.number,
+    )
+    if (proposal === null || proposal instanceof Error)
+      throw new Error("missing preservation proposal")
+    expect(
+      (
+        await apiRequest(`${path}/${record.number}/approve`, {
+          method: "POST",
+          accountId: reviewer.accountId,
+          body: {
+            decision_target: {
+              proposal_version: proposal.version,
+              proposal_digest: proposal.digest,
+              task_key: proposal.currentTaskKey,
+              task_round: proposal.currentTaskRound,
+            },
+            comment: "Reviewed original",
+          },
+        })
+      ).status,
+    ).toBe(200)
+    expect(
+      (
+        await apiRequest(`${path}/${record.number}/execute`, {
+          method: "POST",
+          body: { proposal_digest: proposal.digest },
+        })
+      ).status,
+    ).toBe(200)
     mappings.push({
       recordKind: sourceRecord.recordKind,
       sourceRecordId: sourceRecord.recordId,
@@ -162,26 +192,38 @@ test("感謝・原資・景品・交換申請を全件保全し、人の承認�
   }
   const sourcePath = `/thanks/record-source-freezes/${freezeId}`
   const planId = crypto.randomUUID()
-  const thanksMappings = mappings.filter((mapping) => mapping.recordKind === "thanks-message-record")
+  const thanksMappings = mappings.filter(
+    (mapping) => mapping.recordKind === "thanks-message-record",
+  )
   const coverageRecords = (records: typeof mappings) =>
     records.map(({ sourceRecordId, preservedRecordId }) => ({ sourceRecordId, preservedRecordId }))
   const firstCoverage = await post(`${sourcePath}/coverage-pages`, crypto.randomUUID(), {
-    purpose: "archive", recordKind: "thanks-message-record", records: coverageRecords(thanksMappings.slice(0, 10)),
+    purpose: "archive",
+    recordKind: "thanks-message-record",
+    records: coverageRecords(thanksMappings.slice(0, 10)),
   })
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
-    sequence: 1, nextCursor: "10", recordCount: 10,
+    sequence: 1,
+    nextCursor: "10",
+    recordCount: 10,
   })
-  expect((await post(`${sourcePath}/retirement-plans`, planId, { purpose: "archive" })).status).toBe(503)
+  expect(
+    (await post(`${sourcePath}/retirement-plans`, planId, { purpose: "archive" })).status,
+  ).toBe(503)
   const lastCoverage = await post(`${sourcePath}/coverage-pages`, crypto.randomUUID(), {
-    purpose: "archive", recordKind: "thanks-message-record", records: coverageRecords(thanksMappings.slice(10)),
+    purpose: "archive",
+    recordKind: "thanks-message-record",
+    records: coverageRecords(thanksMappings.slice(10)),
   })
   if (lastCoverage.status !== 200) throw new Error(await lastCoverage.text())
   expect(await lastCoverage.json()).toMatchObject({ sequence: 2, nextCursor: null, recordCount: 1 })
   for (const recordKind of thanksRecordKinds.slice(1)) {
     const records = mappings.filter((mapping) => mapping.recordKind === recordKind)
     const covered = await post(`${sourcePath}/coverage-pages`, crypto.randomUUID(), {
-      purpose: "archive", recordKind, records: coverageRecords(records),
+      purpose: "archive",
+      recordKind,
+      records: coverageRecords(records),
     })
     if (covered.status !== 200) throw new Error(await covered.text())
     expect(await covered.json()).toMatchObject({ sequence: 1, nextCursor: null, recordCount: 1 })
@@ -251,9 +293,15 @@ test("感謝・原資・景品・交換申請を全件保全し、人の承認�
   expect(
     await database.prepare("SELECT count(*) AS n FROM thanks_messages").first<number>("n"),
   ).toBe(11)
-  expect(await database.prepare("SELECT count(*) AS n FROM thanks_point_budgets").first<number>("n")).toBe(1)
-  expect(await database.prepare("SELECT count(*) AS n FROM thanks_rewards").first<number>("n")).toBe(1)
-  expect(await database.prepare("SELECT count(*) AS n FROM thanks_redemptions").first<number>("n")).toBe(1)
+  expect(
+    await database.prepare("SELECT count(*) AS n FROM thanks_point_budgets").first<number>("n"),
+  ).toBe(1)
+  expect(
+    await database.prepare("SELECT count(*) AS n FROM thanks_rewards").first<number>("n"),
+  ).toBe(1)
+  expect(
+    await database.prepare("SELECT count(*) AS n FROM thanks_redemptions").first<number>("n"),
+  ).toBe(1)
   expect(
     await database
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")

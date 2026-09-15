@@ -2,7 +2,7 @@ import type { ThanksContext } from "@/contexts/thanks/configuration/thanks-conte
 import type { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
 import { CaptureThanksRecordAdapter } from "@/contexts/thanks/infrastructure/adapters/capture-thanks-record.adapter"
 import { ThanksError } from "@/contexts/thanks/domain/errors"
-import { thanksRecordKindSchema } from "@/contexts/thanks/domain/thanks-record-kind"
+import { thanksRecordKindSchema } from "@/contexts/thanks/domain/definitions/thanks-record-kind.definition"
 
 type Context = ThanksContext & Readonly<{ sourceNamespace: string }>
 
@@ -20,8 +20,7 @@ export class RevalidateThanksRecordSourceAdapter {
       return new ThanksError("forbidden", "record source does not belong to this thanks registry")
 
     const recordKind = thanksRecordKindSchema.safeParse(source.props.recordKind)
-    if (!recordKind.success)
-      return new ThanksError("forbidden", "invalid thanks record kind")
+    if (!recordKind.success) return new ThanksError("forbidden", "invalid thanks record kind")
     const current = await new CaptureThanksRecordAdapter(this.c).prepare({
       recordKind: recordKind.data,
       recordId: source.props.recordId,
@@ -32,10 +31,7 @@ export class RevalidateThanksRecordSourceAdapter {
       !source.matchesSource(current.source) ||
       Date.parse(source.props.capturedAt) > Date.parse(current.source.props.capturedAt)
     )
-      return new ThanksError(
-        "thanks_conflict",
-        "thanks record differs from preservation proposal",
-      )
+      return new ThanksError("thanks_conflict", "thanks record differs from preservation proposal")
 
     return Object.freeze({
       source,

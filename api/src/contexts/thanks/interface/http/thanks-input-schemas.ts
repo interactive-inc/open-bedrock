@@ -1,4 +1,4 @@
-import { thanksRecordKindSchema } from "@/contexts/thanks/domain/thanks-record-kind"
+import { thanksRecordKindSchema } from "@/contexts/thanks/domain/definitions/thanks-record-kind.definition"
 import { z } from "zod"
 
 export const thanksRecordRouteSchema = z.strictObject({

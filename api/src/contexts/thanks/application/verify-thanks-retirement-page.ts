@@ -10,7 +10,7 @@ import { RecordRetirementVerificationPlanRepository } from "@system/infrastructu
 import { RecordRetirementVerificationReceiptRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
 import { RecordRetirementVerificationReceiptEntity } from "@system/domain/entities/record-retirement-verification-receipt.entity"
 import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
-import { thanksRecordKinds } from "@/contexts/thanks/domain/thanks-record-kind"
+import { thanksRecordKinds } from "@/contexts/thanks/domain/definitions/thanks-record-kind.definition"
 
 type Context = ConstructorParameters<typeof PrepareThanksRetirementPageAdapter>[0]
 
@@ -48,9 +48,7 @@ export class VerifyThanksRetirementPage {
       plan.snapshot.capability.revision !== 1 ||
       JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(thanksRecordKinds)
     )
-      return new ThanksRetirementConflictError(
-        "retirement plan unavailable or capability changed",
-      )
+      return new ThanksRetirementConflictError("retirement plan unavailable or capability changed")
     const repository = new RecordRetirementVerificationReceiptRepository(context)
     const existing = await repository.find(command.id)
     if (existing instanceof Error) return existing

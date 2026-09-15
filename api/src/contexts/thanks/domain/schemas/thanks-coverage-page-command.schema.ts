@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { thanksRecordKindSchema } from "@/contexts/thanks/domain/thanks-record-kind"
+import { thanksRecordKindSchema } from "@/contexts/thanks/domain/definitions/thanks-record-kind.definition"
 
 export const thanksCoveragePageCommandSchema = z.strictObject({
   id: z.uuid(),
