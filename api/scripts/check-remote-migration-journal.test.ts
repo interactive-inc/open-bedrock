@@ -21,6 +21,7 @@ function check(props: {
   const directory = mkdtempSync(join(tmpdir(), "migration-preflight-"))
   try {
     mkdirSync(join(directory, "bin"))
+    writeFileSync(join(directory, "bin", "bunx"), "#!/bin/sh\nexit 99\n", { mode: 0o755 })
     mkdirSync(join(directory, "one"))
     mkdirSync(join(directory, "two"))
     writeFileSync(join(directory, "one", "0001_initial.sql"), "SELECT 1;")
@@ -62,12 +63,13 @@ function check(props: {
         )
     }
     writeFileSync(
-      join(directory, "bin", "bunx"),
-      `#!/usr/bin/env node
+      join(directory, "bin", "node"),
+      `#!${process.execPath}
 const args=process.argv.slice(2);
-if(args[0]!=='wrangler'||args[1]!=='d1'||args[2]!=='execute'||!args.includes('--remote'))process.exit(20);
+if(!args[0].endsWith('/wrangler/bin/wrangler.js')||args[1]!=='d1'||args[2]!=='execute'||!args.includes('--remote'))process.exit(20);
 const plan=JSON.parse(process.env.PREFLIGHT_TEST_PLAN);
 const query=args[args.indexOf('--command')+1];
+if(args.length!==10||!query.startsWith('SELECT '))process.exit(21);
 if(query.startsWith('SELECT type, name, tbl_name, sql')){console.log(JSON.stringify([{success:true,results:JSON.parse(process.env.PREFLIGHT_SCHEMA)}]));process.exit(0)}
 if(query.includes('sqlite_master')){console.log(JSON.stringify([{success:true,results:process.env.PREFLIGHT_POPULATED==='true'?[{name:'existing_data'}]:[]}]));process.exit(0)}
 const rows=plan[args[3]];

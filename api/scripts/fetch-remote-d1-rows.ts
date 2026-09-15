@@ -1,4 +1,6 @@
 import { spawn } from "node:child_process"
+import { createRequire } from "node:module"
+import { dirname, join } from "node:path"
 
 /** 配備前の読み取りを実行し、照会失敗を空の結果と区別する。 */
 export async function fetchRemoteD1Rows(props: {
@@ -8,9 +10,12 @@ export async function fetchRemoteD1Rows(props: {
   allowMissingJournal?: true
 }): Promise<ReadonlyArray<unknown> | null> {
   const child = spawn(
-    "bunx",
+    "node",
     [
-      "wrangler",
+      join(
+        dirname(createRequire(import.meta.url).resolve("wrangler/package.json")),
+        "bin/wrangler.js",
+      ),
       "d1",
       "execute",
       props.binding,
