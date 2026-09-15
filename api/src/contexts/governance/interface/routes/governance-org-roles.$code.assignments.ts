@@ -1,4 +1,6 @@
 import { AssignGovernanceOrgRole } from "@/contexts/governance/application/assign-governance-org-role"
+import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
+import { CompanyGovernanceRoleAssignmentWriteAdapter } from "@/contexts/governance/infrastructure/adapters/company-governance-role-assignment-write.adapter"
 import { prepareGovernanceAudit } from "@/api/http/audit/prepare-governance-audit"
 import { factory } from "@/api/http/factory"
 import { ApplicationError, ValidationError } from "@/lib/errors"
@@ -37,8 +39,42 @@ export const POST = factory.createHandlers(verifyBearer, zValidator("json", requ
     )
   }
   const result = await new AssignGovernanceOrgRole({
-    context: c,
-    prepareAudit: (audit) => prepareGovernanceAudit({ c, ...audit }),
+    assign: (props) =>
+      new CompanyGovernanceRoleAssignmentWriteAdapter({
+        actor: CompanyActorValue.restore({
+          accountId: String(props.session.accountId),
+          employeeId: String(props.session.employeeId),
+          organizationIds: ["organization:default"],
+          capabilities: ["company:write"],
+        }),
+        database: c.env.DB,
+        auditStatements: prepareGovernanceAudit({
+          c,
+          session: props.session,
+          action: "governance.org_role.assigned",
+          targetType: "governance_org_role",
+          targetId: props.responsibilityCode,
+          metadata: {
+            employee_code: props.employeeCode,
+            department_code: props.departmentCode,
+            starts_on: props.startsOn,
+            ends_on: props.endsOn,
+          },
+        }),
+      }).assign({
+        organizationId: "organization:default",
+        commandId: props.commandId,
+        expectedRevision: props.expectedRevision,
+        responsibilityCode: props.responsibilityCode,
+        responsibilityName: props.responsibilityName,
+        cardinality: props.cardinality,
+        employeeCode: props.employeeCode,
+        departmentCode: props.departmentCode,
+        startsOn: props.startsOn,
+        endsOn: props.endsOn,
+        sourceDocumentCode: props.sourceDocumentCode,
+        recordedAt: new Date(c.env.NOW ?? Date.now()).getTime(),
+      }),
   }).execute({
     session,
     commandId,

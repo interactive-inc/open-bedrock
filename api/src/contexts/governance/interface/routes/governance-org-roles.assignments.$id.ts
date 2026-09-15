@@ -1,4 +1,6 @@
 import { RevokeGovernanceOrgRole } from "@/contexts/governance/application/revoke-governance-org-role"
+import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
+import { CompanyGovernanceRoleAssignmentWriteAdapter } from "@/contexts/governance/infrastructure/adapters/company-governance-role-assignment-write.adapter"
 import { prepareGovernanceAudit } from "@/api/http/audit/prepare-governance-audit"
 import { factory } from "@/api/http/factory"
 import { ApplicationError, ValidationError } from "@/lib/errors"
@@ -29,8 +31,30 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     )
   }
   const result = await new RevokeGovernanceOrgRole({
-    context: c,
-    prepareAudit: (audit) => prepareGovernanceAudit({ c, ...audit }),
+    revoke: (props) =>
+      new CompanyGovernanceRoleAssignmentWriteAdapter({
+        actor: CompanyActorValue.restore({
+          accountId: String(props.session.accountId),
+          employeeId: String(props.session.employeeId),
+          organizationIds: ["organization:default"],
+          capabilities: ["company:write"],
+        }),
+        database: c.env.DB,
+        auditStatements: prepareGovernanceAudit({
+          c,
+          session: props.session,
+          action: "governance.org_role.revoked",
+          targetType: "governance_org_role",
+          targetId: props.assignmentId,
+          metadata: { assignment_id: props.assignmentId },
+        }),
+      }).revoke({
+        organizationId: "organization:default",
+        commandId: props.commandId,
+        expectedRevision: props.expectedRevision,
+        assignmentId: props.assignmentId,
+        recordedAt: new Date(c.env.NOW ?? Date.now()).getTime(),
+      }),
   }).execute({ session, commandId, expectedRevision, assignmentId })
   if (result instanceof ApplicationError) throw toHttpException(result)
   if (result instanceof Error) throw result
