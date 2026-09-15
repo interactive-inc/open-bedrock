@@ -1,6 +1,7 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { CareerSheet } from "@/contexts/career/domain/entities/career-sheet.entity"
-import { UnexpectedError } from "@/lib/errors"
+import { isCareerRecordSourceFrozenError } from "@/contexts/career/infrastructure/repositories/lib/is-career-record-source-frozen-error"
+import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { CareerSheetRepository } from "@/contexts/career/infrastructure/repositories/career-sheet.repository"
@@ -33,6 +34,9 @@ export class UpdateMyCareerSheet {
     )
 
     if (updated instanceof Error) {
+      if (isCareerRecordSourceFrozenError(updated)) {
+        return new ConflictError("career writes are frozen", "record_source_frozen", { cause: updated })
+      }
       return new UnexpectedError("failed to update career sheet", { cause: updated })
     }
 

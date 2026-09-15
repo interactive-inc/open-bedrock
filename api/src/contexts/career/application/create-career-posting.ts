@@ -1,6 +1,7 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
-import { ForbiddenError, UnexpectedError } from "@/lib/errors"
+import { isCareerRecordSourceFrozenError } from "@/contexts/career/infrastructure/repositories/lib/is-career-record-source-frozen-error"
+import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
@@ -40,6 +41,9 @@ export class CreateCareerPosting {
     const created = await postingRepository.create(careerPosting)
 
     if (created instanceof Error) {
+      if (isCareerRecordSourceFrozenError(created)) {
+        return new ConflictError("career writes are frozen", "record_source_frozen", { cause: created })
+      }
       return new UnexpectedError("failed to create career posting", { cause: created })
     }
 

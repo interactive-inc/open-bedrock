@@ -1,5 +1,6 @@
-import { UnexpectedError } from "@/lib/errors"
+import { ConflictError, UnexpectedError } from "@/lib/errors"
 import { CareerSheetRepository } from "@/contexts/career/infrastructure/repositories/career-sheet.repository"
+import { isCareerRecordSourceFrozenError } from "@/contexts/career/infrastructure/repositories/lib/is-career-record-source-frozen-error"
 
 import { UpdateMyCareerSheet } from "@/contexts/career/application/update-my-career-sheet"
 import { careerSheets } from "@/contexts/career/infrastructure/schema/career"
@@ -70,6 +71,11 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     const deleted = await repository.deleteByEmployeeId(command.employeeId)
 
     if (deleted instanceof Error) {
+      if (isCareerRecordSourceFrozenError(deleted)) {
+        return new ConflictError("career writes are frozen", "record_source_frozen", {
+          cause: deleted,
+        })
+      }
       return new UnexpectedError("failed to delete career sheet", { cause: deleted })
     }
 
