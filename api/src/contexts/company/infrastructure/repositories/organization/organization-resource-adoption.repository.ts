@@ -8,6 +8,7 @@ import {
   type CompanyOperationError,
 } from "@/contexts/company/domain/errors"
 import { OrganizationResourceAdoptionSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/organization/organization-resource-adoption-snapshot.adapter"
+import type { OrganizationResourceAdoptionSnapshotValue } from "@/contexts/company/domain/values/organization-resource-adoption-snapshot.value"
 import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { validateCompanyOrganizationChange } from "@/contexts/company/domain/policies/company-organization.policy"
@@ -49,7 +50,13 @@ export class OrganizationResourceAdoptionRepository {
     try {
       const replay = await this.replay(command.props.commandId, fingerprint)
       if (replay !== null) return replay
-      const applied = await this.apply(command, fingerprint).catch((cause: unknown) =>
+      const snapshot = await new OrganizationResourceAdoptionSnapshotAdapter(this.c.env.DB).find(
+        command.props.organizationUnitId,
+      )
+      if (snapshot instanceof Error) return this.unavailable(snapshot)
+      if (snapshot === null)
+        return new CompanyNotFoundError("組織が見つかりません", "organization_unit_not_found")
+      const applied = await this.apply(command, fingerprint, snapshot).catch((cause: unknown) =>
         this.unavailable(cause),
       )
       if (!(applied instanceof Error)) return applied
@@ -71,6 +78,7 @@ export class OrganizationResourceAdoptionRepository {
   private async apply(
     command: OrganizationResourceAdoptionEntity,
     fingerprint: string,
+    snapshot: OrganizationResourceAdoptionSnapshotValue,
   ): Promise<OrganizationResourceAdoptionResult | CompanyOperationError> {
     const today = resolveCompanyBusinessDate({
       now: new Date(command.props.recordedAt).toISOString(),
@@ -79,10 +87,6 @@ export class OrganizationResourceAdoptionRepository {
     if (today instanceof Error) return this.unavailable(today)
     if (today !== command.props.observedOn) return this.conflict()
     const snapshots = new OrganizationResourceAdoptionSnapshotAdapter(this.c.env.DB)
-    const snapshot = await snapshots.find(command.props.organizationUnitId)
-    if (snapshot instanceof Error) return this.unavailable(snapshot)
-    if (snapshot === null)
-      return new CompanyNotFoundError("組織が見つかりません", "organization_unit_not_found")
     const changes = command.toChanges(snapshot)
     if (changes instanceof Error) return changes
     if (await this.hasResources(command.props.organizationUnitId, changes)) return this.conflict()

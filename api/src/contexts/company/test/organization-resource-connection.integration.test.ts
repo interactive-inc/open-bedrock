@@ -538,6 +538,18 @@ describe("organization resources and the company period ledger", () => {
         .prepare("SELECT count(*) AS count FROM company_organization_resource_adoptions")
         .first<number>("count"),
     ).toBe(1)
+
+    const other = await fixture()
+    const otherInput = await other.preview(other.root.id)
+    const conflicting = await Promise.all([
+      other.adopt(otherInput, "first-adoption"),
+      other.adopt(otherInput, "second-adoption"),
+    ])
+    expect(
+      conflicting
+        .map((response) => Number(response.status))
+        .toSorted((left, right) => left - right),
+    ).toEqual([201, 409])
   })
 
   test("確認後から保存直前までに台帳が変わった移行を拒否する", async () => {

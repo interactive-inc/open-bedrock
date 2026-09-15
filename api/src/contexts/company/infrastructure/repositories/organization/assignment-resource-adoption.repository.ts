@@ -2,6 +2,7 @@ import type { CompanyContext } from "@/contexts/company/configuration/company-co
 import type { AssignmentResourceAdoptionEntity } from "@/contexts/company/domain/entities/assignment-resource-adoption.entity"
 import { OrganizationWorkforceChangeEntity } from "@/contexts/company/domain/entities/organization-workforce-change.entity"
 import { AssignmentResourceAdoptionSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/organization/assignment-resource-adoption-snapshot.adapter"
+import type { AssignmentResourceAdoptionSnapshotValue } from "@/contexts/company/domain/values/assignment-resource-adoption-snapshot.value"
 import { AssignmentReportingAdoptionChangeValue } from "@/contexts/company/domain/values/assignment-reporting-adoption-change.value"
 import { CompanyReportingRelationTimelineValue } from "@/contexts/company/domain/values/company-reporting-relation-timeline.value"
 import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
@@ -55,7 +56,13 @@ export class AssignmentResourceAdoptionRepository {
     try {
       const replay = await this.replay(command.props.commandId, fingerprint)
       if (replay !== null) return replay
-      const applied = await this.apply(command, fingerprint).catch((cause: unknown) => {
+      const snapshot = await new AssignmentResourceAdoptionSnapshotAdapter(this.c.env.DB).find(
+        command.props.employeeId,
+      )
+      if (snapshot instanceof Error) return this.unavailable(snapshot)
+      if (snapshot === null)
+        return new CompanyNotFoundError("従業員が見つかりません", "employee_not_found")
+      const applied = await this.apply(command, fingerprint, snapshot).catch((cause: unknown) => {
         if (
           cause instanceof Error &&
           /company (?:reporting employment|personnel reporting (?:owner|assignment))/.test(
@@ -85,6 +92,7 @@ export class AssignmentResourceAdoptionRepository {
   private async apply(
     command: AssignmentResourceAdoptionEntity,
     fingerprint: string,
+    snapshot: AssignmentResourceAdoptionSnapshotValue,
   ): Promise<AssignmentResourceAdoptionResult | CompanyOperationError> {
     const today = resolveCompanyBusinessDate({
       now: new Date(command.props.recordedAt).toISOString(),
@@ -94,10 +102,6 @@ export class AssignmentResourceAdoptionRepository {
     if (today !== command.props.observedOn) return this.conflict()
     const database = this.c.env.DB
     const snapshots = new AssignmentResourceAdoptionSnapshotAdapter(database)
-    const snapshot = await snapshots.find(command.props.employeeId)
-    if (snapshot instanceof Error) return this.unavailable(snapshot)
-    if (snapshot === null)
-      return new CompanyNotFoundError("従業員が見つかりません", "employee_not_found")
     const assignments = await command.toAssignments(snapshot)
     if (assignments instanceof CompanyOperationError) return assignments
     if (assignments instanceof Error) return this.invalid(assignments)
