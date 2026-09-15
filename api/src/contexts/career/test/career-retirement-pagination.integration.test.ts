@@ -10,7 +10,10 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { GET as preservedDossier } from "@system/interface/routes/system.preserved-records.$recordId.dossier"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
-import { careerRecordKinds, type CareerRecordKind } from "@/contexts/career/domain/career-record-kind"
+import {
+  careerRecordKinds,
+  type CareerRecordKind,
+} from "@/contexts/career/domain/definitions/career-record-kind.definition"
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("キャリア公募・応募・シート記録を全件保全し、人の承認を経て3台帳を撤去確定する", async () => {
@@ -83,51 +86,76 @@ test("キャリア公募・応募・シート記録を全件保全し、人の�
     )
   const freezeId = crypto.randomUUID()
   expect(
-    (await post("/career/record-source-freezes", freezeId, { reason: "Preserve career" }))
-      .status,
+    (await post("/career/record-source-freezes", freezeId, { reason: "Preserve career" })).status,
   ).toBe(201)
   expect(
-    await database.prepare("SELECT count(*) AS n FROM system_procedure_definitions WHERE key=?1")
-      .bind(definition.key).first<number>("n"),
+    await database
+      .prepare("SELECT count(*) AS n FROM system_procedure_definitions WHERE key=?1")
+      .bind(definition.key)
+      .first<number>("n"),
   ).toBe(1)
   await expect(
     database.prepare("UPDATE career_postings SET title='Must not change' WHERE id=1").run(),
   ).rejects.toThrow("career_record_source_frozen")
   await expect(
-    database.prepare(`INSERT INTO career_applications
+    database
+      .prepare(`INSERT INTO career_applications
       (posting_id,applicant_id,message,status) VALUES (2,?1,NULL,'applied')`)
-      .bind(creatorPerson.employeeId).run(),
+      .bind(creatorPerson.employeeId)
+      .run(),
   ).rejects.toThrow("career_record_source_frozen")
   const blockedWrites = [
     await apiRequest("/career/career-postings", {
       method: "POST",
-      body: { title: "Blocked", dept_id: null, dept_name: null, required_skills: null, status: "open" },
+      body: {
+        title: "Blocked",
+        dept_id: null,
+        dept_name: null,
+        required_skills: null,
+        status: "open",
+      },
     }),
     await apiRequest("/career/career-postings/1", {
       method: "PUT",
-      body: { title: "Must not change", dept_id: null, dept_name: null, required_skills: null, status: "open" },
+      body: {
+        title: "Must not change",
+        dept_id: null,
+        dept_name: null,
+        required_skills: null,
+        status: "open",
+      },
     }),
     await apiRequest("/career/career-postings/11", { method: "DELETE" }),
-    await apiRequest("/career/career-postings/2/apply", { method: "POST", body: { message: "Blocked" } }),
-    await apiRequest("/career/career-applications/1", { method: "PUT", body: { message: "Blocked" } }),
+    await apiRequest("/career/career-postings/2/apply", {
+      method: "POST",
+      body: { message: "Blocked" },
+    }),
+    await apiRequest("/career/career-applications/1", {
+      method: "PUT",
+      body: { message: "Blocked" },
+    }),
     await apiRequest("/career/career-applications/1", { method: "DELETE" }),
     await apiRequest("/career/career-sheets/me", {
-      method: "PUT", body: { goals_text: "Blocked", strengths_text: null },
+      method: "PUT",
+      body: { goals_text: "Blocked", strengths_text: null },
     }),
     await apiRequest("/career/career-sheets/me", { method: "DELETE" }),
   ]
-  expect(blockedWrites.map((response) => response.status)).toEqual([409,409,409,409,409,409,409,409])
+  expect(blockedWrites.map((response) => response.status)).toEqual([
+    409, 409, 409, 409, 409, 409, 409, 409,
+  ])
   for (const response of blockedWrites) {
     expect(await response.json()).toMatchObject({ code: "record_source_frozen" })
   }
-  const sourceRecords: ReadonlyArray<Readonly<{ recordKind: CareerRecordKind; recordId: string }>> = [
-    ...Array.from({ length: 11 }, (_, index) => ({
-      recordKind: "career-posting-record" as const,
-      recordId: String(index + 1),
-    })),
-    { recordKind: "career-application-record", recordId: "1" },
-    { recordKind: "career-sheet-record", recordId: creatorPerson.employeeId },
-  ]
+  const sourceRecords: ReadonlyArray<Readonly<{ recordKind: CareerRecordKind; recordId: string }>> =
+    [
+      ...Array.from({ length: 11 }, (_, index) => ({
+        recordKind: "career-posting-record" as const,
+        recordId: String(index + 1),
+      })),
+      { recordKind: "career-application-record", recordId: "1" },
+      { recordKind: "career-sheet-record", recordId: creatorPerson.employeeId },
+    ]
   const mappings: Array<{
     recordKind: CareerRecordKind
     sourceRecordId: string
@@ -144,36 +172,53 @@ test("キャリア公募・応募・シート記録を全件保全し、人の�
           ...conditions,
           disclosure: {
             reason: "Archive verification",
-            grants: [{
-              accountId: creator,
-              actions: ["read", "export"],
-              purposes: ["archive"],
-              validFrom: at.toISOString(),
-              validUntil: null,
-            }],
+            grants: [
+              {
+                accountId: creator,
+                actions: ["read", "export"],
+                purposes: ["archive"],
+                validFrom: at.toISOString(),
+                validUntil: null,
+              },
+            ],
           },
         },
       },
     })
     if (submitted.status !== 201) throw new Error(await submitted.text())
-    const record = z.object({ number: z.number(), record_id: z.string() }).parse(await submitted.json())
-    const proposal = await new SystemD1ProposalAdapter({ env: { DB: database } }).findByNumber(record.number)
-    if (proposal === null || proposal instanceof Error) throw new Error("missing preservation proposal")
-    expect((await apiRequest(`${path}/${record.number}/approve`, {
-      method: "POST", accountId: reviewer.accountId,
-      body: {
-        decision_target: {
-          proposal_version: proposal.version,
-          proposal_digest: proposal.digest,
-          task_key: proposal.currentTaskKey,
-          task_round: proposal.currentTaskRound,
-        },
-        comment: "Reviewed original",
-      },
-    })).status).toBe(200)
-    expect((await apiRequest(`${path}/${record.number}/execute`, {
-      method: "POST", body: { proposal_digest: proposal.digest },
-    })).status).toBe(200)
+    const record = z
+      .object({ number: z.number(), record_id: z.string() })
+      .parse(await submitted.json())
+    const proposal = await new SystemD1ProposalAdapter({ env: { DB: database } }).findByNumber(
+      record.number,
+    )
+    if (proposal === null || proposal instanceof Error)
+      throw new Error("missing preservation proposal")
+    expect(
+      (
+        await apiRequest(`${path}/${record.number}/approve`, {
+          method: "POST",
+          accountId: reviewer.accountId,
+          body: {
+            decision_target: {
+              proposal_version: proposal.version,
+              proposal_digest: proposal.digest,
+              task_key: proposal.currentTaskKey,
+              task_round: proposal.currentTaskRound,
+            },
+            comment: "Reviewed original",
+          },
+        })
+      ).status,
+    ).toBe(200)
+    expect(
+      (
+        await apiRequest(`${path}/${record.number}/execute`, {
+          method: "POST",
+          body: { proposal_digest: proposal.digest },
+        })
+      ).status,
+    ).toBe(200)
     mappings.push({
       recordKind: sourceRecord.recordKind,
       sourceRecordId: sourceRecord.recordId,
@@ -182,26 +227,38 @@ test("キャリア公募・応募・シート記録を全件保全し、人の�
   }
   const sourcePath = `/career/record-source-freezes/${freezeId}`
   const planId = crypto.randomUUID()
-  const postingMappings = mappings.filter((mapping) => mapping.recordKind === "career-posting-record")
+  const postingMappings = mappings.filter(
+    (mapping) => mapping.recordKind === "career-posting-record",
+  )
   const coverageRecords = (records: typeof mappings) =>
     records.map(({ sourceRecordId, preservedRecordId }) => ({ sourceRecordId, preservedRecordId }))
   const firstCoverage = await post(`${sourcePath}/coverage-pages`, crypto.randomUUID(), {
-    purpose: "archive", recordKind: "career-posting-record", records: coverageRecords(postingMappings.slice(0, 10)),
+    purpose: "archive",
+    recordKind: "career-posting-record",
+    records: coverageRecords(postingMappings.slice(0, 10)),
   })
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
-    sequence: 1, nextCursor: "10", recordCount: 10,
+    sequence: 1,
+    nextCursor: "10",
+    recordCount: 10,
   })
-  expect((await post(`${sourcePath}/retirement-plans`, planId, { purpose: "archive" })).status).toBe(503)
+  expect(
+    (await post(`${sourcePath}/retirement-plans`, planId, { purpose: "archive" })).status,
+  ).toBe(503)
   const lastCoverage = await post(`${sourcePath}/coverage-pages`, crypto.randomUUID(), {
-    purpose: "archive", recordKind: "career-posting-record", records: coverageRecords(postingMappings.slice(10)),
+    purpose: "archive",
+    recordKind: "career-posting-record",
+    records: coverageRecords(postingMappings.slice(10)),
   })
   if (lastCoverage.status !== 200) throw new Error(await lastCoverage.text())
   expect(await lastCoverage.json()).toMatchObject({ sequence: 2, nextCursor: null, recordCount: 1 })
   for (const recordKind of careerRecordKinds.slice(1)) {
     const records = mappings.filter((mapping) => mapping.recordKind === recordKind)
     const covered = await post(`${sourcePath}/coverage-pages`, crypto.randomUUID(), {
-      purpose: "archive", recordKind, records: coverageRecords(records),
+      purpose: "archive",
+      recordKind,
+      records: coverageRecords(records),
     })
     if (covered.status !== 200) throw new Error(await covered.text())
     expect(await covered.json()).toMatchObject({ sequence: 1, nextCursor: null, recordCount: 1 })
@@ -271,8 +328,12 @@ test("キャリア公募・応募・シート記録を全件保全し、人の�
   expect(
     await database.prepare("SELECT count(*) AS n FROM career_postings").first<number>("n"),
   ).toBe(11)
-  expect(await database.prepare("SELECT count(*) AS n FROM career_applications").first<number>("n")).toBe(1)
-  expect(await database.prepare("SELECT count(*) AS n FROM career_sheets").first<number>("n")).toBe(1)
+  expect(
+    await database.prepare("SELECT count(*) AS n FROM career_applications").first<number>("n"),
+  ).toBe(1)
+  expect(await database.prepare("SELECT count(*) AS n FROM career_sheets").first<number>("n")).toBe(
+    1,
+  )
   expect(
     await database
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")

@@ -1,4 +1,4 @@
-import { careerRecordKindSchema } from "@/contexts/career/domain/career-record-kind"
+import { careerRecordKindSchema } from "@/contexts/career/domain/definitions/career-record-kind.definition"
 import { z } from "zod"
 
 export const careerRecordRouteSchema = z.strictObject({

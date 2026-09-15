@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { careerRecordKindSchema } from "@/contexts/career/domain/career-record-kind"
+import { careerRecordKindSchema } from "@/contexts/career/domain/definitions/career-record-kind.definition"
 
 export const careerCoveragePageCommandSchema = z.strictObject({
   id: z.uuid(),
