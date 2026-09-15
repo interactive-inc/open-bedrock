@@ -4,6 +4,7 @@ import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { ResignationRepository } from "@/contexts/resignation/infrastructure/repositories/resignation.repository"
+import { isResignationRecordSourceFrozenError } from "@/contexts/resignation/infrastructure/repositories/lib/is-resignation-record-source-frozen-error"
 
 export type Command = {
   session: CompanySessionValue
@@ -46,6 +47,8 @@ export class AcceptResignation {
     })
 
     if (updated instanceof Error) {
+      if (isResignationRecordSourceFrozenError(updated))
+        return new ConflictError("resignation writes are frozen", "record_source_frozen", { cause: updated })
       return new UnexpectedError("failed to update resignation status", { cause: updated })
     }
 
