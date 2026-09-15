@@ -103,7 +103,10 @@ type Context = D1CompanyResourceRepositoryContext
 
 /** Company resource revisions の D1 永続化。 */
 export class D1CompanyResourceRepository implements CompanyResourceRepository {
-  constructor(private readonly c: Context) {}
+  constructor(
+    private readonly c: Context,
+    private readonly atomicStatements: ReadonlyArray<D1PreparedStatement> = [],
+  ) {}
 
   async findMany(query: CompanyResourceQuery): Promise<CompanyResourceReadResult> {
     if (
@@ -388,6 +391,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       ...organizationProjection.beforeWorkforce,
       ...projection,
       ...organizationProjection.statements,
+      ...this.atomicStatements,
       journal.commit,
     ]
 
@@ -567,20 +571,26 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
   private async findResourceConflict(
     change: CompanyResourceChangeEntity,
   ): Promise<Extract<CompanyResourceWriteResult, { kind: "resource_conflict" }> | null> {
+    const observed = new Map<string, number>()
     for (const resource of change.resources) {
-      const actualRevision =
-        (
-          await this.c
-            .prepare(
-              `SELECT revision FROM company_resource_heads
+      const key = `${resource.organizationId}\u0000${resource.type}\u0000${resource.id}`
+      let actualRevision = observed.get(key)
+      if (actualRevision === undefined) {
+        actualRevision =
+          (
+            await this.c
+              .prepare(
+                `SELECT revision FROM company_resource_heads
                WHERE organization_id = ? AND resource_type = ? AND resource_id = ?`,
-            )
-            .bind(resource.organizationId, resource.type, resource.id)
-            .first<{ revision: number }>()
-        )?.revision ?? 0
+              )
+              .bind(resource.organizationId, resource.type, resource.id)
+              .first<{ revision: number }>()
+          )?.revision ?? 0
+      }
       if (resource.revision !== actualRevision + 1) {
         return { kind: "resource_conflict", type: resource.type, id: resource.id, actualRevision }
       }
+      observed.set(key, resource.revision)
     }
     return null
   }

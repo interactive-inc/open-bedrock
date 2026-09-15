@@ -26,11 +26,25 @@ export class ApplyOrganizationChange {
   }
 
   async execute(change: Omit<CompanyResourceChangeProps, "actorAccountId">): Promise<Result> {
+    return this.apply(change, false)
+  }
+
+  /** 移行時に、同じ確定事実の連続した改訂を一つの会社版へ保存する。 */
+  async executeHistory(
+    change: Omit<CompanyResourceChangeProps, "actorAccountId">,
+  ): Promise<Result> {
+    return this.apply(change, true)
+  }
+
+  private async apply(
+    change: Omit<CompanyResourceChangeProps, "actorAccountId">,
+    historyBatch: boolean,
+  ): Promise<Result> {
     const organizationId = change.resources[0]?.organizationId ?? ""
-    const command = CompanyResourceChangeEntity.create({
-      ...change,
-      actorAccountId: this.c.actor.accountId,
-    })
+    const props = { ...change, actorAccountId: this.c.actor.accountId }
+    const command = historyBatch
+      ? CompanyResourceChangeEntity.createHistoryBatch(props)
+      : CompanyResourceChangeEntity.create(props)
     if (command instanceof CompanyResourceValidationError) {
       return { kind: "invalid", error: command }
     }
