@@ -1,3 +1,4 @@
+import { isTrainingRecordSourceFrozenError } from "@/contexts/training/infrastructure/repositories/lib/is-training-record-source-frozen-error"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { canCompleteEnrollment } from "@/contexts/training/domain/policies/enrollment-completion.policy"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -54,6 +55,8 @@ export class CompleteTrainingEnrollment {
     )
 
     if (completed instanceof Error) {
+      if (isTrainingRecordSourceFrozenError(completed))
+        return new ConflictError("training writes are frozen", "record_source_frozen", { cause: completed })
       return new UnexpectedError("failed to update training enrollment", { cause: completed })
     }
 
