@@ -3,6 +3,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
+import { isSurveyRecordSourceFrozenError } from "@/contexts/survey/infrastructure/repositories/lib/is-survey-record-source-frozen-error"
 import type { Survey } from "@/contexts/survey/domain/entities/survey.entity"
 
 export type Command = {
@@ -45,6 +46,9 @@ export class DeleteSurvey {
     const deleted = await surveyRepository.deleteWithResponses(current)
 
     if (deleted instanceof Error) {
+      if (isSurveyRecordSourceFrozenError(deleted)) {
+        return new ConflictError("survey writes are frozen", "record_source_frozen", { cause: deleted })
+      }
       return new UnexpectedError("failed to delete survey", { cause: deleted })
     }
 
