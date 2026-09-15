@@ -521,6 +521,89 @@ export const companyDefinitionResourceAdoptions = sqliteTable(
   ],
 )
 
+/** 外部業務台帳からCompany責務履歴へ接続した元記録を、改変不能な証跡として保持する。 */
+export const companyResponsibilitySourceAdoptions = sqliteTable(
+  "company_responsibility_source_adoptions",
+  {
+    organizationId: text("organization_id").notNull().default("organization:default"),
+    sourceContext: text("source_context").notNull(),
+    sourceKind: text("source_kind").notNull(),
+    sourceId: text("source_id").notNull(),
+    sourceVersion: text("source_version").notNull(),
+    commandId: text("command_id").notNull(),
+    resourceType: text("resource_type").notNull().default("responsibility-assignment"),
+    resourceId: text("resource_id").notNull(),
+    resourceRevision: integer("resource_revision").notNull(),
+    snapshotDigest: text("snapshot_digest").notNull(),
+    sourceJson: text("source_json").notNull(),
+    actorAccountId: text("actor_account_id")
+      .notNull()
+      .references(() => systemAccounts.id, { onDelete: "restrict" }),
+    reason: text("reason").notNull(),
+    expectedRevision: integer("expected_revision").notNull(),
+    organizationRevision: integer("organization_revision").notNull(),
+    recordedAt: integer("recorded_at").notNull(),
+  },
+  (table) => [
+    primaryKey({
+      columns: [
+        table.organizationId,
+        table.sourceContext,
+        table.sourceKind,
+        table.sourceId,
+        table.sourceVersion,
+      ],
+    }),
+    unique().on(table.organizationId, table.commandId),
+    foreignKey({
+      columns: [table.organizationId, table.commandId],
+      foreignColumns: [companyCommandReceipts.organizationId, companyCommandReceipts.commandId],
+    }).onDelete("restrict"),
+    foreignKey({
+      columns: [table.organizationId, table.resourceType, table.resourceId],
+      foreignColumns: [
+        companyResourceHeads.organizationId,
+        companyResourceHeads.resourceType,
+        companyResourceHeads.resourceId,
+      ],
+    }).onDelete("restrict"),
+    check(
+      "company_responsibility_source_adoption_organization",
+      sql`${table.organizationId} = 'organization:default'`,
+    ),
+    check(
+      "company_responsibility_source_adoption_identity",
+      sql`length(trim(${table.sourceContext})) BETWEEN 1 AND 100
+        AND length(trim(${table.sourceKind})) BETWEEN 1 AND 100
+        AND length(trim(${table.sourceId})) BETWEEN 1 AND 255
+        AND length(trim(${table.sourceVersion})) BETWEEN 1 AND 255`,
+    ),
+    check(
+      "company_responsibility_source_adoption_resource",
+      sql`${table.resourceType} = 'responsibility-assignment' AND ${table.resourceRevision} > 0`,
+    ),
+    check(
+      "company_responsibility_source_adoption_digest",
+      sql`length(${table.snapshotDigest}) = 64 AND ${table.snapshotDigest} NOT GLOB '*[^0-9a-f]*'`,
+    ),
+    check(
+      "company_responsibility_source_adoption_source",
+      sql`json_valid(${table.sourceJson}) AND json_type(${table.sourceJson}) = 'object'
+        AND length(CAST(${table.sourceJson} AS BLOB)) <= 750000`,
+    ),
+    check(
+      "company_responsibility_source_adoption_reason",
+      sql`length(trim(${table.reason})) BETWEEN 1 AND 2000`,
+    ),
+    check(
+      "company_responsibility_source_adoption_revision",
+      sql`${table.expectedRevision} >= 0
+        AND ${table.organizationRevision} = ${table.expectedRevision} + 1`,
+    ),
+    check("company_responsibility_source_adoption_time", sql`${table.recordedAt} >= 0`),
+  ],
+)
+
 /** 旧等級付与の元記録と、保全時の確認者・会社版。付与当時の判断者とは区別する。 */
 export const companyGradeAwardArchives = sqliteTable(
   "company_grade_award_archives",
@@ -569,6 +652,7 @@ export const companyGradeAwardArchives = sqliteTable(
 )
 
 export const companySchema = {
+  companyResponsibilitySourceAdoptions,
   companyGradeAwardArchives,
   companyDefinitionResourceAdoptions,
   companyProfileChangeReceipts,
