@@ -5,6 +5,7 @@ import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-redemption.repository"
 import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
+import { isThanksRecordSourceFrozenError } from "@/contexts/thanks/infrastructure/repositories/lib/is-thanks-record-source-frozen-error"
 
 export type Command = {
   employeeId: EmployeeId
@@ -55,6 +56,8 @@ export class RequestRedemption {
     const created = await redemptionRepository.createIfSufficientBalance(redemption)
 
     if (created instanceof Error) {
+      if (isThanksRecordSourceFrozenError(created))
+        return new ConflictError("thanks writes are frozen", "record_source_frozen", { cause: created })
       return new UnexpectedError("failed to create redemption", { cause: created })
     }
 

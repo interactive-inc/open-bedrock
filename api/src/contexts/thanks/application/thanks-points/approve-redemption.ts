@@ -7,6 +7,7 @@ import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-redemption.repository"
 import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
+import { isThanksRecordSourceFrozenError } from "@/contexts/thanks/infrastructure/repositories/lib/is-thanks-record-source-frozen-error"
 
 export type Command = {
   session: CompanySessionValue
@@ -75,6 +76,8 @@ export class ApproveRedemption {
     })
 
     if (updated instanceof Error) {
+      if (isThanksRecordSourceFrozenError(updated))
+        return new ConflictError("thanks writes are frozen", "record_source_frozen", { cause: updated })
       return new UnexpectedError("failed to approve redemption", { cause: updated })
     }
 
