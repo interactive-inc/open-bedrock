@@ -2,6 +2,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { BusinessTrip } from "@/contexts/business-trip/domain/entities/business-trip.entity"
 import type { Context } from "@/env"
 import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/repositories/business-trip.repository"
+import { isBusinessTripRecordSourceFrozenError } from "@/contexts/business-trip/infrastructure/repositories/lib/is-business-trip-record-source-frozen-error"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -59,6 +60,9 @@ export class CreateBusinessTrip {
     const result = await businessTripRepository.create(businessTrip)
 
     if (result instanceof Error) {
+      if (isBusinessTripRecordSourceFrozenError(result)) {
+        return new ConflictError("business trip writes are frozen", "record_source_frozen", { cause: result })
+      }
       return new UnexpectedError("failed to create business trip", { cause: result })
     }
 

@@ -4,6 +4,7 @@ import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/repositories/business-trip.repository"
+import { isBusinessTripRecordSourceFrozenError } from "@/contexts/business-trip/infrastructure/repositories/lib/is-business-trip-record-source-frozen-error"
 
 export type Command = {
   session: CompanySessionValue
@@ -46,6 +47,9 @@ export class RejectBusinessTrip {
     })
 
     if (updated instanceof Error) {
+      if (isBusinessTripRecordSourceFrozenError(updated)) {
+        return new ConflictError("business trip writes are frozen", "record_source_frozen", { cause: updated })
+      }
       return new UnexpectedError("failed to update business trip status", { cause: updated })
     }
 

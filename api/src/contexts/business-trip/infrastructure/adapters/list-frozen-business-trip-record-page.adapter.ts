@@ -1,0 +1,63 @@
+import { z } from "zod"
+import type { BusinessTripContext } from "@/contexts/business-trip/configuration/business-trip-context"
+import { BusinessTripActorReadAdapter } from "@/contexts/business-trip/infrastructure/adapters/business-trip-actor-read.adapter"
+import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+
+type Context = BusinessTripContext
+const inputSchema = z.strictObject({
+  freezeId: z.uuid(),
+  sourceNamespace: z.string().min(1).max(255).regex(/^\S+$/),
+  afterId: z.uuid().nullable(),
+  limit: z.number().int().min(1).max(100),
+})
+
+/** 未解除の停止世代から出張申請記録IDを分割取得し、後続の保存でも同じ世代を検査する。 */
+export class ListFrozenBusinessTripRecordPageAdapter {
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
+
+  async prepare(input: unknown) {
+    const parsed = inputSchema.safeParse(input)
+    if (!parsed.success) return parsed.error
+    const request = parsed.data
+    const actor = await new BusinessTripActorReadAdapter(this.c).prepare()
+    if (actor instanceof Error) return actor
+    const generation = await new RecordSourceFreezeRepository({
+      env: this.c.env,
+      assertions: actor.assertions,
+    }).prepareActiveGeneration({
+      id: request.freezeId,
+      sourceNamespace: request.sourceNamespace,
+      ownerContext: "business-trip",
+    })
+    if (generation instanceof Error) return generation
+    try {
+      const statements = [
+        ...generation.assertions,
+        this.c.env.DB.prepare(
+          "SELECT id FROM business_trips WHERE (?1 IS NULL OR id COLLATE BINARY>?1) ORDER BY id COLLATE BINARY LIMIT ?2",
+        ).bind(request.afterId, request.limit + 1),
+        ...generation.assertions,
+      ]
+      const reads = await this.c.env.DB.batch<{ id: string }>(statements)
+      if (reads.length !== statements.length || reads.some((read) => !read.success))
+        return new Error("frozen business-trip inventory unavailable")
+      const rows = reads[generation.assertions.length]?.results
+      const ids = z
+        .array(z.strictObject({ id: z.uuid() }))
+        .max(request.limit + 1)
+        .safeParse(rows)
+      if (!ids.success) return ids.error
+      const recordIds = ids.data.slice(0, request.limit).map((row) => row.id)
+      return Object.freeze({
+        freezeId: generation.freeze.snapshot.id,
+        recordIds: Object.freeze(recordIds),
+        nextAfterId: ids.data.length > request.limit ? (recordIds.at(-1) ?? null) : null,
+        assertions: generation.assertions,
+      })
+    } catch (cause) {
+      return new Error("frozen business-trip inventory unavailable", { cause })
+    }
+  }
+}
