@@ -46,7 +46,12 @@ async function fixture() {
     roleKeys: [],
   })
   const application = new AdoptGovernanceOrgRoleAssignment({
-    context: context.context,
+    context: {
+      env: {
+        ...context.context.env,
+        RECORD_SOURCE_NAMESPACE: "9664c95f-412f-472f-9e09-9772f55485e1",
+      },
+    },
     prepareAudit: (audit) => [
       context.database
         .prepare(`INSERT INTO system_audit_events
@@ -78,6 +83,7 @@ test("凍結した取消済み割当を元記録とCompanyのactive・void履歴
   const adopted = await context.application.execute({
     session: context.session,
     assignmentId: 7,
+    freezeId: "95ee3345-4f0e-4742-949a-c105bcb13b38",
     commandId: "governance:adopt:7",
     expectedRevision,
     snapshotDigest: context.snapshot.snapshotDigest,
@@ -87,17 +93,21 @@ test("凍結した取消済み割当を元記録とCompanyのactive・void履歴
   expect(
     await context.database
       .prepare(
-        "SELECT source_json, snapshot_digest, resource_revision FROM company_responsibility_source_adoptions",
+        "SELECT source_json, snapshot_digest, resource_revision, source_namespace, freeze_id FROM company_responsibility_source_adoptions",
       )
       .first<{
         source_json: string
         snapshot_digest: string
         resource_revision: number
+        source_namespace: string
+        freeze_id: string
       }>(),
   ).toEqual({
     source_json: context.snapshot.sourceJson,
     snapshot_digest: context.snapshot.snapshotDigest,
     resource_revision: 2,
+    source_namespace: "9664c95f-412f-472f-9e09-9772f55485e1",
+    freeze_id: "95ee3345-4f0e-4742-949a-c105bcb13b38",
   })
   expect(
     await context.database
@@ -111,6 +121,7 @@ test("凍結した取消済み割当を元記録とCompanyのactive・void履歴
     await context.application.execute({
       session: context.session,
       assignmentId: 7,
+      freezeId: "95ee3345-4f0e-4742-949a-c105bcb13b38",
       commandId: "governance:adopt:7",
       expectedRevision,
       snapshotDigest: context.snapshot.snapshotDigest,
@@ -124,6 +135,7 @@ test("凍結前と異なる元記録ダイジェストでは会社版を進め�
   const rejected = await context.application.execute({
     session: context.session,
     assignmentId: 7,
+    freezeId: "95ee3345-4f0e-4742-949a-c105bcb13b38",
     commandId: "governance:adopt:changed",
     expectedRevision,
     snapshotDigest: "0".repeat(64),
@@ -135,6 +147,21 @@ test("凍結前と異なる元記録ダイジェストでは会社版を進め�
       .prepare("SELECT count(*) AS total FROM company_responsibility_source_adoptions")
       .first<number>("total"),
   ).toBe(0)
+})
+
+test("別の停止世代では旧責務をCompanyへ移行しない", async () => {
+  const context = await fixture()
+  const expectedRevision = await context.companyRevision()
+  const rejected = await context.application.execute({
+    session: context.session,
+    assignmentId: 7,
+    freezeId: "8144784c-529c-45b3-bb71-a5439a02b93a",
+    commandId: "governance:adopt:wrong-freeze",
+    expectedRevision,
+    snapshotDigest: context.snapshot.snapshotDigest,
+  })
+  expect(rejected).toMatchObject({ code: "governance_role_source_not_frozen" })
+  expect(await context.companyRevision()).toBe(expectedRevision)
 })
 
 test("停止世代の間は旧責任台帳の追加・更新・削除を全て拒否する", async () => {
@@ -212,6 +239,7 @@ test("全ての旧責務をCompanyへ接続した場合だけ廃止可能な完�
   const adopted = await context.application.execute({
     session: context.session,
     assignmentId: 7,
+    freezeId,
     commandId: "governance:adopt:cutover:7",
     expectedRevision: await context.companyRevision(),
     snapshotDigest: context.snapshot.snapshotDigest,

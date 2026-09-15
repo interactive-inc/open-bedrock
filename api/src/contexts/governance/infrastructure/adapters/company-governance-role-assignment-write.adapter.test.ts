@@ -4,6 +4,8 @@ import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/r
 import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/test/company-assignment-resource.test-support"
 import { CompanyGovernanceRoleAssignmentReadAdapter } from "@/contexts/governance/infrastructure/adapters/company-governance-role-assignment-read.adapter"
 import { CompanyGovernanceRoleAssignmentWriteAdapter } from "@/contexts/governance/infrastructure/adapters/company-governance-role-assignment-write.adapter"
+import { CreateRecordSourceFreeze } from "@system/application/records/create-record-source-freeze"
+import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
 import { expect, test } from "bun:test"
 
 async function fixture() {
@@ -189,6 +191,21 @@ test("監査保存が失敗した場合はCompanyの責務任命も会社版も�
 
 test("取消済みの元記録をactiveとvoidの連続改訂および移行証跡として原子的に保存する", async () => {
   const f = await fixture()
+  const freezeId = "24109d85-bc36-4077-809d-315717a0b07c"
+  const sourceNamespace = "af0d9d64-9dd8-48d2-8e30-d67226e4d65a"
+  const frozen = await new CreateRecordSourceFreeze({
+    repository: new RecordSourceFreezeRepository({ env: f.context.env, assertions: [] }),
+  }).execute(
+    {
+      id: freezeId,
+      sourceNamespace,
+      ownerContext: "governance",
+      actorAccountId: f.creator.accountId,
+      reason: "Freeze legacy responsibility for atomic adoption test",
+    },
+    f.at,
+  )
+  if (frozen instanceof Error || frozen === "conflict") throw new Error("freeze failed")
   const result = await f.writer.assign({
     organizationId: "organization:default",
     commandId: "governance:legacy:7",
@@ -206,17 +223,20 @@ test("取消済みの元記録をactiveとvoidの連続改訂および移行証�
     prepareAdditionalStatements: (assignment) => [
       f.database
         .prepare(`INSERT INTO company_responsibility_source_adoptions
-          (organization_id, source_context, source_kind, source_id, source_version,
+          (organization_id, source_context, source_kind, source_namespace, freeze_id,
+           source_id, source_version,
            command_id, resource_type, resource_id, resource_revision, snapshot_digest,
            source_json, actor_account_id, reason, expected_revision, organization_revision,
            recorded_at)
-         VALUES ('organization:default', 'governance', 'org-role-assignment', '7', 'revoked:1',
-           ?1, 'responsibility-assignment', ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`)
+         VALUES ('organization:default', 'governance', 'org-role-assignment', ?1, ?2,
+           '7', ?3, ?4, 'responsibility-assignment', ?5, ?6, ?3, ?7, ?8, ?9, ?10, ?11, ?12)`)
         .bind(
+          sourceNamespace,
+          freezeId,
+          "0".repeat(64),
           "governance:legacy:7",
           assignment.assignmentId,
           assignment.resourceRevision,
-          "0".repeat(64),
           JSON.stringify({ id: 7, revokedAt: "2025-02-01T00:00:00Z" }),
           assignment.actorAccountId,
           assignment.reason,

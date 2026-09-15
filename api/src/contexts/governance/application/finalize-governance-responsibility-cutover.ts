@@ -69,7 +69,10 @@ export class FinalizeGovernanceResponsibilityCutover {
       FROM company_responsibility_source_adoptions
       WHERE organization_id = 'organization:default'
         AND source_context = 'governance' AND source_kind = 'org-role-assignment'
-      ORDER BY CAST(source_id AS INTEGER), source_id`).all()
+        AND source_namespace = ?1 AND freeze_id = ?2
+      ORDER BY CAST(source_id AS INTEGER), source_id`)
+      .bind(sourceNamespace, props.freezeId)
+      .all()
     const adoptionEntries = z.array(manifestEntrySchema).safeParse(adoptionRows.results)
     if (sourceCount === null || !adoptionEntries.success) {
       return new UnexpectedError("組織責任の移行証跡を検証できません")

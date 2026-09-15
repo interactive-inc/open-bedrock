@@ -11,6 +11,7 @@ import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 const request = z.strictObject({
+  freeze_id: z.string().uuid(),
   snapshot_digest: z.string().regex(/^[0-9a-f]{64}$/),
 })
 
@@ -73,6 +74,7 @@ export const POST = factory.createHandlers(verifyBearer, zValidator("json", requ
   }).execute({
     session,
     assignmentId,
+    freezeId: c.req.valid("json").freeze_id,
     commandId,
     expectedRevision,
     snapshotDigest: c.req.valid("json").snapshot_digest,
