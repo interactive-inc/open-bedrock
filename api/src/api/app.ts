@@ -421,6 +421,26 @@ import * as trainingEnrollmentsRoute from "@/contexts/training/interface/routes/
 import * as trainingEnrollmentsIdRoute from "@/contexts/training/interface/routes/training-enrollments.$id"
 import * as trainingEnrollmentsIdCompleteRoute from "@/contexts/training/interface/routes/training-enrollments.$id.complete"
 import * as trainingEnrollmentsMeRoute from "@/contexts/training/interface/routes/training-enrollments.me"
+import * as workAccidentRecordSourceFreezesRoute from "@/contexts/work-accident/interface/routes/work-accident.record-source-freezes"
+import * as workAccidentRecordSourceFreezesFreezeIdRoute from "@/contexts/work-accident/interface/routes/work-accident.record-source-freezes.$freezeId"
+import * as workAccidentRecordSourceFreezesFreezeIdCoveragePagesRoute from "@/contexts/work-accident/interface/routes/work-accident.record-source-freezes.$freezeId.coverage-pages"
+import * as workAccidentRecordSourceFreezesFreezeIdReleaseRoute from "@/contexts/work-accident/interface/routes/work-accident.record-source-freezes.$freezeId.release"
+import * as workAccidentRecordSourceFreezesFreezeIdRetirementPlansRoute from "@/contexts/work-accident/interface/routes/work-accident.record-source-freezes.$freezeId.retirement-plans"
+import * as workAccidentRetirementPlansPlanIdRequestsRoute from "@/contexts/work-accident/interface/routes/work-accident.retirement-plans.$planId.requests"
+import * as workAccidentRetirementPlansPlanIdRequestsNumberRoute from "@/contexts/work-accident/interface/routes/work-accident.retirement-plans.$planId.requests.$number"
+import * as workAccidentRetirementPlansPlanIdRequestsNumberApproveRoute from "@/contexts/work-accident/interface/routes/work-accident.retirement-plans.$planId.requests.$number.approve"
+import * as workAccidentRetirementPlansPlanIdRequestsNumberExecuteRoute from "@/contexts/work-accident/interface/routes/work-accident.retirement-plans.$planId.requests.$number.execute"
+import * as workAccidentRetirementPlansPlanIdRequestsNumberRejectRoute from "@/contexts/work-accident/interface/routes/work-accident.retirement-plans.$planId.requests.$number.reject"
+import * as workAccidentRetirementPlansPlanIdRequestsNumberResubmitRoute from "@/contexts/work-accident/interface/routes/work-accident.retirement-plans.$planId.requests.$number.resubmit"
+import * as workAccidentRetirementPlansPlanIdRequestsNumberWithdrawRoute from "@/contexts/work-accident/interface/routes/work-accident.retirement-plans.$planId.requests.$number.withdraw"
+import * as workAccidentRetirementPlansPlanIdVerificationReceiptsRoute from "@/contexts/work-accident/interface/routes/work-accident.retirement-plans.$planId.verification-receipts"
+import * as workAccidentWorkAccidentsIdPreservationRequestsRoute from "@/contexts/work-accident/interface/routes/work-accident.work-accidents.$id.preservation-requests"
+import * as workAccidentWorkAccidentsIdPreservationRequestsNumberRoute from "@/contexts/work-accident/interface/routes/work-accident.work-accidents.$id.preservation-requests.$number"
+import * as workAccidentWorkAccidentsIdPreservationRequestsNumberApproveRoute from "@/contexts/work-accident/interface/routes/work-accident.work-accidents.$id.preservation-requests.$number.approve"
+import * as workAccidentWorkAccidentsIdPreservationRequestsNumberExecuteRoute from "@/contexts/work-accident/interface/routes/work-accident.work-accidents.$id.preservation-requests.$number.execute"
+import * as workAccidentWorkAccidentsIdPreservationRequestsNumberRejectRoute from "@/contexts/work-accident/interface/routes/work-accident.work-accidents.$id.preservation-requests.$number.reject"
+import * as workAccidentWorkAccidentsIdPreservationRequestsNumberResubmitRoute from "@/contexts/work-accident/interface/routes/work-accident.work-accidents.$id.preservation-requests.$number.resubmit"
+import * as workAccidentWorkAccidentsIdPreservationRequestsNumberWithdrawRoute from "@/contexts/work-accident/interface/routes/work-accident.work-accidents.$id.preservation-requests.$number.withdraw"
 import * as workAccidentsRoute from "@/contexts/work-accident/interface/routes/work-accidents"
 import * as workAccidentsIdCloseRoute from "@/contexts/work-accident/interface/routes/work-accidents.$id.close"
 import * as employeeWorkStylesRoute from "@/contexts/work-style/interface/routes/employee-work-styles"
@@ -1728,11 +1748,88 @@ const routePart38 = createRouteApp()
   .put("/training/training-enrollments/:id", ...trainingEnrollmentsIdRoute.PUT)
   .delete("/training/training-enrollments/:id", ...trainingEnrollmentsIdRoute.DELETE)
   .post("/training/training-enrollments/:id/complete", ...trainingEnrollmentsIdCompleteRoute.POST)
-  .get("/work-accident/work-accidents", ...workAccidentsRoute.GET)
+  .post("/work-accident/record-source-freezes", ...workAccidentRecordSourceFreezesRoute.POST)
 
 const routePart39 = createRouteApp()
+  .get(
+    "/work-accident/record-source-freezes/:freezeId",
+    ...workAccidentRecordSourceFreezesFreezeIdRoute.GET,
+  )
+  .post(
+    "/work-accident/record-source-freezes/:freezeId/coverage-pages",
+    ...workAccidentRecordSourceFreezesFreezeIdCoveragePagesRoute.POST,
+  )
+  .post(
+    "/work-accident/record-source-freezes/:freezeId/release",
+    ...workAccidentRecordSourceFreezesFreezeIdReleaseRoute.POST,
+  )
+  .post(
+    "/work-accident/record-source-freezes/:freezeId/retirement-plans",
+    ...workAccidentRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
+  )
+  .post(
+    "/work-accident/retirement-plans/:planId/requests",
+    ...workAccidentRetirementPlansPlanIdRequestsRoute.POST,
+  )
+  .get(
+    "/work-accident/retirement-plans/:planId/requests/:number",
+    ...workAccidentRetirementPlansPlanIdRequestsNumberRoute.GET,
+  )
+  .post(
+    "/work-accident/retirement-plans/:planId/requests/:number/approve",
+    ...workAccidentRetirementPlansPlanIdRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/work-accident/retirement-plans/:planId/requests/:number/execute",
+    ...workAccidentRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/work-accident/retirement-plans/:planId/requests/:number/reject",
+    ...workAccidentRetirementPlansPlanIdRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/work-accident/retirement-plans/:planId/requests/:number/resubmit",
+    ...workAccidentRetirementPlansPlanIdRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/work-accident/retirement-plans/:planId/requests/:number/withdraw",
+    ...workAccidentRetirementPlansPlanIdRequestsNumberWithdrawRoute.POST,
+  )
+  .post(
+    "/work-accident/retirement-plans/:planId/verification-receipts",
+    ...workAccidentRetirementPlansPlanIdVerificationReceiptsRoute.POST,
+  )
+  .get("/work-accident/work-accidents", ...workAccidentsRoute.GET)
   .post("/work-accident/work-accidents", ...workAccidentsRoute.POST)
   .post("/work-accident/work-accidents/:id/close", ...workAccidentsIdCloseRoute.POST)
+  .post(
+    "/work-accident/work-accidents/:id/preservation-requests",
+    ...workAccidentWorkAccidentsIdPreservationRequestsRoute.POST,
+  )
+  .get(
+    "/work-accident/work-accidents/:id/preservation-requests/:number",
+    ...workAccidentWorkAccidentsIdPreservationRequestsNumberRoute.GET,
+  )
+  .post(
+    "/work-accident/work-accidents/:id/preservation-requests/:number/approve",
+    ...workAccidentWorkAccidentsIdPreservationRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/work-accident/work-accidents/:id/preservation-requests/:number/execute",
+    ...workAccidentWorkAccidentsIdPreservationRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/work-accident/work-accidents/:id/preservation-requests/:number/reject",
+    ...workAccidentWorkAccidentsIdPreservationRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/work-accident/work-accidents/:id/preservation-requests/:number/resubmit",
+    ...workAccidentWorkAccidentsIdPreservationRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/work-accident/work-accidents/:id/preservation-requests/:number/withdraw",
+    ...workAccidentWorkAccidentsIdPreservationRequestsNumberWithdrawRoute.POST,
+  )
   .get("/work-style/employee-work-styles", ...employeeWorkStylesRoute.GET)
   .post("/work-style/employee-work-styles", ...employeeWorkStylesRoute.POST)
 

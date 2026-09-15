@@ -3,6 +3,7 @@ import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { WorkAccident } from "@/contexts/work-accident/domain/entities/work-accident.entity"
 import type { Context } from "@/env"
+import { isWorkAccidentRecordSourceFrozenError } from "@/contexts/work-accident/infrastructure/repositories/lib/is-work-accident-record-source-frozen-error"
 
 /**
  * 労災・事故の発生記録を closed へ進める。
@@ -29,6 +30,10 @@ export class CloseWorkAccident {
     const closed = await repository.close(props.id)
 
     if (closed instanceof Error) {
+      if (isWorkAccidentRecordSourceFrozenError(closed))
+        return new ConflictError("work accident writes are frozen", "record_source_frozen", {
+          cause: closed,
+        })
       return new UnexpectedError("failed to update work_accident", { cause: closed })
     }
 
