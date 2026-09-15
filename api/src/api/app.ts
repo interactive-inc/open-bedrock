@@ -710,6 +710,26 @@ import * as shiftSwapRequestsMeRoute from "@/contexts/shift/interface/routes/shi
 import * as employeeSkillsMeRoute from "@/contexts/skill/interface/routes/employee-skills.me"
 import * as employeeSkillsMeSkillCodeRoute from "@/contexts/skill/interface/routes/employee-skills.me.$skillCode"
 import * as skillDefinitionsRoute from "@/contexts/skill/interface/routes/skill-definitions"
+import * as skillRecordSourceFreezesRoute from "@/contexts/skill/interface/routes/skill.record-source-freezes"
+import * as skillRecordSourceFreezesFreezeIdRoute from "@/contexts/skill/interface/routes/skill.record-source-freezes.$freezeId"
+import * as skillRecordSourceFreezesFreezeIdCoveragePagesRoute from "@/contexts/skill/interface/routes/skill.record-source-freezes.$freezeId.coverage-pages"
+import * as skillRecordSourceFreezesFreezeIdReleaseRoute from "@/contexts/skill/interface/routes/skill.record-source-freezes.$freezeId.release"
+import * as skillRecordSourceFreezesFreezeIdRetirementPlansRoute from "@/contexts/skill/interface/routes/skill.record-source-freezes.$freezeId.retirement-plans"
+import * as skillRecordsRecordKindRecordIdPreservationRequestsRoute from "@/contexts/skill/interface/routes/skill.records.$recordKind.$recordId.preservation-requests"
+import * as skillRecordsRecordKindRecordIdPreservationRequestsNumberRoute from "@/contexts/skill/interface/routes/skill.records.$recordKind.$recordId.preservation-requests.$number"
+import * as skillRecordsRecordKindRecordIdPreservationRequestsNumberApproveRoute from "@/contexts/skill/interface/routes/skill.records.$recordKind.$recordId.preservation-requests.$number.approve"
+import * as skillRecordsRecordKindRecordIdPreservationRequestsNumberExecuteRoute from "@/contexts/skill/interface/routes/skill.records.$recordKind.$recordId.preservation-requests.$number.execute"
+import * as skillRecordsRecordKindRecordIdPreservationRequestsNumberRejectRoute from "@/contexts/skill/interface/routes/skill.records.$recordKind.$recordId.preservation-requests.$number.reject"
+import * as skillRecordsRecordKindRecordIdPreservationRequestsNumberResubmitRoute from "@/contexts/skill/interface/routes/skill.records.$recordKind.$recordId.preservation-requests.$number.resubmit"
+import * as skillRecordsRecordKindRecordIdPreservationRequestsNumberWithdrawRoute from "@/contexts/skill/interface/routes/skill.records.$recordKind.$recordId.preservation-requests.$number.withdraw"
+import * as skillRetirementPlansPlanIdRequestsRoute from "@/contexts/skill/interface/routes/skill.retirement-plans.$planId.requests"
+import * as skillRetirementPlansPlanIdRequestsNumberRoute from "@/contexts/skill/interface/routes/skill.retirement-plans.$planId.requests.$number"
+import * as skillRetirementPlansPlanIdRequestsNumberApproveRoute from "@/contexts/skill/interface/routes/skill.retirement-plans.$planId.requests.$number.approve"
+import * as skillRetirementPlansPlanIdRequestsNumberExecuteRoute from "@/contexts/skill/interface/routes/skill.retirement-plans.$planId.requests.$number.execute"
+import * as skillRetirementPlansPlanIdRequestsNumberRejectRoute from "@/contexts/skill/interface/routes/skill.retirement-plans.$planId.requests.$number.reject"
+import * as skillRetirementPlansPlanIdRequestsNumberResubmitRoute from "@/contexts/skill/interface/routes/skill.retirement-plans.$planId.requests.$number.resubmit"
+import * as skillRetirementPlansPlanIdRequestsNumberWithdrawRoute from "@/contexts/skill/interface/routes/skill.retirement-plans.$planId.requests.$number.withdraw"
+import * as skillRetirementPlansPlanIdVerificationReceiptsRoute from "@/contexts/skill/interface/routes/skill.retirement-plans.$planId.verification-receipts"
 import * as softwareLicenseRecordSourceFreezesRoute from "@/contexts/software-license/interface/routes/software-license.record-source-freezes"
 import * as softwareLicenseRecordSourceFreezesFreezeIdRoute from "@/contexts/software-license/interface/routes/software-license.record-source-freezes.$freezeId"
 import * as softwareLicenseRecordSourceFreezesFreezeIdCoveragePagesRoute from "@/contexts/software-license/interface/routes/software-license.record-source-freezes.$freezeId.coverage-pages"
@@ -3125,6 +3145,79 @@ const routePart42 = createRouteApp()
   .put("/skill/employee-skills/me", ...employeeSkillsMeRoute.PUT)
   .get("/skill/employee-skills/me/:skillCode", ...employeeSkillsMeSkillCodeRoute.GET)
   .delete("/skill/employee-skills/me/:skillCode", ...employeeSkillsMeSkillCodeRoute.DELETE)
+  .post("/skill/record-source-freezes", ...skillRecordSourceFreezesRoute.POST)
+  .get("/skill/record-source-freezes/:freezeId", ...skillRecordSourceFreezesFreezeIdRoute.GET)
+  .post(
+    "/skill/record-source-freezes/:freezeId/coverage-pages",
+    ...skillRecordSourceFreezesFreezeIdCoveragePagesRoute.POST,
+  )
+  .post(
+    "/skill/record-source-freezes/:freezeId/release",
+    ...skillRecordSourceFreezesFreezeIdReleaseRoute.POST,
+  )
+  .post(
+    "/skill/record-source-freezes/:freezeId/retirement-plans",
+    ...skillRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
+  )
+  .post(
+    "/skill/records/:recordKind/:recordId/preservation-requests",
+    ...skillRecordsRecordKindRecordIdPreservationRequestsRoute.POST,
+  )
+  .get(
+    "/skill/records/:recordKind/:recordId/preservation-requests/:number",
+    ...skillRecordsRecordKindRecordIdPreservationRequestsNumberRoute.GET,
+  )
+  .post(
+    "/skill/records/:recordKind/:recordId/preservation-requests/:number/approve",
+    ...skillRecordsRecordKindRecordIdPreservationRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/skill/records/:recordKind/:recordId/preservation-requests/:number/execute",
+    ...skillRecordsRecordKindRecordIdPreservationRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/skill/records/:recordKind/:recordId/preservation-requests/:number/reject",
+    ...skillRecordsRecordKindRecordIdPreservationRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/skill/records/:recordKind/:recordId/preservation-requests/:number/resubmit",
+    ...skillRecordsRecordKindRecordIdPreservationRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/skill/records/:recordKind/:recordId/preservation-requests/:number/withdraw",
+    ...skillRecordsRecordKindRecordIdPreservationRequestsNumberWithdrawRoute.POST,
+  )
+  .post("/skill/retirement-plans/:planId/requests", ...skillRetirementPlansPlanIdRequestsRoute.POST)
+  .get(
+    "/skill/retirement-plans/:planId/requests/:number",
+    ...skillRetirementPlansPlanIdRequestsNumberRoute.GET,
+  )
+  .post(
+    "/skill/retirement-plans/:planId/requests/:number/approve",
+    ...skillRetirementPlansPlanIdRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/skill/retirement-plans/:planId/requests/:number/execute",
+    ...skillRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/skill/retirement-plans/:planId/requests/:number/reject",
+    ...skillRetirementPlansPlanIdRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/skill/retirement-plans/:planId/requests/:number/resubmit",
+    ...skillRetirementPlansPlanIdRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/skill/retirement-plans/:planId/requests/:number/withdraw",
+    ...skillRetirementPlansPlanIdRequestsNumberWithdrawRoute.POST,
+  )
+
+const routePart43 = createRouteApp()
+  .post(
+    "/skill/retirement-plans/:planId/verification-receipts",
+    ...skillRetirementPlansPlanIdVerificationReceiptsRoute.POST,
+  )
   .get("/skill/skill-definitions", ...skillDefinitionsRoute.GET)
   .post("/software-license/record-source-freezes", ...softwareLicenseRecordSourceFreezesRoute.POST)
   .get(
@@ -3186,8 +3279,6 @@ const routePart42 = createRouteApp()
     ...softwareLicenseSoftwareLicensesAssignmentsAssignmentIdReleaseRoute.POST,
   )
   .get("/software-license/software-licenses/:id", ...softwareLicenseSoftwareLicensesIdRoute.GET)
-
-const routePart43 = createRouteApp()
   .put("/software-license/software-licenses/:id", ...softwareLicenseSoftwareLicensesIdRoute.PUT)
   .post(
     "/software-license/software-licenses/:id/assignments",
@@ -3246,6 +3337,8 @@ const routePart43 = createRouteApp()
   .patch("/system/accounts/:accountId", ...systemAccountsAccountIdRoute.PATCH)
   .get("/system/accounts/:accountId/identities", ...systemAccountsAccountIdIdentitiesRoute.GET)
   .post("/system/accounts/:accountId/identities", ...systemAccountsAccountIdIdentitiesRoute.POST)
+
+const routePart44 = createRouteApp()
   .get(
     "/system/accounts/:accountId/identities/:identityId",
     ...systemAccountsAccountIdIdentitiesIdentityIdRoute.GET,
@@ -3290,8 +3383,6 @@ const routePart43 = createRouteApp()
   .patch("/system/auth/password/reset", ...systemAuthPasswordResetRoute.PATCH)
   .get("/system/batch-jobs", ...systemBatchJobsRoute.GET)
   .post("/system/bootstrap", ...systemBootstrapRoute.POST)
-
-const routePart44 = createRouteApp()
   .post("/system/browser-login-codes", ...systemBrowserLoginCodesRoute.POST)
   .post("/system/browser-sessions", ...systemBrowserSessionsRoute.POST)
   .get("/system/cli-authorization-callback", ...systemCliAuthorizationCallbackRoute.GET)
@@ -3338,6 +3429,8 @@ const routePart44 = createRouteApp()
   .post("/system/notifications", ...systemNotificationsRoute.POST)
   .patch("/system/notifications", ...systemNotificationsRoute.PATCH)
   .get("/system/notifications/unread-count", ...systemNotificationsUnreadCountRoute.GET)
+
+const routePart45 = createRouteApp()
   .get("/system/notifications/:id", ...systemNotificationsIdRoute.GET)
   .patch("/system/notifications/:id", ...systemNotificationsIdRoute.PATCH)
   .delete("/system/notifications/:id", ...systemNotificationsIdRoute.DELETE)
@@ -3373,8 +3466,6 @@ const routePart44 = createRouteApp()
   )
   .get("/system/roles", ...systemRolesRoute.GET)
   .post("/system/roles", ...systemRolesRoute.POST)
-
-const routePart45 = createRouteApp()
   .get("/system/roles/:roleId", ...systemRolesRoleIdRoute.GET)
   .patch("/system/roles/:roleId", ...systemRolesRoleIdRoute.PATCH)
   .delete("/system/roles/:roleId", ...systemRolesRoleIdRoute.DELETE)
@@ -3406,6 +3497,8 @@ const routePart45 = createRouteApp()
   .get("/thanks/thanks-point-budgets/me", ...thanksPointBudgetsMeRoute.GET)
   .post("/thanks/thanks-redemptions", ...thanksRedemptionsRoute.POST)
   .get("/thanks/thanks-redemptions/admin", ...thanksRedemptionsAdminRoute.GET)
+
+const routePart46 = createRouteApp()
   .get("/thanks/thanks-redemptions/inbox", ...thanksRedemptionsInboxRoute.GET)
   .get("/thanks/thanks-redemptions/me", ...thanksRedemptionsMeRoute.GET)
   .post("/thanks/thanks-redemptions/:id/approve", ...thanksRedemptionsIdApproveRoute.POST)
@@ -3426,8 +3519,6 @@ const routePart45 = createRouteApp()
   .delete("/training/training-enrollments/:id", ...trainingEnrollmentsIdRoute.DELETE)
   .post("/training/training-enrollments/:id/complete", ...trainingEnrollmentsIdCompleteRoute.POST)
   .post("/work-accident/record-source-freezes", ...workAccidentRecordSourceFreezesRoute.POST)
-
-const routePart46 = createRouteApp()
   .get(
     "/work-accident/record-source-freezes/:freezeId",
     ...workAccidentRecordSourceFreezesFreezeIdRoute.GET,
@@ -3525,6 +3616,8 @@ const routePart46 = createRouteApp()
     "/work-style/employee-work-styles/:id/preservation-requests/:number/execute",
     ...workStyleEmployeeWorkStylesIdPreservationRequestsNumberExecuteRoute.POST,
   )
+
+const routePart47 = createRouteApp()
   .post(
     "/work-style/employee-work-styles/:id/preservation-requests/:number/reject",
     ...workStyleEmployeeWorkStylesIdPreservationRequestsNumberRejectRoute.POST,
@@ -3635,6 +3728,7 @@ export const app = appBase
   .route("/", routePart44)
   .route("/", routePart45)
   .route("/", routePart46)
+  .route("/", routePart47)
 
 export type AppType = typeof app
 
@@ -3690,6 +3784,7 @@ type ApiClientPart43 = ReturnType<typeof hc<typeof routePart43>>
 type ApiClientPart44 = ReturnType<typeof hc<typeof routePart44>>
 type ApiClientPart45 = ReturnType<typeof hc<typeof routePart45>>
 type ApiClientPart46 = ReturnType<typeof hc<typeof routePart46>>
+type ApiClientPart47 = ReturnType<typeof hc<typeof routePart47>>
 export type ApiClient = ApiClientPart0 &
   ApiClientPart1 &
   ApiClientPart2 &
@@ -3736,4 +3831,5 @@ export type ApiClient = ApiClientPart0 &
   ApiClientPart43 &
   ApiClientPart44 &
   ApiClientPart45 &
-  ApiClientPart46
+  ApiClientPart46 &
+  ApiClientPart47
