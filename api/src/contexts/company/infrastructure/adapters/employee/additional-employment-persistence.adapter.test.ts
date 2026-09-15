@@ -54,7 +54,7 @@ async function write(
     recordedAt: Date.parse("2026-09-08T00:00:00Z"),
   })
   if (change instanceof Error) throw change
-  const result = await new D1CompanyResourceRepository(database).write(change)
+  const result = await new D1CompanyResourceRepository({ database }).write(change)
   if (result.kind !== "applied") throw new Error(JSON.stringify(result))
 }
 async function fixture() {
@@ -148,7 +148,7 @@ test("既存の人物・従業員・旧雇用を保ち、追加雇用の公開�
     ["2026-08-15", []],
     ["2026-09-01", ["employment:new"]],
   ] as const) {
-    const result = await new D1CompanyResourceRepository(database).findMany({
+    const result = await new D1CompanyResourceRepository({ database }).findMany({
       organizationId,
       types: ["employment"],
       effectiveOn: restoreCalendarDate(date),

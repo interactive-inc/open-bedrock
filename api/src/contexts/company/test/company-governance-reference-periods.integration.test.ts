@@ -261,7 +261,7 @@ const references: ReadonlyArray<
 
 function fixture(schemaSql = schema) {
   const database = createCompanyD1TestDatabase(schemaSql)
-  const repository = new D1CompanyResourceRepository(database)
+  const repository = new D1CompanyResourceRepository({ database })
   const write = async (
     resources: ReadonlyArray<CompanyResourceProps>,
     expectedRevision: number,

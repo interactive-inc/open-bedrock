@@ -80,7 +80,7 @@ async function prepare(database: D1Database, item: InitialWorkforceResource) {
   return [...(await initialStatements(database, item)), ...journal]
 }
 async function read(database: D1Database) {
-  const result = await new D1CompanyResourceRepository(database).findMany({
+  const result = await new D1CompanyResourceRepository({ database }).findMany({
     organizationId,
     types: ["person", "employee", "employment"],
     effectiveOn: restoreCalendarDate("2026-09-01"),
@@ -119,7 +119,7 @@ describe("新規登録から公開Company正本への接続", () => {
       employmentType: "PART_TIME",
       status: "ON_LEAVE",
     })
-    const before = await new D1CompanyResourceRepository(database).findMany({
+    const before = await new D1CompanyResourceRepository({ database }).findMany({
       organizationId,
       types: ["employee"],
       effectiveOn: restoreCalendarDate("2026-08-31"),
@@ -147,7 +147,7 @@ describe("新規登録から公開Company正本への接続", () => {
       ],
     })
     if (change instanceof Error) throw change
-    expect(await new D1CompanyResourceRepository(database).write(change)).toMatchObject({
+    expect(await new D1CompanyResourceRepository({ database }).write(change)).toMatchObject({
       kind: "applied",
     })
     expect(

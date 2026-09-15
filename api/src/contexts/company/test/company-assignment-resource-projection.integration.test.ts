@@ -396,7 +396,7 @@ describe("公開Assignmentと業務の所属期間", () => {
         (await f.write([relation], await f.companyRevision(), "reporting:employment-start")).status,
       ),
     ).toBe(201)
-    const snapshot = await new D1CompanyResourceRepository(f.database).findMany({
+    const snapshot = await new D1CompanyResourceRepository({ database: f.database }).findMany({
       organizationId: "organization:default",
       types: ["employment", "collective-body-membership"],
     })
@@ -1324,7 +1324,9 @@ describe("公開Assignmentと業務の所属期間", () => {
     })
     if (change instanceof Error) throw change
     const before = await f.persisted()
-    expect(await new D1CompanyResourceRepository(f.database).write(change)).toMatchObject({
+    expect(
+      await new D1CompanyResourceRepository({ database: f.database }).write(change),
+    ).toMatchObject({
       kind: "invalid",
     })
     expect(await f.persisted()).toEqual(before)

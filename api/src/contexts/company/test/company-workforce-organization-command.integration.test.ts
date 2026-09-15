@@ -9,7 +9,7 @@ import { splitSqlStatements } from "@/lib/database/split-sql-statements"
 
 async function fixture(type: "office-assignment" | "organizational-authority") {
   const f = await createCompanyAuthorityEmploymentTestContext(type)
-  const snapshot = await new D1CompanyResourceRepository(f.database).findMany({
+  const snapshot = await new D1CompanyResourceRepository({ database: f.database }).findMany({
     organizationId: "organization:default",
     types: ["employment"],
   })
@@ -104,7 +104,7 @@ test.each(["office-assignment", "organizational-authority"] as const)(
     ).toBe(201)
     expect(await f.publicAssignments("2030-07-31")).toHaveLength(1)
     expect(await f.publicAssignments("2030-08-01")).toEqual([])
-    const repository = new D1CompanyResourceRepository(f.database)
+    const repository = new D1CompanyResourceRepository({ database: f.database })
     for (const [date, count] of [
       ["2030-07-31", 3],
       ["2030-08-01", 0],

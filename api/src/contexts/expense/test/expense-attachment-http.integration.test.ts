@@ -990,7 +990,9 @@ test("経費の全6種別を実認証で保全し、業務全テーブル撤去�
     ],
   })
   if (change instanceof Error) throw change
-  expect((await new D1CompanyResourceRepository(c.database).write(change)).kind).toBe("applied")
+  expect((await new D1CompanyResourceRepository({ database: c.database }).write(change)).kind).toBe(
+    "applied",
+  )
   const policy = createCompanyProcedureDecisionPolicy({
     approverRoles: [],
     workflow: {

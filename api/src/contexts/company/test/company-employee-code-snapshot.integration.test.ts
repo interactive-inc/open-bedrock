@@ -14,7 +14,7 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 
 test("将来コード・遡及訂正・予約の訂正で人事状態の対象と応答コードを同じ有効日に揃える", async () => {
   const f = await createGovernanceTaskTestContext()
-  const repository = new D1CompanyResourceRepository(f.database)
+  const repository = new D1CompanyResourceRepository({ database: f.database })
   const head = await repository.findMany({
     organizationId: "organization:default",
     types: ["employee"],

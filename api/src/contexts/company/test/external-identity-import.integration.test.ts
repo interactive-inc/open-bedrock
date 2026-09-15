@@ -202,7 +202,7 @@ describe("外部identityとCompany正本の同期", () => {
       organizationRevision: c.input.expectedRevision + 1,
       replayed: false,
     })
-    const resources = await new D1CompanyResourceRepository(c.database).findMany({
+    const resources = await new D1CompanyResourceRepository({ database: c.database }).findMany({
       organizationId: "organization:default",
       types: ["person", "employee", "employment"],
       effectiveOn: restoreCalendarDate("2026-01-01"),
@@ -299,7 +299,7 @@ describe("外部identityとCompany正本の同期", () => {
         .prepare("SELECT email FROM system_identity_profiles")
         .first<Record<string, unknown>>(),
     ).toEqual({ email: "updated@example.com" })
-    const resources = await new D1CompanyResourceRepository(c.database).findMany({
+    const resources = await new D1CompanyResourceRepository({ database: c.database }).findMany({
       organizationId: "organization:default",
       types: ["person"],
     })

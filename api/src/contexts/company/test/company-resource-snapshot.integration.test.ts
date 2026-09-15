@@ -15,7 +15,9 @@ const schema =
 const organizationId = "organization:default"
 
 async function fixture() {
-  const repository = new D1CompanyResourceRepository(createCompanyD1TestDatabase(schema))
+  const repository = new D1CompanyResourceRepository({
+    database: createCompanyD1TestDatabase(schema),
+  })
   const revisions = [
     { date: "2026-01-01", name: "Original", state: "active" },
     { date: "2026-07-01", name: "Future", state: "active" },

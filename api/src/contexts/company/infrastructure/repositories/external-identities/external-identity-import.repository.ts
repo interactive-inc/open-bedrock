@@ -268,7 +268,7 @@ export class ExternalIdentityImportRepository {
       .bind(currentLink.employeeId, organizationId)
       .first<{ employee_id: string }>()
     if (link === null) return { kind: "conflict", reason: "unbound_workforce" }
-    const repository = new D1CompanyResourceRepository(this.c.env.DB)
+    const repository = new D1CompanyResourceRepository({ database: this.c.env.DB })
     const employees = await repository.findMany({
       organizationId,
       types: ["employee"],

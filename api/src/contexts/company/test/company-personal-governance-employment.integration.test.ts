@@ -44,7 +44,7 @@ async function fixture(type: "responsibility-assignment" | "collective-body-memb
   expect(
     Number((await f.write([resource], await f.companyRevision(), "personal:create")).status),
   ).toBe(201)
-  const repository = new D1CompanyResourceRepository(f.database)
+  const repository = new D1CompanyResourceRepository({ database: f.database })
   const resolve = async (date: string) => {
     const resolved = await new CompanyGovernanceAuthorityResolutionAdapter({
       repository,

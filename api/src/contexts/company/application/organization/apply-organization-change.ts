@@ -26,22 +26,15 @@ export class ApplyOrganizationChange {
   }
 
   async execute(change: Omit<CompanyResourceChangeProps, "actorAccountId">): Promise<Result> {
-    return this.apply(change, false)
-  }
-
-  /** 移行時に、同じ確定事実の連続した改訂を一つの会社版へ保存する。 */
-  async executeHistory(
-    change: Omit<CompanyResourceChangeProps, "actorAccountId">,
-  ): Promise<Result> {
-    return this.apply(change, true)
-  }
-
-  private async apply(
-    change: Omit<CompanyResourceChangeProps, "actorAccountId">,
-    historyBatch: boolean,
-  ): Promise<Result> {
     const organizationId = change.resources[0]?.organizationId ?? ""
     const props = { ...change, actorAccountId: this.c.actor.accountId }
+    const identities = new Set<string>()
+    const historyBatch = change.resources.some((resource) => {
+      const identity = `${resource.type}\u0000${resource.id}`
+      if (identities.has(identity)) return true
+      identities.add(identity)
+      return false
+    })
     const command = historyBatch
       ? CompanyResourceChangeEntity.createHistoryBatch(props)
       : CompanyResourceChangeEntity.create(props)

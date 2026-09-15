@@ -31,7 +31,7 @@ test("個別雇用APIも契約を保存し、履歴保存の失敗を全取消�
   expect(await f.persisted()).toEqual(before)
   await f.database.exec("DROP TRIGGER test_contract_history_failure")
   expect(Number((await f.client.employments.$post({ header, json })).status)).toBe(201)
-  const snapshot = await new D1CompanyResourceRepository(f.database).findMany({
+  const snapshot = await new D1CompanyResourceRepository({ database: f.database }).findMany({
     organizationId: f.employment.organizationId,
     organizationRevision: await f.companyRevision(),
     effectiveOn: restoreCalendarDate("2030-06-01"),
@@ -99,7 +99,7 @@ test("休職・復職と将来の契約更新を同じ雇用履歴に保持す�
     const applied = await f.personnel(input, `contract:${input.kind}`)
     if (applied instanceof Error) throw applied
   }
-  const repository = new D1CompanyResourceRepository(f.database)
+  const repository = new D1CompanyResourceRepository({ database: f.database })
   for (const scenario of [
     { date: "2030-07-01", status: "ON_LEAVE", contractTerm: fixedTerm },
     { date: "2030-08-01", status: "ACTIVE", contractTerm: fixedTerm },
@@ -168,7 +168,7 @@ test("将来の契約更新を取消しても旧会社版から取消前の内�
       (await f.write([cancellation], renewalRevision, "contract:cancellation-confirmed")).status,
     ),
   ).toBe(201)
-  const repository = new D1CompanyResourceRepository(f.database)
+  const repository = new D1CompanyResourceRepository({ database: f.database })
   for (const scenario of [
     { organizationRevision: renewalRevision, contractTerm: renewal.attributes.contractTerm },
     { organizationRevision: await f.companyRevision(), contractTerm: fixedTerm },
@@ -213,7 +213,7 @@ test("契約更新を会社版へ追記し、未記録・過去版・現在・�
     },
   }
   expect(Number((await f.write([renewal], confirmedRevision, "contract:renewal")).status)).toBe(201)
-  const repository = new D1CompanyResourceRepository(f.database)
+  const repository = new D1CompanyResourceRepository({ database: f.database })
   const changePage = await new CompanyChangeFeedRepository(f.database).list({
     organizationId: initial.organizationId,
     afterRevision: confirmedRevision,
@@ -315,7 +315,7 @@ test("退職と遡及訂正は契約を保持し、再入社の契約は推測�
     "contract:correct-retirement",
   )
   if (corrected instanceof Error) throw corrected
-  const repository = new D1CompanyResourceRepository(f.database)
+  const repository = new D1CompanyResourceRepository({ database: f.database })
   for (const scenario of [
     { revision: retiredRevision, status: "TERMINATED" },
     { revision: await f.companyRevision(), status: "ACTIVE" },

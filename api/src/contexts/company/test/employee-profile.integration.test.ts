@@ -113,7 +113,7 @@ async function fixture() {
     ],
   })
   if (initial instanceof Error) throw initial
-  expect(await new D1CompanyResourceRepository(database).write(initial)).toMatchObject({
+  expect(await new D1CompanyResourceRepository({ database }).write(initial)).toMatchObject({
     kind: "applied",
   })
   await database.exec(`INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
@@ -185,7 +185,9 @@ test("Account表示名も会社営業日の人物履歴を使い、将来の改�
     ],
   })
   if (change instanceof Error) throw change
-  expect(await new D1CompanyResourceRepository(context.database).write(change)).toMatchObject({
+  expect(
+    await new D1CompanyResourceRepository({ database: context.database }).write(change),
+  ).toMatchObject({
     kind: "applied",
   })
   for (const instant of ["2026-06-30T14:59:59Z", "2026-06-30T15:00:00Z"]) {
@@ -303,7 +305,9 @@ test("Account対応の終了日には古いprofile名へ戻らず、会社上の
     ],
   })
   if (link instanceof Error) throw link
-  expect(await new D1CompanyResourceRepository(context.database).write(link)).toMatchObject({
+  expect(
+    await new D1CompanyResourceRepository({ database: context.database }).write(link),
+  ).toMatchObject({
     kind: "applied",
   })
   const names = await new ReadCompanyAccountDisplayNamesAdapter({
@@ -354,7 +358,7 @@ describe("employee profile writes share the public Person history", () => {
       { account_id: "account:profile", display_name: "Changed Person" },
       { account_id: "account:unlinked", display_name: "Unlinked Person" },
     ])
-    const history = await new D1CompanyResourceRepository(context.database).findMany({
+    const history = await new D1CompanyResourceRepository({ database: context.database }).findMany({
       organizationId: "organization:default",
       types: ["person"],
       effectiveOn: restoreCalendarDate("2026-06-01"),
@@ -578,7 +582,7 @@ describe("employee profile writes share the public Person history", () => {
     const interception = spyOn(context.database, "batch").mockImplementationOnce(
       async (statements) => {
         expect(
-          await new D1CompanyResourceRepository(context.database).write(competing),
+          await new D1CompanyResourceRepository({ database: context.database }).write(competing),
         ).toMatchObject({ kind: "applied" })
         return batch(statements)
       },
@@ -626,7 +630,9 @@ describe("employee profile writes share the public Person history", () => {
       ],
     })
     if (future instanceof Error) throw future
-    expect(await new D1CompanyResourceRepository(context.database).write(future)).toMatchObject({
+    expect(
+      await new D1CompanyResourceRepository({ database: context.database }).write(future),
+    ).toMatchObject({
       kind: "applied",
     })
     expect(await (await context.read()).json()).toMatchObject({
@@ -641,7 +647,9 @@ describe("employee profile writes share the public Person history", () => {
       email: "you@example.com",
       phone: null,
     })
-    const scheduled = await new D1CompanyResourceRepository(context.database).findMany({
+    const scheduled = await new D1CompanyResourceRepository({
+      database: context.database,
+    }).findMany({
       organizationId: "organization:default",
       types: ["person"],
       effectiveOn: restoreCalendarDate("2026-07-01"),
