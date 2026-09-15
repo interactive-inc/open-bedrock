@@ -7,6 +7,7 @@ import {
   UnexpectedError,
   ValidationError,
 } from "@/lib/errors"
+import { isThanksRecordSourceFrozenError } from "@/contexts/thanks/infrastructure/repositories/lib/is-thanks-record-source-frozen-error"
 import type { ApplicationError } from "@/lib/errors"
 import { periodOf } from "@/contexts/thanks/domain/definitions/thanks-period.definition"
 import { toNonNegativePoints } from "@/contexts/thanks/domain/policies/non-negative-points.policy"
@@ -117,6 +118,8 @@ export class SendThanks {
       })
 
       if (ensured instanceof Error) {
+        if (isThanksRecordSourceFrozenError(ensured))
+          return new ConflictError("thanks writes are frozen", "record_source_frozen", { cause: ensured })
         return ensured
       }
     }
@@ -129,6 +132,8 @@ export class SendThanks {
     })
 
     if (created instanceof Error) {
+      if (isThanksRecordSourceFrozenError(created))
+        return new ConflictError("thanks writes are frozen", "record_source_frozen", { cause: created })
       return new UnexpectedError("failed to send thanks", { cause: created })
     }
 

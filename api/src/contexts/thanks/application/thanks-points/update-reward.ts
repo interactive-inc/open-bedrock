@@ -1,5 +1,6 @@
 import { ThanksReward } from "@/contexts/thanks/domain/entities/thanks-reward.entity"
-import { NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
+import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
+import { isThanksRecordSourceFrozenError } from "@/contexts/thanks/infrastructure/repositories/lib/is-thanks-record-source-frozen-error"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
@@ -63,6 +64,8 @@ export class UpdateReward {
     const updated = await rewardRepository.updateWithoutStock(next)
 
     if (updated instanceof Error) {
+      if (isThanksRecordSourceFrozenError(updated))
+        return new ConflictError("thanks writes are frozen", "record_source_frozen", { cause: updated })
       return new UnexpectedError("failed to update reward", { cause: updated })
     }
 
