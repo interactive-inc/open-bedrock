@@ -3,6 +3,7 @@ import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { HealthCheckup } from "@/contexts/health-checkup/domain/entities/health-checkup.entity"
 import type { Context } from "@/env"
+import { isHealthCheckupRecordSourceFrozenError } from "@/contexts/health-checkup/infrastructure/repositories/lib/is-health-checkup-record-source-frozen-error"
 
 /**
  * 健診の実施記録を completed へ進め、実施日を記録する。
@@ -29,6 +30,11 @@ export class CompleteHealthCheckup {
     const completed = await repository.complete({ id: props.id, conductedOn: props.conductedOn })
 
     if (completed instanceof Error) {
+      if (isHealthCheckupRecordSourceFrozenError(completed)) {
+        return new ConflictError("health checkup writes are frozen", "record_source_frozen", {
+          cause: completed,
+        })
+      }
       return new UnexpectedError("failed to update health_checkup", { cause: completed })
     }
 
