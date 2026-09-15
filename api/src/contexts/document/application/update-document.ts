@@ -2,8 +2,9 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import type { Document } from "@/contexts/document/domain/entities/document.entity"
 import type { Context } from "@/env"
 import { DocumentRepository } from "@/contexts/document/infrastructure/repositories/document.repository"
-import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+import { isDocumentRecordSourceFrozenError } from "@/contexts/document/infrastructure/repositories/lib/is-document-record-source-frozen-error"
 
 export type Command = {
   session: CompanySessionValue
@@ -53,6 +54,9 @@ export class UpdateDocument {
     )
 
     if (result instanceof Error) {
+      if (isDocumentRecordSourceFrozenError(result)) {
+        return new ConflictError("document writes are frozen", "record_source_frozen", { cause: result })
+      }
       return new UnexpectedError("failed to update document", { cause: result })
     }
 
