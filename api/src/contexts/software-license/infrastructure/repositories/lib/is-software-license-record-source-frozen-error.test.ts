@@ -1,5 +1,5 @@
 import { expect, test } from "bun:test"
-import { isSoftwareLicenseRecordSourceFrozenError } from "@/contexts/software-license/infrastructure/repositories/is-software-license-record-source-frozen-error"
+import { isSoftwareLicenseRecordSourceFrozenError } from "@/contexts/software-license/infrastructure/repositories/lib/is-software-license-record-source-frozen-error"
 
 test("D1が包んだ台帳停止だけを識別する", () => {
   expect(

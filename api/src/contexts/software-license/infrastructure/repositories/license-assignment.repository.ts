@@ -1,7 +1,7 @@
 import { LicenseAssignmentEntity } from "@/contexts/software-license/domain/entities/license-assignment.entity"
 import type { SoftwareLicenseContext } from "@/contexts/software-license/configuration/software-license-context"
 import { LicenseError } from "@/contexts/software-license/domain/errors"
-import { isSoftwareLicenseRecordSourceFrozenError } from "@/contexts/software-license/infrastructure/repositories/is-software-license-record-source-frozen-error"
+import { isSoftwareLicenseRecordSourceFrozenError } from "@/contexts/software-license/infrastructure/repositories/lib/is-software-license-record-source-frozen-error"
 import type { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
 
