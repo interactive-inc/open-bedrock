@@ -2,6 +2,7 @@ import type { CompanyContext } from "@/contexts/company/configuration/company-co
 import type { ResponsibilityResourceAdoptionEntity } from "@/contexts/company/domain/entities/responsibility-resource-adoption.entity"
 import { OrganizationWorkforceChangeEntity } from "@/contexts/company/domain/entities/organization-workforce-change.entity"
 import { ResponsibilityResourceAdoptionSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/organization/responsibility-resource-adoption-snapshot.adapter"
+import type { ResponsibilityResourceAdoptionSnapshotValue } from "@/contexts/company/domain/values/responsibility-resource-adoption-snapshot.value"
 import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
 import { OrganizationUnitChangeStatementAdapter } from "@/contexts/company/infrastructure/adapters/organization/organization-unit-change-statement.adapter"
 import { OrganizationUnitReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/organization-unit-read.adapter"
@@ -52,7 +53,13 @@ export class ResponsibilityResourceAdoptionRepository {
     try {
       const replay = await this.replay(command.props.commandId, fingerprint)
       if (replay !== null) return replay
-      const applied = await this.apply(command, fingerprint).catch((cause: unknown) => {
+      const snapshot = await new ResponsibilityResourceAdoptionSnapshotAdapter(this.c.env.DB).find(
+        command.props.employeeId,
+      )
+      if (snapshot instanceof Error) return this.unavailable(snapshot)
+      if (snapshot === null)
+        return new CompanyNotFoundError("従業員が見つかりません", "employee_not_found")
+      const applied = await this.apply(command, fingerprint, snapshot).catch((cause: unknown) => {
         if (
           cause instanceof Error &&
           /organization responsibility|company_(?:responsibility_assignment_reference_not_found|employment_authority_invalid|governance_organization_reference_invalid|governance_reference_period_not_covered)/.test(
@@ -82,6 +89,7 @@ export class ResponsibilityResourceAdoptionRepository {
   private async apply(
     command: ResponsibilityResourceAdoptionEntity,
     fingerprint: string,
+    snapshot: ResponsibilityResourceAdoptionSnapshotValue,
   ): Promise<ResponsibilityResourceAdoptionResult | CompanyOperationError> {
     const today = resolveCompanyBusinessDate({
       now: new Date(command.props.recordedAt).toISOString(),
@@ -91,10 +99,6 @@ export class ResponsibilityResourceAdoptionRepository {
     if (today !== command.props.observedOn) return this.conflict()
     const database = this.c.env.DB
     const snapshots = new ResponsibilityResourceAdoptionSnapshotAdapter(database)
-    const snapshot = await snapshots.find(command.props.employeeId)
-    if (snapshot instanceof Error) return this.unavailable(snapshot)
-    if (snapshot === null)
-      return new CompanyNotFoundError("従業員が見つかりません", "employee_not_found")
     const responsibilities = await command.toResponsibilities(snapshot)
     if (responsibilities instanceof CompanyOperationError) return responsibilities
     if (responsibilities instanceof Error) return this.invalid(responsibilities)
