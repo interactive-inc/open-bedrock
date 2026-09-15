@@ -4,6 +4,7 @@ import type { Context } from "@/env"
 import { commendations } from "@/contexts/commendation/infrastructure/schema/commendation"
 import { and, count, desc, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
+import { isCommendationRecordSourceFrozenError } from "@/contexts/commendation/infrastructure/repositories/lib/is-commendation-record-source-frozen-error"
 
 export class CommendationRepository {
   constructor(private readonly c: Context) {}
@@ -74,6 +75,8 @@ export class CommendationRepository {
         ? new Error("failed to create commendation")
         : Commendation.fromRow(row)
     } catch (error) {
+      if (isCommendationRecordSourceFrozenError(error))
+        return new Error("commendation writes are frozen", { cause: error })
       return error instanceof Error ? error : new Error("failed to create commendation")
     }
   }
@@ -88,6 +91,8 @@ export class CommendationRepository {
 
       return rows.length > 0
     } catch (error) {
+      if (isCommendationRecordSourceFrozenError(error))
+        return new Error("commendation writes are frozen", { cause: error })
       return error instanceof Error ? error : new Error("failed to delete commendation")
     }
   }
