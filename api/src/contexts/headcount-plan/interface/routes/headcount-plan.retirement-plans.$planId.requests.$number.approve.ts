@@ -1,0 +1,9 @@
+import { createHeadcountPlanRetirementDecisionHandlers } from "@/contexts/headcount-plan/interface/operations/create-headcount-plan-retirement-decision-handlers"
+import { headcountPlanFactory } from "@/contexts/headcount-plan/interface/request-environment/headcount-plan-factory"
+import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
+
+// @authorization service - 現在の人間の認証とCompanyの承認資格でSystemの判断を記録する
+export const POST = headcountPlanFactory.createHandlers(
+  authenticateSystemAccessToken,
+  ...createHeadcountPlanRetirementDecisionHandlers("approve"),
+)

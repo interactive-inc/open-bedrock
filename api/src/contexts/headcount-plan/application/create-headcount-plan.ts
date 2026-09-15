@@ -5,6 +5,7 @@ import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { HeadcountPlanRepository } from "@/contexts/headcount-plan/infrastructure/repositories/headcount-plan.repository"
 import { UniqueConstraintError } from "@/lib/d1/errors"
+import { isHeadcountPlanRecordSourceFrozenError } from "@/contexts/headcount-plan/infrastructure/repositories/lib/is-headcount-plan-record-source-frozen-error"
 
 export type Command = {
   session: CompanySessionValue
@@ -59,6 +60,9 @@ export class CreateHeadcountPlan {
     }
 
     if (created instanceof Error) {
+      if (isHeadcountPlanRecordSourceFrozenError(created)) {
+        return new ConflictError("headcount plan writes are frozen", "record_source_frozen", { cause: created })
+      }
       return new UnexpectedError("failed to create headcount plan", { cause: created })
     }
 
