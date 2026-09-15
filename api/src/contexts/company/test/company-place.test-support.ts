@@ -16,7 +16,7 @@ export function createCompanyPlaceTestContext(schemaSql?: string) {
       "\n" +
       readFileSync(new URL("../infrastructure/schema/company.sql", import.meta.url), "utf8")
   const database = createCompanyD1TestDatabase(schema)
-  const repository = new D1CompanyResourceRepository(database)
+  const repository = new D1CompanyResourceRepository({ database })
   const common: Omit<CompanyResourceProps, "type" | "id" | "attributes"> = {
     organizationId: "organization:default",
     revision: 1,

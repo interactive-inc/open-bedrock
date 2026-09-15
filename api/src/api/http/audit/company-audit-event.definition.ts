@@ -62,6 +62,7 @@ export const auditActionSchema = z.enum([
   "governance.document.acknowledged",
   "governance.org_role.assigned",
   "governance.org_role.revoked",
+  "governance.org_role.migration_completed",
   "audit.event.searched",
   "audit.event.read",
   "audit.event.exported",

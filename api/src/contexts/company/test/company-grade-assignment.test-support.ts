@@ -36,7 +36,7 @@ export async function createCompanyGradeAssignmentTestContext() {
     Number((await base.write([appointment, grade], expectedRevision, "grade:initial")).status),
   ).toBe(201)
   const read = async (date: string) => {
-    const snapshot = await new D1CompanyResourceRepository(base.database).findMany({
+    const snapshot = await new D1CompanyResourceRepository({ database: base.database }).findMany({
       organizationId: "organization:default",
       types: ["grade-assignment"],
       effectiveOn: restoreCalendarDate(date),

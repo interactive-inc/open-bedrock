@@ -294,7 +294,9 @@ test("別会社の法人、閲覧だけの権限、古い会社版を雇用主�
     ],
   })
   if (foreign instanceof Error) throw foreign
-  expect(await new D1CompanyResourceRepository(f.database).write(foreign)).toMatchObject({
+  expect(
+    await new D1CompanyResourceRepository({ database: f.database }).write(foreign),
+  ).toMatchObject({
     kind: "applied",
   })
   const before = await f.persisted()

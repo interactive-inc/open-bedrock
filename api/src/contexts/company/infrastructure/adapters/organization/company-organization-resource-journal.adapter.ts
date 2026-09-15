@@ -44,7 +44,7 @@ export class CompanyOrganizationResourceJournalAdapter {
         connected.has(period.organizationUnitId),
       )
       if (periods.length === 0) return []
-      const repository = new D1CompanyResourceRepository(this.c)
+      const repository = new D1CompanyResourceRepository({ database: this.c })
       const current = await repository.findMany({
         organizationId: "organization:default",
         types: ["organization-unit"],

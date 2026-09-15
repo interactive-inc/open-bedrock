@@ -28,7 +28,7 @@ test("会社の各台帳は同じ会社版で取得でき、遡及更新後も�
   await database.exec(
     "INSERT INTO system_accounts (id, status, created_at, updated_at) VALUES ('account:test', 'active', 0, 0)",
   )
-  const repository = new D1CompanyResourceRepository(database)
+  const repository = new D1CompanyResourceRepository({ database })
   const specifications: Pick<CompanyResourceProps, "type" | "id" | "attributes">[] = [
     { type: "person", id: "person:test", attributes: { officialName: "Person" } },
     {

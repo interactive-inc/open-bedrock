@@ -75,7 +75,7 @@ function fixture() {
       "\n" +
       readFileSync(new URL("../infrastructure/schema/company.sql", import.meta.url), "utf8"),
   )
-  const repository = new D1CompanyResourceRepository(database)
+  const repository = new D1CompanyResourceRepository({ database })
   const app = new Hono<CompanyHttpEnvironment>()
   app.use("*", async (context, next) => {
     context.set(

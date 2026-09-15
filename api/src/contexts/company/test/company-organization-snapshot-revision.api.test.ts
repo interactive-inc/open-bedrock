@@ -20,7 +20,7 @@ test("公開組織snapshotは指定会社版と有効日を維持し、未来版
       "\n" +
       readFileSync(new URL("../infrastructure/schema/company.sql", import.meta.url), "utf8"),
   )
-  const repository = new D1CompanyResourceRepository(database)
+  const repository = new D1CompanyResourceRepository({ database })
   for (const revision of [1, 2]) {
     const command = CompanyResourceChangeEntity.create({
       commandId: `snapshot:${revision}`,

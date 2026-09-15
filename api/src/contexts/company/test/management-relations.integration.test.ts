@@ -347,7 +347,7 @@ describe("Company reporting graph through organization changes", () => {
     expect(
       Number((await f.write([f.relation("report:profile", 0, 1)], "profile-read")).status),
     ).toBe(201)
-    const snapshot = await new D1CompanyResourceRepository(f.database).findMany({
+    const snapshot = await new D1CompanyResourceRepository({ database: f.database }).findMany({
       organizationId: "organization:default",
       types: ["employee"],
       effectiveOn: restoreCalendarDate("2030-06-01"),

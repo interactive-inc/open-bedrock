@@ -65,7 +65,7 @@ export async function createCompanyAuthorityEmploymentTestContext(
     ],
   })
   if (change instanceof Error) throw change
-  const written = await new D1CompanyResourceRepository(f.database).write(change)
+  const written = await new D1CompanyResourceRepository({ database: f.database }).write(change)
   expect(written).toMatchObject({ kind: "applied" })
   const appointment = change.resources.find((resource) => resource.type === type)
   if (appointment === undefined) throw new Error("appointment missing")

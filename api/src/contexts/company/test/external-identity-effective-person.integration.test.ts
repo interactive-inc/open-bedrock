@@ -10,7 +10,7 @@ test.each([false, true])(
   async (failAudit) => {
     const c = await createExternalIdentityImportTestContext()
     expect((await c.application.execute(c.input)).kind).toBe("applied")
-    const repository = new D1CompanyResourceRepository(c.database)
+    const repository = new D1CompanyResourceRepository({ database: c.database })
     const people = await repository.findMany({
       organizationId: "organization:default",
       types: ["person"],

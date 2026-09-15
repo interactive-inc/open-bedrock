@@ -225,7 +225,7 @@ export async function resolvePersonnelActionInput(
   wire: WirePersonnelActionInput,
   organizationRevision: number,
 ): Promise<PersonnelActionInput | CompanyOperationError> {
-  const repository = new D1CompanyResourceRepository(context.env.DB)
+  const repository = new D1CompanyResourceRepository({ database: context.env.DB })
   if (wire.kind === "corrected") {
     const replacement = await resolveNonCorrection(
       repository,

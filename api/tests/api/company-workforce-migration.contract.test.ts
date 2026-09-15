@@ -67,7 +67,7 @@ describe("Company workforce resource migration", () => {
 
   test("既存データを消さず、共有schemaと同じguardを導入する", async () => {
     const database = createCompanyD1TestDatabase(before)
-    const repository = new D1CompanyResourceRepository(database)
+    const repository = new D1CompanyResourceRepository({ database })
     const change = CompanyResourceChangeEntity.create({
       commandId: "command:existing",
       expectedRevision: 0,

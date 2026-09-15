@@ -105,7 +105,7 @@ async function fixture() {
         ? { ...person, accountId: restoreWorkforceId("system_account", person.accountId) }
         : null,
     )
-    const published = await new D1CompanyResourceRepository(f.database).findMany({
+    const published = await new D1CompanyResourceRepository({ database: f.database }).findMany({
       organizationId: "organization:default",
       types: ["account-employee-link"],
       ids: [resource.id],

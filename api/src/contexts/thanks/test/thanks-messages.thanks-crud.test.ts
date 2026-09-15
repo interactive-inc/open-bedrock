@@ -92,7 +92,7 @@ async function request(props: {
 describe("POST /thanks-messages", () => {
   test("全体と本人の一覧は将来の改名を発効日に表示し、感謝と人物履歴を変更しない", async () => {
     const db = await createTestDb()
-    const repository = new D1CompanyResourceRepository(db)
+    const repository = new D1CompanyResourceRepository({ database: db })
     const initial = CompanyResourceChangeEntity.create({
       commandId: "thanks-name-initial",
       expectedRevision: 0,

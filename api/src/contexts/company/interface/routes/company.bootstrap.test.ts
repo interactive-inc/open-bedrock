@@ -646,7 +646,7 @@ async function responsibilityLifecycleFixture() {
     ORDER BY responsibility_type`)
         .all()
     ).results
-  const repository = new D1CompanyResourceRepository(f.database)
+  const repository = new D1CompanyResourceRepository({ database: f.database })
   const publicResource = async (responsibilityType = "PEOPLE_OPERATIONS") => {
     const id = await f.database
       .prepare(

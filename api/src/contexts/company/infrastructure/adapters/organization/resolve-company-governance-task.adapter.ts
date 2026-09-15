@@ -52,7 +52,7 @@ export class ResolveCompanyGovernanceTaskAdapter {
     }).prepare({ employeeCodes: [], accountIds: [] })
     if (before instanceof Error) return before
     const resolved = await new CompanyGovernanceAuthorityResolutionAdapter({
-      repository: new D1CompanyResourceRepository(this.c.env.DB),
+      repository: new D1CompanyResourceRepository({ database: this.c.env.DB }),
       readActiveAccountIds: (accountIds) =>
         new CompanyDecisionHumanAccountsAdapter({ database: this.c.env.DB }).findMany(
           accountIds,

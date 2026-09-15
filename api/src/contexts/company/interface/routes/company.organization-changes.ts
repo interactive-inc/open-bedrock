@@ -349,7 +349,7 @@ export const POST = factory.createHandlers(
     }
     const applyOrganizationChange = new ApplyOrganizationChange({
       actor,
-      repository: new D1CompanyResourceRepository(database),
+      repository: new D1CompanyResourceRepository({ database }),
     })
     const result = await applyOrganizationChange.execute(change)
 
