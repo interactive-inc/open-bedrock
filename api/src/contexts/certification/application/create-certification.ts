@@ -3,6 +3,7 @@ import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Certification } from "@/contexts/certification/domain/entities/certification.entity"
 import type { Context } from "@/env"
+import { isCertificationRecordSourceFrozenError } from "@/contexts/certification/infrastructure/repositories/lib/is-certification-record-source-frozen-error"
 
 /**
  * 資格マスタを新規作成する。code は一意。重複時は conflict を返す。
@@ -34,6 +35,8 @@ export class CreateCertification {
     const created = await repository.create(props)
 
     if (created instanceof Error) {
+      if (isCertificationRecordSourceFrozenError(created))
+        return new ConflictError("certification writes are frozen", "record_source_frozen", { cause: created })
       return new UnexpectedError("failed to save certification", { cause: created })
     }
 
