@@ -4,6 +4,7 @@ import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/repositories/family-care-leave.repository"
+import { isFamilyCareLeaveRecordSourceFrozenError } from "@/contexts/family-care-leave/infrastructure/repositories/lib/is-family-care-leave-record-source-frozen-error"
 
 export type Command = {
   session: CompanySessionValue
@@ -46,6 +47,8 @@ export class ApproveFamilyCareLeave {
     })
 
     if (updated instanceof Error) {
+      if (isFamilyCareLeaveRecordSourceFrozenError(updated))
+        return new ConflictError("family care leave writes are frozen", "record_source_frozen", { cause: updated })
       return new UnexpectedError("failed to update family care leave status", { cause: updated })
     }
 

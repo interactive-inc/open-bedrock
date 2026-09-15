@@ -10,6 +10,7 @@ import {
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/repositories/family-care-leave.repository"
+import { isFamilyCareLeaveRecordSourceFrozenError } from "@/contexts/family-care-leave/infrastructure/repositories/lib/is-family-care-leave-record-source-frozen-error"
 
 export type Command = {
   familyCareLeaveId: string
@@ -65,6 +66,8 @@ export class UpdateFamilyCareLeave {
     const saved = await familyCareLeaveRepository.updateIfNoOverlap(updated)
 
     if (saved instanceof Error) {
+      if (isFamilyCareLeaveRecordSourceFrozenError(saved))
+        return new ConflictError("family care leave writes are frozen", "record_source_frozen", { cause: saved })
       return new UnexpectedError("failed to update family care leave", { cause: saved })
     }
 
