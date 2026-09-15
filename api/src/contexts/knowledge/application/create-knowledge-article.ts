@@ -5,6 +5,7 @@ import { KnowledgeAuthorAuthorizationAdapter } from "@/contexts/knowledge/infras
 import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/repositories/knowledge-article.repository"
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+import { isKnowledgeRecordSourceFrozenError } from "@/contexts/knowledge/infrastructure/repositories/lib/is-knowledge-article-record-source-frozen-error"
 
 export type Command = {
   title: string
@@ -59,6 +60,8 @@ export class CreateKnowledgeArticle {
     })
 
     if (created instanceof Error) {
+      if (isKnowledgeRecordSourceFrozenError(created))
+        return new ConflictError("knowledge writes are frozen", "record_source_frozen", { cause: created })
       return new UnexpectedError("failed to create knowledge article", { cause: created })
     }
 
