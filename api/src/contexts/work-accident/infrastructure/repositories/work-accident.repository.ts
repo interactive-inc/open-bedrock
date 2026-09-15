@@ -4,6 +4,7 @@ import type { Context } from "@/env"
 import { workAccidents } from "@/contexts/work-accident/infrastructure/schema/work-accident"
 import { and, desc, eq } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
+import { isWorkAccidentRecordSourceFrozenError } from "@/contexts/work-accident/infrastructure/repositories/lib/is-work-accident-record-source-frozen-error"
 
 export class WorkAccidentRepository {
   constructor(private readonly c: Context) {}
@@ -84,6 +85,8 @@ export class WorkAccidentRepository {
         ? new Error("failed to save work_accident")
         : WorkAccident.fromRow(row)
     } catch (error) {
+      if (isWorkAccidentRecordSourceFrozenError(error))
+        return new Error("work accident writes are frozen", { cause: error })
       return error instanceof Error ? error : new Error("failed to save work_accident")
     }
   }
@@ -101,6 +104,8 @@ export class WorkAccidentRepository {
 
       return row === undefined ? null : WorkAccident.fromRow(row)
     } catch (error) {
+      if (isWorkAccidentRecordSourceFrozenError(error))
+        return new Error("work accident writes are frozen", { cause: error })
       return error instanceof Error ? error : new Error("failed to update work_accident")
     }
   }
