@@ -2,8 +2,15 @@ import { prepareGovernanceAudit } from "@/api/http/audit/prepare-governance-audi
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { AdoptGovernanceOrgRoleAssignment } from "@/contexts/governance/application/adopt-governance-org-role-assignment"
+import { GovernanceOrgRoleAssignmentAdoptionAdapter } from "@/contexts/governance/infrastructure/adapters/governance-org-role-assignment-adoption.adapter"
 import { GovernanceRoleAssignmentAdoptionSnapshotAdapter } from "@/contexts/governance/infrastructure/adapters/governance-role-assignment-adoption-snapshot.adapter"
-import { ApplicationError, ForbiddenError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
+import {
+  ApplicationError,
+  ForbiddenError,
+  NotFoundError,
+  UnexpectedError,
+  ValidationError,
+} from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { validateIntParam } from "@/lib/http/validate-int-param"
@@ -25,9 +32,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     )
   }
   const assignmentId = validateIntParam(c.req.param("id"), "governance assignment adoption")
-  const snapshot = await new GovernanceRoleAssignmentAdoptionSnapshotAdapter(c.env.DB).find(
-    assignmentId,
-  )
+  const snapshot = await new GovernanceRoleAssignmentAdoptionSnapshotAdapter({
+    database: c.env.DB,
+  }).find(assignmentId)
   if (snapshot instanceof Error) {
     throw toHttpException(
       new UnexpectedError("組織責任の元記録を確認できません", { cause: snapshot }),
@@ -68,9 +75,14 @@ export const POST = factory.createHandlers(verifyBearer, zValidator("json", requ
       new ValidationError("冪等キーと期待会社版が必要です", "governance_role_headers_invalid"),
     )
   }
-  const result = await new AdoptGovernanceOrgRoleAssignment({
-    context: c,
+  const adapter = new GovernanceOrgRoleAssignmentAdoptionAdapter({
+    database: c.env.DB,
+    now: c.env.NOW,
+    sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE,
     prepareAudit: (audit) => prepareGovernanceAudit({ c, ...audit }),
+  })
+  const result = await new AdoptGovernanceOrgRoleAssignment({
+    adopt: (props) => adapter.execute(props),
   }).execute({
     session,
     assignmentId,

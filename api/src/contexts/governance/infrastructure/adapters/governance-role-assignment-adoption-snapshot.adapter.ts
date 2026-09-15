@@ -23,15 +23,18 @@ type Snapshot = Readonly<{
   snapshotDigest: string
 }>
 
+type Context = Readonly<{ database: D1Database }>
+
 /** 旧組織ロール割当の全列を、Companyへ接続する直前の同一性確認として固定する。 */
 export class GovernanceRoleAssignmentAdoptionSnapshotAdapter {
-  constructor(private readonly database: D1Database) {
+  constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 
   async find(assignmentId: number): Promise<Snapshot | null | Error> {
     try {
-      const row = await this.database.prepare(`${this.selectSource()} WHERE assignment.id = ?1`)
+      const row = await this.c.database
+        .prepare(`${this.selectSource()} WHERE assignment.id = ?1`)
         .bind(assignmentId)
         .first()
       if (row === null) return null
