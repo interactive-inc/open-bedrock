@@ -4,6 +4,7 @@ import type { Context } from "@/env"
 import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/repositories/antisocial-check.repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+import { isAntisocialCheckRecordSourceFrozenError } from "@/contexts/antisocial-check/infrastructure/repositories/lib/is-antisocial-check-record-source-frozen-error"
 
 export type Command = {
   antisocialCheckId: string
@@ -73,6 +74,9 @@ export class UpdateAntisocialCheck {
     const result = await antisocialCheckRepository.update(updated)
 
     if (result instanceof Error) {
+      if (isAntisocialCheckRecordSourceFrozenError(result)) {
+        return new ConflictError("antisocial check writes are frozen", "record_source_frozen", { cause: result })
+      }
       return new UnexpectedError("failed to update antisocial check", { cause: result })
     }
 

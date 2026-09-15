@@ -12,6 +12,7 @@ import { zAppAntisocialCheck } from "@/contexts/antisocial-check/interface/http/
 import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { isAntisocialCheckRecordSourceFrozenError } from "@/contexts/antisocial-check/infrastructure/repositories/lib/is-antisocial-check-record-source-frozen-error"
 
 /** 反社チェック申請をレスポンス用の snake_case に整形し、スキーマで検証する。 */
 function toResponseBody(antisocialCheck: AntisocialCheck) {
@@ -148,6 +149,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     const deleted = await antisocialCheckRepository.delete(command.antisocialCheckId)
 
     if (deleted instanceof Error) {
+      if (isAntisocialCheckRecordSourceFrozenError(deleted)) {
+        return new ConflictError("antisocial check writes are frozen", "record_source_frozen", { cause: deleted })
+      }
       return new UnexpectedError("failed to delete antisocial check", { cause: deleted })
     }
 
