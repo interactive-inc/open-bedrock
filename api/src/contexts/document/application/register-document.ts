@@ -2,8 +2,9 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import { Document } from "@/contexts/document/domain/entities/document.entity"
 import type { Context } from "@/env"
 import { DocumentRepository } from "@/contexts/document/infrastructure/repositories/document.repository"
-import { ForbiddenError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+import { isDocumentRecordSourceFrozenError } from "@/contexts/document/infrastructure/repositories/lib/is-document-record-source-frozen-error"
 
 export type Command = {
   session: CompanySessionValue
@@ -44,6 +45,9 @@ export class RegisterDocument {
     )
 
     if (created instanceof Error) {
+      if (isDocumentRecordSourceFrozenError(created)) {
+        return new ConflictError("document writes are frozen", "record_source_frozen", { cause: created })
+      }
       return new UnexpectedError("failed to create document", { cause: created })
     }
 
