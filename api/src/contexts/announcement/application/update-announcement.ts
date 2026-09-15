@@ -2,7 +2,8 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import type { Announcement } from "@/contexts/announcement/domain/entities/announcement.entity"
 import type { Context } from "@/env"
 import { AnnouncementRepository } from "@/contexts/announcement/infrastructure/repositories/announcement.repository"
-import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { isAnnouncementRecordSourceFrozenError } from "@/contexts/announcement/infrastructure/repositories/lib/is-announcement-record-source-frozen-error"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
@@ -45,6 +46,10 @@ export class UpdateAnnouncement {
     const result = await announcementRepository.update(updated)
 
     if (result instanceof Error) {
+      if (isAnnouncementRecordSourceFrozenError(result))
+        return new ConflictError("announcement writes are frozen", "record_source_frozen", {
+          cause: result,
+        })
       return new UnexpectedError("failed to update announcement", { cause: result })
     }
 
