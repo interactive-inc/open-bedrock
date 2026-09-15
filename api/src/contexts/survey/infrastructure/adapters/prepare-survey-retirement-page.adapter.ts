@@ -12,11 +12,9 @@ import { PrepareSurveyCoverageRecordsAdapter } from "@/contexts/survey/infrastru
 import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
 import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
 import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
-import { surveyRecordKindSchema } from "@/contexts/survey/domain/survey-record-kind"
+import { surveyRecordKindSchema } from "@/contexts/survey/domain/definitions/survey-record-kind.definition"
 
-type Context = SurveyContext &
-  SystemAttachmentStorageContext &
-  SystemDatabaseContext
+type Context = SurveyContext & SystemAttachmentStorageContext & SystemDatabaseContext
 const requestSchema = z.strictObject({
   freezeId: z.uuid(),
   sourceNamespace: z.string().regex(/^\S{1,255}$/),
@@ -82,14 +80,18 @@ export class PrepareSurveyRetirementPageAdapter {
       limit: 10,
     })
     if (captured instanceof Error) return captured
-    if (captured.nextCursor !== stored.snapshot.nextCursor) return new Error("source inventory changed")
+    if (captured.nextCursor !== stored.snapshot.nextCursor)
+      return new Error("source inventory changed")
     const mappings = []
     for (const record of stored.snapshot.records) {
       const source = PreservedRecordSourceValue.create(record.source)
       if (source instanceof Error) return source
       if (source.props.recordKind !== request.recordKind)
         return new Error("retirement record kind changed")
-      mappings.push({ sourceRecordId: source.props.recordId, preservedRecordId: record.preservedRecordId })
+      mappings.push({
+        sourceRecordId: source.props.recordId,
+        preservedRecordId: record.preservedRecordId,
+      })
     }
     const verified = await new PrepareSurveyCoverageRecordsAdapter({
       env: this.c.env,
