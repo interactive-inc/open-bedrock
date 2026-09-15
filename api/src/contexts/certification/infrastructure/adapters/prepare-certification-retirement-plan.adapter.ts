@@ -5,7 +5,7 @@ import { CertificationActorReadAdapter } from "@/contexts/certification/infrastr
 import { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
 import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
-import { certificationRecordKinds } from "@/contexts/certification/domain/certification-record-kind"
+import { certificationRecordKinds } from "@/contexts/certification/domain/definitions/certification-record-kind.definition"
 
 type Context = CertificationContext
 
@@ -60,12 +60,12 @@ export class PrepareCertificationRetirementPlanAdapter {
         ownerContext: "certification",
         capability: { revision: 1, recordKinds: certificationRecordKinds },
         coverage: chains.map(({ summary }) => ({
-            recordKind: summary.recordKind,
-            terminalPageId: summary.terminalPageId,
-            terminalDigest: summary.terminalDigest,
-            pageCount: summary.pageCount,
-            recordCount: summary.recordCount,
-          })),
+          recordKind: summary.recordKind,
+          terminalPageId: summary.terminalPageId,
+          terminalDigest: summary.terminalDigest,
+          pageCount: summary.pageCount,
+          recordCount: summary.recordCount,
+        })),
         actorAccountId: authentication.accountId,
         createdAt: this.c.var.now().toISOString(),
         auditEventId: crypto.randomUUID(),
