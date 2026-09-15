@@ -11,6 +11,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { validateUuidParam } from "@/lib/http/validate-uuid-param"
+import { isCertificateRequestRecordSourceFrozenError } from "@/contexts/certificate-request/infrastructure/repositories/lib/is-certificate-request-record-source-frozen-error"
 import { isoDate } from "@/lib/validation/iso-date.schema"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -151,6 +152,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     const deleted = await certificateRequestRepository.delete(command.certificateRequestId)
 
     if (deleted instanceof Error) {
+      if (isCertificateRequestRecordSourceFrozenError(deleted)) {
+        return new ConflictError("certificate request writes are frozen", "record_source_frozen", { cause: deleted })
+      }
       return new UnexpectedError("failed to delete certificate request", { cause: deleted })
     }
 

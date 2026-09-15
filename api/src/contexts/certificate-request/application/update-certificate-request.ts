@@ -4,6 +4,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/repositories/certificate-request.repository"
+import { isCertificateRequestRecordSourceFrozenError } from "@/contexts/certificate-request/infrastructure/repositories/lib/is-certificate-request-record-source-frozen-error"
 
 export type Command = {
   certificateRequestId: string
@@ -53,6 +54,9 @@ export class UpdateCertificateRequest {
     const result = await certificateRequestRepository.update(updated)
 
     if (result instanceof Error) {
+      if (isCertificateRequestRecordSourceFrozenError(result)) {
+        return new ConflictError("certificate request writes are frozen", "record_source_frozen", { cause: result })
+      }
       return new UnexpectedError("failed to update certificate request", { cause: result })
     }
 
