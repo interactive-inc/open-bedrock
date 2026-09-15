@@ -5,7 +5,7 @@ import {
   decodeEmployeeSkillRecordId,
   skillRecordKindSchema,
   type SkillRecordKind,
-} from "@/contexts/skill/domain/skill-record-kind"
+} from "@/contexts/skill/domain/definitions/skill-record-kind.definition"
 import { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
@@ -37,18 +37,26 @@ function snapshotQuery(recordKind: SkillRecordKind, recordId: string): SnapshotQ
 
 /** 保全資格のある主体へスキル2台帳の原記録を返し、保存直前にも同じ内容を検査する。 */
 export class CaptureSkillRecordAdapter {
-  constructor(private readonly c: Context) { Object.freeze(this) }
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
-  async prepare(input: Readonly<{ recordKind: SkillRecordKind; recordId: string; sourceNamespace: string }>) {
+  async prepare(
+    input: Readonly<{ recordKind: SkillRecordKind; recordId: string; sourceNamespace: string }>,
+  ) {
     const kind = skillRecordKindSchema.safeParse(input.recordKind)
     if (!kind.success) return new SkillError("forbidden", "invalid source record")
     const query = snapshotQuery(kind.data, input.recordId)
-    if (query instanceof Error) return new SkillError("forbidden", "invalid source record", { cause: query })
+    if (query instanceof Error)
+      return new SkillError("forbidden", "invalid source record", { cause: query })
     const actor = await new SkillActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
     try {
       const statement = () => this.c.env.DB.prepare(query.sql).bind(...query.values)
-      const reads = await this.c.env.DB.batch<{ snapshot_json: string }>([...actor.assertions, statement()])
+      const reads = await this.c.env.DB.batch<{ snapshot_json: string }>([
+        ...actor.assertions,
+        statement(),
+      ])
       if (reads.length !== actor.assertions.length + 1 || reads.some((read) => !read.success))
         return new Error("skill source is unavailable")
       const snapshot = reads.at(-1)?.results[0]?.snapshot_json
@@ -75,7 +83,10 @@ export class CaptureSkillRecordAdapter {
         content: new TextEncoder().encode(canonical.toString()),
         actorAccountId: actor.accountId,
         sourceAuthorizationRef: Object.freeze({
-          context: "skill", kind: "record-snapshot", id: input.recordId, version: digest.toString(),
+          context: "skill",
+          kind: "record-snapshot",
+          id: input.recordId,
+          version: digest.toString(),
         }),
         assertions: [
           ...actor.assertions,

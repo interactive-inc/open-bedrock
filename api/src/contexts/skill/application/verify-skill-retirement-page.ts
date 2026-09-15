@@ -10,7 +10,7 @@ import { RecordRetirementVerificationPlanRepository } from "@system/infrastructu
 import { RecordRetirementVerificationReceiptRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
 import { RecordRetirementVerificationReceiptEntity } from "@system/domain/entities/record-retirement-verification-receipt.entity"
 import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
-import { skillRecordKinds } from "@/contexts/skill/domain/skill-record-kind"
+import { skillRecordKinds } from "@/contexts/skill/domain/definitions/skill-record-kind.definition"
 
 type Context = ConstructorParameters<typeof PrepareSkillRetirementPageAdapter>[0]
 
@@ -48,9 +48,7 @@ export class VerifySkillRetirementPage {
       plan.snapshot.capability.revision !== 1 ||
       JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(skillRecordKinds)
     )
-      return new SkillRetirementConflictError(
-        "retirement plan unavailable or capability changed",
-      )
+      return new SkillRetirementConflictError("retirement plan unavailable or capability changed")
     const repository = new RecordRetirementVerificationReceiptRepository(context)
     const existing = await repository.find(command.id)
     if (existing instanceof Error) return existing
