@@ -5,7 +5,7 @@ import {
   assetRecordKindSchema,
   decodeStocktakeItemRecordId,
   type AssetRecordKind,
-} from "@/contexts/asset/domain/asset-record-kind"
+} from "@/contexts/asset/domain/definitions/asset-record-kind.definition"
 import { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
@@ -17,7 +17,8 @@ type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string | numb
 
 function snapshotQuery(recordKind: AssetRecordKind, recordId: string): SnapshotQuery | Error {
   if (recordKind === "asset-record") {
-    if (!z.string().trim().min(1).max(255).safeParse(recordId).success) return new Error("invalid asset id")
+    if (!z.string().trim().min(1).max(255).safeParse(recordId).success)
+      return new Error("invalid asset id")
     return {
       sql: `SELECT json_object('format','asset-record','version',1,'asset',json_object(
         'code',code,'name',name,'kind',kind,'serial',serial,'purchased_on',purchased_on,
@@ -46,7 +47,8 @@ function snapshotQuery(recordKind: AssetRecordKind, recordId: string): SnapshotQ
     }
   }
   const item = decodeStocktakeItemRecordId(recordId)
-  if (item === null || !z.uuid().safeParse(item.stocktakeId).success) return new Error("invalid stocktake item id")
+  if (item === null || !z.uuid().safeParse(item.stocktakeId).success)
+    return new Error("invalid stocktake item id")
   return {
     sql: `SELECT json_object('format','stocktake-item-record','version',1,'item',json_object(
       'stocktake_id',stocktake_id,'asset_code',asset_code,'checked_at',checked_at,
@@ -58,18 +60,26 @@ function snapshotQuery(recordKind: AssetRecordKind, recordId: string): SnapshotQ
 
 /** 保全資格のある主体へ資産4台帳の原記録を返し、保存直前にも同じ内容を検査する。 */
 export class CaptureAssetRecordAdapter {
-  constructor(private readonly c: Context) { Object.freeze(this) }
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
-  async prepare(input: Readonly<{ recordKind: AssetRecordKind; recordId: string; sourceNamespace: string }>) {
+  async prepare(
+    input: Readonly<{ recordKind: AssetRecordKind; recordId: string; sourceNamespace: string }>,
+  ) {
     const kind = assetRecordKindSchema.safeParse(input.recordKind)
     if (!kind.success) return new AssetError("forbidden", "invalid source record")
     const query = snapshotQuery(kind.data, input.recordId)
-    if (query instanceof Error) return new AssetError("forbidden", "invalid source record", { cause: query })
+    if (query instanceof Error)
+      return new AssetError("forbidden", "invalid source record", { cause: query })
     const actor = await new AssetActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
     try {
       const statement = () => this.c.env.DB.prepare(query.sql).bind(...query.values)
-      const reads = await this.c.env.DB.batch<{ snapshot_json: string }>([...actor.assertions, statement()])
+      const reads = await this.c.env.DB.batch<{ snapshot_json: string }>([
+        ...actor.assertions,
+        statement(),
+      ])
       if (reads.length !== actor.assertions.length + 1 || reads.some((read) => !read.success))
         return new Error("asset source is unavailable")
       const snapshot = reads.at(-1)?.results[0]?.snapshot_json
@@ -96,7 +106,10 @@ export class CaptureAssetRecordAdapter {
         content: new TextEncoder().encode(canonical.toString()),
         actorAccountId: actor.accountId,
         sourceAuthorizationRef: Object.freeze({
-          context: "asset", kind: "record-snapshot", id: input.recordId, version: digest.toString(),
+          context: "asset",
+          kind: "record-snapshot",
+          id: input.recordId,
+          version: digest.toString(),
         }),
         assertions: [
           ...actor.assertions,

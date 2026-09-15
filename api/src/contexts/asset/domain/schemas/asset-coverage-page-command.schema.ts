@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { assetRecordKindSchema } from "@/contexts/asset/domain/asset-record-kind"
+import { assetRecordKindSchema } from "@/contexts/asset/domain/definitions/asset-record-kind.definition"
 
 export const assetCoveragePageCommandSchema = z.strictObject({
   id: z.uuid(),

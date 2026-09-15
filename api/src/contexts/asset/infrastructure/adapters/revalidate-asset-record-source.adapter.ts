@@ -2,7 +2,7 @@ import type { AssetContext } from "@/contexts/asset/configuration/asset-context"
 import type { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
 import { CaptureAssetRecordAdapter } from "@/contexts/asset/infrastructure/adapters/capture-asset-record.adapter"
 import { AssetError } from "@/contexts/asset/domain/errors"
-import { assetRecordKindSchema } from "@/contexts/asset/domain/asset-record-kind"
+import { assetRecordKindSchema } from "@/contexts/asset/domain/definitions/asset-record-kind.definition"
 
 type Context = AssetContext & Readonly<{ sourceNamespace: string }>
 
@@ -20,8 +20,7 @@ export class RevalidateAssetRecordSourceAdapter {
       return new AssetError("forbidden", "record source does not belong to this asset registry")
 
     const recordKind = assetRecordKindSchema.safeParse(source.props.recordKind)
-    if (!recordKind.success)
-      return new AssetError("forbidden", "invalid asset record kind")
+    if (!recordKind.success) return new AssetError("forbidden", "invalid asset record kind")
     const current = await new CaptureAssetRecordAdapter(this.c).prepare({
       recordKind: recordKind.data,
       recordId: source.props.recordId,
@@ -32,10 +31,7 @@ export class RevalidateAssetRecordSourceAdapter {
       !source.matchesSource(current.source) ||
       Date.parse(source.props.capturedAt) > Date.parse(current.source.props.capturedAt)
     )
-      return new AssetError(
-        "asset_conflict",
-        "asset record differs from preservation proposal",
-      )
+      return new AssetError("asset_conflict", "asset record differs from preservation proposal")
 
     return Object.freeze({
       source,
