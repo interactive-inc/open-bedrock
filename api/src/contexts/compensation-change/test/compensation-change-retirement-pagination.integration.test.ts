@@ -10,7 +10,10 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { GET as preservedDossier } from "@system/interface/routes/system.preserved-records.$recordId.dossier"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
-import { compensationChangeRecordKinds, type CompensationChangeRecordKind } from "@/contexts/compensation-change/domain/compensation-change-record-kind"
+import {
+  compensationChangeRecordKinds,
+  type CompensationChangeRecordKind,
+} from "@/contexts/compensation-change/domain/definitions/compensation-change-record-kind.definition"
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("給与改定記録を全件保全し、人の承認を経て1台帳を撤去確定する", async () => {
@@ -43,7 +46,14 @@ test("給与改定記録を全件保全し、人の承認を経て1台帳を撤�
       .prepare(`INSERT INTO salary_revisions
         (id,employee_id,effective_date,previous_base_salary,new_base_salary,reason,created_at)
         VALUES (?1,?2,?3,?4,?5,?6,'2026-01-01T00:00:00.000Z')`)
-      .bind(id, creatorPerson.employeeId, `2026-${String(id).padStart(2, "0")}-01`, 200000 + id, 210000 + id, `Revision ${id}`)
+      .bind(
+        id,
+        creatorPerson.employeeId,
+        `2026-${String(id).padStart(2, "0")}-01`,
+        200000 + id,
+        210000 + id,
+        `Revision ${id}`,
+      )
       .run()
   }
   const at = new Date()
@@ -57,23 +67,52 @@ test("給与改定記録を全件保全し、人の承認を経て1台帳を撤�
     .bind(creator, hash, at.getTime(), at.getTime() + 60_000)
     .run()
   const post = (path: string, id: string, body: unknown) =>
-    app.request(path, { method: "POST", headers: { authorization: `Bearer ${token}`, "content-type": "application/json",
-      "idempotency-key": id, "x-system-step-up": stepUpToken }, body: JSON.stringify(body) }, bindings)
+    app.request(
+      path,
+      {
+        method: "POST",
+        headers: {
+          authorization: `Bearer ${token}`,
+          "content-type": "application/json",
+          "idempotency-key": id,
+          "x-system-step-up": stepUpToken,
+        },
+        body: JSON.stringify(body),
+      },
+      bindings,
+    )
   const freezeId = crypto.randomUUID()
-  expect((await post("/compensation-change/record-source-freezes", freezeId, { reason: "Preserve compensation change" })).status).toBe(201)
-  await expect(database.prepare("UPDATE salary_revisions SET reason='Must not change' WHERE id=1").run())
-    .rejects.toThrow("compensation_change_record_source_frozen")
-  await expect(database.prepare("DELETE FROM salary_revisions WHERE id=1").run())
-    .rejects.toThrow("compensation_change_record_source_frozen")
+  expect(
+    (
+      await post("/compensation-change/record-source-freezes", freezeId, {
+        reason: "Preserve compensation change",
+      })
+    ).status,
+  ).toBe(201)
+  await expect(
+    database.prepare("UPDATE salary_revisions SET reason='Must not change' WHERE id=1").run(),
+  ).rejects.toThrow("compensation_change_record_source_frozen")
+  await expect(database.prepare("DELETE FROM salary_revisions WHERE id=1").run()).rejects.toThrow(
+    "compensation_change_record_source_frozen",
+  )
   const blocked = await apiRequest("/compensation-change/salary-revisions", {
     method: "POST",
-    body: { employee_id: creatorPerson.employeeId, effective_date: "2027-01-01", previous_base_salary: 210000,
-      new_base_salary: 220000, reason: "Blocked" },
+    body: {
+      employee_id: creatorPerson.employeeId,
+      effective_date: "2027-01-01",
+      previous_base_salary: 210000,
+      new_base_salary: 220000,
+      reason: "Blocked",
+    },
   })
   expect(blocked.status).toBe(409)
   expect(await blocked.json()).toMatchObject({ code: "record_source_frozen" })
-  const sourceRecords: ReadonlyArray<Readonly<{ recordKind: CompensationChangeRecordKind; recordId: string }>> =
-    Array.from({ length: 11 }, (_, index) => ({ recordKind: "salary-revision-record" as const, recordId: String(index + 1) }))
+  const sourceRecords: ReadonlyArray<
+    Readonly<{ recordKind: CompensationChangeRecordKind; recordId: string }>
+  > = Array.from({ length: 11 }, (_, index) => ({
+    recordKind: "salary-revision-record" as const,
+    recordId: String(index + 1),
+  }))
   const mappings: Array<{
     recordKind: CompensationChangeRecordKind
     sourceRecordId: string
@@ -90,36 +129,53 @@ test("給与改定記録を全件保全し、人の承認を経て1台帳を撤�
           ...conditions,
           disclosure: {
             reason: "Archive verification",
-            grants: [{
-              accountId: creator,
-              actions: ["read", "export"],
-              purposes: ["archive"],
-              validFrom: at.toISOString(),
-              validUntil: null,
-            }],
+            grants: [
+              {
+                accountId: creator,
+                actions: ["read", "export"],
+                purposes: ["archive"],
+                validFrom: at.toISOString(),
+                validUntil: null,
+              },
+            ],
           },
         },
       },
     })
     if (submitted.status !== 201) throw new Error(await submitted.text())
-    const record = z.object({ number: z.number(), record_id: z.string() }).parse(await submitted.json())
-    const proposal = await new SystemD1ProposalAdapter({ env: { DB: database } }).findByNumber(record.number)
-    if (proposal === null || proposal instanceof Error) throw new Error("missing preservation proposal")
-    expect((await apiRequest(`${path}/${record.number}/approve`, {
-      method: "POST", accountId: reviewer.accountId,
-      body: {
-        decision_target: {
-          proposal_version: proposal.version,
-          proposal_digest: proposal.digest,
-          task_key: proposal.currentTaskKey,
-          task_round: proposal.currentTaskRound,
-        },
-        comment: "Reviewed original",
-      },
-    })).status).toBe(200)
-    expect((await apiRequest(`${path}/${record.number}/execute`, {
-      method: "POST", body: { proposal_digest: proposal.digest },
-    })).status).toBe(200)
+    const record = z
+      .object({ number: z.number(), record_id: z.string() })
+      .parse(await submitted.json())
+    const proposal = await new SystemD1ProposalAdapter({ env: { DB: database } }).findByNumber(
+      record.number,
+    )
+    if (proposal === null || proposal instanceof Error)
+      throw new Error("missing preservation proposal")
+    expect(
+      (
+        await apiRequest(`${path}/${record.number}/approve`, {
+          method: "POST",
+          accountId: reviewer.accountId,
+          body: {
+            decision_target: {
+              proposal_version: proposal.version,
+              proposal_digest: proposal.digest,
+              task_key: proposal.currentTaskKey,
+              task_round: proposal.currentTaskRound,
+            },
+            comment: "Reviewed original",
+          },
+        })
+      ).status,
+    ).toBe(200)
+    expect(
+      (
+        await apiRequest(`${path}/${record.number}/execute`, {
+          method: "POST",
+          body: { proposal_digest: proposal.digest },
+        })
+      ).status,
+    ).toBe(200)
     mappings.push({
       recordKind: sourceRecord.recordKind,
       sourceRecordId: sourceRecord.recordId,
@@ -128,19 +184,29 @@ test("給与改定記録を全件保全し、人の承認を経て1台帳を撤�
   }
   const sourcePath = `/compensation-change/record-source-freezes/${freezeId}`
   const planId = crypto.randomUUID()
-  const salaryMappings = mappings.filter((mapping) => mapping.recordKind === "salary-revision-record")
+  const salaryMappings = mappings.filter(
+    (mapping) => mapping.recordKind === "salary-revision-record",
+  )
   const coverageRecords = (records: typeof mappings) =>
     records.map(({ sourceRecordId, preservedRecordId }) => ({ sourceRecordId, preservedRecordId }))
   const firstCoverage = await post(`${sourcePath}/coverage-pages`, crypto.randomUUID(), {
-    purpose: "archive", recordKind: "salary-revision-record", records: coverageRecords(salaryMappings.slice(0, 10)),
+    purpose: "archive",
+    recordKind: "salary-revision-record",
+    records: coverageRecords(salaryMappings.slice(0, 10)),
   })
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
-    sequence: 1, nextCursor: "10", recordCount: 10,
+    sequence: 1,
+    nextCursor: "10",
+    recordCount: 10,
   })
-  expect((await post(`${sourcePath}/retirement-plans`, planId, { purpose: "archive" })).status).toBe(503)
+  expect(
+    (await post(`${sourcePath}/retirement-plans`, planId, { purpose: "archive" })).status,
+  ).toBe(503)
   const lastCoverage = await post(`${sourcePath}/coverage-pages`, crypto.randomUUID(), {
-    purpose: "archive", recordKind: "salary-revision-record", records: coverageRecords(salaryMappings.slice(10)),
+    purpose: "archive",
+    recordKind: "salary-revision-record",
+    records: coverageRecords(salaryMappings.slice(10)),
   })
   if (lastCoverage.status !== 200) throw new Error(await lastCoverage.text())
   expect(await lastCoverage.json()).toMatchObject({ sequence: 2, nextCursor: null, recordCount: 1 })

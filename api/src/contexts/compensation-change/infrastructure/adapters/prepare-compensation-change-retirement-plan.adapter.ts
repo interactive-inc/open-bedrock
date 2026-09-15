@@ -5,7 +5,7 @@ import { CompensationChangeActorReadAdapter } from "@/contexts/compensation-chan
 import { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
 import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
-import { compensationChangeRecordKinds } from "@/contexts/compensation-change/domain/compensation-change-record-kind"
+import { compensationChangeRecordKinds } from "@/contexts/compensation-change/domain/definitions/compensation-change-record-kind.definition"
 
 type Context = CompensationChangeContext
 
@@ -60,12 +60,12 @@ export class PrepareCompensationChangeRetirementPlanAdapter {
         ownerContext: "compensation-change",
         capability: { revision: 1, recordKinds: compensationChangeRecordKinds },
         coverage: chains.map(({ summary }) => ({
-            recordKind: summary.recordKind,
-            terminalPageId: summary.terminalPageId,
-            terminalDigest: summary.terminalDigest,
-            pageCount: summary.pageCount,
-            recordCount: summary.recordCount,
-          })),
+          recordKind: summary.recordKind,
+          terminalPageId: summary.terminalPageId,
+          terminalDigest: summary.terminalDigest,
+          pageCount: summary.pageCount,
+          recordCount: summary.recordCount,
+        })),
         actorAccountId: authentication.accountId,
         createdAt: this.c.var.now().toISOString(),
         auditEventId: crypto.randomUUID(),
