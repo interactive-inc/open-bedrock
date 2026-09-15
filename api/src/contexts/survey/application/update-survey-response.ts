@@ -2,6 +2,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import type { SurveyResponse } from "@/contexts/survey/domain/entities/survey-response.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
+import { isSurveyRecordSourceFrozenError } from "@/contexts/survey/infrastructure/repositories/lib/is-survey-record-source-frozen-error"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -55,6 +56,9 @@ export class UpdateSurveyResponse {
     const result = await surveyRepository.updateResponse(updated)
 
     if (result instanceof Error) {
+      if (isSurveyRecordSourceFrozenError(result)) {
+        return new ConflictError("survey writes are frozen", "record_source_frozen", { cause: result })
+      }
       return new UnexpectedError("failed to update survey response", { cause: result })
     }
 

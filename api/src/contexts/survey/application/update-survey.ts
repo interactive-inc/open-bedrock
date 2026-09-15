@@ -2,6 +2,7 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import type { Survey } from "@/contexts/survey/domain/entities/survey.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
+import { isSurveyRecordSourceFrozenError } from "@/contexts/survey/infrastructure/repositories/lib/is-survey-record-source-frozen-error"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -56,6 +57,9 @@ export class UpdateSurvey {
       const result = await surveyRepository.updateIfNoResponses(updated)
 
       if (result instanceof Error) {
+        if (isSurveyRecordSourceFrozenError(result)) {
+          return new ConflictError("survey writes are frozen", "record_source_frozen", { cause: result })
+        }
         return new UnexpectedError("failed to update survey", { cause: result })
       }
 
@@ -69,6 +73,9 @@ export class UpdateSurvey {
     const result = await surveyRepository.update(updated)
 
     if (result instanceof Error) {
+      if (isSurveyRecordSourceFrozenError(result)) {
+        return new ConflictError("survey writes are frozen", "record_source_frozen", { cause: result })
+      }
       return new UnexpectedError("failed to update survey", { cause: result })
     }
 
