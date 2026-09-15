@@ -1,5 +1,6 @@
 import { ConflictError } from "@/lib/errors"
 import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/repositories/business-trip.repository"
+import { isBusinessTripRecordSourceFrozenError } from "@/contexts/business-trip/infrastructure/repositories/lib/is-business-trip-record-source-frozen-error"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { UpdateBusinessTrip } from "@/contexts/business-trip/application/update-business-trip"
 import type { BusinessTrip } from "@/contexts/business-trip/domain/entities/business-trip.entity"
@@ -155,6 +156,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     const deleted = await businessTripRepository.delete(command.businessTripId)
 
     if (deleted instanceof Error) {
+      if (isBusinessTripRecordSourceFrozenError(deleted)) {
+        return new ConflictError("business trip writes are frozen", "record_source_frozen", { cause: deleted })
+      }
       return new UnexpectedError("failed to delete business trip", { cause: deleted })
     }
 
