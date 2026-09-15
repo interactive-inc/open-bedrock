@@ -3,6 +3,7 @@ import type { SurveySubmissionView } from "@/contexts/survey/domain/definitions/
 import { SurveyResponse } from "@/contexts/survey/domain/entities/survey-response.entity"
 import type { Context } from "@/env"
 import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
+import { isSurveyRecordSourceFrozenError } from "@/contexts/survey/infrastructure/repositories/lib/is-survey-record-source-frozen-error"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -61,6 +62,9 @@ export class SubmitSurveyResponse {
     const created = await surveyRepository.createResponse(surveyResponse)
 
     if (created instanceof Error) {
+      if (isSurveyRecordSourceFrozenError(created)) {
+        return new ConflictError("survey writes are frozen", "record_source_frozen", { cause: created })
+      }
       return new UnexpectedError("failed to create survey response", { cause: created })
     }
 

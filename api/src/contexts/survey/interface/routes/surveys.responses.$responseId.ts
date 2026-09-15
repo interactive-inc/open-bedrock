@@ -1,4 +1,5 @@
 import { ConflictError } from "@/lib/errors"
+import { isSurveyRecordSourceFrozenError } from "@/contexts/survey/infrastructure/repositories/lib/is-survey-record-source-frozen-error"
 import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 
@@ -165,6 +166,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     const deleted = await surveyRepository.deleteResponse(command.responseId)
 
     if (deleted instanceof Error) {
+      if (isSurveyRecordSourceFrozenError(deleted)) {
+        return new ConflictError("survey writes are frozen", "record_source_frozen", { cause: deleted })
+      }
       return new UnexpectedError("failed to delete survey response", { cause: deleted })
     }
 
