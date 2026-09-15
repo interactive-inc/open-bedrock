@@ -1,4 +1,4 @@
-import { skillRecordKindSchema } from "@/contexts/skill/domain/skill-record-kind"
+import { skillRecordKindSchema } from "@/contexts/skill/domain/definitions/skill-record-kind.definition"
 import { z } from "zod"
 
 export const skillRecordRouteSchema = z.strictObject({

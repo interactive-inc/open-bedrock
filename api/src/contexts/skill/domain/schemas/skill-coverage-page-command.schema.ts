@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { skillRecordKindSchema } from "@/contexts/skill/domain/skill-record-kind"
+import { skillRecordKindSchema } from "@/contexts/skill/domain/definitions/skill-record-kind.definition"
 
 export const skillCoveragePageCommandSchema = z.strictObject({
   id: z.uuid(),
