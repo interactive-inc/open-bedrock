@@ -10,7 +10,11 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { GET as preservedDossier } from "@system/interface/routes/system.preserved-records.$recordId.dossier"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
-import { assetRecordKinds, encodeStocktakeItemRecordId, type AssetRecordKind } from "@/contexts/asset/domain/asset-record-kind"
+import {
+  assetRecordKinds,
+  encodeStocktakeItemRecordId,
+  type AssetRecordKind,
+} from "@/contexts/asset/domain/definitions/asset-record-kind.definition"
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の承認を経て4台帳を撤去確定する", async () => {
@@ -40,22 +44,30 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
     .run()
   for (let id = 1; id <= 11; id++) {
     const code = `A${String(id).padStart(4, "0")}`
-    await database.prepare(`INSERT INTO assets
+    await database
+      .prepare(`INSERT INTO assets
       (code,name,kind,serial,purchased_on,status,holder_employee_id,disposed_on,disposal_reason)
       VALUES (?1,?2,'pc',?3,'2026-01-01','in_stock',NULL,NULL,NULL)`)
-      .bind(code, `Asset ${id}`, `SERIAL-${id}`).run()
+      .bind(code, `Asset ${id}`, `SERIAL-${id}`)
+      .run()
   }
-  await database.prepare(`INSERT INTO asset_lendings
+  await database
+    .prepare(`INSERT INTO asset_lendings
     (id,asset_code,employee_id,lent_at,returned_at) VALUES (1,'A0001',?1,'2026-01-02T00:00:00Z','2026-01-03T00:00:00Z')`)
-    .bind(creatorPerson.employeeId).run()
+    .bind(creatorPerson.employeeId)
+    .run()
   const stocktakeId = "a1b2c3d4-e5f6-4a1b-8c2d-000000000001"
-  await database.prepare(`INSERT INTO stocktakes
+  await database
+    .prepare(`INSERT INTO stocktakes
     (id,name,target_date,status,created_at,closed_at) VALUES (?1,'Annual stocktake','2026-04-01','closed','2026-04-01T00:00:00Z','2026-04-02T00:00:00Z')`)
-    .bind(stocktakeId).run()
-  await database.prepare(`INSERT INTO stocktake_items
+    .bind(stocktakeId)
+    .run()
+  await database
+    .prepare(`INSERT INTO stocktake_items
     (stocktake_id,asset_code,checked_at,checker_employee_id,location_note)
     VALUES (?1,'A0001','2026-04-01T01:00:00Z',?2,'Office')`)
-    .bind(stocktakeId, creatorPerson.employeeId).run()
+    .bind(stocktakeId, creatorPerson.employeeId)
+    .run()
   const at = new Date()
   const token = await tokenFor(creator)
   const stepUpToken = "e".repeat(64)
@@ -83,29 +95,38 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
     )
   const freezeId = crypto.randomUUID()
   expect(
-    (await post("/asset/record-source-freezes", freezeId, { reason: "Preserve asset" }))
-      .status,
+    (await post("/asset/record-source-freezes", freezeId, { reason: "Preserve asset" })).status,
   ).toBe(201)
   expect(
-    await database.prepare("SELECT count(*) AS n FROM system_procedure_definitions WHERE key=?1")
-      .bind(definition.key).first<number>("n"),
+    await database
+      .prepare("SELECT count(*) AS n FROM system_procedure_definitions WHERE key=?1")
+      .bind(definition.key)
+      .first<number>("n"),
   ).toBe(1)
   await expect(
     database.prepare("UPDATE assets SET name='Must not change' WHERE code='A0001'").run(),
   ).rejects.toThrow("asset_record_source_frozen")
   await expect(
-    database.prepare("UPDATE stocktakes SET name='Must not change' WHERE id=?1")
-      .bind(stocktakeId).run(),
+    database
+      .prepare("UPDATE stocktakes SET name='Must not change' WHERE id=?1")
+      .bind(stocktakeId)
+      .run(),
   ).rejects.toThrow("asset_record_source_frozen")
   await expect(
-    database.prepare("UPDATE stocktake_items SET location_note='Must not change' WHERE stocktake_id=?1 AND asset_code='A0001'")
-      .bind(stocktakeId).run(),
+    database
+      .prepare(
+        "UPDATE stocktake_items SET location_note='Must not change' WHERE stocktake_id=?1 AND asset_code='A0001'",
+      )
+      .bind(stocktakeId)
+      .run(),
   ).rejects.toThrow("asset_record_source_frozen")
   await expect(
-    database.prepare(`INSERT INTO asset_lendings
+    database
+      .prepare(`INSERT INTO asset_lendings
       (id,asset_code,employee_id,lent_at,returned_at)
       VALUES (2,'A0002',?1,'2026-01-04T00:00:00Z',NULL)`)
-      .bind(creatorPerson.employeeId).run(),
+      .bind(creatorPerson.employeeId)
+      .run(),
   ).rejects.toThrow("asset_record_source_frozen")
   expect(
     (
@@ -131,18 +152,19 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
       })
     ).status,
   ).toBe(409)
-  const sourceRecords: ReadonlyArray<Readonly<{ recordKind: AssetRecordKind; recordId: string }>> = [
-    ...Array.from({ length: 11 }, (_, index) => ({
-      recordKind: "asset-record" as const,
-      recordId: `A${String(index + 1).padStart(4, "0")}`,
-    })),
-    { recordKind: "asset-lending-record", recordId: "1" },
-    { recordKind: "stocktake-record", recordId: stocktakeId },
-    {
-      recordKind: "stocktake-item-record",
-      recordId: encodeStocktakeItemRecordId(stocktakeId, "A0001"),
-    },
-  ]
+  const sourceRecords: ReadonlyArray<Readonly<{ recordKind: AssetRecordKind; recordId: string }>> =
+    [
+      ...Array.from({ length: 11 }, (_, index) => ({
+        recordKind: "asset-record" as const,
+        recordId: `A${String(index + 1).padStart(4, "0")}`,
+      })),
+      { recordKind: "asset-lending-record", recordId: "1" },
+      { recordKind: "stocktake-record", recordId: stocktakeId },
+      {
+        recordKind: "stocktake-item-record",
+        recordId: encodeStocktakeItemRecordId(stocktakeId, "A0001"),
+      },
+    ]
   const mappings: Array<{
     recordKind: AssetRecordKind
     sourceRecordId: string
@@ -159,36 +181,53 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
           ...conditions,
           disclosure: {
             reason: "Archive verification",
-            grants: [{
-              accountId: creator,
-              actions: ["read", "export"],
-              purposes: ["archive"],
-              validFrom: at.toISOString(),
-              validUntil: null,
-            }],
+            grants: [
+              {
+                accountId: creator,
+                actions: ["read", "export"],
+                purposes: ["archive"],
+                validFrom: at.toISOString(),
+                validUntil: null,
+              },
+            ],
           },
         },
       },
     })
     if (submitted.status !== 201) throw new Error(await submitted.text())
-    const record = z.object({ number: z.number(), record_id: z.string() }).parse(await submitted.json())
-    const proposal = await new SystemD1ProposalAdapter({ env: { DB: database } }).findByNumber(record.number)
-    if (proposal === null || proposal instanceof Error) throw new Error("missing preservation proposal")
-    expect((await apiRequest(`${path}/${record.number}/approve`, {
-      method: "POST", accountId: reviewer.accountId,
-      body: {
-        decision_target: {
-          proposal_version: proposal.version,
-          proposal_digest: proposal.digest,
-          task_key: proposal.currentTaskKey,
-          task_round: proposal.currentTaskRound,
-        },
-        comment: "Reviewed original",
-      },
-    })).status).toBe(200)
-    expect((await apiRequest(`${path}/${record.number}/execute`, {
-      method: "POST", body: { proposal_digest: proposal.digest },
-    })).status).toBe(200)
+    const record = z
+      .object({ number: z.number(), record_id: z.string() })
+      .parse(await submitted.json())
+    const proposal = await new SystemD1ProposalAdapter({ env: { DB: database } }).findByNumber(
+      record.number,
+    )
+    if (proposal === null || proposal instanceof Error)
+      throw new Error("missing preservation proposal")
+    expect(
+      (
+        await apiRequest(`${path}/${record.number}/approve`, {
+          method: "POST",
+          accountId: reviewer.accountId,
+          body: {
+            decision_target: {
+              proposal_version: proposal.version,
+              proposal_digest: proposal.digest,
+              task_key: proposal.currentTaskKey,
+              task_round: proposal.currentTaskRound,
+            },
+            comment: "Reviewed original",
+          },
+        })
+      ).status,
+    ).toBe(200)
+    expect(
+      (
+        await apiRequest(`${path}/${record.number}/execute`, {
+          method: "POST",
+          body: { proposal_digest: proposal.digest },
+        })
+      ).status,
+    ).toBe(200)
     mappings.push({
       recordKind: sourceRecord.recordKind,
       sourceRecordId: sourceRecord.recordId,
@@ -201,22 +240,32 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
   const coverageRecords = (records: typeof mappings) =>
     records.map(({ sourceRecordId, preservedRecordId }) => ({ sourceRecordId, preservedRecordId }))
   const firstCoverage = await post(`${sourcePath}/coverage-pages`, crypto.randomUUID(), {
-    purpose: "archive", recordKind: "asset-record", records: coverageRecords(assetMappings.slice(0, 10)),
+    purpose: "archive",
+    recordKind: "asset-record",
+    records: coverageRecords(assetMappings.slice(0, 10)),
   })
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
-    sequence: 1, nextCursor: "A0010", recordCount: 10,
+    sequence: 1,
+    nextCursor: "A0010",
+    recordCount: 10,
   })
-  expect((await post(`${sourcePath}/retirement-plans`, planId, { purpose: "archive" })).status).toBe(503)
+  expect(
+    (await post(`${sourcePath}/retirement-plans`, planId, { purpose: "archive" })).status,
+  ).toBe(503)
   const lastCoverage = await post(`${sourcePath}/coverage-pages`, crypto.randomUUID(), {
-    purpose: "archive", recordKind: "asset-record", records: coverageRecords(assetMappings.slice(10)),
+    purpose: "archive",
+    recordKind: "asset-record",
+    records: coverageRecords(assetMappings.slice(10)),
   })
   if (lastCoverage.status !== 200) throw new Error(await lastCoverage.text())
   expect(await lastCoverage.json()).toMatchObject({ sequence: 2, nextCursor: null, recordCount: 1 })
   for (const recordKind of assetRecordKinds.slice(1)) {
     const records = mappings.filter((mapping) => mapping.recordKind === recordKind)
     const covered = await post(`${sourcePath}/coverage-pages`, crypto.randomUUID(), {
-      purpose: "archive", recordKind, records: coverageRecords(records),
+      purpose: "archive",
+      recordKind,
+      records: coverageRecords(records),
     })
     if (covered.status !== 200) throw new Error(await covered.text())
     expect(await covered.json()).toMatchObject({ sequence: 1, nextCursor: null, recordCount: 1 })
@@ -283,12 +332,14 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
       .bind(planId)
       .first<number>("n"),
   ).toBe(5)
+  expect(await database.prepare("SELECT count(*) AS n FROM assets").first<number>("n")).toBe(11)
   expect(
-    await database.prepare("SELECT count(*) AS n FROM assets").first<number>("n"),
-  ).toBe(11)
-  expect(await database.prepare("SELECT count(*) AS n FROM asset_lendings").first<number>("n")).toBe(1)
+    await database.prepare("SELECT count(*) AS n FROM asset_lendings").first<number>("n"),
+  ).toBe(1)
   expect(await database.prepare("SELECT count(*) AS n FROM stocktakes").first<number>("n")).toBe(1)
-  expect(await database.prepare("SELECT count(*) AS n FROM stocktake_items").first<number>("n")).toBe(1)
+  expect(
+    await database.prepare("SELECT count(*) AS n FROM stocktake_items").first<number>("n"),
+  ).toBe(1)
   expect(
     await database
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
@@ -451,9 +502,7 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
       .first<number>("n"),
   ).toBe(1)
-  expect(
-    await database.prepare("SELECT count(*) AS n FROM assets").first<number>("n"),
-  ).toBe(11)
+  expect(await database.prepare("SELECT count(*) AS n FROM assets").first<number>("n")).toBe(11)
   expect(
     (
       await post(`${sourcePath}/release`, crypto.randomUUID(), {

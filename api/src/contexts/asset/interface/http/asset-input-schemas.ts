@@ -1,4 +1,4 @@
-import { assetRecordKindSchema } from "@/contexts/asset/domain/asset-record-kind"
+import { assetRecordKindSchema } from "@/contexts/asset/domain/definitions/asset-record-kind.definition"
 import { z } from "zod"
 
 export const assetRecordRouteSchema = z.strictObject({
