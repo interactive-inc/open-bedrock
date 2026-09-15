@@ -1,0 +1,157 @@
+import { AdoptGovernanceOrgRoleAssignment } from "@/contexts/governance/application/adopt-governance-org-role-assignment"
+import { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
+import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/test/company-assignment-resource.test-support"
+import { GovernanceRoleAssignmentAdoptionSnapshotAdapter } from "@/contexts/governance/infrastructure/adapters/governance-role-assignment-adoption-snapshot.adapter"
+import { CreateRecordSourceFreeze } from "@system/application/records/create-record-source-freeze"
+import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { expect, test } from "bun:test"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { loadSchema } from "@tests/api/support/load-schema"
+
+async function fixture() {
+  const context = await createCompanyAssignmentResourceTestContext(
+    createD1TestDatabase(loadSchema()),
+  )
+  await context.assignEmployeeCode(context.creator.employeeId, "LEGACY-001")
+  await context.database
+    .prepare(`INSERT INTO governance_org_role_assignments
+      (id, org_role_code, employee_id, department_code, starts_on, ends_on,
+       source_document_code, created_by_account_id, created_at, revoked_by_account_id, revoked_at)
+      VALUES (7, 'ciso', ?2, NULL, '2025-01-01', NULL,
+       'security-policy', ?1, '2025-01-02T00:00:00Z', ?1, '2025-02-01T00:00:00Z')`)
+    .bind(context.creator.accountId, context.creator.employeeId)
+    .run()
+  const freeze = await new CreateRecordSourceFreeze({
+    repository: new RecordSourceFreezeRepository({
+      env: context.context.env,
+      assertions: [],
+    }),
+  }).execute(
+    {
+      id: "95ee3345-4f0e-4742-949a-c105bcb13b38",
+      sourceNamespace: "9664c95f-412f-472f-9e09-9772f55485e1",
+      ownerContext: "governance",
+      actorAccountId: context.creator.accountId,
+      reason: "Freeze governance responsibility assignments for adoption",
+    },
+    context.at,
+  )
+  if (freeze instanceof Error || freeze === "conflict") throw new Error("freeze failed")
+  const session = new CompanySessionValue({
+    accountId: context.creator.accountId,
+    employeeId: context.creator.employeeId,
+    employmentStatus: "ACTIVE",
+    permissions: new Set(["governance:manage"]),
+    roleKeys: [],
+  })
+  const application = new AdoptGovernanceOrgRoleAssignment({
+    context: context.context,
+    prepareAudit: (audit) => [
+      context.database
+        .prepare(`INSERT INTO system_audit_events
+          (event_id, actor_account_id, action, target_type, target_id, outcome, occurred_at,
+           metadata_json)
+         VALUES (?1, ?2, ?3, ?4, ?5, 'succeeded', ?6, ?7)`)
+        .bind(
+          crypto.randomUUID(),
+          audit.session.accountId,
+          audit.action,
+          audit.targetType,
+          audit.targetId,
+          context.at.getTime(),
+          JSON.stringify(audit.metadata ?? null),
+        ),
+    ],
+  })
+  const snapshot = await new GovernanceRoleAssignmentAdoptionSnapshotAdapter(
+    context.database,
+  ).find(7)
+  if (snapshot === null || snapshot instanceof Error) throw new Error("snapshot failed")
+
+  return { ...context, application, session, snapshot }
+}
+
+test("凍結した取消済み割当を元記録とCompanyのactive・void履歴へ接続する", async () => {
+  const context = await fixture()
+  const expectedRevision = await context.companyRevision()
+  const adopted = await context.application.execute({
+    session: context.session,
+    assignmentId: 7,
+    commandId: "governance:adopt:7",
+    expectedRevision,
+    snapshotDigest: context.snapshot.snapshotDigest,
+  })
+  expect(adopted).toMatchObject({ kind: "assigned", replayed: false })
+  if (!("kind" in adopted) || adopted.kind !== "assigned") throw new Error("adoption failed")
+  expect(
+    await context.database
+      .prepare(
+        "SELECT source_json, snapshot_digest, resource_revision FROM company_responsibility_source_adoptions",
+      )
+      .first<{
+        source_json: string
+        snapshot_digest: string
+        resource_revision: number
+      }>(),
+  ).toEqual({
+    source_json: context.snapshot.sourceJson,
+    snapshot_digest: context.snapshot.snapshotDigest,
+    resource_revision: 2,
+  })
+  expect(
+    await context.database
+      .prepare(
+        "SELECT revision, state FROM company_resource_revisions WHERE resource_id = ?1 ORDER BY revision",
+      )
+      .bind(adopted.assignmentId)
+      .all(),
+  ).toMatchObject({ results: [{ revision: 1, state: "active" }, { revision: 2, state: "void" }] })
+  expect(
+    await context.application.execute({
+      session: context.session,
+      assignmentId: 7,
+      commandId: "governance:adopt:7",
+      expectedRevision,
+      snapshotDigest: context.snapshot.snapshotDigest,
+    }),
+  ).toEqual({ ...adopted, replayed: true })
+})
+
+test("凍結前と異なる元記録ダイジェストでは会社版を進めない", async () => {
+  const context = await fixture()
+  const expectedRevision = await context.companyRevision()
+  const rejected = await context.application.execute({
+    session: context.session,
+    assignmentId: 7,
+    commandId: "governance:adopt:changed",
+    expectedRevision,
+    snapshotDigest: "0".repeat(64),
+  })
+  expect(rejected).toMatchObject({ code: "governance_role_source_conflict" })
+  expect(await context.companyRevision()).toBe(expectedRevision)
+  expect(
+    await context.database
+      .prepare("SELECT count(*) AS total FROM company_responsibility_source_adoptions")
+      .first<number>("total"),
+  ).toBe(0)
+})
+
+test("停止世代の間は旧責任台帳の追加・更新・削除を全て拒否する", async () => {
+  const context = await fixture()
+  await expect(
+    context.database
+      .prepare(`INSERT INTO governance_org_role_assignments
+        (org_role_code, employee_id, starts_on, created_by_account_id, created_at)
+        VALUES ('privacy-manager', ?1, '2025-01-01', ?2, '2025-01-02T00:00:00Z')`)
+      .bind(context.creator.employeeId, context.creator.accountId)
+      .run(),
+  ).rejects.toThrow("governance_org_role_assignment_source_frozen")
+  await expect(
+    context.database
+      .prepare("UPDATE governance_org_role_assignments SET ends_on = '2025-03-01' WHERE id = 7")
+      .run(),
+  ).rejects.toThrow("governance_org_role_assignment_source_frozen")
+  await expect(
+    context.database.prepare("DELETE FROM governance_org_role_assignments WHERE id = 7").run(),
+  ).rejects.toThrow("governance_org_role_assignment_source_frozen")
+})
