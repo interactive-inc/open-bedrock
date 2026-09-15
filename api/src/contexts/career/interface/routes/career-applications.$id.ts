@@ -1,6 +1,7 @@
 import { ConflictError } from "@/lib/errors"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { CareerApplicationRepository } from "@/contexts/career/infrastructure/repositories/career-application.repository"
+import { isCareerRecordSourceFrozenError } from "@/contexts/career/infrastructure/repositories/lib/is-career-record-source-frozen-error"
 
 import { UpdateMyCareerApplication } from "@/contexts/career/application/update-my-career-application"
 import type { CareerApplication } from "@/contexts/career/domain/entities/career-application.entity"
@@ -156,6 +157,11 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     const deleted = await applicationRepository.delete(command.applicationId)
 
     if (deleted instanceof Error) {
+      if (isCareerRecordSourceFrozenError(deleted)) {
+        return new ConflictError("career writes are frozen", "record_source_frozen", {
+          cause: deleted,
+        })
+      }
       return new UnexpectedError("failed to delete career application", { cause: deleted })
     }
 
