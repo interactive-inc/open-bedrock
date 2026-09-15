@@ -4,6 +4,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { LifeEventRepository } from "@/contexts/life-event/infrastructure/repositories/life-event.repository"
+import { isLifeEventRecordSourceFrozenError } from "@/contexts/life-event/infrastructure/repositories/lib/is-life-event-record-source-frozen-error"
 import type { LifeEventType } from "@/contexts/life-event/domain/definitions/life-event-type.definition"
 
 export type Command = {
@@ -52,6 +53,8 @@ export class UpdateLifeEvent {
     const saved = await lifeEventRepository.update(updated)
 
     if (saved instanceof Error) {
+      if (isLifeEventRecordSourceFrozenError(saved))
+        return new ConflictError("life event writes are frozen", "record_source_frozen", { cause: saved })
       return new UnexpectedError("failed to update life event", { cause: saved })
     }
 

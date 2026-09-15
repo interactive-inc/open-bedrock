@@ -4,6 +4,7 @@ import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { LifeEventRepository } from "@/contexts/life-event/infrastructure/repositories/life-event.repository"
+import { isLifeEventRecordSourceFrozenError } from "@/contexts/life-event/infrastructure/repositories/lib/is-life-event-record-source-frozen-error"
 
 export type Command = {
   session: CompanySessionValue
@@ -46,6 +47,8 @@ export class ApproveLifeEvent {
     })
 
     if (updated instanceof Error) {
+      if (isLifeEventRecordSourceFrozenError(updated))
+        return new ConflictError("life event writes are frozen", "record_source_frozen", { cause: updated })
       return new UnexpectedError("failed to update life event status", { cause: updated })
     }
 
