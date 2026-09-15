@@ -2,6 +2,7 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import type { Asset } from "@/contexts/asset/domain/entities/asset.entity"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { isAssetRecordSourceFrozenError } from "@/contexts/asset/infrastructure/repositories/lib/is-asset-record-source-frozen-error"
 import type { ApplicationError } from "@/lib/errors"
 import { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
 
@@ -47,6 +48,7 @@ export class ReturnAsset {
     })
 
     if (returned instanceof Error) {
+      if (isAssetRecordSourceFrozenError(returned)) return new ConflictError("asset writes are frozen", "record_source_frozen", { cause: returned })
       return new UnexpectedError("failed to return asset", { cause: returned })
     }
 

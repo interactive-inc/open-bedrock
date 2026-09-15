@@ -1,4 +1,6 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import { assetRecordKindSchema } from "@/contexts/asset/domain/asset-record-kind"
+import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records/record-source-freeze.schema"
 import { z } from "zod"
 
 /** 資産 1 件のレスポンス。廃棄済みは disposed_on / disposal_reason を伴う。 */
@@ -77,4 +79,29 @@ export const zAppStocktakeList = z.object({
 export const zAppAssetList = z.object({
   data: z.array(zAppAsset),
   total: z.number(),
+})
+
+export const assetSourceFreezeResponseSchema = z.strictObject({ freeze: recordSourceFreezeSnapshotSchema })
+export const zAppAssetCoveragePageReceipt = z.strictObject({
+  id: z.uuid(), freezeId: z.uuid(), sequence: z.number().int().positive().safe(),
+  digest: z.string().regex(/^[0-9a-f]{64}$/), afterCursor: z.string().nullable(),
+  nextCursor: z.string().nullable(), checkedAt: z.string().datetime(),
+  recordCount: z.number().int().min(0).max(10),
+})
+export const zAppAssetRetirementPlan = z.strictObject({
+  id: z.uuid(), freezeId: z.uuid(), digest: z.string().regex(/^[0-9a-f]{64}$/),
+  totalPages: z.number().int().positive().safe(), recordKinds: z.array(assetRecordKindSchema).length(4),
+  createdAt: z.iso.datetime(),
+})
+export const zAppAssetRetirementVerificationReceipt = z.strictObject({
+  id: z.uuid(), planId: z.uuid(), planDigest: z.string().regex(/^[0-9a-f]{64}$/),
+  ordinal: z.number().int().positive().safe(), digest: z.string().regex(/^[0-9a-f]{64}$/),
+  coveragePageId: z.uuid(), checkedAt: z.iso.datetime(),
+})
+export const zAppAssetRetirementRequest = z.strictObject({
+  number: z.number().int().positive().safe(), caseId: z.string().min(1), planId: z.uuid(),
+  proposalDigest: z.string().regex(/^[0-9a-f]{64}$/), status: z.string().min(1),
+})
+export const zAppAssetRetirementExecution = z.strictObject({
+  retirement_id: z.uuid(), finalized_at: z.iso.datetime(),
 })

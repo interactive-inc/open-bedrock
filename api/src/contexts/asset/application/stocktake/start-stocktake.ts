@@ -1,6 +1,7 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { Stocktake } from "@/contexts/asset/domain/entities/stocktake.entity"
-import { ForbiddenError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
+import { isAssetRecordSourceFrozenError } from "@/contexts/asset/infrastructure/repositories/lib/is-asset-record-source-frozen-error"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { StocktakeRepository } from "@/contexts/asset/infrastructure/repositories/stocktake/stocktake.repository"
@@ -37,6 +38,7 @@ export class StartStocktake {
     const created = await stocktakeRepository.createWithItems(stocktake)
 
     if (created instanceof Error) {
+      if (isAssetRecordSourceFrozenError(created)) return new ConflictError("asset writes are frozen", "record_source_frozen", { cause: created })
       return new UnexpectedError("failed to create stocktake", { cause: created })
     }
 
