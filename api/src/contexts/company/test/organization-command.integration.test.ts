@@ -209,7 +209,7 @@ describe("organization command receipts and boundaries", () => {
 
   test("初回receipt照会後に同じ依頼が確定しても保存済みの再送結果を返す", async () => {
     const f = fixture()
-    const repository = new D1CompanyResourceRepository(f.database)
+    const repository = new D1CompanyResourceRepository({ database: f.database })
     const findMany = repository.findMany.bind(repository)
     const interception = spyOn(
       D1CompanyResourceRepository.prototype,
@@ -270,7 +270,7 @@ describe("organization command receipts and boundaries", () => {
   test("検証後に組織が変更されても古い依頼を確定しない", async () => {
     const f = fixture()
     expect((await f.post([root], 0, "root-create")).status).toBe(201)
-    const repository = new D1CompanyResourceRepository(f.database)
+    const repository = new D1CompanyResourceRepository({ database: f.database })
     const findMany = repository.findMany.bind(repository)
     const competing = CompanyResourceChangeEntity.create({
       commandId: "competing-root",

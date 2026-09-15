@@ -26,7 +26,7 @@ describe("Company Taskの判断時点の資格", () => {
         timeZone: "Asia/Tokyo",
       })
       if (asOf instanceof Error) throw asOf
-      const repository = new D1CompanyResourceRepository(database)
+      const repository = new D1CompanyResourceRepository({ database })
       const snapshot = await repository.findMany({
         organizationId: "organization:default",
         types: ["employee"],

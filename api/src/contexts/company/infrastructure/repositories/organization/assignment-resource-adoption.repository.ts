@@ -164,7 +164,7 @@ export class AssignmentResourceAdoptionRepository {
       )
     )
       return this.invalid(new Error("organization history is not connected"))
-    const repository = new D1CompanyResourceRepository(database)
+    const repository = new D1CompanyResourceRepository({ database })
     const history = await repository.findReportingRelationHistory(
       "organization:default",
       command.props.expectedRevision,

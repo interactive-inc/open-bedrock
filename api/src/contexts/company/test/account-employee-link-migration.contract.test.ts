@@ -25,7 +25,7 @@ async function fixture() {
   )
   const c = await createExternalIdentityImportTestContext("oidc", database)
   expect((await c.application.execute(c.input)).kind).toBe("applied")
-  const repository = new D1CompanyResourceRepository(database)
+  const repository = new D1CompanyResourceRepository({ database })
   const resources = await repository.findMany({
     organizationId: "organization:default",
     types: ["account-employee-link"],

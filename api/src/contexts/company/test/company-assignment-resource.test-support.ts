@@ -218,7 +218,7 @@ export async function createCompanyAssignmentResourceTestContext(
     return revision
   }
   const publicAssignments = async (date: string) => {
-    const snapshot = await new D1CompanyResourceRepository(base.database).findMany({
+    const snapshot = await new D1CompanyResourceRepository({ database: base.database }).findMany({
       organizationId: "organization:default",
       types: ["assignment"],
       effectiveOn: restoreCalendarDate(date),
@@ -227,7 +227,7 @@ export async function createCompanyAssignmentResourceTestContext(
     return snapshot.resources
   }
   const publicReporting = async (date: string) => {
-    const snapshot = await new D1CompanyResourceRepository(base.database).findMany({
+    const snapshot = await new D1CompanyResourceRepository({ database: base.database }).findMany({
       organizationId: "organization:default",
       types: ["reporting-relation"],
       effectiveOn: restoreCalendarDate(date),

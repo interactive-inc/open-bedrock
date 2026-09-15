@@ -44,7 +44,7 @@ async function fixture(
     organizationHistory,
   )
   await base.initializeAssignment()
-  const repository = new D1CompanyResourceRepository(base.database)
+  const repository = new D1CompanyResourceRepository({ database: base.database })
   const define = async (
     resources: ReadonlyArray<CompanyResourceProps>,
     key: string = crypto.randomUUID(),

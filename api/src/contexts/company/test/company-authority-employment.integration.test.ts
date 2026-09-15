@@ -20,7 +20,7 @@ test.each(["office-assignment", "organizational-authority"] as const)(
     )
     expect(retired).toMatchObject({ replayed: false })
     if (retired instanceof Error) throw retired
-    const repository = new D1CompanyResourceRepository(f.database)
+    const repository = new D1CompanyResourceRepository({ database: f.database })
     for (const [date, count] of [
       ["2030-06-30", 1],
       ["2030-07-01", 0],
@@ -98,7 +98,7 @@ test.each(["office-assignment", "organizational-authority"] as const)(
   "公開APIは%sを残す雇用・所属の短縮を拒否し、同時終了を受け付ける",
   async (type) => {
     const f = await createCompanyAuthorityEmploymentTestContext(type)
-    const repository = new D1CompanyResourceRepository(f.database)
+    const repository = new D1CompanyResourceRepository({ database: f.database })
     const snapshot = await repository.findMany({
       organizationId: "organization:default",
       types: ["employment"],
@@ -276,7 +276,7 @@ test.each(["office-assignment", "organizational-authority"] as const)(
     await f.database.exec("DROP TRIGGER reject_authority_exit")
     const retired = await f.personnel(retirement, "authority:failed-exit")
     if (retired instanceof Error) throw retired
-    const repository = new D1CompanyResourceRepository(f.database)
+    const repository = new D1CompanyResourceRepository({ database: f.database })
     const history = await repository.findEmploymentDependentHistory(
       "organization:default",
       await f.companyRevision(),

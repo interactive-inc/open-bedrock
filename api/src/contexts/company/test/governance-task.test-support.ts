@@ -123,12 +123,12 @@ export async function createGovernanceTaskTestContext(databaseOverride?: D1Datab
       resources: changes,
     })
     if (change instanceof Error) throw change
-    const saved = await new D1CompanyResourceRepository(database).write(change)
+    const saved = await new D1CompanyResourceRepository({ database }).write(change)
     if (saved.kind !== "applied")
       throw new Error(`governance setup failed: ${saved.kind}`, { cause: saved })
   }
   await write(resources)
-  const accountLinks = await new D1CompanyResourceRepository(database).findMany({
+  const accountLinks = await new D1CompanyResourceRepository({ database }).findMany({
     organizationId: "organization:default",
     types: ["account-employee-link"],
   })

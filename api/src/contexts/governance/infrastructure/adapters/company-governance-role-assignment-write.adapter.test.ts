@@ -51,7 +51,7 @@ test("責務定義と任命を一つの会社版へ保存し、同じcommandを�
   expect(replay).toEqual({ ...first, replayed: true })
 
   const read = await new CompanyGovernanceRoleAssignmentReadAdapter({
-    repository: new D1CompanyResourceRepository(f.database),
+    repository: new D1CompanyResourceRepository({ database: f.database }),
   }).read({
     organizationId: "organization:default",
     responsibilityCode: "ciso",
@@ -255,25 +255,32 @@ test("取消済みの元記録をactiveとvoidの連続改訂および移行証�
       )
       .bind(result.assignmentId)
       .all(),
-  ).toMatchObject({ results: [{ revision: 1, state: "active" }, { revision: 2, state: "void" }] })
+  ).toMatchObject({
+    results: [
+      { revision: 1, state: "active" },
+      { revision: 2, state: "void" },
+    ],
+  })
   expect(
     await f.database
       .prepare("SELECT resource_revision FROM company_responsibility_source_adoptions")
       .first<number>("resource_revision"),
   ).toBe(2)
-  expect(await f.writer.assign({
-    organizationId: "organization:default",
-    commandId: "governance:legacy:7",
-    expectedRevision: result.organizationRevision - 1,
-    responsibilityCode: "ciso",
-    responsibilityName: "CISO",
-    cardinality: "one",
-    employeeCode: "EMPLOYEE-001",
-    departmentCode: null,
-    startsOn: restoreCalendarDate("2025-01-01"),
-    endsOn: null,
-    sourceDocumentCode: null,
-    recordedAt: f.at.getTime(),
-    voided: true,
-  })).toEqual({ ...result, replayed: true })
+  expect(
+    await f.writer.assign({
+      organizationId: "organization:default",
+      commandId: "governance:legacy:7",
+      expectedRevision: result.organizationRevision - 1,
+      responsibilityCode: "ciso",
+      responsibilityName: "CISO",
+      cardinality: "one",
+      employeeCode: "EMPLOYEE-001",
+      departmentCode: null,
+      startsOn: restoreCalendarDate("2025-01-01"),
+      endsOn: null,
+      sourceDocumentCode: null,
+      recordedAt: f.at.getTime(),
+      voided: true,
+    }),
+  ).toEqual({ ...result, replayed: true })
 })

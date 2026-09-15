@@ -60,7 +60,7 @@ describe("Company authority resolution HTTP", () => {
                 ],
               })
               if (change instanceof Error) throw change
-              expect((await new D1CompanyResourceRepository(database).write(change)).kind).toBe(
+              expect((await new D1CompanyResourceRepository({ database }).write(change)).kind).toBe(
                 "applied",
               )
             }
@@ -313,6 +313,6 @@ async function seed(
     resources,
   })
   if (change instanceof Error) throw change
-  const written = await new D1CompanyResourceRepository(database).write(change)
+  const written = await new D1CompanyResourceRepository({ database }).write(change)
   if (written.kind !== "applied") throw new Error(`failed to seed: ${written.kind}`)
 }

@@ -141,10 +141,9 @@ export class CompanyPersonnelResourceJournalAdapter {
       )
     )
       return []
-    const history = await new D1CompanyResourceRepository(this.c).findEmploymentDependentHistory(
-      "organization:default",
-      organizationRevision,
-    )
+    const history = await new D1CompanyResourceRepository({
+      database: this.c,
+    }).findEmploymentDependentHistory("organization:default", organizationRevision)
     if (history instanceof Error)
       return new CompanyUnexpectedError("等級割当・任用・決裁資格の履歴を参照できません", {
         cause: history,

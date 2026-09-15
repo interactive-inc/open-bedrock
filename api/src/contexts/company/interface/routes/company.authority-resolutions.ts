@@ -96,7 +96,7 @@ export const POST = factory.createHandlers(
     if (before instanceof Error) throw new CompanyReadUnavailableError(before)
     const resolvedAt = context.var.companyClock?.() ?? new Date(context.env.NOW ?? Date.now())
     const result = await new CompanyGovernanceAuthorityResolutionAdapter({
-      repository: new D1CompanyResourceRepository(database),
+      repository: new D1CompanyResourceRepository({ database }),
       readActiveAccountIds: async (accountIds) => {
         return new CompanyDecisionHumanAccountsAdapter({ database }).findMany(
           accountIds,

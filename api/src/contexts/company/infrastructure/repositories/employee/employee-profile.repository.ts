@@ -70,7 +70,7 @@ export class EmployeeProfileRepository {
             "employee_profile_date_changed",
           )
       }
-      const saved = await new D1CompanyResourceRepository(this.c.env.DB).write(change)
+      const saved = await new D1CompanyResourceRepository({ database: this.c.env.DB }).write(change)
       if (saved.kind === "unavailable")
         return new CompanyUnexpectedError("人物情報を保存できません", { cause: saved.cause })
       if (saved.kind === "invalid")

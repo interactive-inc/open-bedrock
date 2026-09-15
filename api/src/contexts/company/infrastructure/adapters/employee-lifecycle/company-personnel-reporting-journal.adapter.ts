@@ -46,10 +46,9 @@ export class CompanyPersonnelReportingJournalAdapter {
     if (organizationRevision === null)
       return { resources: [], bindings: [], summary: props.action.summary }
     try {
-      const history = await new D1CompanyResourceRepository(this.c).findReportingRelationHistory(
-        "organization:default",
-        organizationRevision,
-      )
+      const history = await new D1CompanyResourceRepository({
+        database: this.c,
+      }).findReportingRelationHistory("organization:default", organizationRevision)
       if (history instanceof Error) throw history
       const selected = await this.c
         .prepare("SELECT * FROM company_personnel_reporting_bindings WHERE employee_id = ?1")

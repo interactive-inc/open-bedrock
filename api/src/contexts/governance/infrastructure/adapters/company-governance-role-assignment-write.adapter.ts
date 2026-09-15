@@ -62,7 +62,7 @@ export class CompanyGovernanceRoleAssignmentWriteAdapter {
       recordedAt: number
     }) => ReadonlyArray<D1PreparedStatement>
   }): Promise<AssignCompanyGovernanceRoleResult> {
-    const snapshotRepository = new D1CompanyResourceRepository(this.c.database)
+    const snapshotRepository = new D1CompanyResourceRepository({ database: this.c.database })
     const snapshot = await snapshotRepository.findMany({
       organizationId: props.organizationId,
       organizationRevision: props.expectedRevision,
@@ -199,10 +199,10 @@ export class CompanyGovernanceRoleAssignmentWriteAdapter {
         reason,
         recordedAt: props.recordedAt,
       }) ?? []
-    const repository = new D1CompanyResourceRepository(this.c.database, [
-      ...this.c.auditStatements,
-      ...additionalStatements,
-    ])
+    const repository = new D1CompanyResourceRepository({
+      database: this.c.database,
+      atomicStatements: [...this.c.auditStatements, ...additionalStatements],
+    })
     const assignment: CompanyResourceProps = {
       organizationId: props.organizationId,
       type: "responsibility-assignment",
@@ -230,10 +230,7 @@ export class CompanyGovernanceRoleAssignmentWriteAdapter {
       recordedAt: props.recordedAt,
       resources,
     }
-    const written =
-      props.voided === true
-        ? await application.executeHistory(change)
-        : await application.execute(change)
+    const written = await application.execute(change)
     return written.kind === "applied"
       ? {
           kind: "assigned",
@@ -251,7 +248,10 @@ export class CompanyGovernanceRoleAssignmentWriteAdapter {
     assignmentId: string
     recordedAt: number
   }): Promise<RevokeCompanyGovernanceRoleResult> {
-    const repository = new D1CompanyResourceRepository(this.c.database, this.c.auditStatements)
+    const repository = new D1CompanyResourceRepository({
+      database: this.c.database,
+      atomicStatements: this.c.auditStatements,
+    })
     const snapshot = await repository.findMany({
       organizationId: props.organizationId,
       organizationRevision: props.expectedRevision,

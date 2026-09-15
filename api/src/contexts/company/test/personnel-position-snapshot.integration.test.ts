@@ -11,7 +11,7 @@ import { resolvePersonnelActionInput } from "@/contexts/company/interface/operat
 
 test("旧役職台帳の撤去後も確認した会社版と発効日の役職を解決し、改名後の再送で変えない", async () => {
   const f = await createCompanyGradeAssignmentTestContext()
-  const repository = new D1CompanyResourceRepository(f.database)
+  const repository = new D1CompanyResourceRepository({ database: f.database })
   for (const [index, name, effectiveFrom] of [
     [0, "Coordinator", "2030-01-01"],
     [1, "Lead Coordinator", "2030-07-01"],
