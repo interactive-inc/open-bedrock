@@ -775,6 +775,26 @@ import * as thanksRedemptionsInboxRoute from "@/contexts/thanks/interface/routes
 import * as thanksRedemptionsMeRoute from "@/contexts/thanks/interface/routes/thanks-redemptions.me"
 import * as thanksRewardsRoute from "@/contexts/thanks/interface/routes/thanks-rewards"
 import * as thanksRewardsIdRoute from "@/contexts/thanks/interface/routes/thanks-rewards.$id"
+import * as thanksRecordSourceFreezesRoute from "@/contexts/thanks/interface/routes/thanks.record-source-freezes"
+import * as thanksRecordSourceFreezesFreezeIdRoute from "@/contexts/thanks/interface/routes/thanks.record-source-freezes.$freezeId"
+import * as thanksRecordSourceFreezesFreezeIdCoveragePagesRoute from "@/contexts/thanks/interface/routes/thanks.record-source-freezes.$freezeId.coverage-pages"
+import * as thanksRecordSourceFreezesFreezeIdReleaseRoute from "@/contexts/thanks/interface/routes/thanks.record-source-freezes.$freezeId.release"
+import * as thanksRecordSourceFreezesFreezeIdRetirementPlansRoute from "@/contexts/thanks/interface/routes/thanks.record-source-freezes.$freezeId.retirement-plans"
+import * as thanksRecordsRecordKindRecordIdPreservationRequestsRoute from "@/contexts/thanks/interface/routes/thanks.records.$recordKind.$recordId.preservation-requests"
+import * as thanksRecordsRecordKindRecordIdPreservationRequestsNumberRoute from "@/contexts/thanks/interface/routes/thanks.records.$recordKind.$recordId.preservation-requests.$number"
+import * as thanksRecordsRecordKindRecordIdPreservationRequestsNumberApproveRoute from "@/contexts/thanks/interface/routes/thanks.records.$recordKind.$recordId.preservation-requests.$number.approve"
+import * as thanksRecordsRecordKindRecordIdPreservationRequestsNumberExecuteRoute from "@/contexts/thanks/interface/routes/thanks.records.$recordKind.$recordId.preservation-requests.$number.execute"
+import * as thanksRecordsRecordKindRecordIdPreservationRequestsNumberRejectRoute from "@/contexts/thanks/interface/routes/thanks.records.$recordKind.$recordId.preservation-requests.$number.reject"
+import * as thanksRecordsRecordKindRecordIdPreservationRequestsNumberResubmitRoute from "@/contexts/thanks/interface/routes/thanks.records.$recordKind.$recordId.preservation-requests.$number.resubmit"
+import * as thanksRecordsRecordKindRecordIdPreservationRequestsNumberWithdrawRoute from "@/contexts/thanks/interface/routes/thanks.records.$recordKind.$recordId.preservation-requests.$number.withdraw"
+import * as thanksRetirementPlansPlanIdRequestsRoute from "@/contexts/thanks/interface/routes/thanks.retirement-plans.$planId.requests"
+import * as thanksRetirementPlansPlanIdRequestsNumberRoute from "@/contexts/thanks/interface/routes/thanks.retirement-plans.$planId.requests.$number"
+import * as thanksRetirementPlansPlanIdRequestsNumberApproveRoute from "@/contexts/thanks/interface/routes/thanks.retirement-plans.$planId.requests.$number.approve"
+import * as thanksRetirementPlansPlanIdRequestsNumberExecuteRoute from "@/contexts/thanks/interface/routes/thanks.retirement-plans.$planId.requests.$number.execute"
+import * as thanksRetirementPlansPlanIdRequestsNumberRejectRoute from "@/contexts/thanks/interface/routes/thanks.retirement-plans.$planId.requests.$number.reject"
+import * as thanksRetirementPlansPlanIdRequestsNumberResubmitRoute from "@/contexts/thanks/interface/routes/thanks.retirement-plans.$planId.requests.$number.resubmit"
+import * as thanksRetirementPlansPlanIdRequestsNumberWithdrawRoute from "@/contexts/thanks/interface/routes/thanks.retirement-plans.$planId.requests.$number.withdraw"
+import * as thanksRetirementPlansPlanIdVerificationReceiptsRoute from "@/contexts/thanks/interface/routes/thanks.retirement-plans.$planId.verification-receipts"
 import * as trainingCoursesRoute from "@/contexts/training/interface/routes/training-courses"
 import * as trainingCoursesCodeRoute from "@/contexts/training/interface/routes/training-courses.$code"
 import * as trainingEnrollmentsRoute from "@/contexts/training/interface/routes/training-enrollments"
@@ -3510,6 +3530,82 @@ const routePart45 = createRouteApp()
   .get("/system/work-items/:id/history", ...systemWorkItemsIdHistoryRoute.GET)
   .post("/system/work-items/:id/results", ...systemWorkItemsIdResultsRoute.POST)
   .post("/system/work-items/:id/return", ...systemWorkItemsIdReturnRoute.POST)
+  .post("/thanks/record-source-freezes", ...thanksRecordSourceFreezesRoute.POST)
+  .get("/thanks/record-source-freezes/:freezeId", ...thanksRecordSourceFreezesFreezeIdRoute.GET)
+  .post(
+    "/thanks/record-source-freezes/:freezeId/coverage-pages",
+    ...thanksRecordSourceFreezesFreezeIdCoveragePagesRoute.POST,
+  )
+  .post(
+    "/thanks/record-source-freezes/:freezeId/release",
+    ...thanksRecordSourceFreezesFreezeIdReleaseRoute.POST,
+  )
+  .post(
+    "/thanks/record-source-freezes/:freezeId/retirement-plans",
+    ...thanksRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
+  )
+  .post(
+    "/thanks/records/:recordKind/:recordId/preservation-requests",
+    ...thanksRecordsRecordKindRecordIdPreservationRequestsRoute.POST,
+  )
+  .get(
+    "/thanks/records/:recordKind/:recordId/preservation-requests/:number",
+    ...thanksRecordsRecordKindRecordIdPreservationRequestsNumberRoute.GET,
+  )
+
+const routePart46 = createRouteApp()
+  .post(
+    "/thanks/records/:recordKind/:recordId/preservation-requests/:number/approve",
+    ...thanksRecordsRecordKindRecordIdPreservationRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/thanks/records/:recordKind/:recordId/preservation-requests/:number/execute",
+    ...thanksRecordsRecordKindRecordIdPreservationRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/thanks/records/:recordKind/:recordId/preservation-requests/:number/reject",
+    ...thanksRecordsRecordKindRecordIdPreservationRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/thanks/records/:recordKind/:recordId/preservation-requests/:number/resubmit",
+    ...thanksRecordsRecordKindRecordIdPreservationRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/thanks/records/:recordKind/:recordId/preservation-requests/:number/withdraw",
+    ...thanksRecordsRecordKindRecordIdPreservationRequestsNumberWithdrawRoute.POST,
+  )
+  .post(
+    "/thanks/retirement-plans/:planId/requests",
+    ...thanksRetirementPlansPlanIdRequestsRoute.POST,
+  )
+  .get(
+    "/thanks/retirement-plans/:planId/requests/:number",
+    ...thanksRetirementPlansPlanIdRequestsNumberRoute.GET,
+  )
+  .post(
+    "/thanks/retirement-plans/:planId/requests/:number/approve",
+    ...thanksRetirementPlansPlanIdRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/thanks/retirement-plans/:planId/requests/:number/execute",
+    ...thanksRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/thanks/retirement-plans/:planId/requests/:number/reject",
+    ...thanksRetirementPlansPlanIdRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/thanks/retirement-plans/:planId/requests/:number/resubmit",
+    ...thanksRetirementPlansPlanIdRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/thanks/retirement-plans/:planId/requests/:number/withdraw",
+    ...thanksRetirementPlansPlanIdRequestsNumberWithdrawRoute.POST,
+  )
+  .post(
+    "/thanks/retirement-plans/:planId/verification-receipts",
+    ...thanksRetirementPlansPlanIdVerificationReceiptsRoute.POST,
+  )
   .get("/thanks/thanks-messages", ...thanksMessagesRoute.GET)
   .post("/thanks/thanks-messages", ...thanksMessagesRoute.POST)
   .get("/thanks/thanks-messages/me", ...thanksMessagesMeRoute.GET)
@@ -3517,8 +3613,6 @@ const routePart45 = createRouteApp()
   .get("/thanks/thanks-point-budgets/me", ...thanksPointBudgetsMeRoute.GET)
   .post("/thanks/thanks-redemptions", ...thanksRedemptionsRoute.POST)
   .get("/thanks/thanks-redemptions/admin", ...thanksRedemptionsAdminRoute.GET)
-
-const routePart46 = createRouteApp()
   .get("/thanks/thanks-redemptions/inbox", ...thanksRedemptionsInboxRoute.GET)
   .get("/thanks/thanks-redemptions/me", ...thanksRedemptionsMeRoute.GET)
   .post("/thanks/thanks-redemptions/:id/approve", ...thanksRedemptionsIdApproveRoute.POST)
@@ -3601,6 +3695,8 @@ const routePart46 = createRouteApp()
     ...trainingRetirementPlansPlanIdVerificationReceiptsRoute.POST,
   )
   .get("/training/training-courses", ...trainingCoursesRoute.GET)
+
+const routePart47 = createRouteApp()
   .post("/training/training-courses", ...trainingCoursesRoute.POST)
   .get("/training/training-courses/:code", ...trainingCoursesCodeRoute.GET)
   .put("/training/training-courses/:code", ...trainingCoursesCodeRoute.PUT)
@@ -3645,8 +3741,6 @@ const routePart46 = createRouteApp()
     "/work-accident/retirement-plans/:planId/requests/:number/execute",
     ...workAccidentRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
   )
-
-const routePart47 = createRouteApp()
   .post(
     "/work-accident/retirement-plans/:planId/requests/:number/reject",
     ...workAccidentRetirementPlansPlanIdRequestsNumberRejectRoute.POST,
@@ -3741,6 +3835,8 @@ const routePart47 = createRouteApp()
     "/work-style/record-source-freezes/:freezeId/retirement-plans",
     ...workStyleRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
   )
+
+const routePart48 = createRouteApp()
   .post(
     "/work-style/retirement-plans/:planId/requests",
     ...workStyleRetirementPlansPlanIdRequestsRoute.POST,
@@ -3823,6 +3919,7 @@ export const app = appBase
   .route("/", routePart45)
   .route("/", routePart46)
   .route("/", routePart47)
+  .route("/", routePart48)
 
 export type AppType = typeof app
 
@@ -3879,6 +3976,7 @@ type ApiClientPart44 = ReturnType<typeof hc<typeof routePart44>>
 type ApiClientPart45 = ReturnType<typeof hc<typeof routePart45>>
 type ApiClientPart46 = ReturnType<typeof hc<typeof routePart46>>
 type ApiClientPart47 = ReturnType<typeof hc<typeof routePart47>>
+type ApiClientPart48 = ReturnType<typeof hc<typeof routePart48>>
 export type ApiClient = ApiClientPart0 &
   ApiClientPart1 &
   ApiClientPart2 &
@@ -3926,4 +4024,5 @@ export type ApiClient = ApiClientPart0 &
   ApiClientPart44 &
   ApiClientPart45 &
   ApiClientPart46 &
-  ApiClientPart47
+  ApiClientPart47 &
+  ApiClientPart48
