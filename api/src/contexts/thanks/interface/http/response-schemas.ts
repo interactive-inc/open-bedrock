@@ -1,5 +1,5 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
-import { thanksRecordKindSchema } from "@/contexts/thanks/domain/thanks-record-kind"
+import { thanksRecordKindSchema } from "@/contexts/thanks/domain/definitions/thanks-record-kind.definition"
 import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records/record-source-freeze.schema"
 import { z } from "zod"
 
@@ -95,25 +95,44 @@ export const zAppThanksBudget = z.object({
   remaining_points: z.number(),
 })
 
-export const thanksSourceFreezeResponseSchema = z.strictObject({ freeze: recordSourceFreezeSnapshotSchema })
+export const thanksSourceFreezeResponseSchema = z.strictObject({
+  freeze: recordSourceFreezeSnapshotSchema,
+})
 export const zAppThanksCoveragePageReceipt = z.strictObject({
-  id: z.uuid(), freezeId: z.uuid(), sequence: z.number().int().positive().safe(),
-  digest: z.string().regex(/^[0-9a-f]{64}$/), afterCursor: z.string().nullable(),
-  nextCursor: z.string().nullable(), checkedAt: z.string().datetime(),
+  id: z.uuid(),
+  freezeId: z.uuid(),
+  sequence: z.number().int().positive().safe(),
+  digest: z.string().regex(/^[0-9a-f]{64}$/),
+  afterCursor: z.string().nullable(),
+  nextCursor: z.string().nullable(),
+  checkedAt: z.string().datetime(),
   recordCount: z.number().int().min(0).max(10),
 })
 export const zAppThanksRetirementPlan = z.strictObject({
-  id: z.uuid(), freezeId: z.uuid(), digest: z.string().regex(/^[0-9a-f]{64}$/),
-  totalPages: z.number().int().positive().safe(), recordKinds: z.array(thanksRecordKindSchema).length(4),
+  id: z.uuid(),
+  freezeId: z.uuid(),
+  digest: z.string().regex(/^[0-9a-f]{64}$/),
+  totalPages: z.number().int().positive().safe(),
+  recordKinds: z.array(thanksRecordKindSchema).length(4),
   createdAt: z.iso.datetime(),
 })
 export const zAppThanksRetirementVerificationReceipt = z.strictObject({
-  id: z.uuid(), planId: z.uuid(), planDigest: z.string().regex(/^[0-9a-f]{64}$/),
-  ordinal: z.number().int().positive().safe(), digest: z.string().regex(/^[0-9a-f]{64}$/),
-  coveragePageId: z.uuid(), checkedAt: z.iso.datetime(),
+  id: z.uuid(),
+  planId: z.uuid(),
+  planDigest: z.string().regex(/^[0-9a-f]{64}$/),
+  ordinal: z.number().int().positive().safe(),
+  digest: z.string().regex(/^[0-9a-f]{64}$/),
+  coveragePageId: z.uuid(),
+  checkedAt: z.iso.datetime(),
 })
 export const zAppThanksRetirementRequest = z.strictObject({
-  number: z.number().int().positive().safe(), caseId: z.string().min(1), planId: z.uuid(),
-  proposalDigest: z.string().regex(/^[0-9a-f]{64}$/), status: z.string().min(1),
+  number: z.number().int().positive().safe(),
+  caseId: z.string().min(1),
+  planId: z.uuid(),
+  proposalDigest: z.string().regex(/^[0-9a-f]{64}$/),
+  status: z.string().min(1),
 })
-export const zAppThanksRetirementExecution = z.strictObject({ retirement_id: z.uuid(), finalized_at: z.iso.datetime() })
+export const zAppThanksRetirementExecution = z.strictObject({
+  retirement_id: z.uuid(),
+  finalized_at: z.iso.datetime(),
+})

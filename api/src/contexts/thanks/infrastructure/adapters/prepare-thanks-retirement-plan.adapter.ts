@@ -5,7 +5,7 @@ import { ThanksActorReadAdapter } from "@/contexts/thanks/infrastructure/adapter
 import { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
 import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
-import { thanksRecordKinds } from "@/contexts/thanks/domain/thanks-record-kind"
+import { thanksRecordKinds } from "@/contexts/thanks/domain/definitions/thanks-record-kind.definition"
 
 type Context = ThanksContext
 
@@ -60,12 +60,12 @@ export class PrepareThanksRetirementPlanAdapter {
         ownerContext: "thanks",
         capability: { revision: 1, recordKinds: thanksRecordKinds },
         coverage: chains.map(({ summary }) => ({
-            recordKind: summary.recordKind,
-            terminalPageId: summary.terminalPageId,
-            terminalDigest: summary.terminalDigest,
-            pageCount: summary.pageCount,
-            recordCount: summary.recordCount,
-          })),
+          recordKind: summary.recordKind,
+          terminalPageId: summary.terminalPageId,
+          terminalDigest: summary.terminalDigest,
+          pageCount: summary.pageCount,
+          recordCount: summary.recordCount,
+        })),
         actorAccountId: authentication.accountId,
         createdAt: this.c.var.now().toISOString(),
         auditEventId: crypto.randomUUID(),

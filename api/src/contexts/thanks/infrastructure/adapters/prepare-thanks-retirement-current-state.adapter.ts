@@ -14,7 +14,7 @@ import { PrepareRecordRetirementDisclosureAdapter } from "@system/infrastructure
 import { PrepareRecordRetirementSourceAttachmentsAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-source-attachments.adapter"
 import { PrepareRecordRetirementStorageKeysAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-storage-keys.adapter"
 import { ForbiddenError } from "@/lib/errors"
-import { thanksRecordKinds } from "@/contexts/thanks/domain/thanks-record-kind"
+import { thanksRecordKinds } from "@/contexts/thanks/domain/definitions/thanks-record-kind.definition"
 
 const requestSchema = z.strictObject({
   planId: z.uuid(),
