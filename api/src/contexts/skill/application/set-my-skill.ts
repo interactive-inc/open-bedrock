@@ -2,10 +2,11 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { EmployeeSkill } from "@/contexts/skill/domain/entities/employee-skill.entity"
 import type { Skill } from "@/contexts/skill/domain/entities/skill.entity"
 import type { Context } from "@/env"
-import { NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { EmployeeSkillRepository } from "@/contexts/skill/infrastructure/repositories/employee-skill.repository"
 import { SkillRepository } from "@/contexts/skill/infrastructure/repositories/skill.repository"
+import { isSkillRecordSourceFrozenError } from "@/contexts/skill/infrastructure/repositories/lib/is-skill-record-source-frozen-error"
 
 export type Command = {
   employeeId: EmployeeId
@@ -54,6 +55,8 @@ export class SetMySkill {
     const saved = await employeeSkillRepository.save(employeeSkill)
 
     if (saved instanceof Error) {
+      if (isSkillRecordSourceFrozenError(saved))
+        return new ConflictError("skill writes are frozen", "record_source_frozen", { cause: saved })
       return new UnexpectedError("failed to save skill", { cause: saved })
     }
 

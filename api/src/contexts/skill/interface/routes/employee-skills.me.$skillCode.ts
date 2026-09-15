@@ -1,4 +1,4 @@
-import { NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { EmployeeSkillRepository } from "@/contexts/skill/infrastructure/repositories/employee-skill.repository"
 import { SkillRepository } from "@/contexts/skill/infrastructure/repositories/skill.repository"
 import { factory } from "@/api/http/factory"
@@ -8,6 +8,7 @@ import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppEmployeeSkill } from "@/contexts/skill/interface/http/response-schemas"
 import { validateCodeParam } from "@/lib/http/validate-code-param"
+import { isSkillRecordSourceFrozenError } from "@/contexts/skill/infrastructure/repositories/lib/is-skill-record-source-frozen-error"
 
 // @authorization owner - 本人のリソースに限定する
 /** GET /employee-skills/me/:skillCode — 本人の登録スキルを1件取得（スキルマスタ結合済み） */
@@ -100,6 +101,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     })
 
     if (deleted instanceof Error) {
+      if (isSkillRecordSourceFrozenError(deleted))
+        return new ConflictError("skill writes are frozen", "record_source_frozen", { cause: deleted })
       return new UnexpectedError("failed to delete skill", { cause: deleted })
     }
 
