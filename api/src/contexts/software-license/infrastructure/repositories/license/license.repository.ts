@@ -3,6 +3,7 @@ import { LicenseEntity } from "@/contexts/software-license/domain/entities/licen
 import type { LicenseState as LicenseRow } from "@/contexts/software-license/domain/entities/license.entity"
 import type { SoftwareLicenseContext } from "@/contexts/software-license/configuration/software-license-context"
 import { LicenseError } from "@/contexts/software-license/domain/errors"
+import { isSoftwareLicenseRecordSourceFrozenError } from "@/contexts/software-license/infrastructure/repositories/lib/is-software-license-record-source-frozen-error"
 
 const columns = `id, name, vendor, category, seats, renewal_deadline AS renewalDeadline,
   owner_employee_id AS ownerEmployeeId, note, status, created_at AS createdAt,
@@ -148,6 +149,8 @@ export class LicenseRepository {
         return new LicenseError("license_unavailable", "license write is unavailable")
       return LicenseEntity.fromRow(row)
     } catch (cause) {
+      if (isSoftwareLicenseRecordSourceFrozenError(cause))
+        return new LicenseError("license_conflict", "service register writes are frozen", { cause })
       if (
         cause instanceof Error &&
         /software_license_capacity_conflict|license_revision_changed|UNIQUE constraint failed: software_license_changes/.test(

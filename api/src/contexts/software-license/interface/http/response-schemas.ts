@@ -1,5 +1,6 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { z } from "zod"
+import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records/record-source-freeze.schema"
 
 /** ライセンス・SaaS 台帳 1 件のレスポンス。 */
 export const licenseResponseSchema = z.object({
@@ -21,4 +22,9 @@ export const licenseResponseSchema = z.object({
 export const licenseListResponseSchema = z.object({
   data: z.array(licenseResponseSchema),
   total: z.number(),
+})
+
+/** サービス利用台帳の書込み停止世代。撤去可否の確定とは分離する。 */
+export const softwareLicenseSourceFreezeResponseSchema = z.strictObject({
+  freeze: recordSourceFreezeSnapshotSchema,
 })

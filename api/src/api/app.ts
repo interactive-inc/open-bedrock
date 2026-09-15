@@ -330,6 +330,9 @@ import * as shiftSwapRequestsMeRoute from "@/contexts/shift/interface/routes/shi
 import * as employeeSkillsMeRoute from "@/contexts/skill/interface/routes/employee-skills.me"
 import * as employeeSkillsMeSkillCodeRoute from "@/contexts/skill/interface/routes/employee-skills.me.$skillCode"
 import * as skillDefinitionsRoute from "@/contexts/skill/interface/routes/skill-definitions"
+import * as softwareLicenseRecordSourceFreezesRoute from "@/contexts/software-license/interface/routes/software-license.record-source-freezes"
+import * as softwareLicenseRecordSourceFreezesFreezeIdRoute from "@/contexts/software-license/interface/routes/software-license.record-source-freezes.$freezeId"
+import * as softwareLicenseRecordSourceFreezesFreezeIdReleaseRoute from "@/contexts/software-license/interface/routes/software-license.record-source-freezes.$freezeId.release"
 import * as softwareLicenseSoftwareLicensesRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses"
 import * as softwareLicenseSoftwareLicensesIdRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id"
 import * as softwareLicenseSoftwareLicensesIdAssignmentsRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.assignments"
@@ -1220,6 +1223,15 @@ const routePart34 = createRouteApp()
   .get("/skill/employee-skills/me/:skillCode", ...employeeSkillsMeSkillCodeRoute.GET)
   .delete("/skill/employee-skills/me/:skillCode", ...employeeSkillsMeSkillCodeRoute.DELETE)
   .get("/skill/skill-definitions", ...skillDefinitionsRoute.GET)
+  .post("/software-license/record-source-freezes", ...softwareLicenseRecordSourceFreezesRoute.POST)
+  .get(
+    "/software-license/record-source-freezes/:freezeId",
+    ...softwareLicenseRecordSourceFreezesFreezeIdRoute.GET,
+  )
+  .post(
+    "/software-license/record-source-freezes/:freezeId/release",
+    ...softwareLicenseRecordSourceFreezesFreezeIdReleaseRoute.POST,
+  )
   .get("/software-license/software-licenses", ...softwareLicenseSoftwareLicensesRoute.GET)
   .post("/software-license/software-licenses", ...softwareLicenseSoftwareLicensesRoute.POST)
   .get(
@@ -1268,14 +1280,14 @@ const routePart34 = createRouteApp()
     "/software-license/software-licenses/:id/preservation-requests/:number/resubmit",
     ...softwareLicenseSoftwareLicensesIdPreservationRequestsNumberResubmitRoute.POST,
   )
+
+const routePart35 = createRouteApp()
   .post(
     "/software-license/software-licenses/:id/preservation-requests/:number/withdraw",
     ...softwareLicenseSoftwareLicensesIdPreservationRequestsNumberWithdrawRoute.POST,
   )
   .get("/survey/surveys", ...surveysRoute.GET)
   .post("/survey/surveys", ...surveysRoute.POST)
-
-const routePart35 = createRouteApp()
   .get("/survey/surveys/responses/me", ...surveysResponsesMeRoute.GET)
   .get("/survey/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.GET)
   .put("/survey/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.PUT)
@@ -1348,11 +1360,11 @@ const routePart35 = createRouteApp()
     "/system/dead-letters/:deadLetterId/requeue",
     ...systemDeadLettersDeadLetterIdRequeueRoute.POST,
   )
+
+const routePart36 = createRouteApp()
   .get("/system/deliveries", ...systemDeliveriesRoute.GET)
   .post("/system/deliveries", ...systemDeliveriesRoute.POST)
   .patch("/system/deliveries/:deliveryId", ...systemDeliveriesDeliveryIdRoute.PATCH)
-
-const routePart36 = createRouteApp()
   .get("/system/health", ...systemHealthRoute.GET)
   .post("/system/identity-sessions", ...systemIdentitySessionsRoute.POST)
   .patch("/system/inbox-messages/:messageId", ...systemInboxMessagesMessageIdRoute.PATCH)
@@ -1428,11 +1440,11 @@ const routePart36 = createRouteApp()
   .post("/system/step-up-grants", ...systemStepUpGrantsRoute.POST)
   .get("/system/work-items", ...systemWorkItemsRoute.GET)
   .post("/system/work-items", ...systemWorkItemsRoute.POST)
+
+const routePart37 = createRouteApp()
   .get("/system/work-items/:id", ...systemWorkItemsIdRoute.GET)
   .post("/system/work-items/:id/accept", ...systemWorkItemsIdAcceptRoute.POST)
   .post("/system/work-items/:id/approve", ...systemWorkItemsIdApproveRoute.POST)
-
-const routePart37 = createRouteApp()
   .post("/system/work-items/:id/cancel", ...systemWorkItemsIdCancelRoute.POST)
   .get(
     "/system/work-items/:id/evidence/:attachmentId",
