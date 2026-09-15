@@ -1,6 +1,7 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { Asset } from "@/contexts/asset/domain/entities/asset.entity"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
+import { isAssetRecordSourceFrozenError } from "@/contexts/asset/infrastructure/repositories/lib/is-asset-record-source-frozen-error"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
@@ -59,6 +60,7 @@ export class RegisterAsset {
     }
 
     if (created instanceof Error) {
+      if (isAssetRecordSourceFrozenError(created)) return new ConflictError("asset writes are frozen", "record_source_frozen", { cause: created })
       return new UnexpectedError("failed to create asset", { cause: created })
     }
 
