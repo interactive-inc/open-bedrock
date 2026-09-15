@@ -68,7 +68,7 @@ export class ResolveGovernanceOrgRoleAdapter {
     })
     if (businessDate instanceof Error) return businessDate
     const snapshot = await new CompanyGovernanceRoleAssignmentReadAdapter({
-      repository: new D1CompanyResourceRepository(this.c.env.DB),
+      repository: new D1CompanyResourceRepository({ database: this.c.env.DB }),
     }).read({
       organizationId: "organization:default",
       responsibilityCode: code,

@@ -1,19 +1,14 @@
-import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
-import type { SystemJsonValue } from "@system/domain/definitions/audit/system-json-value.definition"
-import { CompanyGovernanceRoleAssignmentWriteAdapter } from "@/contexts/governance/infrastructure/adapters/company-governance-role-assignment-write.adapter"
-import type { Context as HonoContext } from "@/env"
+import type { RevokeCompanyGovernanceRoleResult } from "@/contexts/governance/infrastructure/adapters/company-governance-role-assignment-write.adapter"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 
 type Context = Readonly<{
-  context: HonoContext
-  prepareAudit: (props: {
+  revoke: (props: {
     session: CompanySessionValue
-    action: "governance.org_role.revoked"
-    targetType: "governance_org_role"
-    targetId: string
-    metadata?: SystemJsonValue
-  }) => ReadonlyArray<D1PreparedStatement>
+    commandId: string
+    expectedRevision: number
+    assignmentId: string
+  }) => Promise<RevokeCompanyGovernanceRoleResult>
 }>
 
 /** 組織責任の割当をCompanyの取消履歴として解除する。 */
@@ -31,28 +26,7 @@ export class RevokeGovernanceOrgRole {
     if (!props.session.permissions.has("governance:manage")) {
       return new ForbiddenError("組織責任を解除する権限がありません", "governance_role_forbidden")
     }
-    const result = await new CompanyGovernanceRoleAssignmentWriteAdapter({
-      actor: CompanyActorValue.restore({
-        accountId: String(props.session.accountId),
-        employeeId: String(props.session.employeeId),
-        organizationIds: ["organization:default"],
-        capabilities: ["company:write"],
-      }),
-      database: this.c.context.env.DB,
-      auditStatements: this.c.prepareAudit({
-        session: props.session,
-        action: "governance.org_role.revoked",
-        targetType: "governance_org_role",
-        targetId: props.assignmentId,
-        metadata: { assignment_id: props.assignmentId },
-      }),
-    }).revoke({
-      organizationId: "organization:default",
-      commandId: props.commandId,
-      expectedRevision: props.expectedRevision,
-      assignmentId: props.assignmentId,
-      recordedAt: new Date(this.c.context.env.NOW ?? Date.now()).getTime(),
-    })
+    const result = await this.c.revoke(props)
     if (result.kind === "revoked") return result
     if (result.kind === "forbidden") {
       return new ForbiddenError("会社の責務を変更する権限がありません", "governance_role_forbidden")

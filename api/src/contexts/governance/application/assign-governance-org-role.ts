@@ -1,10 +1,7 @@
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
-import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
-import type { SystemJsonValue } from "@system/domain/definitions/audit/system-json-value.definition"
 import { findGovernanceOrgRole } from "@/contexts/governance/domain/catalogs/governance-org-role.catalog"
-import { CompanyGovernanceRoleAssignmentWriteAdapter } from "@/contexts/governance/infrastructure/adapters/company-governance-role-assignment-write.adapter"
-import type { Context as HonoContext } from "@/env"
+import type { AssignCompanyGovernanceRoleResult } from "@/contexts/governance/infrastructure/adapters/company-governance-role-assignment-write.adapter"
 import {
   ConflictError,
   ForbiddenError,
@@ -15,14 +12,19 @@ import {
 import { isoDate } from "@/lib/validation/iso-date.schema"
 
 type Context = Readonly<{
-  context: HonoContext
-  prepareAudit: (props: {
+  assign: (props: {
     session: CompanySessionValue
-    action: "governance.org_role.assigned"
-    targetType: "governance_org_role"
-    targetId: string
-    metadata?: SystemJsonValue
-  }) => ReadonlyArray<D1PreparedStatement>
+    commandId: string
+    expectedRevision: number
+    responsibilityCode: string
+    responsibilityName: string
+    cardinality: "one" | "per_department" | "many"
+    employeeCode: string
+    departmentCode: string | null
+    startsOn: ReturnType<typeof restoreCalendarDate>
+    endsOn: ReturnType<typeof restoreCalendarDate> | null
+    sourceDocumentCode: string | null
+  }) => Promise<AssignCompanyGovernanceRoleResult>
 }>
 
 /** 組織責任をCompanyの公開責務履歴へ割り当てる。 */
@@ -69,28 +71,8 @@ export class AssignGovernanceOrgRole {
       )
     }
 
-    const result = await new CompanyGovernanceRoleAssignmentWriteAdapter({
-      actor: CompanyActorValue.restore({
-        accountId: String(props.session.accountId),
-        employeeId: String(props.session.employeeId),
-        organizationIds: ["organization:default"],
-        capabilities: ["company:write"],
-      }),
-      database: this.c.context.env.DB,
-      auditStatements: this.c.prepareAudit({
-        session: props.session,
-        action: "governance.org_role.assigned",
-        targetType: "governance_org_role",
-        targetId: role.code,
-        metadata: {
-          employee_code: props.employeeCode,
-          department_code: props.departmentCode,
-          starts_on: props.startsOn,
-          ends_on: props.endsOn,
-        },
-      }),
-    }).assign({
-      organizationId: "organization:default",
+    const result = await this.c.assign({
+      session: props.session,
       commandId: props.commandId,
       expectedRevision: props.expectedRevision,
       responsibilityCode: role.code,
@@ -101,7 +83,6 @@ export class AssignGovernanceOrgRole {
       startsOn: restoreCalendarDate(props.startsOn),
       endsOn: props.endsOn === null ? null : restoreCalendarDate(props.endsOn),
       sourceDocumentCode: props.sourceDocumentCode,
-      recordedAt: new Date(this.c.context.env.NOW ?? Date.now()).getTime(),
     })
     if (result.kind === "assigned") {
       return {
@@ -132,7 +113,10 @@ export class AssignGovernanceOrgRole {
       return new ConflictError("指定期間の組織責任と重複します", "governance_role_overlap")
     }
     if (result.kind === "resource_conflict") {
-      return new ConflictError("Companyの責務資源が更新されています", "governance_role_resource_conflict")
+      return new ConflictError(
+        "Companyの責務資源が更新されています",
+        "governance_role_resource_conflict",
+      )
     }
     if (result.kind === "invalid") {
       return new ValidationError("Companyの責務参照が不正です", "governance_role_reference_invalid")
