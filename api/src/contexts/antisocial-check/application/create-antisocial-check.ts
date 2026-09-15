@@ -2,8 +2,9 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { AntisocialCheck } from "@/contexts/antisocial-check/domain/entities/antisocial-check.entity"
 import type { Context } from "@/env"
 import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/repositories/antisocial-check.repository"
-import { UnexpectedError } from "@/lib/errors"
+import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+import { isAntisocialCheckRecordSourceFrozenError } from "@/contexts/antisocial-check/infrastructure/repositories/lib/is-antisocial-check-record-source-frozen-error"
 
 export type Command = {
   requesterId: EmployeeId
@@ -35,6 +36,9 @@ export class CreateAntisocialCheck {
     const created = await antisocialCheckRepository.create(antisocialCheck)
 
     if (created instanceof Error) {
+      if (isAntisocialCheckRecordSourceFrozenError(created)) {
+        return new ConflictError("antisocial check writes are frozen", "record_source_frozen", { cause: created })
+      }
       return new UnexpectedError("failed to create antisocial check", { cause: created })
     }
 
