@@ -1,18 +1,18 @@
-import { PrepareWorkAccidentRetirementPlanAdapter } from "@/contexts/work-accident/infrastructure/adapters/prepare-work-accident-retirement-plan.adapter"
+import { PrepareCompanyCalendarDayRetirementPlanAdapter } from "@/contexts/company-calendar/infrastructure/adapters/prepare-company-calendar-retirement-plan.adapter"
 import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
-import { WorkAccidentRetirementConflictError } from "@/contexts/work-accident/application/errors"
+import { CompanyCalendarDayRetirementConflictError } from "@/contexts/company-calendar/application/errors"
 
-type Context = ConstructorParameters<typeof PrepareWorkAccidentRetirementPlanAdapter>[0]
+type Context = ConstructorParameters<typeof PrepareCompanyCalendarDayRetirementPlanAdapter>[0]
 
 /** 会社カレンダーの全照合ページを検査する計画を固定し、同一IDの再送で検査対象を増減させない。 */
-export class CreateWorkAccidentRetirementPlan {
+export class CreateCompanyCalendarDayRetirementPlan {
   constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 
   async execute(input: unknown, stepUpToken: string) {
-    const prepared = await new PrepareWorkAccidentRetirementPlanAdapter(this.c).prepare(
+    const prepared = await new PrepareCompanyCalendarDayRetirementPlanAdapter(this.c).prepare(
       input,
       stepUpToken,
     )
@@ -35,7 +35,7 @@ export class CreateWorkAccidentRetirementPlan {
     if (existing !== null)
       return matches(existing)
         ? existing
-        : new WorkAccidentRetirementConflictError("retirement plan replay differs")
+        : new CompanyCalendarDayRetirementConflictError("retirement plan replay differs")
     const saved = await repository.append(plan)
     if (saved instanceof Error) return saved
     if (saved === "written") return plan
@@ -43,6 +43,6 @@ export class CreateWorkAccidentRetirementPlan {
     if (raced instanceof Error) return raced
     return raced !== null && matches(raced)
       ? raced
-      : new WorkAccidentRetirementConflictError("retirement plan creation conflicts")
+      : new CompanyCalendarDayRetirementConflictError("retirement plan creation conflicts")
   }
 }
