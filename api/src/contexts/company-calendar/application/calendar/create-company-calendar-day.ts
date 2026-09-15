@@ -6,6 +6,7 @@ import type { CalendarDayKind } from "@/contexts/company-calendar/domain/definit
 import type { Context } from "@/env"
 import { CompanyCalendarDayRepository } from "@/contexts/company-calendar/infrastructure/repositories/calendar/company-calendar-day.repository"
 import { UniqueConstraintError } from "@/lib/d1/errors"
+import { isCompanyCalendarDayRecordSourceFrozenError } from "@/contexts/company-calendar/infrastructure/repositories/lib/is-company-calendar-record-source-frozen-error"
 
 export type Command = {
   session: CompanySessionValue
@@ -44,6 +45,11 @@ export class CreateCompanyCalendarDay {
     }
 
     if (created instanceof Error) {
+      if (isCompanyCalendarDayRecordSourceFrozenError(created)) {
+        return new ConflictError("company calendar writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
+      }
       return new UnexpectedError("failed to create calendar day", { cause: created })
     }
 

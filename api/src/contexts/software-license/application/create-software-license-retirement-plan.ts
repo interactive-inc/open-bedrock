@@ -5,7 +5,7 @@ import { SoftwareLicenseRetirementConflictError } from "@/contexts/software-lice
 
 type Context = ConstructorParameters<typeof PrepareSoftwareLicenseRetirementPlanAdapter>[0]
 
-/** 打刻の全照合ページを検査する計画を固定し、同一IDの再送で検査対象を増減させない。 */
+/** 会社カレンダーの全照合ページを検査する計画を固定し、同一IDの再送で検査対象を増減させない。 */
 export class CreateSoftwareLicenseRetirementPlan {
   constructor(private readonly c: Context) {
     Object.freeze(this)
