@@ -3,6 +3,8 @@ import { FinalizeGovernanceResponsibilityCutover } from "@/contexts/governance/a
 import { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/test/company-assignment-resource.test-support"
 import { GovernanceRoleAssignmentAdoptionSnapshotAdapter } from "@/contexts/governance/infrastructure/adapters/governance-role-assignment-adoption-snapshot.adapter"
+import { GovernanceOrgRoleAssignmentAdoptionAdapter } from "@/contexts/governance/infrastructure/adapters/governance-org-role-assignment-adoption.adapter"
+import { GovernanceResponsibilityCutoverAdapter } from "@/contexts/governance/infrastructure/adapters/governance-responsibility-cutover.adapter"
 import { CreateRecordSourceFreeze } from "@system/application/records/create-record-source-freeze"
 import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
 import { expect, test } from "bun:test"
@@ -45,13 +47,10 @@ async function fixture() {
     permissions: new Set(["governance:manage"]),
     roleKeys: [],
   })
-  const application = new AdoptGovernanceOrgRoleAssignment({
-    context: {
-      env: {
-        ...context.context.env,
-        RECORD_SOURCE_NAMESPACE: "9664c95f-412f-472f-9e09-9772f55485e1",
-      },
-    },
+  const adapter = new GovernanceOrgRoleAssignmentAdoptionAdapter({
+    database: context.database,
+    now: context.at.getTime(),
+    sourceNamespace: "9664c95f-412f-472f-9e09-9772f55485e1",
     prepareAudit: (audit) => [
       context.database
         .prepare(`INSERT INTO system_audit_events
@@ -69,9 +68,12 @@ async function fixture() {
         ),
     ],
   })
-  const snapshot = await new GovernanceRoleAssignmentAdoptionSnapshotAdapter(
-    context.database,
-  ).find(7)
+  const application = new AdoptGovernanceOrgRoleAssignment({
+    adopt: (props) => adapter.execute(props),
+  })
+  const snapshot = await new GovernanceRoleAssignmentAdoptionSnapshotAdapter({
+    database: context.database,
+  }).find(7)
   if (snapshot === null || snapshot instanceof Error) throw new Error("snapshot failed")
 
   return { ...context, application, session, snapshot }
@@ -116,7 +118,12 @@ test("凍結した取消済み割当を元記録とCompanyのactive・void履歴
       )
       .bind(adopted.assignmentId)
       .all(),
-  ).toMatchObject({ results: [{ revision: 1, state: "active" }, { revision: 2, state: "void" }] })
+  ).toMatchObject({
+    results: [
+      { revision: 1, state: "active" },
+      { revision: 2, state: "void" },
+    ],
+  })
   expect(
     await context.application.execute({
       session: context.session,
@@ -185,14 +192,10 @@ test("停止世代の間は旧責任台帳の追加・更新・削除を全て�
 })
 
 function cutoverApplication(context: Readonly<{ database: D1Database; at: Date }>) {
-  return new FinalizeGovernanceResponsibilityCutover({
-    context: {
-      env: {
-        DB: context.database,
-        NOW: context.at.toISOString(),
-        RECORD_SOURCE_NAMESPACE: "9664c95f-412f-472f-9e09-9772f55485e1",
-      },
-    },
+  const adapter = new GovernanceResponsibilityCutoverAdapter({
+    database: context.database,
+    now: context.at.getTime(),
+    sourceNamespace: "9664c95f-412f-472f-9e09-9772f55485e1",
     prepareAudit: (audit) => {
       const eventId = crypto.randomUUID()
       return {
@@ -219,6 +222,9 @@ function cutoverApplication(context: Readonly<{ database: D1Database; at: Date }
         ],
       }
     },
+  })
+  return new FinalizeGovernanceResponsibilityCutover({
+    finalize: (props) => adapter.execute(props),
   })
 }
 
@@ -257,9 +263,9 @@ test("全ての旧責務をCompanyへ接続した場合だけ廃止可能な完�
     source_count: 1,
     adopted_count: 1,
   })
-  expect(
-    await cutoverApplication(context).execute({ session: context.session, freezeId }),
-  ).toEqual({ ...completed, replayed: true })
+  expect(await cutoverApplication(context).execute({ session: context.session, freezeId })).toEqual(
+    { ...completed, replayed: true },
+  )
   await expect(
     context.database.prepare("DELETE FROM company_responsibility_source_cutovers").run(),
   ).rejects.toThrow("company_responsibility_source_cutover_immutable")
