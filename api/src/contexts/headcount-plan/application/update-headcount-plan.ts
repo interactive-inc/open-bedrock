@@ -1,9 +1,10 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { HeadcountPlan } from "@/contexts/headcount-plan/domain/entities/headcount-plan.entity"
-import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { HeadcountPlanRepository } from "@/contexts/headcount-plan/infrastructure/repositories/headcount-plan.repository"
+import { isHeadcountPlanRecordSourceFrozenError } from "@/contexts/headcount-plan/infrastructure/repositories/lib/is-headcount-plan-record-source-frozen-error"
 
 export type Command = {
   session: CompanySessionValue
@@ -42,6 +43,9 @@ export class UpdateHeadcountPlan {
     const updated = await repository.update(command.id, next)
 
     if (updated instanceof Error) {
+      if (isHeadcountPlanRecordSourceFrozenError(updated)) {
+        return new ConflictError("headcount plan writes are frozen", "record_source_frozen", { cause: updated })
+      }
       return new UnexpectedError("failed to update headcount plan", { cause: updated })
     }
 
