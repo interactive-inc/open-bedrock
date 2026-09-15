@@ -1,5 +1,6 @@
 import { EmployeeCertificationRepository } from "@/contexts/certification/infrastructure/repositories/employee-certification.repository"
-import { NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { isCertificationRecordSourceFrozenError } from "@/contexts/certification/infrastructure/repositories/lib/is-certification-record-source-frozen-error"
 
 import { factory } from "@/api/http/factory"
 import { toHttpException } from "@/lib/http/to-http-exception"
@@ -33,6 +34,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     const deleted = await repository.delete(props.id)
 
     if (deleted instanceof Error) {
+      if (isCertificationRecordSourceFrozenError(deleted))
+        return new ConflictError("certification writes are frozen", "record_source_frozen", { cause: deleted })
       return new UnexpectedError("failed to delete employee_certification", { cause: deleted })
     }
 
