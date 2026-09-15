@@ -2,6 +2,7 @@ import { Announcement } from "@/contexts/announcement/domain/entities/announceme
 import type { Context } from "@/env"
 import { announcements } from "@/contexts/announcement/infrastructure/schema/announcement"
 import { eq } from "drizzle-orm"
+import { isAnnouncementRecordSourceFrozenError } from "@/contexts/announcement/infrastructure/repositories/lib/is-announcement-record-source-frozen-error"
 
 export class AnnouncementRepository {
   constructor(private readonly c: Context) {}
@@ -42,6 +43,8 @@ export class AnnouncementRepository {
         ? new Error("failed to insert announcement")
         : Announcement.fromRow(row)
     } catch (error) {
+      if (isAnnouncementRecordSourceFrozenError(error))
+        return new Error("announcement writes are frozen", { cause: error })
       return error instanceof Error ? error : new Error("failed to insert announcement")
     }
   }
@@ -67,6 +70,8 @@ export class AnnouncementRepository {
 
       return row === undefined ? null : Announcement.fromRow(row)
     } catch (error) {
+      if (isAnnouncementRecordSourceFrozenError(error))
+        return new Error("announcement writes are frozen", { cause: error })
       return error instanceof Error ? error : new Error("failed to update announcement")
     }
   }
