@@ -1,11 +1,12 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { EmployeeWorkStyle } from "@/contexts/work-style/domain/entities/employee-work-style.entity"
-import { ForbiddenError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { WorkStyle } from "@/contexts/work-style/domain/definitions/work-style.definition"
 import type { Context } from "@/env"
 import { EmployeeWorkStyleRepository } from "@/contexts/work-style/infrastructure/repositories/employee-work-style.repository"
+import { isEmployeeWorkStyleRecordSourceFrozenError } from "@/contexts/work-style/infrastructure/repositories/lib/is-work-style-record-source-frozen-error"
 
 export type Command = {
   session: CompanySessionValue
@@ -44,6 +45,9 @@ export class CreateEmployeeWorkStyle {
     const created = await repository.create(workStyle)
 
     if (created instanceof Error) {
+      if (isEmployeeWorkStyleRecordSourceFrozenError(created)) {
+        return new ConflictError("work style writes are frozen", "record_source_frozen", { cause: created })
+      }
       return new UnexpectedError("failed to create work style", { cause: created })
     }
 
