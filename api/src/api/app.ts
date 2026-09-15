@@ -461,6 +461,26 @@ import * as leaveRequestsIdSubmitRoute from "@/contexts/leave/interface/routes/l
 import * as leaveRequestsAdminRoute from "@/contexts/leave/interface/routes/leave-requests.admin"
 import * as leaveRequestsInboxRoute from "@/contexts/leave/interface/routes/leave-requests.inbox"
 import * as leaveRequestsMeRoute from "@/contexts/leave/interface/routes/leave-requests.me"
+import * as lifeEventLifeEventsIdPreservationRequestsRoute from "@/contexts/life-event/interface/routes/life-event.life-events.$id.preservation-requests"
+import * as lifeEventLifeEventsIdPreservationRequestsNumberRoute from "@/contexts/life-event/interface/routes/life-event.life-events.$id.preservation-requests.$number"
+import * as lifeEventLifeEventsIdPreservationRequestsNumberApproveRoute from "@/contexts/life-event/interface/routes/life-event.life-events.$id.preservation-requests.$number.approve"
+import * as lifeEventLifeEventsIdPreservationRequestsNumberExecuteRoute from "@/contexts/life-event/interface/routes/life-event.life-events.$id.preservation-requests.$number.execute"
+import * as lifeEventLifeEventsIdPreservationRequestsNumberRejectRoute from "@/contexts/life-event/interface/routes/life-event.life-events.$id.preservation-requests.$number.reject"
+import * as lifeEventLifeEventsIdPreservationRequestsNumberResubmitRoute from "@/contexts/life-event/interface/routes/life-event.life-events.$id.preservation-requests.$number.resubmit"
+import * as lifeEventLifeEventsIdPreservationRequestsNumberWithdrawRoute from "@/contexts/life-event/interface/routes/life-event.life-events.$id.preservation-requests.$number.withdraw"
+import * as lifeEventRecordSourceFreezesRoute from "@/contexts/life-event/interface/routes/life-event.record-source-freezes"
+import * as lifeEventRecordSourceFreezesFreezeIdRoute from "@/contexts/life-event/interface/routes/life-event.record-source-freezes.$freezeId"
+import * as lifeEventRecordSourceFreezesFreezeIdCoveragePagesRoute from "@/contexts/life-event/interface/routes/life-event.record-source-freezes.$freezeId.coverage-pages"
+import * as lifeEventRecordSourceFreezesFreezeIdReleaseRoute from "@/contexts/life-event/interface/routes/life-event.record-source-freezes.$freezeId.release"
+import * as lifeEventRecordSourceFreezesFreezeIdRetirementPlansRoute from "@/contexts/life-event/interface/routes/life-event.record-source-freezes.$freezeId.retirement-plans"
+import * as lifeEventRetirementPlansPlanIdRequestsRoute from "@/contexts/life-event/interface/routes/life-event.retirement-plans.$planId.requests"
+import * as lifeEventRetirementPlansPlanIdRequestsNumberRoute from "@/contexts/life-event/interface/routes/life-event.retirement-plans.$planId.requests.$number"
+import * as lifeEventRetirementPlansPlanIdRequestsNumberApproveRoute from "@/contexts/life-event/interface/routes/life-event.retirement-plans.$planId.requests.$number.approve"
+import * as lifeEventRetirementPlansPlanIdRequestsNumberExecuteRoute from "@/contexts/life-event/interface/routes/life-event.retirement-plans.$planId.requests.$number.execute"
+import * as lifeEventRetirementPlansPlanIdRequestsNumberRejectRoute from "@/contexts/life-event/interface/routes/life-event.retirement-plans.$planId.requests.$number.reject"
+import * as lifeEventRetirementPlansPlanIdRequestsNumberResubmitRoute from "@/contexts/life-event/interface/routes/life-event.retirement-plans.$planId.requests.$number.resubmit"
+import * as lifeEventRetirementPlansPlanIdRequestsNumberWithdrawRoute from "@/contexts/life-event/interface/routes/life-event.retirement-plans.$planId.requests.$number.withdraw"
+import * as lifeEventRetirementPlansPlanIdVerificationReceiptsRoute from "@/contexts/life-event/interface/routes/life-event.retirement-plans.$planId.verification-receipts"
 import * as lifeEventsRoute from "@/contexts/life-event/interface/routes/life-events"
 import * as lifeEventsIdRoute from "@/contexts/life-event/interface/routes/life-events.$id"
 import * as lifeEventsIdApproveRoute from "@/contexts/life-event/interface/routes/life-events.$id.approve"
@@ -2279,7 +2299,84 @@ const routePart37 = createRouteApp()
   .put("/life-event/life-events/:id", ...lifeEventsIdRoute.PUT)
   .delete("/life-event/life-events/:id", ...lifeEventsIdRoute.DELETE)
   .post("/life-event/life-events/:id/approve", ...lifeEventsIdApproveRoute.POST)
+  .post(
+    "/life-event/life-events/:id/preservation-requests",
+    ...lifeEventLifeEventsIdPreservationRequestsRoute.POST,
+  )
+  .get(
+    "/life-event/life-events/:id/preservation-requests/:number",
+    ...lifeEventLifeEventsIdPreservationRequestsNumberRoute.GET,
+  )
+  .post(
+    "/life-event/life-events/:id/preservation-requests/:number/approve",
+    ...lifeEventLifeEventsIdPreservationRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/life-event/life-events/:id/preservation-requests/:number/execute",
+    ...lifeEventLifeEventsIdPreservationRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/life-event/life-events/:id/preservation-requests/:number/reject",
+    ...lifeEventLifeEventsIdPreservationRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/life-event/life-events/:id/preservation-requests/:number/resubmit",
+    ...lifeEventLifeEventsIdPreservationRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/life-event/life-events/:id/preservation-requests/:number/withdraw",
+    ...lifeEventLifeEventsIdPreservationRequestsNumberWithdrawRoute.POST,
+  )
   .post("/life-event/life-events/:id/reject", ...lifeEventsIdRejectRoute.POST)
+  .post("/life-event/record-source-freezes", ...lifeEventRecordSourceFreezesRoute.POST)
+  .get(
+    "/life-event/record-source-freezes/:freezeId",
+    ...lifeEventRecordSourceFreezesFreezeIdRoute.GET,
+  )
+  .post(
+    "/life-event/record-source-freezes/:freezeId/coverage-pages",
+    ...lifeEventRecordSourceFreezesFreezeIdCoveragePagesRoute.POST,
+  )
+  .post(
+    "/life-event/record-source-freezes/:freezeId/release",
+    ...lifeEventRecordSourceFreezesFreezeIdReleaseRoute.POST,
+  )
+  .post(
+    "/life-event/record-source-freezes/:freezeId/retirement-plans",
+    ...lifeEventRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
+  )
+  .post(
+    "/life-event/retirement-plans/:planId/requests",
+    ...lifeEventRetirementPlansPlanIdRequestsRoute.POST,
+  )
+  .get(
+    "/life-event/retirement-plans/:planId/requests/:number",
+    ...lifeEventRetirementPlansPlanIdRequestsNumberRoute.GET,
+  )
+  .post(
+    "/life-event/retirement-plans/:planId/requests/:number/approve",
+    ...lifeEventRetirementPlansPlanIdRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/life-event/retirement-plans/:planId/requests/:number/execute",
+    ...lifeEventRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/life-event/retirement-plans/:planId/requests/:number/reject",
+    ...lifeEventRetirementPlansPlanIdRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/life-event/retirement-plans/:planId/requests/:number/resubmit",
+    ...lifeEventRetirementPlansPlanIdRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/life-event/retirement-plans/:planId/requests/:number/withdraw",
+    ...lifeEventRetirementPlansPlanIdRequestsNumberWithdrawRoute.POST,
+  )
+  .post(
+    "/life-event/retirement-plans/:planId/verification-receipts",
+    ...lifeEventRetirementPlansPlanIdVerificationReceiptsRoute.POST,
+  )
   .get("/meeting/decision-records", ...decisionRecordsRoute.GET)
   .post("/meeting/decision-records", ...decisionRecordsRoute.POST)
   .get("/meeting/decision-records/:id", ...decisionRecordsIdRoute.GET)
@@ -2293,6 +2390,8 @@ const routePart37 = createRouteApp()
   .put("/meeting/meetings/:code", ...meetingsCodeRoute.PUT)
   .post("/meeting/meetings/:code/archive", ...meetingsCodeArchiveRoute.POST)
   .get("/meeting/meetings/:code/minutes", ...meetingsCodeMinutesRoute.GET)
+
+const routePart38 = createRouteApp()
   .post("/meeting/meetings/:code/minutes", ...meetingsCodeMinutesRoute.POST)
   .post("/onboarding/onboarding-assignments", ...onboardingAssignmentsRoute.POST)
   .get(
@@ -2325,8 +2424,6 @@ const routePart37 = createRouteApp()
   )
   .get("/one-on-one/one-on-ones", ...oneOnOnesRoute.GET)
   .post("/one-on-one/one-on-ones", ...oneOnOnesRoute.POST)
-
-const routePart38 = createRouteApp()
   .get("/one-on-one/one-on-ones/me", ...oneOnOnesMeRoute.GET)
   .get("/one-on-one/one-on-ones/:id", ...oneOnOnesIdRoute.GET)
   .put("/one-on-one/one-on-ones/:id", ...oneOnOnesIdRoute.PUT)
@@ -2412,6 +2509,8 @@ const routePart38 = createRouteApp()
   .post("/partner/partner-contracts", ...partnerContractsRoute.POST)
   .put("/partner/partner-contracts/:id", ...partnerContractsIdRoute.PUT)
   .get("/partner/partners", ...partnersRoute.GET)
+
+const routePart39 = createRouteApp()
   .post("/partner/partners", ...partnersRoute.POST)
   .get("/partner/partners/:code", ...partnersCodeRoute.GET)
   .put("/partner/partners/:id", ...partnersIdRoute.PUT)
@@ -2447,8 +2546,6 @@ const routePart38 = createRouteApp()
   .get("/performance-review/performance-goals/me", ...performanceGoalsMeRoute.GET)
   .get("/performance-review/performance-goals/tree", ...performanceGoalsTreeRoute.GET)
   .get("/performance-review/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.GET)
-
-const routePart39 = createRouteApp()
   .put("/performance-review/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.PUT)
   .delete("/performance-review/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.DELETE)
   .get(
@@ -2501,6 +2598,8 @@ const routePart39 = createRouteApp()
     ...recruitmentCandidatesIdAdvanceRoute.POST,
   )
   .get("/regulation/regulations", ...regulationsRoute.GET)
+
+const routePart40 = createRouteApp()
   .post("/regulation/regulations", ...regulationsRoute.POST)
   .get("/regulation/regulations/:code", ...regulationsCodeRoute.GET)
   .post("/regulation/regulations/:code/archive", ...regulationsCodeArchiveRoute.POST)
@@ -2542,8 +2641,6 @@ const routePart39 = createRouteApp()
     "/rental/rental-reservations/:id/preservation-requests/:number/execute",
     ...rentalRentalReservationsIdPreservationRequestsNumberExecuteRoute.POST,
   )
-
-const routePart40 = createRouteApp()
   .post(
     "/rental/rental-reservations/:id/preservation-requests/:number/reject",
     ...rentalRentalReservationsIdPreservationRequestsNumberRejectRoute.POST,
@@ -2605,6 +2702,8 @@ const routePart40 = createRouteApp()
   .get("/ringi/ringi-requests/me", ...ringiRequestsMeRoute.GET)
   .get("/ringi/ringi-requests/:id", ...ringiRequestsIdRoute.GET)
   .post("/ringi/ringi-requests/:id/approve", ...ringiRequestsIdApproveRoute.POST)
+
+const routePart41 = createRouteApp()
   .post("/ringi/ringi-requests/:id/cancel", ...ringiRequestsIdCancelRoute.POST)
   .post("/ringi/ringi-requests/:id/execute", ...ringiRequestsIdExecuteRoute.POST)
   .post("/ringi/ringi-requests/:id/reject", ...ringiRequestsIdRejectRoute.POST)
@@ -2625,8 +2724,6 @@ const routePart40 = createRouteApp()
   .get("/shift/shift-assignments/:id", ...shiftAssignmentsIdRoute.GET)
   .put("/shift/shift-assignments/:id", ...shiftAssignmentsIdRoute.PUT)
   .delete("/shift/shift-assignments/:id", ...shiftAssignmentsIdRoute.DELETE)
-
-const routePart41 = createRouteApp()
   .post("/shift/shift-assignments/:id/publish", ...shiftAssignmentsIdPublishRoute.POST)
   .get("/shift/shift-patterns", ...shiftPatternsRoute.GET)
   .post("/shift/shift-patterns", ...shiftPatternsRoute.POST)
@@ -2682,6 +2779,8 @@ const routePart41 = createRouteApp()
     "/software-license/retirement-plans/:planId/requests/:number/reject",
     ...softwareLicenseRetirementPlansPlanIdRequestsNumberRejectRoute.POST,
   )
+
+const routePart42 = createRouteApp()
   .post(
     "/software-license/retirement-plans/:planId/requests/:number/resubmit",
     ...softwareLicenseRetirementPlansPlanIdRequestsNumberResubmitRoute.POST,
@@ -2747,8 +2846,6 @@ const routePart41 = createRouteApp()
     ...softwareLicenseSoftwareLicensesIdPreservationRequestsNumberWithdrawRoute.POST,
   )
   .get("/survey/surveys", ...surveysRoute.GET)
-
-const routePart42 = createRouteApp()
   .post("/survey/surveys", ...surveysRoute.POST)
   .get("/survey/surveys/responses/me", ...surveysResponsesMeRoute.GET)
   .get("/survey/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.GET)
@@ -2801,6 +2898,8 @@ const routePart42 = createRouteApp()
     "/system/attachments/:attachmentId/preservations/:preservationId/release",
     ...systemAttachmentsAttachmentIdPreservationsPreservationIdReleaseRoute.POST,
   )
+
+const routePart43 = createRouteApp()
   .get("/system/audit-disclosure-policies", ...systemAuditDisclosurePoliciesRoute.GET)
   .post("/system/audit-disclosure-policies", ...systemAuditDisclosurePoliciesRoute.POST)
   .get("/system/audit-events", ...systemAuditEventsRoute.GET)
@@ -2824,8 +2923,6 @@ const routePart42 = createRouteApp()
   )
   .get("/system/deliveries", ...systemDeliveriesRoute.GET)
   .post("/system/deliveries", ...systemDeliveriesRoute.POST)
-
-const routePart43 = createRouteApp()
   .patch("/system/deliveries/:deliveryId", ...systemDeliveriesDeliveryIdRoute.PATCH)
   .get("/system/health", ...systemHealthRoute.GET)
   .post("/system/identity-sessions", ...systemIdentitySessionsRoute.POST)
@@ -2875,6 +2972,8 @@ const routePart43 = createRouteApp()
     ...systemPreservedRecordsRecordIdDossierRoute.GET,
   )
   .get("/system/principals", ...systemPrincipalsRoute.GET)
+
+const routePart44 = createRouteApp()
   .post("/system/principals", ...systemPrincipalsRoute.POST)
   .get("/system/principals/:principalId", ...systemPrincipalsPrincipalIdRoute.GET)
   .patch("/system/principals/:principalId", ...systemPrincipalsPrincipalIdRoute.PATCH)
@@ -2904,8 +3003,6 @@ const routePart43 = createRouteApp()
   .post("/system/work-items", ...systemWorkItemsRoute.POST)
   .get("/system/work-items/:id", ...systemWorkItemsIdRoute.GET)
   .post("/system/work-items/:id/accept", ...systemWorkItemsIdAcceptRoute.POST)
-
-const routePart44 = createRouteApp()
   .post("/system/work-items/:id/approve", ...systemWorkItemsIdApproveRoute.POST)
   .post("/system/work-items/:id/cancel", ...systemWorkItemsIdCancelRoute.POST)
   .get(
@@ -2937,6 +3034,8 @@ const routePart44 = createRouteApp()
   .get("/training/training-courses/:code", ...trainingCoursesCodeRoute.GET)
   .put("/training/training-courses/:code", ...trainingCoursesCodeRoute.PUT)
   .delete("/training/training-courses/:code", ...trainingCoursesCodeRoute.DELETE)
+
+const routePart45 = createRouteApp()
   .get("/training/training-enrollments", ...trainingEnrollmentsRoute.GET)
   .post("/training/training-enrollments", ...trainingEnrollmentsRoute.POST)
   .get("/training/training-enrollments/me", ...trainingEnrollmentsMeRoute.GET)
@@ -2993,8 +3092,6 @@ const routePart44 = createRouteApp()
     "/work-accident/retirement-plans/:planId/verification-receipts",
     ...workAccidentRetirementPlansPlanIdVerificationReceiptsRoute.POST,
   )
-
-const routePart45 = createRouteApp()
   .get("/work-accident/work-accidents", ...workAccidentsRoute.GET)
   .post("/work-accident/work-accidents", ...workAccidentsRoute.POST)
   .post("/work-accident/work-accidents/:id/close", ...workAccidentsIdCloseRoute.POST)
@@ -3089,6 +3186,8 @@ const routePart45 = createRouteApp()
     "/work-style/retirement-plans/:planId/requests/:number/execute",
     ...workStyleRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
   )
+
+const routePart46 = createRouteApp()
   .post(
     "/work-style/retirement-plans/:planId/requests/:number/reject",
     ...workStyleRetirementPlansPlanIdRequestsNumberRejectRoute.POST,
@@ -3153,6 +3252,7 @@ export const app = appBase
   .route("/", routePart43)
   .route("/", routePart44)
   .route("/", routePart45)
+  .route("/", routePart46)
 
 export type AppType = typeof app
 
@@ -3207,6 +3307,7 @@ type ApiClientPart42 = ReturnType<typeof hc<typeof routePart42>>
 type ApiClientPart43 = ReturnType<typeof hc<typeof routePart43>>
 type ApiClientPart44 = ReturnType<typeof hc<typeof routePart44>>
 type ApiClientPart45 = ReturnType<typeof hc<typeof routePart45>>
+type ApiClientPart46 = ReturnType<typeof hc<typeof routePart46>>
 export type ApiClient = ApiClientPart0 &
   ApiClientPart1 &
   ApiClientPart2 &
@@ -3252,4 +3353,5 @@ export type ApiClient = ApiClientPart0 &
   ApiClientPart42 &
   ApiClientPart43 &
   ApiClientPart44 &
-  ApiClientPart45
+  ApiClientPart45 &
+  ApiClientPart46

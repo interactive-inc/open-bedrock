@@ -1,6 +1,7 @@
 import { ConflictError } from "@/lib/errors"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { LifeEventRepository } from "@/contexts/life-event/infrastructure/repositories/life-event.repository"
+import { isLifeEventRecordSourceFrozenError } from "@/contexts/life-event/infrastructure/repositories/lib/is-life-event-record-source-frozen-error"
 import { UpdateLifeEvent } from "@/contexts/life-event/application/update-life-event"
 import type { LifeEvent } from "@/contexts/life-event/domain/entities/life-event.entity"
 import { ApplicationError } from "@/lib/errors"
@@ -148,6 +149,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     const deleted = await lifeEventRepository.delete(command.lifeEventId)
 
     if (deleted instanceof Error) {
+      if (isLifeEventRecordSourceFrozenError(deleted))
+        return new ConflictError("life event writes are frozen", "record_source_frozen", { cause: deleted })
       return new UnexpectedError("failed to delete life event", { cause: deleted })
     }
 

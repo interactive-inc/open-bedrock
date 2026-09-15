@@ -1,9 +1,10 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { LifeEvent } from "@/contexts/life-event/domain/entities/life-event.entity"
-import { UnexpectedError } from "@/lib/errors"
+import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { LifeEventRepository } from "@/contexts/life-event/infrastructure/repositories/life-event.repository"
+import { isLifeEventRecordSourceFrozenError } from "@/contexts/life-event/infrastructure/repositories/lib/is-life-event-record-source-frozen-error"
 import type { LifeEventType } from "@/contexts/life-event/domain/definitions/life-event-type.definition"
 
 export type Command = {
@@ -36,6 +37,8 @@ export class CreateLifeEvent {
     const created = await lifeEventRepository.create(lifeEvent)
 
     if (created instanceof Error) {
+      if (isLifeEventRecordSourceFrozenError(created))
+        return new ConflictError("life event writes are frozen", "record_source_frozen", { cause: created })
       return new UnexpectedError("failed to create life event", { cause: created })
     }
 
