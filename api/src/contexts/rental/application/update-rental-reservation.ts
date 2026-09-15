@@ -10,6 +10,7 @@ import {
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { RentalReservationRepository } from "@/contexts/rental/infrastructure/repositories/rental-reservation.repository"
+import { isRentalReservationRecordSourceFrozenError } from "@/contexts/rental/infrastructure/repositories/lib/is-rental-reservation-record-source-frozen-error"
 
 export type Command = {
   reservationId: string
@@ -66,6 +67,9 @@ export class UpdateRentalReservation {
     const result = await reservationRepository.updateIfNoOverlap(updated)
 
     if (result instanceof Error) {
+      if (isRentalReservationRecordSourceFrozenError(result)) {
+        return new ConflictError("rental reservation writes are frozen", "record_source_frozen", { cause: result })
+      }
       return new UnexpectedError("failed to update reservation", { cause: result })
     }
 
