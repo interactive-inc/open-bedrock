@@ -578,6 +578,6 @@
     "src/contexts/company/test/personnel-execution.integration.test.ts": "092ca01afe971b1a39f4f2e68dcdb0dd3121ddf40d5c59073d7ceb5cdb1f0cea",
     "src/contexts/company/test/personnel-position-snapshot.integration.test.ts": "68d544b6e554e880ba906a08f805403642d54d0e0f117005054961fe53e1b0c3",
     "src/contexts/company/test/record-preservation-execution.integration.test.ts": "6fb89877730222fe43bd5f44fee68bfeda6991a6485bc1db16427a17706ead0b",
-    "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts": "f0a9695f5bbd34c37bc86c8bdad89364ec8233f4c70107671fd6ae4319d92362"
+    "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts": "a2a9799f055ffa65bcdf190fc4e8338719821235cfcd63ea37b57e05169eb97b"
   }
 }

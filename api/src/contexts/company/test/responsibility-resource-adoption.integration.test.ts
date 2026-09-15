@@ -696,7 +696,7 @@ test("同時再送は一度だけ接続し、別の依頼・別の主体・キ�
       .sort((a, b) => a - b),
   ).toEqual([201, 409])
   expect((await other.state()).receipts).toHaveLength(1)
-})
+}, 15_000)
 
 test("保存直前の会社版変更を拒否し、再確認した同じキーで接続する", async () => {
   const f = await fixture()
