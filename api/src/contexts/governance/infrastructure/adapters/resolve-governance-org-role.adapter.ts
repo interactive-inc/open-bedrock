@@ -3,14 +3,17 @@ import type { Context } from "@/env"
 import { GovernanceAdapter } from "@/contexts/governance/infrastructure/adapters/governance.adapter"
 import { CurrentOrganizationReadModelAdapter } from "@/contexts/company/infrastructure/adapters/organization/current-organization-read-model.adapter"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
+import { CompanyGovernanceRoleAssignmentReadAdapter } from "@/contexts/governance/infrastructure/adapters/company-governance-role-assignment-read.adapter"
 
 export type GovernanceOrgRoleAssignee = {
-  assignment_id: number | null
+  assignment_id: string | null
   employee_id: EmployeeId
   employee_code: string
   employee_name: string
   department_code: string | null
-  source: "manual_assignment" | "department_manager"
+  source: "company_responsibility" | "department_manager"
 }
 
 /**
@@ -64,26 +67,21 @@ export class ResolveGovernanceOrgRoleAdapter {
       timeZone: this.c.env.COMPANY_TIME_ZONE,
     })
     if (businessDate instanceof Error) return businessDate
-    const assignments = await repository.listActiveManualAssignments({
-      orgRoleCode: code,
-      businessDate,
+    const snapshot = await new CompanyGovernanceRoleAssignmentReadAdapter({
+      repository: new D1CompanyResourceRepository({ database: this.c.env.DB }),
+    }).read({
+      organizationId: "organization:default",
+      responsibilityCode: code,
+      effectiveOn: restoreCalendarDate(businessDate),
     })
-    if (assignments instanceof Error) return assignments
-
-    return assignments.flatMap((assignment) => {
-      const employee = employeesById.get(assignment.employeeId)
-      return employee === undefined
-        ? []
-        : [
-            {
-              assignment_id: assignment.id,
-              employee_id: employee.id,
-              employee_code: employee.code,
-              employee_name: employee.name,
-              department_code: assignment.departmentCode,
-              source: "manual_assignment" as const,
-            },
-          ]
-    })
+    if (snapshot instanceof Error) return snapshot
+    return snapshot.assignees.map((assignment) => ({
+      assignment_id: assignment.assignmentId,
+      employee_id: assignment.employeeId as EmployeeId,
+      employee_code: assignment.employeeCode,
+      employee_name: assignment.employeeName,
+      department_code: assignment.departmentCode,
+      source: "company_responsibility" as const,
+    }))
   }
 }
