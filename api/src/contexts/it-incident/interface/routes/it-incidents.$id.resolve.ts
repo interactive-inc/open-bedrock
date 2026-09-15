@@ -8,6 +8,7 @@ import { toHttpException } from "@/lib/http/to-http-exception"
 import { validateIntParam } from "@/lib/http/validate-int-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
+import { isItIncidentRecordSourceFrozenError } from "@/contexts/it-incident/infrastructure/repositories/lib/is-it-incident-record-source-frozen-error"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /it-incidents/:id/resolve — インシデントを解消済みに倒す（it_incident:manage） */
@@ -48,6 +49,11 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     const updated = await repository.update(incident.resolve(command.resolvedAt))
 
     if (updated instanceof Error) {
+      if (isItIncidentRecordSourceFrozenError(updated)) {
+        return new ConflictError("IT incident writes are frozen", "record_source_frozen", {
+          cause: updated,
+        })
+      }
       return new UnexpectedError("failed to resolve it incident", { cause: updated })
     }
 
