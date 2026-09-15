@@ -781,6 +781,26 @@ import * as trainingEnrollmentsRoute from "@/contexts/training/interface/routes/
 import * as trainingEnrollmentsIdRoute from "@/contexts/training/interface/routes/training-enrollments.$id"
 import * as trainingEnrollmentsIdCompleteRoute from "@/contexts/training/interface/routes/training-enrollments.$id.complete"
 import * as trainingEnrollmentsMeRoute from "@/contexts/training/interface/routes/training-enrollments.me"
+import * as trainingRecordSourceFreezesRoute from "@/contexts/training/interface/routes/training.record-source-freezes"
+import * as trainingRecordSourceFreezesFreezeIdRoute from "@/contexts/training/interface/routes/training.record-source-freezes.$freezeId"
+import * as trainingRecordSourceFreezesFreezeIdCoveragePagesRoute from "@/contexts/training/interface/routes/training.record-source-freezes.$freezeId.coverage-pages"
+import * as trainingRecordSourceFreezesFreezeIdReleaseRoute from "@/contexts/training/interface/routes/training.record-source-freezes.$freezeId.release"
+import * as trainingRecordSourceFreezesFreezeIdRetirementPlansRoute from "@/contexts/training/interface/routes/training.record-source-freezes.$freezeId.retirement-plans"
+import * as trainingRecordsRecordKindRecordIdPreservationRequestsRoute from "@/contexts/training/interface/routes/training.records.$recordKind.$recordId.preservation-requests"
+import * as trainingRecordsRecordKindRecordIdPreservationRequestsNumberRoute from "@/contexts/training/interface/routes/training.records.$recordKind.$recordId.preservation-requests.$number"
+import * as trainingRecordsRecordKindRecordIdPreservationRequestsNumberApproveRoute from "@/contexts/training/interface/routes/training.records.$recordKind.$recordId.preservation-requests.$number.approve"
+import * as trainingRecordsRecordKindRecordIdPreservationRequestsNumberExecuteRoute from "@/contexts/training/interface/routes/training.records.$recordKind.$recordId.preservation-requests.$number.execute"
+import * as trainingRecordsRecordKindRecordIdPreservationRequestsNumberRejectRoute from "@/contexts/training/interface/routes/training.records.$recordKind.$recordId.preservation-requests.$number.reject"
+import * as trainingRecordsRecordKindRecordIdPreservationRequestsNumberResubmitRoute from "@/contexts/training/interface/routes/training.records.$recordKind.$recordId.preservation-requests.$number.resubmit"
+import * as trainingRecordsRecordKindRecordIdPreservationRequestsNumberWithdrawRoute from "@/contexts/training/interface/routes/training.records.$recordKind.$recordId.preservation-requests.$number.withdraw"
+import * as trainingRetirementPlansPlanIdRequestsRoute from "@/contexts/training/interface/routes/training.retirement-plans.$planId.requests"
+import * as trainingRetirementPlansPlanIdRequestsNumberRoute from "@/contexts/training/interface/routes/training.retirement-plans.$planId.requests.$number"
+import * as trainingRetirementPlansPlanIdRequestsNumberApproveRoute from "@/contexts/training/interface/routes/training.retirement-plans.$planId.requests.$number.approve"
+import * as trainingRetirementPlansPlanIdRequestsNumberExecuteRoute from "@/contexts/training/interface/routes/training.retirement-plans.$planId.requests.$number.execute"
+import * as trainingRetirementPlansPlanIdRequestsNumberRejectRoute from "@/contexts/training/interface/routes/training.retirement-plans.$planId.requests.$number.reject"
+import * as trainingRetirementPlansPlanIdRequestsNumberResubmitRoute from "@/contexts/training/interface/routes/training.retirement-plans.$planId.requests.$number.resubmit"
+import * as trainingRetirementPlansPlanIdRequestsNumberWithdrawRoute from "@/contexts/training/interface/routes/training.retirement-plans.$planId.requests.$number.withdraw"
+import * as trainingRetirementPlansPlanIdVerificationReceiptsRoute from "@/contexts/training/interface/routes/training.retirement-plans.$planId.verification-receipts"
 import * as workAccidentRecordSourceFreezesRoute from "@/contexts/work-accident/interface/routes/work-accident.record-source-freezes"
 import * as workAccidentRecordSourceFreezesFreezeIdRoute from "@/contexts/work-accident/interface/routes/work-accident.record-source-freezes.$freezeId"
 import * as workAccidentRecordSourceFreezesFreezeIdCoveragePagesRoute from "@/contexts/work-accident/interface/routes/work-accident.record-source-freezes.$freezeId.coverage-pages"
@@ -3506,6 +3526,80 @@ const routePart46 = createRouteApp()
   .get("/thanks/thanks-rewards", ...thanksRewardsRoute.GET)
   .post("/thanks/thanks-rewards", ...thanksRewardsRoute.POST)
   .patch("/thanks/thanks-rewards/:id", ...thanksRewardsIdRoute.PATCH)
+  .post("/training/record-source-freezes", ...trainingRecordSourceFreezesRoute.POST)
+  .get("/training/record-source-freezes/:freezeId", ...trainingRecordSourceFreezesFreezeIdRoute.GET)
+  .post(
+    "/training/record-source-freezes/:freezeId/coverage-pages",
+    ...trainingRecordSourceFreezesFreezeIdCoveragePagesRoute.POST,
+  )
+  .post(
+    "/training/record-source-freezes/:freezeId/release",
+    ...trainingRecordSourceFreezesFreezeIdReleaseRoute.POST,
+  )
+  .post(
+    "/training/record-source-freezes/:freezeId/retirement-plans",
+    ...trainingRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
+  )
+  .post(
+    "/training/records/:recordKind/:recordId/preservation-requests",
+    ...trainingRecordsRecordKindRecordIdPreservationRequestsRoute.POST,
+  )
+  .get(
+    "/training/records/:recordKind/:recordId/preservation-requests/:number",
+    ...trainingRecordsRecordKindRecordIdPreservationRequestsNumberRoute.GET,
+  )
+  .post(
+    "/training/records/:recordKind/:recordId/preservation-requests/:number/approve",
+    ...trainingRecordsRecordKindRecordIdPreservationRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/training/records/:recordKind/:recordId/preservation-requests/:number/execute",
+    ...trainingRecordsRecordKindRecordIdPreservationRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/training/records/:recordKind/:recordId/preservation-requests/:number/reject",
+    ...trainingRecordsRecordKindRecordIdPreservationRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/training/records/:recordKind/:recordId/preservation-requests/:number/resubmit",
+    ...trainingRecordsRecordKindRecordIdPreservationRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/training/records/:recordKind/:recordId/preservation-requests/:number/withdraw",
+    ...trainingRecordsRecordKindRecordIdPreservationRequestsNumberWithdrawRoute.POST,
+  )
+  .post(
+    "/training/retirement-plans/:planId/requests",
+    ...trainingRetirementPlansPlanIdRequestsRoute.POST,
+  )
+  .get(
+    "/training/retirement-plans/:planId/requests/:number",
+    ...trainingRetirementPlansPlanIdRequestsNumberRoute.GET,
+  )
+  .post(
+    "/training/retirement-plans/:planId/requests/:number/approve",
+    ...trainingRetirementPlansPlanIdRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/training/retirement-plans/:planId/requests/:number/execute",
+    ...trainingRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/training/retirement-plans/:planId/requests/:number/reject",
+    ...trainingRetirementPlansPlanIdRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/training/retirement-plans/:planId/requests/:number/resubmit",
+    ...trainingRetirementPlansPlanIdRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/training/retirement-plans/:planId/requests/:number/withdraw",
+    ...trainingRetirementPlansPlanIdRequestsNumberWithdrawRoute.POST,
+  )
+  .post(
+    "/training/retirement-plans/:planId/verification-receipts",
+    ...trainingRetirementPlansPlanIdVerificationReceiptsRoute.POST,
+  )
   .get("/training/training-courses", ...trainingCoursesRoute.GET)
   .post("/training/training-courses", ...trainingCoursesRoute.POST)
   .get("/training/training-courses/:code", ...trainingCoursesCodeRoute.GET)
@@ -3551,6 +3645,8 @@ const routePart46 = createRouteApp()
     "/work-accident/retirement-plans/:planId/requests/:number/execute",
     ...workAccidentRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
   )
+
+const routePart47 = createRouteApp()
   .post(
     "/work-accident/retirement-plans/:planId/requests/:number/reject",
     ...workAccidentRetirementPlansPlanIdRequestsNumberRejectRoute.POST,
@@ -3616,8 +3712,6 @@ const routePart46 = createRouteApp()
     "/work-style/employee-work-styles/:id/preservation-requests/:number/execute",
     ...workStyleEmployeeWorkStylesIdPreservationRequestsNumberExecuteRoute.POST,
   )
-
-const routePart47 = createRouteApp()
   .post(
     "/work-style/employee-work-styles/:id/preservation-requests/:number/reject",
     ...workStyleEmployeeWorkStylesIdPreservationRequestsNumberRejectRoute.POST,
