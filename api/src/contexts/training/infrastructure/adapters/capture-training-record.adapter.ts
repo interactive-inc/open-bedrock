@@ -4,7 +4,7 @@ import { TrainingError } from "@/contexts/training/domain/errors"
 import {
   trainingRecordKindSchema,
   type TrainingRecordKind,
-} from "@/contexts/training/domain/training-record-kind"
+} from "@/contexts/training/domain/definitions/training-record-kind.definition"
 import { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
@@ -41,18 +41,26 @@ function snapshotQuery(recordKind: TrainingRecordKind, recordId: string): Snapsh
 
 /** 保全資格のある主体へ研修2台帳の原記録を返し、保存直前にも同じ内容を検査する。 */
 export class CaptureTrainingRecordAdapter {
-  constructor(private readonly c: Context) { Object.freeze(this) }
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
-  async prepare(input: Readonly<{ recordKind: TrainingRecordKind; recordId: string; sourceNamespace: string }>) {
+  async prepare(
+    input: Readonly<{ recordKind: TrainingRecordKind; recordId: string; sourceNamespace: string }>,
+  ) {
     const kind = trainingRecordKindSchema.safeParse(input.recordKind)
     if (!kind.success) return new TrainingError("forbidden", "invalid source record")
     const query = snapshotQuery(kind.data, input.recordId)
-    if (query instanceof Error) return new TrainingError("forbidden", "invalid source record", { cause: query })
+    if (query instanceof Error)
+      return new TrainingError("forbidden", "invalid source record", { cause: query })
     const actor = await new TrainingActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
     try {
       const statement = () => this.c.env.DB.prepare(query.sql).bind(...query.values)
-      const reads = await this.c.env.DB.batch<{ snapshot_json: string }>([...actor.assertions, statement()])
+      const reads = await this.c.env.DB.batch<{ snapshot_json: string }>([
+        ...actor.assertions,
+        statement(),
+      ])
       if (reads.length !== actor.assertions.length + 1 || reads.some((read) => !read.success))
         return new Error("training source is unavailable")
       const snapshot = reads.at(-1)?.results[0]?.snapshot_json
@@ -79,7 +87,10 @@ export class CaptureTrainingRecordAdapter {
         content: new TextEncoder().encode(canonical.toString()),
         actorAccountId: actor.accountId,
         sourceAuthorizationRef: Object.freeze({
-          context: "training", kind: "record-snapshot", id: input.recordId, version: digest.toString(),
+          context: "training",
+          kind: "record-snapshot",
+          id: input.recordId,
+          version: digest.toString(),
         }),
         assertions: [
           ...actor.assertions,

@@ -1,4 +1,4 @@
-import { trainingRecordKindSchema } from "@/contexts/training/domain/training-record-kind"
+import { trainingRecordKindSchema } from "@/contexts/training/domain/definitions/training-record-kind.definition"
 import { z } from "zod"
 
 export const trainingRecordRouteSchema = z.strictObject({

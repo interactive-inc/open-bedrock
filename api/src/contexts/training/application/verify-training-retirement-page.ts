@@ -10,7 +10,7 @@ import { RecordRetirementVerificationPlanRepository } from "@system/infrastructu
 import { RecordRetirementVerificationReceiptRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
 import { RecordRetirementVerificationReceiptEntity } from "@system/domain/entities/record-retirement-verification-receipt.entity"
 import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
-import { trainingRecordKinds } from "@/contexts/training/domain/training-record-kind"
+import { trainingRecordKinds } from "@/contexts/training/domain/definitions/training-record-kind.definition"
 
 type Context = ConstructorParameters<typeof PrepareTrainingRetirementPageAdapter>[0]
 
