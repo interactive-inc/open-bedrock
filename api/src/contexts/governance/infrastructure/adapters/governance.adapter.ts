@@ -17,11 +17,13 @@ import {
   governanceDocuments,
   governanceDocumentReferences,
   governanceDocumentVersions,
-  governanceOrgRoleAssignments,
-  governanceOrgRoles,
   governancePublicationApprovals,
 } from "@/contexts/governance/infrastructure/schema/governance"
-import { and, asc, desc, eq, gt, isNull, lte, or } from "drizzle-orm"
+import {
+  findGovernanceOrgRole,
+  governanceOrgRoles,
+} from "@/contexts/governance/domain/catalogs/governance-org-role.catalog"
+import { and, asc, desc, eq } from "drizzle-orm"
 
 export type GovernanceVersionRecord = {
   row: typeof governanceDocumentVersions.$inferSelect
@@ -464,164 +466,11 @@ export class GovernanceAdapter {
   }
 
   async listOrgRoles() {
-    try {
-      return await this.c.var.database
-        .select()
-        .from(governanceOrgRoles)
-        .orderBy(asc(governanceOrgRoles.code))
-    } catch (error) {
-      return toError(error, "failed to list governance organization roles")
-    }
+    return governanceOrgRoles
   }
 
   async findOrgRole(code: string) {
-    try {
-      const rows = await this.c.var.database
-        .select()
-        .from(governanceOrgRoles)
-        .where(eq(governanceOrgRoles.code, code))
-        .limit(1)
-      return rows.at(0) ?? null
-    } catch (error) {
-      return toError(error, "failed to load governance organization role")
-    }
-  }
-
-  async listActiveManualAssignments(props: { orgRoleCode?: string; businessDate: string }) {
-    try {
-      return await this.c.var.database
-        .select()
-        .from(governanceOrgRoleAssignments)
-        .where(
-          and(
-            props.orgRoleCode === undefined
-              ? undefined
-              : eq(governanceOrgRoleAssignments.orgRoleCode, props.orgRoleCode),
-            lte(governanceOrgRoleAssignments.startsOn, props.businessDate),
-            or(
-              isNull(governanceOrgRoleAssignments.endsOn),
-              gt(governanceOrgRoleAssignments.endsOn, props.businessDate),
-            ),
-            isNull(governanceOrgRoleAssignments.revokedAt),
-          ),
-        )
-        .orderBy(
-          asc(governanceOrgRoleAssignments.orgRoleCode),
-          asc(governanceOrgRoleAssignments.id),
-        )
-    } catch (error) {
-      return toError(error, "failed to list governance organization role assignments")
-    }
-  }
-
-  async listManualAssignments(orgRoleCode?: string) {
-    try {
-      return await this.c.var.database
-        .select()
-        .from(governanceOrgRoleAssignments)
-        .where(
-          and(
-            orgRoleCode === undefined
-              ? undefined
-              : eq(governanceOrgRoleAssignments.orgRoleCode, orgRoleCode),
-            isNull(governanceOrgRoleAssignments.revokedAt),
-          ),
-        )
-        .orderBy(
-          asc(governanceOrgRoleAssignments.orgRoleCode),
-          asc(governanceOrgRoleAssignments.id),
-        )
-    } catch (error) {
-      return toError(error, "failed to list governance organization role assignments")
-    }
-  }
-
-  async addAssignment(props: {
-    orgRoleCode: string
-    employeeId: EmployeeId
-    departmentCode: string | null
-    startsOn: string
-    endsOn: string | null
-    sourceDocumentCode: string | null
-    cardinality: "one" | "per_department" | "many"
-    accountId: AccountId
-    now: string
-    auditStatements: ReadonlyArray<D1PreparedStatement>
-  }) {
-    try {
-      const assignmentScope =
-        props.cardinality === "one"
-          ? ""
-          : props.cardinality === "per_department"
-            ? "AND department_code IS ?3"
-            : "AND employee_id = ?2 AND department_code IS ?3"
-      await this.c.env.DB.batch([
-        this.c.env.DB.prepare(
-          `INSERT INTO governance_org_role_assignments
-            (org_role_code, employee_id, department_code, starts_on, ends_on,
-             source_document_code, created_by_account_id, created_at)
-           SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8
-           WHERE NOT EXISTS (
-             SELECT 1 FROM governance_org_role_assignments
-             WHERE org_role_code = ?1
-               AND revoked_at IS NULL
-               AND (ends_on IS NULL OR ?4 < ends_on)
-               AND (?5 IS NULL OR starts_on < ?5)
-               ${assignmentScope}
-           )`,
-        ).bind(
-          props.orgRoleCode,
-          props.employeeId,
-          props.departmentCode,
-          props.startsOn,
-          props.endsOn,
-          props.sourceDocumentCode,
-          props.accountId,
-          props.now,
-        ),
-        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
-        ...props.auditStatements,
-      ])
-      const rows = await this.c.var.database
-        .select()
-        .from(governanceOrgRoleAssignments)
-        .where(
-          and(
-            eq(governanceOrgRoleAssignments.orgRoleCode, props.orgRoleCode),
-            eq(governanceOrgRoleAssignments.employeeId, props.employeeId),
-            eq(governanceOrgRoleAssignments.startsOn, props.startsOn),
-          ),
-        )
-        .orderBy(desc(governanceOrgRoleAssignments.id))
-        .limit(1)
-      return rows.at(0) ?? new Error("assignment was not created")
-    } catch (error) {
-      if (isAbortedByGuard(error)) return false
-      return toError(error, "failed to add governance organization role assignment")
-    }
-  }
-
-  async revokeAssignment(props: {
-    id: number
-    accountId: AccountId
-    revokedAt: string
-    auditStatements: ReadonlyArray<D1PreparedStatement>
-  }): Promise<boolean | Error> {
-    try {
-      await this.c.env.DB.batch([
-        this.c.env.DB.prepare(
-          `UPDATE governance_org_role_assignments
-           SET revoked_by_account_id = ?1, revoked_at = ?2
-           WHERE id = ?3 AND revoked_at IS NULL`,
-        ).bind(props.accountId, props.revokedAt, props.id),
-        abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
-        ...props.auditStatements,
-      ])
-      return true
-    } catch (error) {
-      if (isAbortedByGuard(error)) return false
-      return toError(error, "failed to delete governance organization role assignment")
-    }
+    return findGovernanceOrgRole(code)
   }
 
   private async hydrateVersion(
