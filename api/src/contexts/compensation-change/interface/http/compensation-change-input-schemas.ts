@@ -1,4 +1,4 @@
-import { compensationChangeRecordKindSchema } from "@/contexts/compensation-change/domain/compensation-change-record-kind"
+import { compensationChangeRecordKindSchema } from "@/contexts/compensation-change/domain/definitions/compensation-change-record-kind.definition"
 import { z } from "zod"
 
 export const compensationChangeRecordRouteSchema = z.strictObject({

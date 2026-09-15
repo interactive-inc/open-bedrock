@@ -1,19 +1,23 @@
 import { z } from "zod"
 import type { CompensationChangeContext } from "@/contexts/compensation-change/configuration/compensation-change-context"
-import { compensationChangeRecordKindSchema } from "@/contexts/compensation-change/domain/compensation-change-record-kind"
+import { compensationChangeRecordKindSchema } from "@/contexts/compensation-change/domain/definitions/compensation-change-record-kind.definition"
 import { ListFrozenCompensationChangeRecordPageAdapter } from "@/contexts/compensation-change/infrastructure/adapters/list-frozen-compensation-change-record-page.adapter"
 import { CaptureCompensationChangeRecordAdapter } from "@/contexts/compensation-change/infrastructure/adapters/capture-compensation-change-record.adapter"
 
 type Context = CompensationChangeContext
 const requestSchema = z.strictObject({
-  freezeId: z.uuid(), sourceNamespace: z.string().regex(/^\S{1,255}$/),
-  recordKind: compensationChangeRecordKindSchema, afterCursor: z.string().nullable(),
+  freezeId: z.uuid(),
+  sourceNamespace: z.string().regex(/^\S{1,255}$/),
+  recordKind: compensationChangeRecordKindSchema,
+  afterCursor: z.string().nullable(),
   limit: z.number().int().min(1).max(10),
 })
 
 /** 停止した給与改定の原文を分割取得し、全取得後にも同じ停止世代を検査する。 */
 export class CaptureFrozenCompensationChangeRecordPageAdapter {
-  constructor(private readonly c: Context) { Object.freeze(this) }
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
   async prepare(input: unknown) {
     const parsed = requestSchema.safeParse(input)
@@ -24,7 +28,9 @@ export class CaptureFrozenCompensationChangeRecordPageAdapter {
     const records = []
     for (const recordId of page.recordIds) {
       const record = await new CaptureCompensationChangeRecordAdapter(this.c).prepare({
-        recordKind: request.recordKind, recordId, sourceNamespace: request.sourceNamespace,
+        recordKind: request.recordKind,
+        recordId,
+        sourceNamespace: request.sourceNamespace,
       })
       if (record instanceof Error) return record
       records.push(record)
@@ -37,8 +43,11 @@ export class CaptureFrozenCompensationChangeRecordPageAdapter {
       return new Error("frozen compensation-change capture changed", { cause })
     }
     return Object.freeze({
-      freezeId: page.freezeId, afterCursor: request.afterCursor, nextCursor: page.nextCursor,
-      records: Object.freeze(records), assertions: page.assertions,
+      freezeId: page.freezeId,
+      afterCursor: request.afterCursor,
+      nextCursor: page.nextCursor,
+      records: Object.freeze(records),
+      assertions: page.assertions,
     })
   }
 }

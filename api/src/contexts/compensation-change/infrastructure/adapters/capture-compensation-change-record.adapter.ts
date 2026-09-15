@@ -3,7 +3,7 @@ import { CompensationChangeError } from "@/contexts/compensation-change/domain/e
 import {
   compensationChangeRecordKindSchema,
   type CompensationChangeRecordKind,
-} from "@/contexts/compensation-change/domain/compensation-change-record-kind"
+} from "@/contexts/compensation-change/domain/definitions/compensation-change-record-kind.definition"
 import { CompensationChangeActorReadAdapter } from "@/contexts/compensation-change/infrastructure/adapters/compensation-change-actor-read.adapter"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
@@ -13,7 +13,10 @@ type Context = CompensationChangeContext
 
 type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<number> }>
 
-function snapshotQuery(recordKind: CompensationChangeRecordKind, recordId: string): SnapshotQuery | Error {
+function snapshotQuery(
+  recordKind: CompensationChangeRecordKind,
+  recordId: string,
+): SnapshotQuery | Error {
   const parsed = compensationChangeRecordKindSchema.safeParse(recordKind)
   const id = Number(recordId)
   if (!parsed.success || !Number.isSafeInteger(id) || id <= 0 || String(id) !== recordId)
@@ -33,7 +36,13 @@ export class CaptureCompensationChangeRecordAdapter {
     Object.freeze(this)
   }
 
-  async prepare(input: Readonly<{ recordKind: CompensationChangeRecordKind; recordId: string; sourceNamespace: string }>) {
+  async prepare(
+    input: Readonly<{
+      recordKind: CompensationChangeRecordKind
+      recordId: string
+      sourceNamespace: string
+    }>,
+  ) {
     const query = snapshotQuery(input.recordKind, input.recordId)
     if (query instanceof Error)
       return new CompensationChangeError("forbidden", "invalid source record", { cause: query })
@@ -41,7 +50,10 @@ export class CaptureCompensationChangeRecordAdapter {
     if (actor instanceof Error) return actor
     try {
       const statement = () => this.c.env.DB.prepare(query.sql).bind(...query.values)
-      const reads = await this.c.env.DB.batch<{ snapshot_json: string }>([...actor.assertions, statement()])
+      const reads = await this.c.env.DB.batch<{ snapshot_json: string }>([
+        ...actor.assertions,
+        statement(),
+      ])
       if (reads.length !== actor.assertions.length + 1 || reads.some((read) => !read.success))
         return new Error("compensation change source is unavailable")
       const snapshot = reads.at(-1)?.results[0]?.snapshot_json
@@ -67,11 +79,19 @@ export class CaptureCompensationChangeRecordAdapter {
         source,
         content: new TextEncoder().encode(canonical.toString()),
         actorAccountId: actor.accountId,
-        sourceAuthorizationRef: Object.freeze({ context: "compensation-change", kind: "record-snapshot", id: input.recordId, version: digest.toString() }),
-        assertions: [...actor.assertions, this.c.env.DB.prepare(
-          `SELECT CASE WHEN (SELECT snapshot_json FROM (${query.sql})) IS ?${query.values.length + 1}
+        sourceAuthorizationRef: Object.freeze({
+          context: "compensation-change",
+          kind: "record-snapshot",
+          id: input.recordId,
+          version: digest.toString(),
+        }),
+        assertions: [
+          ...actor.assertions,
+          this.c.env.DB.prepare(
+            `SELECT CASE WHEN (SELECT snapshot_json FROM (${query.sql})) IS ?${query.values.length + 1}
             THEN 1 ELSE json_extract('', '$') END`,
-        ).bind(...query.values, snapshot)],
+          ).bind(...query.values, snapshot),
+        ],
       }
     } catch (cause) {
       return new Error("compensation change source capture failed", { cause })

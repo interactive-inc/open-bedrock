@@ -2,7 +2,7 @@ import type { CompensationChangeContext } from "@/contexts/compensation-change/c
 import type { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
 import { CaptureCompensationChangeRecordAdapter } from "@/contexts/compensation-change/infrastructure/adapters/capture-compensation-change-record.adapter"
 import { CompensationChangeError } from "@/contexts/compensation-change/domain/errors"
-import { compensationChangeRecordKindSchema } from "@/contexts/compensation-change/domain/compensation-change-record-kind"
+import { compensationChangeRecordKindSchema } from "@/contexts/compensation-change/domain/definitions/compensation-change-record-kind.definition"
 
 type Context = CompensationChangeContext & Readonly<{ sourceNamespace: string }>
 
@@ -17,7 +17,10 @@ export class RevalidateCompensationChangeRecordSourceAdapter {
       source.props.sourceNamespace !== this.c.sourceNamespace ||
       source.props.ownerContext !== "compensation-change"
     )
-      return new CompensationChangeError("forbidden", "record source does not belong to this compensation-change registry")
+      return new CompensationChangeError(
+        "forbidden",
+        "record source does not belong to this compensation-change registry",
+      )
 
     const recordKind = compensationChangeRecordKindSchema.safeParse(source.props.recordKind)
     if (!recordKind.success)

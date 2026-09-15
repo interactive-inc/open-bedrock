@@ -14,7 +14,7 @@ import { PrepareRecordRetirementDisclosureAdapter } from "@system/infrastructure
 import { PrepareRecordRetirementSourceAttachmentsAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-source-attachments.adapter"
 import { PrepareRecordRetirementStorageKeysAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-storage-keys.adapter"
 import { ForbiddenError } from "@/lib/errors"
-import { compensationChangeRecordKinds } from "@/contexts/compensation-change/domain/compensation-change-record-kind"
+import { compensationChangeRecordKinds } from "@/contexts/compensation-change/domain/definitions/compensation-change-record-kind.definition"
 
 const requestSchema = z.strictObject({
   planId: z.uuid(),
@@ -57,7 +57,8 @@ export class PrepareCompensationChangeRetirementCurrentStateAdapter {
       plan.snapshot.sourceNamespace !== request.sourceNamespace ||
       plan.snapshot.ownerContext !== "compensation-change" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(compensationChangeRecordKinds)
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(compensationChangeRecordKinds)
     )
       return new Error("retirement plan or source capability differs")
     const target = { planId: plan.snapshot.id, planDigest: plan.digest }

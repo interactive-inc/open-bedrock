@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { compensationChangeRecordKindSchema } from "@/contexts/compensation-change/domain/compensation-change-record-kind"
+import { compensationChangeRecordKindSchema } from "@/contexts/compensation-change/domain/definitions/compensation-change-record-kind.definition"
 
 export const compensationChangeCoveragePageCommandSchema = z.strictObject({
   id: z.uuid(),

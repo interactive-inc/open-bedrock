@@ -10,7 +10,7 @@ import { RecordRetirementVerificationPlanRepository } from "@system/infrastructu
 import { RecordRetirementVerificationReceiptRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
 import { RecordRetirementVerificationReceiptEntity } from "@system/domain/entities/record-retirement-verification-receipt.entity"
 import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
-import { compensationChangeRecordKinds } from "@/contexts/compensation-change/domain/compensation-change-record-kind"
+import { compensationChangeRecordKinds } from "@/contexts/compensation-change/domain/definitions/compensation-change-record-kind.definition"
 
 type Context = ConstructorParameters<typeof PrepareCompensationChangeRetirementPageAdapter>[0]
 
@@ -46,7 +46,8 @@ export class VerifyCompensationChangeRetirementPage {
       plan.snapshot.sourceNamespace !== command.sourceNamespace ||
       plan.snapshot.ownerContext !== "compensation-change" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(compensationChangeRecordKinds)
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(compensationChangeRecordKinds)
     )
       return new CompensationChangeRetirementConflictError(
         "retirement plan unavailable or capability changed",
@@ -127,6 +128,8 @@ export class VerifyCompensationChangeRetirementPage {
     if (raced instanceof Error) return raced
     return raced !== null && matches(raced)
       ? raced
-      : new CompensationChangeRetirementConflictError("retirement verification position already written")
+      : new CompensationChangeRetirementConflictError(
+          "retirement verification position already written",
+        )
   }
 }
