@@ -5,6 +5,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { SalaryRevisionRepository } from "@/contexts/compensation-change/infrastructure/repositories/salary-revision/salary-revision.repository"
+import { isCompensationChangeRecordSourceFrozenError } from "@/contexts/compensation-change/infrastructure/repositories/lib/is-compensation-change-record-source-frozen-error"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { UniqueConstraintError } from "@/lib/d1/errors"
 
@@ -63,6 +64,11 @@ export class CreateSalaryRevision {
     }
 
     if (created instanceof Error) {
+      if (isCompensationChangeRecordSourceFrozenError(created)) {
+        return new ConflictError("compensation change writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
+      }
       return new UnexpectedError("failed to create salary revision", { cause: created })
     }
 
