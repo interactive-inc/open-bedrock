@@ -604,6 +604,57 @@ export const companyResponsibilitySourceAdoptions = sqliteTable(
   ],
 )
 
+/** 旧責務台帳の全件がCompanyへ接続済みであることを固定する、廃止判断の完了証跡。 */
+export const companyResponsibilitySourceCutovers = sqliteTable(
+  "company_responsibility_source_cutovers",
+  {
+    organizationId: text("organization_id").notNull().default("organization:default"),
+    sourceContext: text("source_context").notNull(),
+    sourceKind: text("source_kind").notNull(),
+    sourceNamespace: text("source_namespace").notNull(),
+    freezeId: text("freeze_id").notNull().unique(),
+    sourceCount: integer("source_count").notNull(),
+    adoptedCount: integer("adopted_count").notNull(),
+    sourceManifestDigest: text("source_manifest_digest").notNull(),
+    sourceManifestJson: text("source_manifest_json").notNull(),
+    auditEventId: text("audit_event_id").notNull(),
+    actorAccountId: text("actor_account_id")
+      .notNull()
+      .references(() => systemAccounts.id, { onDelete: "restrict" }),
+    completedAt: integer("completed_at").notNull(),
+  },
+  (table) => [
+    primaryKey({ columns: [table.organizationId, table.sourceContext, table.sourceKind] }),
+    check(
+      "company_responsibility_source_cutover_organization",
+      sql`${table.organizationId} = 'organization:default'`,
+    ),
+    check(
+      "company_responsibility_source_cutover_identity",
+      sql`length(trim(${table.sourceContext})) BETWEEN 1 AND 100
+        AND length(trim(${table.sourceKind})) BETWEEN 1 AND 100
+        AND length(trim(${table.sourceNamespace})) BETWEEN 1 AND 255`,
+    ),
+    check(
+      "company_responsibility_source_cutover_counts",
+      sql`${table.sourceCount} >= 0 AND ${table.adoptedCount} = ${table.sourceCount}`,
+    ),
+    check(
+      "company_responsibility_source_cutover_digest",
+      sql`length(${table.sourceManifestDigest}) = 64
+        AND ${table.sourceManifestDigest} NOT GLOB '*[^0-9a-f]*'`,
+    ),
+    check(
+      "company_responsibility_source_cutover_manifest",
+      sql`json_valid(${table.sourceManifestJson})
+        AND json_type(${table.sourceManifestJson}) = 'array'
+        AND json_array_length(${table.sourceManifestJson}) = ${table.sourceCount}
+        AND length(CAST(${table.sourceManifestJson} AS BLOB)) <= 750000`,
+    ),
+    check("company_responsibility_source_cutover_time", sql`${table.completedAt} >= 0`),
+  ],
+)
+
 /** 旧等級付与の元記録と、保全時の確認者・会社版。付与当時の判断者とは区別する。 */
 export const companyGradeAwardArchives = sqliteTable(
   "company_grade_award_archives",
@@ -652,6 +703,7 @@ export const companyGradeAwardArchives = sqliteTable(
 )
 
 export const companySchema = {
+  companyResponsibilitySourceCutovers,
   companyResponsibilitySourceAdoptions,
   companyGradeAwardArchives,
   companyDefinitionResourceAdoptions,

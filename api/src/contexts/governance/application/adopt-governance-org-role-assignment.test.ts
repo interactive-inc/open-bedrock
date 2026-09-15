@@ -1,4 +1,5 @@
 import { AdoptGovernanceOrgRoleAssignment } from "@/contexts/governance/application/adopt-governance-org-role-assignment"
+import { FinalizeGovernanceResponsibilityCutover } from "@/contexts/governance/application/finalize-governance-responsibility-cutover"
 import { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/test/company-assignment-resource.test-support"
 import { GovernanceRoleAssignmentAdoptionSnapshotAdapter } from "@/contexts/governance/infrastructure/adapters/governance-role-assignment-adoption-snapshot.adapter"
@@ -154,4 +155,84 @@ test("停止世代の間は旧責任台帳の追加・更新・削除を全て�
   await expect(
     context.database.prepare("DELETE FROM governance_org_role_assignments WHERE id = 7").run(),
   ).rejects.toThrow("governance_org_role_assignment_source_frozen")
+})
+
+function cutoverApplication(context: Readonly<{ database: D1Database; at: Date }>) {
+  return new FinalizeGovernanceResponsibilityCutover({
+    context: {
+      env: {
+        DB: context.database,
+        NOW: context.at.toISOString(),
+        RECORD_SOURCE_NAMESPACE: "9664c95f-412f-472f-9e09-9772f55485e1",
+      },
+    },
+    prepareAudit: (audit) => {
+      const eventId = crypto.randomUUID()
+      return {
+        eventId,
+        statements: [
+          context.database
+            .prepare(`INSERT INTO company_audit_event_appends
+              (event_id, request_id, actor_account_id, actor_employee_id, action,
+               target_type, target_id, outcome, reason_code, authorization_json,
+               before_json, after_json, metadata_json, client_ip, client_name, created_at)
+              VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, 'succeeded', NULL, NULL,
+               NULL, NULL, ?8, NULL, 'api', ?9)`)
+            .bind(
+              eventId,
+              crypto.randomUUID(),
+              audit.session.accountId,
+              audit.session.employeeId,
+              audit.action,
+              audit.targetType,
+              audit.targetId,
+              JSON.stringify(audit.metadata),
+              Math.floor(context.at.getTime() / 1_000),
+            ),
+        ],
+      }
+    },
+  })
+}
+
+test("全ての旧責務をCompanyへ接続した場合だけ廃止可能な完了証跡を固定する", async () => {
+  const context = await fixture()
+  const freezeId = "95ee3345-4f0e-4742-949a-c105bcb13b38"
+  const incomplete = await cutoverApplication(context).execute({
+    session: context.session,
+    freezeId,
+  })
+  expect(incomplete).toMatchObject({ code: "governance_role_cutover_incomplete" })
+  expect(
+    await context.database
+      .prepare("SELECT count(*) FROM company_responsibility_source_cutovers")
+      .first<number>("count(*)"),
+  ).toBe(0)
+
+  const adopted = await context.application.execute({
+    session: context.session,
+    assignmentId: 7,
+    commandId: "governance:adopt:cutover:7",
+    expectedRevision: await context.companyRevision(),
+    snapshotDigest: context.snapshot.snapshotDigest,
+  })
+  expect(adopted).toMatchObject({ kind: "assigned" })
+
+  const completed = await cutoverApplication(context).execute({
+    session: context.session,
+    freezeId,
+  })
+  expect(completed).toMatchObject({
+    kind: "completed",
+    replayed: false,
+    freeze_id: freezeId,
+    source_count: 1,
+    adopted_count: 1,
+  })
+  expect(
+    await cutoverApplication(context).execute({ session: context.session, freezeId }),
+  ).toEqual({ ...completed, replayed: true })
+  await expect(
+    context.database.prepare("DELETE FROM company_responsibility_source_cutovers").run(),
+  ).rejects.toThrow("company_responsibility_source_cutover_immutable")
 })
