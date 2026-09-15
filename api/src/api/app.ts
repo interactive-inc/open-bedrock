@@ -544,6 +544,26 @@ import * as workAccidentWorkAccidentsIdPreservationRequestsNumberWithdrawRoute f
 import * as workAccidentsRoute from "@/contexts/work-accident/interface/routes/work-accidents"
 import * as workAccidentsIdCloseRoute from "@/contexts/work-accident/interface/routes/work-accidents.$id.close"
 import * as employeeWorkStylesRoute from "@/contexts/work-style/interface/routes/employee-work-styles"
+import * as workStyleEmployeeWorkStylesIdPreservationRequestsRoute from "@/contexts/work-style/interface/routes/work-style.employee-work-styles.$id.preservation-requests"
+import * as workStyleEmployeeWorkStylesIdPreservationRequestsNumberRoute from "@/contexts/work-style/interface/routes/work-style.employee-work-styles.$id.preservation-requests.$number"
+import * as workStyleEmployeeWorkStylesIdPreservationRequestsNumberApproveRoute from "@/contexts/work-style/interface/routes/work-style.employee-work-styles.$id.preservation-requests.$number.approve"
+import * as workStyleEmployeeWorkStylesIdPreservationRequestsNumberExecuteRoute from "@/contexts/work-style/interface/routes/work-style.employee-work-styles.$id.preservation-requests.$number.execute"
+import * as workStyleEmployeeWorkStylesIdPreservationRequestsNumberRejectRoute from "@/contexts/work-style/interface/routes/work-style.employee-work-styles.$id.preservation-requests.$number.reject"
+import * as workStyleEmployeeWorkStylesIdPreservationRequestsNumberResubmitRoute from "@/contexts/work-style/interface/routes/work-style.employee-work-styles.$id.preservation-requests.$number.resubmit"
+import * as workStyleEmployeeWorkStylesIdPreservationRequestsNumberWithdrawRoute from "@/contexts/work-style/interface/routes/work-style.employee-work-styles.$id.preservation-requests.$number.withdraw"
+import * as workStyleRecordSourceFreezesRoute from "@/contexts/work-style/interface/routes/work-style.record-source-freezes"
+import * as workStyleRecordSourceFreezesFreezeIdRoute from "@/contexts/work-style/interface/routes/work-style.record-source-freezes.$freezeId"
+import * as workStyleRecordSourceFreezesFreezeIdCoveragePagesRoute from "@/contexts/work-style/interface/routes/work-style.record-source-freezes.$freezeId.coverage-pages"
+import * as workStyleRecordSourceFreezesFreezeIdReleaseRoute from "@/contexts/work-style/interface/routes/work-style.record-source-freezes.$freezeId.release"
+import * as workStyleRecordSourceFreezesFreezeIdRetirementPlansRoute from "@/contexts/work-style/interface/routes/work-style.record-source-freezes.$freezeId.retirement-plans"
+import * as workStyleRetirementPlansPlanIdRequestsRoute from "@/contexts/work-style/interface/routes/work-style.retirement-plans.$planId.requests"
+import * as workStyleRetirementPlansPlanIdRequestsNumberRoute from "@/contexts/work-style/interface/routes/work-style.retirement-plans.$planId.requests.$number"
+import * as workStyleRetirementPlansPlanIdRequestsNumberApproveRoute from "@/contexts/work-style/interface/routes/work-style.retirement-plans.$planId.requests.$number.approve"
+import * as workStyleRetirementPlansPlanIdRequestsNumberExecuteRoute from "@/contexts/work-style/interface/routes/work-style.retirement-plans.$planId.requests.$number.execute"
+import * as workStyleRetirementPlansPlanIdRequestsNumberRejectRoute from "@/contexts/work-style/interface/routes/work-style.retirement-plans.$planId.requests.$number.reject"
+import * as workStyleRetirementPlansPlanIdRequestsNumberResubmitRoute from "@/contexts/work-style/interface/routes/work-style.retirement-plans.$planId.requests.$number.resubmit"
+import * as workStyleRetirementPlansPlanIdRequestsNumberWithdrawRoute from "@/contexts/work-style/interface/routes/work-style.retirement-plans.$planId.requests.$number.withdraw"
+import * as workStyleRetirementPlansPlanIdVerificationReceiptsRoute from "@/contexts/work-style/interface/routes/work-style.retirement-plans.$planId.verification-receipts"
 import * as systemAccountsRoute from "@system/interface/routes/system.accounts"
 import * as systemAccountsAccountIdRoute from "@system/interface/routes/system.accounts.$accountId"
 import * as systemAccountsAccountIdIdentitiesRoute from "@system/interface/routes/system.accounts.$accountId.identities"
@@ -2324,6 +2344,83 @@ const routePart41 = createRouteApp()
   )
   .get("/work-style/employee-work-styles", ...employeeWorkStylesRoute.GET)
   .post("/work-style/employee-work-styles", ...employeeWorkStylesRoute.POST)
+  .post(
+    "/work-style/employee-work-styles/:id/preservation-requests",
+    ...workStyleEmployeeWorkStylesIdPreservationRequestsRoute.POST,
+  )
+  .get(
+    "/work-style/employee-work-styles/:id/preservation-requests/:number",
+    ...workStyleEmployeeWorkStylesIdPreservationRequestsNumberRoute.GET,
+  )
+  .post(
+    "/work-style/employee-work-styles/:id/preservation-requests/:number/approve",
+    ...workStyleEmployeeWorkStylesIdPreservationRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/work-style/employee-work-styles/:id/preservation-requests/:number/execute",
+    ...workStyleEmployeeWorkStylesIdPreservationRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/work-style/employee-work-styles/:id/preservation-requests/:number/reject",
+    ...workStyleEmployeeWorkStylesIdPreservationRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/work-style/employee-work-styles/:id/preservation-requests/:number/resubmit",
+    ...workStyleEmployeeWorkStylesIdPreservationRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/work-style/employee-work-styles/:id/preservation-requests/:number/withdraw",
+    ...workStyleEmployeeWorkStylesIdPreservationRequestsNumberWithdrawRoute.POST,
+  )
+  .post("/work-style/record-source-freezes", ...workStyleRecordSourceFreezesRoute.POST)
+  .get(
+    "/work-style/record-source-freezes/:freezeId",
+    ...workStyleRecordSourceFreezesFreezeIdRoute.GET,
+  )
+  .post(
+    "/work-style/record-source-freezes/:freezeId/coverage-pages",
+    ...workStyleRecordSourceFreezesFreezeIdCoveragePagesRoute.POST,
+  )
+  .post(
+    "/work-style/record-source-freezes/:freezeId/release",
+    ...workStyleRecordSourceFreezesFreezeIdReleaseRoute.POST,
+  )
+  .post(
+    "/work-style/record-source-freezes/:freezeId/retirement-plans",
+    ...workStyleRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
+  )
+  .post(
+    "/work-style/retirement-plans/:planId/requests",
+    ...workStyleRetirementPlansPlanIdRequestsRoute.POST,
+  )
+  .get(
+    "/work-style/retirement-plans/:planId/requests/:number",
+    ...workStyleRetirementPlansPlanIdRequestsNumberRoute.GET,
+  )
+  .post(
+    "/work-style/retirement-plans/:planId/requests/:number/approve",
+    ...workStyleRetirementPlansPlanIdRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/work-style/retirement-plans/:planId/requests/:number/execute",
+    ...workStyleRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/work-style/retirement-plans/:planId/requests/:number/reject",
+    ...workStyleRetirementPlansPlanIdRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/work-style/retirement-plans/:planId/requests/:number/resubmit",
+    ...workStyleRetirementPlansPlanIdRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/work-style/retirement-plans/:planId/requests/:number/withdraw",
+    ...workStyleRetirementPlansPlanIdRequestsNumberWithdrawRoute.POST,
+  )
+  .post(
+    "/work-style/retirement-plans/:planId/verification-receipts",
+    ...workStyleRetirementPlansPlanIdVerificationReceiptsRoute.POST,
+  )
 
 export const app = appBase
   .route("/", routePart0)
