@@ -332,7 +332,17 @@ import * as employeeSkillsMeSkillCodeRoute from "@/contexts/skill/interface/rout
 import * as skillDefinitionsRoute from "@/contexts/skill/interface/routes/skill-definitions"
 import * as softwareLicenseRecordSourceFreezesRoute from "@/contexts/software-license/interface/routes/software-license.record-source-freezes"
 import * as softwareLicenseRecordSourceFreezesFreezeIdRoute from "@/contexts/software-license/interface/routes/software-license.record-source-freezes.$freezeId"
+import * as softwareLicenseRecordSourceFreezesFreezeIdCoveragePagesRoute from "@/contexts/software-license/interface/routes/software-license.record-source-freezes.$freezeId.coverage-pages"
 import * as softwareLicenseRecordSourceFreezesFreezeIdReleaseRoute from "@/contexts/software-license/interface/routes/software-license.record-source-freezes.$freezeId.release"
+import * as softwareLicenseRecordSourceFreezesFreezeIdRetirementPlansRoute from "@/contexts/software-license/interface/routes/software-license.record-source-freezes.$freezeId.retirement-plans"
+import * as softwareLicenseRetirementPlansPlanIdRequestsRoute from "@/contexts/software-license/interface/routes/software-license.retirement-plans.$planId.requests"
+import * as softwareLicenseRetirementPlansPlanIdRequestsNumberRoute from "@/contexts/software-license/interface/routes/software-license.retirement-plans.$planId.requests.$number"
+import * as softwareLicenseRetirementPlansPlanIdRequestsNumberApproveRoute from "@/contexts/software-license/interface/routes/software-license.retirement-plans.$planId.requests.$number.approve"
+import * as softwareLicenseRetirementPlansPlanIdRequestsNumberExecuteRoute from "@/contexts/software-license/interface/routes/software-license.retirement-plans.$planId.requests.$number.execute"
+import * as softwareLicenseRetirementPlansPlanIdRequestsNumberRejectRoute from "@/contexts/software-license/interface/routes/software-license.retirement-plans.$planId.requests.$number.reject"
+import * as softwareLicenseRetirementPlansPlanIdRequestsNumberResubmitRoute from "@/contexts/software-license/interface/routes/software-license.retirement-plans.$planId.requests.$number.resubmit"
+import * as softwareLicenseRetirementPlansPlanIdRequestsNumberWithdrawRoute from "@/contexts/software-license/interface/routes/software-license.retirement-plans.$planId.requests.$number.withdraw"
+import * as softwareLicenseRetirementPlansPlanIdVerificationReceiptsRoute from "@/contexts/software-license/interface/routes/software-license.retirement-plans.$planId.verification-receipts"
 import * as softwareLicenseSoftwareLicensesRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses"
 import * as softwareLicenseSoftwareLicensesIdRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id"
 import * as softwareLicenseSoftwareLicensesIdAssignmentsRoute from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.assignments"
@@ -1229,8 +1239,48 @@ const routePart34 = createRouteApp()
     ...softwareLicenseRecordSourceFreezesFreezeIdRoute.GET,
   )
   .post(
+    "/software-license/record-source-freezes/:freezeId/coverage-pages",
+    ...softwareLicenseRecordSourceFreezesFreezeIdCoveragePagesRoute.POST,
+  )
+  .post(
     "/software-license/record-source-freezes/:freezeId/release",
     ...softwareLicenseRecordSourceFreezesFreezeIdReleaseRoute.POST,
+  )
+  .post(
+    "/software-license/record-source-freezes/:freezeId/retirement-plans",
+    ...softwareLicenseRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
+  )
+  .post(
+    "/software-license/retirement-plans/:planId/requests",
+    ...softwareLicenseRetirementPlansPlanIdRequestsRoute.POST,
+  )
+  .get(
+    "/software-license/retirement-plans/:planId/requests/:number",
+    ...softwareLicenseRetirementPlansPlanIdRequestsNumberRoute.GET,
+  )
+  .post(
+    "/software-license/retirement-plans/:planId/requests/:number/approve",
+    ...softwareLicenseRetirementPlansPlanIdRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/software-license/retirement-plans/:planId/requests/:number/execute",
+    ...softwareLicenseRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/software-license/retirement-plans/:planId/requests/:number/reject",
+    ...softwareLicenseRetirementPlansPlanIdRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/software-license/retirement-plans/:planId/requests/:number/resubmit",
+    ...softwareLicenseRetirementPlansPlanIdRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/software-license/retirement-plans/:planId/requests/:number/withdraw",
+    ...softwareLicenseRetirementPlansPlanIdRequestsNumberWithdrawRoute.POST,
+  )
+  .post(
+    "/software-license/retirement-plans/:planId/verification-receipts",
+    ...softwareLicenseRetirementPlansPlanIdVerificationReceiptsRoute.POST,
   )
   .get("/software-license/software-licenses", ...softwareLicenseSoftwareLicensesRoute.GET)
   .post("/software-license/software-licenses", ...softwareLicenseSoftwareLicensesRoute.POST)
@@ -1243,6 +1293,8 @@ const routePart34 = createRouteApp()
     ...softwareLicenseSoftwareLicensesAssignmentsAssignmentIdReleaseRoute.POST,
   )
   .get("/software-license/software-licenses/:id", ...softwareLicenseSoftwareLicensesIdRoute.GET)
+
+const routePart35 = createRouteApp()
   .put("/software-license/software-licenses/:id", ...softwareLicenseSoftwareLicensesIdRoute.PUT)
   .post(
     "/software-license/software-licenses/:id/assignments",
@@ -1280,8 +1332,6 @@ const routePart34 = createRouteApp()
     "/software-license/software-licenses/:id/preservation-requests/:number/resubmit",
     ...softwareLicenseSoftwareLicensesIdPreservationRequestsNumberResubmitRoute.POST,
   )
-
-const routePart35 = createRouteApp()
   .post(
     "/software-license/software-licenses/:id/preservation-requests/:number/withdraw",
     ...softwareLicenseSoftwareLicensesIdPreservationRequestsNumberWithdrawRoute.POST,
@@ -1347,6 +1397,8 @@ const routePart35 = createRouteApp()
   .patch("/system/auth/password/reset", ...systemAuthPasswordResetRoute.PATCH)
   .get("/system/batch-jobs", ...systemBatchJobsRoute.GET)
   .post("/system/bootstrap", ...systemBootstrapRoute.POST)
+
+const routePart36 = createRouteApp()
   .post("/system/browser-login-codes", ...systemBrowserLoginCodesRoute.POST)
   .post("/system/browser-sessions", ...systemBrowserSessionsRoute.POST)
   .get("/system/cli-authorization-callback", ...systemCliAuthorizationCallbackRoute.GET)
@@ -1360,8 +1412,6 @@ const routePart35 = createRouteApp()
     "/system/dead-letters/:deadLetterId/requeue",
     ...systemDeadLettersDeadLetterIdRequeueRoute.POST,
   )
-
-const routePart36 = createRouteApp()
   .get("/system/deliveries", ...systemDeliveriesRoute.GET)
   .post("/system/deliveries", ...systemDeliveriesRoute.POST)
   .patch("/system/deliveries/:deliveryId", ...systemDeliveriesDeliveryIdRoute.PATCH)
@@ -1430,6 +1480,8 @@ const routePart36 = createRouteApp()
   )
   .get("/system/roles", ...systemRolesRoute.GET)
   .post("/system/roles", ...systemRolesRoute.POST)
+
+const routePart37 = createRouteApp()
   .get("/system/roles/:roleId", ...systemRolesRoleIdRoute.GET)
   .patch("/system/roles/:roleId", ...systemRolesRoleIdRoute.PATCH)
   .delete("/system/roles/:roleId", ...systemRolesRoleIdRoute.DELETE)
@@ -1440,8 +1492,6 @@ const routePart36 = createRouteApp()
   .post("/system/step-up-grants", ...systemStepUpGrantsRoute.POST)
   .get("/system/work-items", ...systemWorkItemsRoute.GET)
   .post("/system/work-items", ...systemWorkItemsRoute.POST)
-
-const routePart37 = createRouteApp()
   .get("/system/work-items/:id", ...systemWorkItemsIdRoute.GET)
   .post("/system/work-items/:id/accept", ...systemWorkItemsIdAcceptRoute.POST)
   .post("/system/work-items/:id/approve", ...systemWorkItemsIdApproveRoute.POST)
@@ -1483,6 +1533,8 @@ const routePart37 = createRouteApp()
   .delete("/training/training-enrollments/:id", ...trainingEnrollmentsIdRoute.DELETE)
   .post("/training/training-enrollments/:id/complete", ...trainingEnrollmentsIdCompleteRoute.POST)
   .get("/work-accident/work-accidents", ...workAccidentsRoute.GET)
+
+const routePart38 = createRouteApp()
   .post("/work-accident/work-accidents", ...workAccidentsRoute.POST)
   .post("/work-accident/work-accidents/:id/close", ...workAccidentsIdCloseRoute.POST)
   .get("/work-style/employee-work-styles", ...employeeWorkStylesRoute.GET)
@@ -1527,6 +1579,7 @@ export const app = appBase
   .route("/", routePart35)
   .route("/", routePart36)
   .route("/", routePart37)
+  .route("/", routePart38)
 
 export type AppType = typeof app
 
@@ -1573,6 +1626,7 @@ type ApiClientPart34 = ReturnType<typeof hc<typeof routePart34>>
 type ApiClientPart35 = ReturnType<typeof hc<typeof routePart35>>
 type ApiClientPart36 = ReturnType<typeof hc<typeof routePart36>>
 type ApiClientPart37 = ReturnType<typeof hc<typeof routePart37>>
+type ApiClientPart38 = ReturnType<typeof hc<typeof routePart38>>
 export type ApiClient = ApiClientPart0 &
   ApiClientPart1 &
   ApiClientPart2 &
@@ -1610,4 +1664,5 @@ export type ApiClient = ApiClientPart0 &
   ApiClientPart34 &
   ApiClientPart35 &
   ApiClientPart36 &
-  ApiClientPart37
+  ApiClientPart37 &
+  ApiClientPart38
