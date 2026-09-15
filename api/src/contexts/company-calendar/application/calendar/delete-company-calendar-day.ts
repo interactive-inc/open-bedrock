@@ -1,9 +1,10 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
-import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { CompanyCalendarDayRepository } from "@/contexts/company-calendar/infrastructure/repositories/calendar/company-calendar-day.repository"
 import type { CompanyCalendarDay } from "@/contexts/company-calendar/domain/entities/company-calendar-day.entity"
+import { isCompanyCalendarDayRecordSourceFrozenError } from "@/contexts/company-calendar/infrastructure/repositories/lib/is-company-calendar-record-source-frozen-error"
 
 export type Command = {
   session: CompanySessionValue
@@ -38,6 +39,11 @@ export class DeleteCompanyCalendarDay {
     const deleted = await repository.delete(existing)
 
     if (deleted instanceof Error) {
+      if (isCompanyCalendarDayRecordSourceFrozenError(deleted)) {
+        return new ConflictError("company calendar writes are frozen", "record_source_frozen", {
+          cause: deleted,
+        })
+      }
       return new UnexpectedError("failed to delete calendar day", { cause: deleted })
     }
 

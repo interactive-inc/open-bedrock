@@ -5,7 +5,7 @@ import { AttendanceRetirementConflictError } from "@/contexts/attendance/applica
 
 type Context = ConstructorParameters<typeof PrepareAttendanceRetirementPlanAdapter>[0]
 
-/** 打刻の全照合ページを検査する計画を固定し、同一IDの再送で検査対象を増減させない。 */
+/** 会社カレンダーの全照合ページを検査する計画を固定し、同一IDの再送で検査対象を増減させない。 */
 export class CreateAttendanceRetirementPlan {
   constructor(private readonly c: Context) {
     Object.freeze(this)
