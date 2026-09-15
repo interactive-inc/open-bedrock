@@ -4,6 +4,7 @@ import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { RentalReservationRepository } from "@/contexts/rental/infrastructure/repositories/rental-reservation.repository"
+import { isRentalReservationRecordSourceFrozenError } from "@/contexts/rental/infrastructure/repositories/lib/is-rental-reservation-record-source-frozen-error"
 
 export type Command = {
   session: CompanySessionValue
@@ -46,6 +47,9 @@ export class ReturnRentalReservation {
     })
 
     if (updated instanceof Error) {
+      if (isRentalReservationRecordSourceFrozenError(updated)) {
+        return new ConflictError("rental reservation writes are frozen", "record_source_frozen", { cause: updated })
+      }
       return new UnexpectedError("failed to update rental reservation status", { cause: updated })
     }
 

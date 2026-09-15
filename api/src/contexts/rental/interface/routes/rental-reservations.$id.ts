@@ -13,6 +13,7 @@ import { UnauthorizedError } from "@/lib/http/errors"
 import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { isRentalReservationRecordSourceFrozenError } from "@/contexts/rental/infrastructure/repositories/lib/is-rental-reservation-record-source-frozen-error"
 
 /** 予約をレスポンス用の snake_case に整形する。 */
 function toResponseBody(reservation: RentalReservation) {
@@ -151,6 +152,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     const deleted = await reservationRepository.delete(command.reservationId)
 
     if (deleted instanceof Error) {
+      if (isRentalReservationRecordSourceFrozenError(deleted)) {
+        return new ConflictError("rental reservation writes are frozen", "record_source_frozen", { cause: deleted })
+      }
       return new UnexpectedError("failed to delete reservation", { cause: deleted })
     }
 
