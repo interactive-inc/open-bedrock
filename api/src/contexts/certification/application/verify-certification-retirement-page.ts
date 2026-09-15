@@ -10,7 +10,7 @@ import { RecordRetirementVerificationPlanRepository } from "@system/infrastructu
 import { RecordRetirementVerificationReceiptRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
 import { RecordRetirementVerificationReceiptEntity } from "@system/domain/entities/record-retirement-verification-receipt.entity"
 import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
-import { certificationRecordKinds } from "@/contexts/certification/domain/certification-record-kind"
+import { certificationRecordKinds } from "@/contexts/certification/domain/definitions/certification-record-kind.definition"
 
 type Context = ConstructorParameters<typeof PrepareCertificationRetirementPageAdapter>[0]
 
@@ -46,7 +46,8 @@ export class VerifyCertificationRetirementPage {
       plan.snapshot.sourceNamespace !== command.sourceNamespace ||
       plan.snapshot.ownerContext !== "certification" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(certificationRecordKinds)
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(certificationRecordKinds)
     )
       return new CertificationRetirementConflictError(
         "retirement plan unavailable or capability changed",

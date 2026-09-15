@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { certificationRecordKindSchema } from "@/contexts/certification/domain/certification-record-kind"
+import { certificationRecordKindSchema } from "@/contexts/certification/domain/definitions/certification-record-kind.definition"
 
 export const certificationCoveragePageCommandSchema = z.strictObject({
   id: z.uuid(),

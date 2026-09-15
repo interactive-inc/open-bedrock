@@ -4,7 +4,7 @@ import { CertificationError } from "@/contexts/certification/domain/errors"
 import {
   certificationRecordKindSchema,
   type CertificationRecordKind,
-} from "@/contexts/certification/domain/certification-record-kind"
+} from "@/contexts/certification/domain/definitions/certification-record-kind.definition"
 import { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
@@ -18,7 +18,10 @@ function numericId(recordId: string): number | null {
   return parsed.success && String(parsed.data) === recordId ? parsed.data : null
 }
 
-function snapshotQuery(recordKind: CertificationRecordKind, recordId: string): SnapshotQuery | Error {
+function snapshotQuery(
+  recordKind: CertificationRecordKind,
+  recordId: string,
+): SnapshotQuery | Error {
   const id = numericId(recordId)
   if (id === null) return new Error("invalid certification record id")
   if (recordKind === "certification-record") {
@@ -40,18 +43,30 @@ function snapshotQuery(recordKind: CertificationRecordKind, recordId: string): S
 
 /** 保全資格のある主体へ資格2台帳の原記録を返し、保存直前にも同じ内容を検査する。 */
 export class CaptureCertificationRecordAdapter {
-  constructor(private readonly c: Context) { Object.freeze(this) }
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
 
-  async prepare(input: Readonly<{ recordKind: CertificationRecordKind; recordId: string; sourceNamespace: string }>) {
+  async prepare(
+    input: Readonly<{
+      recordKind: CertificationRecordKind
+      recordId: string
+      sourceNamespace: string
+    }>,
+  ) {
     const kind = certificationRecordKindSchema.safeParse(input.recordKind)
     if (!kind.success) return new CertificationError("forbidden", "invalid source record")
     const query = snapshotQuery(kind.data, input.recordId)
-    if (query instanceof Error) return new CertificationError("forbidden", "invalid source record", { cause: query })
+    if (query instanceof Error)
+      return new CertificationError("forbidden", "invalid source record", { cause: query })
     const actor = await new CertificationActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
     try {
       const statement = () => this.c.env.DB.prepare(query.sql).bind(...query.values)
-      const reads = await this.c.env.DB.batch<{ snapshot_json: string }>([...actor.assertions, statement()])
+      const reads = await this.c.env.DB.batch<{ snapshot_json: string }>([
+        ...actor.assertions,
+        statement(),
+      ])
       if (reads.length !== actor.assertions.length + 1 || reads.some((read) => !read.success))
         return new Error("certification source is unavailable")
       const snapshot = reads.at(-1)?.results[0]?.snapshot_json
@@ -78,7 +93,10 @@ export class CaptureCertificationRecordAdapter {
         content: new TextEncoder().encode(canonical.toString()),
         actorAccountId: actor.accountId,
         sourceAuthorizationRef: Object.freeze({
-          context: "certification", kind: "record-snapshot", id: input.recordId, version: digest.toString(),
+          context: "certification",
+          kind: "record-snapshot",
+          id: input.recordId,
+          version: digest.toString(),
         }),
         assertions: [
           ...actor.assertions,

@@ -2,7 +2,7 @@ import type { CertificationContext } from "@/contexts/certification/configuratio
 import type { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
 import { CaptureCertificationRecordAdapter } from "@/contexts/certification/infrastructure/adapters/capture-certification-record.adapter"
 import { CertificationError } from "@/contexts/certification/domain/errors"
-import { certificationRecordKindSchema } from "@/contexts/certification/domain/certification-record-kind"
+import { certificationRecordKindSchema } from "@/contexts/certification/domain/definitions/certification-record-kind.definition"
 
 type Context = CertificationContext & Readonly<{ sourceNamespace: string }>
 
@@ -17,7 +17,10 @@ export class RevalidateCertificationRecordSourceAdapter {
       source.props.sourceNamespace !== this.c.sourceNamespace ||
       source.props.ownerContext !== "certification"
     )
-      return new CertificationError("forbidden", "record source does not belong to this certification registry")
+      return new CertificationError(
+        "forbidden",
+        "record source does not belong to this certification registry",
+      )
 
     const recordKind = certificationRecordKindSchema.safeParse(source.props.recordKind)
     if (!recordKind.success)
