@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { describe, expect, test } from "bun:test"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
@@ -14,6 +15,11 @@ import {
   initializeStandardCompanyTestState,
 } from "@tests/api/support/initialize-standard-company-test-state"
 import { z } from "zod"
+import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
+import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
+import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
+import { governanceOrgRoles } from "@/contexts/governance/domain/catalogs/governance-org-role.catalog"
+import { drizzle } from "drizzle-orm/d1"
 
 const jwtSecret = "governance-route-test-secret"
 
@@ -41,6 +47,103 @@ async function createTestDb(): Promise<D1Database> {
   )
   await seedIamForEmployees(db)
   await initializeStandardCompanyTestState(db)
+
+  const expectedRevision =
+    (await db
+      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+      .first<number>("revision")) ?? 0
+  const resources: CompanyResourceProps[] = [
+    ...governanceOrgRoles.map<CompanyResourceProps>((role) => ({
+      organizationId: "organization:default",
+      type: "responsibility" as const,
+      id: `governance:responsibility:${role.code}`,
+      revision: 1,
+      state: "active" as const,
+      effectiveFrom: restoreCalendarDate("2025-01-01"),
+      effectiveTo: null,
+      attributes: { code: role.code, officialName: role.name },
+    })),
+    ...seedEmployees
+      .filter((employee) => employee.status !== "retired")
+      .flatMap((employee): CompanyResourceProps[] => [
+        {
+          organizationId: "organization:default",
+          type: "person" as const,
+          id: `governance:person:${employee.id}`,
+          revision: 1,
+          state: "active" as const,
+          effectiveFrom: restoreCalendarDate("2025-01-01"),
+          effectiveTo: null,
+          attributes: { officialName: employee.name },
+        },
+        {
+          organizationId: "organization:default",
+          type: "employee" as const,
+          id: String(employee.id),
+          revision: 1,
+          state: "active" as const,
+          effectiveFrom: restoreCalendarDate("2025-01-01"),
+          effectiveTo: null,
+          attributes: {
+            personId: `governance:person:${employee.id}`,
+            employeeCode: employee.code,
+          },
+        },
+        {
+          organizationId: "organization:default",
+          type: "employment" as const,
+          id: `governance:employment:${employee.id}`,
+          revision: 1,
+          state: "active" as const,
+          effectiveFrom: restoreCalendarDate("2025-01-01"),
+          effectiveTo: null,
+          attributes: {
+            employeeId: String(employee.id),
+            status: employee.status === "leave" ? ("ON_LEAVE" as const) : ("ACTIVE" as const),
+            employmentType: "FULL_TIME" as const,
+          },
+        },
+      ]),
+  ]
+  const change = CompanyResourceChangeEntity.create({
+    commandId: "governance-test-company-identities",
+    expectedRevision,
+    actorAccountId: "system:test",
+    reason: "Initialize governance Company identities",
+    recordedAt: Date.parse("2026-01-01T00:00:00.000Z"),
+    resources,
+  })
+  if (change instanceof Error) throw change
+  const journal = await new CompanyResourceJournalAdapter({
+    database: drizzle(db),
+    d1: db,
+  }).prepare(change)
+  if (journal instanceof Error) throw journal
+  const bindings = seedEmployees
+    .filter((employee) => employee.status !== "retired")
+    .flatMap((employee) => [
+      db
+        .prepare(
+          `INSERT INTO company_workforce_resource_bindings
+            (resource_type, resource_id, organization_id, employee_id, resource_revision,
+             lifecycle_revision, last_action_id)
+           VALUES ('employee', ?1, 'organization:default', ?1, 1, 0, ?2)`,
+        )
+        .bind(String(employee.id), `test:${employee.id}:initial-state`),
+      db
+        .prepare(
+          `INSERT INTO company_workforce_resource_bindings
+            (resource_type, resource_id, organization_id, employee_id, resource_revision,
+             lifecycle_revision, last_action_id)
+           VALUES ('employment', ?1, 'organization:default', ?2, 1, 0, ?3)`,
+        )
+        .bind(
+          `governance:employment:${employee.id}`,
+          String(employee.id),
+          `test:${employee.id}:initial-state`,
+        ),
+    ])
+  await db.batch([...journal.statements, ...bindings, journal.commit])
 
   return db
 }
@@ -85,7 +188,17 @@ async function request(props: {
   employeeId: EmployeeId
   method?: string
   body?: unknown
+  headers?: Record<string, string>
 }) {
+  const roleMutation =
+    props.method === "POST" && props.path.endsWith("/assignments")
+      ? true
+      : props.method === "DELETE" && props.path.includes("/governance-org-roles/assignments/")
+  const revision = roleMutation
+    ? await props.db
+        .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+        .first<number>("revision")
+    : null
   return requestWithContext({
     db: props.db,
     jwtSecret,
@@ -93,6 +206,14 @@ async function request(props: {
     token: await token(props.employeeId),
     method: props.method,
     body: props.body,
+    headers:
+      roleMutation && revision !== null
+        ? {
+            "idempotency-key": crypto.randomUUID(),
+            "if-match": String(revision),
+            ...props.headers,
+          }
+        : props.headers,
   })
 }
 
@@ -223,8 +344,8 @@ describe("governance documents", () => {
       method: "POST",
       body: { employee_code: "E001", starts_on: "2026-01-01" },
     })
-    expect(first.status).toBe(201)
-    const assignment = z.object({ id: z.number() }).parse(await first.json())
+    if (first.status !== 201) throw new Error(await first.text())
+    const assignment = z.object({ id: z.string() }).parse(await first.json())
 
     const overlapping = await request({
       db,
@@ -244,12 +365,11 @@ describe("governance documents", () => {
     expect(revoked.status).toBe(204)
     const stored = await db
       .prepare(
-        "SELECT revoked_by_account_id, revoked_at FROM governance_org_role_assignments WHERE id = ?1",
+        "SELECT state, actor_account_id FROM company_resource_revisions WHERE resource_type = 'responsibility-assignment' AND resource_id = ?1 ORDER BY revision DESC LIMIT 1",
       )
       .bind(assignment.id)
-      .first<{ revoked_by_account_id: string; revoked_at: string }>()
-    expect(stored?.revoked_by_account_id).toBe("1")
-    expect(stored?.revoked_at).toBeString()
+      .first<{ state: string; actor_account_id: string }>()
+    expect(stored).toEqual({ state: "void", actor_account_id: "1" })
 
     const replacement = await request({
       db,
@@ -263,20 +383,28 @@ describe("governance documents", () => {
 
   test("requires both system permission and current organization role for review", async () => {
     const db = await createTestDb()
-    await db
-      .prepare(
-        `INSERT INTO governance_org_role_assignments
-          (org_role_code, employee_id, starts_on, ends_on, created_by_account_id, created_at)
-         VALUES ('board', 1, '2025-01-01', NULL, 1, '2025-01-01T00:00:00.000Z')`,
-      )
-      .run()
-    await db
-      .prepare(
-        `INSERT INTO governance_org_role_assignments
-          (org_role_code, employee_id, starts_on, ends_on, created_by_account_id, created_at)
-         VALUES ('ciso', 2, '2025-01-01', NULL, 1, '2025-01-01T00:00:00.000Z')`,
-      )
-      .run()
+    expect(
+      (
+        await request({
+          db,
+          path: "/governance/governance-org-roles/board/assignments",
+          employeeId: toWorkforceEmployeeId(1),
+          method: "POST",
+          body: { employee_code: "E001", starts_on: "2025-01-01" },
+        })
+      ).status,
+    ).toBe(201)
+    expect(
+      (
+        await request({
+          db,
+          path: "/governance/governance-org-roles/ciso/assignments",
+          employeeId: toWorkforceEmployeeId(1),
+          method: "POST",
+          body: { employee_code: "E002", starts_on: "2025-01-01" },
+        })
+      ).status,
+    ).toBe(201)
     const approval = `  mode: approval
   approver_org_roles:
     - board

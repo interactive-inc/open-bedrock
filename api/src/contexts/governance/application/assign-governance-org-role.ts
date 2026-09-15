@@ -1,11 +1,10 @@
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { SystemJsonValue } from "@system/domain/definitions/audit/system-json-value.definition"
+import { findGovernanceOrgRole } from "@/contexts/governance/domain/catalogs/governance-org-role.catalog"
+import { CompanyGovernanceRoleAssignmentWriteAdapter } from "@/contexts/governance/infrastructure/adapters/company-governance-role-assignment-write.adapter"
 import type { Context as HonoContext } from "@/env"
-import {
-  GovernanceAdapter,
-  type GovernanceAuditStatements,
-} from "@/contexts/governance/infrastructure/adapters/governance.adapter"
-import { CurrentOrganizationReadModelAdapter } from "@/contexts/company/infrastructure/adapters/organization/current-organization-read-model.adapter"
 import {
   ConflictError,
   ForbiddenError,
@@ -23,10 +22,10 @@ type Context = Readonly<{
     targetType: "governance_org_role"
     targetId: string
     metadata?: SystemJsonValue
-  }) => GovernanceAuditStatements
+  }) => ReadonlyArray<D1PreparedStatement>
 }>
 
-/** 組織責任を割り当てる。 */
+/** 組織責任をCompanyの公開責務履歴へ割り当てる。 */
 export class AssignGovernanceOrgRole {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -34,6 +33,8 @@ export class AssignGovernanceOrgRole {
 
   async execute(props: {
     session: CompanySessionValue
+    commandId: string
+    expectedRevision: number
     orgRoleCode: string
     employeeCode: string
     departmentCode: string | null
@@ -51,29 +52,15 @@ export class AssignGovernanceOrgRole {
     ) {
       return new ValidationError("有効期間が不正です", "governance_role_period_invalid")
     }
-    const repository = new GovernanceAdapter(this.c.context)
-    const [role, assignments, organization] = await Promise.all([
-      repository.findOrgRole(props.orgRoleCode),
-      repository.listManualAssignments(props.orgRoleCode),
-      new CurrentOrganizationReadModelAdapter(this.c.context).loadCurrentOrganization(),
-    ])
-    if (role instanceof Error || assignments instanceof Error || organization instanceof Error) {
-      return new UnexpectedError("組織責任の現在状態を確認できません", {
-        cause:
-          role instanceof Error ? role : assignments instanceof Error ? assignments : organization,
-      })
-    }
-    if (role === null)
+    const role = findGovernanceOrgRole(props.orgRoleCode)
+    if (role === null) {
       return new NotFoundError("組織ロールがありません", "governance_role_not_found")
+    }
     if (role.assignmentMode !== "manual") {
       return new ConflictError(
         "この組織ロールは組織図から自動解決されます",
         "governance_role_derived",
       )
-    }
-    const employee = organization.employeesByCode.get(props.employeeCode)
-    if (employee === undefined) {
-      return new NotFoundError("有効な従業員がありません", "governance_role_employee_not_found")
     }
     if (role.cardinality === "per_department" && props.departmentCode === null) {
       return new ValidationError(
@@ -81,45 +68,20 @@ export class AssignGovernanceOrgRole {
         "governance_role_department_required",
       )
     }
-    if (
-      props.departmentCode !== null &&
-      !organization.departments.some((department) => department.code === props.departmentCode)
-    ) {
-      return new NotFoundError("部署がありません", "governance_role_department_not_found")
-    }
-    const overlaps = assignments.filter((assignment) =>
-      this.periodsOverlap(
-        { startsOn: props.startsOn, endsOn: props.endsOn },
-        { startsOn: assignment.startsOn, endsOn: assignment.endsOn },
-      ),
-    )
-    const conflicts = overlaps.some((assignment) => {
-      if (role.cardinality === "one") return true
-      if (role.cardinality === "per_department") {
-        return assignment.departmentCode === props.departmentCode
-      }
-      return (
-        assignment.employeeId === employee.id && assignment.departmentCode === props.departmentCode
-      )
-    })
-    if (conflicts) {
-      return new ConflictError("指定期間の組織責任と重複します", "governance_role_overlap")
-    }
-    const saved = await repository.addAssignment({
-      orgRoleCode: props.orgRoleCode,
-      employeeId: employee.id,
-      departmentCode: props.departmentCode,
-      startsOn: props.startsOn,
-      endsOn: props.endsOn,
-      sourceDocumentCode: props.sourceDocumentCode,
-      cardinality: role.cardinality,
-      accountId: props.session.accountId,
-      now: this.c.context.env.NOW ?? new Date().toISOString(),
+
+    const result = await new CompanyGovernanceRoleAssignmentWriteAdapter({
+      actor: CompanyActorValue.restore({
+        accountId: String(props.session.accountId),
+        employeeId: String(props.session.employeeId),
+        organizationIds: ["organization:default"],
+        capabilities: ["company:write"],
+      }),
+      database: this.c.context.env.DB,
       auditStatements: this.c.prepareAudit({
         session: props.session,
         action: "governance.org_role.assigned",
         targetType: "governance_org_role",
-        targetId: props.orgRoleCode,
+        targetId: role.code,
         metadata: {
           employee_code: props.employeeCode,
           department_code: props.departmentCode,
@@ -127,22 +89,54 @@ export class AssignGovernanceOrgRole {
           ends_on: props.endsOn,
         },
       }),
+    }).assign({
+      organizationId: "organization:default",
+      commandId: props.commandId,
+      expectedRevision: props.expectedRevision,
+      responsibilityCode: role.code,
+      responsibilityName: role.name,
+      cardinality: role.cardinality,
+      employeeCode: props.employeeCode,
+      departmentCode: props.departmentCode,
+      startsOn: restoreCalendarDate(props.startsOn),
+      endsOn: props.endsOn === null ? null : restoreCalendarDate(props.endsOn),
+      sourceDocumentCode: props.sourceDocumentCode,
+      recordedAt: new Date(this.c.context.env.NOW ?? Date.now()).getTime(),
     })
-    if (saved instanceof Error) {
-      return new UnexpectedError("組織責任を割り当てられません", { cause: saved })
+    if (result.kind === "assigned") {
+      return {
+        id: result.assignmentId,
+        orgRoleCode: role.code,
+        employeeCode: props.employeeCode,
+        departmentCode: props.departmentCode,
+        startsOn: props.startsOn,
+        endsOn: props.endsOn,
+        sourceDocumentCode: props.sourceDocumentCode,
+        organizationRevision: result.organizationRevision,
+        replayed: result.replayed,
+      }
     }
-    return saved === false
-      ? new ConflictError("指定期間の組織責任と重複します", "governance_role_overlap")
-      : saved
-  }
-
-  private periodsOverlap(
-    left: { startsOn: string; endsOn: string | null },
-    right: { startsOn: string; endsOn: string | null },
-  ): boolean {
-    return (
-      (right.endsOn === null || left.startsOn < right.endsOn) &&
-      (left.endsOn === null || right.startsOn < left.endsOn)
-    )
+    if (result.kind === "forbidden") {
+      return new ForbiddenError("会社の責務を変更する権限がありません", "governance_role_forbidden")
+    }
+    if (result.kind === "conflict") {
+      return new ConflictError("会社版が更新されています", "governance_role_revision_conflict")
+    }
+    if (result.kind === "command_conflict") {
+      return new ConflictError(
+        "冪等キーが別の操作に使われています",
+        "governance_role_command_conflict",
+      )
+    }
+    if (result.kind === "overlap") {
+      return new ConflictError("指定期間の組織責任と重複します", "governance_role_overlap")
+    }
+    if (result.kind === "resource_conflict") {
+      return new ConflictError("Companyの責務資源が更新されています", "governance_role_resource_conflict")
+    }
+    if (result.kind === "invalid") {
+      return new ValidationError("Companyの責務参照が不正です", "governance_role_reference_invalid")
+    }
+    return new UnexpectedError("組織責任を割り当てられません", { cause: result.cause })
   }
 }
