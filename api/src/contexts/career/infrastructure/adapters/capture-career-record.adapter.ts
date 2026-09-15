@@ -3,7 +3,7 @@ import { CareerError } from "@/contexts/career/domain/errors"
 import {
   careerRecordKindSchema,
   type CareerRecordKind,
-} from "@/contexts/career/domain/career-record-kind"
+} from "@/contexts/career/domain/definitions/career-record-kind.definition"
 import { CareerActorReadAdapter } from "@/contexts/career/infrastructure/adapters/career-actor-read.adapter"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
@@ -48,7 +48,9 @@ export class CaptureCareerRecordAdapter {
     Object.freeze(this)
   }
 
-  async prepare(input: Readonly<{ recordKind: CareerRecordKind; recordId: string; sourceNamespace: string }>) {
+  async prepare(
+    input: Readonly<{ recordKind: CareerRecordKind; recordId: string; sourceNamespace: string }>,
+  ) {
     const kind = careerRecordKindSchema.safeParse(input.recordKind)
     if (!kind.success) return new CareerError("forbidden", "invalid source record")
     const query = snapshotQuery(kind.data, input.recordId)

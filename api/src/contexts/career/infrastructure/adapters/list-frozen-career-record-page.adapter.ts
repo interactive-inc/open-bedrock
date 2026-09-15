@@ -1,5 +1,5 @@
 import type { CareerContext } from "@/contexts/career/configuration/career-context"
-import { careerRecordKindSchema } from "@/contexts/career/domain/career-record-kind"
+import { careerRecordKindSchema } from "@/contexts/career/domain/definitions/career-record-kind.definition"
 import { CareerActorReadAdapter } from "@/contexts/career/infrastructure/adapters/career-actor-read.adapter"
 import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
 import { z } from "zod"
@@ -36,7 +36,11 @@ export class ListFrozenCareerRecordPageAdapter {
     })
     if (generation instanceof Error) return generation
     const numeric = request.recordKind !== "career-sheet-record"
-    const after = numeric ? (request.afterCursor === null ? 0 : Number(request.afterCursor)) : request.afterCursor ?? ""
+    const after = numeric
+      ? request.afterCursor === null
+        ? 0
+        : Number(request.afterCursor)
+      : (request.afterCursor ?? "")
     if (
       numeric &&
       (!Number.isSafeInteger(after) ||

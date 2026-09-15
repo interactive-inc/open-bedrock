@@ -2,7 +2,7 @@ import type { CareerContext } from "@/contexts/career/configuration/career-conte
 import type { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
 import { CaptureCareerRecordAdapter } from "@/contexts/career/infrastructure/adapters/capture-career-record.adapter"
 import { CareerError } from "@/contexts/career/domain/errors"
-import { careerRecordKindSchema } from "@/contexts/career/domain/career-record-kind"
+import { careerRecordKindSchema } from "@/contexts/career/domain/definitions/career-record-kind.definition"
 
 type Context = CareerContext & Readonly<{ sourceNamespace: string }>
 
@@ -20,8 +20,7 @@ export class RevalidateCareerRecordSourceAdapter {
       return new CareerError("forbidden", "record source does not belong to this career registry")
 
     const recordKind = careerRecordKindSchema.safeParse(source.props.recordKind)
-    if (!recordKind.success)
-      return new CareerError("forbidden", "invalid career record kind")
+    if (!recordKind.success) return new CareerError("forbidden", "invalid career record kind")
     const current = await new CaptureCareerRecordAdapter(this.c).prepare({
       recordKind: recordKind.data,
       recordId: source.props.recordId,
@@ -32,10 +31,7 @@ export class RevalidateCareerRecordSourceAdapter {
       !source.matchesSource(current.source) ||
       Date.parse(source.props.capturedAt) > Date.parse(current.source.props.capturedAt)
     )
-      return new CareerError(
-        "career_conflict",
-        "career record differs from preservation proposal",
-      )
+      return new CareerError("career_conflict", "career record differs from preservation proposal")
 
     return Object.freeze({
       source,
