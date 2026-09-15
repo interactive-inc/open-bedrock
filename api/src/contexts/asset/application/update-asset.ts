@@ -1,6 +1,7 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { Asset } from "@/contexts/asset/domain/entities/asset.entity"
-import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { isAssetRecordSourceFrozenError } from "@/contexts/asset/infrastructure/repositories/lib/is-asset-record-source-frozen-error"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
@@ -44,6 +45,7 @@ export class UpdateAsset {
     const updated = await assetRepository.updateDetails(asset.withDetails(command.details))
 
     if (updated instanceof Error) {
+      if (isAssetRecordSourceFrozenError(updated)) return new ConflictError("asset writes are frozen", "record_source_frozen", { cause: updated })
       return new UnexpectedError("failed to update asset", { cause: updated })
     }
 
