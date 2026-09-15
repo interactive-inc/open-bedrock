@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { trainingRecordKindSchema } from "@/contexts/training/domain/training-record-kind"
+import { trainingRecordKindSchema } from "@/contexts/training/domain/definitions/training-record-kind.definition"
 
 export const trainingCoveragePageCommandSchema = z.strictObject({
   id: z.uuid(),

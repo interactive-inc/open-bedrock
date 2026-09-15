@@ -2,7 +2,7 @@ import type { TrainingContext } from "@/contexts/training/configuration/training
 import type { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
 import { CaptureTrainingRecordAdapter } from "@/contexts/training/infrastructure/adapters/capture-training-record.adapter"
 import { TrainingError } from "@/contexts/training/domain/errors"
-import { trainingRecordKindSchema } from "@/contexts/training/domain/training-record-kind"
+import { trainingRecordKindSchema } from "@/contexts/training/domain/definitions/training-record-kind.definition"
 
 type Context = TrainingContext & Readonly<{ sourceNamespace: string }>
 
@@ -17,11 +17,13 @@ export class RevalidateTrainingRecordSourceAdapter {
       source.props.sourceNamespace !== this.c.sourceNamespace ||
       source.props.ownerContext !== "training"
     )
-      return new TrainingError("forbidden", "record source does not belong to this training registry")
+      return new TrainingError(
+        "forbidden",
+        "record source does not belong to this training registry",
+      )
 
     const recordKind = trainingRecordKindSchema.safeParse(source.props.recordKind)
-    if (!recordKind.success)
-      return new TrainingError("forbidden", "invalid training record kind")
+    if (!recordKind.success) return new TrainingError("forbidden", "invalid training record kind")
     const current = await new CaptureTrainingRecordAdapter(this.c).prepare({
       recordKind: recordKind.data,
       recordId: source.props.recordId,

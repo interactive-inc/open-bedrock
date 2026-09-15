@@ -10,7 +10,10 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { GET as preservedDossier } from "@system/interface/routes/system.preserved-records.$recordId.dossier"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
-import { trainingRecordKinds, type TrainingRecordKind } from "@/contexts/training/domain/training-record-kind"
+import {
+  trainingRecordKinds,
+  type TrainingRecordKind,
+} from "@/contexts/training/domain/definitions/training-record-kind.definition"
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("研修コース・受講記録を全件保全し、人の承認を経て2台帳を撤去確定する", async () => {
@@ -40,15 +43,19 @@ test("研修コース・受講記録を全件保全し、人の承認を経て2�
     .run()
   for (let id = 1; id <= 11; id++) {
     const code = `A${String(id).padStart(4, "0")}`
-    await database.prepare(`INSERT INTO training_courses
+    await database
+      .prepare(`INSERT INTO training_courses
       (id,code,title,description,duration_minutes,category,is_required,status)
       VALUES (?1,?2,?3,NULL,60,'skill',0,'active')`)
-      .bind(id, code, `Training ${id}`).run()
+      .bind(id, code, `Training ${id}`)
+      .run()
   }
-  await database.prepare(`INSERT INTO training_enrollments
+  await database
+    .prepare(`INSERT INTO training_enrollments
     (id,course_id,employee_id,status,completed_at,score,due_date)
     VALUES (1,1,?1,'enrolled',NULL,NULL,'2026-12-31')`)
-    .bind(creatorPerson.employeeId).run()
+    .bind(creatorPerson.employeeId)
+    .run()
   const at = new Date()
   const token = await tokenFor(creator)
   const stepUpToken = "e".repeat(64)
@@ -80,17 +87,23 @@ test("研修コース・受講記録を全件保全し、人の承認を経て2�
       .status,
   ).toBe(201)
   expect(
-    await database.prepare("SELECT count(*) AS n FROM system_procedure_definitions WHERE key=?1")
-      .bind(definition.key).first<number>("n"),
+    await database
+      .prepare("SELECT count(*) AS n FROM system_procedure_definitions WHERE key=?1")
+      .bind(definition.key)
+      .first<number>("n"),
   ).toBe(1)
   await expect(
-    database.prepare("UPDATE training_courses SET title='Must not change' WHERE code='A0001'").run(),
+    database
+      .prepare("UPDATE training_courses SET title='Must not change' WHERE code='A0001'")
+      .run(),
   ).rejects.toThrow("training_record_source_frozen")
   await expect(
-    database.prepare(`INSERT INTO training_enrollments
+    database
+      .prepare(`INSERT INTO training_enrollments
       (id,course_id,employee_id,status,completed_at,score,due_date)
       VALUES (2,2,?1,'enrolled',NULL,NULL,NULL)`)
-      .bind(creatorPerson.employeeId).run(),
+      .bind(creatorPerson.employeeId)
+      .run(),
   ).rejects.toThrow("training_record_source_frozen")
   expect(
     (
@@ -123,7 +136,9 @@ test("研修コース・受講記録を全件保全し、人の承認を経て2�
       })
     ).status,
   ).toBe(409)
-  const sourceRecords: ReadonlyArray<Readonly<{ recordKind: TrainingRecordKind; recordId: string }>> = [
+  const sourceRecords: ReadonlyArray<
+    Readonly<{ recordKind: TrainingRecordKind; recordId: string }>
+  > = [
     ...Array.from({ length: 11 }, (_, index) => ({
       recordKind: "training-course-record" as const,
       recordId: String(index + 1),
@@ -146,36 +161,53 @@ test("研修コース・受講記録を全件保全し、人の承認を経て2�
           ...conditions,
           disclosure: {
             reason: "Archive verification",
-            grants: [{
-              accountId: creator,
-              actions: ["read", "export"],
-              purposes: ["archive"],
-              validFrom: at.toISOString(),
-              validUntil: null,
-            }],
+            grants: [
+              {
+                accountId: creator,
+                actions: ["read", "export"],
+                purposes: ["archive"],
+                validFrom: at.toISOString(),
+                validUntil: null,
+              },
+            ],
           },
         },
       },
     })
     if (submitted.status !== 201) throw new Error(await submitted.text())
-    const record = z.object({ number: z.number(), record_id: z.string() }).parse(await submitted.json())
-    const proposal = await new SystemD1ProposalAdapter({ env: { DB: database } }).findByNumber(record.number)
-    if (proposal === null || proposal instanceof Error) throw new Error("missing preservation proposal")
-    expect((await apiRequest(`${path}/${record.number}/approve`, {
-      method: "POST", accountId: reviewer.accountId,
-      body: {
-        decision_target: {
-          proposal_version: proposal.version,
-          proposal_digest: proposal.digest,
-          task_key: proposal.currentTaskKey,
-          task_round: proposal.currentTaskRound,
-        },
-        comment: "Reviewed original",
-      },
-    })).status).toBe(200)
-    expect((await apiRequest(`${path}/${record.number}/execute`, {
-      method: "POST", body: { proposal_digest: proposal.digest },
-    })).status).toBe(200)
+    const record = z
+      .object({ number: z.number(), record_id: z.string() })
+      .parse(await submitted.json())
+    const proposal = await new SystemD1ProposalAdapter({ env: { DB: database } }).findByNumber(
+      record.number,
+    )
+    if (proposal === null || proposal instanceof Error)
+      throw new Error("missing preservation proposal")
+    expect(
+      (
+        await apiRequest(`${path}/${record.number}/approve`, {
+          method: "POST",
+          accountId: reviewer.accountId,
+          body: {
+            decision_target: {
+              proposal_version: proposal.version,
+              proposal_digest: proposal.digest,
+              task_key: proposal.currentTaskKey,
+              task_round: proposal.currentTaskRound,
+            },
+            comment: "Reviewed original",
+          },
+        })
+      ).status,
+    ).toBe(200)
+    expect(
+      (
+        await apiRequest(`${path}/${record.number}/execute`, {
+          method: "POST",
+          body: { proposal_digest: proposal.digest },
+        })
+      ).status,
+    ).toBe(200)
     mappings.push({
       recordKind: sourceRecord.recordKind,
       sourceRecordId: sourceRecord.recordId,
@@ -184,26 +216,38 @@ test("研修コース・受講記録を全件保全し、人の承認を経て2�
   }
   const sourcePath = `/training/record-source-freezes/${freezeId}`
   const planId = crypto.randomUUID()
-  const trainingMappings = mappings.filter((mapping) => mapping.recordKind === "training-course-record")
+  const trainingMappings = mappings.filter(
+    (mapping) => mapping.recordKind === "training-course-record",
+  )
   const coverageRecords = (records: typeof mappings) =>
     records.map(({ sourceRecordId, preservedRecordId }) => ({ sourceRecordId, preservedRecordId }))
   const firstCoverage = await post(`${sourcePath}/coverage-pages`, crypto.randomUUID(), {
-    purpose: "archive", recordKind: "training-course-record", records: coverageRecords(trainingMappings.slice(0, 10)),
+    purpose: "archive",
+    recordKind: "training-course-record",
+    records: coverageRecords(trainingMappings.slice(0, 10)),
   })
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
-    sequence: 1, nextCursor: "10", recordCount: 10,
+    sequence: 1,
+    nextCursor: "10",
+    recordCount: 10,
   })
-  expect((await post(`${sourcePath}/retirement-plans`, planId, { purpose: "archive" })).status).toBe(503)
+  expect(
+    (await post(`${sourcePath}/retirement-plans`, planId, { purpose: "archive" })).status,
+  ).toBe(503)
   const lastCoverage = await post(`${sourcePath}/coverage-pages`, crypto.randomUUID(), {
-    purpose: "archive", recordKind: "training-course-record", records: coverageRecords(trainingMappings.slice(10)),
+    purpose: "archive",
+    recordKind: "training-course-record",
+    records: coverageRecords(trainingMappings.slice(10)),
   })
   if (lastCoverage.status !== 200) throw new Error(await lastCoverage.text())
   expect(await lastCoverage.json()).toMatchObject({ sequence: 2, nextCursor: null, recordCount: 1 })
   for (const recordKind of trainingRecordKinds.slice(1)) {
     const records = mappings.filter((mapping) => mapping.recordKind === recordKind)
     const covered = await post(`${sourcePath}/coverage-pages`, crypto.randomUUID(), {
-      purpose: "archive", recordKind, records: coverageRecords(records),
+      purpose: "archive",
+      recordKind,
+      records: coverageRecords(records),
     })
     if (covered.status !== 200) throw new Error(await covered.text())
     expect(await covered.json()).toMatchObject({ sequence: 1, nextCursor: null, recordCount: 1 })
@@ -273,7 +317,9 @@ test("研修コース・受講記録を全件保全し、人の承認を経て2�
   expect(
     await database.prepare("SELECT count(*) AS n FROM training_courses").first<number>("n"),
   ).toBe(11)
-  expect(await database.prepare("SELECT count(*) AS n FROM training_enrollments").first<number>("n")).toBe(1)
+  expect(
+    await database.prepare("SELECT count(*) AS n FROM training_enrollments").first<number>("n"),
+  ).toBe(1)
   expect(
     await database
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
