@@ -4,6 +4,7 @@ import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/repositories/family-care-leave.repository"
+import { isFamilyCareLeaveRecordSourceFrozenError } from "@/contexts/family-care-leave/infrastructure/repositories/lib/is-family-care-leave-record-source-frozen-error"
 
 export type Command = {
   employeeId: EmployeeId
@@ -41,6 +42,8 @@ export class CreateFamilyCareLeave {
     const created = await familyCareLeaveRepository.create(familyCareLeave)
 
     if (created instanceof Error) {
+      if (isFamilyCareLeaveRecordSourceFrozenError(created))
+        return new ConflictError("family care leave writes are frozen", "record_source_frozen", { cause: created })
       return new UnexpectedError("failed to create family care leave", { cause: created })
     }
 

@@ -1,6 +1,7 @@
 import { ConflictError } from "@/lib/errors"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/repositories/family-care-leave.repository"
+import { isFamilyCareLeaveRecordSourceFrozenError } from "@/contexts/family-care-leave/infrastructure/repositories/lib/is-family-care-leave-record-source-frozen-error"
 import { UpdateFamilyCareLeave } from "@/contexts/family-care-leave/application/update-family-care-leave"
 import type { FamilyCareLeave } from "@/contexts/family-care-leave/domain/entities/family-care-leave.entity"
 import { factory } from "@/api/http/factory"
@@ -151,6 +152,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     const deleted = await familyCareLeaveRepository.delete(command.familyCareLeaveId)
 
     if (deleted instanceof Error) {
+      if (isFamilyCareLeaveRecordSourceFrozenError(deleted))
+        return new ConflictError("family care leave writes are frozen", "record_source_frozen", { cause: deleted })
       return new UnexpectedError("failed to delete family care leave", { cause: deleted })
     }
 
