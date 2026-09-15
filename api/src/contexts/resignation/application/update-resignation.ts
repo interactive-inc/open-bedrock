@@ -2,6 +2,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import type { Resignation } from "@/contexts/resignation/domain/entities/resignation.entity"
 import type { Context } from "@/env"
 import { ResignationRepository } from "@/contexts/resignation/infrastructure/repositories/resignation.repository"
+import { isResignationRecordSourceFrozenError } from "@/contexts/resignation/infrastructure/repositories/lib/is-resignation-record-source-frozen-error"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -51,6 +52,8 @@ export class UpdateResignation {
     const saved = await resignationRepository.update(updated)
 
     if (saved instanceof Error) {
+      if (isResignationRecordSourceFrozenError(saved))
+        return new ConflictError("resignation writes are frozen", "record_source_frozen", { cause: saved })
       return new UnexpectedError("failed to update resignation", { cause: saved })
     }
 

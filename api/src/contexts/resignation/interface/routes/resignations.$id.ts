@@ -1,5 +1,6 @@
 import { ConflictError } from "@/lib/errors"
 import { ResignationRepository } from "@/contexts/resignation/infrastructure/repositories/resignation.repository"
+import { isResignationRecordSourceFrozenError } from "@/contexts/resignation/infrastructure/repositories/lib/is-resignation-record-source-frozen-error"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { UpdateResignation } from "@/contexts/resignation/application/update-resignation"
 import type { Resignation } from "@/contexts/resignation/domain/entities/resignation.entity"
@@ -159,6 +160,8 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     const deleted = await resignationRepository.delete(command.resignationId)
 
     if (deleted instanceof Error) {
+      if (isResignationRecordSourceFrozenError(deleted))
+        return new ConflictError("resignation writes are frozen", "record_source_frozen", { cause: deleted })
       return new UnexpectedError("failed to delete resignation", { cause: deleted })
     }
 

@@ -4,6 +4,7 @@ import type { Context } from "@/env"
 import { ResignationRepository } from "@/contexts/resignation/infrastructure/repositories/resignation.repository"
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+import { isResignationRecordSourceFrozenError } from "@/contexts/resignation/infrastructure/repositories/lib/is-resignation-record-source-frozen-error"
 
 export type Command = {
   employeeId: EmployeeId
@@ -46,6 +47,8 @@ export class CreateResignation {
     const created = await resignationRepository.create(resignation)
 
     if (created instanceof Error) {
+      if (isResignationRecordSourceFrozenError(created))
+        return new ConflictError("resignation writes are frozen", "record_source_frozen", { cause: created })
       return new UnexpectedError("failed to create resignation", { cause: created })
     }
 
