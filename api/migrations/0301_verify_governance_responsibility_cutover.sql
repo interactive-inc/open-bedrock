@@ -10,6 +10,8 @@ BEGIN
       WHERE organization_id = NEW.organization_id
         AND source_context = NEW.source_context
         AND source_kind = NEW.source_kind
+        AND source_namespace = NEW.source_namespace
+        AND freeze_id = NEW.freeze_id
     )
     OR EXISTS (
       SELECT 1
@@ -18,6 +20,8 @@ BEGIN
         ON adoption.organization_id = NEW.organization_id
         AND adoption.source_context = NEW.source_context
         AND adoption.source_kind = NEW.source_kind
+        AND adoption.source_namespace = NEW.source_namespace
+        AND adoption.freeze_id = NEW.freeze_id
         AND adoption.source_id = CAST(source.id AS TEXT)
       LEFT JOIN company_resource_revisions resource
         ON resource.organization_id = adoption.organization_id

@@ -43,6 +43,8 @@ BEGIN
         WHERE adoption.organization_id = NEW.organization_id
           AND adoption.source_context = NEW.source_context
           AND adoption.source_kind = NEW.source_kind
+          AND adoption.source_namespace = NEW.source_namespace
+          AND adoption.freeze_id = NEW.freeze_id
           AND adoption.source_id = json_extract(entry.value, '$.sourceId')
           AND adoption.source_version = json_extract(entry.value, '$.sourceVersion')
       )
@@ -51,6 +53,8 @@ BEGIN
     WHERE adoption.organization_id = NEW.organization_id
       AND adoption.source_context = NEW.source_context
       AND adoption.source_kind = NEW.source_kind
+      AND adoption.source_namespace = NEW.source_namespace
+      AND adoption.freeze_id = NEW.freeze_id
       AND NOT EXISTS (
         SELECT 1 FROM json_each(NEW.source_manifest_json) entry
         WHERE json_extract(entry.value, '$.sourceId') = adoption.source_id

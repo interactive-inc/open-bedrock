@@ -15,7 +15,9 @@ import {
 import type { SystemJsonValue } from "@system/domain/definitions/audit/system-json-value.definition"
 
 type Context = Readonly<{
-  context: Readonly<{ env: Pick<Bindings, "DB" | "NOW"> }>
+  context: Readonly<{
+    env: Pick<Bindings, "DB" | "NOW"> & Readonly<{ RECORD_SOURCE_NAMESPACE?: string }>
+  }>
   prepareAudit: (props: {
     session: CompanySessionValue
     action: "governance.org_role.assigned"
@@ -34,6 +36,7 @@ export class AdoptGovernanceOrgRoleAssignment {
   async execute(props: {
     session: CompanySessionValue
     assignmentId: number
+    freezeId: string
     commandId: string
     expectedRevision: number
     snapshotDigest: string
@@ -41,9 +44,15 @@ export class AdoptGovernanceOrgRoleAssignment {
     if (!props.session.permissions.has("governance:manage")) {
       return new ForbiddenError("組織責任を移行する権限がありません", "governance_role_forbidden")
     }
-    const freeze = await this.c.context.env.DB.prepare(
-      "SELECT id FROM system_record_source_freezes WHERE owner_context = 'governance' AND revision = 1",
-    ).first()
+    const sourceNamespace = this.c.context.env.RECORD_SOURCE_NAMESPACE
+    if (sourceNamespace === undefined) {
+      return new UnexpectedError("組織責任の移行元を特定できません")
+    }
+    const freeze = await this.c.context.env.DB.prepare(`SELECT id
+      FROM system_record_source_freezes
+      WHERE id = ?1 AND source_namespace = ?2 AND owner_context = 'governance' AND revision = 1`)
+      .bind(props.freezeId, sourceNamespace)
+      .first()
     if (freeze === null) {
       return new ConflictError(
         "組織責任の元台帳を停止してから移行してください",
@@ -108,13 +117,16 @@ export class AdoptGovernanceOrgRoleAssignment {
       voided: snapshot.source.revoked_at !== null,
       prepareAdditionalStatements: (assignment) => [
         this.c.context.env.DB.prepare(`INSERT INTO company_responsibility_source_adoptions
-          (organization_id, source_context, source_kind, source_id, source_version,
+          (organization_id, source_context, source_kind, source_namespace, freeze_id,
+           source_id, source_version,
            command_id, resource_type, resource_id, resource_revision, snapshot_digest,
            source_json, actor_account_id, reason, expected_revision, organization_revision,
            recorded_at)
          VALUES ('organization:default', 'governance', 'org-role-assignment', ?1, ?2,
-           ?3, 'responsibility-assignment', ?4, ?5, ?2, ?6, ?7, ?8, ?9, ?10, ?11)`)
+           ?3, ?4, ?5, 'responsibility-assignment', ?6, ?7, ?4, ?8, ?9, ?10, ?11, ?12, ?13)`)
           .bind(
+            sourceNamespace,
+            props.freezeId,
             String(snapshot.source.id),
             snapshot.snapshotDigest,
             props.commandId,

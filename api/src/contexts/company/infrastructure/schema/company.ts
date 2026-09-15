@@ -528,6 +528,8 @@ export const companyResponsibilitySourceAdoptions = sqliteTable(
     organizationId: text("organization_id").notNull().default("organization:default"),
     sourceContext: text("source_context").notNull(),
     sourceKind: text("source_kind").notNull(),
+    sourceNamespace: text("source_namespace").notNull(),
+    freezeId: text("freeze_id").notNull(),
     sourceId: text("source_id").notNull(),
     sourceVersion: text("source_version").notNull(),
     commandId: text("command_id").notNull(),
@@ -575,6 +577,7 @@ export const companyResponsibilitySourceAdoptions = sqliteTable(
       "company_responsibility_source_adoption_identity",
       sql`length(trim(${table.sourceContext})) BETWEEN 1 AND 100
         AND length(trim(${table.sourceKind})) BETWEEN 1 AND 100
+        AND length(trim(${table.sourceNamespace})) BETWEEN 1 AND 255
         AND length(trim(${table.sourceId})) BETWEEN 1 AND 255
         AND length(trim(${table.sourceVersion})) BETWEEN 1 AND 255`,
     ),

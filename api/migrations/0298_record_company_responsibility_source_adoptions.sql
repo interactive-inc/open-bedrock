@@ -3,6 +3,8 @@ CREATE TABLE company_responsibility_source_adoptions (
     CHECK (organization_id = 'organization:default'),
   source_context TEXT NOT NULL CHECK (length(trim(source_context)) BETWEEN 1 AND 100),
   source_kind TEXT NOT NULL CHECK (length(trim(source_kind)) BETWEEN 1 AND 100),
+  source_namespace TEXT NOT NULL CHECK (length(trim(source_namespace)) BETWEEN 1 AND 255),
+  freeze_id TEXT NOT NULL,
   source_id TEXT NOT NULL CHECK (length(trim(source_id)) BETWEEN 1 AND 255),
   source_version TEXT NOT NULL CHECK (length(trim(source_version)) BETWEEN 1 AND 255),
   command_id TEXT NOT NULL,
@@ -26,12 +28,22 @@ CREATE TABLE company_responsibility_source_adoptions (
   FOREIGN KEY (organization_id, command_id)
     REFERENCES company_command_receipts(organization_id, command_id) ON DELETE RESTRICT,
   FOREIGN KEY (organization_id, resource_type, resource_id)
-    REFERENCES company_resource_heads(organization_id, resource_type, resource_id) ON DELETE RESTRICT
+    REFERENCES company_resource_heads(organization_id, resource_type, resource_id) ON DELETE RESTRICT,
+  FOREIGN KEY (freeze_id) REFERENCES system_record_source_freezes(id) ON DELETE RESTRICT
 );
 
 CREATE TRIGGER company_responsibility_source_adoptions_insert_guard
 BEFORE INSERT ON company_responsibility_source_adoptions
 BEGIN
+  SELECT RAISE(ABORT, 'company_responsibility_source_adoption_freeze_invalid')
+  WHERE NOT EXISTS (
+    SELECT 1 FROM system_record_source_freezes freeze
+    WHERE freeze.id = NEW.freeze_id
+      AND freeze.source_namespace = NEW.source_namespace
+      AND freeze.owner_context = NEW.source_context
+      AND freeze.revision = 1
+  );
+
   SELECT RAISE(ABORT, 'company_responsibility_source_adoption_resource_invalid')
   WHERE NOT EXISTS (
     SELECT 1
