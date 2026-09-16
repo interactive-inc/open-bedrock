@@ -101,6 +101,8 @@ function toCompanyResource(row: CompanyResourceRow): CompanyResourceEntity | Err
 type Context = Readonly<{
   database: D1Database
   atomicStatements?: ReadonlyArray<D1PreparedStatement>
+  /** 同じcommandIdの再送で、Company外の同一batch書込も一致させる。 */
+  atomicPayload?: unknown
 }>
 
 /** Company resource revisions の D1 永続化。 */
@@ -300,10 +302,13 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
     if (organizationId === undefined) {
       return { kind: "unavailable", cause: new Error("Empty change") }
     }
+    if ((this.c.atomicStatements?.length ?? 0) > 0 && this.c.atomicPayload === undefined) {
+      return { kind: "unavailable", cause: new Error("Atomic statements require a payload") }
+    }
     const journal = await new CompanyResourceJournalAdapter({
       database: drizzle(this.c.database),
       d1: this.c.database,
-    }).prepare(change)
+    }).prepare(change, this.c.atomicPayload)
     if (journal instanceof Error) return { kind: "unavailable", cause: journal }
     const commandFingerprint = journal.fingerprint
 

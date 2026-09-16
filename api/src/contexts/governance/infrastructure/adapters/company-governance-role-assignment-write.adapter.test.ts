@@ -206,7 +206,7 @@ test("取消済みの元記録をactiveとvoidの連続改訂および移行証�
     f.at,
   )
   if (frozen instanceof Error || frozen === "conflict") throw new Error("freeze failed")
-  const result = await f.writer.assign({
+  const adoptionRequest: Parameters<CompanyGovernanceRoleAssignmentWriteAdapter["assign"]>[0] = {
     organizationId: "organization:default",
     commandId: "governance:legacy:7",
     expectedRevision: await f.companyRevision(),
@@ -220,6 +220,7 @@ test("取消済みの元記録をactiveとvoidの連続改訂および移行証�
     sourceDocumentCode: null,
     recordedAt: f.at.getTime(),
     voided: true,
+    additionalPayload: { sourceNamespace, freezeId, sourceId: "7", snapshotDigest: "0".repeat(64) },
     prepareAdditionalStatements: (assignment) => [
       f.database
         .prepare(`INSERT INTO company_responsibility_source_adoptions
@@ -245,7 +246,8 @@ test("取消済みの元記録をactiveとvoidの連続改訂および移行証�
           assignment.recordedAt,
         ),
     ],
-  })
+  }
+  const result = await f.writer.assign(adoptionRequest)
   expect(result).toMatchObject({ kind: "assigned", replayed: false })
   if (result.kind !== "assigned") throw new Error(`adoption failed: ${result.kind}`)
   expect(
@@ -266,21 +268,16 @@ test("取消済みの元記録をactiveとvoidの連続改訂および移行証�
       .prepare("SELECT resource_revision FROM company_responsibility_source_adoptions")
       .first<number>("resource_revision"),
   ).toBe(2)
+  expect(await f.writer.assign(adoptionRequest)).toEqual({ ...result, replayed: true })
   expect(
     await f.writer.assign({
-      organizationId: "organization:default",
-      commandId: "governance:legacy:7",
-      expectedRevision: result.organizationRevision - 1,
-      responsibilityCode: "ciso",
-      responsibilityName: "CISO",
-      cardinality: "one",
-      employeeCode: "EMPLOYEE-001",
-      departmentCode: null,
-      startsOn: restoreCalendarDate("2025-01-01"),
-      endsOn: null,
-      sourceDocumentCode: null,
-      recordedAt: f.at.getTime(),
-      voided: true,
+      ...adoptionRequest,
+      additionalPayload: {
+        sourceNamespace,
+        freezeId: "different-freeze",
+        sourceId: "7",
+        snapshotDigest: "0".repeat(64),
+      },
     }),
-  ).toEqual({ ...result, replayed: true })
+  ).toEqual({ kind: "command_conflict" })
 })
