@@ -449,7 +449,7 @@
     "src/contexts/company/interface/routes/company.bootstrap.ts": "cc7c491ccf7742c964999ffd7717a7f7a89982aae760f34c79afe6ecb516d000",
     "src/contexts/company/interface/routes/company.capabilities.test.ts": "81f1b79fff344386b8136f3655e024edc0924efa1886b015bbfce03a911e8057",
     "src/contexts/company/interface/routes/company.capabilities.ts": "e960871ee2c2adfac6087823b852f7452027de37bd13d593a78e955e21225060",
-    "src/contexts/company/interface/routes/company.changes.test.ts": "19418312e49c5a4fd46f674fc305f2daf97e4caf020c51dfce870a37a58df71d",
+    "src/contexts/company/interface/routes/company.changes.test.ts": "a933af0847a3ecc4eee9f79128ee8341e0e3557762bb2eef11f499f8dd3b1fb5",
     "src/contexts/company/interface/routes/company.changes.ts": "c3817b26f26590cfb94602aa14c486a8e8d48c29e760bda3feeb3ba63080ebaf",
     "src/contexts/company/interface/routes/company.definition-resource-adoptions.$commandId.ts": "f952da8f222f35d8e0fbbb7cf7f372c2cb7a8a8e28ea98f76228e7ad41d4b7cb",
     "src/contexts/company/interface/routes/company.definitions.ts": "19711ea23e70a6e1791529313bcfa47dca4f21cabbb3c62d1adfdfe883d2dba5",
