@@ -48,6 +48,21 @@ test("休暇4台帳を複合キーを含む主キー順で分割し、欠落と�
   ])
   expect(scan("leave-procedure-binding-record")).toEqual([["binding-a", "binding-b"]])
   expect(scan("leave-decision-notification-record")).toEqual([["job-a", "job-b"]])
+  database.exec(`
+    INSERT INTO leave_requests VALUES (0);
+    INSERT INTO leave_procedure_bindings VALUES ('');
+    INSERT INTO leave_decision_notifications VALUES ('');
+  `)
+  for (const [kind, firstId] of [
+    ["leave-request-record", "0"],
+    ["leave-procedure-binding-record", ""],
+    ["leave-decision-notification-record", ""],
+  ] as const) {
+    const query = leaveInventoryQuery(kind, null, 10)
+    if (query instanceof Error) throw query
+    const first = database.query(query.sql).get(...query.values) as Record<string, unknown> | null
+    expect(first && query.recordId(first)).toBe(firstId)
+  }
   expect(leaveInventoryQuery("leave-request-record", "01", 10)).toBeInstanceOf(Error)
   expect(leaveInventoryQuery("leave-balance-record", "broken", 10)).toBeInstanceOf(Error)
   database.close()
