@@ -1,4 +1,9 @@
 import { z } from "zod"
+import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records/record-source-freeze.schema"
+
+export const onboardingSourceFreezeResponseSchema = z.strictObject({
+  freeze: recordSourceFreezeSnapshotSchema,
+})
 
 /** オンボーディングテンプレート 1 件のレスポンス。 */
 export const zAppOnboardingTemplate = z.object({
