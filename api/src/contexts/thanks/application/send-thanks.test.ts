@@ -9,6 +9,7 @@ import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restor
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
 import { createTestContext } from "@tests/api/support/create-test-context"
+import { publishTestEmployeeResources } from "@tests/api/support/company/publish-test-employee-resources"
 import { NotFoundError, ValidationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 
@@ -52,6 +53,16 @@ async function seedEmployee(
   })
   if (initialEmployment instanceof Error) throw initialEmployment
   await context.env.DB.batch([...initialEmployment])
+  await publishTestEmployeeResources(context.env.DB, {
+    employeeId: String(employeeId),
+    employmentId: `employment:${code}`,
+    officialName: name,
+    employeeCode: code,
+    employmentType: "FULL_TIME",
+    employmentStatus: "ACTIVE",
+    effectiveFrom: "1970-01-01",
+    recordedAt: 0,
+  })
 
   return employeeId
 }

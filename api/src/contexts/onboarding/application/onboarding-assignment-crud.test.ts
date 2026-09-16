@@ -19,6 +19,7 @@ import {
 } from "@/contexts/onboarding/infrastructure/schema/onboarding"
 import { eq } from "drizzle-orm"
 import { createTestContext } from "@tests/api/support/create-test-context"
+import { publishTestEmployeeResources } from "@tests/api/support/company/publish-test-employee-resources"
 import { makeTestSession } from "@tests/api/support/make-test-session"
 import { describe, expect, test } from "bun:test"
 
@@ -54,6 +55,16 @@ async function seedEmployee(context: Context, code: string): Promise<number> {
     phone: null,
     createdAt: new Date(0),
     updatedAt: new Date(0),
+  })
+  await publishTestEmployeeResources(context.env.DB, {
+    employeeId: String(id),
+    employmentId: `test:onboarding:employment:${id}`,
+    officialName: "You",
+    employeeCode: code,
+    employmentType: "FULL_TIME",
+    employmentStatus: "ACTIVE",
+    effectiveFrom: "1970-01-01",
+    recordedAt: 0,
   })
 
   return id

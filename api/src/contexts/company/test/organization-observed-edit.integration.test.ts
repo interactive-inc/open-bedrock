@@ -21,6 +21,8 @@ const observedSchema = z.object({
 
 async function fixture() {
   const base = await createEmployeeAdoptionFixture()
+  const adoption = await base.post(await base.input(), "observed-edit-employee-adoption")
+  if (adoption.status !== 200) throw new Error(`employee adoption failed: ${adoption.status}`)
   const company: CompanyContext = {
     env: base.environment,
     var: {

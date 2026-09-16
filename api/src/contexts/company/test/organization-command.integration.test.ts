@@ -364,6 +364,8 @@ describe("organization command receipts and boundaries", () => {
 describe("legacy organization routes stay inside their Company scope", () => {
   test("別organizationの管理者は既定組織の参照・変更・成功済み依頼の再送ができない", async () => {
     const f = await createEmployeeAdoptionFixture()
+    const adoption = await f.post(await f.input(), "organization-scope-employee-adoption")
+    if (adoption.status !== 200) throw new Error("test employee adoption failed")
     const request = (path: string, method = "GET", body?: unknown) =>
       f.app.request(
         path,
