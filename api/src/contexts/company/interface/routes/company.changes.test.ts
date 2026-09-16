@@ -8,6 +8,10 @@ import type { CompanyHttpEnvironment } from "@/contexts/company/interface/reques
 import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/test/company-assignment-resource.test-support"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { GET } from "@/contexts/company/interface/routes/company.changes"
+import { GET as peopleGET } from "@/contexts/company/interface/routes/company.people"
+import { GET as employeesGET } from "@/contexts/company/interface/routes/company.employees"
+import { GET as employmentsGET } from "@/contexts/company/interface/routes/company.employments"
+import { GET as organizationSnapshotsGET } from "@/contexts/company/interface/routes/company.organization-snapshots"
 
 const pageSchema = z.object({
   data: z.array(
@@ -242,4 +246,140 @@ test("実際の人事発令と公開履歴の全改訂を再構築し、旧台�
   )
   expect(received.length).toBeGreaterThan(2)
   expect(new Set(received).size).toBe(received.length)
+})
+
+test("独立consumerは変更feedで発見したIDだけから同じ会社版の人物・雇用・所属を再構築できる", async () => {
+  const f = await createCompanyAssignmentResourceTestContext()
+  await f.initializeAssignment()
+  const pinnedRevision = await f.companyRevision()
+  const actor = CompanyActorValue.restore({
+    ...f.creator,
+    organizationIds: ["organization:default"],
+    capabilities: ["company:read"],
+  })
+  const app = new Hono<CompanyHttpEnvironment>()
+    .use("*", async (context, next) => {
+      context.set("companyActor", actor)
+      await next()
+    })
+    .get("/changes", ...GET)
+    .get("/people", ...peopleGET)
+    .get("/employees", ...employeesGET)
+    .get("/employments", ...employmentsGET)
+    .get("/organization-snapshots", ...organizationSnapshotsGET)
+  const headers = { "x-company-organization-id": "organization:default" }
+  const env = f.context.env
+  const fetchPage = async (query: URLSearchParams) => {
+    const response = await app.request(`/changes?${query}`, { headers }, env)
+    expect(response.status).toBe(200)
+    return z
+      .object({
+        data: z.array(
+          z.object({
+            organization_revision: z.number(),
+            resource_type: z.string(),
+            resource_id: z.string(),
+            revision: z.number(),
+          }),
+        ),
+        has_more: z.boolean(),
+        next_cursor: z.string(),
+        through_revision: z.number(),
+      })
+      .parse(await response.json())
+  }
+  const query = new URLSearchParams({ limit: "2", through_revision: String(pinnedRevision) })
+  const discovered = new Map<string, Set<string>>()
+  let lastRevision = 0
+  let previousPageLastRevision: number | null = null
+  let splitRevisionAcrossPages = false
+  let completionCursor: string | null = null
+  for (let pageNumber = 0; pageNumber < 100; pageNumber++) {
+    const page = await fetchPage(query)
+    expect(page.through_revision).toBe(pinnedRevision)
+    if (page.data[0]?.organization_revision === previousPageLastRevision) {
+      splitRevisionAcrossPages = true
+    }
+    if (pageNumber === 0) {
+      expect(await fetchPage(query)).toEqual(page)
+      const retired = await f.personnel(
+        {
+          kind: "retired",
+          employeeCode: "EMPLOYEE-001",
+          retirementOn: restoreCalendarDate("2030-06-30"),
+        },
+        "feed:retired-during-reconstruction",
+      )
+      if (retired instanceof Error) throw retired
+      expect(await f.companyRevision()).toBeGreaterThan(pinnedRevision)
+    }
+    for (const change of page.data) {
+      expect(change.organization_revision).toBeGreaterThanOrEqual(lastRevision)
+      lastRevision = change.organization_revision
+      const ids = discovered.get(change.resource_type) ?? new Set<string>()
+      ids.add(change.resource_id)
+      discovered.set(change.resource_type, ids)
+    }
+    previousPageLastRevision = page.data.at(-1)?.organization_revision ?? null
+    if (!page.has_more) {
+      completionCursor = page.next_cursor
+      break
+    }
+    if (pageNumber === 99) throw new Error("change feed did not finish")
+    query.set("cursor", page.next_cursor)
+  }
+  expect(splitRevisionAcrossPages).toBe(true)
+
+  const routes = [
+    ["person", "/people"],
+    ["employee", "/employees"],
+    ["employment", "/employments"],
+  ] as const
+  const read = async (path: string, ids?: ReadonlySet<string>) => {
+    const query = new URLSearchParams({
+      organization_revision: String(pinnedRevision),
+      effective_on: "2030-02-01",
+    })
+    for (const id of ids ?? []) query.append("id", id)
+    const response = await app.request(`${path}?${query}`, { headers }, env)
+    expect(response.status).toBe(200)
+    return z
+      .object({ organizationRevision: z.number(), resources: z.array(z.unknown()) })
+      .parse(await response.json())
+  }
+  for (const [type, path] of routes) {
+    const ids = discovered.get(type)
+    expect(ids?.size).toBeGreaterThan(0)
+    const whole = await read(path)
+    expect(whole.organizationRevision).toBe(pinnedRevision)
+    expect(whole.resources.length).toBeGreaterThan(0)
+    const reconstructed = await read(path, ids)
+    expect(reconstructed).toEqual(whole)
+  }
+  expect(discovered.get("organization-unit")?.size).toBeGreaterThan(0)
+  expect(discovered.get("assignment")?.size).toBeGreaterThan(0)
+  const organizationIds = new Set(
+    [...discovered.entries()]
+      .filter(([type]) =>
+        [
+          "organization-unit",
+          "assignment",
+          "reporting-relation",
+          "office-assignment",
+          "grade-assignment",
+          "responsibility-assignment",
+          "collective-body-membership",
+          "organizational-authority",
+        ].includes(type),
+      )
+      .flatMap(([, ids]) => [...ids]),
+  )
+  expect(organizationIds.size).toBeGreaterThan(0)
+  expect(await read("/organization-snapshots", organizationIds)).toEqual(
+    await read("/organization-snapshots"),
+  )
+  expect(completionCursor).not.toBeNull()
+  const resumed = await fetchPage(new URLSearchParams({ cursor: completionCursor! }))
+  expect(resumed.data.length).toBeGreaterThan(0)
+  expect(resumed.data.every((change) => change.organization_revision > pinnedRevision)).toBe(true)
 })
