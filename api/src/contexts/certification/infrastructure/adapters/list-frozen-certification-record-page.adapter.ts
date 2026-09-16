@@ -34,11 +34,10 @@ export class ListFrozenCertificationRecordPageAdapter {
       ownerContext: "certification",
     })
     if (generation instanceof Error) return generation
-    const after = request.afterCursor === null ? 0 : Number(request.afterCursor)
+    const after = request.afterCursor === null ? null : Number(request.afterCursor)
     if (
-      !Number.isSafeInteger(after) ||
-      after < 0 ||
-      (request.afterCursor !== null && String(after) !== request.afterCursor)
+      after !== null &&
+      (!Number.isSafeInteger(after) || after <= 0 || String(after) !== request.afterCursor)
     )
       return new Error("invalid certification cursor")
     const table =
@@ -46,9 +45,14 @@ export class ListFrozenCertificationRecordPageAdapter {
         ? "certification_definitions"
         : "employee_certifications"
     try {
-      const page = this.c.env.DB.prepare(
-        `SELECT id AS record_id FROM ${table} WHERE id>?1 ORDER BY id LIMIT ?2`,
-      ).bind(after, request.limit + 1)
+      const page =
+        after === null
+          ? this.c.env.DB.prepare(`SELECT id AS record_id FROM ${table} ORDER BY id LIMIT ?1`).bind(
+              request.limit + 1,
+            )
+          : this.c.env.DB.prepare(
+              `SELECT id AS record_id FROM ${table} WHERE id>?1 ORDER BY id LIMIT ?2`,
+            ).bind(after, request.limit + 1)
       const statements = [...generation.assertions, page, ...generation.assertions]
       const reads = await this.c.env.DB.batch<{ record_id: number }>(statements)
       if (reads.length !== statements.length || reads.some((read) => !read.success))

@@ -75,17 +75,28 @@ export class ListFrozenSkillRecordPageAdapter {
 
   private query(kind: z.infer<typeof skillRecordKindSchema>, cursor: string | null, limit: number) {
     if (kind === "skill-record")
-      return {
-        sql: "SELECT code AS record_id FROM skill_definitions WHERE code>?1 ORDER BY code LIMIT ?2",
-        values: [cursor ?? "", limit],
-      }
+      return cursor === null
+        ? {
+            sql: "SELECT code AS record_id FROM skill_definitions ORDER BY code LIMIT ?1",
+            values: [limit],
+          }
+        : {
+            sql: "SELECT code AS record_id FROM skill_definitions WHERE code>?1 ORDER BY code LIMIT ?2",
+            values: [cursor, limit],
+          }
     const key = cursor === null ? null : decodeEmployeeSkillRecordId(cursor)
     if (cursor !== null && key === null) return new Error("invalid employee skill cursor")
-    return {
-      sql: `SELECT employee_id,skill_code FROM employee_skills
-        WHERE employee_id>?1 OR (employee_id=?1 AND skill_code>?2)
-        ORDER BY employee_id,skill_code LIMIT ?3`,
-      values: [key?.employeeId ?? "", key?.skillCode ?? "", limit],
-    }
+    return key === null
+      ? {
+          sql: `SELECT employee_id,skill_code FROM employee_skills
+            ORDER BY employee_id,skill_code LIMIT ?1`,
+          values: [limit],
+        }
+      : {
+          sql: `SELECT employee_id,skill_code FROM employee_skills
+            WHERE employee_id>?1 OR (employee_id=?1 AND skill_code>?2)
+            ORDER BY employee_id,skill_code LIMIT ?3`,
+          values: [key.employeeId, key.skillCode, limit],
+        }
   }
 }

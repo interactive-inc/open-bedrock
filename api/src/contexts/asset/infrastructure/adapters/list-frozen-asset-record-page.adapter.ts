@@ -75,35 +75,49 @@ export class ListFrozenAssetRecordPageAdapter {
 
   private query(kind: z.infer<typeof assetRecordKindSchema>, cursor: string | null, limit: number) {
     if (kind === "asset-record")
-      return {
-        sql: "SELECT code AS record_id FROM assets WHERE code>?1 ORDER BY code LIMIT ?2",
-        values: [cursor ?? "", limit],
-      }
+      return cursor === null
+        ? { sql: "SELECT code AS record_id FROM assets ORDER BY code LIMIT ?1", values: [limit] }
+        : {
+            sql: "SELECT code AS record_id FROM assets WHERE code>?1 ORDER BY code LIMIT ?2",
+            values: [cursor, limit],
+          }
     if (kind === "asset-lending-record") {
-      const after = cursor === null ? 0 : Number(cursor)
+      const after = cursor === null ? null : Number(cursor)
       if (
-        !Number.isSafeInteger(after) ||
-        after < 0 ||
-        (cursor !== null && String(after) !== cursor)
+        after !== null &&
+        (!Number.isSafeInteger(after) || after <= 0 || String(after) !== cursor)
       )
         return new Error("invalid lending cursor")
-      return {
-        sql: "SELECT id AS record_id FROM asset_lendings WHERE id>?1 ORDER BY id LIMIT ?2",
-        values: [after, limit],
-      }
+      return after === null
+        ? {
+            sql: "SELECT id AS record_id FROM asset_lendings ORDER BY id LIMIT ?1",
+            values: [limit],
+          }
+        : {
+            sql: "SELECT id AS record_id FROM asset_lendings WHERE id>?1 ORDER BY id LIMIT ?2",
+            values: [after, limit],
+          }
     }
     if (kind === "stocktake-record")
-      return {
-        sql: "SELECT id AS record_id FROM stocktakes WHERE id>?1 ORDER BY id LIMIT ?2",
-        values: [cursor ?? "", limit],
-      }
+      return cursor === null
+        ? { sql: "SELECT id AS record_id FROM stocktakes ORDER BY id LIMIT ?1", values: [limit] }
+        : {
+            sql: "SELECT id AS record_id FROM stocktakes WHERE id>?1 ORDER BY id LIMIT ?2",
+            values: [cursor, limit],
+          }
     const item = cursor === null ? null : decodeStocktakeItemRecordId(cursor)
     if (cursor !== null && item === null) return new Error("invalid stocktake item cursor")
-    return {
-      sql: `SELECT stocktake_id,asset_code FROM stocktake_items
-        WHERE stocktake_id>?1 OR (stocktake_id=?1 AND asset_code>?2)
-        ORDER BY stocktake_id,asset_code LIMIT ?3`,
-      values: [item?.stocktakeId ?? "", item?.assetCode ?? "", limit],
-    }
+    return item === null
+      ? {
+          sql: `SELECT stocktake_id,asset_code FROM stocktake_items
+            ORDER BY stocktake_id,asset_code LIMIT ?1`,
+          values: [limit],
+        }
+      : {
+          sql: `SELECT stocktake_id,asset_code FROM stocktake_items
+            WHERE stocktake_id>?1 OR (stocktake_id=?1 AND asset_code>?2)
+            ORDER BY stocktake_id,asset_code LIMIT ?3`,
+          values: [item.stocktakeId, item.assetCode, limit],
+        }
   }
 }
