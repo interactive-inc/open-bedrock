@@ -52,6 +52,8 @@ export class CompanyGovernanceRoleAssignmentWriteAdapter {
     sourceDocumentCode: string | null
     recordedAt: number
     voided?: boolean
+    /** Company外の移行記録を同じcommandIdの再送判定へ含める。 */
+    additionalPayload?: unknown
     prepareAdditionalStatements?: (assignment: {
       assignmentId: string
       resourceRevision: 1 | 2
@@ -199,9 +201,23 @@ export class CompanyGovernanceRoleAssignmentWriteAdapter {
         reason,
         recordedAt: props.recordedAt,
       }) ?? []
+    if (additionalStatements.length > 0 && props.additionalPayload === undefined) {
+      return { kind: "unavailable", cause: new Error("Additional statements require a payload") }
+    }
     const repository = new D1CompanyResourceRepository({
       database: this.c.database,
       atomicStatements: [...this.c.auditStatements, ...additionalStatements],
+      atomicPayload: {
+        kind: "governance_role_assignment",
+        responsibilityCode: props.responsibilityCode,
+        employeeCode: props.employeeCode,
+        departmentCode: props.departmentCode,
+        startsOn: props.startsOn,
+        endsOn: props.endsOn,
+        sourceDocumentCode: props.sourceDocumentCode,
+        voided: props.voided === true,
+        ...(props.additionalPayload === undefined ? {} : { additional: props.additionalPayload }),
+      },
     })
     const assignment: CompanyResourceProps = {
       organizationId: props.organizationId,
@@ -251,6 +267,7 @@ export class CompanyGovernanceRoleAssignmentWriteAdapter {
     const repository = new D1CompanyResourceRepository({
       database: this.c.database,
       atomicStatements: this.c.auditStatements,
+      atomicPayload: { kind: "governance_role_revocation", assignmentId: props.assignmentId },
     })
     const snapshot = await repository.findMany({
       organizationId: props.organizationId,

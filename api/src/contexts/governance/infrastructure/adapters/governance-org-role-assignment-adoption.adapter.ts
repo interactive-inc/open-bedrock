@@ -93,6 +93,12 @@ export class GovernanceOrgRoleAssignmentAdoptionAdapter {
       sourceDocumentCode: snapshot.source.source_document_code,
       recordedAt: new Date(this.c.now ?? Date.now()).getTime(),
       voided: snapshot.source.revoked_at !== null,
+      additionalPayload: {
+        sourceNamespace,
+        freezeId: props.freezeId,
+        sourceId: String(snapshot.source.id),
+        snapshotDigest: snapshot.snapshotDigest,
+      },
       prepareAdditionalStatements: (assignment) => [
         this.c.database
           .prepare(`INSERT INTO company_responsibility_source_adoptions
