@@ -1,4 +1,9 @@
 import { z } from "zod"
+import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records/record-source-freeze.schema"
+
+export const regulationSourceFreezeResponseSchema = z.strictObject({
+  freeze: recordSourceFreezeSnapshotSchema,
+})
 
 /** 規程集一覧の 1 件（最新版のメタ情報を含む）。 */
 export const zAppRegulationListItem = z.object({
