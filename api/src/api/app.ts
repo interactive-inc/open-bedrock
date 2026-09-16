@@ -853,7 +853,9 @@ import * as shiftSwapRequestsAdminRoute from "@/contexts/shift/interface/routes/
 import * as shiftSwapRequestsMeRoute from "@/contexts/shift/interface/routes/shift-swap-requests.me"
 import * as shiftRecordSourceFreezesRoute from "@/contexts/shift/interface/routes/shift.record-source-freezes"
 import * as shiftRecordSourceFreezesFreezeIdRoute from "@/contexts/shift/interface/routes/shift.record-source-freezes.$freezeId"
+import * as shiftRecordSourceFreezesFreezeIdCoveragePagesRoute from "@/contexts/shift/interface/routes/shift.record-source-freezes.$freezeId.coverage-pages"
 import * as shiftRecordSourceFreezesFreezeIdReleaseRoute from "@/contexts/shift/interface/routes/shift.record-source-freezes.$freezeId.release"
+import * as shiftRecordSourceFreezesFreezeIdRetirementPlansRoute from "@/contexts/shift/interface/routes/shift.record-source-freezes.$freezeId.retirement-plans"
 import * as shiftRecordsRecordKindRecordIdPreservationRequestsRoute from "@/contexts/shift/interface/routes/shift.records.$recordKind.$recordId.preservation-requests"
 import * as shiftRecordsRecordKindRecordIdPreservationRequestsNumberRoute from "@/contexts/shift/interface/routes/shift.records.$recordKind.$recordId.preservation-requests.$number"
 import * as shiftRecordsRecordKindRecordIdPreservationRequestsNumberApproveRoute from "@/contexts/shift/interface/routes/shift.records.$recordKind.$recordId.preservation-requests.$number.approve"
@@ -861,6 +863,14 @@ import * as shiftRecordsRecordKindRecordIdPreservationRequestsNumberExecuteRoute
 import * as shiftRecordsRecordKindRecordIdPreservationRequestsNumberRejectRoute from "@/contexts/shift/interface/routes/shift.records.$recordKind.$recordId.preservation-requests.$number.reject"
 import * as shiftRecordsRecordKindRecordIdPreservationRequestsNumberResubmitRoute from "@/contexts/shift/interface/routes/shift.records.$recordKind.$recordId.preservation-requests.$number.resubmit"
 import * as shiftRecordsRecordKindRecordIdPreservationRequestsNumberWithdrawRoute from "@/contexts/shift/interface/routes/shift.records.$recordKind.$recordId.preservation-requests.$number.withdraw"
+import * as shiftRetirementPlansPlanIdRequestsRoute from "@/contexts/shift/interface/routes/shift.retirement-plans.$planId.requests"
+import * as shiftRetirementPlansPlanIdRequestsNumberRoute from "@/contexts/shift/interface/routes/shift.retirement-plans.$planId.requests.$number"
+import * as shiftRetirementPlansPlanIdRequestsNumberApproveRoute from "@/contexts/shift/interface/routes/shift.retirement-plans.$planId.requests.$number.approve"
+import * as shiftRetirementPlansPlanIdRequestsNumberExecuteRoute from "@/contexts/shift/interface/routes/shift.retirement-plans.$planId.requests.$number.execute"
+import * as shiftRetirementPlansPlanIdRequestsNumberRejectRoute from "@/contexts/shift/interface/routes/shift.retirement-plans.$planId.requests.$number.reject"
+import * as shiftRetirementPlansPlanIdRequestsNumberResubmitRoute from "@/contexts/shift/interface/routes/shift.retirement-plans.$planId.requests.$number.resubmit"
+import * as shiftRetirementPlansPlanIdRequestsNumberWithdrawRoute from "@/contexts/shift/interface/routes/shift.retirement-plans.$planId.requests.$number.withdraw"
+import * as shiftRetirementPlansPlanIdVerificationReceiptsRoute from "@/contexts/shift/interface/routes/shift.retirement-plans.$planId.verification-receipts"
 import * as employeeSkillsMeRoute from "@/contexts/skill/interface/routes/employee-skills.me"
 import * as employeeSkillsMeSkillCodeRoute from "@/contexts/skill/interface/routes/employee-skills.me.$skillCode"
 import * as skillDefinitionsRoute from "@/contexts/skill/interface/routes/skill-definitions"
@@ -3883,8 +3893,16 @@ const routePart45 = createRouteApp()
   .post("/shift/record-source-freezes", ...shiftRecordSourceFreezesRoute.POST)
   .get("/shift/record-source-freezes/:freezeId", ...shiftRecordSourceFreezesFreezeIdRoute.GET)
   .post(
+    "/shift/record-source-freezes/:freezeId/coverage-pages",
+    ...shiftRecordSourceFreezesFreezeIdCoveragePagesRoute.POST,
+  )
+  .post(
     "/shift/record-source-freezes/:freezeId/release",
     ...shiftRecordSourceFreezesFreezeIdReleaseRoute.POST,
+  )
+  .post(
+    "/shift/record-source-freezes/:freezeId/retirement-plans",
+    ...shiftRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
   )
   .post(
     "/shift/records/:recordKind/:recordId/preservation-requests",
@@ -3914,11 +3932,40 @@ const routePart45 = createRouteApp()
     "/shift/records/:recordKind/:recordId/preservation-requests/:number/withdraw",
     ...shiftRecordsRecordKindRecordIdPreservationRequestsNumberWithdrawRoute.POST,
   )
+  .post("/shift/retirement-plans/:planId/requests", ...shiftRetirementPlansPlanIdRequestsRoute.POST)
+
+const routePart46 = createRouteApp()
+  .get(
+    "/shift/retirement-plans/:planId/requests/:number",
+    ...shiftRetirementPlansPlanIdRequestsNumberRoute.GET,
+  )
+  .post(
+    "/shift/retirement-plans/:planId/requests/:number/approve",
+    ...shiftRetirementPlansPlanIdRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/shift/retirement-plans/:planId/requests/:number/execute",
+    ...shiftRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/shift/retirement-plans/:planId/requests/:number/reject",
+    ...shiftRetirementPlansPlanIdRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/shift/retirement-plans/:planId/requests/:number/resubmit",
+    ...shiftRetirementPlansPlanIdRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/shift/retirement-plans/:planId/requests/:number/withdraw",
+    ...shiftRetirementPlansPlanIdRequestsNumberWithdrawRoute.POST,
+  )
+  .post(
+    "/shift/retirement-plans/:planId/verification-receipts",
+    ...shiftRetirementPlansPlanIdVerificationReceiptsRoute.POST,
+  )
   .get("/shift/shift-assignments", ...shiftAssignmentsRoute.GET)
   .post("/shift/shift-assignments", ...shiftAssignmentsRoute.POST)
   .get("/shift/shift-assignments/me", ...shiftAssignmentsMeRoute.GET)
-
-const routePart46 = createRouteApp()
   .get("/shift/shift-assignments/:id", ...shiftAssignmentsIdRoute.GET)
   .put("/shift/shift-assignments/:id", ...shiftAssignmentsIdRoute.PUT)
   .delete("/shift/shift-assignments/:id", ...shiftAssignmentsIdRoute.DELETE)
@@ -4002,6 +4049,8 @@ const routePart46 = createRouteApp()
     "/skill/retirement-plans/:planId/requests/:number/resubmit",
     ...skillRetirementPlansPlanIdRequestsNumberResubmitRoute.POST,
   )
+
+const routePart47 = createRouteApp()
   .post(
     "/skill/retirement-plans/:planId/requests/:number/withdraw",
     ...skillRetirementPlansPlanIdRequestsNumberWithdrawRoute.POST,
@@ -4036,8 +4085,6 @@ const routePart46 = createRouteApp()
     "/software-license/retirement-plans/:planId/requests/:number",
     ...softwareLicenseRetirementPlansPlanIdRequestsNumberRoute.GET,
   )
-
-const routePart47 = createRouteApp()
   .post(
     "/software-license/retirement-plans/:planId/requests/:number/approve",
     ...softwareLicenseRetirementPlansPlanIdRequestsNumberApproveRoute.POST,
@@ -4172,6 +4219,8 @@ const routePart47 = createRouteApp()
     "/survey/retirement-plans/:planId/requests/:number/execute",
     ...surveyRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
   )
+
+const routePart48 = createRouteApp()
   .post(
     "/survey/retirement-plans/:planId/requests/:number/reject",
     ...surveyRetirementPlansPlanIdRequestsNumberRejectRoute.POST,
@@ -4194,8 +4243,6 @@ const routePart47 = createRouteApp()
   .get("/survey/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.GET)
   .put("/survey/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.PUT)
   .delete("/survey/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.DELETE)
-
-const routePart48 = createRouteApp()
   .get("/survey/surveys/:surveyId", ...surveysSurveyIdRoute.GET)
   .put("/survey/surveys/:surveyId", ...surveysSurveyIdRoute.PUT)
   .delete("/survey/surveys/:surveyId", ...surveysSurveyIdRoute.DELETE)
@@ -4258,6 +4305,8 @@ const routePart48 = createRouteApp()
   .post("/system/cli-sessions", ...systemCliSessionsRoute.POST)
   .get("/system/connectors", ...systemConnectorsRoute.GET)
   .post("/system/connectors", ...systemConnectorsRoute.POST)
+
+const routePart49 = createRouteApp()
   .patch("/system/connectors/:connectorId", ...systemConnectorsConnectorIdRoute.PATCH)
   .get("/system/dead-letters", ...systemDeadLettersRoute.GET)
   .post(
@@ -4271,8 +4320,6 @@ const routePart48 = createRouteApp()
   .post("/system/identity-sessions", ...systemIdentitySessionsRoute.POST)
   .patch("/system/inbox-messages/:messageId", ...systemInboxMessagesMessageIdRoute.PATCH)
   .get("/system/integration-exchanges", ...systemIntegrationExchangesRoute.GET)
-
-const routePart49 = createRouteApp()
   .post("/system/integration-exchanges", ...systemIntegrationExchangesRoute.POST)
   .get(
     "/system/integration-exchanges/:exchangeId",
@@ -4341,6 +4388,8 @@ const routePart49 = createRouteApp()
   .post("/system/sessions", ...systemSessionsRoute.POST)
   .patch("/system/sessions", ...systemSessionsRoute.PATCH)
   .delete("/system/sessions", ...systemSessionsRoute.DELETE)
+
+const routePart50 = createRouteApp()
   .post("/system/step-up-grants", ...systemStepUpGrantsRoute.POST)
   .get("/system/work-items", ...systemWorkItemsRoute.GET)
   .post("/system/work-items", ...systemWorkItemsRoute.POST)
@@ -4354,8 +4403,6 @@ const routePart49 = createRouteApp()
   )
   .post("/system/work-items/:id/handovers", ...systemWorkItemsIdHandoversRoute.POST)
   .post("/system/work-items/:id/handovers/accept", ...systemWorkItemsIdHandoversAcceptRoute.POST)
-
-const routePart50 = createRouteApp()
   .post("/system/work-items/:id/handovers/decline", ...systemWorkItemsIdHandoversDeclineRoute.POST)
   .get("/system/work-items/:id/history", ...systemWorkItemsIdHistoryRoute.GET)
   .post("/system/work-items/:id/results", ...systemWorkItemsIdResultsRoute.POST)
@@ -4448,6 +4495,8 @@ const routePart50 = createRouteApp()
   .get("/thanks/thanks-rewards", ...thanksRewardsRoute.GET)
   .post("/thanks/thanks-rewards", ...thanksRewardsRoute.POST)
   .patch("/thanks/thanks-rewards/:id", ...thanksRewardsIdRoute.PATCH)
+
+const routePart51 = createRouteApp()
   .post("/training/record-source-freezes", ...trainingRecordSourceFreezesRoute.POST)
   .get("/training/record-source-freezes/:freezeId", ...trainingRecordSourceFreezesFreezeIdRoute.GET)
   .post(
@@ -4482,8 +4531,6 @@ const routePart50 = createRouteApp()
     "/training/records/:recordKind/:recordId/preservation-requests/:number/reject",
     ...trainingRecordsRecordKindRecordIdPreservationRequestsNumberRejectRoute.POST,
   )
-
-const routePart51 = createRouteApp()
   .post(
     "/training/records/:recordKind/:recordId/preservation-requests/:number/resubmit",
     ...trainingRecordsRecordKindRecordIdPreservationRequestsNumberResubmitRoute.POST,
@@ -4588,6 +4635,8 @@ const routePart51 = createRouteApp()
   .get("/work-accident/work-accidents", ...workAccidentsRoute.GET)
   .post("/work-accident/work-accidents", ...workAccidentsRoute.POST)
   .post("/work-accident/work-accidents/:id/close", ...workAccidentsIdCloseRoute.POST)
+
+const routePart52 = createRouteApp()
   .post(
     "/work-accident/work-accidents/:id/preservation-requests",
     ...workAccidentWorkAccidentsIdPreservationRequestsRoute.POST,
@@ -4622,8 +4671,6 @@ const routePart51 = createRouteApp()
     "/work-style/employee-work-styles/:id/preservation-requests",
     ...workStyleEmployeeWorkStylesIdPreservationRequestsRoute.POST,
   )
-
-const routePart52 = createRouteApp()
   .get(
     "/work-style/employee-work-styles/:id/preservation-requests/:number",
     ...workStyleEmployeeWorkStylesIdPreservationRequestsNumberRoute.GET,
