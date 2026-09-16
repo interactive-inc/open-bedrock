@@ -33,6 +33,7 @@ import { POST as assign } from "@/contexts/software-license/interface/routes/sof
 import { POST as release } from "@/contexts/software-license/interface/routes/software-license.software-licenses.assignments.$assignmentId.release"
 import { licenseResponseSchema } from "@/contexts/software-license/interface/http/response-schemas"
 import { HTTPException } from "hono/http-exception"
+import { publishTestEmployeeResources } from "@tests/api/support/company/publish-test-employee-resources"
 
 const schema = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
   .filter((file) => file.endsWith(".sql"))
@@ -100,6 +101,16 @@ export async function createLicenseFixture(databaseOverride?: D1Database) {
     })
     if (initial instanceof Error) throw initial
     await database.batch([...initial])
+    await publishTestEmployeeResources(database, {
+      employeeId: `employee:${suffix}`,
+      employmentId: `employment:${suffix}`,
+      officialName: suffix,
+      employeeCode: suffix.toUpperCase(),
+      employmentType: "FULL_TIME",
+      employmentStatus: "ACTIVE",
+      effectiveFrom: "2020-01-01",
+      recordedAt: 0,
+    })
   }
   await database.exec(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
     VALUES ('license-test-binding','account:manager','license-test-manager',0);`)

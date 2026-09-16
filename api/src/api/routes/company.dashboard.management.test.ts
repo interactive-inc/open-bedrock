@@ -10,6 +10,7 @@ import {
   seedCompanyOrganization,
 } from "@tests/api/support/company/seed-company-test-state"
 import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import { publishTestEmployeeResources } from "@tests/api/support/company/publish-test-employee-resources"
 import { z } from "zod"
 
 const jwtSecret = "management-dashboard-route-test-secret"
@@ -84,6 +85,7 @@ async function createTestDb(): Promise<D1Database> {
       // E004 は退職済み(在籍数に数えない)。
       status: employee.id === 4 ? "retired" : "active",
     })),
+    { publishResources: false },
   )
 
   await seedIamForEmployees(
@@ -168,51 +170,21 @@ async function createTestDb(): Promise<D1Database> {
   ])
 
   // 集計の正本となる公開雇用履歴。旧注記は参照元として使用しない。
-  await db
-    .prepare(`INSERT INTO company_organizations (id, revision, created_at, updated_at)
-    VALUES ('organization:default', 1, 0, 0) ON CONFLICT(id) DO UPDATE SET revision = 1`)
-    .run()
   for (const employee of managementEmployees) {
     const employeeId = String(employee.id)
-    await seedD1(db, "company_resource_heads", [
-      {
-        organization_id: "organization:default",
-        resource_type: "employee",
-        resource_id: employeeId,
-        revision: 1,
-        organization_revision: 1,
-        state: "active",
-        effective_from: "2024-01-01",
-        effective_to: null,
-        attributes_json: JSON.stringify({
-          personId: `person:${employeeId}`,
-          employeeCode: employee.code,
-        }),
-        updated_at: 0,
-      },
-    ])
-    await seedD1(db, "company_resource_revisions", [
-      {
-        organization_id: "organization:default",
-        resource_type: "employment",
-        resource_id: `test:${employeeId}:employment`,
-        revision: 1,
-        organization_revision: 1,
-        state: "active",
-        effective_from:
-          employee.id === 2 ? "2026-06-01" : employee.id === 3 ? "2026-05-20" : "2024-01-01",
-        effective_to: employee.id === 4 ? "2026-06-11" : null,
-        attributes_json: JSON.stringify({
-          employeeId,
-          employmentType: "FULL_TIME",
-          status: "ACTIVE",
-        }),
-        command_id: "confirmed-fixture",
-        actor_account_id: "1",
-        reason: "Confirmed employment dates",
-        recorded_at: 0,
-      },
-    ])
+    await publishTestEmployeeResources(db, {
+      employeeId,
+      employmentId: `test:${employeeId}:employment`,
+      officialName: employee.name,
+      employeeCode: employee.code,
+      email: employee.email,
+      employmentType: "FULL_TIME",
+      employmentStatus: "ACTIVE",
+      effectiveFrom:
+        employee.id === 2 ? "2026-06-01" : employee.id === 3 ? "2026-05-20" : "2024-01-01",
+      effectiveTo: employee.id === 4 ? "2026-06-11" : null,
+      recordedAt: 0,
+    })
   }
 
   // 当月の打刻 2 件、前月 1 件(数えない)。
@@ -472,7 +444,9 @@ test("旧注記の削除後も正式な雇用履歴から同じ入退社件数�
 
 test("既存契約が未接続なら正確な集計としてゼロ件を返さない", async () => {
   const db = await createTestDb()
-  await seedCompanyEmployees(db, [{ id: 5, code: "E005", name: "Unconnected", status: "active" }])
+  await seedCompanyEmployees(db, [{ id: 5, code: "E005", name: "Unconnected", status: "active" }], {
+    publishResources: false,
+  })
   const response = await requestWithContext({
     db,
     jwtSecret,

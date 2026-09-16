@@ -12,11 +12,6 @@ export function companyEmploymentStateSql(): string {
     WHERE effective_rank = 1 AND state = 'active' AND (effective_to IS NULL OR ?1 < effective_to)
   ),
   current_employees AS (
-    SELECT employee.id, employee.official_name, employee.employee_code, employee.email, employee.phone
-    FROM company_employees AS employee
-    WHERE NOT EXISTS (SELECT 1 FROM company_workforce_resource_bindings AS binding
-      WHERE binding.resource_type = 'employee' AND binding.employee_id = employee.id)
-    UNION ALL
     SELECT binding.employee_id AS id,
       json_extract(person.attributes_json, '$.officialName') AS official_name,
       json_extract(employee.attributes_json, '$.employeeCode') AS employee_code,
@@ -59,7 +54,6 @@ export function companyEmploymentStateSql(): string {
      AND status.starts_on <= ?1
      AND (status.ends_on IS NULL OR ?1 < status.ends_on)
     WHERE employment.is_void = 0
-      AND EXISTS (SELECT 1 FROM current_employees AS employee WHERE employee.id = employment.employee_id)
       AND employment.starts_on <= ?1
       AND (employment.ends_on IS NULL OR ?1 < employment.ends_on)
   )`

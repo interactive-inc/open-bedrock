@@ -11,6 +11,7 @@ import type { CompanyContext } from "@/contexts/company/configuration/company-co
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { companyEmployeeDirectorySql } from "@/contexts/company/infrastructure/adapters/employee/lib/company-employee-directory-sql"
+import { assertPublicEmployeeBindings } from "@/contexts/company/infrastructure/adapters/employee/lib/public-employee-binding"
 import { z } from "zod"
 import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
@@ -105,10 +106,8 @@ export class CompanyEmployeeDirectoryReadAdapter {
     ) SELECT CASE
       WHEN (SELECT count(*) FROM resolved_employment_period) != 1 THEN NULL
       WHEN NOT EXISTS (SELECT 1 FROM company_workforce_resource_bindings
-        WHERE resource_type = 'employment' AND resource_id = ${employmentId}) THEN (
-        SELECT CASE WHEN employment_type IN ('FULL_TIME', 'PART_TIME') THEN employment_type END
-        FROM company_employments AS legacy_employment
-        WHERE legacy_employment.id = ${employmentId} AND legacy_employment.employee_id = ${employeeId})
+        WHERE resource_type = 'employment' AND resource_id = ${employmentId})
+        THEN json_extract('unbound_company_employment:' || ${employmentId}, '$')
       WHEN (SELECT count(*) FROM company_workforce_resource_bindings
         WHERE resource_type = 'employment' AND resource_id = ${employmentId}) != 1 THEN NULL
       ELSE (SELECT CASE WHEN count(*) = 1 THEN min(json_extract(attributes_json, '$.employmentType')) END
@@ -163,6 +162,8 @@ export class CompanyEmployeeDirectoryReadAdapter {
     if (employeeIds.length === 0) return new Map()
     const asOf = resolveCompanyBusinessDate({ now: c.now, timeZone: c.timeZone })
     if (asOf instanceof Error) return asOf
+    const bindingError = await assertPublicEmployeeBindings(c.database)
+    if (bindingError !== null) return bindingError
     try {
       const database = "prepare" in c.database ? drizzle(c.database) : c.database
       const history = sql.join(companyEmploymentStateSql().split("?1").map(sql.raw), sql`${asOf}`)
@@ -203,6 +204,8 @@ export class CompanyEmployeeDirectoryReadAdapter {
     if (unique.length === 0) return []
     const businessDate = this.businessDate()
     if (businessDate instanceof Error) return businessDate
+    const bindingError = await assertPublicEmployeeBindings(this.c.env.DB)
+    if (bindingError !== null) return bindingError
 
     try {
       const statements: D1PreparedStatement[] = []
@@ -243,6 +246,8 @@ export class CompanyEmployeeDirectoryReadAdapter {
     if (unique.length === 0) return []
     const businessDate = this.businessDate()
     if (businessDate instanceof Error) return businessDate
+    const bindingError = await assertPublicEmployeeBindings(this.c.env.DB)
+    if (bindingError !== null) return bindingError
 
     const statements: D1PreparedStatement[] = []
     for (let offset = 0; offset < unique.length; offset += 99) {
@@ -306,6 +311,8 @@ export class CompanyEmployeeDirectoryReadAdapter {
 
     const businessDate = this.businessDate()
     if (businessDate instanceof Error) return businessDate
+    const bindingError = await assertPublicEmployeeBindings(this.c.env.DB)
+    if (bindingError !== null) return bindingError
 
     const conditions: string[] = []
     const values: Array<string | number> = [businessDate]
@@ -364,6 +371,8 @@ export class CompanyEmployeeDirectoryReadAdapter {
   ): Promise<CompanyEmployeeDirectoryEntry | null | Error> {
     const businessDate = this.businessDate()
     if (businessDate instanceof Error) return businessDate
+    const bindingError = await assertPublicEmployeeBindings(this.c.env.DB)
+    if (bindingError !== null) return bindingError
 
     try {
       const rows = await this.c.env.DB.prepare(

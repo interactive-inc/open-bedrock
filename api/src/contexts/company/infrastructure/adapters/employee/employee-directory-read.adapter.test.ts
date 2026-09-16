@@ -60,7 +60,8 @@ function employmentAttributes(database: D1Database, now: string, timeZone = "Asi
 }
 
 function attributeDatabase(additionalSql = "") {
-  return createEmployeeEmploymentTestDatabase(`
+  return createEmployeeEmploymentTestDatabase(
+    `
     ALTER TABLE company_employments ADD COLUMN employment_type TEXT DEFAULT 'PART_TIME';
     INSERT INTO company_workforce_resource_bindings VALUES
       ('employment', 'employment:1', 'organization:1', 'employee:1'),
@@ -72,7 +73,9 @@ function attributeDatabase(additionalSql = "") {
       ('organization:1', 'employment', 'employment:1', 1, 'active', '2026-01-01', '2026-10-01', '{"employeeId":"employee:1","employmentType":"FULL_TIME"}'),
       ('organization:1', 'employment', 'employment:1', 2, 'active', '2026-09-01', '2026-10-01', '{"employeeId":"employee:1","employmentType":"PART_TIME"}');
     ${additionalSql}
-  `)
+  `,
+    false,
+  )
 }
 
 describe("氏名・雇用区分の時点参照", () => {
@@ -176,13 +179,17 @@ describe("氏名・雇用区分の時点参照", () => {
     }
   })
 
-  test("未接続の雇用区分は旧台帳を使い、未知の区分を常勤に書き換えない", async () => {
-    const database = attributeDatabase("DELETE FROM company_workforce_resource_bindings;")
-    expect(await employmentAttributes(database, "2026-08-01T00:00:00Z")).toEqual([
-      { id: "employment:1", name: "Example Person", type: "PART_TIME" },
-    ])
-    await database.exec("UPDATE company_employments SET employment_type = 'UNKNOWN';")
-    expect((await employmentAttributes(database, "2026-08-01T00:00:00Z"))[0]?.type).toBeNull()
+  test("未接続の雇用区分を旧台帳で補わず読取を拒否する", async () => {
+    const database = attributeDatabase(
+      "DELETE FROM company_workforce_resource_bindings WHERE resource_type = 'employment';",
+    )
+    let failure: unknown
+    try {
+      await employmentAttributes(database, "2026-08-01T00:00:00Z")
+    } catch (cause) {
+      failure = cause
+    }
+    expect(failure).toBeInstanceOf(Error)
   })
 })
 
@@ -218,6 +225,11 @@ describe("雇用IDごとの有効な在籍状態", () => {
   test("再入社予約と終了済み契約を取り違えず、別従業員の雇用も混ぜない", async () => {
     const database = createEmployeeEmploymentTestDatabase(`
       INSERT INTO company_employees VALUES ('employee:2', 'Another Person', 'E002', NULL, NULL);
+      INSERT INTO company_workforce_resource_bindings VALUES
+        ('employee', 'employee:2', 'organization:default', 'employee:2');
+      INSERT INTO company_resource_revisions VALUES
+        ('organization:default', 'person', 'person:2', 1, 'active', '2026-01-01', NULL, '{"officialName":"Another Person"}'),
+        ('organization:default', 'employee', 'employee:2', 1, 'active', '2026-01-01', NULL, '{"personId":"person:2","employeeCode":"E002"}');
       INSERT INTO company_employments VALUES ('employment:2', 'employee:2', 'ACTIVE', '2026-01-01', NULL), ('employment:rehire', 'employee:1', 'ACTIVE', '2026-12-01', NULL);
       INSERT INTO company_employment_period_versions VALUES ('employment:2', 1, 'employee:2', '2026-01-01', NULL, 0), ('employment:rehire', 1, 'employee:1', '2026-12-01', NULL, 0);
       INSERT INTO company_employee_status_period_versions VALUES ('status:2', 1, 'employment:2', 'employee:2', 'leave', '2026-01-01', NULL, 0), ('status:rehire', 1, 'employment:rehire', 'employee:1', 'active', '2026-12-01', NULL, 0);
@@ -263,9 +275,23 @@ describe("雇用IDごとの有効な在籍状態", () => {
 })
 
 describe("Company directoryの在籍時点", () => {
+  test("公開履歴に未接続の従業員が残る場合は一覧と単体参照を拒否する", async () => {
+    const database = createEmployeeEmploymentTestDatabase("", false)
+    const reader = directory(database, "2026-09-01T00:00:00Z")
+    expect(await reader.findById(restoreWorkforceId("employee", "employee:1"))).toBeInstanceOf(
+      Error,
+    )
+    expect(await reader.list(page)).toBeInstanceOf(Error)
+  })
+
   test("Employee IDの一括参照は重複を除き、100件を超えても指定した基準日を使う", async () => {
     const database = createEmployeeEmploymentTestDatabase(`
       INSERT INTO company_employees VALUES ('employee:200', 'Another Person', NULL, NULL, NULL);
+      INSERT INTO company_workforce_resource_bindings VALUES
+        ('employee', 'employee:200', 'organization:default', 'employee:200');
+      INSERT INTO company_resource_revisions VALUES
+        ('organization:default', 'person', 'person:200', 1, 'active', '2026-01-01', NULL, '{"officialName":"Another Person"}'),
+        ('organization:default', 'employee', 'employee:200', 1, 'active', '2026-01-01', NULL, '{"personId":"person:200","employeeCode":null}');
     `)
     const employeeId = restoreWorkforceId("employee", "employee:1")
     const ids = Array.from({ length: 201 }, (_, index) =>
@@ -345,6 +371,11 @@ describe("Company directoryの在籍時点", () => {
       CREATE VIEW company_account_employee_link_periods AS
         SELECT account_id, employee_id, NULL AS starts_on, NULL AS ends_on FROM company_account_employee_links;
       INSERT INTO company_employees VALUES ('employee:2', 'Another Person', 'E002', NULL, NULL);
+      INSERT INTO company_workforce_resource_bindings VALUES
+        ('employee', 'employee:2', 'organization:default', 'employee:2');
+      INSERT INTO company_resource_revisions VALUES
+        ('organization:default', 'person', 'person:2', 1, 'active', '2026-01-01', NULL, '{"officialName":"Another Person"}'),
+        ('organization:default', 'employee', 'employee:2', 1, 'active', '2026-01-01', NULL, '{"personId":"person:2","employeeCode":"E002"}');
       INSERT INTO company_account_employee_links VALUES ('account:1', 'employee:1'), ('account:1', 'employee:2');
     `)
     expect(
@@ -408,9 +439,7 @@ describe("Company directoryの在籍時点", () => {
 
   test("初回入社前の人を在籍中として表示しない", async () => {
     const database = createEmployeeEmploymentTestDatabase()
-    expect(await directory(database, "2025-12-31T00:00:00Z").findByCode("E001")).toMatchObject({
-      employment: null,
-    })
+    expect(await directory(database, "2025-12-31T00:00:00Z").findByCode("E001")).toBeNull()
   })
 
   test("最新訂正で取り消した雇用を表示用tableから復活させない", async () => {
@@ -486,6 +515,7 @@ describe("Company従業員名の期間参照", () => {
       INSERT INTO company_resource_revisions VALUES
         ('organization:default', 'person', 'person:1', 3, 'active', '2026-07-01', NULL, '{"officialName":"Corrected Person"}');
     `,
+      false,
     )
     for (const source of [database, drizzle(database)]) {
       for (const instant of ["2026-06-30T14:59:59Z", "2026-06-30T15:00:00Z"]) {
@@ -519,7 +549,7 @@ describe("Company従業員名の期間参照", () => {
       "UPDATE company_resource_revisions SET state = 'cancelled' WHERE resource_type = 'person' AND revision = 2;",
       "DELETE FROM company_resource_revisions WHERE resource_type = 'person';",
     ]) {
-      const database = createEmployeeEmploymentTestDatabase(history + suffix)
+      const database = createEmployeeEmploymentTestDatabase(history + suffix, false)
       for (const now of ["2025-12-31T00:00:00Z", "2026-07-01T00:00:00Z"]) {
         const names = await employeeNamesReader({
           database,
@@ -531,8 +561,8 @@ describe("Company従業員名の期間参照", () => {
     }
   })
 
-  test("未接続の従業員名を保ち、201件・重複・存在しないIDを一括参照する", async () => {
-    const database = createEmployeeEmploymentTestDatabase()
+  test("未接続の従業員名は旧台帳で補わず、201件の参照を拒否する", async () => {
+    const database = createEmployeeEmploymentTestDatabase("", false)
     const ids = Array.from({ length: 201 }, (_, index) =>
       restoreWorkforceId("employee", `employee:${index}`),
     )
@@ -541,7 +571,7 @@ describe("Company従業員名の期間参照", () => {
       now: "2026-07-01T00:00:00Z",
       timeZone: "Asia/Tokyo",
     }).findForEmployeeIds([...ids, employeeId])
-    expect(names).toEqual(new Map([[employeeId, "Example Person"]]))
+    expect(names).toBeInstanceOf(Error)
   })
 
   test("空の参照はDB・時計を使用せず、非空なら不明なtimezoneを拒否する", async () => {
@@ -580,7 +610,7 @@ describe("Company従業員名の期間参照", () => {
     ).toBeInstanceOf(Error)
   })
 
-  test("壊れた氏名とDB障害では部分結果を返さない", async () => {
+  test("旧氏名の変更を公開履歴へ混ぜず、DB障害では部分結果を返さない", async () => {
     const database = createEmployeeEmploymentTestDatabase(
       "UPDATE company_employees SET official_name = '';",
     )
@@ -589,7 +619,9 @@ describe("Company従業員名の期間参照", () => {
       now: "2026-07-01T00:00:00Z",
       timeZone: "Asia/Tokyo",
     })
-    expect(await repository.findForEmployeeIds([employeeId])).toBeInstanceOf(Error)
+    expect(await repository.findForEmployeeIds([employeeId])).toEqual(
+      new Map([[employeeId, "Example Person"]]),
+    )
     const outage = spyOn(database, "prepare").mockImplementation(() => {
       throw new Error("Database unavailable")
     })

@@ -10,6 +10,7 @@ import { InitialEmploymentPersistenceAdapter } from "@/contexts/company/infrastr
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { describe, expect, test } from "bun:test"
+import { publishTestEmployeeResources } from "@tests/api/support/company/publish-test-employee-resources"
 
 const jwtSecret = "account-directory-route-test-secret"
 
@@ -58,6 +59,17 @@ async function createTestDatabase(): Promise<D1Database> {
     })
     if (initialEmployment instanceof Error) throw initialEmployment
     await database.batch([...initialEmployment])
+    await publishTestEmployeeResources(database, {
+      employeeId: String(employee.id),
+      employmentId: `test:${employee.id}:employment`,
+      officialName: employee.name,
+      employeeCode: employee.code,
+      email: employee.email,
+      employmentType: "FULL_TIME",
+      employmentStatus: "ACTIVE",
+      effectiveFrom: "1970-01-01",
+      recordedAt: 0,
+    })
   }
   return database
 }
