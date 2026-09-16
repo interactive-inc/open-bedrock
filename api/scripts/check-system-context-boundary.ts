@@ -37,7 +37,7 @@ const SYSTEM_SCHEMA_PATHS = discoverSystemSchemaPaths(
   resolve(SYSTEM_CONTEXT_ROOT, "infrastructure/schema"),
 )
 const SYSTEM_SELF_REFERENCE_ROOT = SYSTEM_CONTEXT_ROOT
-const WORKSPACE_PACKAGE_PATH = resolve(PROJECT_ROOT, "..", "package.json")
+const PRODUCT_PACKAGE_PATH = resolve(PROJECT_ROOT, "package.json")
 const SYSTEM_OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "system-context.manifest.json")
 const SYSTEM_CAPABILITY_CATALOG_PATH = resolve(
   SYSTEM_CONTEXT_ROOT,
@@ -69,6 +69,7 @@ const NON_CONTEXT_DIRECTORIES = new Set([
 ])
 const FORBIDDEN_VOCABULARY =
   /\b(announcements?|billing|care|chats?|company|companies|departments?|employees?|employments?|expenses?|facilities|facility|human\s+resources?|leaves?|org|organizations?|personnel|residents?|ringi|shifts?|staff|thanks|tweets?|twit|workforces?)\b/i
+const PRODUCT_MARKER = /^[a-z][a-z0-9]*$/
 const RETIRED_LAYER_MODULE =
   /^@\/(?:api\/)?(domain|application|infrastructure|interface\/converters)(?:\/(.*))?$/
 const GLOBAL_SCHEMA_MODULE = /^@\/database\/schema(?:\/|$)/
@@ -801,40 +802,42 @@ async function inspectSystemPath(
 }
 
 /**
- * 製品 marker は共有 manifest に列挙せず、製品ごとの package 名と環境変数から導出する。
- * 共有ファイルに他製品の名前を置くと、検査そのものが名前を公開してしまうため。
+ * 製品 marker は共有 manifest に列挙せず、各製品の package.json の systemProductMarkers へ自製品の分だけ宣言する。
+ * 製品間で同一に保つファイルへ他製品の名前を置くと、検査そのものがその名前を公開してしまうため。
  */
 export function resolveProductMarkers(
-  packageName: unknown,
+  declaredMarkers: unknown,
   extraMarkers: string | undefined,
-): ReadonlySet<string> {
-  const markers = new Set<string>()
-
-  if (typeof packageName === "string") {
-    const product = packageName.replace(/^@[^/]+\//, "").replace(/^open-/, "")
-    const marker = product.toLowerCase().replaceAll(/[^a-z0-9]/g, "")
-
-    if (marker.length > 0) markers.add(marker)
+): ReadonlySet<string> | Error {
+  if (
+    !Array.isArray(declaredMarkers) ||
+    declaredMarkers.length === 0 ||
+    !declaredMarkers.every((marker) => typeof marker === "string" && PRODUCT_MARKER.test(marker))
+  ) {
+    return new Error(
+      "package.json の systemProductMarkers に自製品の marker を小文字英数字で宣言してください",
+    )
   }
 
-  for (const marker of (extraMarkers ?? "").toLowerCase().split(/[\s,]+/)) {
-    if (/^[a-z][a-z0-9]*$/.test(marker)) markers.add(marker)
-  }
+  const extras = (extraMarkers ?? "")
+    .toLowerCase()
+    .split(/[\s,]+/)
+    .filter((marker) => PRODUCT_MARKER.test(marker))
 
-  return markers
+  return new Set<string>([...declaredMarkers, ...extras])
 }
 
-function readForbiddenProductMarkers(): ReadonlySet<string> {
-  let packageName: unknown
-
+function readForbiddenProductMarkers(): ReadonlySet<string> | Error {
   try {
-    const packageJson: unknown = JSON.parse(readFileSync(WORKSPACE_PACKAGE_PATH, "utf8"))
-    packageName = isUnknownRecord(packageJson) ? packageJson.name : undefined
-  } catch {
-    packageName = undefined
-  }
+    const packageJson: unknown = JSON.parse(readFileSync(PRODUCT_PACKAGE_PATH, "utf8"))
 
-  return resolveProductMarkers(packageName, process.env.SYSTEM_PRODUCT_MARKERS)
+    return resolveProductMarkers(
+      isUnknownRecord(packageJson) ? packageJson.systemProductMarkers : undefined,
+      process.env.SYSTEM_PRODUCT_MARKERS,
+    )
+  } catch {
+    return new Error("package.json を解析できません")
+  }
 }
 
 function inspectTypeScriptConfig(path: string): SystemBoundaryViolation[] {
@@ -895,8 +898,13 @@ function inspectSystemOwnership(): SystemBoundaryViolation[] {
 
 export async function checkSystemContextBoundary(): Promise<SystemBoundaryViolation[]> {
   const downstreamContexts = discoverDownstreamContexts()
-  const forbiddenProductMarkers = readForbiddenProductMarkers()
+  const productMarkers = readForbiddenProductMarkers()
+  const forbiddenProductMarkers =
+    productMarkers instanceof Error ? new Set<string>() : productMarkers
   const violations: SystemBoundaryViolation[] = [
+    ...(productMarkers instanceof Error
+      ? [{ file: "package.json", reason: productMarkers.message }]
+      : []),
     ...inspectSystemOwnership(),
     ...inspectSystemCapabilityLayout(),
   ]

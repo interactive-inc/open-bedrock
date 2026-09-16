@@ -378,16 +378,14 @@ describe("inspectSystemSource", () => {
     expect(regularExpressionViolations[0]?.reason).toContain('製品 marker "productx"')
   })
 
-  test("製品markerを共有manifestではなく製品のpackage名と環境変数から導出する", () => {
-    expect([...resolveProductMarkers("open-productx", undefined)]).toEqual(["productx"])
-    expect([...resolveProductMarkers("@scope/product-x", undefined)]).toEqual(["productx"])
-    expect([...resolveProductMarkers("productx", " VendorX, vendory  bad-marker ")]).toEqual([
-      "productx",
-      "vendorx",
-      "vendory",
-    ])
-    expect([...resolveProductMarkers(undefined, undefined)]).toEqual([])
-    expect([...resolveProductMarkers(1, "")]).toEqual([])
+  test("製品markerを共有manifestではなく製品ローカルの宣言と環境変数から解決する", () => {
+    expect(resolveProductMarkers(["productx"], " VendorX, vendory  bad-marker ")).toEqual(
+      new Set(["productx", "vendorx", "vendory"]),
+    )
+
+    for (const declared of [undefined, [], "productx", ["ProductX"], ["product-x"], [1]]) {
+      expect(resolveProductMarkers(declared, "vendorx")).toBeInstanceOf(Error)
+    }
   })
 
   test("製品markerのコメント・部分綴り・未宣言markerを拒否しない", () => {

@@ -52,5 +52,8 @@
     "dts-bundle-generator": "9.5.1",
     "typescript": "^5.9.3",
     "wrangler": "^4.118.0"
-  }
+  },
+  "systemProductMarkers": [
+    "bedrock"
+  ]
 }
