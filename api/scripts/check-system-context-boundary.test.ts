@@ -7,6 +7,7 @@ import {
   inspectSystemOwnershipManifest,
   inspectSystemSelfReferencePathMappings,
   inspectSystemSource,
+  resolveProductMarkers,
   selectDownstreamContextNames,
 } from "./check-system-context-boundary"
 import { describe, expect, test } from "bun:test"
@@ -20,7 +21,6 @@ describe("System ownership manifest", () => {
   const manifest = {
     version: 2,
     implementedCapabilities: ["audit", "auth"],
-    forbiddenProductMarkers: ["productx", "vendorx"],
     schemaTables: ["accounts", "auditLogs"],
     targetCapabilities: ["audit", "auth", "events"],
   }
@@ -63,11 +63,6 @@ describe("System ownership manifest", () => {
       { ...manifest, implementedCapabilities: ["Auth"] },
       { ...manifest, implementedCapabilities: ["auth", "auth"] },
       { ...manifest, implementedCapabilities: ["auth", "audit"] },
-      { ...manifest, forbiddenProductMarkers: "productx" },
-      { ...manifest, forbiddenProductMarkers: ["ProductX"] },
-      { ...manifest, forbiddenProductMarkers: ["product-x"] },
-      { ...manifest, forbiddenProductMarkers: ["productx", "productx"] },
-      { ...manifest, forbiddenProductMarkers: ["vendorx", "productx"] },
       { ...manifest, schemaTables: ["accounts", 1] },
       { ...manifest, schemaTables: ["Accounts"] },
       { ...manifest, schemaTables: ["accounts", "accounts"] },
@@ -381,6 +376,18 @@ describe("inspectSystemSource", () => {
     expect(stringViolations[0]?.reason).toContain('製品 marker "productx"')
     expect(templateViolations[0]?.reason).toContain('製品 marker "productx"')
     expect(regularExpressionViolations[0]?.reason).toContain('製品 marker "productx"')
+  })
+
+  test("製品markerを共有manifestではなく製品のpackage名と環境変数から導出する", () => {
+    expect([...resolveProductMarkers("open-productx", undefined)]).toEqual(["productx"])
+    expect([...resolveProductMarkers("@scope/product-x", undefined)]).toEqual(["productx"])
+    expect([...resolveProductMarkers("productx", " VendorX, vendory  bad-marker ")]).toEqual([
+      "productx",
+      "vendorx",
+      "vendory",
+    ])
+    expect([...resolveProductMarkers(undefined, undefined)]).toEqual([])
+    expect([...resolveProductMarkers(1, "")]).toEqual([])
   })
 
   test("製品markerのコメント・部分綴り・未宣言markerを拒否しない", () => {

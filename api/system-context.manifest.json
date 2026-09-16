@@ -16,7 +16,6 @@
     "work",
     "workflow"
   ],
-  "forbiddenProductMarkers": ["bedrock", "cclcc", "cocolococo", "hiract", "inta"],
   "schemaTables": [
     "systemAccountInvitations",
     "systemAccounts",
