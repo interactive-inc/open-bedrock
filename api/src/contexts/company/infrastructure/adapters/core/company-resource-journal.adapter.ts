@@ -34,10 +34,11 @@ export class CompanyResourceJournalAdapter {
 
   async prepare(
     change: CompanyResourceChangeEntity,
+    atomicPayload?: unknown,
   ): Promise<PreparedCompanyResourceJournal | Error> {
     const d1 = this.c.d1
     if (d1 === undefined) return new Error("D1 statement preparation is unavailable")
-    const journal = await this.build(change)
+    const journal = await this.build(change, atomicPayload)
     if (journal instanceof Error) return journal
     const prepare = (statement: CompanyResourceJournalStatement) => {
       const query = statement.toSQL()
@@ -50,11 +51,11 @@ export class CompanyResourceJournalAdapter {
     }
   }
 
-  async build(change: CompanyResourceChangeEntity) {
+  async build(change: CompanyResourceChangeEntity, atomicPayload?: unknown) {
     const database = this.c.database
     const organizationId = change.resources[0]?.organizationId
     if (organizationId === undefined) return new Error("empty Company command")
-    const canonical = CanonicalSystemJsonValue.create({
+    const commandPayload = {
       expectedRevision: change.expectedRevision,
       actorAccountId: change.actorAccountId,
       reason: change.reason,
@@ -68,7 +69,10 @@ export class CompanyResourceJournalAdapter {
         effectiveTo: resource.effectiveTo,
         attributes: resource.attributes,
       })),
-    })
+    }
+    const canonical = CanonicalSystemJsonValue.create(
+      atomicPayload === undefined ? commandPayload : { ...commandPayload, atomicPayload },
+    )
     if (canonical instanceof Error) return canonical
     const digest = await ProposalDigestValue.create(canonical)
     if (digest instanceof Error) return digest
