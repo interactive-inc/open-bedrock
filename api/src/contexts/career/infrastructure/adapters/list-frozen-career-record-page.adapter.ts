@@ -36,16 +36,16 @@ export class ListFrozenCareerRecordPageAdapter {
     })
     if (generation instanceof Error) return generation
     const numeric = request.recordKind !== "career-sheet-record"
-    const after = numeric
-      ? request.afterCursor === null
-        ? 0
-        : Number(request.afterCursor)
-      : (request.afterCursor ?? "")
+    const after =
+      request.afterCursor === null
+        ? null
+        : numeric
+          ? Number(request.afterCursor)
+          : request.afterCursor
     if (
       numeric &&
-      (!Number.isSafeInteger(after) ||
-        Number(after) < 0 ||
-        (request.afterCursor !== null && String(after) !== request.afterCursor))
+      after !== null &&
+      (!Number.isSafeInteger(after) || Number(after) <= 0 || String(after) !== request.afterCursor)
     )
       return new Error("invalid career cursor")
     const [table, column] =
@@ -55,9 +55,14 @@ export class ListFrozenCareerRecordPageAdapter {
           ? ["career_applications", "id"]
           : ["career_sheets", "employee_id"]
     try {
-      const page = this.c.env.DB.prepare(
-        `SELECT ${column} AS record_id FROM ${table} WHERE ${column}>?1 ORDER BY ${column} LIMIT ?2`,
-      ).bind(after, request.limit + 1)
+      const page =
+        after === null
+          ? this.c.env.DB.prepare(
+              `SELECT ${column} AS record_id FROM ${table} ORDER BY ${column} LIMIT ?1`,
+            ).bind(request.limit + 1)
+          : this.c.env.DB.prepare(
+              `SELECT ${column} AS record_id FROM ${table} WHERE ${column}>?1 ORDER BY ${column} LIMIT ?2`,
+            ).bind(after, request.limit + 1)
       const statements = [...generation.assertions, page, ...generation.assertions]
       const reads = await this.c.env.DB.batch<{ record_id: string | number }>(statements)
       if (reads.length !== statements.length || reads.some((read) => !read.success))

@@ -33,13 +33,15 @@ export class ListFrozenLicenseRecordPageAdapter {
     })
     if (generation instanceof Error) return generation
     try {
-      const statements = [
-        ...generation.assertions,
-        this.c.env.DB.prepare(
-          "SELECT id FROM software_licenses WHERE id>?1 ORDER BY id LIMIT ?2",
-        ).bind(request.afterId, request.limit + 1),
-        ...generation.assertions,
-      ]
+      const page =
+        request.afterId === 0
+          ? this.c.env.DB.prepare("SELECT id FROM software_licenses ORDER BY id LIMIT ?1").bind(
+              request.limit + 1,
+            )
+          : this.c.env.DB.prepare(
+              "SELECT id FROM software_licenses WHERE id>?1 ORDER BY id LIMIT ?2",
+            ).bind(request.afterId, request.limit + 1)
+      const statements = [...generation.assertions, page, ...generation.assertions]
       const reads = await this.c.env.DB.batch<{ id: number }>(statements)
       if (reads.length !== statements.length || reads.some((read) => !read.success))
         return new Error("frozen software-license inventory unavailable")

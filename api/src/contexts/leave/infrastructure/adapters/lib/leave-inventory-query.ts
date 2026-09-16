@@ -18,12 +18,18 @@ export function leaveInventoryQuery(
 ): Query | Error {
   const pageSize = limit + 1
   if (recordKind === "leave-request-record") {
-    const cursor = after === null ? 0 : Number(after)
-    if (!Number.isSafeInteger(cursor) || cursor < 0 || (after !== null && String(cursor) !== after))
+    const cursor = after === null ? null : Number(after)
+    if (
+      cursor !== null &&
+      (!Number.isSafeInteger(cursor) || cursor <= 0 || String(cursor) !== after)
+    )
       return new Error("invalid leave request cursor")
     return {
-      sql: "SELECT id AS record_id FROM leave_requests WHERE id>?1 ORDER BY id LIMIT ?2",
-      values: [cursor, pageSize],
+      sql:
+        cursor === null
+          ? "SELECT id AS record_id FROM leave_requests ORDER BY id LIMIT ?1"
+          : "SELECT id AS record_id FROM leave_requests WHERE id>?1 ORDER BY id LIMIT ?2",
+      values: cursor === null ? [pageSize] : [cursor, pageSize],
       recordId: (row) => String(row.record_id),
     }
   }
@@ -50,16 +56,22 @@ export function leaveInventoryQuery(
   }
   if (recordKind === "leave-procedure-binding-record") {
     return {
-      sql: `SELECT request_key AS record_id FROM leave_procedure_bindings
-        WHERE request_key>?1 ORDER BY request_key LIMIT ?2`,
-      values: [after ?? "", pageSize],
+      sql:
+        after === null
+          ? `SELECT request_key AS record_id FROM leave_procedure_bindings ORDER BY request_key LIMIT ?1`
+          : `SELECT request_key AS record_id FROM leave_procedure_bindings
+            WHERE request_key>?1 ORDER BY request_key LIMIT ?2`,
+      values: after === null ? [pageSize] : [after, pageSize],
       recordId: (row) => String(row.record_id),
     }
   }
   return {
-    sql: `SELECT job_id AS record_id FROM leave_decision_notifications
-      WHERE job_id>?1 ORDER BY job_id LIMIT ?2`,
-    values: [after ?? "", pageSize],
+    sql:
+      after === null
+        ? `SELECT job_id AS record_id FROM leave_decision_notifications ORDER BY job_id LIMIT ?1`
+        : `SELECT job_id AS record_id FROM leave_decision_notifications
+          WHERE job_id>?1 ORDER BY job_id LIMIT ?2`,
+    values: after === null ? [pageSize] : [after, pageSize],
     recordId: (row) => String(row.record_id),
   }
 }
