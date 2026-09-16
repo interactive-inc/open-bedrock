@@ -30,8 +30,7 @@ export class CaptureAttendanceRecordAdapter {
     }>,
   ) {
     const formatVersion = input.formatVersion ?? 2
-    if (!Number.isSafeInteger(input.recordId) || input.recordId < 1)
-      return new Error("invalid attendance source record")
+    if (!Number.isSafeInteger(input.recordId)) return new Error("invalid attendance source record")
     const actor = await new AttendanceRecordSourceAuthorizationAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
     try {

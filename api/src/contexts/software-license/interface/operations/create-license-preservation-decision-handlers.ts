@@ -18,7 +18,10 @@ import {
 export function createLicensePreservationDecisionHandlers(action: "approve" | "reject") {
   return softwareLicenseFactory.createHandlers(
     ensureLicenseEnabled,
-    zValidator("param", z.strictObject({ id: licenseIdSchema, number: licenseIdSchema })),
+    zValidator(
+      "param",
+      z.strictObject({ id: licenseIdSchema, number: z.coerce.number().int().positive().safe() }),
+    ),
     zValidator(
       "json",
       z.strictObject({

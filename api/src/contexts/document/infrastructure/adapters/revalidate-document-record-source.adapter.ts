@@ -18,9 +18,12 @@ export class RevalidateDocumentRecordSourceAdapter {
       source.props.ownerContext !== "document" ||
       source.props.recordKind !== "document-record"
     )
-      return new DocumentError("forbidden", "record source does not belong to this document registry")
+      return new DocumentError(
+        "forbidden",
+        "record source does not belong to this document registry",
+      )
 
-    const documentId = z.coerce.number().int().positive().safe().safeParse(source.props.recordId)
+    const documentId = z.coerce.number().int().safe().safeParse(source.props.recordId)
     if (!documentId.success || String(documentId.data) !== source.props.recordId)
       return new DocumentError("forbidden", "invalid document record identifier")
     const current = await new CaptureDocumentRecordAdapter(this.c).prepare({

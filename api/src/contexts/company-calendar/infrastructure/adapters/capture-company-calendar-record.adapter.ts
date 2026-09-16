@@ -25,7 +25,7 @@ export class CaptureCompanyCalendarDayRecordAdapter {
   }
 
   async prepare(input: Readonly<{ companyCalendarDayId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.companyCalendarDayId) || input.companyCalendarDayId < 1)
+    if (!Number.isSafeInteger(input.companyCalendarDayId))
       return new CompanyCalendarDayError("forbidden", "invalid source record")
     const actor = await new CompanyCalendarDayActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor

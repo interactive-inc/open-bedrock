@@ -19,7 +19,10 @@ import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company
 export const GET = softwareLicenseFactory.createHandlers(
   ensureLicenseEnabled,
   authenticateSystemAccessToken,
-  zValidator("param", z.strictObject({ id: licenseIdSchema, number: licenseIdSchema })),
+  zValidator(
+    "param",
+    z.strictObject({ id: licenseIdSchema, number: z.coerce.number().int().positive().safe() }),
+  ),
   zValidator(
     "query",
     z.strictObject({ include_original: z.enum(["true", "false"]).default("false") }),

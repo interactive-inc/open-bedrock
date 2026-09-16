@@ -18,9 +18,12 @@ export class RevalidateKnowledgeRecordSourceAdapter {
       source.props.ownerContext !== "knowledge" ||
       source.props.recordKind !== "knowledge-article-record"
     )
-      return new KnowledgeError("forbidden", "record source does not belong to this knowledge registry")
+      return new KnowledgeError(
+        "forbidden",
+        "record source does not belong to this knowledge registry",
+      )
 
-    const articleId = z.coerce.number().int().positive().safe().safeParse(source.props.recordId)
+    const articleId = z.coerce.number().int().safe().safeParse(source.props.recordId)
     if (!articleId.success || String(articleId.data) !== source.props.recordId)
       return new KnowledgeError("forbidden", "invalid knowledge record identifier")
     const current = await new CaptureKnowledgeRecordAdapter(this.c).prepare({

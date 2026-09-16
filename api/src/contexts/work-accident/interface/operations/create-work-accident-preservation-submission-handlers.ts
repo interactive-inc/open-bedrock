@@ -33,7 +33,10 @@ export function createWorkAccidentPreservationSubmissionHandlers(mode: "create" 
   return workAccidentFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: workAccidentIdSchema, number: workAccidentIdSchema.optional() }),
+      z.strictObject({
+        id: workAccidentIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +56,8 @@ export function createWorkAccidentPreservationSubmissionHandlers(mode: "create" 
           recordId: String(workAccidentId),
           sourceNamespace,
           authorize: () => new WorkAccidentActorReadAdapter(c).prepare(),
-          capture: () => new CaptureWorkAccidentRecordAdapter(c).prepare({ workAccidentId, sourceNamespace }),
+          capture: () =>
+            new CaptureWorkAccidentRecordAdapter(c).prepare({ workAccidentId, sourceNamespace }),
         },
         prepareTask: (input) => new PrepareCompanyRecordProcedureTaskAdapter(c).prepare(input),
       })

@@ -19,7 +19,7 @@ function snapshotQuery(
 ): SnapshotQuery | Error {
   const parsed = compensationChangeRecordKindSchema.safeParse(recordKind)
   const id = Number(recordId)
-  if (!parsed.success || !Number.isSafeInteger(id) || id <= 0 || String(id) !== recordId)
+  if (!parsed.success || !Number.isSafeInteger(id) || String(id) !== recordId)
     return new Error("invalid compensation change record id")
   return {
     sql: `SELECT json_object('format','salary-revision-record','version',1,'salary_revision',json_object(

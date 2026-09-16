@@ -83,10 +83,7 @@ export class ListFrozenAssetRecordPageAdapter {
           }
     if (kind === "asset-lending-record") {
       const after = cursor === null ? null : Number(cursor)
-      if (
-        after !== null &&
-        (!Number.isSafeInteger(after) || after <= 0 || String(after) !== cursor)
-      )
+      if (after !== null && (!Number.isSafeInteger(after) || String(after) !== cursor))
         return new Error("invalid lending cursor")
       return after === null
         ? {

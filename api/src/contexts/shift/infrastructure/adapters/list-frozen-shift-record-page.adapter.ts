@@ -41,7 +41,7 @@ export class ListFrozenShiftRecordPageAdapter {
     const after = request.afterCursor === null ? null : Number(request.afterCursor)
     if (
       after !== null &&
-      (!Number.isSafeInteger(after) || after <= 0 || String(after) !== request.afterCursor)
+      (!Number.isSafeInteger(after) || String(after) !== request.afterCursor)
     )
       return new Error("invalid shift cursor")
     try {

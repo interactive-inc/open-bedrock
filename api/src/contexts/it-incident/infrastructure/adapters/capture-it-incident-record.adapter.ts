@@ -28,7 +28,7 @@ export class CaptureItIncidentRecordAdapter {
   }
 
   async prepare(input: Readonly<{ itIncidentId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.itIncidentId) || input.itIncidentId < 1)
+    if (!Number.isSafeInteger(input.itIncidentId))
       return new ItIncidentError("forbidden", "invalid source record")
     const actor = await new ItIncidentActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor

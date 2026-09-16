@@ -14,7 +14,7 @@ type Context = CertificationContext
 type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string | number> }>
 
 function numericId(recordId: string): number | null {
-  const parsed = z.coerce.number().int().positive().safe().safeParse(recordId)
+  const parsed = z.coerce.number().int().safe().safeParse(recordId)
   return parsed.success && String(parsed.data) === recordId ? parsed.data : null
 }
 

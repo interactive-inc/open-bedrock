@@ -26,7 +26,7 @@ export class CaptureCommendationRecordAdapter {
   }
 
   async prepare(input: Readonly<{ commendationId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.commendationId) || input.commendationId < 1)
+    if (!Number.isSafeInteger(input.commendationId))
       return new CommendationError("forbidden", "invalid source record")
     const actor = await new CommendationActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor

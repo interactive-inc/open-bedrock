@@ -25,10 +25,7 @@ export class ListLicenseRecordInventoryAdapter {
         return new Error("license inventory is unavailable")
       const snapshot = reads.at(-1)?.results[0]?.ids_json
       if (snapshot === undefined) return new Error("license inventory is unavailable")
-      const ids = z
-        .array(z.number().int().positive().safe())
-        .readonly()
-        .safeParse(JSON.parse(snapshot))
+      const ids = z.array(z.number().int().safe()).readonly().safeParse(JSON.parse(snapshot))
       if (!ids.success) return ids.error
       return Object.freeze({
         licenseIds: ids.data,

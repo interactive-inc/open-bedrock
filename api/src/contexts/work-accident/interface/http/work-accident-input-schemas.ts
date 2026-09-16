@@ -1,3 +1,3 @@
 import { z } from "zod"
 
-export const workAccidentIdSchema = z.coerce.number().int().positive().safe()
+export const workAccidentIdSchema = z.coerce.number().int().safe()

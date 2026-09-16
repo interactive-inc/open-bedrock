@@ -28,7 +28,7 @@ function snapshotQuery(recordKind: AssetRecordKind, recordId: string): SnapshotQ
     }
   }
   if (recordKind === "asset-lending-record") {
-    const id = z.coerce.number().int().positive().safe().safeParse(recordId)
+    const id = z.coerce.number().int().safe().safeParse(recordId)
     if (!id.success || String(id.data) !== recordId) return new Error("invalid lending id")
     return {
       sql: `SELECT json_object('format','asset-lending-record','version',1,'lending',json_object(

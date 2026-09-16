@@ -27,7 +27,7 @@ export class CaptureExpenseProcedureBindingAdapter {
       session: CompanyPersonnelSession
     }>,
   ) {
-    if (!Number.isSafeInteger(input.expenseId) || input.expenseId < 1)
+    if (!Number.isSafeInteger(input.expenseId))
       return new Error("invalid expense procedure binding")
     const now = this.c.now()
     const authorized = await new PrepareExpenseRecordReadAdapter(this.c).prepare({

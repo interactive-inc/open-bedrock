@@ -34,10 +34,7 @@ export class ListFrozenCompensationChangeRecordPageAdapter {
     })
     if (generation instanceof Error) return generation
     const after = request.afterCursor === null ? null : Number(request.afterCursor)
-    if (
-      after !== null &&
-      (!Number.isSafeInteger(after) || after <= 0 || String(after) !== request.afterCursor)
-    )
+    if (after !== null && (!Number.isSafeInteger(after) || String(after) !== request.afterCursor))
       return new Error("invalid compensation change cursor")
     try {
       const page =

@@ -10,10 +10,10 @@ import { GET as preservedDossier } from "@system/interface/routes/system.preserv
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
 
-test("取引先11件と契約記録を分割照合し撤去確定する", async () => {
+test("負数・0を含む取引先11件と契約記録を分割照合し撤去確定する", async () => {
   const { database, governance, creator, reviewer, definition, bindings, tokenFor, request } =
     await createPartnerPreservationFixture()
-  for (let id = 1; id <= 11; id++) {
+  for (let id = -9; id <= 1; id++) {
     await database
       .prepare(`INSERT INTO partners
       (id,code,name,category,corporate_number,note,status,created_at)
@@ -23,7 +23,7 @@ test("取引先11件と契約記録を分割照合し撤去確定する", async 
   }
   await database.exec(`INSERT INTO partner_contracts
     (id,partner_id,title,contract_date,starts_on,ends_on,renewal_deadline,note,created_at)
-    VALUES (1,1,'Service Agreement','2026-09-15','2026-10-01','2027-09-30',
+    VALUES (1,-9,'Service Agreement','2026-09-15','2026-10-01','2027-09-30',
       '2027-08-31','Annual renewal','2026-09-15T12:00:00.000Z')`)
   const token = await tokenFor(creator.accountId)
   const stepUpToken = "f".repeat(64)
@@ -72,7 +72,7 @@ test("取引先11件と契約記録を分割照合し撤去確定する", async 
   const sources = [
     ...Array.from({ length: 11 }, (_, index) => ({
       kind: "partner-record" as const,
-      id: String(index + 1),
+      id: String(index - 9),
     })),
     { kind: "partner-contract-record" as const, id: "1" },
   ]
@@ -136,7 +136,7 @@ test("取引先11件と契約記録を分割照合し撤去確定する", async 
     post(coveragePath, { purpose: "archive", recordKind, records })
   const first = await cover("partner-record", partnerMappings.slice(0, 10))
   if (first.status !== 200) throw new Error(await first.text())
-  expect(await first.json()).toMatchObject({ sequence: 1, nextCursor: "10", recordCount: 10 })
+  expect(await first.json()).toMatchObject({ sequence: 1, nextCursor: "0", recordCount: 10 })
   expect((await cover("partner-record", partnerMappings.slice(0, 1))).status).toBe(409)
   const second = await cover("partner-record", partnerMappings.slice(10))
   if (second.status !== 200) throw new Error(await second.text())

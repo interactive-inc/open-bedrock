@@ -33,7 +33,10 @@ export function createHeadcountPlanPreservationSubmissionHandlers(mode: "create"
   return headcountPlanFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: headcountPlanIdSchema, number: headcountPlanIdSchema.optional() }),
+      z.strictObject({
+        id: headcountPlanIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +56,8 @@ export function createHeadcountPlanPreservationSubmissionHandlers(mode: "create"
           recordId: String(headcountPlanId),
           sourceNamespace,
           authorize: () => new HeadcountPlanActorReadAdapter(c).prepare(),
-          capture: () => new CaptureHeadcountPlanRecordAdapter(c).prepare({ headcountPlanId, sourceNamespace }),
+          capture: () =>
+            new CaptureHeadcountPlanRecordAdapter(c).prepare({ headcountPlanId, sourceNamespace }),
         },
         prepareTask: (input) => new PrepareCompanyRecordProcedureTaskAdapter(c).prepare(input),
       })

@@ -9,7 +9,7 @@ export function roomSnapshotQuery(
   recordId: string,
 ): SnapshotQuery | Error {
   if (recordKind === "room-record") {
-    const parsed = z.coerce.number().int().positive().safe().safeParse(recordId)
+    const parsed = z.coerce.number().int().safe().safeParse(recordId)
     if (!parsed.success || String(parsed.data) !== recordId)
       return new Error("invalid room record id")
     return {

@@ -35,7 +35,10 @@ export function createLicensePreservationSubmissionHandlers(mode: "create" | "re
     ensureLicenseEnabled,
     zValidator(
       "param",
-      z.strictObject({ id: licenseIdSchema, number: licenseIdSchema.optional() }),
+      z.strictObject({
+        id: licenseIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),

@@ -26,7 +26,7 @@ export class CaptureHeadcountPlanRecordAdapter {
   }
 
   async prepare(input: Readonly<{ headcountPlanId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.headcountPlanId) || input.headcountPlanId < 1)
+    if (!Number.isSafeInteger(input.headcountPlanId))
       return new HeadcountPlanError("forbidden", "invalid source record")
     const actor = await new HeadcountPlanActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor

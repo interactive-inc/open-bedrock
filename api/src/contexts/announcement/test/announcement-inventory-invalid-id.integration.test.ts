@@ -51,7 +51,7 @@ test("ID 0 の原記録を初回ページから漏らさず撤去照合を拒否
     { purpose: "archive", records: [] },
     crypto.randomUUID(),
   )
-  expect(coverage.status).toBe(503)
+  expect(coverage.status).toBe(409)
   expect(
     await database
       .prepare("SELECT count(*) AS n FROM system_record_coverage_pages")

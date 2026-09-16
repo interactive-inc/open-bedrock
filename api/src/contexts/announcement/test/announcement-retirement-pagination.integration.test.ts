@@ -12,7 +12,7 @@ import { systemFactory } from "@system/interface/request-environment/system-fact
 import { drizzle } from "drizzle-orm/d1"
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
-test("11件のアナウンスを全件保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
+test("ID 0 を含む11件のアナウンスを全件保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
   const {
     database,
     governance,
@@ -37,7 +37,7 @@ test("11件のアナウンスを全件保全し、人の承認・取消・再提
     VALUES ('binding:retirement-review',?1,'role:retirement-review',0)`)
     .bind(reviewer.accountId)
     .run()
-  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
+  for (const id of Array.from({ length: 11 }, (_, index) => index)) {
     await database
       .prepare(`INSERT INTO announcements
       (id,title,body_md,published_on,author_employee_id,status,created_at)
@@ -46,9 +46,9 @@ test("11件のアナウンスを全件保全し、人の承認・取消・再提
         id,
         `Announcement ${id}`,
         `Original body ${id}`,
-        `2026-08-${String(id).padStart(2, "0")}`,
+        `2026-08-${String(id + 1).padStart(2, "0")}`,
         creatorPerson.employeeId,
-        `2026-08-${String(id).padStart(2, "0")}T00:00:00Z`,
+        `2026-08-${String(id + 1).padStart(2, "0")}T00:00:00Z`,
       )
       .run()
   }
@@ -79,8 +79,11 @@ test("11件のアナウンスを全件保全し、人の承認・取消・再提
     )
   const freezeId = crypto.randomUUID()
   expect(
-    (await post("/announcement/record-source-freezes", freezeId, { reason: "Preserve announcement" }))
-      .status,
+    (
+      await post("/announcement/record-source-freezes", freezeId, {
+        reason: "Preserve announcement",
+      })
+    ).status,
   ).toBe(201)
   expect(
     (
@@ -99,7 +102,7 @@ test("11件のアナウンスを全件保全し、人の承認・取消・再提
     ).status,
   ).toBe(409)
   const mappings = []
-  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
+  for (const id of Array.from({ length: 11 }, (_, index) => index)) {
     const path = `/announcement/announcements/${id}/preservation-requests`
     const submitted = await apiRequest(path, {
       method: "POST",
@@ -168,7 +171,7 @@ test("11件のアナウンスを全件保全し、人の承認・取消・再提
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "10",
+    nextCursor: "9",
     recordCount: 10,
   })
   expect(
@@ -240,9 +243,9 @@ test("11件のアナウンスを全件保全し、人の承認・取消・再提
       .bind(planId)
       .first<number>("n"),
   ).toBe(2)
-  expect(
-    await database.prepare("SELECT count(*) AS n FROM announcements").first<number>("n"),
-  ).toBe(11)
+  expect(await database.prepare("SELECT count(*) AS n FROM announcements").first<number>("n")).toBe(
+    11,
+  )
   expect(
     await database
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
@@ -405,9 +408,9 @@ test("11件のアナウンスを全件保全し、人の承認・取消・再提
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
       .first<number>("n"),
   ).toBe(1)
-  expect(
-    await database.prepare("SELECT count(*) AS n FROM announcements").first<number>("n"),
-  ).toBe(11)
+  expect(await database.prepare("SELECT count(*) AS n FROM announcements").first<number>("n")).toBe(
+    11,
+  )
   expect(
     (
       await post(`${sourcePath}/release`, crypto.randomUUID(), {

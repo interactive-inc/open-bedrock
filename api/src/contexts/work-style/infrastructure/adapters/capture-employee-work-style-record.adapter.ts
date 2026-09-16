@@ -27,7 +27,7 @@ export class CaptureEmployeeWorkStyleRecordAdapter {
   }
 
   async prepare(input: Readonly<{ employeeWorkStyleId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.employeeWorkStyleId) || input.employeeWorkStyleId < 1)
+    if (!Number.isSafeInteger(input.employeeWorkStyleId))
       return new EmployeeWorkStyleError("forbidden", "invalid source record")
     const actor = await new EmployeeWorkStyleActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor

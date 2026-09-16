@@ -88,7 +88,7 @@ export class PrepareAttendanceRetirementPageAdapter {
     for (const record of stored.snapshot.records) {
       const source = PreservedRecordSourceValue.create(record.source)
       if (source instanceof Error) return source
-      const id = z.coerce.number().int().positive().safe().safeParse(source.props.recordId)
+      const id = z.coerce.number().int().safe().safeParse(source.props.recordId)
       if (!id.success) return id.error
       mappings.push({ sourceRecordId: id.data, preservedRecordId: record.preservedRecordId })
     }

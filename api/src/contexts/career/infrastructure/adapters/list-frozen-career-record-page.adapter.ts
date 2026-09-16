@@ -45,7 +45,7 @@ export class ListFrozenCareerRecordPageAdapter {
     if (
       numeric &&
       after !== null &&
-      (!Number.isSafeInteger(after) || Number(after) <= 0 || String(after) !== request.afterCursor)
+      (!Number.isSafeInteger(after) || String(after) !== request.afterCursor)
     )
       return new Error("invalid career cursor")
     const [table, column] =

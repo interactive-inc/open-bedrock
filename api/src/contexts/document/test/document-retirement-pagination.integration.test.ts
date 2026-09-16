@@ -12,7 +12,7 @@ import { systemFactory } from "@system/interface/request-environment/system-fact
 import { drizzle } from "drizzle-orm/d1"
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
-test("11件の文書台帳記録を全件保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
+test("ID 0 を含む11件の文書台帳記録を全件保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
   const {
     database,
     governance,
@@ -37,7 +37,7 @@ test("11件の文書台帳記録を全件保全し、人の承認・取消・再
     VALUES ('binding:retirement-review',?1,'role:retirement-review',0)`)
     .bind(reviewer.accountId)
     .run()
-  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
+  for (const id of Array.from({ length: 11 }, (_, index) => index)) {
     await database
       .prepare(`INSERT INTO document_ledger_entries
       (id,title,category,location,partner_code,expires_on,note,created_at)
@@ -47,7 +47,7 @@ test("11件の文書台帳記録を全件保全し、人の承認・取消・再
         `Document ${id}`,
         `cabinet/${id}`,
         `Document note ${id}`,
-        `2026-08-${String(id).padStart(2, "0")}T00:00:00Z`,
+        `2026-08-${String(id + 1).padStart(2, "0")}T00:00:00Z`,
       )
       .run()
   }
@@ -110,7 +110,7 @@ test("11件の文書台帳記録を全件保全し、人の承認・取消・再
     ).status,
   ).toBe(409)
   const mappings = []
-  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
+  for (const id of Array.from({ length: 11 }, (_, index) => index)) {
     const path = `/document/document-ledger-entries/${id}/preservation-requests`
     const submitted = await apiRequest(path, {
       method: "POST",
@@ -179,7 +179,7 @@ test("11件の文書台帳記録を全件保全し、人の承認・取消・再
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "10",
+    nextCursor: "9",
     recordCount: 10,
   })
   expect(
