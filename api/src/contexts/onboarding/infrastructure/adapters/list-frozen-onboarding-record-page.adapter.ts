@@ -1,0 +1,125 @@
+import { z } from "zod"
+import type { OnboardingContext } from "@/contexts/onboarding/configuration/onboarding-context"
+import {
+  decodeOnboardingTemplateTaskRecordId,
+  encodeOnboardingTemplateTaskRecordId,
+  onboardingRecordKindSchema,
+} from "@/contexts/onboarding/domain/definitions/onboarding-record-kind.definition"
+import { OnboardingActorReadAdapter } from "@/contexts/onboarding/infrastructure/adapters/onboarding-actor-read.adapter"
+import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+
+type Context = OnboardingContext
+
+const inputSchema = z.strictObject({
+  freezeId: z.uuid(),
+  sourceNamespace: z.string().min(1).max(255).regex(/^\S+$/),
+  recordKind: onboardingRecordKindSchema,
+  afterCursor: z.string().nullable(),
+  limit: z.number().int().min(1).max(100),
+})
+
+const numericTables = {
+  "onboarding-template-record": "onboarding_templates",
+  "onboarding-assignment-record": "onboarding_assignments",
+  "onboarding-task-record": "onboarding_tasks",
+} as const
+
+/** 停止した5台帳を各主キーの順序で分割し、停止世代も同じ読取で確認する。 */
+export class ListFrozenOnboardingRecordPageAdapter {
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
+
+  async prepare(input: unknown) {
+    const parsed = inputSchema.safeParse(input)
+    if (!parsed.success) return parsed.error
+    const request = parsed.data
+    const actor = await new OnboardingActorReadAdapter(this.c).prepare()
+    if (actor instanceof Error) return actor
+    const generation = await new RecordSourceFreezeRepository({
+      env: this.c.env,
+      assertions: actor.assertions,
+    }).prepareActiveGeneration({
+      id: request.freezeId,
+      sourceNamespace: request.sourceNamespace,
+      ownerContext: "onboarding",
+    })
+    if (generation instanceof Error) return generation
+    const after = request.afterCursor
+    const numericTable = numericTables[request.recordKind as keyof typeof numericTables]
+    const numericCursor = numericTable && after !== null ? Number(after) : null
+    const taskCursor =
+      request.recordKind === "onboarding-template-task-record" && after !== null
+        ? decodeOnboardingTemplateTaskRecordId(after)
+        : null
+    if (
+      after !== null &&
+      (numericTable
+        ? !Number.isSafeInteger(numericCursor) || String(numericCursor) !== after
+        : request.recordKind === "onboarding-template-task-record"
+          ? taskCursor === null
+          : after.length === 0)
+    )
+      return new Error("invalid onboarding cursor")
+    try {
+      const db = this.c.env.DB
+      const page = numericTable
+        ? after === null
+          ? db
+              .prepare(`SELECT id AS record_id FROM ${numericTable} ORDER BY id LIMIT ?1`)
+              .bind(request.limit + 1)
+          : db
+              .prepare(
+                `SELECT id AS record_id FROM ${numericTable} WHERE id>?1 ORDER BY id LIMIT ?2`,
+              )
+              .bind(numericCursor, request.limit + 1)
+        : request.recordKind === "onboarding-template-task-record"
+          ? taskCursor === null
+            ? db
+                .prepare(
+                  `SELECT template_code, code FROM onboarding_template_tasks ORDER BY template_code,code LIMIT ?1`,
+                )
+                .bind(request.limit + 1)
+            : db
+                .prepare(
+                  `SELECT template_code, code FROM onboarding_template_tasks WHERE template_code>?1 OR (template_code=?1 AND code>?2) ORDER BY template_code,code LIMIT ?3`,
+                )
+                .bind(taskCursor.templateCode, taskCursor.code, request.limit + 1)
+          : after === null
+            ? db
+                .prepare(
+                  `SELECT job_id AS record_id FROM onboarding_lifecycle_deliveries ORDER BY job_id LIMIT ?1`,
+                )
+                .bind(request.limit + 1)
+            : db
+                .prepare(
+                  `SELECT job_id AS record_id FROM onboarding_lifecycle_deliveries WHERE job_id>?1 ORDER BY job_id LIMIT ?2`,
+                )
+                .bind(after, request.limit + 1)
+      const statements = [...generation.assertions, page, ...generation.assertions]
+      const reads = await db.batch<{
+        record_id?: number | string
+        template_code?: string
+        code?: string
+      }>(statements)
+      if (reads.length !== statements.length || reads.some((read) => !read.success))
+        return new Error("frozen onboarding inventory unavailable")
+      const ids = (reads[generation.assertions.length]?.results ?? []).map((row) =>
+        request.recordKind === "onboarding-template-task-record"
+          ? encodeOnboardingTemplateTaskRecordId(String(row.template_code), String(row.code))
+          : String(row.record_id),
+      )
+      if (new Set(ids).size !== ids.length || ids.some((id) => id.length === 0))
+        return new Error("invalid onboarding inventory")
+      const recordIds = ids.slice(0, request.limit)
+      return Object.freeze({
+        freezeId: generation.freeze.snapshot.id,
+        recordIds: Object.freeze(recordIds),
+        nextCursor: ids.length > request.limit ? (recordIds.at(-1) ?? null) : null,
+        assertions: generation.assertions,
+      })
+    } catch (cause) {
+      return new Error("frozen onboarding inventory unavailable", { cause })
+    }
+  }
+}
