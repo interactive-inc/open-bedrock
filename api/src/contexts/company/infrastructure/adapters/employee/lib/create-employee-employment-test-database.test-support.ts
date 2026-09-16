@@ -49,6 +49,18 @@ const schema = `
   INSERT INTO company_employees VALUES ('employee:1', 'Example Person', 'E001', NULL, NULL);
 `
 
-export function createEmployeeEmploymentTestDatabase(additionalSql = ""): D1Database {
-  return createCompanyD1TestDatabase(schema + additionalSql)
+export function createEmployeeEmploymentTestDatabase(
+  additionalSql = "",
+  published = true,
+): D1Database {
+  const resources = published
+    ? `
+      INSERT INTO company_workforce_resource_bindings VALUES
+        ('employee', 'employee:1', 'organization:default', 'employee:1');
+      INSERT INTO company_resource_revisions VALUES
+        ('organization:default', 'person', 'person:1', 1, 'active', '2026-01-01', NULL, '{"officialName":"Example Person","email":null,"phone":null}'),
+        ('organization:default', 'employee', 'employee:1', 1, 'active', '2026-01-01', NULL, '{"personId":"person:1","employeeCode":"E001"}');
+    `
+    : ""
+  return createCompanyD1TestDatabase(schema + resources + additionalSql)
 }

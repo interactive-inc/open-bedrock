@@ -15,6 +15,11 @@ describe("Companyの在籍期間に基づくアクセス判定", () => {
   test("一括参照でも在籍・休職・未在籍を人ごとに区別し、重複した状態で部分結果を返さない", async () => {
     const database = createEmployeeEmploymentTestDatabase(`
       INSERT INTO company_employees VALUES ('employee:2', 'Second Person', 'E002', NULL, NULL);
+      INSERT INTO company_workforce_resource_bindings VALUES
+        ('employee', 'employee:2', 'organization:default', 'employee:2');
+      INSERT INTO company_resource_revisions VALUES
+        ('organization:default', 'person', 'person:2', 1, 'active', '2026-01-01', NULL, '{"officialName":"Second Person"}'),
+        ('organization:default', 'employee', 'employee:2', 1, 'active', '2026-01-01', NULL, '{"personId":"person:2","employeeCode":"E002"}');
       INSERT INTO company_employment_period_versions VALUES ('employment:2', 1, 'employee:2', '2026-01-01', NULL, 0);
       INSERT INTO company_employee_status_period_versions VALUES ('status:2', 1, 'employment:2', 'employee:2', 'leave', '2026-01-01', NULL, 0);
     `)
