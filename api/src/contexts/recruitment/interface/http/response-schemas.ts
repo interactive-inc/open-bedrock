@@ -1,4 +1,9 @@
 import { z } from "zod"
+import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records/record-source-freeze.schema"
+
+export const recruitmentSourceFreezeResponseSchema = z.strictObject({
+  freeze: recordSourceFreezeSnapshotSchema,
+})
 
 /** 募集ポジション 1 件のレスポンス。 */
 export const zAppRecruitmentPosition = z.object({
