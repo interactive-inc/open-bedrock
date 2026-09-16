@@ -20,7 +20,7 @@ async function reduceRevocation(
   return result
 }
 
-export function RevokeOrgRoleButton(props: { assignmentId: number; employeeName: string }) {
+export function RevokeOrgRoleButton(props: { assignmentId: string; employeeName: string }) {
   const [, action, pending] = useActionState(reduceRevocation, initialState)
   return (
     <ConfirmActionDialog

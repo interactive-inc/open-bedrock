@@ -135,9 +135,8 @@ export async function revokeGovernanceOrgRoleAction(
   if (!me.permissions.includes("governance:manage"))
     return initialError("組織ロールを管理する権限がありません")
   const rawId = formData.get("assignment_id")
-  const assignmentId = typeof rawId === "string" && /^[1-9]\d*$/.test(rawId) ? Number(rawId) : null
-  if (assignmentId === null || !Number.isSafeInteger(assignmentId))
-    return initialError("割当を特定できません")
+  const assignmentId = typeof rawId === "string" && /^\S{1,255}$/.test(rawId) ? rawId : null
+  if (assignmentId === null) return initialError("割当を特定できません")
   const result = await revokeGovernanceOrgRole(assignmentId)
   if (result instanceof Error) return initialError(result.message)
   revalidatePath("/governance/governance-documents/manage")
