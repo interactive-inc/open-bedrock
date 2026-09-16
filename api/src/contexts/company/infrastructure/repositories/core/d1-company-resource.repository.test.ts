@@ -239,6 +239,79 @@ async function counts(database: D1Database) {
 }
 
 describe("Company workforce resourceの参照整合性", () => {
+  test("同一batchの業務payloadが異なる再送を拒否する", async () => {
+    const { database } = fixture()
+    await database.exec("CREATE TABLE care_test_updates (value TEXT NOT NULL)")
+    const change = command([employment, employee, person])
+    const repository = (value: string, atomicPayload: unknown = { value }) =>
+      new D1CompanyResourceRepository({
+        database,
+        atomicStatements: [
+          database.prepare("INSERT INTO care_test_updates (value) VALUES (?1)").bind(value),
+        ],
+        atomicPayload,
+      })
+
+    expect(await repository("initial").write(change)).toMatchObject({
+      kind: "applied",
+      replayed: false,
+    })
+    expect(await repository("initial").write(change)).toMatchObject({
+      kind: "applied",
+      replayed: true,
+    })
+    expect(await repository("changed").write(change)).toEqual({ kind: "command_conflict" })
+    expect((await database.prepare("SELECT value FROM care_test_updates").all()).results).toEqual([
+      { value: "initial" },
+    ])
+    expect((await counts(database))?.organization_revision).toBe(1)
+  })
+
+  test("同一batchの業務書込にpayloadがない場合は何も保存しない", async () => {
+    const { database } = fixture()
+    await database.exec("CREATE TABLE care_test_updates (value TEXT NOT NULL)")
+    const repository = new D1CompanyResourceRepository({
+      database,
+      atomicStatements: [database.prepare("INSERT INTO care_test_updates VALUES ('unexpected')")],
+    })
+    expect(await repository.write(command([employment, employee, person]))).toMatchObject({
+      kind: "unavailable",
+    })
+    expect((await database.prepare("SELECT value FROM care_test_updates").all()).results).toEqual(
+      [],
+    )
+    expect(await counts(database)).toEqual({
+      heads: 0,
+      revisions: 0,
+      receipts: 0,
+      organization_revision: 0,
+    })
+  })
+
+  test("同一batchの業務書込に失敗したらCompany履歴も再送記録も残さない", async () => {
+    const { database } = fixture()
+    await database.exec(
+      "CREATE TABLE care_test_updates (value TEXT NOT NULL CHECK (value = 'valid'))",
+    )
+    const repository = new D1CompanyResourceRepository({
+      database,
+      atomicStatements: [database.prepare("INSERT INTO care_test_updates VALUES ('invalid')")],
+      atomicPayload: { value: "invalid" },
+    })
+    expect(await repository.write(command([employment, employee, person]))).toMatchObject({
+      kind: "unavailable",
+    })
+    expect((await database.prepare("SELECT value FROM care_test_updates").all()).results).toEqual(
+      [],
+    )
+    expect(await counts(database)).toEqual({
+      heads: 0,
+      revisions: 0,
+      receipts: 0,
+      organization_revision: 0,
+    })
+  })
+
   test("参照順と逆に入力しても人・従業員・雇用を原子的に登録し、再送で増やさない", async () => {
     const { database, repository } = fixture()
     const change = command([employment, employee, person])
