@@ -1,10 +1,12 @@
 import { runScheduledLeaveNotifications } from "@/api/scheduled/run-leave-notifications"
-import { app } from "@/api/app"
 import { runScheduledOnboarding } from "@/api/scheduled/run-onboarding"
 import type { Bindings } from "@/env"
 
 export default {
-  fetch: app.fetch,
+  async fetch(request: Request, env: Bindings, context: ExecutionContext): Promise<Response> {
+    const { app } = await import("@/api/app")
+    return app.fetch(request, env, context)
+  },
   async scheduled(_controller: ScheduledController, env: Bindings): Promise<void> {
     const deliveries = await Promise.allSettled([
       runScheduledOnboarding({ env, clock: () => new Date() }),
