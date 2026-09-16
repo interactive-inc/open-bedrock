@@ -11,8 +11,10 @@ import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-sy
 const secret = "ringi-integration-test-secret"
 
 /** 実System・Companyと稟議2台帳の原記録を接続する保全fixture。 */
-export async function createRingiPreservationFixture() {
-  const governance = await createGovernanceTaskTestContext()
+export async function createRingiPreservationFixture(
+  existingGovernance?: Awaited<ReturnType<typeof createGovernanceTaskTestContext>>,
+) {
+  const governance = existingGovernance ?? (await createGovernanceTaskTestContext())
   const database = governance.database
   const creator = governance.creator
   const reviewer = governance.people.find((person) => person.accountId !== creator.accountId)
