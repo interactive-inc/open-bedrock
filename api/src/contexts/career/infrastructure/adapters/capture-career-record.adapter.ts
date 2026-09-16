@@ -24,7 +24,7 @@ function snapshotQuery(recordKind: CareerRecordKind, recordId: string): Snapshot
     }
   }
   const id = Number(recordId)
-  if (!Number.isSafeInteger(id) || id <= 0 || String(id) !== recordId)
+  if (!Number.isSafeInteger(id) || String(id) !== recordId)
     return new Error("invalid career record id")
   return recordKind === "career-posting-record"
     ? {

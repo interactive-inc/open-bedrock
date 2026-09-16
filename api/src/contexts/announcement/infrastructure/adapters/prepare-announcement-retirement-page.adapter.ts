@@ -13,9 +13,7 @@ import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastru
 import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
 import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
 
-type Context = AnnouncementContext &
-  SystemAttachmentStorageContext &
-  SystemDatabaseContext
+type Context = AnnouncementContext & SystemAttachmentStorageContext & SystemDatabaseContext
 const requestSchema = z.strictObject({
   freezeId: z.uuid(),
   sourceNamespace: z.string().regex(/^\S{1,255}$/),
@@ -88,7 +86,7 @@ export class PrepareAnnouncementRetirementPageAdapter {
     for (const record of stored.snapshot.records) {
       const source = PreservedRecordSourceValue.create(record.source)
       if (source instanceof Error) return source
-      const id = z.coerce.number().int().positive().safe().safeParse(source.props.recordId)
+      const id = z.coerce.number().int().safe().safeParse(source.props.recordId)
       if (!id.success) return id.error
       mappings.push({ sourceRecordId: id.data, preservedRecordId: record.preservedRecordId })
     }

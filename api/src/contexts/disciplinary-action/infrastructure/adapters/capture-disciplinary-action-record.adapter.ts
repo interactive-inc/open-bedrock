@@ -26,7 +26,7 @@ export class CaptureDisciplinaryActionRecordAdapter {
   }
 
   async prepare(input: Readonly<{ disciplinaryActionId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.disciplinaryActionId) || input.disciplinaryActionId < 1)
+    if (!Number.isSafeInteger(input.disciplinaryActionId))
       return new DisciplinaryActionError("forbidden", "invalid source record")
     const actor = await new DisciplinaryActionActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor

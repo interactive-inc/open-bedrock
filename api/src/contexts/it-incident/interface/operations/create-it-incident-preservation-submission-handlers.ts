@@ -33,7 +33,10 @@ export function createItIncidentPreservationSubmissionHandlers(mode: "create" | 
   return itIncidentFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: itIncidentIdSchema, number: itIncidentIdSchema.optional() }),
+      z.strictObject({
+        id: itIncidentIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +56,8 @@ export function createItIncidentPreservationSubmissionHandlers(mode: "create" | 
           recordId: String(itIncidentId),
           sourceNamespace,
           authorize: () => new ItIncidentActorReadAdapter(c).prepare(),
-          capture: () => new CaptureItIncidentRecordAdapter(c).prepare({ itIncidentId, sourceNamespace }),
+          capture: () =>
+            new CaptureItIncidentRecordAdapter(c).prepare({ itIncidentId, sourceNamespace }),
         },
         prepareTask: (input) => new PrepareCompanyRecordProcedureTaskAdapter(c).prepare(input),
       })

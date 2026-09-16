@@ -26,8 +26,7 @@ export class CaptureExpenseBudgetRecordAdapter {
       session: CompanyPersonnelSession
     }>,
   ) {
-    if (!Number.isSafeInteger(input.budgetId) || input.budgetId < 1)
-      return new Error("invalid expense record")
+    if (!Number.isSafeInteger(input.budgetId)) return new Error("invalid expense record")
     const now = this.c.now()
     const authorized = await new PrepareExpensePreservationReadAdapter(this.c).prepare({
       ...input,

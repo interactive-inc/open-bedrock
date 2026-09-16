@@ -27,10 +27,8 @@ export class CaptureExpenseApprovalRecordAdapter {
       session: CompanyPersonnelSession
     }>,
   ) {
-    if (!Number.isSafeInteger(input.expenseId) || input.expenseId < 1)
-      return new Error("invalid expense record")
-    if (!Number.isSafeInteger(input.approvalId) || input.approvalId < 1)
-      return new Error("invalid expense approval record")
+    if (!Number.isSafeInteger(input.expenseId)) return new Error("invalid expense record")
+    if (!Number.isSafeInteger(input.approvalId)) return new Error("invalid expense approval record")
     const now = this.c.now()
     const authorized = await new PrepareExpenseRecordReadAdapter(this.c).prepare({
       ...input,

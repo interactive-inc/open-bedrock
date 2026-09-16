@@ -28,7 +28,7 @@ export class CaptureWorkAccidentRecordAdapter {
   }
 
   async prepare(input: Readonly<{ workAccidentId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.workAccidentId) || input.workAccidentId < 1)
+    if (!Number.isSafeInteger(input.workAccidentId))
       return new WorkAccidentError("forbidden", "invalid source record")
     const actor = await new WorkAccidentActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor

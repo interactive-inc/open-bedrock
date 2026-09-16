@@ -29,7 +29,7 @@ export class CaptureDocumentRecordAdapter {
   }
 
   async prepare(input: Readonly<{ documentId: number; sourceNamespace: string }>) {
-    if (!z.number().int().positive().safe().safeParse(input.documentId).success)
+    if (!z.number().int().safe().safeParse(input.documentId).success)
       return new DocumentError("forbidden", "invalid source record")
     const actor = await new DocumentActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor

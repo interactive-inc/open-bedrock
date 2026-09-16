@@ -44,7 +44,7 @@ export class CaptureKnowledgeRecordAdapter {
   }
 
   async prepare(input: Readonly<{ articleId: number; sourceNamespace: string }>) {
-    if (!z.number().int().positive().safe().safeParse(input.articleId).success)
+    if (!z.number().int().safe().safeParse(input.articleId).success)
       return new KnowledgeError("forbidden", "invalid source record")
     const actor = await new KnowledgeActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor

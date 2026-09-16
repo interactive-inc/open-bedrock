@@ -16,7 +16,13 @@ import {
 /** 保全の肯定・否定判断に同じ認証、会社資格、対象照合を適用する。 */
 export function createHealthCheckupPreservationDecisionHandlers(action: "approve" | "reject") {
   return healthCheckupFactory.createHandlers(
-    zValidator("param", z.strictObject({ id: healthCheckupIdSchema, number: healthCheckupIdSchema })),
+    zValidator(
+      "param",
+      z.strictObject({
+        id: healthCheckupIdSchema,
+        number: z.coerce.number().int().positive().safe(),
+      }),
+    ),
     zValidator(
       "json",
       z.strictObject({

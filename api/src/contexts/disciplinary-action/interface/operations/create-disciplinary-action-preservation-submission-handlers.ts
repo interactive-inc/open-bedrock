@@ -18,7 +18,9 @@ import { SubmitRecordPreservationAdapter } from "@system/infrastructure/adapters
 import { RecordPreservationSubmissionError } from "@system/infrastructure/adapters/records/errors"
 
 /** 懲戒記録の取得と会社資格をSystemの共通提出処理へ接続する。 */
-export function createDisciplinaryActionPreservationSubmissionHandlers(mode: "create" | "resubmit") {
+export function createDisciplinaryActionPreservationSubmissionHandlers(
+  mode: "create" | "resubmit",
+) {
   const requestSchema = z.strictObject({
     procedure_key: procedureKeySchema,
     conditions: recordPreservationRequestSchema,
@@ -33,7 +35,10 @@ export function createDisciplinaryActionPreservationSubmissionHandlers(mode: "cr
   return disciplinaryActionFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: disciplinaryActionIdSchema, number: disciplinaryActionIdSchema.optional() }),
+      z.strictObject({
+        id: disciplinaryActionIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +58,11 @@ export function createDisciplinaryActionPreservationSubmissionHandlers(mode: "cr
           recordId: String(disciplinaryActionId),
           sourceNamespace,
           authorize: () => new DisciplinaryActionActorReadAdapter(c).prepare(),
-          capture: () => new CaptureDisciplinaryActionRecordAdapter(c).prepare({ disciplinaryActionId, sourceNamespace }),
+          capture: () =>
+            new CaptureDisciplinaryActionRecordAdapter(c).prepare({
+              disciplinaryActionId,
+              sourceNamespace,
+            }),
         },
         prepareTask: (input) => new PrepareCompanyRecordProcedureTaskAdapter(c).prepare(input),
       })

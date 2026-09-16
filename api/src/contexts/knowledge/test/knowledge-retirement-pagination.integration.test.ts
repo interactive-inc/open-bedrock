@@ -12,7 +12,7 @@ import { systemFactory } from "@system/interface/request-environment/system-fact
 import { drizzle } from "drizzle-orm/d1"
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
-test("11件のナレッジ記事と全改訂履歴を保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
+test("ID 0 を含む11件のナレッジ記事と全改訂履歴を保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
   const {
     database,
     governance,
@@ -37,8 +37,8 @@ test("11件のナレッジ記事と全改訂履歴を保全し、人の承認・
     VALUES ('binding:retirement-review',?1,'role:retirement-review',0)`)
     .bind(reviewer.accountId)
     .run()
-  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
-    const createdAt = `2026-08-${String(id).padStart(2, "0")}T00:00:00Z`
+  for (const id of Array.from({ length: 11 }, (_, index) => index)) {
+    const createdAt = `2026-08-${String(id + 1).padStart(2, "0")}T00:00:00Z`
     const initialSnapshot = JSON.stringify({
       id,
       revision: 1,
@@ -57,20 +57,14 @@ test("11件のナレッジ記事と全改訂履歴を保全し、人の承認・
       .prepare(`INSERT INTO knowledge_articles
       (id,title,category,tags,body_md,author_id,created_at,revision,status)
       VALUES (?1,?2,'handbook',?3,?4,?5,?6,?7,'active')`)
-      .bind(
-        id,
-        title,
-        `tag-${id}`,
-        body,
-        creatorPerson.employeeId,
-        createdAt,
-        revision,
-      )
+      .bind(id, title, `tag-${id}`, body, creatorPerson.employeeId, createdAt, revision)
       .run()
-    await database.prepare(`INSERT INTO knowledge_article_revisions
+    await database
+      .prepare(`INSERT INTO knowledge_article_revisions
       (article_id,revision,snapshot_json,status,source,actor_account_id,reason,recorded_at,command_id,request_json)
       VALUES (?1,1,?2,'active','existing_record',NULL,'Initial article',?3,NULL,NULL)`)
-      .bind(id, initialSnapshot, id).run()
+      .bind(id, initialSnapshot, id)
+      .run()
     if (id === 2) {
       const revisedSnapshot = JSON.stringify({
         ...JSON.parse(initialSnapshot),
@@ -78,10 +72,12 @@ test("11件のナレッジ記事と全改訂履歴を保全し、人の承認・
         title,
         bodyMd: body,
       })
-      await database.prepare(`INSERT INTO knowledge_article_revisions
+      await database
+        .prepare(`INSERT INTO knowledge_article_revisions
         (article_id,revision,snapshot_json,status,source,actor_account_id,reason,recorded_at,command_id,request_json)
         VALUES (2,2,?1,'active','actor',?2,'Revised article',12,'knowledge-revision-2','{}')`)
-        .bind(revisedSnapshot, creator).run()
+        .bind(revisedSnapshot, creator)
+        .run()
     }
   }
   const at = new Date()
@@ -115,17 +111,21 @@ test("11件のナレッジ記事と全改訂履歴を保全し、人の承認・
       .status,
   ).toBe(201)
   expect(
-    await database.prepare("SELECT count(*) AS n FROM system_procedure_definitions WHERE key=?1")
-      .bind(definition.key).first<number>("n"),
+    await database
+      .prepare("SELECT count(*) AS n FROM system_procedure_definitions WHERE key=?1")
+      .bind(definition.key)
+      .first<number>("n"),
   ).toBe(1)
   await expect(
     database.prepare("UPDATE knowledge_articles SET title='Must not change' WHERE id=1").run(),
   ).rejects.toThrow("knowledge_record_source_frozen")
   await expect(
-    database.prepare(`INSERT INTO knowledge_article_revisions
+    database
+      .prepare(`INSERT INTO knowledge_article_revisions
       (article_id,revision,snapshot_json,status,source,actor_account_id,reason,recorded_at,command_id,request_json)
       VALUES (1,2,'{}','active','actor',?1,'Blocked revision',1,'blocked-revision','{}')`)
-      .bind(creator).run(),
+      .bind(creator)
+      .run(),
   ).rejects.toThrow("knowledge_record_source_frozen")
   expect(
     (
@@ -158,7 +158,7 @@ test("11件のナレッジ記事と全改訂履歴を保全し、人の承認・
     ).status,
   ).toBe(409)
   const mappings = []
-  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
+  for (const id of Array.from({ length: 11 }, (_, index) => index)) {
     const path = `/knowledge/knowledge-articles/${id}/preservation-requests`
     const submitted = await apiRequest(path, {
       method: "POST",
@@ -219,8 +219,12 @@ test("11件のナレッジ記事と全改訂履歴を保全し、人の承認・
     mappings.push({ sourceRecordId: id, preservedRecordId: record.record_id })
   }
   expect(
-    await database.prepare("SELECT json_extract(snapshot_json,'$.source.sourceRevision') AS source_revision FROM system_preserved_records WHERE id=?1")
-      .bind(mappings[1]?.preservedRecordId).first<string>("source_revision"),
+    await database
+      .prepare(
+        "SELECT json_extract(snapshot_json,'$.source.sourceRevision') AS source_revision FROM system_preserved_records WHERE id=?1",
+      )
+      .bind(mappings[2]?.preservedRecordId)
+      .first<string>("source_revision"),
   ).toBe("2")
   const sourcePath = `/knowledge/record-source-freezes/${freezeId}`
   const planId = crypto.randomUUID()
@@ -231,7 +235,7 @@ test("11件のナレッジ記事と全改訂履歴を保全し、人の承認・
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "10",
+    nextCursor: "9",
     recordCount: 10,
   })
   expect(

@@ -26,8 +26,7 @@ export class CaptureExpenseAttachmentLinkAdapter {
       session: CompanyPersonnelSession
     }>,
   ) {
-    if (!Number.isSafeInteger(input.expenseId) || input.expenseId < 1)
-      return new Error("invalid expense attachment link")
+    if (!Number.isSafeInteger(input.expenseId)) return new Error("invalid expense attachment link")
     const now = this.c.now()
     const authorized = await new PrepareExpenseAttachmentReadAdapter(this.c).prepare({
       ...input,

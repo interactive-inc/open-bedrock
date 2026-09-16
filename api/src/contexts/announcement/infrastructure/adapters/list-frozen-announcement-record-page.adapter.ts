@@ -47,7 +47,7 @@ export class ListFrozenAnnouncementRecordPageAdapter {
         return new Error("frozen announcement inventory unavailable")
       const rows = reads[generation.assertions.length]?.results
       const ids = z
-        .array(z.strictObject({ id: z.number().int().positive().safe() }))
+        .array(z.strictObject({ id: z.number().int().safe() }))
         .max(request.limit + 1)
         .safeParse(rows)
       if (!ids.success) return ids.error

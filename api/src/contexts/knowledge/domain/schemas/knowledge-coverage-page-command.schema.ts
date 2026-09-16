@@ -8,7 +8,7 @@ export const knowledgeCoveragePageCommandSchema = z.strictObject({
   records: z
     .array(
       z.strictObject({
-        sourceRecordId: z.number().int().positive().safe(),
+        sourceRecordId: z.number().int().safe(),
         preservedRecordId: z.uuid(),
       }),
     )
