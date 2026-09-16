@@ -246,6 +246,163 @@ test("公開commandを通らない雇用の直接短縮でも、所属を取り�
   ).toEqual(before)
 })
 
+test("人物・従業員・雇用を一つの会社版で確定し、後段の失敗では全体を取り消す", async () => {
+  const f = await fixture("office-assignment")
+  const repository = new D1CompanyResourceRepository({ database: f.database })
+  const snapshot = await repository.findMany({
+    organizationId: "organization:default",
+    types: ["person", "employee", "employment"],
+  })
+  if (!snapshot.ok) throw snapshot.cause
+  const employee = snapshot.resources.find(
+    (resource) => resource.type === "employee" && resource.id === f.assignment.attributes.employeeId,
+  )
+  const person = snapshot.resources.find(
+    (resource) => resource.type === "person" && resource.id === employee?.readText("personId"),
+  )
+  const employment = snapshot.resources.find(
+    (resource) => resource.type === "employment" && resource.id === f.employment.id,
+  )
+  if (employee === undefined || person === undefined || employment === undefined)
+    throw new Error("workforce resource missing")
+  const personAttributes = z
+    .object({
+      officialName: z.string(),
+      email: z.string().nullable().optional(),
+      phone: z.string().nullable().optional(),
+    })
+    .parse(person.attributes)
+  const employeeAttributes = z
+    .object({ personId: z.string(), employeeCode: z.string().nullable().optional() })
+    .parse(employee.attributes)
+  const employmentAttributes = z
+    .object({
+      employeeId: z.string(),
+      status: z.enum(["ACTIVE", "ON_LEAVE", "TERMINATED"]),
+      employmentType: z.enum(["FULL_TIME", "PART_TIME"]),
+      contractTerm: z
+        .discriminatedUnion("kind", [
+          z.object({ kind: z.literal("INDEFINITE"), startsOn: z.string() }),
+          z.object({ kind: z.literal("FIXED_TERM"), startsOn: z.string(), endsBefore: z.string() }),
+        ])
+        .nullable()
+        .optional(),
+      employerLegalEntityId: z.string().nullable().optional(),
+      officialName: z.string().optional(),
+    })
+    .parse(employment.attributes)
+  const changedPerson = {
+    organizationId: person.organizationId,
+    type: "person" as const,
+    id: person.id,
+    revision: person.revision + 1,
+    state: "active" as const,
+    effectiveFrom: person.effectiveFrom,
+    effectiveTo: person.effectiveTo,
+    attributes: { ...personAttributes, officialName: "Updated Worker" },
+  }
+  const changedEmployee = {
+    organizationId: employee.organizationId,
+    type: "employee" as const,
+    id: employee.id,
+    revision: employee.revision + 1,
+    state: "active" as const,
+    effectiveFrom: employee.effectiveFrom,
+    effectiveTo: employee.effectiveTo,
+    attributes: { ...employeeAttributes, employeeCode: "EMP-ATOMIC" },
+  }
+  const changedEmployment = {
+    organizationId: employment.organizationId,
+    type: "employment" as const,
+    id: employment.id,
+    revision: employment.revision + 1,
+    state: "active" as const,
+    effectiveFrom: employment.effectiveFrom,
+    effectiveTo: employment.effectiveTo,
+    attributes: { ...employmentAttributes, employmentType: "PART_TIME" as const },
+  }
+  const revision = await f.companyRevision()
+  const resources = [changedPerson, changedEmployee, changedEmployment]
+  expect(Number((await f.write(resources, revision, "workforce:all")).status)).toBe(201)
+  expect(Number((await f.write(resources, revision, "workforce:all")).status)).toBe(200)
+  const saved = await repository.findMany({
+    organizationId: "organization:default",
+    organizationRevision: revision + 1,
+    types: ["person", "employee", "employment"],
+    ids: [person.id, employee.id, employment.id],
+  })
+  if (!saved.ok) throw saved.cause
+  expect(saved.resources.find((resource) => resource.type === "person")?.readText("officialName"))
+    .toBe("Updated Worker")
+  expect(saved.resources.find((resource) => resource.type === "employment")?.readText("employmentType"))
+    .toBe("PART_TIME")
+  expect(saved.resources.find((resource) => resource.type === "employee")?.readText("employeeCode"))
+    .toBe("EMP-ATOMIC")
+  expect(
+    await f.database
+      .prepare("SELECT official_name FROM company_employees WHERE id = ?")
+      .bind(employee.id)
+      .first<string>("official_name"),
+  ).toBe("Updated Worker")
+  expect(
+    await f.database
+      .prepare("SELECT employee_code FROM company_employees WHERE id = ?")
+      .bind(employee.id)
+      .first<string>("employee_code"),
+  ).toBe("EMP-ATOMIC")
+  expect(
+    await f.database
+      .prepare("SELECT employment_type FROM company_employments WHERE id = ?")
+      .bind(employment.id)
+      .first<string>("employment_type"),
+  ).toBe("PART_TIME")
+
+  const nextPerson = {
+    ...changedPerson,
+    revision: changedPerson.revision + 1,
+    attributes: { ...changedPerson.attributes, officialName: "Should Roll Back" },
+  }
+  const nextEmployee = {
+    ...changedEmployee,
+    revision: changedEmployee.revision + 1,
+    attributes: { ...changedEmployee.attributes, employeeCode: "EMP-ROLLBACK" },
+  }
+  const nextEmployment = {
+    ...changedEmployment,
+    revision: changedEmployment.revision + 1,
+    attributes: { ...changedEmployment.attributes, employmentType: "FULL_TIME" as const },
+  }
+  await f.database.exec(
+    "CREATE TRIGGER reject_employment_update BEFORE UPDATE ON company_employments BEGIN SELECT RAISE(ABORT, 'injected employment failure'); END;",
+  )
+  expect(
+    Number(
+      (await f.write([nextPerson, nextEmployee, nextEmployment], revision + 1, "workforce:rollback"))
+        .status,
+    ),
+  ).toBe(503)
+  expect(await f.companyRevision()).toBe(revision + 1)
+  expect(
+    await f.database
+      .prepare("SELECT official_name FROM company_employees WHERE id = ?")
+      .bind(employee.id)
+      .first<string>("official_name"),
+  ).toBe("Updated Worker")
+  expect(
+    await f.database
+      .prepare("SELECT employee_code FROM company_employees WHERE id = ?")
+      .bind(employee.id)
+      .first<string>("employee_code"),
+  ).toBe("EMP-ATOMIC")
+  await f.database.exec("DROP TRIGGER reject_employment_update")
+  expect(
+    Number(
+      (await f.write([nextPerson, nextEmployee, nextEmployment], revision + 1, "workforce:rollback"))
+        .status,
+    ),
+  ).toBe(201)
+})
+
 test("確定済み公開履歴に未完了の組織変更があれば、migrationは既存情報を保って停止する", async () => {
   const f = await fixture("office-assignment")
   await f.database.exec("DROP TRIGGER company_organization_resource_operation_commit_guard")

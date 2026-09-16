@@ -106,6 +106,42 @@ export const POST = factory.createHandlers(
             }),
             z.object({
               organizationId: z.string().regex(/^\S{1,255}$/),
+              type: z.literal("person"),
+              id: z.string().regex(/^\S{1,255}$/),
+              revision: z.number().int().min(1),
+              state: z.enum(["active", "void"]),
+              effectiveFrom: z.string().date(),
+              effectiveTo: z.string().date().nullable(),
+              attributes: z
+                .object({
+                  officialName: z
+                    .string()
+                    .trim()
+                    .min(1)
+                    .max(200)
+                    .refine((value) => !value.includes("\0")),
+                  email: z.email().max(320).nullable().optional(),
+                  phone: z.string().trim().min(1).max(64).nullable().optional(),
+                })
+                .strict(),
+            }),
+            z.object({
+              organizationId: z.string().regex(/^\S{1,255}$/),
+              type: z.literal("employee"),
+              id: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/),
+              revision: z.number().int().min(1),
+              state: z.enum(["active", "void"]),
+              effectiveFrom: z.string().date(),
+              effectiveTo: z.string().date().nullable(),
+              attributes: z
+                .object({
+                  personId: z.string().regex(/^\S{1,255}$/),
+                  employeeCode: z.string().trim().min(1).max(64).nullable().optional(),
+                })
+                .strict(),
+            }),
+            z.object({
+              organizationId: z.string().regex(/^\S{1,255}$/),
               type: z.literal("employment"),
               id: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/),
               revision: z.number().int().min(1),
