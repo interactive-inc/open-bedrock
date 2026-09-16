@@ -650,6 +650,16 @@ import * as onboardingTasksIdUncompleteRoute from "@/contexts/onboarding/interfa
 import * as onboardingTemplatesRoute from "@/contexts/onboarding/interface/routes/onboarding-templates"
 import * as onboardingTemplatesCodeRoute from "@/contexts/onboarding/interface/routes/onboarding-templates.$code"
 import * as onboardingTemplatesCodeLifecycleBindingRoute from "@/contexts/onboarding/interface/routes/onboarding-templates.$code.lifecycle-binding"
+import * as onboardingRecordSourceFreezesRoute from "@/contexts/onboarding/interface/routes/onboarding.record-source-freezes"
+import * as onboardingRecordSourceFreezesFreezeIdRoute from "@/contexts/onboarding/interface/routes/onboarding.record-source-freezes.$freezeId"
+import * as onboardingRecordSourceFreezesFreezeIdReleaseRoute from "@/contexts/onboarding/interface/routes/onboarding.record-source-freezes.$freezeId.release"
+import * as onboardingRecordsRecordKindRecordIdPreservationRequestsRoute from "@/contexts/onboarding/interface/routes/onboarding.records.$recordKind.$recordId.preservation-requests"
+import * as onboardingRecordsRecordKindRecordIdPreservationRequestsNumberRoute from "@/contexts/onboarding/interface/routes/onboarding.records.$recordKind.$recordId.preservation-requests.$number"
+import * as onboardingRecordsRecordKindRecordIdPreservationRequestsNumberApproveRoute from "@/contexts/onboarding/interface/routes/onboarding.records.$recordKind.$recordId.preservation-requests.$number.approve"
+import * as onboardingRecordsRecordKindRecordIdPreservationRequestsNumberExecuteRoute from "@/contexts/onboarding/interface/routes/onboarding.records.$recordKind.$recordId.preservation-requests.$number.execute"
+import * as onboardingRecordsRecordKindRecordIdPreservationRequestsNumberRejectRoute from "@/contexts/onboarding/interface/routes/onboarding.records.$recordKind.$recordId.preservation-requests.$number.reject"
+import * as onboardingRecordsRecordKindRecordIdPreservationRequestsNumberResubmitRoute from "@/contexts/onboarding/interface/routes/onboarding.records.$recordKind.$recordId.preservation-requests.$number.resubmit"
+import * as onboardingRecordsRecordKindRecordIdPreservationRequestsNumberWithdrawRoute from "@/contexts/onboarding/interface/routes/onboarding.records.$recordKind.$recordId.preservation-requests.$number.withdraw"
 import * as oneOnOneOneOnOnesIdPreservationRequestsRoute from "@/contexts/one-on-one/interface/routes/one-on-one.one-on-ones.$id.preservation-requests"
 import * as oneOnOneOneOnOnesIdPreservationRequestsNumberRoute from "@/contexts/one-on-one/interface/routes/one-on-one.one-on-ones.$id.preservation-requests.$number"
 import * as oneOnOneOneOnOnesIdPreservationRequestsNumberApproveRoute from "@/contexts/one-on-one/interface/routes/one-on-one.one-on-ones.$id.preservation-requests.$number.approve"
@@ -3323,6 +3333,43 @@ const routePart41 = createRouteApp()
     "/onboarding/onboarding-templates/:code/lifecycle-binding",
     ...onboardingTemplatesCodeLifecycleBindingRoute.DELETE,
   )
+  .post("/onboarding/record-source-freezes", ...onboardingRecordSourceFreezesRoute.POST)
+  .get(
+    "/onboarding/record-source-freezes/:freezeId",
+    ...onboardingRecordSourceFreezesFreezeIdRoute.GET,
+  )
+  .post(
+    "/onboarding/record-source-freezes/:freezeId/release",
+    ...onboardingRecordSourceFreezesFreezeIdReleaseRoute.POST,
+  )
+  .post(
+    "/onboarding/records/:recordKind/:recordId/preservation-requests",
+    ...onboardingRecordsRecordKindRecordIdPreservationRequestsRoute.POST,
+  )
+  .get(
+    "/onboarding/records/:recordKind/:recordId/preservation-requests/:number",
+    ...onboardingRecordsRecordKindRecordIdPreservationRequestsNumberRoute.GET,
+  )
+  .post(
+    "/onboarding/records/:recordKind/:recordId/preservation-requests/:number/approve",
+    ...onboardingRecordsRecordKindRecordIdPreservationRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/onboarding/records/:recordKind/:recordId/preservation-requests/:number/execute",
+    ...onboardingRecordsRecordKindRecordIdPreservationRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/onboarding/records/:recordKind/:recordId/preservation-requests/:number/reject",
+    ...onboardingRecordsRecordKindRecordIdPreservationRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/onboarding/records/:recordKind/:recordId/preservation-requests/:number/resubmit",
+    ...onboardingRecordsRecordKindRecordIdPreservationRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/onboarding/records/:recordKind/:recordId/preservation-requests/:number/withdraw",
+    ...onboardingRecordsRecordKindRecordIdPreservationRequestsNumberWithdrawRoute.POST,
+  )
   .get("/one-on-one/one-on-ones", ...oneOnOnesRoute.GET)
   .post("/one-on-one/one-on-ones", ...oneOnOnesRoute.POST)
   .get("/one-on-one/one-on-ones/me", ...oneOnOnesMeRoute.GET)
@@ -3411,6 +3458,8 @@ const routePart41 = createRouteApp()
   .put("/partner/partner-contracts/:id", ...partnerContractsIdRoute.PUT)
   .get("/partner/partners", ...partnersRoute.GET)
   .post("/partner/partners", ...partnersRoute.POST)
+
+const routePart42 = createRouteApp()
   .get("/partner/partners/:code", ...partnersCodeRoute.GET)
   .put("/partner/partners/:id", ...partnersIdRoute.PUT)
   .post("/partner/partners/:id/archive", ...partnersIdArchiveRoute.POST)
@@ -3436,8 +3485,6 @@ const routePart41 = createRouteApp()
     "/partner/records/:recordKind/:recordId/preservation-requests/:number",
     ...partnerRecordsRecordKindRecordIdPreservationRequestsNumberRoute.GET,
   )
-
-const routePart42 = createRouteApp()
   .post(
     "/partner/records/:recordKind/:recordId/preservation-requests/:number/approve",
     ...partnerRecordsRecordKindRecordIdPreservationRequestsNumberApproveRoute.POST,
@@ -3536,6 +3583,8 @@ const routePart42 = createRouteApp()
   .get("/performance-review/review-cycles/periods", ...reviewCyclesPeriodsRoute.GET)
   .put("/performance-review/review-cycles/:cycleId", ...reviewCyclesCycleIdRoute.PUT)
   .delete("/performance-review/review-cycles/:cycleId", ...reviewCyclesCycleIdRoute.DELETE)
+
+const routePart43 = createRouteApp()
   .post("/performance-review/review-cycles/:cycleId/close", ...reviewCyclesCycleIdCloseRoute.POST)
   .post(
     "/performance-review/review-cycles/:cycleId/disclose",
@@ -3555,8 +3604,6 @@ const routePart42 = createRouteApp()
   .get("/performance-review/review-forms", ...reviewFormsRoute.GET)
   .get("/performance-review/review-forms/me", ...reviewFormsMeRoute.GET)
   .post("/performance-review/review-forms/:formId/submit", ...reviewFormsFormIdSubmitRoute.POST)
-
-const routePart43 = createRouteApp()
   .get("/recruitment/job-openings", ...jobOpeningsRoute.GET)
   .post("/recruitment/job-openings", ...jobOpeningsRoute.POST)
   .get("/recruitment/job-openings/:jobOpeningId", ...jobOpeningsJobOpeningIdRoute.GET)
@@ -3688,6 +3735,8 @@ const routePart43 = createRouteApp()
     "/regulation/records/:recordKind/:recordId/preservation-requests/:number/reject",
     ...regulationRecordsRecordKindRecordIdPreservationRequestsNumberRejectRoute.POST,
   )
+
+const routePart44 = createRouteApp()
   .post(
     "/regulation/records/:recordKind/:recordId/preservation-requests/:number/resubmit",
     ...regulationRecordsRecordKindRecordIdPreservationRequestsNumberResubmitRoute.POST,
@@ -3713,8 +3762,6 @@ const routePart43 = createRouteApp()
     "/regulation/retirement-plans/:planId/requests/:number/approve",
     ...regulationRetirementPlansPlanIdRequestsNumberApproveRoute.POST,
   )
-
-const routePart44 = createRouteApp()
   .post(
     "/regulation/retirement-plans/:planId/requests/:number/execute",
     ...regulationRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
@@ -3834,6 +3881,8 @@ const routePart44 = createRouteApp()
     "/resignation/record-source-freezes/:freezeId/retirement-plans",
     ...resignationRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
   )
+
+const routePart45 = createRouteApp()
   .post("/resignation/resignations", ...resignationsRoute.POST)
   .get("/resignation/resignations/admin", ...resignationsAdminRoute.GET)
   .get("/resignation/resignations/me", ...resignationsMeRoute.GET)
@@ -3853,8 +3902,6 @@ const routePart44 = createRouteApp()
     "/resignation/resignations/:id/preservation-requests/:number/approve",
     ...resignationResignationsIdPreservationRequestsNumberApproveRoute.POST,
   )
-
-const routePart45 = createRouteApp()
   .post(
     "/resignation/resignations/:id/preservation-requests/:number/execute",
     ...resignationResignationsIdPreservationRequestsNumberExecuteRoute.POST,
@@ -3959,6 +4006,8 @@ const routePart45 = createRouteApp()
     "/room/record-source-freezes/:freezeId/release",
     ...roomRecordSourceFreezesFreezeIdReleaseRoute.POST,
   )
+
+const routePart46 = createRouteApp()
   .post(
     "/room/record-source-freezes/:freezeId/retirement-plans",
     ...roomRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
@@ -3996,8 +4045,6 @@ const routePart45 = createRouteApp()
     "/room/retirement-plans/:planId/requests/:number",
     ...roomRetirementPlansPlanIdRequestsNumberRoute.GET,
   )
-
-const routePart46 = createRouteApp()
   .post(
     "/room/retirement-plans/:planId/requests/:number/approve",
     ...roomRetirementPlansPlanIdRequestsNumberApproveRoute.POST,
@@ -4105,6 +4152,8 @@ const routePart46 = createRouteApp()
     ...shiftRetirementPlansPlanIdVerificationReceiptsRoute.POST,
   )
   .get("/shift/shift-assignments", ...shiftAssignmentsRoute.GET)
+
+const routePart47 = createRouteApp()
   .post("/shift/shift-assignments", ...shiftAssignmentsRoute.POST)
   .get("/shift/shift-assignments/me", ...shiftAssignmentsMeRoute.GET)
   .get("/shift/shift-assignments/:id", ...shiftAssignmentsIdRoute.GET)
@@ -4115,8 +4164,6 @@ const routePart46 = createRouteApp()
   .post("/shift/shift-patterns", ...shiftPatternsRoute.POST)
   .get("/shift/shift-patterns/:id", ...shiftPatternsIdRoute.GET)
   .put("/shift/shift-patterns/:id", ...shiftPatternsIdRoute.PUT)
-
-const routePart47 = createRouteApp()
   .delete("/shift/shift-patterns/:id", ...shiftPatternsIdRoute.DELETE)
   .get("/shift/shift-swap-requests", ...shiftSwapRequestsRoute.GET)
   .post("/shift/shift-swap-requests", ...shiftSwapRequestsRoute.POST)
@@ -4218,6 +4265,8 @@ const routePart47 = createRouteApp()
     "/software-license/record-source-freezes/:freezeId/retirement-plans",
     ...softwareLicenseRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
   )
+
+const routePart48 = createRouteApp()
   .post(
     "/software-license/retirement-plans/:planId/requests",
     ...softwareLicenseRetirementPlansPlanIdRequestsRoute.POST,
@@ -4252,8 +4301,6 @@ const routePart47 = createRouteApp()
   )
   .get("/software-license/software-licenses", ...softwareLicenseSoftwareLicensesRoute.GET)
   .post("/software-license/software-licenses", ...softwareLicenseSoftwareLicensesRoute.POST)
-
-const routePart48 = createRouteApp()
   .get(
     "/software-license/software-licenses/assignments",
     ...softwareLicenseSoftwareLicensesAssignmentsRoute.GET,
@@ -4382,6 +4429,8 @@ const routePart48 = createRouteApp()
   .post("/survey/surveys", ...surveysRoute.POST)
   .get("/survey/surveys/responses/me", ...surveysResponsesMeRoute.GET)
   .get("/survey/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.GET)
+
+const routePart49 = createRouteApp()
   .put("/survey/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.PUT)
   .delete("/survey/surveys/responses/:responseId", ...surveysResponsesResponseIdRoute.DELETE)
   .get("/survey/surveys/:surveyId", ...surveysSurveyIdRoute.GET)
@@ -4392,8 +4441,6 @@ const routePart48 = createRouteApp()
   .get("/system/accounts", ...systemAccountsRoute.GET)
   .post("/system/accounts", ...systemAccountsRoute.POST)
   .get("/system/accounts/:accountId", ...systemAccountsAccountIdRoute.GET)
-
-const routePart49 = createRouteApp()
   .patch("/system/accounts/:accountId", ...systemAccountsAccountIdRoute.PATCH)
   .get("/system/accounts/:accountId/identities", ...systemAccountsAccountIdIdentitiesRoute.GET)
   .post("/system/accounts/:accountId/identities", ...systemAccountsAccountIdIdentitiesRoute.POST)
@@ -4459,6 +4506,8 @@ const routePart49 = createRouteApp()
   .patch("/system/deliveries/:deliveryId", ...systemDeliveriesDeliveryIdRoute.PATCH)
   .get("/system/health", ...systemHealthRoute.GET)
   .post("/system/identity-sessions", ...systemIdentitySessionsRoute.POST)
+
+const routePart50 = createRouteApp()
   .patch("/system/inbox-messages/:messageId", ...systemInboxMessagesMessageIdRoute.PATCH)
   .get("/system/integration-exchanges", ...systemIntegrationExchangesRoute.GET)
   .post("/system/integration-exchanges", ...systemIntegrationExchangesRoute.POST)
@@ -4484,8 +4533,6 @@ const routePart49 = createRouteApp()
   )
   .post("/system/machine-sessions", ...systemMachineSessionsRoute.POST)
   .get("/system/notifications", ...systemNotificationsRoute.GET)
-
-const routePart50 = createRouteApp()
   .post("/system/notifications", ...systemNotificationsRoute.POST)
   .patch("/system/notifications", ...systemNotificationsRoute.PATCH)
   .get("/system/notifications/unread-count", ...systemNotificationsUnreadCountRoute.GET)
@@ -4542,6 +4589,8 @@ const routePart50 = createRouteApp()
     "/system/work-items/:id/evidence/:attachmentId",
     ...systemWorkItemsIdEvidenceAttachmentIdRoute.GET,
   )
+
+const routePart51 = createRouteApp()
   .post("/system/work-items/:id/handovers", ...systemWorkItemsIdHandoversRoute.POST)
   .post("/system/work-items/:id/handovers/accept", ...systemWorkItemsIdHandoversAcceptRoute.POST)
   .post("/system/work-items/:id/handovers/decline", ...systemWorkItemsIdHandoversDeclineRoute.POST)
@@ -4558,8 +4607,6 @@ const routePart50 = createRouteApp()
     "/thanks/record-source-freezes/:freezeId/release",
     ...thanksRecordSourceFreezesFreezeIdReleaseRoute.POST,
   )
-
-const routePart51 = createRouteApp()
   .post(
     "/thanks/record-source-freezes/:freezeId/retirement-plans",
     ...thanksRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
@@ -4664,6 +4711,8 @@ const routePart51 = createRouteApp()
     "/training/records/:recordKind/:recordId/preservation-requests/:number/approve",
     ...trainingRecordsRecordKindRecordIdPreservationRequestsNumberApproveRoute.POST,
   )
+
+const routePart52 = createRouteApp()
   .post(
     "/training/records/:recordKind/:recordId/preservation-requests/:number/execute",
     ...trainingRecordsRecordKindRecordIdPreservationRequestsNumberExecuteRoute.POST,
@@ -4704,8 +4753,6 @@ const routePart51 = createRouteApp()
     "/training/retirement-plans/:planId/requests/:number/resubmit",
     ...trainingRetirementPlansPlanIdRequestsNumberResubmitRoute.POST,
   )
-
-const routePart52 = createRouteApp()
   .post(
     "/training/retirement-plans/:planId/requests/:number/withdraw",
     ...trainingRetirementPlansPlanIdRequestsNumberWithdrawRoute.POST,
@@ -4807,6 +4854,8 @@ const routePart52 = createRouteApp()
     ...workAccidentWorkAccidentsIdPreservationRequestsNumberWithdrawRoute.POST,
   )
   .get("/work-style/employee-work-styles", ...employeeWorkStylesRoute.GET)
+
+const routePart53 = createRouteApp()
   .post("/work-style/employee-work-styles", ...employeeWorkStylesRoute.POST)
   .post(
     "/work-style/employee-work-styles/:id/preservation-requests",
@@ -4841,8 +4890,6 @@ const routePart52 = createRouteApp()
     "/work-style/record-source-freezes/:freezeId",
     ...workStyleRecordSourceFreezesFreezeIdRoute.GET,
   )
-
-const routePart53 = createRouteApp()
   .post(
     "/work-style/record-source-freezes/:freezeId/coverage-pages",
     ...workStyleRecordSourceFreezesFreezeIdCoveragePagesRoute.POST,
