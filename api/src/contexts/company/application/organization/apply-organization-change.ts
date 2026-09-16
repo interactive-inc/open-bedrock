@@ -3,6 +3,7 @@ import {
   type CompanyResourceChangeProps,
 } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
+import { basicWorkforceResourceTypes } from "@/contexts/company/domain/catalogs/company-resource-type.catalog"
 import type { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import type {
   D1CompanyResourceRepository,
@@ -41,9 +42,16 @@ export class ApplyOrganizationChange {
     if (command instanceof CompanyResourceValidationError) {
       return { kind: "invalid", error: command }
     }
+    const basicWorkforceUpdateOnly = change.resources.every(
+      (resource) =>
+        basicWorkforceResourceTypes.includes(resource.type) &&
+        resource.revision > 1 &&
+        resource.state === "active",
+    )
     if (
       !this.c.actor.canAccessOrganization(organizationId) ||
-      !this.c.actor.hasCapability("company:write")
+      (!this.c.actor.hasCapability("company:write") &&
+        !(basicWorkforceUpdateOnly && this.c.actor.canUpdateWorkforce()))
     ) {
       return { kind: "forbidden" }
     }

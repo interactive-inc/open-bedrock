@@ -26,3 +26,10 @@ export const companyResourceTypes = [
 ] as const
 
 export type CompanyResourceType = (typeof companyResourceTypes)[number]
+
+/** 既存の基本情報を訂正する限定資格で扱えるCompany資源。 */
+export const basicWorkforceResourceTypes: ReadonlyArray<CompanyResourceType> = [
+  "person",
+  "employee",
+  "employment",
+]

@@ -7,6 +7,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 export const companyCapabilities = [
   "company:read",
   "company:write",
+  "company:workforce:update",
   "company:master:write",
   "company:admin",
 ] as const
@@ -81,6 +82,10 @@ export class CompanyActorValue {
 
   hasCapability(capability: CompanyCapability): boolean {
     return this.capabilities.includes("company:admin") || this.capabilities.includes(capability)
+  }
+
+  canUpdateWorkforce(): boolean {
+    return this.hasCapability("company:write") || this.hasCapability("company:workforce:update")
   }
 
   hasPermission(permission: CompanyPermissionKey): boolean {
