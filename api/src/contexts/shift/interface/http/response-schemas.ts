@@ -1,5 +1,10 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { z } from "zod"
+import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records/record-source-freeze.schema"
+
+export const shiftSourceFreezeResponseSchema = z.strictObject({
+  freeze: recordSourceFreezeSnapshotSchema,
+})
 
 /** シフトパターン 1 件のレスポンス。 */
 export const zAppShiftPattern = z.object({
