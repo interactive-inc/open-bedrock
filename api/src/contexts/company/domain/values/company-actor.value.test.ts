@@ -15,6 +15,7 @@ describe("CompanyActorValue", () => {
     expect(actor.canAccessOrganization("organization:2")).toBe(false)
     expect(actor.hasCapability("company:read")).toBe(true)
     expect(actor.hasCapability("company:write")).toBe(false)
+    expect(actor.canUpdateWorkforce()).toBe(false)
     expect(Object.isFrozen(actor)).toBe(true)
     expect(Object.isFrozen(actor.organizationIds)).toBe(true)
   })
@@ -30,6 +31,19 @@ describe("CompanyActorValue", () => {
     expect(actor.canAccessOrganization("organization:any")).toBe(true)
     expect(actor.hasCapability("company:read")).toBe(true)
     expect(actor.hasCapability("company:write")).toBe(true)
+    expect(actor.canUpdateWorkforce()).toBe(true)
+  })
+
+  test("workforce update does not imply broad Company write", () => {
+    const actor = CompanyActorValue.restore({
+      accountId: "account:basic-editor",
+      employeeId: null,
+      organizationIds: ["organization:1"],
+      capabilities: ["company:workforce:update"],
+    })
+
+    expect(actor.canUpdateWorkforce()).toBe(true)
+    expect(actor.hasCapability("company:write")).toBe(false)
   })
 
   test("rejects ambiguous or duplicated actor claims", () => {

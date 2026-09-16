@@ -118,6 +118,148 @@ const person = {
 } as const
 
 describe("canonical Company API", () => {
+  test("限定された従業員編集資格は既存人物を訂正でき、作成・取消・法人変更を拒否する", async () => {
+    const database = createCompanyD1TestDatabase(companySql)
+    await seedOrganization(database)
+    expect(
+      (
+        await createClient(database).company.people.$post({
+          header: writeHeaders("admin:person", 0),
+          json: { reason: "本人確認", resources: [person] },
+        })
+      ).status,
+    ).toBe(201)
+    const basicEditor = CompanyActorValue.restore({
+      accountId: "account:basic-editor",
+      employeeId: null,
+      organizationIds: ["organization:default"],
+      capabilities: ["company:workforce:update"],
+    })
+    const client = createClient(database, basicEditor)
+    const creation = await client.company.people.$post({
+      header: writeHeaders("basic:create", 1),
+      json: {
+        reason: "権限外の作成",
+        resources: [{ ...person, id: "person:another" }],
+      },
+    })
+    expect(Number(creation.status)).toBe(403)
+    const correction = await client.company.people.$post({
+      header: writeHeaders("basic:update", 1),
+      json: {
+        reason: "氏名を確認した",
+        resources: [{ ...person, revision: 2, attributes: { officialName: "Updated Person" } }],
+      },
+    })
+    expect(correction.status).toBe(201)
+    const cancellation = await client.company.people.$post({
+      header: writeHeaders("basic:void", 2),
+      json: {
+        reason: "権限外の取消",
+        resources: [{ ...person, revision: 3, state: "void" }],
+      },
+    })
+    expect(Number(cancellation.status)).toBe(403)
+
+    const legalEntity = {
+      organizationId: "organization:default",
+      type: "legal-entity" as const,
+      id: "legal-entity:one",
+      revision: 1,
+      state: "active" as const,
+      effectiveFrom: "2026-01-01",
+      effectiveTo: null,
+      attributes: {
+        officialName: "Company",
+        jurisdictionCountryCode: "JP",
+        registrationNumber: null,
+        defaultCurrencyCode: "JPY",
+      },
+    }
+    const mixed = await client.company["organization-changes"].$post({
+      header: writeHeaders("basic:mixed", 2),
+      json: { reason: "許可外の法人変更", resources: [{ ...person, revision: 3 }, legalEntity] },
+    })
+    expect(Number(mixed.status)).toBe(403)
+    expect(
+      (
+        await database
+          .prepare("SELECT revision FROM company_organizations WHERE id = ?")
+          .bind("organization:default")
+          .first<{ revision: number }>()
+      )?.revision,
+    ).toBe(2)
+  })
+
+  test("限定資格で人物・従業員・雇用の訂正を一つの会社版へ保存する", async () => {
+    const database = createCompanyD1TestDatabase(companySql)
+    await seedOrganization(database)
+    const employee = {
+      ...person,
+      type: "employee" as const,
+      id: "employee:one",
+      attributes: { personId: person.id, employeeCode: "E001" },
+    }
+    const employment = {
+      ...person,
+      type: "employment" as const,
+      id: "employment:one",
+      attributes: {
+        employeeId: employee.id,
+        status: "ACTIVE" as const,
+        employmentType: "FULL_TIME" as const,
+      },
+    }
+    const initial = await createClient(database).company["organization-changes"].$post({
+      header: writeHeaders("admin:workforce", 0),
+      json: { reason: "原資料で登録を確認", resources: [person, employee, employment] },
+    })
+    expect(initial.status).toBe(201)
+
+    const basicEditor = CompanyActorValue.restore({
+      accountId: "account:basic-editor",
+      employeeId: null,
+      organizationIds: ["organization:default"],
+      capabilities: ["company:workforce:update"],
+    })
+    const updated = await createClient(database, basicEditor).company["organization-changes"].$post(
+      {
+        header: writeHeaders("basic:workforce", 1),
+        json: {
+          reason: "氏名・従業員番号・休職を確認",
+          resources: [
+            { ...person, revision: 2, attributes: { officialName: "Updated Person" } },
+            {
+              ...employee,
+              revision: 2,
+              attributes: { ...employee.attributes, employeeCode: "E002" },
+            },
+            {
+              ...employment,
+              revision: 2,
+              effectiveFrom: "2026-09-07",
+              attributes: { ...employment.attributes, status: "ON_LEAVE" as const },
+            },
+          ],
+        },
+      },
+    )
+    expect(updated.status).toBe(201)
+    expect(await updated.json()).toMatchObject({ organizationRevision: 2 })
+    expect(
+      await database
+        .prepare("SELECT official_name, employee_code FROM company_employees WHERE id = ?")
+        .bind(employee.id)
+        .first(),
+    ).toMatchObject({ official_name: "Updated Person", employee_code: "E002" })
+    expect(
+      await database
+        .prepare("SELECT status FROM company_employments WHERE id = ?")
+        .bind(employment.id)
+        .first(),
+    ).toMatchObject({ status: "ON_LEAVE" })
+  })
+
   test("存在しない参照先への従業員・雇用登録は422で拒否し、修正後に同じkeyで再試行できる", async () => {
     const database = createCompanyD1TestDatabase(companySql)
     const client = createClient(database)

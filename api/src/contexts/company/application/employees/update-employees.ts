@@ -28,10 +28,7 @@ export class UpdateEmployees {
 
   async execute(change: Omit<CompanyResourceChangeProps, "actorAccountId">): Promise<Result> {
     const organizationId = change.resources[0]?.organizationId ?? ""
-    if (
-      !this.c.actor.canAccessOrganization(organizationId) ||
-      !this.c.actor.hasCapability("company:write")
-    ) {
+    if (!this.c.actor.canAccessOrganization(organizationId) || !this.c.actor.canUpdateWorkforce()) {
       return { kind: "forbidden" }
     }
 

@@ -4,7 +4,9 @@
 
 ## 共通前提
 
-全operationは認証済みAccountを要求する。API compositionは製品固有のpermissionを、Companyが理解する`company:read`、`company:write`、`company:admin`へ写像する。Company serviceはAccount ID、Employee ID、許可されたorganization ID、capabilityだけを受け取り、session、role、JWT、Hono middlewareを知らない。
+全operationは認証済みAccountを要求する。API compositionは製品固有のpermissionを、Companyが理解する`company:read`、`company:write`、`company:workforce:update`、`company:master:write`、`company:admin`へ写像する。Company serviceはAccount ID、Employee ID、許可されたorganization ID、capabilityだけを受け取り、session、role、JWT、Hono middlewareを知らない。
+
+`company:workforce:update`は既存のPerson、Employee、Employmentの有効なresourceを次のrevisionへ訂正する操作だけを許可する。初回作成、取消、Account対応、法人・組織の変更を許可しない。`/company/organization-changes`へ許可外のresourceを一つでも混ぜた場合は、保存済みcommandの再送も含めて403で拒否する。この資格だけでは会社情報の参照も許可しない。
 
 resource envelopeを扱うrequestは`x-company-organization-id`を必須とする。IDは1から255文字の空白を含まないopaque文字列であり、呼び出し側は接頭辞や内部値を分解しない。Actorのorganization scopeに含まれないIDはfail closedで拒否する。
 
