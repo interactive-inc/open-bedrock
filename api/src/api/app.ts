@@ -615,6 +615,16 @@ import * as decisionRecordsRoute from "@/contexts/meeting/interface/routes/decis
 import * as decisionRecordsIdRoute from "@/contexts/meeting/interface/routes/decision-records.$id"
 import * as decisionRecordsIdSupersedeRoute from "@/contexts/meeting/interface/routes/decision-records.$id.supersede"
 import * as meetingMinutesRecordsIdRoute from "@/contexts/meeting/interface/routes/meeting-minutes-records.$id"
+import * as meetingRecordSourceFreezesRoute from "@/contexts/meeting/interface/routes/meeting.record-source-freezes"
+import * as meetingRecordSourceFreezesFreezeIdRoute from "@/contexts/meeting/interface/routes/meeting.record-source-freezes.$freezeId"
+import * as meetingRecordSourceFreezesFreezeIdReleaseRoute from "@/contexts/meeting/interface/routes/meeting.record-source-freezes.$freezeId.release"
+import * as meetingRecordsRecordKindRecordIdPreservationRequestsRoute from "@/contexts/meeting/interface/routes/meeting.records.$recordKind.$recordId.preservation-requests"
+import * as meetingRecordsRecordKindRecordIdPreservationRequestsNumberRoute from "@/contexts/meeting/interface/routes/meeting.records.$recordKind.$recordId.preservation-requests.$number"
+import * as meetingRecordsRecordKindRecordIdPreservationRequestsNumberApproveRoute from "@/contexts/meeting/interface/routes/meeting.records.$recordKind.$recordId.preservation-requests.$number.approve"
+import * as meetingRecordsRecordKindRecordIdPreservationRequestsNumberExecuteRoute from "@/contexts/meeting/interface/routes/meeting.records.$recordKind.$recordId.preservation-requests.$number.execute"
+import * as meetingRecordsRecordKindRecordIdPreservationRequestsNumberRejectRoute from "@/contexts/meeting/interface/routes/meeting.records.$recordKind.$recordId.preservation-requests.$number.reject"
+import * as meetingRecordsRecordKindRecordIdPreservationRequestsNumberResubmitRoute from "@/contexts/meeting/interface/routes/meeting.records.$recordKind.$recordId.preservation-requests.$number.resubmit"
+import * as meetingRecordsRecordKindRecordIdPreservationRequestsNumberWithdrawRoute from "@/contexts/meeting/interface/routes/meeting.records.$recordKind.$recordId.preservation-requests.$number.withdraw"
 import * as meetingsRoute from "@/contexts/meeting/interface/routes/meetings"
 import * as meetingsCodeRoute from "@/contexts/meeting/interface/routes/meetings.$code"
 import * as meetingsCodeArchiveRoute from "@/contexts/meeting/interface/routes/meetings.$code.archive"
@@ -3088,6 +3098,40 @@ const routePart40 = createRouteApp()
   .post("/meeting/meetings/:code/archive", ...meetingsCodeArchiveRoute.POST)
   .get("/meeting/meetings/:code/minutes", ...meetingsCodeMinutesRoute.GET)
   .post("/meeting/meetings/:code/minutes", ...meetingsCodeMinutesRoute.POST)
+  .post("/meeting/record-source-freezes", ...meetingRecordSourceFreezesRoute.POST)
+  .get("/meeting/record-source-freezes/:freezeId", ...meetingRecordSourceFreezesFreezeIdRoute.GET)
+  .post(
+    "/meeting/record-source-freezes/:freezeId/release",
+    ...meetingRecordSourceFreezesFreezeIdReleaseRoute.POST,
+  )
+  .post(
+    "/meeting/records/:recordKind/:recordId/preservation-requests",
+    ...meetingRecordsRecordKindRecordIdPreservationRequestsRoute.POST,
+  )
+  .get(
+    "/meeting/records/:recordKind/:recordId/preservation-requests/:number",
+    ...meetingRecordsRecordKindRecordIdPreservationRequestsNumberRoute.GET,
+  )
+  .post(
+    "/meeting/records/:recordKind/:recordId/preservation-requests/:number/approve",
+    ...meetingRecordsRecordKindRecordIdPreservationRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/meeting/records/:recordKind/:recordId/preservation-requests/:number/execute",
+    ...meetingRecordsRecordKindRecordIdPreservationRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/meeting/records/:recordKind/:recordId/preservation-requests/:number/reject",
+    ...meetingRecordsRecordKindRecordIdPreservationRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/meeting/records/:recordKind/:recordId/preservation-requests/:number/resubmit",
+    ...meetingRecordsRecordKindRecordIdPreservationRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/meeting/records/:recordKind/:recordId/preservation-requests/:number/withdraw",
+    ...meetingRecordsRecordKindRecordIdPreservationRequestsNumberWithdrawRoute.POST,
+  )
   .post("/onboarding/onboarding-assignments", ...onboardingAssignmentsRoute.POST)
   .get(
     "/onboarding/onboarding-assignments/employees/:employeeCode",

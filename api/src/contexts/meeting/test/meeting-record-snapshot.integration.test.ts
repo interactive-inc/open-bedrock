@@ -1,0 +1,69 @@
+import { Database } from "bun:sqlite"
+import { expect, test } from "bun:test"
+import { meetingSnapshotQuery } from "@/contexts/meeting/infrastructure/adapters/lib/meeting-snapshot-query"
+import type { MeetingRecordKind } from "@/contexts/meeting/domain/definitions/meeting-record-kind.definition"
+
+test("会議体・議事録・意思決定の原記録に全列を残す", () => {
+  const database = new Database(":memory:")
+  database.exec(`
+    CREATE TABLE meetings (
+      id INTEGER PRIMARY KEY, code TEXT, name TEXT, cadence TEXT, description TEXT,
+      status TEXT, created_at TEXT
+    );
+    CREATE TABLE meeting_minutes_records (
+      id INTEGER PRIMARY KEY, meeting_id INTEGER, held_on TEXT, title TEXT, attendees TEXT,
+      body_md TEXT, author_employee_id TEXT, created_at TEXT
+    );
+    CREATE TABLE decision_records (
+      id INTEGER PRIMARY KEY, title TEXT, decided_on TEXT, context TEXT, decision TEXT,
+      consequences TEXT, status TEXT, superseded_by_id INTEGER, created_at TEXT
+    );
+    INSERT INTO meetings VALUES (
+      1,'directors','Board','monthly','Governance','active','2026-09-01T00:00:00.000Z'
+    );
+    INSERT INTO meeting_minutes_records VALUES (
+      2,1,'2026-09-15','September','Alice, Bob','# Minutes','employee-uuid',
+      '2026-09-15T12:00:00.000Z'
+    );
+    INSERT INTO decision_records VALUES (
+      3,'New policy','2026-09-15','Budget','Approve plan','Record action','current',NULL,
+      '2026-09-15T13:00:00.000Z'
+    );
+  `)
+  const sources: ReadonlyArray<readonly [MeetingRecordKind, string]> = [
+    ["meeting-record", "1"],
+    ["meeting-minutes-record", "2"],
+    ["meeting-decision-record", "3"],
+  ]
+  const snapshots = sources.map(([kind, id]) => {
+    const query = meetingSnapshotQuery(kind, id)
+    if (query instanceof Error) throw query
+    const row = database.query(query.sql).get(...query.values) as { snapshot_json: string } | null
+    if (row === null) throw new Error(`missing ${kind}`)
+    return JSON.parse(row.snapshot_json)
+  })
+  expect(snapshots[0].meeting).toMatchObject({
+    id: 1,
+    code: "directors",
+    cadence: "monthly",
+    description: "Governance",
+    status: "active",
+  })
+  expect(snapshots[1].minutes).toMatchObject({
+    id: 2,
+    meeting_id: 1,
+    attendees: "Alice, Bob",
+    body_md: "# Minutes",
+    author_employee_id: "employee-uuid",
+  })
+  expect(snapshots[2].decision).toMatchObject({
+    id: 3,
+    context: "Budget",
+    decision: "Approve plan",
+    consequences: "Record action",
+    status: "current",
+    superseded_by_id: null,
+  })
+  expect(meetingSnapshotQuery("meeting-record", "01")).toBeInstanceOf(Error)
+  database.close()
+})
