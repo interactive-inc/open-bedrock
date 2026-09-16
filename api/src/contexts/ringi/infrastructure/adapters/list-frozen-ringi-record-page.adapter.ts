@@ -1,0 +1,87 @@
+import { z } from "zod"
+import type { RingiContext } from "@/contexts/ringi/configuration/ringi-context"
+import {
+  decodeRingiProcedureBindingRecordId,
+  encodeRingiProcedureBindingRecordId,
+  ringiRecordKindSchema,
+} from "@/contexts/ringi/domain/definitions/ringi-record-kind.definition"
+import { RingiActorReadAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-actor-read.adapter"
+import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+
+type Context = RingiContext
+
+const inputSchema = z.strictObject({
+  freezeId: z.uuid(),
+  sourceNamespace: z.string().min(1).max(255).regex(/^\S+$/),
+  recordKind: ringiRecordKindSchema,
+  afterCursor: z.string().nullable(),
+  limit: z.number().int().min(1).max(100),
+})
+
+/** 停止世代の起案IDまたは案件キーを主キー順に分割し、停止状態も同時に検査する。 */
+export class ListFrozenRingiRecordPageAdapter {
+  constructor(private readonly c: Context) {
+    Object.freeze(this)
+  }
+
+  async prepare(input: unknown) {
+    const parsed = inputSchema.safeParse(input)
+    if (!parsed.success) return parsed.error
+    const request = parsed.data
+    const actor = await new RingiActorReadAdapter(this.c).prepare()
+    if (actor instanceof Error) return actor
+    const generation = await new RecordSourceFreezeRepository({
+      env: this.c.env,
+      assertions: actor.assertions,
+    }).prepareActiveGeneration({
+      id: request.freezeId,
+      sourceNamespace: request.sourceNamespace,
+      ownerContext: "ringi",
+    })
+    if (generation instanceof Error) return generation
+    const numeric = request.recordKind === "ringi-request-record"
+    const after = request.afterCursor
+    const numericCursor = numeric && after !== null ? Number(after) : null
+    const bindingCursor =
+      !numeric && after !== null ? decodeRingiProcedureBindingRecordId(after) : null
+    if (
+      after !== null &&
+      (numeric
+        ? !Number.isSafeInteger(numericCursor) || String(numericCursor) !== after
+        : bindingCursor === null)
+    )
+      return new Error("invalid ringi cursor")
+    try {
+      const table = numeric ? "ringi_requests" : "ringi_procedure_bindings"
+      const column = numeric ? "id" : "request_key"
+      const page =
+        after === null
+          ? this.c.env.DB.prepare(
+              `SELECT ${column} AS record_id FROM ${table} ORDER BY ${column} LIMIT ?1`,
+            ).bind(request.limit + 1)
+          : this.c.env.DB.prepare(
+              `SELECT ${column} AS record_id FROM ${table} WHERE ${column}>?1 ORDER BY ${column} LIMIT ?2`,
+            ).bind(numeric ? numericCursor : bindingCursor, request.limit + 1)
+      const statements = [...generation.assertions, page, ...generation.assertions]
+      const reads = await this.c.env.DB.batch<{ record_id: number | string }>(statements)
+      if (reads.length !== statements.length || reads.some((read) => !read.success))
+        return new Error("frozen ringi inventory unavailable")
+      const ids = (reads[generation.assertions.length]?.results ?? []).map((row) =>
+        numeric
+          ? String(row.record_id)
+          : encodeRingiProcedureBindingRecordId(String(row.record_id)),
+      )
+      if (new Set(ids).size !== ids.length || ids.some((id) => id.length === 0))
+        return new Error("invalid ringi inventory")
+      const recordIds = ids.slice(0, request.limit)
+      return Object.freeze({
+        freezeId: generation.freeze.snapshot.id,
+        recordIds: Object.freeze(recordIds),
+        nextCursor: ids.length > request.limit ? (recordIds.at(-1) ?? null) : null,
+        assertions: generation.assertions,
+      })
+    } catch (cause) {
+      return new Error("frozen ringi inventory unavailable", { cause })
+    }
+  }
+}
