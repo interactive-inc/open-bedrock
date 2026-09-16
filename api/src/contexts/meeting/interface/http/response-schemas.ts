@@ -1,5 +1,10 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records/record-source-freeze.schema"
 import { z } from "zod"
+
+export const meetingSourceFreezeResponseSchema = z.strictObject({
+  freeze: recordSourceFreezeSnapshotSchema,
+})
 
 /** 会議体 1 件のレスポンス（詳細・作成・更新）。 */
 export const zAppMeeting = z.object({
