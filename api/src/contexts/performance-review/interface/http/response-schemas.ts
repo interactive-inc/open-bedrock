@@ -1,6 +1,11 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { GoalTreeNode } from "@/contexts/performance-review/domain/definitions/goal-tree-node.definition"
 import { z } from "zod"
+import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records/record-source-freeze.schema"
+
+export const performanceReviewSourceFreezeResponseSchema = z.strictObject({
+  freeze: recordSourceFreezeSnapshotSchema,
+})
 
 /** 目標の所有主体。 */
 export const zAppGoalOwnerType = z.enum(["individual", "department", "company"])
