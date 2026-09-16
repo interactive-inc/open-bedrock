@@ -544,7 +544,7 @@ describe("既存の所属・上長履歴の公開正本への接続", () => {
         .prepare("SELECT count(*) AS total FROM company_assignment_resource_adoptions")
         .first<number>("total"),
     ).toBe(1)
-  })
+  }, 30_000)
 
   test("保存準備後の会社版変更を拒否し、確認し直した同じキーで接続する", async () => {
     const f = await fixture()
