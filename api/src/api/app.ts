@@ -652,7 +652,9 @@ import * as onboardingTemplatesCodeRoute from "@/contexts/onboarding/interface/r
 import * as onboardingTemplatesCodeLifecycleBindingRoute from "@/contexts/onboarding/interface/routes/onboarding-templates.$code.lifecycle-binding"
 import * as onboardingRecordSourceFreezesRoute from "@/contexts/onboarding/interface/routes/onboarding.record-source-freezes"
 import * as onboardingRecordSourceFreezesFreezeIdRoute from "@/contexts/onboarding/interface/routes/onboarding.record-source-freezes.$freezeId"
+import * as onboardingRecordSourceFreezesFreezeIdCoveragePagesRoute from "@/contexts/onboarding/interface/routes/onboarding.record-source-freezes.$freezeId.coverage-pages"
 import * as onboardingRecordSourceFreezesFreezeIdReleaseRoute from "@/contexts/onboarding/interface/routes/onboarding.record-source-freezes.$freezeId.release"
+import * as onboardingRecordSourceFreezesFreezeIdRetirementPlansRoute from "@/contexts/onboarding/interface/routes/onboarding.record-source-freezes.$freezeId.retirement-plans"
 import * as onboardingRecordsRecordKindRecordIdPreservationRequestsRoute from "@/contexts/onboarding/interface/routes/onboarding.records.$recordKind.$recordId.preservation-requests"
 import * as onboardingRecordsRecordKindRecordIdPreservationRequestsNumberRoute from "@/contexts/onboarding/interface/routes/onboarding.records.$recordKind.$recordId.preservation-requests.$number"
 import * as onboardingRecordsRecordKindRecordIdPreservationRequestsNumberApproveRoute from "@/contexts/onboarding/interface/routes/onboarding.records.$recordKind.$recordId.preservation-requests.$number.approve"
@@ -660,6 +662,14 @@ import * as onboardingRecordsRecordKindRecordIdPreservationRequestsNumberExecute
 import * as onboardingRecordsRecordKindRecordIdPreservationRequestsNumberRejectRoute from "@/contexts/onboarding/interface/routes/onboarding.records.$recordKind.$recordId.preservation-requests.$number.reject"
 import * as onboardingRecordsRecordKindRecordIdPreservationRequestsNumberResubmitRoute from "@/contexts/onboarding/interface/routes/onboarding.records.$recordKind.$recordId.preservation-requests.$number.resubmit"
 import * as onboardingRecordsRecordKindRecordIdPreservationRequestsNumberWithdrawRoute from "@/contexts/onboarding/interface/routes/onboarding.records.$recordKind.$recordId.preservation-requests.$number.withdraw"
+import * as onboardingRetirementPlansPlanIdRequestsRoute from "@/contexts/onboarding/interface/routes/onboarding.retirement-plans.$planId.requests"
+import * as onboardingRetirementPlansPlanIdRequestsNumberRoute from "@/contexts/onboarding/interface/routes/onboarding.retirement-plans.$planId.requests.$number"
+import * as onboardingRetirementPlansPlanIdRequestsNumberApproveRoute from "@/contexts/onboarding/interface/routes/onboarding.retirement-plans.$planId.requests.$number.approve"
+import * as onboardingRetirementPlansPlanIdRequestsNumberExecuteRoute from "@/contexts/onboarding/interface/routes/onboarding.retirement-plans.$planId.requests.$number.execute"
+import * as onboardingRetirementPlansPlanIdRequestsNumberRejectRoute from "@/contexts/onboarding/interface/routes/onboarding.retirement-plans.$planId.requests.$number.reject"
+import * as onboardingRetirementPlansPlanIdRequestsNumberResubmitRoute from "@/contexts/onboarding/interface/routes/onboarding.retirement-plans.$planId.requests.$number.resubmit"
+import * as onboardingRetirementPlansPlanIdRequestsNumberWithdrawRoute from "@/contexts/onboarding/interface/routes/onboarding.retirement-plans.$planId.requests.$number.withdraw"
+import * as onboardingRetirementPlansPlanIdVerificationReceiptsRoute from "@/contexts/onboarding/interface/routes/onboarding.retirement-plans.$planId.verification-receipts"
 import * as oneOnOneOneOnOnesIdPreservationRequestsRoute from "@/contexts/one-on-one/interface/routes/one-on-one.one-on-ones.$id.preservation-requests"
 import * as oneOnOneOneOnOnesIdPreservationRequestsNumberRoute from "@/contexts/one-on-one/interface/routes/one-on-one.one-on-ones.$id.preservation-requests.$number"
 import * as oneOnOneOneOnOnesIdPreservationRequestsNumberApproveRoute from "@/contexts/one-on-one/interface/routes/one-on-one.one-on-ones.$id.preservation-requests.$number.approve"
@@ -3349,8 +3359,16 @@ const routePart41 = createRouteApp()
     ...onboardingRecordSourceFreezesFreezeIdRoute.GET,
   )
   .post(
+    "/onboarding/record-source-freezes/:freezeId/coverage-pages",
+    ...onboardingRecordSourceFreezesFreezeIdCoveragePagesRoute.POST,
+  )
+  .post(
     "/onboarding/record-source-freezes/:freezeId/release",
     ...onboardingRecordSourceFreezesFreezeIdReleaseRoute.POST,
+  )
+  .post(
+    "/onboarding/record-source-freezes/:freezeId/retirement-plans",
+    ...onboardingRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
   )
   .post(
     "/onboarding/records/:recordKind/:recordId/preservation-requests",
@@ -3379,6 +3397,38 @@ const routePart41 = createRouteApp()
   .post(
     "/onboarding/records/:recordKind/:recordId/preservation-requests/:number/withdraw",
     ...onboardingRecordsRecordKindRecordIdPreservationRequestsNumberWithdrawRoute.POST,
+  )
+  .post(
+    "/onboarding/retirement-plans/:planId/requests",
+    ...onboardingRetirementPlansPlanIdRequestsRoute.POST,
+  )
+  .get(
+    "/onboarding/retirement-plans/:planId/requests/:number",
+    ...onboardingRetirementPlansPlanIdRequestsNumberRoute.GET,
+  )
+  .post(
+    "/onboarding/retirement-plans/:planId/requests/:number/approve",
+    ...onboardingRetirementPlansPlanIdRequestsNumberApproveRoute.POST,
+  )
+  .post(
+    "/onboarding/retirement-plans/:planId/requests/:number/execute",
+    ...onboardingRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
+  )
+  .post(
+    "/onboarding/retirement-plans/:planId/requests/:number/reject",
+    ...onboardingRetirementPlansPlanIdRequestsNumberRejectRoute.POST,
+  )
+  .post(
+    "/onboarding/retirement-plans/:planId/requests/:number/resubmit",
+    ...onboardingRetirementPlansPlanIdRequestsNumberResubmitRoute.POST,
+  )
+  .post(
+    "/onboarding/retirement-plans/:planId/requests/:number/withdraw",
+    ...onboardingRetirementPlansPlanIdRequestsNumberWithdrawRoute.POST,
+  )
+  .post(
+    "/onboarding/retirement-plans/:planId/verification-receipts",
+    ...onboardingRetirementPlansPlanIdVerificationReceiptsRoute.POST,
   )
   .get("/one-on-one/one-on-ones", ...oneOnOnesRoute.GET)
   .post("/one-on-one/one-on-ones", ...oneOnOnesRoute.POST)
@@ -3443,6 +3493,8 @@ const routePart41 = createRouteApp()
     "/one-on-one/retirement-plans/:planId/requests/:number/approve",
     ...oneOnOneRetirementPlansPlanIdRequestsNumberApproveRoute.POST,
   )
+
+const routePart42 = createRouteApp()
   .post(
     "/one-on-one/retirement-plans/:planId/requests/:number/execute",
     ...oneOnOneRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
@@ -3468,8 +3520,6 @@ const routePart41 = createRouteApp()
   .put("/partner/partner-contracts/:id", ...partnerContractsIdRoute.PUT)
   .get("/partner/partners", ...partnersRoute.GET)
   .post("/partner/partners", ...partnersRoute.POST)
-
-const routePart42 = createRouteApp()
   .get("/partner/partners/:code", ...partnersCodeRoute.GET)
   .put("/partner/partners/:id", ...partnersIdRoute.PUT)
   .post("/partner/partners/:id/archive", ...partnersIdArchiveRoute.POST)
@@ -3577,6 +3627,8 @@ const routePart42 = createRouteApp()
   .post("/performance-review/performance-goals", ...performanceGoalsRoute.POST)
   .get("/performance-review/performance-goals/me", ...performanceGoalsMeRoute.GET)
   .get("/performance-review/performance-goals/tree", ...performanceGoalsTreeRoute.GET)
+
+const routePart43 = createRouteApp()
   .get("/performance-review/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.GET)
   .put("/performance-review/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.PUT)
   .delete("/performance-review/performance-goals/:goalId", ...performanceGoalsGoalIdRoute.DELETE)
@@ -3593,8 +3645,6 @@ const routePart42 = createRouteApp()
   .get("/performance-review/review-cycles/periods", ...reviewCyclesPeriodsRoute.GET)
   .put("/performance-review/review-cycles/:cycleId", ...reviewCyclesCycleIdRoute.PUT)
   .delete("/performance-review/review-cycles/:cycleId", ...reviewCyclesCycleIdRoute.DELETE)
-
-const routePart43 = createRouteApp()
   .post("/performance-review/review-cycles/:cycleId/close", ...reviewCyclesCycleIdCloseRoute.POST)
   .post(
     "/performance-review/review-cycles/:cycleId/disclose",
@@ -3708,6 +3758,8 @@ const routePart43 = createRouteApp()
     "/recruitment/retirement-plans/:planId/verification-receipts",
     ...recruitmentRetirementPlansPlanIdVerificationReceiptsRoute.POST,
   )
+
+const routePart44 = createRouteApp()
   .post("/regulation/record-source-freezes", ...regulationRecordSourceFreezesRoute.POST)
   .get(
     "/regulation/record-source-freezes/:freezeId",
@@ -3745,8 +3797,6 @@ const routePart43 = createRouteApp()
     "/regulation/records/:recordKind/:recordId/preservation-requests/:number/reject",
     ...regulationRecordsRecordKindRecordIdPreservationRequestsNumberRejectRoute.POST,
   )
-
-const routePart44 = createRouteApp()
   .post(
     "/regulation/records/:recordKind/:recordId/preservation-requests/:number/resubmit",
     ...regulationRecordsRecordKindRecordIdPreservationRequestsNumberResubmitRoute.POST,
@@ -3854,6 +3904,8 @@ const routePart44 = createRouteApp()
     "/rental/retirement-plans/:planId/requests/:number/approve",
     ...rentalRetirementPlansPlanIdRequestsNumberApproveRoute.POST,
   )
+
+const routePart45 = createRouteApp()
   .post(
     "/rental/retirement-plans/:planId/requests/:number/execute",
     ...rentalRetirementPlansPlanIdRequestsNumberExecuteRoute.POST,
@@ -3891,8 +3943,6 @@ const routePart44 = createRouteApp()
     "/resignation/record-source-freezes/:freezeId/retirement-plans",
     ...resignationRecordSourceFreezesFreezeIdRetirementPlansRoute.POST,
   )
-
-const routePart45 = createRouteApp()
   .post("/resignation/resignations", ...resignationsRoute.POST)
   .get("/resignation/resignations/admin", ...resignationsAdminRoute.GET)
   .get("/resignation/resignations/me", ...resignationsMeRoute.GET)
