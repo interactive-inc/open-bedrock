@@ -255,7 +255,8 @@ test("人物・従業員・雇用を一つの会社版で確定し、後段の�
   })
   if (!snapshot.ok) throw snapshot.cause
   const employee = snapshot.resources.find(
-    (resource) => resource.type === "employee" && resource.id === f.assignment.attributes.employeeId,
+    (resource) =>
+      resource.type === "employee" && resource.id === f.assignment.attributes.employeeId,
   )
   const person = snapshot.resources.find(
     (resource) => resource.type === "person" && resource.id === employee?.readText("personId"),
@@ -332,12 +333,15 @@ test("人物・従業員・雇用を一つの会社版で確定し、後段の�
     ids: [person.id, employee.id, employment.id],
   })
   if (!saved.ok) throw saved.cause
-  expect(saved.resources.find((resource) => resource.type === "person")?.readText("officialName"))
-    .toBe("Updated Worker")
-  expect(saved.resources.find((resource) => resource.type === "employment")?.readText("employmentType"))
-    .toBe("PART_TIME")
-  expect(saved.resources.find((resource) => resource.type === "employee")?.readText("employeeCode"))
-    .toBe("EMP-ATOMIC")
+  expect(
+    saved.resources.find((resource) => resource.type === "person")?.readText("officialName"),
+  ).toBe("Updated Worker")
+  expect(
+    saved.resources.find((resource) => resource.type === "employment")?.readText("employmentType"),
+  ).toBe("PART_TIME")
+  expect(
+    saved.resources.find((resource) => resource.type === "employee")?.readText("employeeCode"),
+  ).toBe("EMP-ATOMIC")
   expect(
     await f.database
       .prepare("SELECT official_name FROM company_employees WHERE id = ?")
@@ -377,8 +381,13 @@ test("人物・従業員・雇用を一つの会社版で確定し、後段の�
   )
   expect(
     Number(
-      (await f.write([nextPerson, nextEmployee, nextEmployment], revision + 1, "workforce:rollback"))
-        .status,
+      (
+        await f.write(
+          [nextPerson, nextEmployee, nextEmployment],
+          revision + 1,
+          "workforce:rollback",
+        )
+      ).status,
     ),
   ).toBe(503)
   expect(await f.companyRevision()).toBe(revision + 1)
@@ -397,8 +406,13 @@ test("人物・従業員・雇用を一つの会社版で確定し、後段の�
   await f.database.exec("DROP TRIGGER reject_employment_update")
   expect(
     Number(
-      (await f.write([nextPerson, nextEmployee, nextEmployment], revision + 1, "workforce:rollback"))
-        .status,
+      (
+        await f.write(
+          [nextPerson, nextEmployee, nextEmployment],
+          revision + 1,
+          "workforce:rollback",
+        )
+      ).status,
     ),
   ).toBe(201)
 })
