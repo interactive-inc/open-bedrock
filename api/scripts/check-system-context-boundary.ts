@@ -37,6 +37,7 @@ const SYSTEM_SCHEMA_PATHS = discoverSystemSchemaPaths(
   resolve(SYSTEM_CONTEXT_ROOT, "infrastructure/schema"),
 )
 const SYSTEM_SELF_REFERENCE_ROOT = SYSTEM_CONTEXT_ROOT
+const WORKSPACE_PACKAGE_PATH = resolve(PROJECT_ROOT, "..", "package.json")
 const SYSTEM_OWNERSHIP_MANIFEST_PATH = resolve(PROJECT_ROOT, "system-context.manifest.json")
 const SYSTEM_CAPABILITY_CATALOG_PATH = resolve(
   SYSTEM_CONTEXT_ROOT,
@@ -444,7 +445,6 @@ export function inspectSystemOwnershipManifest(
   }
 
   const expectedFields = [
-    "forbiddenProductMarkers",
     "implementedCapabilities",
     "schemaTables",
     "targetCapabilities",
@@ -469,12 +469,6 @@ export function inspectSystemOwnershipManifest(
     manifest.implementedCapabilities,
     /^[a-z][a-z0-9-]*$/,
   )
-  const forbiddenProductMarkers = inspectSortedUniqueStringList(
-    file,
-    "forbiddenProductMarkers",
-    manifest.forbiddenProductMarkers,
-    /^[a-z][a-z0-9]*$/,
-  )
   const schemaTables = inspectSortedUniqueStringList(
     file,
     "schemaTables",
@@ -489,7 +483,6 @@ export function inspectSystemOwnershipManifest(
   )
   const violations = [
     ...implementedCapabilities.violations,
-    ...forbiddenProductMarkers.violations,
     ...schemaTables.violations,
     ...targetCapabilities.violations,
   ]
@@ -807,18 +800,41 @@ async function inspectSystemPath(
   )
 }
 
-function readForbiddenProductMarkers(): ReadonlySet<string> {
-  try {
-    const manifest: unknown = JSON.parse(readFileSync(SYSTEM_OWNERSHIP_MANIFEST_PATH, "utf8"))
+/**
+ * 製品 marker は共有 manifest に列挙せず、製品ごとの package 名と環境変数から導出する。
+ * 共有ファイルに他製品の名前を置くと、検査そのものが名前を公開してしまうため。
+ */
+export function resolveProductMarkers(
+  packageName: unknown,
+  extraMarkers: string | undefined,
+): ReadonlySet<string> {
+  const markers = new Set<string>()
 
-    return isUnknownRecord(manifest) &&
-      Array.isArray(manifest.forbiddenProductMarkers) &&
-      manifest.forbiddenProductMarkers.every((marker) => typeof marker === "string")
-      ? new Set(manifest.forbiddenProductMarkers)
-      : new Set()
-  } catch {
-    return new Set()
+  if (typeof packageName === "string") {
+    const product = packageName.replace(/^@[^/]+\//, "").replace(/^open-/, "")
+    const marker = product.toLowerCase().replaceAll(/[^a-z0-9]/g, "")
+
+    if (marker.length > 0) markers.add(marker)
   }
+
+  for (const marker of (extraMarkers ?? "").toLowerCase().split(/[\s,]+/)) {
+    if (/^[a-z][a-z0-9]*$/.test(marker)) markers.add(marker)
+  }
+
+  return markers
+}
+
+function readForbiddenProductMarkers(): ReadonlySet<string> {
+  let packageName: unknown
+
+  try {
+    const packageJson: unknown = JSON.parse(readFileSync(WORKSPACE_PACKAGE_PATH, "utf8"))
+    packageName = isUnknownRecord(packageJson) ? packageJson.name : undefined
+  } catch {
+    packageName = undefined
+  }
+
+  return resolveProductMarkers(packageName, process.env.SYSTEM_PRODUCT_MARKERS)
 }
 
 function inspectTypeScriptConfig(path: string): SystemBoundaryViolation[] {

@@ -16,7 +16,6 @@
     "work",
     "workflow"
   ],
-  "forbiddenProductMarkers": ["bedrock", "productx", "productc", "producth", "inta"],
   "schemaTables": [
     "systemAccountInvitations",
     "systemAccounts",
