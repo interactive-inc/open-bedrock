@@ -63,7 +63,7 @@ JSON envelopeはCompany coreの版・期間・原子性を一つに揃えるた�
 - `GET|POST /company/employees`: Employee
 - `GET|POST /company/employments`: Employment
 - `GET /company/organization-snapshots`: OrgUnit、Assignment、ReportingRelation、OrganizationalAuthority
-- `POST /company/organization-changes`: 組織・雇用・任用・法人・拠点・勤務場所の関連変更を一つのcommandとして適用
+- `POST /company/organization-changes`: 人物・従業員・雇用・組織・任用・法人・拠点・勤務場所の関連変更を一つのcommandとして適用
 - `GET|POST /company/definitions`: Position、Grade、Responsibility、CollectiveBody
 - `GET|POST /company/account-employee-links`: System AccountとEmployeeの対応
 - `GET /company/personnel-actions`: 確定した人事発令の履歴
@@ -76,7 +76,7 @@ resource参照用のGETは`id` queryを繰り返して最大100件へ絞れる�
 
 `GET /company/profile`、`/company/people`、`/company/employees`、`/company/employments`、`/company/definitions`、`/company/organization-snapshots`、`/company/account-employee-links`、`/company/legacy-personnel-action-records`は`organization_revision`で会社版を固定できる。同じ会社版と有効日を各APIへ渡すことで、取得途中の更新を混ぜずに関連情報を参照できる。応答の`organizationRevision`とETagは指定版に一致する。指定版より後の遡及訂正は含めない。存在しない未来版や安全な非負整数でない値は400となり、最新版へ置き換えない。会社へのアクセス資格と読取能力がなければ、版の存在を照会せず403となる。
 
-resource更新用のPOSTはendpointが所有するresource種別以外を拒否する。例えば`/people`からEmployeeを書いたり、`/organization-changes`からPositionを書いたりできない。
+resource更新用のPOSTはendpointが所有するresource種別以外を拒否する。例えば`/people`からEmployeeを書いたり、`/organization-changes`からPositionを書いたりできない。人物・従業員・雇用を同時に変更する場合は、`/organization-changes`に各resourceの次版、期待会社版、理由、冪等キーを送る。保存の途中でいずれかが失敗した場合、全resourceの変更と会社版は取り消す。
 
 Account対応はSystem AccountとEmployeeの一対一の同一性を固定し、その対応が有効な期間を改訂する。同じresourceの相手の変更、別resourceによるAccountまたはEmployeeの重複所有、存在しないSystem Accountへの対応を拒否する。対応期間は公開Employeeの存在期間に収まる必要があり、Employee側の訂正でも参照を孤立させない。
 
