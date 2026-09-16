@@ -1,0 +1,109 @@
+import { z } from "zod"
+import { zValidator } from "@hono/zod-validator"
+import { roomFactory } from "@/contexts/room/interface/request-environment/room-factory"
+import { roomRecordRouteSchema } from "@/contexts/room/interface/http/room-input-schemas"
+import { CaptureRoomRecordAdapter } from "@/contexts/room/infrastructure/adapters/capture-room-record.adapter"
+import { RoomActorReadAdapter } from "@/contexts/room/infrastructure/adapters/room-actor-read.adapter"
+import {
+  RoomForbiddenError,
+  RoomInputError,
+  RoomNotFoundError,
+  RoomConflictError,
+  RoomUnavailableError,
+} from "@/contexts/room/interface/errors"
+import { PrepareCompanyRecordProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-task.adapter"
+import { recordPreservationRequestSchema } from "@system/domain/schemas/records/record-preservation-input.schema"
+import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
+import { SubmitRecordPreservationAdapter } from "@system/infrastructure/adapters/records/submit-record-preservation.adapter"
+import { RecordPreservationSubmissionError } from "@system/infrastructure/adapters/records/errors"
+
+/** room記録の取得と会社資格をSystemの共通提出処理へ接続する。 */
+export function createRoomPreservationSubmissionHandlers(mode: "create" | "resubmit") {
+  const requestSchema = z.strictObject({
+    procedure_key: procedureKeySchema,
+    conditions: recordPreservationRequestSchema,
+  })
+  const schemas = {
+    create: requestSchema,
+    resubmit: requestSchema.extend({
+      previous_version: z.number().int().positive().safe(),
+      previous_digest: z.string().regex(/^[a-f0-9]{64}$/),
+    }),
+  }
+  return roomFactory.createHandlers(
+    zValidator("param", roomRecordRouteSchema),
+    zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
+    zValidator("json", schemas[mode]),
+    async (c) => {
+      c.header("Cache-Control", "no-store")
+      const authentication = c.var.bearerReadAuthentication
+      if (authentication === undefined) throw new RoomForbiddenError()
+      const request = c.req.valid("json")
+      const { recordKind, recordId } = c.req.valid("param")
+      const sourceNamespace = c.env.RECORD_SOURCE_NAMESPACE ?? ""
+      const adapter = new SubmitRecordPreservationAdapter({
+        env: c.env,
+        var: c.var,
+        source: {
+          ownerContext: "room",
+          recordKind,
+          recordId,
+          sourceNamespace,
+          authorize: () => new RoomActorReadAdapter(c).prepare(),
+          capture: () =>
+            new CaptureRoomRecordAdapter(c).prepare({
+              recordKind,
+              recordId,
+              sourceNamespace,
+            }),
+        },
+        prepareTask: (input) => new PrepareCompanyRecordProcedureTaskAdapter(c).prepare(input),
+      })
+      const common = {
+        authentication,
+        procedureKey: request.procedure_key,
+        conditions: request.conditions,
+      }
+      const submit = async () => {
+        if (mode === "create") {
+          const idempotencyKey = c.req.valid("header")["idempotency-key"]
+          if (idempotencyKey === undefined)
+            throw new RoomInputError({ message: "invalid preservation request" })
+          return adapter.execute({ ...common, revision: { mode: "create", idempotencyKey } })
+        }
+        const number = c.req.valid("param").number
+        if (
+          number === undefined ||
+          !("previous_version" in request) ||
+          !("previous_digest" in request)
+        )
+          throw new RoomInputError({ message: "invalid preservation request" })
+        return adapter.execute({
+          ...common,
+          revision: {
+            mode: "resubmit",
+            number,
+            previousVersion: request.previous_version,
+            previousDigest: request.previous_digest,
+          },
+        })
+      }
+      const submitted = await submit()
+      if (submitted instanceof RecordPreservationSubmissionError) {
+        switch (submitted.code) {
+          case "invalid":
+            throw new RoomInputError({ message: submitted.message })
+          case "forbidden":
+            throw new RoomForbiddenError()
+          case "not_found":
+            throw new RoomNotFoundError()
+          case "conflict":
+            throw new RoomConflictError()
+          case "unavailable":
+            throw new RoomUnavailableError()
+        }
+      }
+      return c.json(submitted.body, submitted.httpStatus)
+    },
+  )
+}
