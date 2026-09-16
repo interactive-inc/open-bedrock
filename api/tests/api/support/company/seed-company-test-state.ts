@@ -1,3 +1,5 @@
+import { publishTestEmployeeResources } from "@tests/api/support/company/publish-test-employee-resources"
+
 export type CompanyEmployeeFixture = Readonly<{
   id: number | string
   code?: string | null
@@ -66,6 +68,7 @@ function managerCodeFor(
 export async function seedCompanyEmployees(
   db: D1Database,
   employees: ReadonlyArray<CompanyEmployeeFixture>,
+  options: Readonly<{ publishResources?: boolean }> = {},
 ): Promise<void> {
   for (const employee of employees) {
     const id = employeeId(employee)
@@ -150,6 +153,19 @@ export async function seedCompanyEmployees(
     const results = await db.batch(statements)
     if (results.length !== statements.length || results.some((result) => !result.success)) {
       throw new Error(`Company employee fixture ${id} was not persisted atomically`)
+    }
+    if (options.publishResources !== false) {
+      await publishTestEmployeeResources(db, {
+        employeeId: id,
+        employmentId: currentEmploymentId,
+        officialName: employee.name,
+        employeeCode: employee.code ?? null,
+        email: employee.email ?? null,
+        employmentType: "FULL_TIME",
+        employmentStatus: persistedStatus,
+        effectiveFrom: "2024-01-01",
+        recordedAt,
+      })
     }
   }
 }

@@ -63,47 +63,6 @@ async function createTestDb(): Promise<D1Database> {
       effectiveTo: null,
       attributes: { code: role.code, officialName: role.name },
     })),
-    ...seedEmployees
-      .filter((employee) => employee.status !== "retired")
-      .flatMap((employee): CompanyResourceProps[] => [
-        {
-          organizationId: "organization:default",
-          type: "person" as const,
-          id: `governance:person:${employee.id}`,
-          revision: 1,
-          state: "active" as const,
-          effectiveFrom: restoreCalendarDate("2025-01-01"),
-          effectiveTo: null,
-          attributes: { officialName: employee.name },
-        },
-        {
-          organizationId: "organization:default",
-          type: "employee" as const,
-          id: String(employee.id),
-          revision: 1,
-          state: "active" as const,
-          effectiveFrom: restoreCalendarDate("2025-01-01"),
-          effectiveTo: null,
-          attributes: {
-            personId: `governance:person:${employee.id}`,
-            employeeCode: employee.code,
-          },
-        },
-        {
-          organizationId: "organization:default",
-          type: "employment" as const,
-          id: `governance:employment:${employee.id}`,
-          revision: 1,
-          state: "active" as const,
-          effectiveFrom: restoreCalendarDate("2025-01-01"),
-          effectiveTo: null,
-          attributes: {
-            employeeId: String(employee.id),
-            status: employee.status === "leave" ? ("ON_LEAVE" as const) : ("ACTIVE" as const),
-            employmentType: "FULL_TIME" as const,
-          },
-        },
-      ]),
   ]
   const change = CompanyResourceChangeEntity.create({
     commandId: "governance-test-company-identities",
@@ -119,31 +78,7 @@ async function createTestDb(): Promise<D1Database> {
     d1: db,
   }).prepare(change)
   if (journal instanceof Error) throw journal
-  const bindings = seedEmployees
-    .filter((employee) => employee.status !== "retired")
-    .flatMap((employee) => [
-      db
-        .prepare(
-          `INSERT INTO company_workforce_resource_bindings
-            (resource_type, resource_id, organization_id, employee_id, resource_revision,
-             lifecycle_revision, last_action_id)
-           VALUES ('employee', ?1, 'organization:default', ?1, 1, 0, ?2)`,
-        )
-        .bind(String(employee.id), `test:${employee.id}:initial-state`),
-      db
-        .prepare(
-          `INSERT INTO company_workforce_resource_bindings
-            (resource_type, resource_id, organization_id, employee_id, resource_revision,
-             lifecycle_revision, last_action_id)
-           VALUES ('employment', ?1, 'organization:default', ?2, 1, 0, ?3)`,
-        )
-        .bind(
-          `governance:employment:${employee.id}`,
-          String(employee.id),
-          `test:${employee.id}:initial-state`,
-        ),
-    ])
-  await db.batch([...journal.statements, ...bindings, journal.commit])
+  await db.batch([...journal.statements, journal.commit])
 
   return db
 }

@@ -43,6 +43,12 @@ const snapshotSchema = z.object({
 
 async function fixture() {
   const base = await createEmployeeAdoptionFixture()
+  const employeeAdoption = await base.post(
+    await base.input(),
+    "organization-test-employee-adoption",
+  )
+  if (employeeAdoption.status !== 200)
+    throw new Error(`employee adoption failed: ${employeeAdoption.status}`)
   const fetcher: typeof fetch = Object.assign(
     async (input: Parameters<typeof fetch>[0], init?: Parameters<typeof fetch>[1]) =>
       base.app.request(input, init, { ...base.environment, NOW: base.clock.now.toISOString() }),

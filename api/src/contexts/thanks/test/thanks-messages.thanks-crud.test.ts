@@ -93,9 +93,13 @@ describe("POST /thanks-messages", () => {
   test("全体と本人の一覧は将来の改名を発効日に表示し、感謝と人物履歴を変更しない", async () => {
     const db = await createTestDb()
     const repository = new D1CompanyResourceRepository({ database: db })
+    const organizationRevision = await db
+      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+      .first<number>("revision")
+    if (organizationRevision === null) throw new Error("test Company organization is missing")
     const initial = CompanyResourceChangeEntity.create({
       commandId: "thanks-name-initial",
-      expectedRevision: 0,
+      expectedRevision: organizationRevision,
       actorAccountId: "4",
       reason: "Confirmed person",
       recordedAt: 0,
@@ -140,7 +144,7 @@ describe("POST /thanks-messages", () => {
     expect(await repository.write(initial)).toMatchObject({ kind: "applied" })
     const future = CompanyResourceChangeEntity.create({
       commandId: "thanks-name-future",
-      expectedRevision: 1,
+      expectedRevision: organizationRevision + 1,
       actorAccountId: "4",
       reason: "Confirmed future name",
       recordedAt: 1,
