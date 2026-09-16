@@ -27,7 +27,7 @@ export class CaptureAnnouncementRecordAdapter {
   }
 
   async prepare(input: Readonly<{ announcementId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.announcementId) || input.announcementId < 1)
+    if (!Number.isSafeInteger(input.announcementId))
       return new AnnouncementError("forbidden", "invalid source record")
     const actor = await new AnnouncementActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor

@@ -19,10 +19,7 @@ export function leaveInventoryQuery(
   const pageSize = limit + 1
   if (recordKind === "leave-request-record") {
     const cursor = after === null ? null : Number(after)
-    if (
-      cursor !== null &&
-      (!Number.isSafeInteger(cursor) || cursor <= 0 || String(cursor) !== after)
-    )
+    if (cursor !== null && (!Number.isSafeInteger(cursor) || String(cursor) !== after))
       return new Error("invalid leave request cursor")
     return {
       sql:

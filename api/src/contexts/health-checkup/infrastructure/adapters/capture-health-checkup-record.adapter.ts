@@ -28,7 +28,7 @@ export class CaptureHealthCheckupRecordAdapter {
   }
 
   async prepare(input: Readonly<{ healthCheckupId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.healthCheckupId) || input.healthCheckupId < 1)
+    if (!Number.isSafeInteger(input.healthCheckupId))
       return new HealthCheckupError("forbidden", "invalid source record")
     const actor = await new HealthCheckupActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor

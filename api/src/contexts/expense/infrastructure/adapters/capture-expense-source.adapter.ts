@@ -71,7 +71,7 @@ export class CaptureExpenseSourceAdapter {
     if (
       target.recordKind !== "expense-attachment" &&
       target.recordKind !== "expense-attachment-link" &&
-      (!Number.isSafeInteger(numericId) || numericId < 1 || String(numericId) !== target.recordId)
+      (!Number.isSafeInteger(numericId) || String(numericId) !== target.recordId)
     )
       return new Error("invalid expense source identifier")
     switch (target.recordKind) {
@@ -91,12 +91,7 @@ export class CaptureExpenseSourceAdapter {
         const separator = target.recordId.indexOf(":")
         const parent = target.recordId.slice(0, separator)
         const expenseId = Number(parent)
-        if (
-          separator < 1 ||
-          !Number.isSafeInteger(expenseId) ||
-          expenseId < 1 ||
-          String(expenseId) !== parent
-        )
+        if (separator < 1 || !Number.isSafeInteger(expenseId) || String(expenseId) !== parent)
           return new Error("invalid expense attachment link identifier")
         return new CaptureExpenseAttachmentLinkAdapter(this.c).prepare({
           ...input,
@@ -124,7 +119,6 @@ export class CaptureExpenseSourceAdapter {
         const id = z
           .number()
           .int()
-          .positive()
           .safe()
           .safeParse(reads[guards.length]?.results.at(0)?.expense_id)
         if (!id.success) return new Error("expense source parent missing")

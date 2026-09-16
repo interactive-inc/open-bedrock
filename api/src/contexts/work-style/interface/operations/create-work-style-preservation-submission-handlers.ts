@@ -33,7 +33,10 @@ export function createEmployeeWorkStylePreservationSubmissionHandlers(mode: "cre
   return employeeWorkStyleFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: employeeWorkStyleIdSchema, number: employeeWorkStyleIdSchema.optional() }),
+      z.strictObject({
+        id: employeeWorkStyleIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +56,11 @@ export function createEmployeeWorkStylePreservationSubmissionHandlers(mode: "cre
           recordId: String(employeeWorkStyleId),
           sourceNamespace,
           authorize: () => new EmployeeWorkStyleActorReadAdapter(c).prepare(),
-          capture: () => new CaptureEmployeeWorkStyleRecordAdapter(c).prepare({ employeeWorkStyleId, sourceNamespace }),
+          capture: () =>
+            new CaptureEmployeeWorkStyleRecordAdapter(c).prepare({
+              employeeWorkStyleId,
+              sourceNamespace,
+            }),
         },
         prepareTask: (input) => new PrepareCompanyRecordProcedureTaskAdapter(c).prepare(input),
       })

@@ -13,7 +13,7 @@ import { drizzle } from "drizzle-orm/d1"
 test("会議室11件と予約を分割照合し撤去確定する", async () => {
   const { database, governance, creator, reviewer, definition, bindings, tokenFor, request } =
     await createRoomPreservationFixture()
-  for (let id = 1; id <= 11; id++) {
+  for (let id = -9; id <= 1; id++) {
     await database
       .prepare(`INSERT INTO rooms (id,name,capacity,location)
       VALUES (?1,?2,8,'Floor 2')`)
@@ -23,7 +23,7 @@ test("会議室11件と予約を分割照合し撤去確定する", async () => 
   await database
     .prepare(`INSERT INTO room_reservations
     (id,room_id,reserver_id,start_at,end_at,purpose)
-    VALUES ('reservation-1',1,?1,'2026-09-15T09:00:00.000Z',
+    VALUES ('reservation-1',-9,?1,'2026-09-15T09:00:00.000Z',
       '2026-09-15T10:00:00.000Z','Planning')`)
     .bind(creator.employeeId)
     .run()
@@ -74,7 +74,7 @@ test("会議室11件と予約を分割照合し撤去確定する", async () => 
   const sources = [
     ...Array.from({ length: 11 }, (_, index) => ({
       kind: "room-record" as const,
-      id: String(index + 1),
+      id: String(index - 9),
     })),
     { kind: "room-reservation-record" as const, id: "reservation-1" },
   ]
@@ -138,7 +138,7 @@ test("会議室11件と予約を分割照合し撤去確定する", async () => 
     post(coveragePath, { purpose: "archive", recordKind, records })
   const first = await cover("room-record", roomMappings.slice(0, 10))
   if (first.status !== 200) throw new Error(await first.text())
-  expect(await first.json()).toMatchObject({ sequence: 1, nextCursor: "10", recordCount: 10 })
+  expect(await first.json()).toMatchObject({ sequence: 1, nextCursor: "0", recordCount: 10 })
   expect((await cover("room-record", roomMappings.slice(0, 1))).status).toBe(409)
   const second = await cover("room-record", roomMappings.slice(10))
   if (second.status !== 200) throw new Error(await second.text())

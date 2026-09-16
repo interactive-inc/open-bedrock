@@ -8,7 +8,7 @@ export function partnerSnapshotQuery(
   recordKind: PartnerRecordKind,
   recordId: string,
 ): SnapshotQuery | Error {
-  const parsed = z.coerce.number().int().positive().safe().safeParse(recordId)
+  const parsed = z.coerce.number().int().safe().safeParse(recordId)
   if (!parsed.success || String(parsed.data) !== recordId)
     return new Error("invalid partner record id")
   const id = parsed.data

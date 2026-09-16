@@ -33,7 +33,10 @@ export function createHealthCheckupPreservationSubmissionHandlers(mode: "create"
   return healthCheckupFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: healthCheckupIdSchema, number: healthCheckupIdSchema.optional() }),
+      z.strictObject({
+        id: healthCheckupIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +56,8 @@ export function createHealthCheckupPreservationSubmissionHandlers(mode: "create"
           recordId: String(healthCheckupId),
           sourceNamespace,
           authorize: () => new HealthCheckupActorReadAdapter(c).prepare(),
-          capture: () => new CaptureHealthCheckupRecordAdapter(c).prepare({ healthCheckupId, sourceNamespace }),
+          capture: () =>
+            new CaptureHealthCheckupRecordAdapter(c).prepare({ healthCheckupId, sourceNamespace }),
         },
         prepareTask: (input) => new PrepareCompanyRecordProcedureTaskAdapter(c).prepare(input),
       })

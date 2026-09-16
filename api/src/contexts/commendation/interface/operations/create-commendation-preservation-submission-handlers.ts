@@ -33,7 +33,10 @@ export function createCommendationPreservationSubmissionHandlers(mode: "create" 
   return commendationFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: commendationIdSchema, number: commendationIdSchema.optional() }),
+      z.strictObject({
+        id: commendationIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +56,8 @@ export function createCommendationPreservationSubmissionHandlers(mode: "create" 
           recordId: String(commendationId),
           sourceNamespace,
           authorize: () => new CommendationActorReadAdapter(c).prepare(),
-          capture: () => new CaptureCommendationRecordAdapter(c).prepare({ commendationId, sourceNamespace }),
+          capture: () =>
+            new CaptureCommendationRecordAdapter(c).prepare({ commendationId, sourceNamespace }),
         },
         prepareTask: (input) => new PrepareCompanyRecordProcedureTaskAdapter(c).prepare(input),
       })

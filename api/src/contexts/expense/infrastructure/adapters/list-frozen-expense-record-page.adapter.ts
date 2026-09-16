@@ -19,7 +19,7 @@ const inputSchema = z.strictObject({
 })
 const rowSchema = z.strictObject({
   record_id: z.string().min(1).max(512),
-  expense_id: z.number().int().positive().safe().nullable(),
+  expense_id: z.number().int().safe().nullable(),
   attachment_id: z.string().min(1).max(255).nullable(),
 })
 const sources: Readonly<Record<ExpenseRecordKind, string>> = {

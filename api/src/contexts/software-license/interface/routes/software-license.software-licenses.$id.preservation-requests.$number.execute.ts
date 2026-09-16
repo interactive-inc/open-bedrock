@@ -20,7 +20,10 @@ import { authenticateSystemAccessToken } from "@system/interface/middlewares/aut
 export const POST = softwareLicenseFactory.createHandlers(
   ensureLicenseEnabled,
   authenticateSystemAccessToken,
-  zValidator("param", z.strictObject({ id: licenseIdSchema, number: licenseIdSchema })),
+  zValidator(
+    "param",
+    z.strictObject({ id: licenseIdSchema, number: z.coerce.number().int().positive().safe() }),
+  ),
   zValidator("json", z.strictObject({ proposal_digest: z.string().regex(/^[a-f0-9]{64}$/) })),
   async (c) => {
     c.header("Cache-Control", "no-store")

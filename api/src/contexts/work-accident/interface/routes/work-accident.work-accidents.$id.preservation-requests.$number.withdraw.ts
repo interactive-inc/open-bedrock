@@ -15,7 +15,10 @@ import {
 // @authorization owner - 認証された申請者だけが指定した未完了提案を理由とともに取り下げる
 export const POST = workAccidentFactory.createHandlers(
   authenticateSystemAccessToken,
-  zValidator("param", z.strictObject({ id: workAccidentIdSchema, number: workAccidentIdSchema })),
+  zValidator(
+    "param",
+    z.strictObject({ id: workAccidentIdSchema, number: z.coerce.number().int().positive().safe() }),
+  ),
   zValidator(
     "json",
     z.strictObject({

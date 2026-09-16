@@ -41,7 +41,7 @@ export class ListFrozenRoomRecordPageAdapter {
     if (after !== null) {
       if (request.recordKind === "room-record") {
         const number = Number(after)
-        if (!Number.isSafeInteger(number) || number <= 0 || String(number) !== after)
+        if (!Number.isSafeInteger(number) || String(number) !== after)
           return new Error("invalid room cursor")
       } else if (after.length === 0 || after.length > 1000) {
         return new Error("invalid room cursor")

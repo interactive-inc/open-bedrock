@@ -63,6 +63,12 @@ test("休暇4台帳を複合キーを含む主キー順で分割し、欠落と�
     const first = database.query(query.sql).get(...query.values) as Record<string, unknown> | null
     expect(first && query.recordId(first)).toBe(firstId)
   }
+  const afterZero = leaveInventoryQuery("leave-request-record", "0", 10)
+  if (afterZero instanceof Error) throw afterZero
+  const afterZeroIds = (
+    database.query(afterZero.sql).all(...afterZero.values) as Record<string, unknown>[]
+  ).map(afterZero.recordId)
+  expect(afterZeroIds).toEqual(Array.from({ length: 11 }, (_, index) => String(index + 1)))
   expect(leaveInventoryQuery("leave-request-record", "01", 10)).toBeInstanceOf(Error)
   expect(leaveInventoryQuery("leave-balance-record", "broken", 10)).toBeInstanceOf(Error)
   database.close()

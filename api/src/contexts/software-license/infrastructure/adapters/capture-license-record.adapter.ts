@@ -30,7 +30,7 @@ export class CaptureLicenseRecordAdapter {
   }
 
   async prepare(input: Readonly<{ licenseId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.licenseId) || input.licenseId < 1)
+    if (!Number.isSafeInteger(input.licenseId))
       return new LicenseError("forbidden", "invalid source record")
     const actor = await new LicenseActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor

@@ -35,10 +35,7 @@ export class ListFrozenTrainingRecordPageAdapter {
     })
     if (generation instanceof Error) return generation
     const after = request.afterCursor === null ? null : Number(request.afterCursor)
-    if (
-      after !== null &&
-      (!Number.isSafeInteger(after) || after <= 0 || String(after) !== request.afterCursor)
-    )
+    if (after !== null && (!Number.isSafeInteger(after) || String(after) !== request.afterCursor))
       return new Error("invalid training cursor")
     const table =
       request.recordKind === "training-course-record" ? "training_courses" : "training_enrollments"

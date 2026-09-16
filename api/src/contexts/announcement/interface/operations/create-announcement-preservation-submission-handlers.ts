@@ -33,7 +33,10 @@ export function createAnnouncementPreservationSubmissionHandlers(mode: "create" 
   return announcementFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: announcementIdSchema, number: announcementIdSchema.optional() }),
+      z.strictObject({
+        id: announcementIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +56,8 @@ export function createAnnouncementPreservationSubmissionHandlers(mode: "create" 
           recordId: String(announcementId),
           sourceNamespace,
           authorize: () => new AnnouncementActorReadAdapter(c).prepare(),
-          capture: () => new CaptureAnnouncementRecordAdapter(c).prepare({ announcementId, sourceNamespace }),
+          capture: () =>
+            new CaptureAnnouncementRecordAdapter(c).prepare({ announcementId, sourceNamespace }),
         },
         prepareTask: (input) => new PrepareCompanyRecordProcedureTaskAdapter(c).prepare(input),
       })

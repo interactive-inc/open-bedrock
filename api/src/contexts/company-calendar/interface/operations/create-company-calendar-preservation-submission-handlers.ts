@@ -18,7 +18,9 @@ import { SubmitRecordPreservationAdapter } from "@system/infrastructure/adapters
 import { RecordPreservationSubmissionError } from "@system/infrastructure/adapters/records/errors"
 
 /** 会社カレンダー記録の取得と会社資格をSystemの共通提出処理へ接続する。 */
-export function createCompanyCalendarDayPreservationSubmissionHandlers(mode: "create" | "resubmit") {
+export function createCompanyCalendarDayPreservationSubmissionHandlers(
+  mode: "create" | "resubmit",
+) {
   const requestSchema = z.strictObject({
     procedure_key: procedureKeySchema,
     conditions: recordPreservationRequestSchema,
@@ -33,7 +35,10 @@ export function createCompanyCalendarDayPreservationSubmissionHandlers(mode: "cr
   return companyCalendarDayFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: companyCalendarDayIdSchema, number: companyCalendarDayIdSchema.optional() }),
+      z.strictObject({
+        id: companyCalendarDayIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +58,11 @@ export function createCompanyCalendarDayPreservationSubmissionHandlers(mode: "cr
           recordId: String(companyCalendarDayId),
           sourceNamespace,
           authorize: () => new CompanyCalendarDayActorReadAdapter(c).prepare(),
-          capture: () => new CaptureCompanyCalendarDayRecordAdapter(c).prepare({ companyCalendarDayId, sourceNamespace }),
+          capture: () =>
+            new CaptureCompanyCalendarDayRecordAdapter(c).prepare({
+              companyCalendarDayId,
+              sourceNamespace,
+            }),
         },
         prepareTask: (input) => new PrepareCompanyRecordProcedureTaskAdapter(c).prepare(input),
       })

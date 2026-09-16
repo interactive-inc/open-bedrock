@@ -16,7 +16,13 @@ import {
 /** 保全の肯定・否定判断に同じ認証、会社資格、対象照合を適用する。 */
 export function createCompanyCalendarDayPreservationDecisionHandlers(action: "approve" | "reject") {
   return companyCalendarDayFactory.createHandlers(
-    zValidator("param", z.strictObject({ id: companyCalendarDayIdSchema, number: companyCalendarDayIdSchema })),
+    zValidator(
+      "param",
+      z.strictObject({
+        id: companyCalendarDayIdSchema,
+        number: z.coerce.number().int().positive().safe(),
+      }),
+    ),
     zValidator(
       "json",
       z.strictObject({
