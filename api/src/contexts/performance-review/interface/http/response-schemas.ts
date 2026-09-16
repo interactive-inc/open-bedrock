@@ -1,10 +1,50 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { GoalTreeNode } from "@/contexts/performance-review/domain/definitions/goal-tree-node.definition"
 import { z } from "zod"
+import { performanceReviewRecordKindSchema } from "@/contexts/performance-review/domain/definitions/performance-review-record-kind.definition"
 import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records/record-source-freeze.schema"
 
 export const performanceReviewSourceFreezeResponseSchema = z.strictObject({
   freeze: recordSourceFreezeSnapshotSchema,
+})
+
+export const zAppPerformanceReviewCoveragePageReceipt = z.strictObject({
+  id: z.uuid(),
+  freezeId: z.uuid(),
+  sequence: z.number().int().positive().safe(),
+  digest: z.string().regex(/^[0-9a-f]{64}$/),
+  afterCursor: z.string().nullable(),
+  nextCursor: z.string().nullable(),
+  checkedAt: z.string().datetime(),
+  recordCount: z.number().int().min(0).max(10),
+})
+export const zAppPerformanceReviewRetirementPlan = z.strictObject({
+  id: z.uuid(),
+  freezeId: z.uuid(),
+  digest: z.string().regex(/^[0-9a-f]{64}$/),
+  totalPages: z.number().int().positive().safe(),
+  recordKinds: z.array(performanceReviewRecordKindSchema).length(8),
+  createdAt: z.iso.datetime(),
+})
+export const zAppPerformanceReviewRetirementVerificationReceipt = z.strictObject({
+  id: z.uuid(),
+  planId: z.uuid(),
+  planDigest: z.string().regex(/^[0-9a-f]{64}$/),
+  ordinal: z.number().int().positive().safe(),
+  digest: z.string().regex(/^[0-9a-f]{64}$/),
+  coveragePageId: z.uuid(),
+  checkedAt: z.iso.datetime(),
+})
+export const zAppPerformanceReviewRetirementRequest = z.strictObject({
+  number: z.number().int().positive().safe(),
+  caseId: z.string().min(1),
+  planId: z.uuid(),
+  proposalDigest: z.string().regex(/^[0-9a-f]{64}$/),
+  status: z.string().min(1),
+})
+export const zAppPerformanceReviewRetirementExecution = z.strictObject({
+  retirement_id: z.uuid(),
+  finalized_at: z.iso.datetime(),
 })
 
 /** 目標の所有主体。 */
