@@ -51,4 +51,76 @@ export class CompanyEmploymentResourceHistoryAdapter {
     }
     return history
   }
+
+  async readMany(
+    input: Readonly<{
+      organizationId: string
+      employmentIds: ReadonlyArray<string>
+      organizationRevision: number
+    }>,
+  ): Promise<ReadonlyMap<string, ReadonlyArray<CompanyResourceProps>> | Error> {
+    if (
+      input.employmentIds.length < 1 ||
+      input.employmentIds.length > 100 ||
+      !Number.isSafeInteger(input.organizationRevision) ||
+      input.organizationRevision < 0
+    ) {
+      return new Error("invalid employment history query")
+    }
+    const rows = await this.c
+      .prepare(`SELECT resource_id, revision, state, effective_from, effective_to, attributes_json
+      FROM company_resource_revisions
+      WHERE organization_id = ?1 AND resource_type = 'employment'
+        AND resource_id IN (SELECT value FROM json_each(?2))
+        AND organization_revision <= ?3
+      ORDER BY resource_id, revision`)
+      .bind(
+        input.organizationId,
+        JSON.stringify([...new Set(input.employmentIds)]),
+        input.organizationRevision,
+      )
+      .all()
+      .catch((cause: unknown) =>
+        cause instanceof Error ? cause : new Error("failed to read employment resource histories"),
+      )
+    if (rows instanceof Error) return rows
+    if (!rows.success) return new Error("failed to read employment resource histories")
+    const parsed = z
+      .array(
+        z.object({
+          resource_id: z.string(),
+          revision: z.number().int().positive(),
+          state: z.enum(["active", "void"]),
+          effective_from: date,
+          effective_to: date.nullable(),
+          attributes_json: z.string(),
+        }),
+      )
+      .safeParse(rows.results)
+    if (!parsed.success) return parsed.error
+    const histories = new Map<string, CompanyResourceProps[]>()
+    for (const row of parsed.data) {
+      let attributes: unknown
+      try {
+        attributes = JSON.parse(row.attributes_json)
+      } catch (cause) {
+        return new Error("invalid employment resource attributes", { cause })
+      }
+      const parsedAttributes = z.record(z.string(), z.json()).safeParse(attributes)
+      if (!parsedAttributes.success) return parsedAttributes.error
+      const history = histories.get(row.resource_id) ?? []
+      history.push({
+        organizationId: input.organizationId,
+        type: "employment",
+        id: row.resource_id,
+        revision: row.revision,
+        state: row.state,
+        effectiveFrom: row.effective_from,
+        effectiveTo: row.effective_to,
+        attributes: parsedAttributes.data,
+      })
+      histories.set(row.resource_id, history)
+    }
+    return histories
+  }
 }
