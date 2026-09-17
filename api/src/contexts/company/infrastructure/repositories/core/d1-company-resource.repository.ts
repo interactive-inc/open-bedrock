@@ -147,18 +147,28 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
         query.organizationRevision !== undefined
           ? this.c.database
               .prepare(
-                `WITH ranked_resources AS (
+                `WITH date_ranked AS (
                  SELECT resource.*,
                         row_number() OVER (
-                          PARTITION BY resource.resource_type, resource.resource_id
-                          ORDER BY CASE WHEN ? IS NULL OR resource.resource_type = 'organization-unit'
-                            THEN NULL ELSE resource.effective_from END DESC, resource.revision DESC
-                        ) AS effective_rank
+                          PARTITION BY resource.resource_type, resource.resource_id,
+                            CASE WHEN ? IS NULL OR resource.resource_type = 'organization-unit'
+                              THEN NULL ELSE resource.effective_from END
+                          ORDER BY resource.revision DESC
+                        ) AS date_rank
                    FROM company_resource_revisions resource
                   WHERE resource.organization_id = ?
                     AND resource.organization_revision <= ?
                     AND (? IS NULL OR resource.resource_type = 'organization-unit' OR resource.effective_from <= ?)
                     AND ${conditions.map((condition) => `resource.${condition}`).join(" AND ")}
+               ), ranked_resources AS (
+                 SELECT date_ranked.*,
+                        row_number() OVER (
+                          PARTITION BY resource_type, resource_id
+                          ORDER BY CASE WHEN ? IS NULL OR resource_type = 'organization-unit'
+                            THEN NULL ELSE effective_from END DESC, revision DESC
+                        ) AS effective_rank
+                   FROM date_ranked
+                  WHERE date_rank = 1 AND NOT (state = 'void' AND corrects_revision IS NOT NULL)
                )
                SELECT organization_id, resource_type, resource_id, revision, state,
                       effective_from, effective_to, attributes_json
@@ -175,6 +185,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                 query.effectiveOn ?? null,
                 query.effectiveOn ?? null,
                 ...binds,
+                query.effectiveOn ?? null,
                 query.effectiveOn ?? null,
                 query.effectiveOn ?? null,
                 query.effectiveOn ?? null,
@@ -200,7 +211,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                      FROM company_organizations
                     WHERE id = ?
                  ),
-                 ranked_resources AS (
+                 date_ranked AS (
                    SELECT resource.organization_id,
                           resource.resource_type,
                           resource.resource_id,
@@ -209,16 +220,26 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                           resource.effective_from,
                           resource.effective_to,
                           resource.attributes_json,
+                          resource.corrects_revision,
                           row_number() OVER (
-                            PARTITION BY resource.resource_type, resource.resource_id
-                            ORDER BY CASE WHEN resource.resource_type = 'organization-unit' THEN NULL ELSE resource.effective_from END DESC, resource.revision DESC
-                          ) AS effective_rank
+                            PARTITION BY resource.resource_type, resource.resource_id,
+                              CASE WHEN resource.resource_type = 'organization-unit' THEN NULL ELSE resource.effective_from END
+                            ORDER BY resource.revision DESC
+                          ) AS date_rank
                      FROM company_resource_revisions AS resource
                      CROSS JOIN snapshot
                     WHERE resource.organization_id = ?
                       AND resource.organization_revision <= snapshot.revision
                       AND (resource.resource_type = 'organization-unit' OR resource.effective_from <= ?)
                       AND ${conditions.map((condition) => `resource.${condition}`).join(" AND ")}
+                 ), ranked_resources AS (
+                   SELECT date_ranked.*,
+                          row_number() OVER (
+                            PARTITION BY resource_type, resource_id
+                            ORDER BY CASE WHEN resource_type = 'organization-unit' THEN NULL ELSE effective_from END DESC, revision DESC
+                          ) AS effective_rank
+                     FROM date_ranked
+                    WHERE date_rank = 1 AND NOT (state = 'void' AND corrects_revision IS NOT NULL)
                  )
                  SELECT organization_id, resource_type, resource_id, revision, state,
                         effective_from, effective_to, attributes_json

@@ -19,17 +19,19 @@ type Query = Readonly<{
 
 const resourceRowSchema = z.object({ attributes_json: z.string() })
 
+type Context = D1Database
+
 /** 一資源の全revisionを、指定した会社版を超えない位置で順に取得する。 */
 export class CompanyResourceHistoryRepository {
-  constructor(private readonly database: D1Database) {}
+  constructor(private readonly c: Context) {}
 
   async list(query: Query) {
     try {
-      const pages = await this.database.batch([
-        this.database
+      const pages = await this.c.batch([
+        this.c
           .prepare("SELECT revision FROM company_organizations WHERE id = ?")
           .bind(query.organizationId),
-        this.database
+        this.c
           .prepare(`SELECT organization_revision, resource_type, resource_id, revision,
             command_id, actor_account_id, reason, evidence_references_json, corrects_revision,
             state, effective_from, effective_to, recorded_at, attributes_json
