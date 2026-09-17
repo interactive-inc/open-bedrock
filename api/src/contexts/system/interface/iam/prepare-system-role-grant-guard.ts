@@ -1,6 +1,6 @@
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { iamRoleIdSchema } from "@system/domain/schemas/iam/iam-role.schema"
-import { prepareSystemRoleGrantGuardStatement } from "@system/infrastructure/adapters/iam/system-role-grant-guard.adapter"
+import { SystemRoleGrantGuardAdapter } from "@system/infrastructure/adapters/iam/system-role-grant-guard.adapter"
 import type { BatchItem } from "drizzle-orm/batch"
 
 /** 他 context の D1 batch で Account・role・禁止権限を保存直前に再検査する。 */
@@ -23,5 +23,5 @@ export function prepareSystemRoleGrantGuard(
   ) {
     return new Error("Invalid System role grant guard")
   }
-  return prepareSystemRoleGrantGuardStatement(input)
+  return new SystemRoleGrantGuardAdapter(input).prepare()
 }

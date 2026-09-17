@@ -1,5 +1,5 @@
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
-import { prepareCompanyOrganizationRevisionGuardStatement } from "@/contexts/company/infrastructure/adapters/core/company-revision-guard.adapter"
+import { CompanyRevisionGuardAdapter } from "@/contexts/company/infrastructure/adapters/core/company-revision-guard.adapter"
 import type { BatchItem } from "drizzle-orm/batch"
 
 /**
@@ -21,5 +21,5 @@ export function prepareCompanyOrganizationRevisionGuard(
     return new Error("Invalid Company organization revision guard")
   }
 
-  return prepareCompanyOrganizationRevisionGuardStatement(input)
+  return new CompanyRevisionGuardAdapter(input).prepare()
 }
