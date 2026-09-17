@@ -5,6 +5,7 @@ import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/
 import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { readCompanyEmploymentPersonNames } from "@/contexts/company/interface/operations/read-company-employment-person-names"
+import { readCompanyEmploymentsByEmployee } from "@/contexts/company/interface/operations/read-company-employments-by-employee"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 
 const organizationId = "organization:default"
@@ -196,4 +197,82 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
   })
   if (pinnedEnded instanceof Error) throw pinnedEnded
   expect([...pinnedEnded.names]).toEqual([["employment:one", "New Name"]])
+
+  const currentEmployment = await readCompanyEmploymentsByEmployee({
+    database,
+    organizationId,
+    employeeIds: ["employee:one", "employee:missing"],
+    effectiveOn,
+  })
+  if (currentEmployment instanceof Error) throw currentEmployment
+  expect([...currentEmployment.employmentIdsByEmployee]).toEqual([
+    ["employee:one", []],
+    ["employee:missing", []],
+  ])
+
+  const pastEmployment = await readCompanyEmploymentsByEmployee({
+    database,
+    organizationId,
+    employeeIds: ["employee:one", "employee:missing"],
+    effectiveOn,
+    includeEndedEmployments: true,
+    organizationRevision: 3,
+  })
+  if (pastEmployment instanceof Error) throw pastEmployment
+  expect(pastEmployment.organizationRevision).toBe(3)
+  expect([...pastEmployment.employmentIdsByEmployee]).toEqual([
+    ["employee:one", ["employment:one"]],
+    ["employee:missing", []],
+  ])
+
+  const priorEmployment = await readCompanyEmploymentsByEmployee({
+    database,
+    organizationId,
+    employeeIds: ["employee:one"],
+    effectiveOn,
+    organizationRevision: 2,
+  })
+  if (priorEmployment instanceof Error) throw priorEmployment
+  expect(priorEmployment.employmentIdsByEmployee.get("employee:one")).toEqual(["employment:one"])
+
+  const rehire = CompanyResourceChangeEntity.create({
+    commandId: "names:rehire",
+    expectedRevision: 3,
+    actorAccountId: "account:operator",
+    reason: "Confirmed new employment after leaving",
+    recordedAt: 4,
+    resources: [
+      {
+        ...resources[2]!,
+        id: "employment:rehire",
+        effectiveFrom: restoreCalendarDate("2030-05-01"),
+      },
+    ],
+  })
+  if (rehire instanceof Error) throw rehire
+  expect(await repository.write(rehire)).toMatchObject({
+    kind: "applied",
+    organizationRevision: 4,
+  })
+
+  const afterRehire = await readCompanyEmploymentsByEmployee({
+    database,
+    organizationId,
+    employeeIds: ["employee:one"],
+    effectiveOn,
+  })
+  if (afterRehire instanceof Error) throw afterRehire
+  expect(afterRehire.employmentIdsByEmployee.get("employee:one")).toEqual(["employment:rehire"])
+  const allRecordedEmployments = await readCompanyEmploymentsByEmployee({
+    database,
+    organizationId,
+    employeeIds: ["employee:one"],
+    effectiveOn,
+    includeEndedEmployments: true,
+  })
+  if (allRecordedEmployments instanceof Error) throw allRecordedEmployments
+  expect(allRecordedEmployments.employmentIdsByEmployee.get("employee:one")).toEqual([
+    "employment:one",
+    "employment:rehire",
+  ])
 })

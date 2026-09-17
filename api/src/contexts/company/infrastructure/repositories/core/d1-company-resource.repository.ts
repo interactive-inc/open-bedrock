@@ -21,6 +21,8 @@ export type CompanyResourceQuery = Readonly<{
   types: ReadonlyArray<CompanyResourceType>
   ids?: ReadonlyArray<string>
   codes?: ReadonlyArray<string>
+  /** 雇用の版を確定した後、その版の従業員で絞る。 */
+  employmentEmployeeIds?: ReadonlyArray<string>
   effectiveOn?: CalendarDate
   /** 時点までに開始した終了済み資源も、履歴上の参照先として返す。 */
   includeEnded?: boolean
@@ -116,7 +118,10 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       query.types.length < 1 ||
       query.types.length > 100 ||
       (query.ids?.length ?? 0) > 100 ||
-      (query.codes?.length ?? 0) > 100
+      (query.codes?.length ?? 0) > 100 ||
+      (query.employmentEmployeeIds?.length ?? 0) > 100 ||
+      (query.employmentEmployeeIds !== undefined &&
+        (query.types.length !== 1 || query.types[0] !== "employment"))
     ) {
       return { ok: false, cause: new Error("Invalid Company resource query") }
     }
@@ -147,6 +152,14 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
           ? ""
           : "AND json_extract(attributes_json, '$.code') IN (SELECT value FROM json_each(?))"
       const codeBinds = query.codes === undefined ? [] : [JSON.stringify(query.codes)]
+      const employmentEmployeeCondition =
+        query.employmentEmployeeIds === undefined
+          ? ""
+          : "AND json_extract(attributes_json, '$.employeeId') IN (SELECT value FROM json_each(?))"
+      const employmentEmployeeBinds =
+        query.employmentEmployeeIds === undefined
+          ? []
+          : [JSON.stringify(query.employmentEmployeeIds)]
       const effectiveEndCondition =
         query.includeEnded === true ? "" : "AND (effective_to IS NULL OR effective_to > ?)"
 
@@ -191,6 +204,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                 WHERE effective_rank = 1 AND state = 'active'
                   AND (? IS NULL OR (effective_from <= ? ${effectiveEndCondition}))
                 ${codeCondition}
+                ${employmentEmployeeCondition}
                   ORDER BY resource_type, resource_id`,
               )
               .bind(
@@ -206,6 +220,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                 query.effectiveOn ?? null,
                 ...(query.includeEnded === true ? [] : [query.effectiveOn ?? null]),
                 ...codeBinds,
+                ...employmentEmployeeBinds,
               )
           : query.effectiveOn === undefined
             ? this.c.database
@@ -217,9 +232,10 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                     AND state = 'active'
                     AND ${conditions.join(" AND ")}
                   ${codeCondition}
+                  ${employmentEmployeeCondition}
                   ORDER BY resource_type, resource_id`,
                 )
-                .bind(query.organizationId, ...binds, ...codeBinds)
+                .bind(query.organizationId, ...binds, ...codeBinds, ...employmentEmployeeBinds)
             : this.c.database
                 .prepare(
                   `WITH snapshot AS (
@@ -273,6 +289,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                     AND effective_from <= ?
                     ${effectiveEndCondition}
                   ${codeCondition}
+                  ${employmentEmployeeCondition}
                   ORDER BY resource_type, resource_id`,
                 )
                 .bind(
@@ -283,6 +300,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                   query.effectiveOn,
                   ...(query.includeEnded === true ? [] : [query.effectiveOn]),
                   ...codeBinds,
+                  ...employmentEmployeeBinds,
                 )
 
       const [revisionResult, resourceResult] = await this.c.database.batch([

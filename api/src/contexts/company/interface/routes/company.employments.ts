@@ -54,6 +54,9 @@ export const GET = factory.createHandlers(
       id: z
         .union([z.string().regex(/^\S{1,255}$/), z.array(z.string().regex(/^\S{1,255}$/)).max(100)])
         .optional(),
+      employee_id: z
+        .union([z.string().regex(/^\S{1,255}$/), z.array(z.string().regex(/^\S{1,255}$/)).max(100)])
+        .optional(),
       organization_revision: z
         .string()
         .regex(/^(0|[1-9]\d*)$/)
@@ -107,6 +110,12 @@ export const GET = factory.createHandlers(
         : Array.isArray(requestQuery.id)
           ? requestQuery.id
           : [requestQuery.id]
+    const employeeIds =
+      requestQuery.employee_id === undefined
+        ? []
+        : Array.isArray(requestQuery.employee_id)
+          ? requestQuery.employee_id
+          : [requestQuery.employee_id]
     const effectiveOn = requestQuery.effective_on ?? requestQuery.as_of
     const query = {
       organizationId: headers["x-company-organization-id"],
@@ -114,6 +123,7 @@ export const GET = factory.createHandlers(
       types: ["employment"] as const,
       includeEnded: requestQuery.include_ended,
       ...(ids.length === 0 ? {} : { ids }),
+      ...(employeeIds.length === 0 ? {} : { employmentEmployeeIds: employeeIds }),
       ...(effectiveOn === undefined ? {} : { effectiveOn: restoreCalendarDate(effectiveOn) }),
     }
     if (
@@ -126,6 +136,11 @@ export const GET = factory.createHandlers(
           query.ids.length > 100 ||
           new Set(query.ids).size !== query.ids.length ||
           !query.ids.every((id) => CompanyResourceEntity.isIdentifier(id)))) ||
+      (query.employmentEmployeeIds !== undefined &&
+        (query.employmentEmployeeIds.length < 1 ||
+          query.employmentEmployeeIds.length > 100 ||
+          new Set(query.employmentEmployeeIds).size !== query.employmentEmployeeIds.length ||
+          !query.employmentEmployeeIds.every((id) => CompanyResourceEntity.isIdentifier(id)))) ||
       (query.effectiveOn !== undefined && !isCalendarDate(query.effectiveOn))
     ) {
       throw new CompanyQueryInvalidError(new CompanyResourceValidationError("invalid_query"))

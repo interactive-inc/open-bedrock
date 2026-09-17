@@ -165,6 +165,32 @@ test("会社の各台帳は同じ会社版で取得でき、遡及更新後も�
     organizationRevision: 2,
     resources: [{ id: "employment:test", revision: 2, effectiveTo: "2030-07-01" }],
   })
+  const employeeEmployment = await app.request(
+    "/employments?organization_revision=2&effective_on=2030-08-01&include_ended=true&employee_id=employee:test",
+    { headers },
+    { DB: database, COMPANY_TIME_ZONE: "UTC" },
+  )
+  expect(employeeEmployment.status).toBe(200)
+  expect(await employeeEmployment.json()).toMatchObject({
+    organizationRevision: 2,
+    resources: [{ id: "employment:test" }],
+  })
+  const unrelatedEmployee = await app.request(
+    "/employments?organization_revision=2&effective_on=2030-08-01&include_ended=true&employee_id=employee:other",
+    { headers },
+    { DB: database, COMPANY_TIME_ZONE: "UTC" },
+  )
+  expect(unrelatedEmployee.status).toBe(200)
+  expect(await unrelatedEmployee.json()).toMatchObject({
+    organizationRevision: 2,
+    resources: [],
+  })
+  const duplicateEmployee = await app.request(
+    "/employments?employee_id=employee:test&employee_id=employee:test",
+    { headers },
+    { DB: database, COMPANY_TIME_ZONE: "UTC" },
+  )
+  expect(duplicateEmployee.status).toBe(400)
   const missingDate = await app.request(
     "/employments?include_ended=true",
     { headers },
