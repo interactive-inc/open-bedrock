@@ -62,6 +62,8 @@ describe("NotificationMessageEntity", () => {
     ["oversized body", { ...validProps, body: "x".repeat(10_001) }],
     ["unnamespaced source", { ...validProps, source: { type: "account", id: "1" } }],
     ["empty source id", { ...validProps, source: { type: "system:account", id: "" } }],
+    ["empty publication key", { ...validProps, publicationKey: "" }],
+    ["oversized publication key", { ...validProps, publicationKey: "x".repeat(513) }],
     ["invalid clock", { ...validProps, createdAt: new Date(Number.NaN) }],
     ["unknown field", { ...validProps, recipientAccountId: "account-1" }],
   ])("fails closed for %s", (_name, input) => {

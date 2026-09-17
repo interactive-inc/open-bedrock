@@ -52,6 +52,7 @@ const propsSchema = z
     title: titleSchema,
     body: bodySchema.nullable(),
     source: notificationSourceReferenceSchema.nullable(),
+    publicationKey: z.string().min(1).max(512).nullable().optional(),
     createdAt: z.date(),
   })
   .strict()
@@ -68,6 +69,7 @@ export class NotificationMessageEntity {
   readonly title: string
   readonly body: string | null
   readonly source: NotificationSourceReference | null
+  readonly publicationKey: string | null
   readonly #createdAtEpochMilliseconds: number
 
   private constructor(props: ParsedProps) {
@@ -77,6 +79,7 @@ export class NotificationMessageEntity {
     this.body = props.body
     this.source =
       props.source === null ? null : Object.freeze({ type: props.source.type, id: props.source.id })
+    this.publicationKey = props.publicationKey ?? null
     this.#createdAtEpochMilliseconds = props.createdAt.getTime()
     Object.freeze(this)
   }

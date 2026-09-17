@@ -137,6 +137,7 @@ export class SystemNotificationRepository {
                message.body,
                message.source_type,
                message.source_id,
+               message.dedupe_key,
                message.created_at
              FROM system_notification_deliveries AS delivery
              INNER JOIN system_notification_messages AS message ON message.id = delivery.message_id
@@ -313,6 +314,25 @@ function prepareMessageInsert(
   database: D1Database,
   message: NotificationMessageEntity,
 ): D1PreparedStatement {
+  if (message.publicationKey !== null) {
+    return database
+      .prepare(
+        `INSERT INTO system_notification_messages
+           (id, kind, title, body, source_type, source_id, dedupe_key, created_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+         ON CONFLICT(dedupe_key) DO NOTHING`,
+      )
+      .bind(
+        message.id,
+        message.kind,
+        message.title,
+        message.body,
+        message.source?.type ?? null,
+        message.source?.id ?? null,
+        message.publicationKey,
+        message.createdAt.getTime(),
+      )
+  }
   return database
     .prepare(
       `INSERT INTO system_notification_messages
@@ -335,6 +355,32 @@ function prepareDeliveryFanOut(
   message: NotificationMessageEntity,
   payload: string,
 ): D1PreparedStatement {
+  if (message.publicationKey !== null) {
+    return database
+      .prepare(
+        `INSERT INTO system_notification_deliveries
+           (id, message_id, recipient_account_id, delivered_at, read_at)
+         SELECT
+           json_extract(item.value, '$.id'),
+           message.id,
+           json_extract(item.value, '$.recipientAccountId'),
+           json_extract(item.value, '$.deliveredAt'),
+           NULL
+         FROM json_each(?1) AS item
+         INNER JOIN system_notification_messages AS message
+           ON message.dedupe_key = ?2
+         INNER JOIN system_accounts AS account
+           ON account.id = json_extract(item.value, '$.recipientAccountId')
+          AND account.status = 'active'
+         WHERE json_extract(item.value, '$.readAt') IS NULL
+           AND NOT EXISTS (
+             SELECT 1 FROM system_notification_deliveries AS existing
+             WHERE existing.message_id = message.id
+               AND existing.recipient_account_id = account.id
+           )`,
+      )
+      .bind(payload, message.publicationKey)
+  }
   return database
     .prepare(
       `INSERT INTO system_notification_deliveries
@@ -361,6 +407,43 @@ function preparePublicationInvariant(
   message: NotificationMessageEntity,
   payload: string,
 ): D1PreparedStatement {
+  if (message.publicationKey !== null) {
+    return database
+      .prepare(
+        `SELECT CASE WHEN
+           json_array_length(?1) > 0
+           AND EXISTS (
+             SELECT 1 FROM system_notification_messages
+             WHERE dedupe_key = ?2 AND kind = ?3 AND title = ?4 AND body IS ?5
+               AND source_type IS ?6 AND source_id IS ?7
+           )
+           AND (
+             SELECT count(*) FROM system_notification_deliveries AS delivery
+             INNER JOIN system_notification_messages AS existing
+               ON existing.id = delivery.message_id
+             WHERE existing.dedupe_key = ?2
+           ) = json_array_length(?1)
+           AND NOT EXISTS (
+             SELECT 1 FROM json_each(?1) AS item
+             LEFT JOIN system_notification_deliveries AS delivery
+               ON delivery.recipient_account_id = json_extract(item.value, '$.recipientAccountId')
+              AND delivery.message_id = (
+                SELECT id FROM system_notification_messages WHERE dedupe_key = ?2
+              )
+             WHERE delivery.id IS NULL
+           )
+         THEN 1 ELSE json_extract('', '$') END AS ok`,
+      )
+      .bind(
+        payload,
+        message.publicationKey,
+        message.kind,
+        message.title,
+        message.body,
+        message.source?.type ?? null,
+        message.source?.id ?? null,
+      )
+  }
   return database
     .prepare(
       `SELECT CASE WHEN
@@ -429,6 +512,7 @@ function prepareNotificationSelect(
          message.body,
          message.source_type,
          message.source_id,
+         message.dedupe_key,
          message.created_at
        FROM system_notification_deliveries AS delivery
        INNER JOIN system_notification_messages AS message ON message.id = delivery.message_id
@@ -460,6 +544,7 @@ function toSystemNotification(row: unknown): SystemNotification | Error {
     body: values.body,
     source_type: values.source_type,
     source_id: values.source_id,
+    dedupe_key: values.dedupe_key,
     created_at: values.created_at,
   })
   if (message instanceof Error) return message

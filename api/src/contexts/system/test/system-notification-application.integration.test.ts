@@ -27,6 +27,7 @@ CREATE TABLE system_notification_messages (
   body TEXT,
   source_type TEXT,
   source_id TEXT,
+  dedupe_key TEXT UNIQUE,
   created_at INTEGER NOT NULL,
   CHECK ((source_type IS NULL AND source_id IS NULL) OR
          (source_type IS NOT NULL AND source_id IS NOT NULL))
@@ -119,6 +120,149 @@ describe("canonical System Notification Application + D1 repository", () => {
       await database
         .prepare("SELECT count(*) AS count FROM system_notification_deliveries")
         .first<number>("count"),
+    ).toBe(0)
+  })
+
+  test("同じpublication keyの再送は元のMessageとDeliveryへ収束する", async () => {
+    const database = createSystemD1TestDatabase(notificationSchema)
+    await insertAccount(database, "account-owner", "active")
+    const repository = new SystemNotificationRepository({ context: { env: { DB: database } } })
+    const publish = new PublishSystemNotification({ notificationRepository: repository })
+    const first = createMessage("message-original", "system:test:publication-1", "source-1")
+    const firstDeliveries = createDeliveryBatch([
+      createDelivery({
+        id: "delivery-original",
+        messageId: first.id,
+        recipientAccountId: "account-owner",
+      }),
+    ])
+    expect(await publish.execute({ message: first, deliveries: firstDeliveries })).toEqual({
+      kind: "published",
+    })
+
+    const retry = createMessage("message-retry", "system:test:publication-1", "source-1")
+    const retryDeliveries = createDeliveryBatch([
+      createDelivery({
+        id: "delivery-retry",
+        messageId: retry.id,
+        recipientAccountId: "account-owner",
+      }),
+    ])
+    expect(await publish.execute({ message: retry, deliveries: retryDeliveries })).toEqual({
+      kind: "published",
+    })
+    expect(
+      await database
+        .prepare("SELECT id FROM system_notification_messages WHERE dedupe_key = ?1")
+        .bind("system:test:publication-1")
+        .first<string>("id"),
+    ).toBe("message-original")
+    expect(
+      await database.prepare("SELECT id FROM system_notification_deliveries").first<string>("id"),
+    ).toBe("delivery-original")
+    const stored = await repository.findByDeliveryIdForAccount(
+      firstDeliveries.deliveries[0]!.id,
+      zAccountId.parse("account-owner"),
+    )
+    expect(stored).not.toBeInstanceOf(Error)
+    if (stored instanceof Error || stored === null) throw stored ?? new Error("missing delivery")
+    expect(stored.message.publicationKey).toBe("system:test:publication-1")
+  })
+
+  test("同じpublication keyで本文や宛先を変えた再送は全件rollbackする", async () => {
+    const database = createSystemD1TestDatabase(notificationSchema)
+    await insertAccount(database, "account-owner", "active")
+    await insertAccount(database, "account-extra", "active")
+    const repository = new SystemNotificationRepository({ context: { env: { DB: database } } })
+    const publish = new PublishSystemNotification({ notificationRepository: repository })
+    const original = createMessage("message-original", "system:test:publication-2", "source-2")
+    const originalDeliveries = createDeliveryBatch([
+      createDelivery({
+        id: "delivery-original",
+        messageId: original.id,
+        recipientAccountId: "account-owner",
+      }),
+    ])
+    expect(await publish.execute({ message: original, deliveries: originalDeliveries })).toEqual({
+      kind: "published",
+    })
+
+    const changedContent = NotificationMessageEntity.create({
+      id: "message-changed",
+      kind: original.kind,
+      title: "Different content",
+      body: original.body,
+      source: original.source,
+      publicationKey: original.publicationKey,
+      createdAt: original.createdAt,
+    })
+    if (changedContent instanceof Error) throw changedContent
+    expect(
+      await publish.execute({
+        message: changedContent,
+        deliveries: createDeliveryBatch([
+          createDelivery({
+            id: "delivery-changed",
+            messageId: changedContent.id,
+            recipientAccountId: "account-owner",
+          }),
+        ]),
+      }),
+    ).toBeInstanceOf(Error)
+
+    const changedRecipient = createMessage("message-extra", "system:test:publication-2", "source-2")
+    expect(
+      await publish.execute({
+        message: changedRecipient,
+        deliveries: createDeliveryBatch([
+          createDelivery({
+            id: "delivery-extra",
+            messageId: changedRecipient.id,
+            recipientAccountId: "account-extra",
+          }),
+        ]),
+      }),
+    ).toBeInstanceOf(Error)
+    expect(
+      await database
+        .prepare("SELECT count(*) FROM system_notification_deliveries")
+        .first<number>("count(*)"),
+    ).toBe(1)
+  })
+
+  test("publication key付きでも無効なAccountを含めば全件rollbackする", async () => {
+    const database = createSystemD1TestDatabase(notificationSchema)
+    await insertAccount(database, "account-active", "active")
+    await insertAccount(database, "account-suspended", "suspended")
+    const message = createMessage("message-keyed-rollback", "system:test:publication-3")
+    const deliveries = createDeliveryBatch([
+      createDelivery({
+        id: "delivery-active",
+        messageId: message.id,
+        recipientAccountId: "account-active",
+      }),
+      createDelivery({
+        id: "delivery-suspended",
+        messageId: message.id,
+        recipientAccountId: "account-suspended",
+      }),
+    ])
+    const repository = new SystemNotificationRepository({ context: { env: { DB: database } } })
+    expect(
+      await new PublishSystemNotification({ notificationRepository: repository }).execute({
+        message,
+        deliveries,
+      }),
+    ).toBeInstanceOf(Error)
+    expect(
+      await database
+        .prepare("SELECT count(*) FROM system_notification_messages")
+        .first<number>("count(*)"),
+    ).toBe(0)
+    expect(
+      await database
+        .prepare("SELECT count(*) FROM system_notification_deliveries")
+        .first<number>("count(*)"),
     ).toBe(0)
   })
 
@@ -249,13 +393,18 @@ describe("canonical System Notification Application + D1 repository", () => {
   })
 })
 
-function createMessage(id: string): NotificationMessageEntity {
+function createMessage(
+  id: string,
+  publicationKey: string | null = null,
+  sourceId = `source-${id}`,
+): NotificationMessageEntity {
   const message = NotificationMessageEntity.create({
     id,
     kind: "system:test.created",
     title: "System test notification",
     body: "plain text body",
-    source: { type: "system:test.source", id: `source-${id}` },
+    source: { type: "system:test.source", id: sourceId },
+    publicationKey,
     createdAt: new Date(1_000),
   })
 

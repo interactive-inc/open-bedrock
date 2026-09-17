@@ -16,6 +16,7 @@ export function toSystemNotificationMessage(row: unknown): NotificationMessageEn
       record.source_type === null && record.source_id === null
         ? null
         : { type: record.source_type, id: record.source_id },
+    publicationKey: record.dedupe_key ?? null,
     createdAt:
       typeof record.created_at === "number" ? new Date(record.created_at) : record.created_at,
   })
