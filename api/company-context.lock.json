@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "36e29664b1d087859deb47330c1e46659f5ff003ce2a9b09c3e39508de1c963c",
+    "company-context.manifest.json": "72f5cd9fcb38630982dd206d54d99637ff1df89bcf6ea255647ead4445b3d67a",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -437,6 +437,7 @@
     "src/contexts/company/interface/operations/dispatch-personnel-action.ts": "db8dab0e17d872cc97d072cab533ee45c617c2e0a040aff06aefeaf77f4a0303",
     "src/contexts/company/interface/operations/employee-lifecycle/get-lifecycle-state.ts": "2c885d30657fa7640b6df00f67ccb07ff2b0b6486d8ac4e7f22fb1cb82930cef",
     "src/contexts/company/interface/operations/read-company-employee-names.ts": "5430c39769279048095c0bea338715f3b13cc65e752edfa2ebf24dff78682641",
+    "src/contexts/company/interface/operations/read-company-employment-person-names.ts": "3b680edd8b4c7a2d520dd4cde368b80856e8b012412451118114e4266af5584d",
     "src/contexts/company/interface/operations/resolve-personnel-action-input.ts": "4c44b8ac38b9d7f05c43b558bc3fc76dd4ccb6b16ee1dd8263fc018da5c17367",
     "src/contexts/company/interface/operations/to-company-personnel-session.ts": "68173ab68698fed230ab8f46bc74e9b0cddb0c4da87d6f131b9bbd09cfbcb12f",
     "src/contexts/company/interface/operations/to-http-exception.ts": "49f39e08992214078d83467bbeef13ab85c4f01cd87d3009ce8505fb599b97ca",
@@ -584,6 +585,7 @@
     "src/contexts/company/test/personnel-company-revision.integration.test.ts": "2bef414b4ce8e8a4d2887fdcb8389607c2ee9a7c7d0a407894a5bb2071f89243",
     "src/contexts/company/test/personnel-execution.integration.test.ts": "092ca01afe971b1a39f4f2e68dcdb0dd3121ddf40d5c59073d7ceb5cdb1f0cea",
     "src/contexts/company/test/personnel-position-snapshot.integration.test.ts": "68d544b6e554e880ba906a08f805403642d54d0e0f117005054961fe53e1b0c3",
+    "src/contexts/company/test/read-company-employment-person-names.integration.test.ts": "139867a41c135a9f32f6c56482e3bfb156fa8c76f6dbade0bce6658cf71242bf",
     "src/contexts/company/test/record-preservation-execution.integration.test.ts": "6fb89877730222fe43bd5f44fee68bfeda6991a6485bc1db16427a17706ead0b",
     "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts": "beba929c951949a0c4fdefdabfeec2d91a6bd610d6de7d4334af944383d52c49"
   }

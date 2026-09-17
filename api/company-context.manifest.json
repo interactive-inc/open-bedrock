@@ -437,6 +437,7 @@
     "src/contexts/company/interface/operations/dispatch-personnel-action.ts",
     "src/contexts/company/interface/operations/employee-lifecycle/get-lifecycle-state.ts",
     "src/contexts/company/interface/operations/read-company-employee-names.ts",
+    "src/contexts/company/interface/operations/read-company-employment-person-names.ts",
     "src/contexts/company/interface/operations/resolve-personnel-action-input.ts",
     "src/contexts/company/interface/operations/to-company-personnel-session.ts",
     "src/contexts/company/interface/operations/to-http-exception.ts",
@@ -584,6 +585,7 @@
     "src/contexts/company/test/personnel-company-revision.integration.test.ts",
     "src/contexts/company/test/personnel-execution.integration.test.ts",
     "src/contexts/company/test/personnel-position-snapshot.integration.test.ts",
+    "src/contexts/company/test/read-company-employment-person-names.integration.test.ts",
     "src/contexts/company/test/record-preservation-execution.integration.test.ts",
     "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts"
   ],
