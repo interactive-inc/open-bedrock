@@ -140,6 +140,14 @@ export const companyResourceRevisions = sqliteTable(
       table.resourceId,
     ),
     index("company_resource_revisions_command_idx").on(table.organizationId, table.commandId),
+    /**
+     * account-employee-link の改訂行だけの部分索引。有効期間ビューの内側の走査をこの行集合に絞る。
+     * resource_type 先頭の通常索引にすると、person / employee を IN で引く ranked_workforce_resources
+     * CTE の実行計画まで変わり本番で 50 倍の走査になったため（#4457）、述語付きで他の読みから見えなくする
+     */
+    index("company_resource_revisions_account_link_idx")
+      .on(table.organizationId, table.resourceId)
+      .where(sql`${table.resourceType} = 'account-employee-link'`),
     check("company_resource_revisions_revision_positive", sql`${table.revision} >= 1`),
     check("company_resource_revisions_state_valid", sql`${table.state} IN ('active', 'void')`),
     check(
