@@ -35,6 +35,22 @@ export type SystemNotificationPage = Readonly<{
   total: number
 }>
 
+/** 既存の通知も含む、Account宛ての保存済み通知の読み取り投影。 */
+export type SystemNotificationRecord = Readonly<{
+  id: string
+  messageId: string
+  deliveredAt: number
+  readAt: number | null
+  kind: string
+  title: string
+  body: string | null
+  priority: "low" | "normal" | "high" | "critical"
+  actionUrl: string | null
+  actionType: string | null
+  actionId: string | null
+  resourceScope: Readonly<{ type: string; id: string }> | null
+}>
+
 export type ListSystemNotificationsProps = Readonly<{
   recipientAccountId: AccountId
   read: boolean | null
@@ -233,6 +249,43 @@ export class SystemNotificationRepository {
     }
   }
 
+  /** 旧kind/action URLを再解釈せず、受信者の未破棄通知を返す。 */
+  async listRecordsForAccount(
+    recipientAccountId: AccountId,
+    read: boolean | null = null,
+    deliveryId: string | null = null,
+  ): Promise<ReadonlyArray<SystemNotificationRecord> | Error> {
+    try {
+      const result = await this.c.context.env.DB.prepare(
+        `SELECT delivery.id, delivery.message_id, delivery.delivered_at, delivery.read_at,
+                message.kind, message.title, message.body, message.priority,
+                message.action_url, message.action_type, message.action_id,
+                scope.resource_type, scope.resource_id
+           FROM system_notification_deliveries AS delivery
+           INNER JOIN system_notification_messages AS message ON message.id = delivery.message_id
+           LEFT JOIN system_notification_resource_scopes AS scope ON scope.message_id = message.id
+          WHERE delivery.recipient_account_id = ?1
+            AND delivery.dismissed_at IS NULL
+            AND (?2 IS NULL OR (delivery.read_at IS NOT NULL) = ?2)
+            AND (?3 IS NULL OR delivery.id = ?3)`,
+      )
+        .bind(recipientAccountId, read === null ? null : read ? 1 : 0, deliveryId)
+        .all()
+      if (!result.success) return new Error("System Notification record list did not succeed")
+      const records: Array<SystemNotificationRecord> = []
+      for (const raw of result.results) {
+        const record = toSystemNotificationRecord(raw)
+        if (record instanceof Error) return record
+        records.push(record)
+      }
+      return Object.freeze(records)
+    } catch (caught) {
+      return caught instanceof Error
+        ? caught
+        : new Error("failed to list System Notification records")
+    }
+  }
+
   async countUnreadForAccount(recipientAccountId: AccountId): Promise<number | Error> {
     try {
       const total = await this.c.context.env.DB.prepare(
@@ -250,6 +303,48 @@ export class SystemNotificationRepository {
       return caught instanceof Error
         ? caught
         : new Error("failed to count unread System Notifications")
+    }
+  }
+
+  /** 製品側が可視性を確認したdeliveryだけを、受信Accountの既読へ遷移する。 */
+  async markSelectedRecordsRead(
+    input: Readonly<{
+      recipientAccountId: AccountId
+      deliveryIds: ReadonlyArray<string>
+      readAt: Date
+    }>,
+  ): Promise<number | Error> {
+    if (
+      !Array.isArray(input.deliveryIds) ||
+      input.deliveryIds.some((id) => typeof id !== "string" || id.length < 1 || id.length > 255) ||
+      !(input.readAt instanceof Date) ||
+      !Number.isSafeInteger(input.readAt.getTime())
+    ) {
+      return new Error("System Notification read selection is invalid")
+    }
+    if (input.deliveryIds.length === 0) return 0
+    const payload = JSON.stringify([...new Set(input.deliveryIds)])
+    if (new TextEncoder().encode(payload).byteLength > maximumPublicationPayloadBytes) {
+      return new Error("System Notification read selection is too large")
+    }
+    try {
+      const result = await this.c.context.env.DB.prepare(
+        `UPDATE system_notification_deliveries
+            SET read_at = ?1
+          WHERE recipient_account_id = ?2
+            AND id IN (SELECT value FROM json_each(?3))
+            AND read_at IS NULL
+            AND dismissed_at IS NULL
+            AND delivered_at <= ?1`,
+      )
+        .bind(input.readAt.getTime(), input.recipientAccountId, payload)
+        .run()
+      const changes = result.meta.changes
+      return Number.isSafeInteger(changes) && changes >= 0 && changes <= input.deliveryIds.length
+        ? changes
+        : new Error("System Notification read selection count is invalid")
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to mark System Notification read")
     }
   }
 
@@ -690,4 +785,44 @@ function toSystemNotification(row: unknown): SystemNotification | Error {
   }
 
   return Object.freeze({ message, delivery })
+}
+
+function toSystemNotificationRecord(raw: unknown): SystemNotificationRecord | Error {
+  if (typeof raw !== "object" || raw === null || Array.isArray(raw)) {
+    return new Error("System Notification record is invalid")
+  }
+  const row = raw as Record<string, unknown>
+  const strings = [row.id, row.message_id, row.kind, row.title]
+  const optionalStrings = [row.body, row.action_url, row.action_type, row.action_id]
+  if (
+    strings.some((value) => typeof value !== "string" || value.length === 0) ||
+    optionalStrings.some((value) => value !== null && typeof value !== "string") ||
+    typeof row.delivered_at !== "number" ||
+    !Number.isSafeInteger(row.delivered_at) ||
+    (row.read_at !== null &&
+      (typeof row.read_at !== "number" || !Number.isSafeInteger(row.read_at))) ||
+    !["low", "normal", "high", "critical"].includes(row.priority as string) ||
+    (row.resource_type === null) !== (row.resource_id === null) ||
+    (row.resource_type !== null &&
+      (typeof row.resource_type !== "string" || typeof row.resource_id !== "string"))
+  ) {
+    return new Error("System Notification record is invalid")
+  }
+  return Object.freeze({
+    id: row.id as string,
+    messageId: row.message_id as string,
+    deliveredAt: row.delivered_at as number,
+    readAt: row.read_at as number | null,
+    kind: row.kind as string,
+    title: row.title as string,
+    body: row.body as string | null,
+    priority: row.priority as SystemNotificationRecord["priority"],
+    actionUrl: row.action_url as string | null,
+    actionType: row.action_type as string | null,
+    actionId: row.action_id as string | null,
+    resourceScope:
+      row.resource_type === null
+        ? null
+        : Object.freeze({ type: row.resource_type as string, id: row.resource_id as string }),
+  })
 }

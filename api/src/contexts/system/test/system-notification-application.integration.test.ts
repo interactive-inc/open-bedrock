@@ -8,6 +8,8 @@ import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-d
 import { SystemNotificationRepository } from "@system/infrastructure/repositories/notifications/system-notification.repository"
 import { prepareSystemNotificationPublicationBatch } from "@system/interface/operations/prepare-system-notification-publication-batch"
 import { listExistingSystemNotificationPublicationKeys } from "@system/interface/operations/list-existing-system-notification-publications"
+import { listSystemNotificationRecords } from "@system/interface/operations/list-system-notification-records"
+import { markSelectedSystemNotificationRecordsRead } from "@system/interface/operations/mark-selected-system-notification-records-read"
 import { describe, expect, test } from "bun:test"
 
 const notificationSchema = `
@@ -27,6 +29,7 @@ CREATE TABLE system_notification_messages (
   kind TEXT NOT NULL,
   title TEXT NOT NULL,
   body TEXT,
+  action_url TEXT,
   source_type TEXT,
   source_id TEXT,
   action_type TEXT,
@@ -58,6 +61,59 @@ CREATE TABLE system_notification_deliveries (
 `
 
 describe("canonical System Notification Application + D1 repository", () => {
+  test("旧通知もAccount・scope付きで読め、選択済みdeliveryだけを既読にする", async () => {
+    const database = createSystemD1TestDatabase(notificationSchema)
+    await insertAccount(database, "account-owner", "active")
+    await insertAccount(database, "account-other", "active")
+    await database.exec(`
+      INSERT INTO system_notification_messages
+        (id, kind, title, body, action_url, priority, created_at)
+      VALUES ('legacy', 'chat', '旧通知', NULL, '/chat/channels/abc', 'normal', 1000);
+      INSERT INTO system_notification_resource_scopes (message_id, resource_type, resource_id)
+      VALUES ('legacy', 'care:facility', 'f1');
+      INSERT INTO system_notification_deliveries
+        (id, message_id, recipient_account_id, delivered_at)
+      VALUES ('owner-delivery', 'legacy', 'account-owner', 1000),
+             ('other-delivery', 'legacy', 'account-other', 1000);
+    `)
+    const owner = zAccountId.parse("account-owner")
+    const other = zAccountId.parse("account-other")
+    const ownerRecords = await listSystemNotificationRecords({
+      database,
+      recipientAccountId: owner,
+    })
+    expect(ownerRecords).toEqual([
+      {
+        id: "owner-delivery",
+        messageId: "legacy",
+        deliveredAt: 1000,
+        readAt: null,
+        kind: "chat",
+        title: "旧通知",
+        body: null,
+        priority: "normal",
+        actionUrl: "/chat/channels/abc",
+        actionType: null,
+        actionId: null,
+        resourceScope: { type: "care:facility", id: "f1" },
+      },
+    ])
+    expect(
+      await markSelectedSystemNotificationRecordsRead({
+        database,
+        recipientAccountId: owner,
+        deliveryIds: ["owner-delivery", "other-delivery"],
+        readAt: new Date(2000),
+      }),
+    ).toBe(1)
+    expect(
+      await listSystemNotificationRecords({ database, recipientAccountId: owner, read: false }),
+    ).toEqual([])
+    expect(
+      await listSystemNotificationRecords({ database, recipientAccountId: other, read: false }),
+    ).toHaveLength(1)
+  })
+
   test("公開済みkeyの照会は旧形式のMessageも含め、存在しないkeyを返さない", async () => {
     const database = createSystemD1TestDatabase(notificationSchema)
     await database
