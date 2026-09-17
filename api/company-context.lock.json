@@ -255,7 +255,7 @@
     "src/contexts/company/domain/values/company-change-cursor.value.ts": "eb2511c4cee03f8de890866a8fb5304aeafa9a958d7881b1dc27769922f45cde",
     "src/contexts/company/domain/values/company-employment-dependent-change.value.test.ts": "495e5275b1ff54a348cbd7db41411c34c878cf25c2efcb8c8a44e4356368015f",
     "src/contexts/company/domain/values/company-employment-dependent-change.value.ts": "433c9726d75c0789013818013d2a3df16d8c43bb4e6ecd22c8ea9516880a0284",
-    "src/contexts/company/domain/values/company-employment-journal-change.value.test.ts": "da122fc6421f680beff348789b34d6a250905b5c5011863f58b236adebcb2da0",
+    "src/contexts/company/domain/values/company-employment-journal-change.value.test.ts": "7c0c4ad0dd849db5ff1a9b62e6415cdd55cdf30abc293923f7984a2f71375b3e",
     "src/contexts/company/domain/values/company-employment-journal-change.value.ts": "3ee8276db1fb6c50103ad1e918183f712e03283ecfc3e40cdf0c43ae107d0631",
     "src/contexts/company/domain/values/company-employment-movements.value.test.ts": "ef197e60ba4f58a3f13c3c0a041dc065cd6ba814e9cbe151d8adbb75240f4e08",
     "src/contexts/company/domain/values/company-employment-movements.value.ts": "26129cd50e2bbc4ab29e3b317d26a236bc7bae16782b62f0bc3aa299f397bdd3",

@@ -118,6 +118,42 @@ describe("期間訂正から公開雇用の追記を作る", () => {
       periods: [{ startsOn: "2026-02-01", endsOn: null, status: "active" }],
     })
   })
+  test("開始日を前へ訂正しても後続の旧発効境界で雇用開始日を戻さない", () => {
+    const history = [
+      initial().toProps(),
+      {
+        ...initial().toProps(),
+        revision: 2,
+        effectiveFrom: restoreCalendarDate("2026-07-01"),
+        attributes: { ...attributes, status: "ON_LEAVE" },
+      },
+    ]
+    const result = changes({
+      history,
+      employment: { ...employment, startsOn: "2025-12-01" },
+      statuses: [
+        { ...status, startsOn: "2025-12-01", endsOn: "2026-07-01" },
+        {
+          ...status,
+          periodId: "status:leave",
+          startsOn: "2026-07-01",
+          status: "leave",
+        },
+      ],
+    })
+    if (result instanceof Error) throw result
+    const timeline = CompanyEmploymentResourceTimelineValue.create([
+      ...history,
+      ...result.resources,
+    ])
+    expect(timeline).toMatchObject({
+      startsOn: "2025-12-01",
+      periods: [
+        { startsOn: "2025-12-01", endsOn: "2026-07-01", status: "active" },
+        { startsOn: "2026-07-01", endsOn: null, status: "leave" },
+      ],
+    })
+  })
   test("期間取消は古い発効境界も取り消す", () => {
     const result = changes({ employment: { ...employment, isVoid: true }, statuses: [] })
     if (result instanceof Error) throw result
