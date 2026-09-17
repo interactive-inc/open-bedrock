@@ -129,6 +129,25 @@ export class CompanyEmploymentResourceProjectionAdapter {
     const startsOn = timeline.startsOn ?? previous.data?.starts_on
     if (startsOn === undefined || startsOn === null)
       return new CompanyResourceValidationError("invalid_period")
+    if (previous.data !== null && startsOn !== previous.data.starts_on) {
+      const previousStart = history
+        .toReversed()
+        .find(
+          (entry) => entry.state === "active" && entry.effectiveFrom === previous.data?.starts_on,
+        )
+      if (
+        previousStart === undefined ||
+        !props.change.corrections.some(
+          (correction) =>
+            correction.type === "employment" &&
+            correction.id === resource.id &&
+            correction.correctsRevision === previousStart.revision &&
+            props.stagedHistory.some((entry) => entry.revision === correction.revision),
+        )
+      ) {
+        return new CompanyResourceValidationError("unlinked_start_correction")
+      }
+    }
     const isVoid = timeline.periods.length === 0
     const endsOn = isVoid ? (previous.data?.ends_on ?? null) : timeline.endsOn
     const expectedRevision = baseRevision + props.revisionOffset

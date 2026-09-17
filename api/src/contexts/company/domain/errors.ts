@@ -16,6 +16,7 @@ export type CompanyResourceValidationCode =
   | "invalid_period"
   | "invalid_attributes"
   | "invalid_resource"
+  | "unlinked_start_correction"
   | "invalid_organization"
   | "invalid_change"
   | "invalid_query"
