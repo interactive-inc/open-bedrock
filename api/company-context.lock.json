@@ -422,7 +422,7 @@
     "src/contexts/company/infrastructure/schema/company-relations.ts": "5a4e53200f4e936f7143af14c4733f24a592cc6b4b35269747f3650f37217379",
     "src/contexts/company/infrastructure/schema/company-sql.contract.test.ts": "ce33392d976c100cd36fad3310ccdaa8f0010a41affc05c6bad2d57bf4e405f0",
     "src/contexts/company/infrastructure/schema/company.sql": "78c269fd0150912bfa1b6390c75b47af32e0d0a7c8c6d567cabdc676415d082b",
-    "src/contexts/company/infrastructure/schema/company.ts": "24884364f67d9d5d335eecdbdfb26af5d8180d7771121f518614699de1991958",
+    "src/contexts/company/infrastructure/schema/company.ts": "2bb5670de2f6fe24018abfc41bde0907a5787572701376df403b215634e2e929",
     "src/contexts/company/infrastructure/schema/employee-lifecycle.ts": "0f25dd9e26d022696530b1e247f237b364503b1964873409e3260a3b3ba5836b",
     "src/contexts/company/infrastructure/schema/employee.ts": "9e316ba71a56f99889e7149c9b1b5d7c2b1b86aa83e62f7539f8e34a94bd6c42",
     "src/contexts/company/infrastructure/schema/employment.ts": "3be9e6157016a6f26bb26aecdc449f99f9b4457cbb9e7d729b14e3b19e52a20b",
