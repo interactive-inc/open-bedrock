@@ -118,9 +118,13 @@ export const DELETE = systemFactory.createHandlers(
     if (!accountId.success) {
       throw new SystemInvalidSessionError()
     }
+    const dismissedAt = context.var.now()
+    if (!Number.isSafeInteger(dismissedAt.getTime())) {
+      throw new SystemNotificationUnavailableError()
+    }
     const dismissed = await new SystemNotificationRepository({
       context: { env: { DB: context.env.DB } },
-    }).dismissDelivery(context.req.valid("param").id, accountId.data)
+    }).dismissDelivery(context.req.valid("param").id, accountId.data, dismissedAt)
     if (dismissed instanceof Error) {
       throw new SystemNotificationUnavailableError()
     }

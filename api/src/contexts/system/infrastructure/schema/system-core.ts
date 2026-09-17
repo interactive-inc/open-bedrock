@@ -633,6 +633,7 @@ export const systemNotificationDeliveries = sqliteTable(
       .references(() => systemAccounts.id, { onDelete: "restrict" }),
     deliveredAt: integer("delivered_at", { mode: "timestamp_ms" }).notNull(),
     readAt: integer("read_at", { mode: "timestamp_ms" }),
+    dismissedAt: integer("dismissed_at", { mode: "timestamp_ms" }),
   },
   (table) => [
     uniqueIndex("system_notification_deliveries_message_account_uniq").on(
@@ -645,11 +646,15 @@ export const systemNotificationDeliveries = sqliteTable(
     ),
     index("system_notification_deliveries_unread_idx")
       .on(table.recipientAccountId, table.deliveredAt)
-      .where(sql`${table.readAt} IS NULL`),
+      .where(sql`${table.readAt} IS NULL AND ${table.dismissedAt} IS NULL`),
     check("system_notification_deliveries_id_length", sql`length(${table.id}) BETWEEN 1 AND 255`),
     check(
       "system_notification_deliveries_read_chronology",
       sql`${table.readAt} IS NULL OR ${table.readAt} >= ${table.deliveredAt}`,
+    ),
+    check(
+      "system_notification_deliveries_dismiss_chronology",
+      sql`${table.dismissedAt} IS NULL OR ${table.dismissedAt} >= ${table.deliveredAt}`,
     ),
   ],
 )

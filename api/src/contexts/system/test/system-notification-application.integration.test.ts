@@ -48,12 +48,210 @@ CREATE TABLE system_notification_deliveries (
   recipient_account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE RESTRICT,
   delivered_at INTEGER NOT NULL,
   read_at INTEGER,
+  dismissed_at INTEGER,
   UNIQUE (message_id, recipient_account_id),
-  CHECK (read_at IS NULL OR read_at >= delivered_at)
+  CHECK (read_at IS NULL OR read_at >= delivered_at),
+  CHECK (dismissed_at IS NULL OR dismissed_at >= delivered_at)
 );
 `
 
 describe("canonical System Notification Application + D1 repository", () => {
+  test("複数のMessageとDeliveryを件数非依存の4 queryで原子的にpublish・retryする", async () => {
+    let queryCount = 0
+    const database = createSystemD1TestDatabase(notificationSchema, {
+      onQuery: () => {
+        queryCount += 1
+      },
+    })
+    const accounts = Array.from({ length: 200 }, (_, index) => `account-${index + 1}`)
+    await database.batch(
+      accounts.map((accountId) =>
+        database
+          .prepare(
+            `INSERT INTO system_accounts
+               (id, status, token_version, created_at, updated_at)
+             VALUES (?1, 'active', 0, 1000, 1000)`,
+          )
+          .bind(accountId),
+      ),
+    )
+    const repository = new SystemNotificationRepository({ context: { env: { DB: database } } })
+    const publications = accounts.map((accountId, index) => {
+      const message = createMessage(
+        `message-${index + 1}`,
+        `system:test:batch-${index + 1}`,
+        `source-${index + 1}`,
+      )
+      return {
+        message,
+        deliveries: createDeliveryBatch([
+          createDelivery({
+            id: `delivery-${index + 1}`,
+            messageId: message.id,
+            recipientAccountId: accountId,
+          }),
+        ]),
+      }
+    })
+    const statements = repository.preparePublishBatch(publications)
+    if (statements instanceof Error) throw statements
+    expect(statements).toHaveLength(4)
+    queryCount = 0
+    await database.batch([...statements])
+    expect(queryCount).toBe(4)
+    const retries = accounts.map((accountId, index) => {
+      const message = createMessage(
+        `retry-${index + 1}`,
+        `system:test:batch-${index + 1}`,
+        `source-${index + 1}`,
+      )
+      return {
+        message,
+        deliveries: createDeliveryBatch([
+          createDelivery({
+            id: `retry-delivery-${index + 1}`,
+            messageId: message.id,
+            recipientAccountId: accountId,
+          }),
+        ]),
+      }
+    })
+    const replayStatements = repository.preparePublishBatch(retries)
+    if (replayStatements instanceof Error) throw replayStatements
+    queryCount = 0
+    await database.batch([...replayStatements])
+    expect(queryCount).toBe(4)
+    expect(
+      await database
+        .prepare("SELECT count(*) FROM system_notification_messages")
+        .first<number>("count(*)"),
+    ).toBe(200)
+    expect(
+      await database
+        .prepare("SELECT count(*) FROM system_notification_deliveries")
+        .first<number>("count(*)"),
+    ).toBe(200)
+  })
+
+  test("業務statementと複数通知は無効Account時に全rollbackする", async () => {
+    const database = createSystemD1TestDatabase(notificationSchema)
+    await database.exec("CREATE TABLE business_effects (id TEXT PRIMARY KEY)")
+    await insertAccount(database, "account-active", "active")
+    await insertAccount(database, "account-suspended", "suspended")
+    const publications = ["account-active", "account-suspended"].map((accountId, index) => {
+      const message = createScopedMessage(
+        `message-batch-${index + 1}`,
+        `care:shift:batch-${index + 1}`,
+      )
+      return {
+        message,
+        deliveries: createDeliveryBatch([
+          createDelivery({
+            id: `delivery-batch-${index + 1}`,
+            messageId: message.id,
+            recipientAccountId: accountId,
+          }),
+        ]),
+      }
+    })
+    const repository = new SystemNotificationRepository({ context: { env: { DB: database } } })
+    const statements = repository.preparePublishBatch(publications)
+    if (statements instanceof Error) throw statements
+    await expect(
+      database.batch([
+        database.prepare("INSERT INTO business_effects (id) VALUES ('business-1')"),
+        ...statements,
+      ]),
+    ).rejects.toThrow()
+    for (const table of [
+      "business_effects",
+      "system_notification_messages",
+      "system_notification_resource_scopes",
+      "system_notification_deliveries",
+    ]) {
+      expect(
+        await database.prepare(`SELECT count(*) FROM ${table}`).first<number>("count(*)"),
+      ).toBe(0)
+    }
+  })
+
+  test("複数通知の再送で内容・scope・宛先の相違を全件拒否する", async () => {
+    const database = createSystemD1TestDatabase(notificationSchema)
+    await insertAccount(database, "account-one", "active")
+    await insertAccount(database, "account-two", "active")
+    const repository = new SystemNotificationRepository({ context: { env: { DB: database } } })
+    const original = createScopedMessage("original-message", "care:shift:batch-retry")
+    const first = repository.preparePublishBatch([
+      {
+        message: original,
+        deliveries: createDeliveryBatch([
+          createDelivery({
+            id: "original-delivery",
+            messageId: original.id,
+            recipientAccountId: "account-one",
+          }),
+        ]),
+      },
+    ])
+    if (first instanceof Error) throw first
+    await database.batch([...first])
+
+    for (const [index, change] of [
+      { priority: "critical" },
+      { resourceScope: { type: "care:facility", id: "facility-2" } },
+    ].entries()) {
+      const changed = NotificationMessageEntity.create({
+        id: `changed-message-${index}`,
+        kind: original.kind,
+        title: original.title,
+        body: original.body,
+        source: original.source,
+        action: original.action,
+        resourceScope: original.resourceScope,
+        priority: original.priority,
+        publicationKey: original.publicationKey,
+        createdAt: original.createdAt,
+        ...change,
+      })
+      if (changed instanceof Error) throw changed
+      const replay = repository.preparePublishBatch([
+        {
+          message: changed,
+          deliveries: createDeliveryBatch([
+            createDelivery({
+              id: `changed-delivery-${index}`,
+              messageId: changed.id,
+              recipientAccountId: "account-one",
+            }),
+          ]),
+        },
+      ])
+      if (replay instanceof Error) throw replay
+      await expect(database.batch([...replay])).rejects.toThrow()
+    }
+
+    const changedRecipient = createScopedMessage("changed-recipient", "care:shift:batch-retry")
+    const replay = repository.preparePublishBatch([
+      {
+        message: changedRecipient,
+        deliveries: createDeliveryBatch([
+          createDelivery({
+            id: "changed-recipient-delivery",
+            messageId: changedRecipient.id,
+            recipientAccountId: "account-two",
+          }),
+        ]),
+      },
+    ])
+    if (replay instanceof Error) throw replay
+    await expect(database.batch([...replay])).rejects.toThrow()
+    expect(
+      await database
+        .prepare("SELECT count(*) FROM system_notification_deliveries")
+        .first<number>("count(*)"),
+    ).toBe(1)
+  })
+
   test("200 AccountへのMessageとDeliveryを件数非依存の3 queryで不可分にfan-outする", async () => {
     let queryCount = 0
     const database = createSystemD1TestDatabase(notificationSchema, {
@@ -494,12 +692,64 @@ describe("canonical System Notification Application + D1 repository", () => {
       await repository.dismissDelivery(
         page.items[0]!.delivery.id,
         zAccountId.parse("account-other"),
+        new Date(4_000),
       ),
     ).toBe(false)
-    expect(await repository.dismissDelivery(page.items[0]!.delivery.id, accountId)).toBe(true)
+    expect(await repository.dismissDelivery(page.items[0]!.delivery.id, accountId, new Date(4_000))).toBe(true)
     expect(
       await repository.findByDeliveryIdForAccount(page.items[0]!.delivery.id, accountId),
     ).toBeNull()
+  })
+
+  test("dismiss後の同一publication再送はDeliveryを復活させない", async () => {
+    const database = createSystemD1TestDatabase(notificationSchema)
+    await insertAccount(database, "account-owner", "active")
+    const repository = new SystemNotificationRepository({ context: { env: { DB: database } } })
+    const message = createMessage("dismiss-message", "system:test:dismiss-1", "source-dismiss")
+    const deliveries = createDeliveryBatch([
+      createDelivery({
+        id: "dismiss-delivery",
+        messageId: message.id,
+        recipientAccountId: "account-owner",
+      }),
+    ])
+    expect(
+      await new PublishSystemNotification({ notificationRepository: repository }).execute({
+        message,
+        deliveries,
+      }),
+    ).toEqual({ kind: "published" })
+    const accountId = zAccountId.parse("account-owner")
+    expect(await repository.dismissDelivery(deliveries.deliveries[0]!.id, accountId, new Date(3_000))).toBe(true)
+    const retry = createMessage("retry-message", "system:test:dismiss-1", "source-dismiss")
+    const replay = repository.preparePublishBatch([
+      {
+        message: retry,
+        deliveries: createDeliveryBatch([
+          createDelivery({
+            id: "retry-delivery",
+            messageId: retry.id,
+            recipientAccountId: "account-owner",
+          }),
+        ]),
+      },
+    ])
+    if (replay instanceof Error) throw replay
+    await database.batch([...replay])
+    expect(await repository.countUnreadForAccount(accountId)).toBe(0)
+    expect(
+      await repository.findMany({ recipientAccountId: accountId, read: null, limit: 10, offset: 0 }),
+    ).toMatchObject({ total: 0, items: [] })
+    expect(
+      await database
+        .prepare("SELECT count(*) FROM system_notification_deliveries")
+        .first<number>("count(*)"),
+    ).toBe(1)
+    expect(
+      await database
+        .prepare("SELECT dismissed_at FROM system_notification_deliveries")
+        .first<number>("dismissed_at"),
+    ).toBe(3_000)
   })
 })
 

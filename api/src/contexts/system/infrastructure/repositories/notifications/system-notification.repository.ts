@@ -6,6 +6,10 @@ import type { NotificationMessageEntity } from "@system/domain/entities/notifica
 import type { SystemD1Context } from "@system/configuration/system-context"
 import { toSystemNotificationDelivery } from "@system/infrastructure/repositories/notifications/lib/to-system-notification-delivery"
 import { toSystemNotificationMessage } from "@system/infrastructure/repositories/notifications/lib/to-system-notification-message"
+import {
+  prepareSystemNotificationPublicationBatch,
+  type SystemNotificationPublication,
+} from "@system/infrastructure/repositories/notifications/lib/prepare-system-notification-publication-batch"
 
 const maximumPublicationPayloadBytes = 1_000_000
 
@@ -66,6 +70,13 @@ export class SystemNotificationRepository {
       prepareDeliveryFanOut(database, message, payload),
       preparePublicationInvariant(database, message, payload),
     ]
+  }
+
+  /** 複数Messageのfan-outを件数に依存しない4文で他の業務statementと同時に確定する。 */
+  preparePublishBatch(
+    publications: ReadonlyArray<SystemNotificationPublication>,
+  ): ReadonlyArray<D1PreparedStatement> | Error {
+    return prepareSystemNotificationPublicationBatch(this.c.context.env.DB, publications)
   }
 
   async publish(
@@ -132,6 +143,7 @@ export class SystemNotificationRepository {
                delivery.recipient_account_id,
                delivery.delivered_at,
                delivery.read_at,
+               delivery.dismissed_at,
                message.id AS message_id_value,
                message.kind,
                message.title,
@@ -149,6 +161,7 @@ export class SystemNotificationRepository {
              INNER JOIN system_notification_messages AS message ON message.id = delivery.message_id
              LEFT JOIN system_notification_resource_scopes AS scope ON scope.message_id = message.id
              WHERE delivery.recipient_account_id = ?1
+               AND delivery.dismissed_at IS NULL
                AND (?2 IS NULL OR (delivery.read_at IS NOT NULL) = ?2)
              ORDER BY delivery.delivered_at DESC, delivery.id DESC
              LIMIT ?3 OFFSET ?4`,
@@ -164,6 +177,7 @@ export class SystemNotificationRepository {
             `SELECT count(*) AS total
              FROM system_notification_deliveries
              WHERE recipient_account_id = ?1
+               AND dismissed_at IS NULL
                AND (?2 IS NULL OR (read_at IS NOT NULL) = ?2)`,
           )
           .bind(props.recipientAccountId, props.read === null ? null : props.read ? 1 : 0),
@@ -196,7 +210,7 @@ export class SystemNotificationRepository {
       const total = await this.c.context.env.DB.prepare(
         `SELECT count(*) AS total
            FROM system_notification_deliveries
-           WHERE recipient_account_id = ?1 AND read_at IS NULL`,
+           WHERE recipient_account_id = ?1 AND read_at IS NULL AND dismissed_at IS NULL`,
       )
         .bind(recipientAccountId)
         .first<number>("total")
@@ -223,6 +237,7 @@ export class SystemNotificationRepository {
              SET read_at = coalesce(read_at, ?1)
              WHERE id = ?2
                AND recipient_account_id = ?3
+               AND dismissed_at IS NULL
                AND delivered_at <= ?1
                AND (read_at IS NULL OR read_at <= ?1)`,
           )
@@ -267,6 +282,7 @@ export class SystemNotificationRepository {
            SET read_at = ?1
            WHERE recipient_account_id = ?2
              AND read_at IS NULL
+             AND dismissed_at IS NULL
              AND delivered_at <= ?1`,
       )
         .bind(readAt.getTime(), recipientAccountId)
@@ -286,13 +302,16 @@ export class SystemNotificationRepository {
   async dismissDelivery(
     deliveryId: NotificationDeliveryId,
     recipientAccountId: AccountId,
+    dismissedAt: Date,
   ): Promise<boolean | Error> {
     try {
       const result = await this.c.context.env.DB.prepare(
-        `DELETE FROM system_notification_deliveries
-           WHERE id = ?1 AND recipient_account_id = ?2`,
+        `UPDATE system_notification_deliveries
+           SET dismissed_at = ?3
+           WHERE id = ?1 AND recipient_account_id = ?2
+             AND dismissed_at IS NULL AND delivered_at <= ?3`,
       )
-        .bind(deliveryId, recipientAccountId)
+        .bind(deliveryId, recipientAccountId, dismissedAt.getTime())
         .run()
 
       return result.meta.changes === 1
@@ -561,9 +580,9 @@ function prepareDeliverySelect(
 ): D1PreparedStatement {
   return database
     .prepare(
-      `SELECT id, message_id, recipient_account_id, delivered_at, read_at
+      `SELECT id, message_id, recipient_account_id, delivered_at, read_at, dismissed_at
        FROM system_notification_deliveries
-       WHERE id = ?1 AND recipient_account_id = ?2
+       WHERE id = ?1 AND recipient_account_id = ?2 AND dismissed_at IS NULL
        LIMIT 1`,
     )
     .bind(deliveryId, recipientAccountId)
@@ -582,6 +601,7 @@ function prepareNotificationSelect(
          delivery.recipient_account_id,
          delivery.delivered_at,
          delivery.read_at,
+         delivery.dismissed_at,
          message.id AS message_id_value,
          message.kind,
          message.title,
@@ -599,6 +619,7 @@ function prepareNotificationSelect(
        INNER JOIN system_notification_messages AS message ON message.id = delivery.message_id
        LEFT JOIN system_notification_resource_scopes AS scope ON scope.message_id = message.id
        WHERE delivery.id = ?1 AND delivery.recipient_account_id = ?2
+         AND delivery.dismissed_at IS NULL
        LIMIT 1`,
     )
     .bind(deliveryId, recipientAccountId)
@@ -616,6 +637,7 @@ function toSystemNotification(row: unknown): SystemNotification | Error {
     recipient_account_id: values.recipient_account_id,
     delivered_at: values.delivered_at,
     read_at: values.read_at,
+    dismissed_at: values.dismissed_at,
   })
   if (delivery instanceof Error) return delivery
 

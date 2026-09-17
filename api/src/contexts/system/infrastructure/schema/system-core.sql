@@ -585,7 +585,9 @@ CREATE TABLE system_notification_deliveries (
     REFERENCES system_accounts(id) ON DELETE RESTRICT,
   delivered_at INTEGER NOT NULL,
   read_at INTEGER
-    CHECK (read_at IS NULL OR read_at >= delivered_at)
+    CHECK (read_at IS NULL OR read_at >= delivered_at),
+  dismissed_at INTEGER
+    CHECK (dismissed_at IS NULL OR dismissed_at >= delivered_at)
 );
 
 CREATE UNIQUE INDEX system_notification_deliveries_message_account_uniq
@@ -594,7 +596,7 @@ CREATE INDEX system_notification_deliveries_account_idx
   ON system_notification_deliveries (recipient_account_id, delivered_at);
 CREATE INDEX system_notification_deliveries_unread_idx
   ON system_notification_deliveries (recipient_account_id, delivered_at)
-  WHERE read_at IS NULL;
+  WHERE read_at IS NULL AND dismissed_at IS NULL;
 
 /* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_notification_deliveries_monotonic_read
@@ -605,8 +607,10 @@ WHEN
   OR NEW.recipient_account_id IS NOT OLD.recipient_account_id
   OR NEW.delivered_at IS NOT OLD.delivered_at
   OR (OLD.read_at IS NOT NULL AND NEW.read_at IS NOT OLD.read_at)
+  OR (OLD.dismissed_at IS NOT NULL AND NEW.dismissed_at IS NOT OLD.dismissed_at)
+  OR (OLD.dismissed_at IS NOT NULL AND NEW.read_at IS NOT OLD.read_at)
 BEGIN
-  SELECT RAISE(ABORT, 'notification delivery is immutable except first read');
+  SELECT RAISE(ABORT, 'notification delivery is immutable except first read and dismiss');
 END;
 
 CREATE TABLE system_batch_jobs (

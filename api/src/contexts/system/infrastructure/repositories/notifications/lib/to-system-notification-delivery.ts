@@ -19,5 +19,11 @@ export function toSystemNotificationDelivery(row: unknown): NotificationDelivery
         : typeof record.read_at === "number"
           ? new Date(record.read_at)
           : record.read_at,
+    dismissedAt:
+      record.dismissed_at == null
+        ? null
+        : typeof record.dismissed_at === "number"
+          ? new Date(record.dismissed_at)
+          : record.dismissed_at,
   })
 }

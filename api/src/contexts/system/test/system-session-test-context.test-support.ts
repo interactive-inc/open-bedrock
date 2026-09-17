@@ -264,7 +264,8 @@ const schema = `
     message_id TEXT NOT NULL REFERENCES system_notification_messages(id) ON DELETE RESTRICT,
     recipient_account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE RESTRICT,
     delivered_at INTEGER NOT NULL,
-    read_at INTEGER
+    read_at INTEGER,
+    dismissed_at INTEGER
   );
 
   CREATE UNIQUE INDEX system_notification_deliveries_message_account_uniq
