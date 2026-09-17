@@ -4,6 +4,7 @@ import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definition
 import { readCompanyEmploymentAccount } from "@/contexts/company/interface/operations/read-company-employment-account"
 import { readCompanyEmploymentDirectory } from "@/contexts/company/interface/operations/read-company-employment-directory"
 import { readCompanyEmploymentsByAccount } from "@/contexts/company/interface/operations/read-company-employments-by-account"
+import { readCompanyEmploymentsByAccounts } from "@/contexts/company/interface/operations/read-company-employments-by-accounts"
 import { readCompanyEmploymentsByEmployee } from "@/contexts/company/interface/operations/read-company-employments-by-employee"
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
 
@@ -69,6 +70,30 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
     employmentIds: [],
     employmentStatusesById: new Map(),
   })
+  expect(
+    await readCompanyEmploymentsByAccounts({
+      database: fixture.database,
+      organizationId: "organization:default",
+      accountIds: [person.accountId, "account:missing"],
+      effectiveOn,
+      organizationRevision: found.organizationRevision,
+    }),
+  ).toEqual({
+    organizationRevision: found.organizationRevision,
+    employmentIdsByAccount: new Map([
+      [person.accountId, [employmentId]],
+      ["account:missing", []],
+    ]),
+    employmentStatusesById: new Map([[employmentId, "ACTIVE"]]),
+  })
+  expect(
+    await readCompanyEmploymentsByAccounts({
+      database: fixture.database,
+      organizationId: "organization:default",
+      accountIds: [],
+      effectiveOn,
+    }),
+  ).toBeInstanceOf(Error)
 
   const directory = await readCompanyEmploymentDirectory({
     database: fixture.database,
