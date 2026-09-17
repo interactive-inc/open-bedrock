@@ -7,6 +7,7 @@ import { NotificationMessageEntity } from "@system/domain/entities/notification-
 import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-database.test-support"
 import { SystemNotificationRepository } from "@system/infrastructure/repositories/notifications/system-notification.repository"
 import { prepareSystemNotificationPublicationBatch } from "@system/interface/operations/prepare-system-notification-publication-batch"
+import { listExistingSystemNotificationPublicationKeys } from "@system/interface/operations/list-existing-system-notification-publications"
 import { describe, expect, test } from "bun:test"
 
 const notificationSchema = `
@@ -57,6 +58,25 @@ CREATE TABLE system_notification_deliveries (
 `
 
 describe("canonical System Notification Application + D1 repository", () => {
+  test("公開済みkeyの照会は旧形式のMessageも含め、存在しないkeyを返さない", async () => {
+    const database = createSystemD1TestDatabase(notificationSchema)
+    await database
+      .prepare(
+        `INSERT INTO system_notification_messages
+           (id, kind, title, body, priority, dedupe_key, created_at)
+         VALUES ('old-message', 'shift_request', '旧通知', '本文', 'high', 'shift_request:old', 1000)`,
+      )
+      .run()
+    const found = await listExistingSystemNotificationPublicationKeys({
+      database,
+      publicationKeys: ["shift_request:old", "shift_request:missing"],
+    })
+    expect(found).toEqual(new Set(["shift_request:old"]))
+    expect(
+      await listExistingSystemNotificationPublicationKeys({ database, publicationKeys: [""] }),
+    ).toBeInstanceOf(Error)
+  })
+
   test("公開操作はplainな入力を検証し、業務statementと同じbatchに参加できる", async () => {
     const database = createSystemD1TestDatabase(notificationSchema)
     await database.exec("CREATE TABLE business_effects (id TEXT PRIMARY KEY)")

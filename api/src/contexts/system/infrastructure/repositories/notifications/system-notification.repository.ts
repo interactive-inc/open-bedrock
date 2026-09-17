@@ -79,6 +79,34 @@ export class SystemNotificationRepository {
     return prepareSystemNotificationPublicationBatch(this.c.context.env.DB, publications)
   }
 
+  async listExistingPublicationKeys(
+    publicationKeys: ReadonlyArray<string>,
+  ): Promise<ReadonlySet<string> | Error> {
+    if (
+      !Array.isArray(publicationKeys) ||
+      publicationKeys.some((key) => typeof key !== "string" || key.length < 1 || key.length > 512)
+    ) {
+      return new Error("System Notification publication keys are invalid")
+    }
+    if (publicationKeys.length === 0) return new Set<string>()
+    const payload = JSON.stringify([...new Set(publicationKeys)])
+    if (new TextEncoder().encode(payload).byteLength > maximumPublicationPayloadBytes) {
+      return new Error("System Notification publication keys payload is too large")
+    }
+    try {
+      const found = await this.c.context.env.DB.prepare(
+        `SELECT dedupe_key AS publication_key
+           FROM system_notification_messages
+          WHERE dedupe_key IN (SELECT value FROM json_each(?1))`,
+      )
+        .bind(payload)
+        .all<{ publication_key: string }>()
+      return new Set(found.results.map((row) => row.publication_key))
+    } catch (cause) {
+      return cause instanceof Error ? cause : new Error("System Notification key lookup failed")
+    }
+  }
+
   async publish(
     message: NotificationMessageEntity,
     deliveries: NotificationDeliveryBatchValue,
