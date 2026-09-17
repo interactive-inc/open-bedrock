@@ -51,7 +51,11 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
       effectiveOn,
       organizationRevision: found.organizationRevision,
     }),
-  ).toEqual({ organizationRevision: found.organizationRevision, employmentIds: [employmentId] })
+  ).toEqual({
+    organizationRevision: found.organizationRevision,
+    employmentIds: [employmentId],
+    employmentStatusesById: new Map([[employmentId, "ACTIVE"]]),
+  })
   expect(
     await readCompanyEmploymentsByAccount({
       database: fixture.database,
@@ -60,7 +64,11 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
       effectiveOn,
       organizationRevision: found.organizationRevision,
     }),
-  ).toEqual({ organizationRevision: found.organizationRevision, employmentIds: [] })
+  ).toEqual({
+    organizationRevision: found.organizationRevision,
+    employmentIds: [],
+    employmentStatusesById: new Map(),
+  })
 
   const directory = await readCompanyEmploymentDirectory({
     database: fixture.database,
@@ -83,7 +91,10 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
     effectiveOn,
     organizationRevision: found.organizationRevision,
   })
-  expect(missing).toEqual({ organizationRevision: found.organizationRevision, employment: null })
+  expect(missing).toEqual({
+    organizationRevision: found.organizationRevision,
+    employment: null,
+  })
 
   const beforeHire = await readCompanyEmploymentAccount({
     database: fixture.database,
@@ -92,5 +103,8 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
     effectiveOn: restoreCalendarDate("1900-01-01"),
     organizationRevision: found.organizationRevision,
   })
-  expect(beforeHire).toEqual({ organizationRevision: found.organizationRevision, employment: null })
+  expect(beforeHire).toEqual({
+    organizationRevision: found.organizationRevision,
+    employment: null,
+  })
 }, 15_000)
