@@ -246,6 +246,7 @@ const schema = `
     body TEXT,
     source_type TEXT,
     source_id TEXT,
+    dedupe_key TEXT UNIQUE,
     created_at INTEGER NOT NULL
   );
 
