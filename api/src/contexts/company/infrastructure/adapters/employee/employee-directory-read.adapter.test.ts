@@ -24,38 +24,35 @@ const page = {
 
 function employmentStatuses(database: D1Database, now: string) {
   const selected = alias(employments, "selected_employment")
+  const state = CompanyEmployeeDirectoryReadAdapter.employmentStateTable({
+    now,
+    timeZone: "Asia/Tokyo",
+    alias: "selected_employment_state",
+  })
   return drizzle(database)
-    .select({
-      id: selected.id,
-      status: CompanyEmployeeDirectoryReadAdapter.employmentStatus({
-        now,
-        timeZone: "Asia/Tokyo",
-        employmentId: selected.id,
-        employeeId: selected.employeeId,
-      }),
-    })
+    .select({ id: selected.id, status: state.status })
     .from(selected)
+    .leftJoin(
+      state.source,
+      state.on({ employmentId: selected.id, employeeId: selected.employeeId }),
+    )
     .orderBy(selected.id)
 }
 
 function employmentAttributes(database: D1Database, now: string, timeZone = "Asia/Tokyo") {
   const selected = alias(employments, "listed_employment")
+  const state = CompanyEmployeeDirectoryReadAdapter.employmentStateTable({
+    now,
+    timeZone,
+    alias: "listed_employment_state",
+  })
   return drizzle(database)
-    .select({
-      id: selected.id,
-      name: CompanyEmployeeDirectoryReadAdapter.employeeName({
-        now,
-        timeZone,
-        employeeId: selected.employeeId,
-      }),
-      type: CompanyEmployeeDirectoryReadAdapter.employmentType({
-        now,
-        timeZone,
-        employmentId: selected.id,
-        employeeId: selected.employeeId,
-      }),
-    })
+    .select({ id: selected.id, name: state.officialName, type: state.employmentType })
     .from(selected)
+    .leftJoin(
+      state.source,
+      state.on({ employmentId: selected.id, employeeId: selected.employeeId }),
+    )
     .orderBy(selected.id)
 }
 
@@ -92,19 +89,18 @@ describe("氏名・雇用区分の時点参照", () => {
       type: "FULL_TIME" | "PART_TIME"
       status: "ACTIVE" | "TERMINATED"
     }>) {
-      const query = {
+      const state = CompanyEmployeeDirectoryReadAdapter.employmentStateTable({
         asOf: restoreCalendarDate(scenario.date),
-        employmentId: selected.id,
-        employeeId: selected.employeeId,
-      }
+        alias: "scheduled_employment_state",
+      })
       expect(
         await drizzle(database)
-          .select({
-            name: CompanyEmployeeDirectoryReadAdapter.employeeName(query),
-            type: CompanyEmployeeDirectoryReadAdapter.employmentType(query),
-            status: CompanyEmployeeDirectoryReadAdapter.employmentStatus(query),
-          })
-          .from(selected),
+          .select({ name: state.officialName, type: state.employmentType, status: state.status })
+          .from(selected)
+          .leftJoin(
+            state.source,
+            state.on({ employmentId: selected.id, employeeId: selected.employeeId }),
+          ),
       ).toEqual([{ name: scenario.name, type: scenario.type, status: scenario.status }])
     }
   })
@@ -190,6 +186,81 @@ describe("氏名・雇用区分の時点参照", () => {
       failure = cause
     }
     expect(failure).toBeInstanceOf(Error)
+  })
+})
+
+describe("雇用状態の派生表", () => {
+  test("未接続の雇用は絞り込みを通し、区分を読んだ文だけを失敗させる", async () => {
+    const database = attributeDatabase(
+      "DELETE FROM company_workforce_resource_bindings WHERE resource_type = 'employment';",
+    )
+    const selected = alias(employments, "filtered_employment")
+    const state = CompanyEmployeeDirectoryReadAdapter.employmentStateTable({
+      asOf: restoreCalendarDate("2026-08-01"),
+      alias: "filtered_employment_state",
+    })
+    const filtered = (where: ReturnType<typeof state.isEmploymentType>) =>
+      drizzle(database)
+        .select({ id: selected.id })
+        .from(selected)
+        .leftJoin(
+          state.source,
+          state.on({ employmentId: selected.id, employeeId: selected.employeeId }),
+        )
+        .where(where)
+    expect(await filtered(state.hasEmploymentType)).toEqual([{ id: "employment:1" }])
+    expect(await filtered(state.isEmploymentType("PART_TIME"))).toEqual([{ id: "employment:1" }])
+    let failure: unknown
+    try {
+      await drizzle(database)
+        .select({ type: state.employmentType })
+        .from(selected)
+        .leftJoin(
+          state.source,
+          state.on({ employmentId: selected.id, employeeId: selected.employeeId }),
+        )
+    } catch (cause) {
+      failure = cause
+    }
+    expect(failure).toBeInstanceOf(Error)
+  })
+
+  test("接続済みの雇用は区分の一致だけを通し、重複した接続や開始前は通さない", async () => {
+    const selected = alias(employments, "filtered_employment")
+    for (const scenario of [
+      { additional: "", date: "2026-08-01", has: true, fullTime: true, partTime: false },
+      { additional: "", date: "2025-12-31", has: false, fullTime: false, partTime: false },
+      {
+        additional:
+          "INSERT INTO company_workforce_resource_bindings VALUES ('employment', 'employment:1', 'organization:1', 'employee:1');",
+        date: "2026-08-01",
+        has: false,
+        fullTime: false,
+        partTime: false,
+      },
+    ]) {
+      const database = attributeDatabase(scenario.additional)
+      const state = CompanyEmployeeDirectoryReadAdapter.employmentStateTable({
+        asOf: restoreCalendarDate(scenario.date),
+        alias: "filtered_employment_state",
+      })
+      const count = async (where: ReturnType<typeof state.isEmploymentType>) =>
+        (
+          await drizzle(database)
+            .select({ id: selected.id })
+            .from(selected)
+            .leftJoin(
+              state.source,
+              state.on({ employmentId: selected.id, employeeId: selected.employeeId }),
+            )
+            .where(where)
+        ).length === 1
+      expect({
+        has: await count(state.hasEmploymentType),
+        fullTime: await count(state.isEmploymentType("FULL_TIME")),
+        partTime: await count(state.isEmploymentType("PART_TIME")),
+      }).toEqual({ has: scenario.has, fullTime: scenario.fullTime, partTime: scenario.partTime })
+    }
   })
 })
 
