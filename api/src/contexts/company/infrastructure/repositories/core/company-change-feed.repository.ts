@@ -26,7 +26,7 @@ export class CompanyChangeFeedRepository {
           .bind(props.organizationId),
         this.c
           .prepare(`SELECT organization_revision, resource_type, resource_id, revision,
-            command_id, actor_account_id, reason, evidence_references_json, state,
+            command_id, actor_account_id, reason, evidence_references_json, corrects_revision, state,
             effective_from, effective_to, recorded_at
           FROM company_resource_revisions
           WHERE organization_id = ?1

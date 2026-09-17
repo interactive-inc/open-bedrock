@@ -8,6 +8,7 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import { createCompanyEmployerTestContext } from "@/contexts/company/test/company-employer.test-support"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
+import { prepareHistoricalCompanyResourceRevisionFixture } from "@/contexts/company/test/historical-company-resource-revision.test-support"
 import { splitSqlStatements } from "@/lib/database/split-sql-statements"
 
 const files = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
@@ -31,6 +32,7 @@ test.each([false, true])(
   "既存の全改訂を保全し、不整合の有無に応じて移行を原子的に確定する: %s",
   async (invalid) => {
     const database = createCompanyD1TestDatabase(files.slice(0, cutover).map(read).join("\n"))
+    await prepareHistoricalCompanyResourceRevisionFixture(database)
     const f = await createCompanyEmployerTestContext(database)
     if (invalid)
       expect(

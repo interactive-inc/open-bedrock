@@ -5,6 +5,13 @@ import {
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import type { OrganizationChangeEvidenceReference } from "@/contexts/company/domain/entities/organization-workforce-change.entity"
 
+export type CompanyResourceCorrection = Readonly<{
+  type: CompanyResourceProps["type"]
+  id: string
+  revision: number
+  correctsRevision: number
+}>
+
 export type CompanyResourceChangeProps = Readonly<{
   commandId: string
   expectedRevision: number
@@ -12,6 +19,7 @@ export type CompanyResourceChangeProps = Readonly<{
   reason: string
   recordedAt: number
   evidenceReferences?: ReadonlyArray<OrganizationChangeEvidenceReference>
+  corrections?: ReadonlyArray<CompanyResourceCorrection>
   resources: ReadonlyArray<CompanyResourceProps>
 }>
 
@@ -22,6 +30,7 @@ export class CompanyResourceChangeEntity {
   readonly reason: string
   readonly recordedAt: number
   readonly evidenceReferences: ReadonlyArray<OrganizationChangeEvidenceReference>
+  readonly corrections: ReadonlyArray<CompanyResourceCorrection>
   readonly resources: ReadonlyArray<CompanyResourceEntity>
 
   private constructor(
@@ -35,6 +44,9 @@ export class CompanyResourceChangeEntity {
     this.recordedAt = props.recordedAt
     this.evidenceReferences = Object.freeze(
       (props.evidenceReferences ?? []).map((reference) => Object.freeze({ ...reference })),
+    )
+    this.corrections = Object.freeze(
+      (props.corrections ?? []).map((correction) => Object.freeze({ ...correction })),
     )
     this.resources = Object.freeze([...props.resources])
     Object.freeze(this)
@@ -77,6 +89,8 @@ export class CompanyResourceChangeEntity {
             value.trim() !== value,
         ),
       ) ||
+      (props.corrections?.length ?? 0) > props.resources.length ||
+      ((props.corrections?.length ?? 0) > 0 && (props.evidenceReferences?.length ?? 0) === 0) ||
       props.resources.length < 1 ||
       (!historyBatch && props.resources.length > 100)
     ) {
@@ -104,6 +118,27 @@ export class CompanyResourceChangeEntity {
       )
         return new CompanyResourceValidationError("invalid_change")
       identities.set(identity, resource.revision)
+    }
+
+    const corrections = new Set<string>()
+    for (const correction of props.corrections ?? []) {
+      const target = resources.find(
+        (resource) =>
+          resource.type === correction.type &&
+          resource.id === correction.id &&
+          resource.revision === correction.revision,
+      )
+      const key = `${correction.type}\u0000${correction.id}\u0000${correction.revision}`
+      if (
+        target === undefined ||
+        corrections.has(key) ||
+        !Number.isSafeInteger(correction.correctsRevision) ||
+        correction.correctsRevision < 1 ||
+        correction.correctsRevision >= correction.revision
+      ) {
+        return new CompanyResourceValidationError("invalid_change")
+      }
+      corrections.add(key)
     }
 
     return new CompanyResourceChangeEntity({ ...props, resources })

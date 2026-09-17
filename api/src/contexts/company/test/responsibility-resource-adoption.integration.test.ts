@@ -20,6 +20,7 @@ import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { prepareHistoricalCompanyResourceRevisionFixture } from "@/contexts/company/test/historical-company-resource-revision.test-support"
 import { splitSqlStatements } from "@/lib/database/split-sql-statements"
 
 function resourceProps(resource: CompanyResourceEntity): CompanyResourceProps {
@@ -911,6 +912,7 @@ test("既存の期間重複があるmigrationは一意制約を置換する前�
       .replaceAll("initialization:company:root", "fixture:confirmed-organization")
       .replaceAll("system:initialization", "fixture:organization-recorder"),
   )
+  await prepareHistoricalCompanyResourceRevisionFixture(database)
   const f = await fixture(database, "confirmed")
   const responsibility: CompanyResourceProps = {
     organizationId: "organization:default",

@@ -62,6 +62,7 @@ export class CompanyResourceJournalAdapter {
       ...(change.evidenceReferences.length > 0
         ? { evidenceReferences: change.evidenceReferences }
         : {}),
+      ...(change.corrections.length > 0 ? { corrections: change.corrections } : {}),
       resources: change.resources.map((resource) => ({
         organizationId: resource.organizationId,
         type: resource.type,
@@ -116,6 +117,12 @@ export class CompanyResourceJournalAdapter {
         return compareCompanyResourcePersistence(firstLeft, firstRight)
       })
       .flatMap((versions) => versions.toSorted((left, right) => left.revision - right.revision))
+    const corrections = new Map(
+      change.corrections.map((correction) => [
+        `${correction.type}\u0000${correction.id}\u0000${correction.revision}`,
+        correction.correctsRevision,
+      ]),
+    )
     for (const resource of ordered) {
       const attributesJson = CanonicalSystemJsonValue.create(resource.attributes)
       if (attributesJson instanceof Error) return attributesJson
@@ -139,6 +146,9 @@ export class CompanyResourceJournalAdapter {
           actorAccountId: change.actorAccountId,
           reason: change.reason,
           evidenceReferencesJson: evidenceReferencesJson.toString(),
+          correctsRevision:
+            corrections.get(`${resource.type}\u0000${resource.id}\u0000${resource.revision}`) ??
+            null,
           recordedAt: change.recordedAt,
         }),
         database

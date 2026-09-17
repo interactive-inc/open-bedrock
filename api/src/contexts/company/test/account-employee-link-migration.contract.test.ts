@@ -5,6 +5,7 @@ import { join } from "node:path"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { createExternalIdentityImportTestContext } from "@/contexts/company/test/external-identity-import.test-support"
+import { prepareHistoricalCompanyResourceRevisionFixture } from "@/contexts/company/test/historical-company-resource-revision.test-support"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
@@ -23,6 +24,7 @@ async function fixture() {
       .map((file) => readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8"))
       .join("\n"),
   )
+  const auditMigrations = await prepareHistoricalCompanyResourceRevisionFixture(database)
   const c = await createExternalIdentityImportTestContext("oidc", database)
   expect((await c.application.execute(c.input)).kind).toBe("applied")
   const repository = new D1CompanyResourceRepository({ database })
@@ -61,7 +63,7 @@ async function fixture() {
     expect((await repository.write(change)).kind).toBe("applied")
   }
   const migrate = async () => {
-    for (const file of files.filter((file) => file >= first))
+    for (const file of files.filter((file) => file >= first && !auditMigrations.has(file)))
       await database.batch(
         splitSqlStatements(readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8")).map(
           (sql) => database.prepare(sql),

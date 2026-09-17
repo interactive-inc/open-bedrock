@@ -6,6 +6,7 @@ import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-
 import { splitSqlStatements } from "@/lib/database/split-sql-statements"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { createCompanyEmployerTestContext } from "@/contexts/company/test/company-employer.test-support"
+import { prepareHistoricalCompanyResourceRevisionFixture } from "@/contexts/company/test/historical-company-resource-revision.test-support"
 
 const filename = readdirSync(COMPANY_TEST_MIGRATIONS_DIR).find((name) =>
   name.endsWith("_guard_company_employment_contract_terms.sql"),
@@ -28,6 +29,7 @@ test.each([false, true])("実製品の既存履歴を保全してD1のbatchで�
       .map((name) => readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, name), "utf8"))
       .join("\n"),
   )
+  await prepareHistoricalCompanyResourceRevisionFixture(database)
   const f = await createCompanyEmployerTestContext(database)
   const invalidInsert = database
     .prepare(`INSERT INTO company_resource_revisions

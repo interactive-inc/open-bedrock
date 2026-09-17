@@ -70,6 +70,39 @@ describe("CompanyResourceChangeEntity", () => {
       }),
     ).toMatchObject({ code: "invalid_change" })
   })
+
+  test("訂正元revisionは同一command内の対象資源と原資料に結び付ける", () => {
+    const props = {
+      commandId: "command:correction",
+      expectedRevision: 1,
+      actorAccountId: "account:1",
+      reason: "correct old employee fact",
+      recordedAt: 2,
+      resources: [{ ...employee, revision: 2 }],
+      corrections: [
+        { type: "employee" as const, id: employee.id, revision: 2, correctsRevision: 1 },
+      ],
+    }
+    expect(CompanyResourceChangeEntity.create(props)).toMatchObject({ code: "invalid_change" })
+    const withEvidence = {
+      ...props,
+      evidenceReferences: [{ context: "system", kind: "document", id: "hire:1", version: "1" }],
+    }
+    const change = CompanyResourceChangeEntity.create(withEvidence)
+    expect(change).toBeInstanceOf(CompanyResourceChangeEntity)
+    if (!(change instanceof CompanyResourceChangeEntity)) return
+    expect(change.corrections).toEqual(props.corrections)
+    expect(Object.isFrozen(change.corrections[0])).toBeTrue()
+    for (const corrections of [
+      [{ ...props.corrections[0]!, id: "employee:other" }],
+      [{ ...props.corrections[0]!, correctsRevision: 2 }],
+      [props.corrections[0]!, props.corrections[0]!],
+    ]) {
+      expect(CompanyResourceChangeEntity.create({ ...withEvidence, corrections })).toMatchObject({
+        code: "invalid_change",
+      })
+    }
+  })
 })
 
 test("人事履歴の内部batchは同じ資源の連続版を受け付け、通常commandは重複を拒否する", () => {

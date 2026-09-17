@@ -43,6 +43,7 @@ function fixture() {
     ALTER TABLE company_resource_revisions ADD COLUMN actor_account_id TEXT NOT NULL DEFAULT 'account:writer';
     ALTER TABLE company_resource_revisions ADD COLUMN reason TEXT NOT NULL DEFAULT 'Confirmed company fact';
     ALTER TABLE company_resource_revisions ADD COLUMN evidence_references_json TEXT NOT NULL DEFAULT '[]';
+    ALTER TABLE company_resource_revisions ADD COLUMN corrects_revision INTEGER;
     UPDATE company_resource_revisions SET evidence_references_json =
       '[{"context":"system","kind":"document","id":"source:hire","version":"1"}]'
       WHERE command_id = 'command:one';
@@ -121,6 +122,16 @@ test("原資料参照は正式revisionに残り、変更取得と再送判定に
   })
   if (changedEvidence instanceof Error) throw changedEvidence
   expect(await repository.write(changedEvidence)).toMatchObject({ kind: "command_conflict" })
+  const correction = CompanyResourceChangeEntity.create({
+    ...props,
+    commandId: "evidence:correction",
+    expectedRevision: 1,
+    corrections: [{ type: "legal-entity", id: f.legalEntity.id, revision: 2, correctsRevision: 1 }],
+    resources: [{ ...f.legalEntity, revision: 2 }],
+  })
+  if (correction instanceof Error) throw correction
+  expect(await repository.write(correction)).toMatchObject({ kind: "applied", replayed: false })
+  expect(await repository.write(correction)).toMatchObject({ kind: "applied", replayed: true })
   const page = await new CompanyChangeFeedRepository(f.database).list({
     organizationId: "organization:default",
     afterRevision: 0,
@@ -131,8 +142,13 @@ test("原資料参照は正式revisionに残り、変更取得と再送判定に
     limit: 25,
   })
   if (page instanceof Error) throw page
-  expect(page.changes).toHaveLength(f.resources.length)
+  expect(page.changes).toHaveLength(f.resources.length + 1)
   expect(page.changes[0]?.evidence_references).toEqual(props.evidenceReferences)
+  expect(page.changes.find((change) => change.revision === 2)).toMatchObject({
+    resource_type: "legal-entity",
+    corrects_revision: 1,
+    evidence_references: props.evidenceReferences,
+  })
 })
 
 test("同じcommandの変更をページ境界で失わず、停止・再送・独立consumerの再構築が一致する", async () => {

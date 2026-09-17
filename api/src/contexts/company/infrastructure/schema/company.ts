@@ -128,6 +128,7 @@ export const companyResourceRevisions = sqliteTable(
     actorAccountId: text("actor_account_id").notNull(),
     reason: text("reason").notNull(),
     evidenceReferencesJson: text("evidence_references_json").notNull().default("[]"),
+    correctsRevision: integer("corrects_revision"),
     recordedAt: integer("recorded_at").notNull(),
   },
   (table) => [
@@ -150,6 +151,10 @@ export const companyResourceRevisions = sqliteTable(
       .on(table.organizationId, table.resourceId)
       .where(sql`${table.resourceType} = 'account-employee-link'`),
     check("company_resource_revisions_revision_positive", sql`${table.revision} >= 1`),
+    check(
+      "company_resource_revisions_correction_target_valid",
+      sql`${table.correctsRevision} IS NULL OR (${table.correctsRevision} >= 1 AND ${table.correctsRevision} < ${table.revision})`,
+    ),
     check("company_resource_revisions_state_valid", sql`${table.state} IN ('active', 'void')`),
     check(
       "company_resource_revisions_period_valid",

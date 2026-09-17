@@ -566,6 +566,7 @@
     "src/contexts/company/test/grade-assignment-history.api.test.ts",
     "src/contexts/company/test/grade-award-archive-read.test.ts",
     "src/contexts/company/test/grade-award-archive-storage.test.ts",
+    "src/contexts/company/test/historical-company-resource-revision.test-support.ts",
     "src/contexts/company/test/legacy-definition-records.api.integration.test.ts",
     "src/contexts/company/test/legacy-manager-retirement.integration.test.ts",
     "src/contexts/company/test/management-relations.integration.test.ts",

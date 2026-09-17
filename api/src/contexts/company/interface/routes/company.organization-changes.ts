@@ -2,6 +2,7 @@ import { resolveCompanyRecordedAt } from "@/contexts/company/interface/request-e
 /** /company/organization-changes */
 import { ApplyOrganizationChange } from "@/contexts/company/application/organization/apply-organization-change"
 import type { CompanyJsonObject } from "@/contexts/company/domain/entities/company-resource.entity"
+import { companyResourceTypes } from "@/contexts/company/domain/catalogs/company-resource-type.catalog"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import {
@@ -50,6 +51,17 @@ export const POST = factory.createHandlers(
             kind: z.string().trim().min(1).max(100),
             id: z.string().trim().min(1).max(512),
             version: z.string().trim().min(1).max(255),
+          }),
+        )
+        .max(100)
+        .optional(),
+      corrections: z
+        .array(
+          z.strictObject({
+            type: z.enum(companyResourceTypes),
+            id: z.string().regex(/^\S{1,255}$/),
+            revision: z.number().int().min(2),
+            correctsRevision: z.number().int().min(1),
           }),
         )
         .max(100)
@@ -386,6 +398,7 @@ export const POST = factory.createHandlers(
       expectedRevision: Number(headers["if-match"].replace(/^W\//, "").replace(/^"|"$/g, "")),
       reason: body.reason,
       evidenceReferences: body.evidenceReferences,
+      corrections: body.corrections,
       recordedAt: resolveCompanyRecordedAt(context.var.companyClock),
       resources: body.resources.map((resource) => ({
         ...resource,

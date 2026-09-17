@@ -17,6 +17,7 @@ const schema = z.object({
   actor_account_id: z.string().min(1),
   reason: z.string().min(1),
   evidence_references: z.array(evidenceReferenceSchema),
+  corrects_revision: z.number().int().positive().nullable(),
   state: z.enum(["active", "void"]),
   effective_from: z.string().date(),
   effective_to: z.string().date().nullable(),
