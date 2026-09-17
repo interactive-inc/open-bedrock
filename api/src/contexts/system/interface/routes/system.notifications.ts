@@ -9,6 +9,7 @@ import {
 import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"
 import { SystemFeaturePermission } from "@system/domain/catalogs/iam/system-feature-permission.catalog"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { notificationSourceReferenceSchema } from "@system/domain/schemas/notifications/notification-reference.schema"
 import { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
 import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
 import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
@@ -58,6 +59,9 @@ export const GET = systemFactory.createHandlers(
           body: message.body,
           source:
             message.source === null ? null : { type: message.source.type, id: message.source.id },
+          action: message.action,
+          resource_scope: message.resourceScope,
+          priority: message.priority,
           delivered_at: delivery.deliveredAt.toISOString(),
           read_at: delivery.readAt?.toISOString() ?? null,
         })),
@@ -99,6 +103,9 @@ export const POST = systemFactory.createHandlers(
         .strict()
         .nullable()
         .default(null),
+      action: notificationSourceReferenceSchema.nullable().default(null),
+      resource_scope: notificationSourceReferenceSchema.nullable().default(null),
+      priority: z.enum(["low", "normal", "high", "critical"]).default("normal"),
     }),
   ),
   async (context) => {
@@ -128,6 +135,9 @@ export const POST = systemFactory.createHandlers(
       title: body.title,
       body: body.body,
       source: body.source,
+      action: body.action,
+      resourceScope: body.resource_scope,
+      priority: body.priority,
       createdAt: now,
     })
     if (message instanceof Error) {

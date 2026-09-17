@@ -27,10 +27,19 @@ CREATE TABLE system_notification_messages (
   body TEXT,
   source_type TEXT,
   source_id TEXT,
+  action_type TEXT,
+  action_id TEXT,
+  priority TEXT NOT NULL DEFAULT 'normal',
   dedupe_key TEXT UNIQUE,
   created_at INTEGER NOT NULL,
   CHECK ((source_type IS NULL AND source_id IS NULL) OR
          (source_type IS NOT NULL AND source_id IS NOT NULL))
+);
+
+CREATE TABLE system_notification_resource_scopes (
+  message_id TEXT PRIMARY KEY NOT NULL REFERENCES system_notification_messages(id) ON DELETE CASCADE,
+  resource_type TEXT NOT NULL,
+  resource_id TEXT NOT NULL
 );
 
 CREATE TABLE system_notification_deliveries (
@@ -266,6 +275,107 @@ describe("canonical System Notification Application + D1 repository", () => {
     ).toBe(0)
   })
 
+  test("優先度・opaque action・resource scopeを保存し、属性を変えた再送は拒否する", async () => {
+    const database = createSystemD1TestDatabase(notificationSchema)
+    await insertAccount(database, "account-owner", "active")
+    const repository = new SystemNotificationRepository({ context: { env: { DB: database } } })
+    const publish = new PublishSystemNotification({ notificationRepository: repository })
+    const message = createScopedMessage("message-scoped", "care:shift:reminder-1")
+    const deliveries = createDeliveryBatch([
+      createDelivery({
+        id: "delivery-scoped",
+        messageId: message.id,
+        recipientAccountId: "account-owner",
+      }),
+    ])
+    expect(await publish.execute({ message, deliveries })).toEqual({ kind: "published" })
+    const saved = await repository.findByDeliveryIdForAccount(
+      deliveries.deliveries[0]!.id,
+      zAccountId.parse("account-owner"),
+    )
+    expect(saved).not.toBeInstanceOf(Error)
+    if (saved instanceof Error || saved === null) throw saved ?? new Error("missing delivery")
+    expect(saved.message).toMatchObject({
+      priority: "high",
+      action: { type: "care:shift_request", id: "facility-1" },
+      resourceScope: { type: "care:facility", id: "facility-1" },
+    })
+
+    for (const [index, changedField] of [
+      { priority: "critical" },
+      { action: { type: "care:shift_request", id: "facility-2" } },
+      { resourceScope: { type: "care:facility", id: "facility-2" } },
+      { resourceScope: null },
+    ].entries()) {
+      const changed = NotificationMessageEntity.create({
+        id: `message-scoped-retry-${index}`,
+        kind: message.kind,
+        title: message.title,
+        body: message.body,
+        source: message.source,
+        action: message.action,
+        resourceScope: message.resourceScope,
+        priority: message.priority,
+        publicationKey: message.publicationKey,
+        createdAt: message.createdAt,
+        ...changedField,
+      })
+      if (changed instanceof Error) throw changed
+      expect(
+        await publish.execute({
+          message: changed,
+          deliveries: createDeliveryBatch([
+            createDelivery({
+              id: `delivery-scoped-retry-${index}`,
+              messageId: changed.id,
+              recipientAccountId: "account-owner",
+            }),
+          ]),
+        }),
+      ).toBeInstanceOf(Error)
+    }
+    expect(
+      await database
+        .prepare("SELECT count(*) FROM system_notification_resource_scopes")
+        .first<number>("count(*)"),
+    ).toBe(1)
+  })
+
+  test("resource scope付き配信の一部失敗はMessage・scope・Deliveryを全rollbackする", async () => {
+    const database = createSystemD1TestDatabase(notificationSchema)
+    await insertAccount(database, "account-active", "active")
+    await insertAccount(database, "account-suspended", "suspended")
+    const message = createScopedMessage("message-scoped-failure", "care:shift:reminder-2")
+    const deliveries = createDeliveryBatch([
+      createDelivery({
+        id: "delivery-scoped-active",
+        messageId: message.id,
+        recipientAccountId: "account-active",
+      }),
+      createDelivery({
+        id: "delivery-scoped-suspended",
+        messageId: message.id,
+        recipientAccountId: "account-suspended",
+      }),
+    ])
+    const repository = new SystemNotificationRepository({ context: { env: { DB: database } } })
+    expect(
+      await new PublishSystemNotification({ notificationRepository: repository }).execute({
+        message,
+        deliveries,
+      }),
+    ).toBeInstanceOf(Error)
+    for (const table of [
+      "system_notification_messages",
+      "system_notification_resource_scopes",
+      "system_notification_deliveries",
+    ]) {
+      expect(
+        await database.prepare(`SELECT count(*) FROM ${table}`).first<number>("count(*)"),
+      ).toBe(0)
+    }
+  })
+
   test("他Accountからreceiptを隠し、既読時刻を最初の遷移から後退も上書きもしない", async () => {
     const database = createSystemD1TestDatabase(notificationSchema)
     await insertAccount(database, "account-owner", "active")
@@ -408,6 +518,23 @@ function createMessage(
     createdAt: new Date(1_000),
   })
 
+  if (message instanceof Error) throw message
+  return message
+}
+
+function createScopedMessage(id: string, publicationKey: string): NotificationMessageEntity {
+  const message = NotificationMessageEntity.create({
+    id,
+    kind: "care:shift.reminder",
+    title: "Shift reminder",
+    body: "Submit your shift request",
+    source: { type: "care:shift.request", id: "request-1" },
+    action: { type: "care:shift_request", id: "facility-1" },
+    resourceScope: { type: "care:facility", id: "facility-1" },
+    priority: "high",
+    publicationKey,
+    createdAt: new Date(1_000),
+  })
   if (message instanceof Error) throw message
   return message
 }

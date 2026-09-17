@@ -246,8 +246,17 @@ const schema = `
     body TEXT,
     source_type TEXT,
     source_id TEXT,
+    action_type TEXT,
+    action_id TEXT,
+    priority TEXT NOT NULL DEFAULT 'normal',
     dedupe_key TEXT UNIQUE,
     created_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE system_notification_resource_scopes (
+    message_id TEXT PRIMARY KEY NOT NULL REFERENCES system_notification_messages(id) ON DELETE CASCADE,
+    resource_type TEXT NOT NULL,
+    resource_id TEXT NOT NULL
   );
 
   CREATE TABLE system_notification_deliveries (

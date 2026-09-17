@@ -536,6 +536,8 @@ export const systemNotificationMessages = sqliteTable(
     title: text("title").notNull(),
     body: text("body"),
     actionUrl: text("action_url"),
+    actionType: text("action_type"),
+    actionId: text("action_id"),
     priority: text("priority", { enum: ["low", "normal", "high", "critical"] })
       .notNull()
       .default("normal"),
@@ -572,6 +574,14 @@ export const systemNotificationMessages = sqliteTable(
         ${table.sourceType} IS NOT NULL AND ${table.sourceId} IS NOT NULL
         AND length(${table.sourceType}) BETWEEN 3 AND 100
         AND length(${table.sourceId}) BETWEEN 1 AND 512
+      )`,
+    ),
+    check(
+      "system_notification_messages_action_pair",
+      sql`(${table.actionType} IS NULL AND ${table.actionId} IS NULL) OR (
+        ${table.actionType} IS NOT NULL AND ${table.actionId} IS NOT NULL
+        AND length(${table.actionType}) BETWEEN 3 AND 100
+        AND length(${table.actionId}) BETWEEN 1 AND 512
       )`,
     ),
   ],

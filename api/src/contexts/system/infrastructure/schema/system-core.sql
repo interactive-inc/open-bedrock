@@ -519,6 +519,8 @@ CREATE TABLE system_notification_messages (
     CHECK (body IS NULL OR length(body) BETWEEN 1 AND 10000),
   action_url TEXT
     CHECK (action_url IS NULL OR length(action_url) BETWEEN 1 AND 2048),
+  action_type TEXT,
+  action_id TEXT,
   priority TEXT NOT NULL DEFAULT 'normal'
     CHECK (priority IN ('low', 'normal', 'high', 'critical')),
   dedupe_key TEXT,
@@ -530,6 +532,13 @@ CREATE TABLE system_notification_messages (
       source_type IS NOT NULL AND source_id IS NOT NULL
       AND length(source_type) BETWEEN 3 AND 100
       AND length(source_id) BETWEEN 1 AND 512
+    )
+  ),
+  CHECK (
+    (action_type IS NULL AND action_id IS NULL) OR (
+      action_type IS NOT NULL AND action_id IS NOT NULL
+      AND length(action_type) BETWEEN 3 AND 100
+      AND length(action_id) BETWEEN 1 AND 512
     )
   )
 );

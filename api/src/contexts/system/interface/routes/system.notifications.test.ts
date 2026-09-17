@@ -100,6 +100,9 @@ describe("System Notification HTTP", () => {
         title: "System notification",
         body: "Portable notification body",
         source: { type: "system:test-source", id: "source-1" },
+        action: { type: "system:test-action", id: "target-1" },
+        resource_scope: { type: "system:test-resource", id: "resource-1" },
+        priority: "high",
       },
     })
     expect(published.status).toBe(201)
@@ -123,7 +126,17 @@ describe("System Notification HTTP", () => {
 
     const listed = await client.system.notifications.$get({ query: {} })
     expect(listed.status).toBe(200)
-    expect(await listed.json()).toMatchObject({ total: 1, notifications: [{ id: deliveryId }] })
+    expect(await listed.json()).toMatchObject({
+      total: 1,
+      notifications: [
+        {
+          id: deliveryId,
+          action: { type: "system:test-action", id: "target-1" },
+          resource_scope: { type: "system:test-resource", id: "resource-1" },
+          priority: "high",
+        },
+      ],
+    })
 
     const unread = await client.system.notifications["unread-count"].$get()
     expect(unread.status).toBe(200)
@@ -133,7 +146,13 @@ describe("System Notification HTTP", () => {
       param: { id: deliveryId },
     })
     expect(detail.status).toBe(200)
-    expect(await detail.json()).toMatchObject({ id: deliveryId, read_at: null })
+    expect(await detail.json()).toMatchObject({
+      id: deliveryId,
+      read_at: null,
+      action: { type: "system:test-action", id: "target-1" },
+      resource_scope: { type: "system:test-resource", id: "resource-1" },
+      priority: "high",
+    })
 
     const marked = await client.system.notifications[":id"].$patch({
       param: { id: deliveryId },

@@ -62,6 +62,7 @@ export class SystemNotificationRepository {
     const database = this.c.context.env.DB
     return [
       prepareMessageInsert(database, message),
+      ...(message.resourceScope === null ? [] : [prepareResourceScopeInsert(database, message)]),
       prepareDeliveryFanOut(database, message, payload),
       preparePublicationInvariant(database, message, payload),
     ]
@@ -75,7 +76,7 @@ export class SystemNotificationRepository {
     if (statements instanceof Error) return statements
     try {
       const results = await this.c.context.env.DB.batch([...statements])
-      return results.length === 3 && results.every((result) => result.success)
+      return results.length === statements.length && results.every((result) => result.success)
         ? undefined
         : new Error("System Notification publication did not succeed")
     } catch (caught) {
@@ -137,10 +138,16 @@ export class SystemNotificationRepository {
                message.body,
                message.source_type,
                message.source_id,
+               message.priority,
+               message.action_type,
+               message.action_id,
                message.dedupe_key,
+               scope.resource_type,
+               scope.resource_id,
                message.created_at
              FROM system_notification_deliveries AS delivery
              INNER JOIN system_notification_messages AS message ON message.id = delivery.message_id
+             LEFT JOIN system_notification_resource_scopes AS scope ON scope.message_id = message.id
              WHERE delivery.recipient_account_id = ?1
                AND (?2 IS NULL OR (delivery.read_at IS NOT NULL) = ?2)
              ORDER BY delivery.delivered_at DESC, delivery.id DESC
@@ -318,8 +325,9 @@ function prepareMessageInsert(
     return database
       .prepare(
         `INSERT INTO system_notification_messages
-           (id, kind, title, body, source_type, source_id, dedupe_key, created_at)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)
+           (id, kind, title, body, source_type, source_id, priority,
+            action_type, action_id, dedupe_key, created_at)
+         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11)
          ON CONFLICT(dedupe_key) DO NOTHING`,
       )
       .bind(
@@ -329,6 +337,9 @@ function prepareMessageInsert(
         message.body,
         message.source?.type ?? null,
         message.source?.id ?? null,
+        message.priority,
+        message.action?.type ?? null,
+        message.action?.id ?? null,
         message.publicationKey,
         message.createdAt.getTime(),
       )
@@ -336,8 +347,9 @@ function prepareMessageInsert(
   return database
     .prepare(
       `INSERT INTO system_notification_messages
-         (id, kind, title, body, source_type, source_id, created_at)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
+         (id, kind, title, body, source_type, source_id, priority,
+          action_type, action_id, created_at)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`,
     )
     .bind(
       message.id,
@@ -346,8 +358,36 @@ function prepareMessageInsert(
       message.body,
       message.source?.type ?? null,
       message.source?.id ?? null,
+      message.priority,
+      message.action?.type ?? null,
+      message.action?.id ?? null,
       message.createdAt.getTime(),
     )
+}
+
+function prepareResourceScopeInsert(
+  database: D1Database,
+  message: NotificationMessageEntity,
+): D1PreparedStatement {
+  const scope = message.resourceScope
+  if (scope === null) throw new Error("notification resource scope is missing")
+  if (message.publicationKey !== null) {
+    return database
+      .prepare(
+        `INSERT INTO system_notification_resource_scopes
+           (message_id, resource_type, resource_id)
+         SELECT id, ?2, ?3 FROM system_notification_messages WHERE dedupe_key = ?1
+         ON CONFLICT(message_id) DO NOTHING`,
+      )
+      .bind(message.publicationKey, scope.type, scope.id)
+  }
+  return database
+    .prepare(
+      `INSERT INTO system_notification_resource_scopes
+         (message_id, resource_type, resource_id)
+       VALUES (?1, ?2, ?3)`,
+    )
+    .bind(message.id, scope.type, scope.id)
 }
 
 function prepareDeliveryFanOut(
@@ -416,6 +456,22 @@ function preparePublicationInvariant(
              SELECT 1 FROM system_notification_messages
              WHERE dedupe_key = ?2 AND kind = ?3 AND title = ?4 AND body IS ?5
                AND source_type IS ?6 AND source_id IS ?7
+               AND priority = ?8 AND action_type IS ?9 AND action_id IS ?10
+           )
+           AND (
+             (?11 IS NULL AND NOT EXISTS (
+               SELECT 1 FROM system_notification_resource_scopes AS scope
+               INNER JOIN system_notification_messages AS existing
+                 ON existing.id = scope.message_id
+               WHERE existing.dedupe_key = ?2
+             ))
+             OR EXISTS (
+               SELECT 1 FROM system_notification_resource_scopes AS scope
+               INNER JOIN system_notification_messages AS existing
+                 ON existing.id = scope.message_id
+               WHERE existing.dedupe_key = ?2
+                 AND scope.resource_type = ?11 AND scope.resource_id = ?12
+             )
            )
            AND (
              SELECT count(*) FROM system_notification_deliveries AS delivery
@@ -442,6 +498,11 @@ function preparePublicationInvariant(
         message.body,
         message.source?.type ?? null,
         message.source?.id ?? null,
+        message.priority,
+        message.action?.type ?? null,
+        message.action?.id ?? null,
+        message.resourceScope?.type ?? null,
+        message.resourceScope?.id ?? null,
       )
   }
   return database
@@ -452,6 +513,16 @@ function preparePublicationInvariant(
            SELECT 1 FROM system_notification_messages
            WHERE id = ?2 AND kind = ?3 AND title = ?4 AND body IS ?5
              AND source_type IS ?6 AND source_id IS ?7 AND created_at = ?8
+             AND priority = ?9 AND action_type IS ?10 AND action_id IS ?11
+         )
+         AND (
+           (?12 IS NULL AND NOT EXISTS (
+             SELECT 1 FROM system_notification_resource_scopes WHERE message_id = ?2
+           ))
+           OR EXISTS (
+             SELECT 1 FROM system_notification_resource_scopes
+             WHERE message_id = ?2 AND resource_type = ?12 AND resource_id = ?13
+           )
          )
          AND NOT EXISTS (
            SELECT 1
@@ -475,6 +546,11 @@ function preparePublicationInvariant(
       message.source?.type ?? null,
       message.source?.id ?? null,
       message.createdAt.getTime(),
+      message.priority,
+      message.action?.type ?? null,
+      message.action?.id ?? null,
+      message.resourceScope?.type ?? null,
+      message.resourceScope?.id ?? null,
     )
 }
 
@@ -512,10 +588,16 @@ function prepareNotificationSelect(
          message.body,
          message.source_type,
          message.source_id,
+         message.priority,
+         message.action_type,
+         message.action_id,
          message.dedupe_key,
+         scope.resource_type,
+         scope.resource_id,
          message.created_at
        FROM system_notification_deliveries AS delivery
        INNER JOIN system_notification_messages AS message ON message.id = delivery.message_id
+       LEFT JOIN system_notification_resource_scopes AS scope ON scope.message_id = message.id
        WHERE delivery.id = ?1 AND delivery.recipient_account_id = ?2
        LIMIT 1`,
     )
@@ -544,7 +626,12 @@ function toSystemNotification(row: unknown): SystemNotification | Error {
     body: values.body,
     source_type: values.source_type,
     source_id: values.source_id,
+    priority: values.priority,
+    action_type: values.action_type,
+    action_id: values.action_id,
     dedupe_key: values.dedupe_key,
+    resource_type: values.resource_type,
+    resource_id: values.resource_id,
     created_at: values.created_at,
   })
   if (message instanceof Error) return message
