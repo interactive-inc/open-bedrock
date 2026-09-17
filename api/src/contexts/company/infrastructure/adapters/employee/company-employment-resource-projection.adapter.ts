@@ -29,6 +29,7 @@ type StatusRow = z.infer<typeof statusRow>
 type Context = D1Database
 type Props = Readonly<{
   resource: CompanyResourceEntity
+  stagedHistory: ReadonlyArray<CompanyResourceEntity>
   change: CompanyResourceChangeEntity
   fingerprint: string
   revisionOffset: number
@@ -42,9 +43,15 @@ export class CompanyEmploymentResourceProjectionAdapter {
 
   async prepare(props: Props): Promise<ReadonlyArray<D1PreparedStatement> | Error> {
     const resource = props.resource
+    const firstStaged = props.stagedHistory[0]
+    if (firstStaged === undefined || props.stagedHistory.at(-1) !== resource)
+      return new CompanyResourceValidationError("invalid_resource")
     const history = await new CompanyEmploymentResourceHistoryAdapter(this.c).read(resource)
     if (history instanceof Error) return history
-    const timeline = CompanyEmploymentResourceTimelineValue.create([...history, resource])
+    const timeline = CompanyEmploymentResourceTimelineValue.create([
+      ...history,
+      ...props.stagedHistory,
+    ])
     if (timeline instanceof Error) return timeline
     const snapshot = await this.c.batch([
       this.c
@@ -105,10 +112,10 @@ export class CompanyEmploymentResourceProjectionAdapter {
       return new CompanyResourceValidationError("invalid_resource")
     }
     if (
-      (binding.data === null && (resource.revision !== 1 || previous.data !== null)) ||
+      (binding.data === null && (firstStaged.revision !== 1 || previous.data !== null)) ||
       (binding.data !== null &&
         (binding.data.organization_id !== resource.organizationId ||
-          binding.data.resource_revision !== resource.revision - 1 ||
+          binding.data.resource_revision !== firstStaged.revision - 1 ||
           binding.data.lifecycle_revision !== baseRevision ||
           previous.data === null))
     ) {

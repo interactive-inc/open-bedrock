@@ -48,18 +48,28 @@ export class CompanyWorkforceResourceProjectionAdapter {
       if (prepared instanceof Error) return prepared
       statements.push(...prepared)
     }
-    const employments = change.resources
-      .filter((resource) => resource.type === "employment")
-      .toSorted(
-        (left, right) =>
-          Number(left.effectiveTo === null && left.readText("status") !== "TERMINATED") -
-          Number(right.effectiveTo === null && right.readText("status") !== "TERMINATED"),
+    const employmentHistories = new Map<string, CompanyResourceEntity[]>()
+    for (const resource of change.resources.filter((resource) => resource.type === "employment")) {
+      const history = employmentHistories.get(resource.id) ?? []
+      history.push(resource)
+      employmentHistories.set(resource.id, history)
+    }
+    const employments = [...employmentHistories.values()].toSorted((left, right) => {
+      const leftFinal = left.at(-1)
+      const rightFinal = right.at(-1)
+      return (
+        Number(leftFinal?.effectiveTo === null && leftFinal.readText("status") !== "TERMINATED") -
+        Number(rightFinal?.effectiveTo === null && rightFinal.readText("status") !== "TERMINATED")
       )
-    for (const resource of employments) {
+    })
+    for (const history of employments) {
+      const resource = history.at(-1)
+      if (resource === undefined) return new CompanyResourceValidationError("invalid_resource")
       const employeeId = resource.readText("employeeId")
       if (employeeId === null) return new CompanyResourceValidationError("invalid_resource")
       const prepared = await new CompanyEmploymentResourceProjectionAdapter(this.c).prepare({
         resource,
+        stagedHistory: history,
         change,
         fingerprint,
         revisionOffset: revisions.get(employeeId) ?? 0,
