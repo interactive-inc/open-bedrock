@@ -76,6 +76,10 @@ CREATE UNIQUE INDEX company_resource_revisions_org_revision_idx
 CREATE INDEX company_resource_revisions_command_idx
   ON company_resource_revisions (organization_id, command_id);
 
+CREATE INDEX company_resource_revisions_account_link_idx
+  ON company_resource_revisions (organization_id, resource_id)
+  WHERE resource_type = 'account-employee-link';
+
 CREATE TABLE company_command_receipts (
   organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE RESTRICT ON UPDATE CASCADE,
   command_id TEXT NOT NULL,
