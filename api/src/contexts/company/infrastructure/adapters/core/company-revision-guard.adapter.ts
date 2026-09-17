@@ -15,12 +15,10 @@ export class CompanyRevisionGuardAdapter {
   prepare(): BatchItem<"sqlite"> {
     return drizzle(this.c.database)
       .select({
-        revisionGuard: sql<number>`json_extract(
-      CASE WHEN
+        revisionGuard: sql<number>`CASE WHEN
         (SELECT revision FROM company_organizations WHERE id = ${this.c.organizationId})
           = ${this.c.expectedRevision}
-        THEN '{"revision":0}' ELSE 'company_revision_conflict'
-      END, '$.revision')`,
+        THEN 0 ELSE json_extract('[]', 'company_revision_conflict') END`,
       })
       .from(sql`(SELECT 1) AS company_revision_guard`)
   }

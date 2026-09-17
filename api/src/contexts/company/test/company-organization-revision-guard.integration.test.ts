@@ -39,10 +39,12 @@ test("Company 版の競合と組織不在で他 context の batch 書込を戻�
       .prepare("SELECT name FROM company_organizations WHERE id = 'organization:default'")
       .first<string>("name")
 
-  await expect(orm.batch([guard(0), write])).rejects.toThrow()
+  await expect(orm.batch([guard(0), write])).rejects.toThrow("company_revision_conflict")
   expect(await name()).toBe("Before")
 
-  await expect(orm.batch([guard(1, "organization:missing"), write])).rejects.toThrow()
+  await expect(orm.batch([guard(1, "organization:missing"), write])).rejects.toThrow(
+    "company_revision_conflict",
+  )
   expect(await name()).toBe("Before")
 
   await orm.batch([guard(1), write])
