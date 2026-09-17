@@ -15,6 +15,7 @@ import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastr
 import { ResolveLiveEmployeeAccessAdapter } from "@/contexts/company/infrastructure/adapters/employee/resolve-live-employee-access.adapter"
 import { POST as POST_PEOPLE } from "@/contexts/company/interface/routes/company.people"
 import { POST as POST_EMPLOYEES } from "@/contexts/company/interface/routes/company.employees"
+import { POST as POST_ORGANIZATION_CHANGES } from "@/contexts/company/interface/routes/company.organization-changes"
 import {
   GET as GET_EMPLOYMENTS,
   POST as POST_EMPLOYMENTS,
@@ -87,6 +88,7 @@ function fixture() {
     .post("/company/people", ...POST_PEOPLE)
     .post("/company/employees", ...POST_EMPLOYEES)
     .post("/company/employments", ...POST_EMPLOYMENTS)
+    .post("/company/organization-changes", ...POST_ORGANIZATION_CHANGES)
     .get("/company/employments", ...GET_EMPLOYMENTS)
   const write = (
     resource: Resource,
@@ -104,6 +106,21 @@ function fixture() {
           "if-match": `"${expectedRevision}"`,
         },
         body: JSON.stringify({ reason: "Record confirmed workforce facts", resources: [resource] }),
+      },
+      { DB: database },
+    )
+  const writeBatch = (resources: Resource[], expectedRevision: number, key: string) =>
+    app.request(
+      "/company/organization-changes",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-company-organization-id": organizationId,
+          "idempotency-key": key,
+          "if-match": `"${expectedRevision}"`,
+        },
+        body: JSON.stringify({ reason: "Correct confirmed workforce start", resources }),
       },
       { DB: database },
     )
@@ -125,6 +142,7 @@ function fixture() {
   return {
     database,
     write,
+    writeBatch,
     directory: (now: string) =>
       new CompanyEmployeeDirectoryReadAdapter(context(now)).findById(employeeId),
     access: (now: string) =>
@@ -178,6 +196,43 @@ function fixture() {
 }
 
 describe("公開Company APIから実際の従業員台帳と在籍判定まで", () => {
+  test("元の入社発令がない公開雇用も開始日を前倒しして時点参照と投影を揃える", async () => {
+    const f = fixture()
+    await f.initialize()
+    const revision = await f.database
+      .prepare("SELECT revision FROM company_organizations WHERE id = ?1")
+      .bind(organizationId)
+      .first<number>("revision")
+    if (revision === null) throw new Error("missing company revision")
+    expect(
+      Number(
+        (
+          await f.writeBatch(
+            [
+              { ...person, revision: 2, effectiveFrom: "2025-12-01" },
+              { ...employee, revision: 2, effectiveFrom: "2025-12-01" },
+              { ...employment, revision: 2, effectiveFrom: "2025-12-01" },
+            ],
+            revision,
+            "correct:employment-start",
+          )
+        ).status,
+      ),
+    ).toBe(201)
+    expect(
+      await f.database
+        .prepare("SELECT hire_date FROM company_employments WHERE id = ?1")
+        .bind(employment.id)
+        .first<{ hire_date: string }>(),
+    ).toEqual({ hire_date: "2025-12-01" })
+    expect(await (await f.readEmployment("2025-12-15")).json()).toMatchObject({
+      resources: [{ id: employment.id, effectiveFrom: "2025-12-01" }],
+    })
+    expect(await (await f.readEmployment("2026-01-15")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ACTIVE" } }],
+    })
+  })
+
   test("公開APIで作った雇用への人事発令が公開履歴へ戻り、次の公開writeも続けられる", async () => {
     const f = fixture()
     await f.initialize()

@@ -546,7 +546,7 @@
     "src/contexts/company/test/company-resource-snapshot.integration.test.ts": "7175ed0ea1002dc870ce82128c53ecb38ed5775b7b4f586c06862cddb5cba804",
     "src/contexts/company/test/company-workforce-account-batch.integration.test.ts": "60a38e98271e15d13a9df2c43fad86ad5d0233057641c50efec82aa1c1200158",
     "src/contexts/company/test/company-workforce-organization-command.integration.test.ts": "c09bc4e495a0b5393b03f344a4af86572a1738e7864caab5b8f8604414aa27c4",
-    "src/contexts/company/test/company-workforce-resource-projection.integration.test.ts": "70c0ec3b388826bb4fceb9d441c1dc95ced28d2ffc028efa4e71cda1a3dc3ff4",
+    "src/contexts/company/test/company-workforce-resource-projection.integration.test.ts": "574c8c76d40db03b9222e3dfd563cd73febeaed6cf3695edaf146ce954c68586",
     "src/contexts/company/test/company.definition-permissions.api.integration.test.ts": "e9e3b39af6922859888c44cc637f6b009c33e064c2e35595eeea3ddc9a9e5f8e",
     "src/contexts/company/test/d1-test-database.test-support.ts": "160ffda7e0f331adf5fe95c705ce0d45f0716c4388827cf223e0aab9dc852135",
     "src/contexts/company/test/employee-profile.integration.test.ts": "6e77cb2e18ebaed11877ff2c5b55b42730a38ac189e008b4112a399982b72371",
