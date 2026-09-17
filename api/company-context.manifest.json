@@ -337,6 +337,7 @@
     "src/contexts/company/infrastructure/adapters/employee/lib/CLAUDE.md",
     "src/contexts/company/infrastructure/adapters/employee/lib/company-employee-directory-sql.ts",
     "src/contexts/company/infrastructure/adapters/employee/lib/company-employment-state-sql.ts",
+    "src/contexts/company/infrastructure/adapters/employee/lib/company-employment-state-table-sql.ts",
     "src/contexts/company/infrastructure/adapters/employee/lib/create-employee-employment-test-database.test-support.ts",
     "src/contexts/company/infrastructure/adapters/employee/lib/public-employee-binding.ts",
     "src/contexts/company/infrastructure/adapters/employee/resolve-live-employee-access.adapter.test.ts",
