@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { readCompanyEmploymentAccount } from "@/contexts/company/interface/operations/read-company-employment-account"
+import { readCompanyEmploymentDirectory } from "@/contexts/company/interface/operations/read-company-employment-directory"
 import { readCompanyEmploymentsByAccount } from "@/contexts/company/interface/operations/read-company-employments-by-account"
 import { readCompanyEmploymentsByEmployee } from "@/contexts/company/interface/operations/read-company-employments-by-employee"
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
@@ -60,6 +61,20 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
       organizationRevision: found.organizationRevision,
     }),
   ).toEqual({ organizationRevision: found.organizationRevision, employmentIds: [] })
+
+  const directory = await readCompanyEmploymentDirectory({
+    database: fixture.database,
+    organizationId: "organization:default",
+    effectiveOn,
+    organizationRevision: found.organizationRevision,
+  })
+  if (directory instanceof Error) throw directory
+  expect(directory.items.find((item) => item.employmentId === employmentId)).toMatchObject({
+    employeeId: person.employeeId,
+    personName: expect.any(String),
+    accountId: person.accountId,
+    status: "ACTIVE",
+  })
 
   const missing = await readCompanyEmploymentAccount({
     database: fixture.database,
