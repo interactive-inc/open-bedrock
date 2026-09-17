@@ -12,6 +12,16 @@ export const companyRouteManifest = [
   },
   {
     method: "GET",
+    path: "/company/resource-history/:type/:id",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.resource-history.$type.$id",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
     path: "/company/grade-assignment-history",
     phase: "authenticated",
     handler: {
