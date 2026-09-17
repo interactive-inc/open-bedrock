@@ -132,3 +132,64 @@ test("限定資格は人物を変更できるが法人資源との混在は再�
   expect(await command.execute(mixed)).toMatchObject({ kind: "forbidden" })
   expect(writeAttempts).toBe(1)
 })
+
+test("限定人事資格は根拠と訂正元を持つ雇用期間の取消・代替だけを確定できる", async () => {
+  const workforceActor = CompanyActorValue.restore({
+    accountId: "account:basic-editor",
+    employeeId: null,
+    organizationIds: ["organization:default"],
+    capabilities: ["company:workforce:update"],
+  })
+  let writeAttempts = 0
+  const command = new ApplyOrganizationChange({
+    actor: workforceActor,
+    repository: {
+      writeOrganizationChange: async () => {
+        writeAttempts += 1
+        return { kind: "applied", organizationRevision: 2, replayed: false }
+      },
+    },
+  })
+  const employment = {
+    organizationId: "organization:default",
+    type: "employment" as const,
+    id: "employment:one",
+    state: "active" as const,
+    effectiveFrom: restoreCalendarDate("2026-02-01"),
+    effectiveTo: null,
+    attributes: {
+      employeeId: "employee:one",
+      status: "ACTIVE",
+      employmentType: "FULL_TIME",
+    },
+  }
+  const change = {
+    commandId: "command:correct-start",
+    expectedRevision: 1,
+    reason: "入社原資料による開始日訂正",
+    recordedAt: 2,
+    evidenceReferences: [
+      { context: "system", kind: "document", id: "hire:original", version: "1" },
+    ],
+    corrections: [2, 3].map((revision) => ({
+      type: "employment" as const,
+      id: employment.id,
+      revision,
+      correctsRevision: 1,
+    })),
+    resources: [
+      { ...employment, revision: 2, state: "void" as const },
+      { ...employment, revision: 3 },
+    ],
+  }
+
+  expect(await command.execute(change)).toMatchObject({ kind: "applied" })
+  expect(writeAttempts).toBe(1)
+  expect(await command.execute({ ...change, evidenceReferences: [] })).toMatchObject({
+    kind: "invalid",
+  })
+  expect(
+    await command.execute({ ...change, corrections: change.corrections.slice(0, 1) }),
+  ).toMatchObject({ kind: "forbidden" })
+  expect(writeAttempts).toBe(1)
+})

@@ -42,12 +42,37 @@ export class ApplyOrganizationChange {
     if (command instanceof CompanyResourceValidationError) {
       return { kind: "invalid", error: command }
     }
-    const basicWorkforceUpdateOnly = change.resources.every(
-      (resource) =>
-        basicWorkforceResourceTypes.includes(resource.type) &&
-        resource.revision > 1 &&
-        resource.state === "active",
-    )
+    const basicWorkforceUpdateOnly = change.resources.every((resource) => {
+      if (!basicWorkforceResourceTypes.includes(resource.type) || resource.revision <= 1) {
+        return false
+      }
+      if (resource.state === "active") return true
+      if (resource.type !== "employment" || !change.evidenceReferences?.length) return false
+
+      const source = change.corrections?.find(
+        (correction) =>
+          correction.type === resource.type &&
+          correction.id === resource.id &&
+          correction.revision === resource.revision,
+      )
+      return (
+        source !== undefined &&
+        change.resources.some(
+          (replacement) =>
+            replacement.type === "employment" &&
+            replacement.id === resource.id &&
+            replacement.state === "active" &&
+            replacement.revision > resource.revision &&
+            change.corrections?.some(
+              (correction) =>
+                correction.type === replacement.type &&
+                correction.id === replacement.id &&
+                correction.revision === replacement.revision &&
+                correction.correctsRevision === source.correctsRevision,
+            ),
+        )
+      )
+    })
     if (
       !this.c.actor.canAccessOrganization(organizationId) ||
       (!this.c.actor.hasCapability("company:write") &&
