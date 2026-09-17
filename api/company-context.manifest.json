@@ -444,6 +444,7 @@
     "src/contexts/company/interface/operations/read-company-employment-account.ts",
     "src/contexts/company/interface/operations/read-company-employment-directory.ts",
     "src/contexts/company/interface/operations/read-company-employment-person-names.ts",
+    "src/contexts/company/interface/operations/read-company-employment-start-dates.ts",
     "src/contexts/company/interface/operations/read-company-employments-by-account.ts",
     "src/contexts/company/interface/operations/read-company-employments-by-employee.ts",
     "src/contexts/company/interface/operations/resolve-personnel-action-input.ts",

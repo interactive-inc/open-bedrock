@@ -6,6 +6,7 @@ import type { CompanyResourceProps } from "@/contexts/company/domain/entities/co
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { readCompanyEmploymentPersonNames } from "@/contexts/company/interface/operations/read-company-employment-person-names"
 import { readCompanyEmploymentDirectory } from "@/contexts/company/interface/operations/read-company-employment-directory"
+import { readCompanyEmploymentStartDates } from "@/contexts/company/interface/operations/read-company-employment-start-dates"
 import { readCompanyEmploymentsByEmployee } from "@/contexts/company/interface/operations/read-company-employments-by-employee"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 
@@ -208,6 +209,7 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
       employmentId: "employment:one",
       personName: "New Name",
       status: "ACTIVE",
+      startedOn: "2030-01-01",
       effectiveTo: "2030-05-01",
     },
   ])
@@ -300,4 +302,110 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
     "employment:one",
     "employment:rehire",
   ])
+})
+
+test("雇用状態が後日変わっても開始日は最初の確定期間から読む", async () => {
+  const database = createCompanyD1TestDatabase(
+    readFileSync(
+      new URL("../../system/infrastructure/schema/system-core.sql", import.meta.url),
+      "utf8",
+    ) +
+      "\n" +
+      readFileSync(new URL("../infrastructure/schema/company.sql", import.meta.url), "utf8"),
+  )
+  const repository = new D1CompanyResourceRepository({ database })
+  const base = {
+    organizationId,
+    revision: 1,
+    state: "active",
+    effectiveFrom: restoreCalendarDate("2030-01-01"),
+    effectiveTo: null,
+  } as const
+  const employment: CompanyResourceProps = {
+    ...base,
+    type: "employment",
+    id: "employment:one",
+    attributes: {
+      employeeId: "employee:one",
+      status: "ACTIVE",
+      employmentType: "FULL_TIME",
+    },
+  }
+  const initial = CompanyResourceChangeEntity.create({
+    commandId: "start:initial",
+    expectedRevision: 0,
+    actorAccountId: "account:operator",
+    reason: "Confirmed hire",
+    recordedAt: 1,
+    resources: [
+      { ...base, type: "person", id: "person:one", attributes: { officialName: "One" } },
+      {
+        ...base,
+        type: "employee",
+        id: "employee:one",
+        attributes: { personId: "person:one", employeeCode: "E001" },
+      },
+      employment,
+    ],
+  })
+  if (initial instanceof Error) throw initial
+  expect(await repository.write(initial)).toMatchObject({
+    kind: "applied",
+    organizationRevision: 1,
+  })
+
+  const leave = CompanyResourceChangeEntity.create({
+    commandId: "start:leave",
+    expectedRevision: 1,
+    actorAccountId: "account:operator",
+    reason: "Confirmed leave",
+    recordedAt: 2,
+    resources: [
+      {
+        ...employment,
+        revision: 2,
+        effectiveFrom: restoreCalendarDate("2030-03-01"),
+        attributes: { ...employment.attributes, status: "ON_LEAVE" },
+      },
+    ],
+  })
+  if (leave instanceof Error) throw leave
+  expect(await repository.write(leave)).toMatchObject({ kind: "applied", organizationRevision: 2 })
+
+  const current = await readCompanyEmploymentDirectory({
+    database,
+    organizationId,
+    effectiveOn,
+    organizationRevision: 2,
+  })
+  if (current instanceof Error) throw current
+  expect(current.items).toMatchObject([
+    { employmentId: "employment:one", status: "ON_LEAVE", startedOn: "2030-01-01" },
+  ])
+  const historical = await readCompanyEmploymentDirectory({
+    database,
+    organizationId,
+    effectiveOn,
+    organizationRevision: 1,
+  })
+  if (historical instanceof Error) throw historical
+  expect(historical.items).toMatchObject([
+    { employmentId: "employment:one", status: "ACTIVE", startedOn: "2030-01-01" },
+  ])
+  expect(
+    await readCompanyEmploymentStartDates({
+      database,
+      organizationId,
+      employmentIds: ["employment:missing"],
+      organizationRevision: 2,
+    }),
+  ).toBeInstanceOf(Error)
+  expect(
+    await readCompanyEmploymentStartDates({
+      database,
+      organizationId,
+      employmentIds: ["employment:one"],
+      organizationRevision: -1,
+    }),
+  ).toBeInstanceOf(Error)
 })

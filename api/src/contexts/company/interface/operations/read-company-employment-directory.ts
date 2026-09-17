@@ -10,6 +10,7 @@ import {
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { readCompanyEmploymentPersonNames } from "@/contexts/company/interface/operations/read-company-employment-person-names"
+import { readCompanyEmploymentStartDates } from "@/contexts/company/interface/operations/read-company-employment-start-dates"
 
 export type CompanyEmploymentDirectoryItem = Readonly<{
   employmentId: string
@@ -18,6 +19,7 @@ export type CompanyEmploymentDirectoryItem = Readonly<{
   accountId: string | null
   status: EmploymentStatus
   employmentType: EmploymentType
+  startedOn: CalendarDate
   effectiveTo: CalendarDate | null
 }>
 
@@ -60,7 +62,7 @@ export async function readCompanyEmploymentDirectory(
       if (employeeId === null) return new Error("Company employment has no employee")
       employeeIds.add(employeeId)
     }
-    const [names, links] = await Promise.all([
+    const [names, links, startsOnByEmployment] = await Promise.all([
       readCompanyEmploymentPersonNames({
         database: input.database,
         organizationId: input.organizationId,
@@ -76,9 +78,16 @@ export async function readCompanyEmploymentDirectory(
         effectiveOn: input.effectiveOn,
         organizationRevision,
       }),
+      readCompanyEmploymentStartDates({
+        database: input.database,
+        organizationId: input.organizationId,
+        employmentIds: group.map((employment) => employment.id),
+        organizationRevision,
+      }),
     ])
     if (names instanceof Error) return names
     if (!links.ok) return asError(links.cause)
+    if (startsOnByEmployment instanceof Error) return startsOnByEmployment
 
     const accountByEmployee = new Map<string, string>()
     for (const link of links.resources) {
@@ -98,11 +107,13 @@ export async function readCompanyEmploymentDirectory(
       const personName = names.names.get(employment.id)
       const status = employment.readText("status")
       const employmentType = employment.readText("employmentType")
+      const startedOn = startsOnByEmployment.get(employment.id)
       if (
         employeeId === null ||
         personName === undefined ||
         !isEmploymentStatus(status) ||
-        !isEmploymentType(employmentType)
+        !isEmploymentType(employmentType) ||
+        startedOn === undefined
       ) {
         return new Error("Company employment directory item is incomplete")
       }
@@ -113,6 +124,7 @@ export async function readCompanyEmploymentDirectory(
         accountId: accountByEmployee.get(employeeId) ?? null,
         status,
         employmentType,
+        startedOn,
         effectiveTo: employment.effectiveTo,
       })
     }
