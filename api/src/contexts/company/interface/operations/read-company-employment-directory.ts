@@ -32,6 +32,7 @@ export async function readCompanyEmploymentDirectory(
     database: D1Database
     organizationId: string
     effectiveOn: CalendarDate
+    includeEndedEmployments?: boolean
     organizationRevision?: number
   }>,
 ): Promise<CompanyEmploymentDirectory | Error> {
@@ -44,6 +45,7 @@ export async function readCompanyEmploymentDirectory(
     organizationId: input.organizationId,
     types: ["employment"],
     effectiveOn: input.effectiveOn,
+    includeEnded: input.includeEndedEmployments,
     organizationRevision: input.organizationRevision,
   })
   if (!employments.ok) return asError(employments.cause)
@@ -64,6 +66,7 @@ export async function readCompanyEmploymentDirectory(
         organizationId: input.organizationId,
         employmentIds: group.map((employment) => employment.id),
         effectiveOn: input.effectiveOn,
+        includeEndedEmployments: input.includeEndedEmployments,
         organizationRevision,
       }),
       repository.findMany({

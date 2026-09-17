@@ -5,6 +5,7 @@ import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/
 import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { readCompanyEmploymentPersonNames } from "@/contexts/company/interface/operations/read-company-employment-person-names"
+import { readCompanyEmploymentDirectory } from "@/contexts/company/interface/operations/read-company-employment-directory"
 import { readCompanyEmploymentsByEmployee } from "@/contexts/company/interface/operations/read-company-employments-by-employee"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 
@@ -186,6 +187,30 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
   if (endedForAttribution instanceof Error) throw endedForAttribution
   expect(endedForAttribution.organizationRevision).toBe(3)
   expect(endedForAttribution.names.get("employment:one")).toBe("New Name")
+  const currentDirectory = await readCompanyEmploymentDirectory({
+    database,
+    organizationId,
+    effectiveOn,
+    organizationRevision: 3,
+  })
+  if (currentDirectory instanceof Error) throw currentDirectory
+  expect(currentDirectory.items).toEqual([])
+  const endedDirectory = await readCompanyEmploymentDirectory({
+    database,
+    organizationId,
+    effectiveOn,
+    includeEndedEmployments: true,
+    organizationRevision: 3,
+  })
+  if (endedDirectory instanceof Error) throw endedDirectory
+  expect(endedDirectory.items).toMatchObject([
+    {
+      employmentId: "employment:one",
+      personName: "New Name",
+      status: "ACTIVE",
+      effectiveTo: "2030-05-01",
+    },
+  ])
 
   const pinnedEnded = await readCompanyEmploymentPersonNames({
     database,
