@@ -243,3 +243,65 @@ test("訂正による旧開始日の取消は前倒しした期間へ戻り、�
   if (!afterCancellation.ok) throw afterCancellation.cause
   expect(afterCancellation.resources).toEqual([])
 })
+
+test("単一revisionで開始日を前倒しする訂正も旧開始日の資源を復活させない", async () => {
+  const repository = new D1CompanyResourceRepository({
+    database: createCompanyD1TestDatabase(schema),
+  })
+  const original = {
+    organizationId,
+    type: "grade" as const,
+    id: "grade:single-correction",
+    revision: 1,
+    state: "active" as const,
+    effectiveFrom: restoreCalendarDate("2026-02-01"),
+    effectiveTo: null,
+    attributes: { code: "GRADE", officialName: "Grade" },
+  }
+  const first = CompanyResourceChangeEntity.create({
+    commandId: "grade:single-initial",
+    expectedRevision: 0,
+    actorAccountId: "account:operator",
+    reason: "Original source",
+    recordedAt: 1,
+    resources: [original],
+  })
+  if (first instanceof Error) throw first
+  expect(await repository.write(first)).toMatchObject({ kind: "applied" })
+  const correction = CompanyResourceChangeEntity.create({
+    commandId: "grade:single-correct",
+    expectedRevision: 1,
+    actorAccountId: "account:operator",
+    reason: "Original source confirms earlier start",
+    recordedAt: 2,
+    evidenceReferences: [
+      { context: "system", kind: "document", id: "grade:single-original", version: "1" },
+    ],
+    corrections: [{ type: "grade", id: original.id, revision: 2, correctsRevision: 1 }],
+    resources: [{ ...original, revision: 2, effectiveFrom: restoreCalendarDate("2026-01-01") }],
+  })
+  if (correction instanceof Error) throw correction
+  expect(await repository.write(correction)).toMatchObject({ kind: "applied" })
+  const beforeCorrection = await repository.findMany({
+    organizationId,
+    organizationRevision: 1,
+    types: ["grade"],
+    effectiveOn: restoreCalendarDate("2026-03-01"),
+  })
+  if (!beforeCorrection.ok) throw beforeCorrection.cause
+  expect(beforeCorrection.resources.map((item) => item.toProps().effectiveFrom)).toEqual([
+    restoreCalendarDate("2026-02-01"),
+  ])
+  for (const organizationRevision of [undefined, 2] as const) {
+    const snapshot = await repository.findMany({
+      organizationId,
+      organizationRevision,
+      types: ["grade"],
+      effectiveOn: restoreCalendarDate("2026-03-01"),
+    })
+    if (!snapshot.ok) throw snapshot.cause
+    expect(snapshot.resources.map((item) => item.toProps().effectiveFrom)).toEqual([
+      restoreCalendarDate("2026-01-01"),
+    ])
+  }
+})

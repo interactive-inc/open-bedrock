@@ -169,6 +169,14 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                         ) AS effective_rank
                    FROM date_ranked
                   WHERE date_rank = 1 AND NOT (state = 'void' AND corrects_revision IS NOT NULL)
+                    AND NOT EXISTS (
+                      SELECT 1 FROM company_resource_revisions correction
+                       WHERE correction.organization_id = date_ranked.organization_id
+                         AND correction.resource_type = date_ranked.resource_type
+                         AND correction.resource_id = date_ranked.resource_id
+                         AND correction.corrects_revision = date_ranked.revision
+                         AND correction.organization_revision <= ?
+                    )
                )
                SELECT organization_id, resource_type, resource_id, revision, state,
                       effective_from, effective_to, attributes_json
@@ -186,6 +194,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                 query.effectiveOn ?? null,
                 ...binds,
                 query.effectiveOn ?? null,
+                query.organizationRevision,
                 query.effectiveOn ?? null,
                 query.effectiveOn ?? null,
                 query.effectiveOn ?? null,
@@ -240,6 +249,14 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                           ) AS effective_rank
                      FROM date_ranked
                     WHERE date_rank = 1 AND NOT (state = 'void' AND corrects_revision IS NOT NULL)
+                      AND NOT EXISTS (
+                        SELECT 1 FROM company_resource_revisions correction
+                         WHERE correction.organization_id = date_ranked.organization_id
+                           AND correction.resource_type = date_ranked.resource_type
+                           AND correction.resource_id = date_ranked.resource_id
+                           AND correction.corrects_revision = date_ranked.revision
+                           AND correction.organization_revision <= (SELECT revision FROM snapshot)
+                      )
                  )
                  SELECT organization_id, resource_type, resource_id, revision, state,
                         effective_from, effective_to, attributes_json
