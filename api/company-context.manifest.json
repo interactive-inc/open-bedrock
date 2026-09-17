@@ -436,6 +436,7 @@
     "src/contexts/company/interface/module.ts",
     "src/contexts/company/interface/operations/dispatch-personnel-action.ts",
     "src/contexts/company/interface/operations/employee-lifecycle/get-lifecycle-state.ts",
+    "src/contexts/company/interface/operations/read-company-account-display-names.ts",
     "src/contexts/company/interface/operations/read-company-employee-names.ts",
     "src/contexts/company/interface/operations/read-company-employment-person-names.ts",
     "src/contexts/company/interface/operations/read-company-employments-by-employee.ts",

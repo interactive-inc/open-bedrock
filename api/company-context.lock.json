@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "e3d5ca8857a9a4e0a75540f8dd0e8f609d720dac511cdb90405ba41f475f37fb",
+    "company-context.manifest.json": "cdd6716ee5d9053517b6a08f1ef3114c844e3438d0f45877cbc9b8ebe215ee58",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -436,6 +436,7 @@
     "src/contexts/company/interface/module.ts": "e44fa7373176c32b372cf5c4962ce089775f85dacdfebc853c16d46935a450ee",
     "src/contexts/company/interface/operations/dispatch-personnel-action.ts": "db8dab0e17d872cc97d072cab533ee45c617c2e0a040aff06aefeaf77f4a0303",
     "src/contexts/company/interface/operations/employee-lifecycle/get-lifecycle-state.ts": "2c885d30657fa7640b6df00f67ccb07ff2b0b6486d8ac4e7f22fb1cb82930cef",
+    "src/contexts/company/interface/operations/read-company-account-display-names.ts": "970e1a13c6dddffb5d6a2252847a67c85879731c13a0e8f4ceaf1185a528779b",
     "src/contexts/company/interface/operations/read-company-employee-names.ts": "5430c39769279048095c0bea338715f3b13cc65e752edfa2ebf24dff78682641",
     "src/contexts/company/interface/operations/read-company-employment-person-names.ts": "4f2ce46639b56fe16673932cf1e979832e3e8c8e47b3ab7af55d72419a0a3a70",
     "src/contexts/company/interface/operations/read-company-employments-by-employee.ts": "fb96793b12cf3e065ccadb91e35b7e7d088b5edf7c46cad101ced5d5bb85f37d",
