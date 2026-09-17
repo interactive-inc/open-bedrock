@@ -34,6 +34,7 @@ export async function readCompanyEmploymentDirectory(
     database: D1Database
     organizationId: string
     effectiveOn: CalendarDate
+    employmentIds?: ReadonlyArray<string>
     includeEndedEmployments?: boolean
     organizationRevision?: number
   }>,
@@ -41,11 +42,20 @@ export async function readCompanyEmploymentDirectory(
   if (!CompanyResourceEntity.isIdentifier(input.organizationId)) {
     return new Error("Invalid Company employment directory query")
   }
+  if (
+    input.employmentIds !== undefined &&
+    (input.employmentIds.length < 1 ||
+      input.employmentIds.length > 100 ||
+      !input.employmentIds.every(CompanyResourceEntity.isIdentifier))
+  ) {
+    return new Error("Invalid Company employment directory query")
+  }
 
   const repository = new D1CompanyResourceRepository({ database: input.database })
   const employments = await repository.findMany({
     organizationId: input.organizationId,
     types: ["employment"],
+    ids: input.employmentIds,
     effectiveOn: input.effectiveOn,
     includeEnded: input.includeEndedEmployments,
     organizationRevision: input.organizationRevision,

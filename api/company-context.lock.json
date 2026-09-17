@@ -442,7 +442,7 @@
     "src/contexts/company/interface/operations/read-company-account-display-names.ts": "6fa21fe2d17b89bb924447cb43f0e18aa4dc20691f03889daa11873512d06456",
     "src/contexts/company/interface/operations/read-company-employee-names.ts": "5430c39769279048095c0bea338715f3b13cc65e752edfa2ebf24dff78682641",
     "src/contexts/company/interface/operations/read-company-employment-account.ts": "cb7ea0c455d20614c4aef413259c04678b03589d53468cbd37125c1534e25103",
-    "src/contexts/company/interface/operations/read-company-employment-directory.ts": "2f060597dcf266e1750c6c78e505bc699c4d6b33ac0cc3ae313ba4313c087832",
+    "src/contexts/company/interface/operations/read-company-employment-directory.ts": "ca770467ff4331e685edeb8a722f8947ad1324e20cbff712da89801f1a5eaea5",
     "src/contexts/company/interface/operations/read-company-employment-person-names.ts": "4f2ce46639b56fe16673932cf1e979832e3e8c8e47b3ab7af55d72419a0a3a70",
     "src/contexts/company/interface/operations/read-company-employment-start-dates.ts": "b822fd6734efdb618363407f6eb38217b1c1cc3f8317530d3a5064045486271f",
     "src/contexts/company/interface/operations/read-company-employments-by-account.ts": "d77a1630d9051eb6c064834fe6804ede78302d11bcec942e723a14a6e5da96f5",
@@ -596,7 +596,7 @@
     "src/contexts/company/test/personnel-execution.integration.test.ts": "092ca01afe971b1a39f4f2e68dcdb0dd3121ddf40d5c59073d7ceb5cdb1f0cea",
     "src/contexts/company/test/personnel-position-snapshot.integration.test.ts": "68d544b6e554e880ba906a08f805403642d54d0e0f117005054961fe53e1b0c3",
     "src/contexts/company/test/read-company-employment-account.integration.test.ts": "0b6d03e8896b00229894a8d6275749bf11e853a647bd8ebc4a2ad7c08363f626",
-    "src/contexts/company/test/read-company-employment-person-names.integration.test.ts": "518fe7df13c4cd83f16091c521ccedd78f172272d53048fcb058b5ad56ba2372",
+    "src/contexts/company/test/read-company-employment-person-names.integration.test.ts": "8b440b4e2d7498a53231d1c00c717fe2ca03b561112457ae157c3a150777fe8f",
     "src/contexts/company/test/record-preservation-execution.integration.test.ts": "6fb89877730222fe43bd5f44fee68bfeda6991a6485bc1db16427a17706ead0b",
     "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts": "beba929c951949a0c4fdefdabfeec2d91a6bd610d6de7d4334af944383d52c49"
   }

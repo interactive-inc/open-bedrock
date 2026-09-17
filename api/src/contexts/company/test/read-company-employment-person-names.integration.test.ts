@@ -213,6 +213,24 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
       effectiveTo: "2030-05-01",
     },
   ])
+  const unrelated = await readCompanyEmploymentDirectory({
+    database,
+    organizationId,
+    effectiveOn,
+    employmentIds: ["employment:missing"],
+    includeEndedEmployments: true,
+    organizationRevision: 3,
+  })
+  if (unrelated instanceof Error) throw unrelated
+  expect(unrelated.items).toEqual([])
+  expect(
+    await readCompanyEmploymentDirectory({
+      database,
+      organizationId,
+      effectiveOn,
+      employmentIds: [],
+    }),
+  ).toBeInstanceOf(Error)
 
   const pinnedEnded = await readCompanyEmploymentPersonNames({
     database,
