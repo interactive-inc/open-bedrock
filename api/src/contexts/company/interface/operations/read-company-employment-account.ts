@@ -7,6 +7,7 @@ export type CompanyEmploymentAccount = Readonly<{
   employment: Readonly<{
     employeeId: string
     status: string
+    effectiveTo: CalendarDate | null
     accountId: string | null
   }> | null
 }>
@@ -18,6 +19,7 @@ export async function readCompanyEmploymentAccount(
     organizationId: string
     employmentId: string
     effectiveOn: CalendarDate
+    includeEndedEmployment?: boolean
     organizationRevision?: number
   }>,
 ): Promise<CompanyEmploymentAccount | Error> {
@@ -34,6 +36,7 @@ export async function readCompanyEmploymentAccount(
     types: ["employment"],
     ids: [input.employmentId],
     effectiveOn: input.effectiveOn,
+    includeEnded: input.includeEndedEmployment,
     organizationRevision: input.organizationRevision,
   })
   if (!employments.ok) return asError(employments.cause)
@@ -62,7 +65,7 @@ export async function readCompanyEmploymentAccount(
 
   return {
     organizationRevision: employments.organizationRevision,
-    employment: { employeeId, status, accountId },
+    employment: { employeeId, status, effectiveTo: employment.effectiveTo, accountId },
   }
 }
 

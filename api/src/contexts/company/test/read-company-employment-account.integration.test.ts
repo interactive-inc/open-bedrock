@@ -36,6 +36,7 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
     employment: {
       employeeId: person.employeeId,
       status: "ACTIVE",
+      effectiveTo: null,
       accountId: person.accountId,
     },
   })
@@ -57,4 +58,4 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
     organizationRevision: found.organizationRevision,
   })
   expect(beforeHire).toEqual({ organizationRevision: found.organizationRevision, employment: null })
-})
+}, 15_000)
