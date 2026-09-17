@@ -447,6 +447,7 @@
     "src/contexts/company/interface/operations/read-company-employment-resource-chain.ts",
     "src/contexts/company/interface/operations/read-company-employment-start-dates.ts",
     "src/contexts/company/interface/operations/read-company-employments-by-account.ts",
+    "src/contexts/company/interface/operations/read-company-employments-by-accounts.ts",
     "src/contexts/company/interface/operations/read-company-employments-by-employee.ts",
     "src/contexts/company/interface/operations/resolve-personnel-action-input.ts",
     "src/contexts/company/interface/operations/to-company-personnel-session.ts",

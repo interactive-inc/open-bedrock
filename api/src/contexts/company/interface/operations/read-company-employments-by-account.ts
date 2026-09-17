@@ -1,8 +1,6 @@
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import type { EmploymentStatus } from "@/contexts/company/domain/definitions/employment-status.definition"
-import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
-import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
-import { readCompanyEmploymentsByEmployee } from "@/contexts/company/interface/operations/read-company-employments-by-employee"
+import { readCompanyEmploymentsByAccounts } from "@/contexts/company/interface/operations/read-company-employments-by-accounts"
 
 export type CompanyEmploymentsByAccount = Readonly<{
   organizationRevision: number
@@ -21,54 +19,18 @@ export async function readCompanyEmploymentsByAccount(
     organizationRevision?: number
   }>,
 ): Promise<CompanyEmploymentsByAccount | Error> {
-  if (
-    !CompanyResourceEntity.isIdentifier(input.organizationId) ||
-    !CompanyResourceEntity.isIdentifier(input.accountId)
-  ) {
-    return new Error("Invalid Company Account employment query")
-  }
-
-  const links = await new D1CompanyResourceRepository({
-    database: input.database,
-  }).findMany({
-    organizationId: input.organizationId,
-    types: ["account-employee-link"],
-    accountLinkAccountIds: [input.accountId],
-    effectiveOn: input.effectiveOn,
-    organizationRevision: input.organizationRevision,
-  })
-  if (!links.ok) return asError(links.cause)
-
-  if (links.resources.length > 1) return new Error("Company Account employee link is ambiguous")
-  const link = links.resources[0]
-  if (link === undefined) {
-    return {
-      organizationRevision: links.organizationRevision,
-      employmentIds: [],
-      employmentStatusesById: new Map(),
-    }
-  }
-  const employeeId = link.readText("employeeId")
-  if (link.readText("accountId") !== input.accountId || employeeId === null) {
-    return new Error("Company Account employee link is incomplete")
-  }
-
-  const employments = await readCompanyEmploymentsByEmployee({
+  const employments = await readCompanyEmploymentsByAccounts({
     database: input.database,
     organizationId: input.organizationId,
-    employeeIds: [employeeId],
+    accountIds: [input.accountId],
     effectiveOn: input.effectiveOn,
     includeEndedEmployments: input.includeEndedEmployments,
-    organizationRevision: links.organizationRevision,
+    organizationRevision: input.organizationRevision,
   })
   if (employments instanceof Error) return employments
   return {
-    organizationRevision: links.organizationRevision,
-    employmentIds: [...employments.employmentIdsByEmployee.values()].flat(),
+    organizationRevision: employments.organizationRevision,
+    employmentIds: employments.employmentIdsByAccount.get(input.accountId) ?? [],
     employmentStatusesById: employments.employmentStatusesById,
   }
-}
-
-function asError(cause: unknown): Error {
-  return cause instanceof Error ? cause : new Error("Company Account employment read failed")
 }
