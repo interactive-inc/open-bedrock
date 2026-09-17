@@ -6,6 +6,7 @@ import { NotificationDeliveryEntity } from "@system/domain/entities/notification
 import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
 import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-database.test-support"
 import { SystemNotificationRepository } from "@system/infrastructure/repositories/notifications/system-notification.repository"
+import { prepareSystemNotificationPublicationBatch } from "@system/interface/operations/prepare-system-notification-publication-batch"
 import { describe, expect, test } from "bun:test"
 
 const notificationSchema = `
@@ -56,6 +57,59 @@ CREATE TABLE system_notification_deliveries (
 `
 
 describe("canonical System Notification Application + D1 repository", () => {
+  test("公開操作はplainな入力を検証し、業務statementと同じbatchに参加できる", async () => {
+    const database = createSystemD1TestDatabase(notificationSchema)
+    await database.exec("CREATE TABLE business_effects (id TEXT PRIMARY KEY)")
+    await insertAccount(database, "account-public", "active")
+    const input = {
+      database,
+      publications: [
+        {
+          message: {
+            id: "message-public",
+            kind: "chat:message",
+            title: "通知",
+            body: "本文",
+            source: { type: "chat:message", id: "chat-public" },
+            action: { type: "chat:channel", id: "channel-public" },
+            resourceScope: { type: "care:facility", id: "facility-public" },
+            priority: "normal" as const,
+            publicationKey: "chat:public:account-public",
+            createdAt: new Date(1_000),
+          },
+          deliveries: [
+            {
+              id: "delivery-public",
+              recipientAccountId: "account-public",
+              deliveredAt: new Date(1_000),
+            },
+          ],
+        },
+      ],
+    }
+    const statements = prepareSystemNotificationPublicationBatch(input)
+    if (statements instanceof Error) throw statements
+    expect(statements).toHaveLength(4)
+    await database.batch([
+      database.prepare("INSERT INTO business_effects (id) VALUES ('business-public')"),
+      ...statements,
+    ])
+    expect(
+      await database.prepare("SELECT count(*) FROM business_effects").first<number>("count(*)"),
+    ).toBe(1)
+    expect(
+      await database
+        .prepare("SELECT count(*) FROM system_notification_deliveries")
+        .first<number>("count(*)"),
+    ).toBe(1)
+    expect(
+      prepareSystemNotificationPublicationBatch({
+        ...input,
+        publications: [{ ...input.publications[0]!, deliveries: [] }],
+      }),
+    ).toBeInstanceOf(Error)
+  })
+
   test("複数のMessageとDeliveryを件数非依存の4 queryで原子的にpublish・retryする", async () => {
     let queryCount = 0
     const database = createSystemD1TestDatabase(notificationSchema, {
@@ -695,7 +749,9 @@ describe("canonical System Notification Application + D1 repository", () => {
         new Date(4_000),
       ),
     ).toBe(false)
-    expect(await repository.dismissDelivery(page.items[0]!.delivery.id, accountId, new Date(4_000))).toBe(true)
+    expect(
+      await repository.dismissDelivery(page.items[0]!.delivery.id, accountId, new Date(4_000)),
+    ).toBe(true)
     expect(
       await repository.findByDeliveryIdForAccount(page.items[0]!.delivery.id, accountId),
     ).toBeNull()
@@ -720,7 +776,9 @@ describe("canonical System Notification Application + D1 repository", () => {
       }),
     ).toEqual({ kind: "published" })
     const accountId = zAccountId.parse("account-owner")
-    expect(await repository.dismissDelivery(deliveries.deliveries[0]!.id, accountId, new Date(3_000))).toBe(true)
+    expect(
+      await repository.dismissDelivery(deliveries.deliveries[0]!.id, accountId, new Date(3_000)),
+    ).toBe(true)
     const retry = createMessage("retry-message", "system:test:dismiss-1", "source-dismiss")
     const replay = repository.preparePublishBatch([
       {
@@ -738,7 +796,12 @@ describe("canonical System Notification Application + D1 repository", () => {
     await database.batch([...replay])
     expect(await repository.countUnreadForAccount(accountId)).toBe(0)
     expect(
-      await repository.findMany({ recipientAccountId: accountId, read: null, limit: 10, offset: 0 }),
+      await repository.findMany({
+        recipientAccountId: accountId,
+        read: null,
+        limit: 10,
+        offset: 0,
+      }),
     ).toMatchObject({ total: 0, items: [] })
     expect(
       await database
