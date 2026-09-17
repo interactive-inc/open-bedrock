@@ -62,6 +62,10 @@ export const GET = factory.createHandlers(
         .optional(),
       effective_on: z.string().date().optional(),
       as_of: z.string().date().optional(),
+      include_ended: z
+        .enum(["true", "false"])
+        .transform((value) => value === "true")
+        .optional(),
     }),
     (validation) => {
       if (!validation.success) {
@@ -89,6 +93,13 @@ export const GET = factory.createHandlers(
     ) {
       throw new CompanyEffectiveDateQueryConflictError()
     }
+    if (
+      requestQuery.include_ended === true &&
+      requestQuery.effective_on === undefined &&
+      requestQuery.as_of === undefined
+    ) {
+      throw new CompanyQueryInvalidError(new CompanyResourceValidationError("invalid_query"))
+    }
 
     const ids =
       requestQuery.id === undefined
@@ -101,6 +112,7 @@ export const GET = factory.createHandlers(
       organizationId: headers["x-company-organization-id"],
       organizationRevision: requestQuery.organization_revision,
       types: ["employment"] as const,
+      includeEnded: requestQuery.include_ended,
       ...(ids.length === 0 ? {} : { ids }),
       ...(effectiveOn === undefined ? {} : { effectiveOn: restoreCalendarDate(effectiveOn) }),
     }

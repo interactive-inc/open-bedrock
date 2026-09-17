@@ -153,4 +153,22 @@ test("会社の各台帳は同じ会社版で取得でき、遡及更新後も�
     expect(forbidden.status).toBe(403)
     state.authorized = true
   }
+
+  const headers = { "x-company-organization-id": "organization:default" }
+  const endedEmployment = await app.request(
+    "/employments?organization_revision=2&effective_on=2030-08-01&include_ended=true",
+    { headers },
+    { DB: database, COMPANY_TIME_ZONE: "UTC" },
+  )
+  expect(endedEmployment.status).toBe(200)
+  expect(await endedEmployment.json()).toMatchObject({
+    organizationRevision: 2,
+    resources: [{ id: "employment:test", revision: 2, effectiveTo: "2030-07-01" }],
+  })
+  const missingDate = await app.request(
+    "/employments?include_ended=true",
+    { headers },
+    { DB: database, COMPANY_TIME_ZONE: "UTC" },
+  )
+  expect(missingDate.status).toBe(400)
 })

@@ -22,6 +22,8 @@ export type CompanyResourceQuery = Readonly<{
   ids?: ReadonlyArray<string>
   codes?: ReadonlyArray<string>
   effectiveOn?: CalendarDate
+  /** 時点までに開始した終了済み資源も、履歴上の参照先として返す。 */
+  includeEnded?: boolean
   organizationRevision?: number
 }>
 
@@ -125,6 +127,9 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
     ) {
       return { ok: false, cause: new CompanySnapshotRevisionError() }
     }
+    if (query.includeEnded === true && query.effectiveOn === undefined) {
+      return { ok: false, cause: new Error("includeEnded requires effectiveOn") }
+    }
 
     try {
       const binds: unknown[] = []
@@ -142,6 +147,8 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
           ? ""
           : "AND json_extract(attributes_json, '$.code') IN (SELECT value FROM json_each(?))"
       const codeBinds = query.codes === undefined ? [] : [JSON.stringify(query.codes)]
+      const effectiveEndCondition =
+        query.includeEnded === true ? "" : "AND (effective_to IS NULL OR effective_to > ?)"
 
       const resourceStatement =
         query.organizationRevision !== undefined
@@ -182,7 +189,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                       effective_from, effective_to, attributes_json
                  FROM ranked_resources
                 WHERE effective_rank = 1 AND state = 'active'
-                  AND (? IS NULL OR (effective_from <= ? AND (effective_to IS NULL OR effective_to > ?)))
+                  AND (? IS NULL OR (effective_from <= ? ${effectiveEndCondition}))
                 ${codeCondition}
                   ORDER BY resource_type, resource_id`,
               )
@@ -197,7 +204,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                 query.organizationRevision,
                 query.effectiveOn ?? null,
                 query.effectiveOn ?? null,
-                query.effectiveOn ?? null,
+                ...(query.includeEnded === true ? [] : [query.effectiveOn ?? null]),
                 ...codeBinds,
               )
           : query.effectiveOn === undefined
@@ -264,7 +271,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                   WHERE effective_rank = 1
                     AND state = 'active'
                     AND effective_from <= ?
-                    AND (effective_to IS NULL OR effective_to > ?)
+                    ${effectiveEndCondition}
                   ${codeCondition}
                   ORDER BY resource_type, resource_id`,
                 )
@@ -274,7 +281,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                   query.effectiveOn,
                   ...binds,
                   query.effectiveOn,
-                  query.effectiveOn,
+                  ...(query.includeEnded === true ? [] : [query.effectiveOn]),
                   ...codeBinds,
                 )
 

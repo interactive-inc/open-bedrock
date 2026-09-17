@@ -85,6 +85,17 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
   if (beforeHire instanceof Error) throw beforeHire
   expect([...beforeHire.names]).toEqual([])
 
+  const beforeHireWithEnded = await readCompanyEmploymentPersonNames({
+    database,
+    organizationId,
+    employmentIds: ["employment:one"],
+    effectiveOn: restoreCalendarDate("2029-12-31"),
+    includeEndedEmployments: true,
+    organizationRevision: previous.organizationRevision,
+  })
+  if (beforeHireWithEnded instanceof Error) throw beforeHireWithEnded
+  expect([...beforeHireWithEnded.names]).toEqual([])
+
   const correction = CompanyResourceChangeEntity.create({
     commandId: "names:change",
     expectedRevision: 1,
@@ -134,4 +145,55 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
     organizationRevision: 3,
   })
   expect(unknownRevision).toBeInstanceOf(Error)
+
+  const closure = CompanyResourceChangeEntity.create({
+    commandId: "names:employment-ended",
+    expectedRevision: 2,
+    actorAccountId: "account:operator",
+    reason: "Confirmed employment end",
+    recordedAt: 3,
+    resources: [
+      {
+        ...resources[2]!,
+        revision: 2,
+        effectiveTo: restoreCalendarDate("2030-05-01"),
+      },
+    ],
+  })
+  if (closure instanceof Error) throw closure
+  expect(await repository.write(closure)).toMatchObject({
+    kind: "applied",
+    organizationRevision: 3,
+  })
+
+  const activeOnly = await readCompanyEmploymentPersonNames({
+    database,
+    organizationId,
+    employmentIds: ["employment:one"],
+    effectiveOn,
+  })
+  if (activeOnly instanceof Error) throw activeOnly
+  expect([...activeOnly.names]).toEqual([])
+
+  const endedForAttribution = await readCompanyEmploymentPersonNames({
+    database,
+    organizationId,
+    employmentIds: ["employment:one"],
+    effectiveOn,
+    includeEndedEmployments: true,
+  })
+  if (endedForAttribution instanceof Error) throw endedForAttribution
+  expect(endedForAttribution.organizationRevision).toBe(3)
+  expect(endedForAttribution.names.get("employment:one")).toBe("New Name")
+
+  const pinnedEnded = await readCompanyEmploymentPersonNames({
+    database,
+    organizationId,
+    employmentIds: ["employment:one"],
+    effectiveOn,
+    includeEndedEmployments: true,
+    organizationRevision: 3,
+  })
+  if (pinnedEnded instanceof Error) throw pinnedEnded
+  expect([...pinnedEnded.names]).toEqual([["employment:one", "New Name"]])
 })

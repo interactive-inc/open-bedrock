@@ -14,6 +14,7 @@ export async function readCompanyEmploymentPersonNames(
     organizationId: string
     employmentIds: ReadonlyArray<string>
     effectiveOn: CalendarDate
+    includeEndedEmployments?: boolean
     organizationRevision?: number
   }>,
 ): Promise<CompanyEmploymentPersonNames | Error> {
@@ -34,6 +35,7 @@ export async function readCompanyEmploymentPersonNames(
     types: ["employment"],
     ids: employmentIds,
     effectiveOn: input.effectiveOn,
+    includeEnded: input.includeEndedEmployments,
     organizationRevision: input.organizationRevision,
   })
   if (!employments.ok) return asError(employments.cause)
