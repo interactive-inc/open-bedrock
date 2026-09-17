@@ -444,6 +444,7 @@
     "src/contexts/company/interface/operations/read-company-employment-account.ts",
     "src/contexts/company/interface/operations/read-company-employment-directory.ts",
     "src/contexts/company/interface/operations/read-company-employment-person-names.ts",
+    "src/contexts/company/interface/operations/read-company-employment-resource-chain.ts",
     "src/contexts/company/interface/operations/read-company-employment-start-dates.ts",
     "src/contexts/company/interface/operations/read-company-employments-by-account.ts",
     "src/contexts/company/interface/operations/read-company-employments-by-employee.ts",
@@ -597,6 +598,7 @@
     "src/contexts/company/test/personnel-position-snapshot.integration.test.ts",
     "src/contexts/company/test/read-company-employment-account.integration.test.ts",
     "src/contexts/company/test/read-company-employment-person-names.integration.test.ts",
+    "src/contexts/company/test/read-company-employment-resource-chain.integration.test.ts",
     "src/contexts/company/test/record-preservation-execution.integration.test.ts",
     "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts"
   ],
