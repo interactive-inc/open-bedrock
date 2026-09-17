@@ -36,6 +36,8 @@ function fixture() {
       ('company:a', 2, 'position', 'p', 1, 'command:two', 'active', '2040-01-01', NULL, 20),
       ('company:a', 3, 'grade', 'a', 2, 'command:three', 'void', '2040-01-01', NULL, 30),
       ('company:b', 1, 'person', 'private:person', 1, 'command:private', 'active', '2020-01-01', NULL, 10);
+    ALTER TABLE company_resource_revisions ADD COLUMN actor_account_id TEXT NOT NULL DEFAULT 'account:writer';
+    ALTER TABLE company_resource_revisions ADD COLUMN reason TEXT NOT NULL DEFAULT 'Confirmed company fact';
   `)
   const actors: { value: CompanyActorValue | null } = {
     value: CompanyActorValue.restore({
@@ -62,6 +64,28 @@ function fixture() {
     )
   return { database, actors, request }
 }
+
+test("変更取得は保存済みの変更者と理由を同じ会社版に返す", async () => {
+  const f = fixture()
+  const page = z
+    .object({
+      data: z.array(
+        z.object({
+          organization_revision: z.number(),
+          resource_id: z.string(),
+          actor_account_id: z.string(),
+          reason: z.string(),
+        }),
+      ),
+    })
+    .parse(await (await f.request()).json())
+  expect(page.data[0]).toEqual({
+    organization_revision: 1,
+    resource_id: "legal:a",
+    actor_account_id: "account:writer",
+    reason: "Confirmed company fact",
+  })
+})
 
 test("同じcommandの変更をページ境界で失わず、停止・再送・独立consumerの再構築が一致する", async () => {
   const f = fixture()
@@ -92,7 +116,10 @@ test("取得中に追加された変更は固定した上限を越えず、完�
   const f = fixture()
   const first = pageSchema.parse(await (await f.request({ limit: "2" })).json())
   await f.database.exec(`UPDATE company_organizations SET revision = 4 WHERE id = 'company:a';
-    INSERT INTO company_resource_revisions VALUES ('company:a', 4, 'responsibility', 'later', 1, 'command:later', 'active', '2010-01-01', NULL, 40);`)
+    INSERT INTO company_resource_revisions
+      (organization_id, organization_revision, resource_type, resource_id, revision,
+       command_id, state, effective_from, effective_to, recorded_at)
+      VALUES ('company:a', 4, 'responsibility', 'later', 1, 'command:later', 'active', '2010-01-01', NULL, 40);`)
   const pinned = pageSchema.parse(
     await (await f.request({ cursor: first.next_cursor, through_revision: "3" })).json(),
   )
@@ -154,7 +181,10 @@ test("保存データや取得の異常を空の完了ページとして返さ�
 test("一つの会社版にある同一資源の複数改訂もページ境界で取りこぼさない", async () => {
   const f = fixture()
   await f.database.exec(
-    "INSERT INTO company_resource_revisions VALUES ('company:a', 2, 'grade', 'a', 2, 'command:two', 'void', '2040-01-01', NULL, 20)",
+    `INSERT INTO company_resource_revisions
+      (organization_id, organization_revision, resource_type, resource_id, revision,
+       command_id, state, effective_from, effective_to, recorded_at)
+      VALUES ('company:a', 2, 'grade', 'a', 2, 'command:two', 'void', '2040-01-01', NULL, 20)`,
   )
   const first = pageSchema.parse(await (await f.request({ limit: "2" })).json())
   const second = pageSchema.parse(
@@ -207,6 +237,8 @@ test("実際の人事発令と公開履歴の全改訂を再構築し、旧台�
             resource_type: z.string(),
             resource_id: z.string(),
             revision: z.number(),
+            actor_account_id: z.string().min(1),
+            reason: z.string().min(1),
           }),
         ),
         has_more: z.boolean(),

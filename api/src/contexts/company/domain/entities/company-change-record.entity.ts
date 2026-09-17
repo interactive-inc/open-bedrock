@@ -7,6 +7,8 @@ const schema = z.object({
   resource_id: z.string().min(1),
   revision: z.number().int().positive(),
   command_id: z.string().min(1),
+  actor_account_id: z.string().min(1),
+  reason: z.string().min(1),
   state: z.enum(["active", "void"]),
   effective_from: z.string().date(),
   effective_to: z.string().date().nullable(),
