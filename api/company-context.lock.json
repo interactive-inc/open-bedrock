@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "cdd6716ee5d9053517b6a08f1ef3114c844e3438d0f45877cbc9b8ebe215ee58",
+    "company-context.manifest.json": "25638cdced0cd8b9b5c27af48fe3de3a5c385bacf62c97a1c41ba0f83cab2bc7",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -401,7 +401,7 @@
     "src/contexts/company/infrastructure/repositories/core/company-change-feed.repository.ts": "51cc43d00151bf476b60e80bd4da9691485fcf6dd936f8bf455330a81392628f",
     "src/contexts/company/infrastructure/repositories/core/company-resource-history.repository.ts": "92760a1f039883a860a58c09e74afe2a8bac7d2112503253498ea571c2b23e88",
     "src/contexts/company/infrastructure/repositories/core/d1-company-resource.repository.test.ts": "6f7be99791cbb535d7cb5837f9a7fd73ccc062b44522cd16bdab4da273da5bb1",
-    "src/contexts/company/infrastructure/repositories/core/d1-company-resource.repository.ts": "6dac343326200f88fafafe90acc957fae5a493e29e460f56f38c1f2d8f8f7393",
+    "src/contexts/company/infrastructure/repositories/core/d1-company-resource.repository.ts": "4980b22c259c06fa84c304543a34058d80468c6339ede31238c50298ab391560",
     "src/contexts/company/infrastructure/repositories/definitions/grade-assignment-history.repository.ts": "6618d90e2bf13faa3e77bb1470b6cc2637bc1acd1fe6fdeb37737dc5f28419f3",
     "src/contexts/company/infrastructure/repositories/employee-history/personnel-annotation.repository.ts": "e4316b2183fb1c70ff24c132fcdd65ec8ae7fef359a8f547ea1d589d4c8964e8",
     "src/contexts/company/infrastructure/repositories/employee-lifecycle/company-employment-movements.repository.test.ts": "1cef578e5642eddc0c51019f5741b66117d55714975a031073aadd868cfaee0c",
@@ -438,6 +438,7 @@
     "src/contexts/company/interface/operations/employee-lifecycle/get-lifecycle-state.ts": "2c885d30657fa7640b6df00f67ccb07ff2b0b6486d8ac4e7f22fb1cb82930cef",
     "src/contexts/company/interface/operations/read-company-account-display-names.ts": "6fa21fe2d17b89bb924447cb43f0e18aa4dc20691f03889daa11873512d06456",
     "src/contexts/company/interface/operations/read-company-employee-names.ts": "5430c39769279048095c0bea338715f3b13cc65e752edfa2ebf24dff78682641",
+    "src/contexts/company/interface/operations/read-company-employment-account.ts": "628951912fd1b379e31749bc47d1154c6cfca0645119e3f4f884ae3414140543",
     "src/contexts/company/interface/operations/read-company-employment-person-names.ts": "4f2ce46639b56fe16673932cf1e979832e3e8c8e47b3ab7af55d72419a0a3a70",
     "src/contexts/company/interface/operations/read-company-employments-by-employee.ts": "fb96793b12cf3e065ccadb91e35b7e7d088b5edf7c46cad101ced5d5bb85f37d",
     "src/contexts/company/interface/operations/resolve-personnel-action-input.ts": "4c44b8ac38b9d7f05c43b558bc3fc76dd4ccb6b16ee1dd8263fc018da5c17367",
@@ -587,6 +588,7 @@
     "src/contexts/company/test/personnel-company-revision.integration.test.ts": "2bef414b4ce8e8a4d2887fdcb8389607c2ee9a7c7d0a407894a5bb2071f89243",
     "src/contexts/company/test/personnel-execution.integration.test.ts": "092ca01afe971b1a39f4f2e68dcdb0dd3121ddf40d5c59073d7ceb5cdb1f0cea",
     "src/contexts/company/test/personnel-position-snapshot.integration.test.ts": "68d544b6e554e880ba906a08f805403642d54d0e0f117005054961fe53e1b0c3",
+    "src/contexts/company/test/read-company-employment-account.integration.test.ts": "1ca45e15203752ea43b24ad1437ea25ff8e76ccb677a56c4a1986396d618897b",
     "src/contexts/company/test/read-company-employment-person-names.integration.test.ts": "58393ba5b490db3263e538ce2b7f44505b67478ca9c53536d9b4b93129b8afed",
     "src/contexts/company/test/record-preservation-execution.integration.test.ts": "6fb89877730222fe43bd5f44fee68bfeda6991a6485bc1db16427a17706ead0b",
     "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts": "beba929c951949a0c4fdefdabfeec2d91a6bd610d6de7d4334af944383d52c49"

@@ -1,0 +1,60 @@
+import { expect, test } from "bun:test"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
+import { readCompanyEmploymentAccount } from "@/contexts/company/interface/operations/read-company-employment-account"
+import { readCompanyEmploymentsByEmployee } from "@/contexts/company/interface/operations/read-company-employments-by-employee"
+import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
+
+test("雇用と Account 対応を同じ Company 版で読み、存在しない雇用を補完しない", async () => {
+  const fixture = await createGovernanceTaskTestContext()
+  const person = fixture.people[1]!
+  const effectiveOn = resolveCompanyBusinessDate({
+    now: fixture.at.toISOString(),
+    timeZone: "Asia/Tokyo",
+  })
+  if (effectiveOn instanceof Error) throw effectiveOn
+  const employments = await readCompanyEmploymentsByEmployee({
+    database: fixture.database,
+    organizationId: "organization:default",
+    employeeIds: [person.employeeId],
+    effectiveOn,
+  })
+  if (employments instanceof Error) throw employments
+  const employmentId = employments.employmentIdsByEmployee.get(person.employeeId)?.[0]
+  if (employmentId === undefined) throw new Error("employment fixture is missing")
+
+  const found = await readCompanyEmploymentAccount({
+    database: fixture.database,
+    organizationId: "organization:default",
+    employmentId,
+    effectiveOn,
+    organizationRevision: employments.organizationRevision,
+  })
+  if (found instanceof Error) throw found
+  expect(found).toEqual({
+    organizationRevision: employments.organizationRevision,
+    employment: {
+      employeeId: person.employeeId,
+      status: "ACTIVE",
+      accountId: person.accountId,
+    },
+  })
+
+  const missing = await readCompanyEmploymentAccount({
+    database: fixture.database,
+    organizationId: "organization:default",
+    employmentId: "employment:missing",
+    effectiveOn,
+    organizationRevision: found.organizationRevision,
+  })
+  expect(missing).toEqual({ organizationRevision: found.organizationRevision, employment: null })
+
+  const beforeHire = await readCompanyEmploymentAccount({
+    database: fixture.database,
+    organizationId: "organization:default",
+    employmentId,
+    effectiveOn: restoreCalendarDate("1900-01-01"),
+    organizationRevision: found.organizationRevision,
+  })
+  expect(beforeHire).toEqual({ organizationRevision: found.organizationRevision, employment: null })
+})
