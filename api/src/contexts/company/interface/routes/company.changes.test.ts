@@ -12,6 +12,10 @@ import { GET as peopleGET } from "@/contexts/company/interface/routes/company.pe
 import { GET as employeesGET } from "@/contexts/company/interface/routes/company.employees"
 import { GET as employmentsGET } from "@/contexts/company/interface/routes/company.employments"
 import { GET as organizationSnapshotsGET } from "@/contexts/company/interface/routes/company.organization-snapshots"
+import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
+import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
+import { CompanyChangeFeedRepository } from "@/contexts/company/infrastructure/repositories/core/company-change-feed.repository"
+import { createCompanyPlaceTestContext } from "@/contexts/company/test/company-place.test-support"
 
 const pageSchema = z.object({
   data: z.array(
@@ -38,6 +42,10 @@ function fixture() {
       ('company:b', 1, 'person', 'private:person', 1, 'command:private', 'active', '2020-01-01', NULL, 10);
     ALTER TABLE company_resource_revisions ADD COLUMN actor_account_id TEXT NOT NULL DEFAULT 'account:writer';
     ALTER TABLE company_resource_revisions ADD COLUMN reason TEXT NOT NULL DEFAULT 'Confirmed company fact';
+    ALTER TABLE company_resource_revisions ADD COLUMN evidence_references_json TEXT NOT NULL DEFAULT '[]';
+    UPDATE company_resource_revisions SET evidence_references_json =
+      '[{"context":"system","kind":"document","id":"source:hire","version":"1"}]'
+      WHERE command_id = 'command:one';
   `)
   const actors: { value: CompanyActorValue | null } = {
     value: CompanyActorValue.restore({
@@ -75,6 +83,7 @@ test("変更取得は保存済みの変更者と理由を同じ会社版に返�
           resource_id: z.string(),
           actor_account_id: z.string(),
           reason: z.string(),
+          evidence_references: z.array(z.object({ id: z.string() })),
         }),
       ),
     })
@@ -84,7 +93,46 @@ test("変更取得は保存済みの変更者と理由を同じ会社版に返�
     resource_id: "legal:a",
     actor_account_id: "account:writer",
     reason: "Confirmed company fact",
+    evidence_references: [{ id: "source:hire" }],
   })
+})
+
+test("原資料参照は正式revisionに残り、変更取得と再送判定に反映される", async () => {
+  const f = createCompanyPlaceTestContext()
+  const repository = new D1CompanyResourceRepository({ database: f.database })
+  const props = {
+    commandId: "evidence:initial",
+    actorAccountId: "account:writer",
+    reason: "Verified from signed source",
+    recordedAt: 10,
+    expectedRevision: 0,
+    evidenceReferences: [
+      { context: "system", kind: "document", id: "hire:original", version: "1" },
+    ],
+    resources: f.resources,
+  }
+  const command = CompanyResourceChangeEntity.create(props)
+  if (command instanceof Error) throw command
+  expect(await repository.write(command)).toMatchObject({ kind: "applied" })
+  expect(await repository.write(command)).toMatchObject({ kind: "applied", replayed: true })
+  const changedEvidence = CompanyResourceChangeEntity.create({
+    ...props,
+    evidenceReferences: [{ ...props.evidenceReferences[0]!, version: "2" }],
+  })
+  if (changedEvidence instanceof Error) throw changedEvidence
+  expect(await repository.write(changedEvidence)).toMatchObject({ kind: "command_conflict" })
+  const page = await new CompanyChangeFeedRepository(f.database).list({
+    organizationId: "organization:default",
+    afterRevision: 0,
+    afterType: null,
+    afterId: null,
+    afterResourceRevision: null,
+    throughRevision: null,
+    limit: 25,
+  })
+  if (page instanceof Error) throw page
+  expect(page.changes).toHaveLength(f.resources.length)
+  expect(page.changes[0]?.evidence_references).toEqual(props.evidenceReferences)
 })
 
 test("同じcommandの変更をページ境界で失わず、停止・再送・独立consumerの再構築が一致する", async () => {

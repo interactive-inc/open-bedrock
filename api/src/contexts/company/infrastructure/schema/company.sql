@@ -64,6 +64,8 @@ CREATE TABLE company_resource_revisions (
   command_id TEXT NOT NULL,
   actor_account_id TEXT NOT NULL,
   reason TEXT NOT NULL CHECK (length(reason) BETWEEN 1 AND 2000),
+  evidence_references_json TEXT NOT NULL DEFAULT '[]'
+    CHECK (json_valid(evidence_references_json) AND json_type(evidence_references_json) = 'array'),
   recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
   PRIMARY KEY (organization_id, resource_type, resource_id, revision)
 );

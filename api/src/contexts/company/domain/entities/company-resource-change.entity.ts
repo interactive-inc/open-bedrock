@@ -3,6 +3,7 @@ import {
   type CompanyResourceProps,
 } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
+import type { OrganizationChangeEvidenceReference } from "@/contexts/company/domain/entities/organization-workforce-change.entity"
 
 export type CompanyResourceChangeProps = Readonly<{
   commandId: string
@@ -10,6 +11,7 @@ export type CompanyResourceChangeProps = Readonly<{
   actorAccountId: string
   reason: string
   recordedAt: number
+  evidenceReferences?: ReadonlyArray<OrganizationChangeEvidenceReference>
   resources: ReadonlyArray<CompanyResourceProps>
 }>
 
@@ -19,6 +21,7 @@ export class CompanyResourceChangeEntity {
   readonly actorAccountId: string
   readonly reason: string
   readonly recordedAt: number
+  readonly evidenceReferences: ReadonlyArray<OrganizationChangeEvidenceReference>
   readonly resources: ReadonlyArray<CompanyResourceEntity>
 
   private constructor(
@@ -30,6 +33,9 @@ export class CompanyResourceChangeEntity {
     this.actorAccountId = props.actorAccountId
     this.reason = props.reason
     this.recordedAt = props.recordedAt
+    this.evidenceReferences = Object.freeze(
+      (props.evidenceReferences ?? []).map((reference) => Object.freeze({ ...reference })),
+    )
     this.resources = Object.freeze([...props.resources])
     Object.freeze(this)
   }
@@ -61,6 +67,16 @@ export class CompanyResourceChangeEntity {
       props.reason.length < 1 ||
       props.reason.length > 2_000 ||
       props.reason.trim() !== props.reason ||
+      (props.evidenceReferences?.length ?? 0) > 100 ||
+      props.evidenceReferences?.some((reference) =>
+        ([reference.context, reference.kind, reference.id, reference.version] as const).some(
+          (value, index) =>
+            typeof value !== "string" ||
+            value.length < 1 ||
+            value.length > [100, 100, 512, 255][index]! ||
+            value.trim() !== value,
+        ),
+      ) ||
       props.resources.length < 1 ||
       (!historyBatch && props.resources.length > 100)
     ) {

@@ -42,6 +42,34 @@ describe("CompanyResourceChangeEntity", () => {
     expect(Object.isFrozen(change)).toBeTrue()
     expect(Object.isFrozen(change.resources)).toBeTrue()
   })
+
+  test("原資料参照を検証して不変の変更記録に保持する", () => {
+    const reference = { context: "system", kind: "document", id: "hire:1", version: "2" }
+    const change = CompanyResourceChangeEntity.create({
+      commandId: "command:evidence",
+      expectedRevision: 0,
+      actorAccountId: "account:1",
+      reason: "corrected from original document",
+      recordedAt: 1,
+      evidenceReferences: [reference],
+      resources: [employee],
+    })
+    expect(change).toBeInstanceOf(CompanyResourceChangeEntity)
+    if (!(change instanceof CompanyResourceChangeEntity)) return
+    expect(change.evidenceReferences).toEqual([reference])
+    expect(Object.isFrozen(change.evidenceReferences[0])).toBeTrue()
+    expect(
+      CompanyResourceChangeEntity.create({
+        commandId: "command:invalid-evidence",
+        expectedRevision: 0,
+        actorAccountId: "account:1",
+        reason: "invalid evidence",
+        recordedAt: 1,
+        evidenceReferences: [{ ...reference, id: " hire:1" }],
+        resources: [employee],
+      }),
+    ).toMatchObject({ code: "invalid_change" })
+  })
 })
 
 test("人事履歴の内部batchは同じ資源の連続版を受け付け、通常commandは重複を拒否する", () => {

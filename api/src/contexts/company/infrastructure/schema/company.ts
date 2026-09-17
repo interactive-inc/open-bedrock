@@ -127,6 +127,7 @@ export const companyResourceRevisions = sqliteTable(
     commandId: text("command_id").notNull(),
     actorAccountId: text("actor_account_id").notNull(),
     reason: text("reason").notNull(),
+    evidenceReferencesJson: text("evidence_references_json").notNull().default("[]"),
     recordedAt: integer("recorded_at").notNull(),
   },
   (table) => [

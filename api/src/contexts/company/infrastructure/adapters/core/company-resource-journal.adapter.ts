@@ -59,6 +59,9 @@ export class CompanyResourceJournalAdapter {
       expectedRevision: change.expectedRevision,
       actorAccountId: change.actorAccountId,
       reason: change.reason,
+      ...(change.evidenceReferences.length > 0
+        ? { evidenceReferences: change.evidenceReferences }
+        : {}),
       resources: change.resources.map((resource) => ({
         organizationId: resource.organizationId,
         type: resource.type,
@@ -116,6 +119,8 @@ export class CompanyResourceJournalAdapter {
     for (const resource of ordered) {
       const attributesJson = CanonicalSystemJsonValue.create(resource.attributes)
       if (attributesJson instanceof Error) return attributesJson
+      const evidenceReferencesJson = CanonicalSystemJsonValue.create(change.evidenceReferences)
+      if (evidenceReferencesJson instanceof Error) return evidenceReferencesJson
       const values = {
         organizationId: resource.organizationId,
         resourceType: resource.type,
@@ -133,6 +138,7 @@ export class CompanyResourceJournalAdapter {
           commandId: change.commandId,
           actorAccountId: change.actorAccountId,
           reason: change.reason,
+          evidenceReferencesJson: evidenceReferencesJson.toString(),
           recordedAt: change.recordedAt,
         }),
         database

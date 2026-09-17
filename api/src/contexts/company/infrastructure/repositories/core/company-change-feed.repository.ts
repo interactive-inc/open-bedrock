@@ -26,7 +26,8 @@ export class CompanyChangeFeedRepository {
           .bind(props.organizationId),
         this.c
           .prepare(`SELECT organization_revision, resource_type, resource_id, revision,
-            command_id, actor_account_id, reason, state, effective_from, effective_to, recorded_at
+            command_id, actor_account_id, reason, evidence_references_json, state,
+            effective_from, effective_to, recorded_at
           FROM company_resource_revisions
           WHERE organization_id = ?1
             AND organization_revision <= coalesce(?2, (SELECT revision FROM company_organizations WHERE id = ?1))
