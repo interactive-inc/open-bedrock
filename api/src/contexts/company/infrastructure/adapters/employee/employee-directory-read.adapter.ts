@@ -1,9 +1,10 @@
-import { getTableName, sql, type SQL } from "drizzle-orm"
+import { and, eq, sql, type SQL } from "drizzle-orm"
 import type { SQLiteColumn } from "drizzle-orm/sqlite-core"
 import type { PersistedEmploymentStatus } from "@/contexts/company/domain/definitions/employment-status.definition"
 import type { EmploymentType } from "@/contexts/company/domain/definitions/employment-type.definition"
 import { drizzle, type DrizzleD1Database } from "drizzle-orm/d1"
 import { companyEmploymentStateSql } from "@/contexts/company/infrastructure/adapters/employee/lib/company-employment-state-sql"
+import { companyEmploymentStateTableSql } from "@/contexts/company/infrastructure/adapters/employee/lib/company-employment-state-table-sql"
 import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
@@ -54,99 +55,53 @@ export class CompanyEmployeeDirectoryReadAdapter {
     Object.freeze(this)
   }
 
-  /** 検索・並べ替え・表示で同じ会社営業日の人物名を使う。 */
-  static employeeName(
+  /**
+   * 会社営業日の氏名・在籍状態・雇用区分を1文につき1回だけ計算する派生表。呼び出し側は `source` を
+   * `leftJoin(source, on(...))` で雇用行へ結合し、返された式を SELECT・WHERE・ORDER BY で使う。
+   * 同じ文で複数の日付を使う場合は `alias` を変える。
+   *
+   * `employmentType` は未接続の雇用で SQL エラーにする（fail closed）。WHERE では結合順によって
+   * 範囲外の行でも評価され得るため、絞り込みには未接続を通す `hasEmploymentType` / `isEmploymentType`
+   * を使い、失敗は SELECT や集計の `employmentType` で表面化させる。
+   */
+  static employmentStateTable(
     c: DateQuery &
       Readonly<{
-        employeeId: SQLiteColumn
+        alias: string
       }>,
-  ): SQL<string | null> {
+  ) {
     const asOf =
       "asOf" in c ? c.asOf : resolveCompanyBusinessDate({ now: c.now, timeZone: c.timeZone })
     if (asOf instanceof Error) throw asOf
-    const employeeId = sql`${sql.identifier(getTableName(c.employeeId.table))}.${sql.identifier(c.employeeId.name)}`
-    const history = sql.join(companyEmploymentStateSql().split("?1").map(sql.raw), sql`${asOf}`)
-    return sql<string | null>`(${history}
-      SELECT CASE WHEN count(*) = 1 AND typeof(min(official_name)) = 'text'
-        AND length(trim(min(official_name))) > 0 THEN min(official_name) END
-      FROM current_employees WHERE id = ${employeeId})`
-  }
+    const alias = sql.identifier(c.alias)
+    const column = (name: string) => sql`${alias}.${sql.identifier(name)}`
+    const resolvedCount = column("resolved_count")
+    const bindingCount = column("binding_count")
+    const candidateType = column("employment_type")
+    const body = sql.join(companyEmploymentStateTableSql().split("?1").map(sql.raw), sql`${asOf}`)
+    const typeOrUnbound = (predicate: SQL) =>
+      sql<boolean>`(${resolvedCount} = 1 AND (${bindingCount} = 0
+        OR (${bindingCount} = 1 AND ${predicate})))`
 
-  /** 有効な版の雇用区分を読み、終了した契約には最終在籍日の区分を使う。 */
-  static employmentType(
-    c: DateQuery &
-      Readonly<{
-        employmentId: SQLiteColumn
-        employeeId: SQLiteColumn
-      }>,
-  ): SQL<EmploymentType | null> {
-    const asOf =
-      "asOf" in c ? c.asOf : resolveCompanyBusinessDate({ now: c.now, timeZone: c.timeZone })
-    if (asOf instanceof Error) throw asOf
-    const employeeId = sql`${sql.identifier(getTableName(c.employeeId.table))}.${sql.identifier(c.employeeId.name)}`
-    const employmentId = sql`${sql.identifier(getTableName(c.employmentId.table))}.${sql.identifier(c.employmentId.name)}`
-    return sql<EmploymentType | null>`(WITH resolved_employment_period AS (
-      SELECT period.*, CASE WHEN period.ends_on <= ${asOf}
-        THEN date(period.ends_on, '-1 day') ELSE ${asOf} END AS read_on
-      FROM company_employment_period_versions AS period
-      WHERE period.period_id = ${employmentId} AND period.employee_id = ${employeeId}
-        AND period.is_void = 0 AND period.starts_on <= ${asOf}
-        AND NOT EXISTS (SELECT 1 FROM company_employment_period_versions AS newer
-          WHERE newer.period_id = period.period_id AND newer.revision > period.revision)
-    ), ranked_employment_attributes AS (
-      SELECT resource.*, period.read_on,
-        row_number() OVER (PARTITION BY resource.organization_id, resource.resource_id
-          ORDER BY resource.effective_from DESC, resource.revision DESC) AS effective_rank
-      FROM resolved_employment_period AS period
-      JOIN company_workforce_resource_bindings AS binding ON binding.resource_type = 'employment'
-        AND binding.resource_id = period.period_id AND binding.employee_id = period.employee_id
-      JOIN company_resource_revisions AS resource ON resource.organization_id = binding.organization_id
-        AND resource.resource_type = 'employment' AND resource.resource_id = binding.resource_id
-        AND resource.effective_from <= period.read_on
-    ) SELECT CASE
-      WHEN (SELECT count(*) FROM resolved_employment_period) != 1 THEN NULL
-      WHEN NOT EXISTS (SELECT 1 FROM company_workforce_resource_bindings
-        WHERE resource_type = 'employment' AND resource_id = ${employmentId})
-        THEN json_extract('unbound_company_employment:' || ${employmentId}, '$')
-      WHEN (SELECT count(*) FROM company_workforce_resource_bindings
-        WHERE resource_type = 'employment' AND resource_id = ${employmentId}) != 1 THEN NULL
-      ELSE (SELECT CASE WHEN count(*) = 1 THEN min(json_extract(attributes_json, '$.employmentType')) END
-        FROM ranked_employment_attributes WHERE effective_rank = 1 AND state = 'active'
-          AND (effective_to IS NULL OR read_on < effective_to)
-          AND json_extract(attributes_json, '$.employeeId') = ${employeeId}
-          AND json_extract(attributes_json, '$.employmentType') IN ('FULL_TIME', 'PART_TIME'))
-      END)`
-  }
-
-  /** 雇用IDごとの在籍状態を期間で判定し、開始前や曖昧な履歴を表示用statusで補わない。 */
-  static employmentStatus(
-    c: DateQuery &
-      Readonly<{
-        employmentId: SQLiteColumn
-        employeeId: SQLiteColumn
-      }>,
-  ): SQL<PersistedEmploymentStatus | null> {
-    const asOf =
-      "asOf" in c ? c.asOf : resolveCompanyBusinessDate({ now: c.now, timeZone: c.timeZone })
-    if (asOf instanceof Error) throw asOf
-    const employeeId = sql`${sql.identifier(getTableName(c.employeeId.table))}.${sql.identifier(c.employeeId.name)}`
-    const employmentId = sql`${sql.identifier(getTableName(c.employmentId.table))}.${sql.identifier(c.employmentId.name)}`
-    const history = sql.join(companyEmploymentStateSql().split("?1").map(sql.raw), sql`${asOf}`)
-    return sql<PersistedEmploymentStatus | null>`(${history}
-      SELECT CASE
-        WHEN (SELECT count(*) FROM current_employees WHERE id = ${employeeId}) != 1 THEN NULL
-        WHEN EXISTS (SELECT 1 FROM current_employment_states
-          WHERE employee_id = ${employeeId} AND employment_id = ${employmentId}) THEN (
-          SELECT CASE WHEN count(*) = 1 AND count(status_period_id) = 1
-            AND min(status_starts_on >= employment_starts_on
-              AND (employment_ends_on IS NULL OR (status_ends_on IS NOT NULL AND status_ends_on <= employment_ends_on)))
-            THEN CASE min(status) WHEN 'active' THEN 'ACTIVE' WHEN 'leave' THEN 'ON_LEAVE' END
-            ELSE NULL END
-          FROM current_employment_states WHERE employee_id = ${employeeId})
-        WHEN EXISTS (SELECT 1 FROM latest_employment_periods
-          WHERE employee_id = ${employeeId} AND period_id = ${employmentId}
-            AND is_void = 0 AND ends_on <= ${asOf}) THEN 'TERMINATED'
-        ELSE NULL END)`
+    return Object.freeze({
+      source: sql`(${body}) AS ${alias}`,
+      on: (columns: Readonly<{ employmentId: SQLiteColumn; employeeId: SQLiteColumn }>) =>
+        and(
+          eq(column("employment_id"), columns.employmentId),
+          eq(column("employee_id"), columns.employeeId),
+        ) ?? sql`0`,
+      officialName: sql<string | null>`${column("official_name")}`,
+      status: sql<PersistedEmploymentStatus | null>`${column("status")}`,
+      employmentType: sql<EmploymentType | null>`(CASE
+        WHEN ${resolvedCount} IS NOT 1 THEN NULL
+        WHEN ${bindingCount} = 0
+          THEN json_extract('unbound_company_employment:' || ${column("employment_id")}, '$')
+        WHEN ${bindingCount} != 1 THEN NULL
+        ELSE ${candidateType} END)`,
+      hasEmploymentType: typeOrUnbound(sql`${candidateType} IS NOT NULL`),
+      isEmploymentType: (employmentType: EmploymentType) =>
+        typeOrUnbound(sql`${candidateType} = ${employmentType}`),
+    })
   }
 
   /** 従業員名だけが必要な製品の参照も、同じ人物履歴へ揃える。 */
