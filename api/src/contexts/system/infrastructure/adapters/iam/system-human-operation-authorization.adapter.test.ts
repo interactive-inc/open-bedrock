@@ -49,6 +49,24 @@ test("現在の人の権限を合成し、global管理者も同じ保存条件�
   expect(sqlite.query("SELECT count(*) AS count FROM test_records").get()).toEqual({ count: 2 })
 })
 
+test("明示権限モードでは技術管理者だけの付与を代用しない", async () => {
+  const { sqlite, database, adapter, input } = fixture()
+  sqlite.exec(
+    "DELETE FROM system_iam_role_permissions; INSERT INTO system_iam_role_permissions VALUES ('role:1', 'system:admin')",
+  )
+  expect(await adapter.prepare({ ...input, requireExplicitPermissions: true })).toBe("forbidden")
+  sqlite.exec(
+    "INSERT INTO system_iam_role_permissions VALUES ('role:1', 'records:read'), ('role:1', 'records:write')",
+  )
+  const explicit = await adapter.prepare({ ...input, requireExplicitPermissions: true })
+  if (explicit === "forbidden" || explicit instanceof Error) throw explicit
+  await database.batch([...explicit.assertions])
+  sqlite.exec("DELETE FROM system_iam_role_permissions WHERE permission_key = 'records:write'")
+  expect(await database.batch([...explicit.assertions]).catch((cause) => cause)).toBeInstanceOf(
+    Error,
+  )
+})
+
 test("期限・対象scope・Principalの種別・token版を検査する", async () => {
   for (const mutation of [
     "UPDATE system_role_bindings SET revoked_at = 1000",
