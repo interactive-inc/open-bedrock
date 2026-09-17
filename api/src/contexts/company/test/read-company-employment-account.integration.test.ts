@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { readCompanyEmploymentAccount } from "@/contexts/company/interface/operations/read-company-employment-account"
+import { readCompanyEmploymentsByAccount } from "@/contexts/company/interface/operations/read-company-employments-by-account"
 import { readCompanyEmploymentsByEmployee } from "@/contexts/company/interface/operations/read-company-employments-by-employee"
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
 
@@ -40,6 +41,25 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
       accountId: person.accountId,
     },
   })
+
+  expect(
+    await readCompanyEmploymentsByAccount({
+      database: fixture.database,
+      organizationId: "organization:default",
+      accountId: person.accountId,
+      effectiveOn,
+      organizationRevision: found.organizationRevision,
+    }),
+  ).toEqual({ organizationRevision: found.organizationRevision, employmentIds: [employmentId] })
+  expect(
+    await readCompanyEmploymentsByAccount({
+      database: fixture.database,
+      organizationId: "organization:default",
+      accountId: "account:missing",
+      effectiveOn,
+      organizationRevision: found.organizationRevision,
+    }),
+  ).toEqual({ organizationRevision: found.organizationRevision, employmentIds: [] })
 
   const missing = await readCompanyEmploymentAccount({
     database: fixture.database,

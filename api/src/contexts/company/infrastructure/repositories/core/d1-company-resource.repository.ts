@@ -25,6 +25,8 @@ export type CompanyResourceQuery = Readonly<{
   employmentEmployeeIds?: ReadonlyArray<string>
   /** Account 対応の版を確定した後、その版の従業員で絞る。 */
   accountLinkEmployeeIds?: ReadonlyArray<string>
+  /** Account 対応の版を確定した後、その版の Account で絞る。 */
+  accountLinkAccountIds?: ReadonlyArray<string>
   effectiveOn?: CalendarDate
   /** 時点までに開始した終了済み資源も、履歴上の参照先として返す。 */
   includeEnded?: boolean
@@ -123,9 +125,12 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
       (query.codes?.length ?? 0) > 100 ||
       (query.employmentEmployeeIds?.length ?? 0) > 100 ||
       (query.accountLinkEmployeeIds?.length ?? 0) > 100 ||
+      (query.accountLinkAccountIds?.length ?? 0) > 100 ||
       (query.employmentEmployeeIds !== undefined &&
         (query.types.length !== 1 || query.types[0] !== "employment")) ||
       (query.accountLinkEmployeeIds !== undefined &&
+        (query.types.length !== 1 || query.types[0] !== "account-employee-link")) ||
+      (query.accountLinkAccountIds !== undefined &&
         (query.types.length !== 1 || query.types[0] !== "account-employee-link"))
     ) {
       return { ok: false, cause: new Error("Invalid Company resource query") }
@@ -164,6 +169,14 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
           : "AND json_extract(attributes_json, '$.employeeId') IN (SELECT value FROM json_each(?))"
       const resourceEmployeeBinds =
         resourceEmployeeIds === undefined ? [] : [JSON.stringify(resourceEmployeeIds)]
+      const accountCondition =
+        query.accountLinkAccountIds === undefined
+          ? ""
+          : "AND json_extract(attributes_json, '$.accountId') IN (SELECT value FROM json_each(?))"
+      const accountBinds =
+        query.accountLinkAccountIds === undefined
+          ? []
+          : [JSON.stringify(query.accountLinkAccountIds)]
       const effectiveEndCondition =
         query.includeEnded === true ? "" : "AND (effective_to IS NULL OR effective_to > ?)"
 
@@ -209,6 +222,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                   AND (? IS NULL OR (effective_from <= ? ${effectiveEndCondition}))
                 ${codeCondition}
                 ${resourceEmployeeCondition}
+                ${accountCondition}
                   ORDER BY resource_type, resource_id`,
               )
               .bind(
@@ -225,6 +239,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                 ...(query.includeEnded === true ? [] : [query.effectiveOn ?? null]),
                 ...codeBinds,
                 ...resourceEmployeeBinds,
+                ...accountBinds,
               )
           : query.effectiveOn === undefined
             ? this.c.database
@@ -237,9 +252,16 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                     AND ${conditions.join(" AND ")}
                   ${codeCondition}
                   ${resourceEmployeeCondition}
+                  ${accountCondition}
                   ORDER BY resource_type, resource_id`,
                 )
-                .bind(query.organizationId, ...binds, ...codeBinds, ...resourceEmployeeBinds)
+                .bind(
+                  query.organizationId,
+                  ...binds,
+                  ...codeBinds,
+                  ...resourceEmployeeBinds,
+                  ...accountBinds,
+                )
             : this.c.database
                 .prepare(
                   `WITH snapshot AS (
@@ -294,6 +316,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                     ${effectiveEndCondition}
                   ${codeCondition}
                   ${resourceEmployeeCondition}
+                  ${accountCondition}
                   ORDER BY resource_type, resource_id`,
                 )
                 .bind(
@@ -305,6 +328,7 @@ export class D1CompanyResourceRepository implements CompanyResourceRepository {
                   ...(query.includeEnded === true ? [] : [query.effectiveOn]),
                   ...codeBinds,
                   ...resourceEmployeeBinds,
+                  ...accountBinds,
                 )
 
       const [revisionResult, resourceResult] = await this.c.database.batch([
