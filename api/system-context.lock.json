@@ -525,6 +525,8 @@
     "src/contexts/system/interface/iam/revoke-system-scoped-role-binding.ts": "6e17bb5d2ba5960ddce3a7168c9f11bad4ff227407c851996e6109aa0868be90",
     "src/contexts/system/interface/iam/revoke-system-scoped-role-bindings-with-effects.test.ts": "4b16c93a3cdabeb5ae969154499fd62e06075751133f97a27ae0a0f9ef3b27a6",
     "src/contexts/system/interface/iam/revoke-system-scoped-role-bindings-with-effects.ts": "003bdcd09428933b051b70e4600749c672d91cf6ce74b8fb288715908bcc7338",
+    "src/contexts/system/interface/iam/system-account-invitations.test.ts": "9e39bba40a548f4e72f8e8b03874e5a4f7eb8ee352c5876dece8329f0491925c",
+    "src/contexts/system/interface/iam/system-account-invitations.ts": "00ffcf467882c4ff385c1dd098d86bef13f42ac9dea034f9e15dcadeb9b391c5",
     "src/contexts/system/interface/middlewares/authenticate-system-access-token.test.ts": "7f4ed27f9755b2177b201b6090915620ea7cdb9e063c05b27b1d738271e223f8",
     "src/contexts/system/interface/middlewares/authenticate-system-access-token.ts": "e934c27e78cfa2a28d234939cee02849486fe64ef47843bdd4e157c83a73c04d",
     "src/contexts/system/interface/middlewares/authenticate-system-machine-access-token.ts": "9741b810975def781d1f8f641e68129678c6baf1164f64692433bcfce0fd1fbf",
