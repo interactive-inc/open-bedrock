@@ -1,4 +1,3 @@
-import { accountEmployeeLinks } from "@/contexts/company/infrastructure/schema/employee"
 import { sql } from "drizzle-orm"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
 
@@ -15,7 +14,8 @@ export class CompanyAccountProfileRenameGuardAdapter {
     return this.c
       .select({
         ok: sql<number>`CASE WHEN EXISTS (
-        SELECT 1 FROM ${accountEmployeeLinks} WHERE ${accountEmployeeLinks.accountId} = ${accountId}
+        SELECT 1 FROM company_account_employee_resource_bindings
+        WHERE account_id = ${accountId}
       ) THEN json_extract('{}', ${BLOCKED_PATH}) ELSE 1 END`,
       })
       .from(sql`(SELECT 1)`)
