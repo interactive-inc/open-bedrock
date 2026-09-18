@@ -1,6 +1,6 @@
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { ListSystemScopedRoleBindingsAdapter } from "@system/infrastructure/adapters/iam/list-system-scoped-role-bindings.adapter"
-import type { SystemScopedRoleBinding } from "@system/application/iam/system-iam-read-models"
+import type { SystemScopedRoleBinding } from "@system/domain/definitions/system-iam-read-models.definition"
 
 /** 他contextにopaque resource上の有効なbindingと権限を公開する。 */
 export async function listSystemScopedRoleBindings(

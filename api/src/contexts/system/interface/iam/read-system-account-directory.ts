@@ -1,6 +1,6 @@
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { ReadSystemAccountDirectoryAdapter } from "@system/infrastructure/adapters/iam/read-system-account-directory.adapter"
-import type { SystemAccountDirectoryEntry } from "@system/application/iam/system-iam-read-models"
+import type { SystemAccountDirectoryEntry } from "@system/domain/definitions/system-iam-read-models.definition"
 
 /** 他contextへAccount状態と有効なログインIdentityの連絡先だけを公開する。 */
 export async function readSystemAccountDirectory(
