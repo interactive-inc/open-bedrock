@@ -1,3 +1,4 @@
+import { canReadCompanyResource } from "@/contexts/company/interface/operations/company-resource-read-permission"
 import { resolveCompanyRecordedAt } from "@/contexts/company/interface/request-environment/resolve-company-recorded-at"
 /** /company/people */
 import { CreatePeople } from "@/contexts/company/application/people/create-people"
@@ -121,8 +122,7 @@ export const GET = factory.createHandlers(
     if (
       (!actor.organizationIds.includes(query.organizationId) &&
         !actor.organizationIds.includes("*")) ||
-      (!actor.capabilities.includes("company:admin") &&
-        !actor.capabilities.includes("company:read"))
+      !canReadCompanyResource(actor, "person")
     ) {
       throw new CompanyAccessDeniedError()
     }

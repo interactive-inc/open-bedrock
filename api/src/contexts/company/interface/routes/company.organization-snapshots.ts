@@ -93,7 +93,7 @@ export const GET = factory.createHandlers(
         "assignment",
         "reporting-relation",
         "office-assignment",
-        "grade-assignment",
+        ...(actor.hasPermission("employee:attributes:read") ? (["grade-assignment"] as const) : []),
         "responsibility-assignment",
         "collective-body-membership",
         "organizational-authority",

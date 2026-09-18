@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { Hono } from "hono"
 import { hc } from "hono/client"
+import { z } from "zod"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
@@ -10,6 +11,7 @@ import { GET } from "@/contexts/company/interface/routes/company.organization-sn
 import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { createCompanyGradeAssignmentTestContext } from "@/contexts/company/test/company-grade-assignment.test-support"
 
 test("公開組織snapshotは指定会社版と有効日を維持し、未来版・不正値・権限不足を拒否する", async () => {
   const database = createCompanyD1TestDatabase(
@@ -101,4 +103,44 @@ test("公開組織snapshotは指定会社版と有効日を維持し、未来版
     query: { organization_revision: "1" },
   })
   expect(Number(forbidden.status)).toBe(403)
+})
+
+test("組織閲覧だけのsnapshotは従業員の等級割当を含まない", async () => {
+  const f = await createCompanyGradeAssignmentTestContext()
+  const access = { attributesRead: false }
+  const app = new Hono<CompanyHttpEnvironment>()
+    .use("*", async (context, next) => {
+      context.set(
+        "companyActor",
+        CompanyActorValue.restore({
+          accountId: "account:reader",
+          employeeId: null,
+          organizationIds: ["organization:default"],
+          capabilities: ["company:read"],
+          permissions: access.attributesRead
+            ? ["org:read", "employee:attributes:read"]
+            : ["org:read"],
+        }),
+      )
+      await next()
+    })
+    .get("/snapshots", ...GET)
+  const request = async () =>
+    app.request(
+      "/snapshots?effective_on=2030-04-01",
+      { headers: { "x-company-organization-id": "organization:default" } },
+      { DB: f.database },
+    )
+  const orgOnly = await request()
+  expect(orgOnly.status).toBe(200)
+  const responseSchema = z.object({ resources: z.array(z.object({ type: z.string() })) })
+  const orgResources = responseSchema.parse(await orgOnly.json()).resources
+  expect(orgResources.some((resource) => resource.type === "assignment")).toBe(true)
+  expect(orgResources.some((resource) => resource.type === "grade-assignment")).toBe(false)
+
+  access.attributesRead = true
+  const authorized = await request()
+  expect(authorized.status).toBe(200)
+  const authorizedResources = responseSchema.parse(await authorized.json()).resources
+  expect(authorizedResources.some((resource) => resource.type === "grade-assignment")).toBe(true)
 })

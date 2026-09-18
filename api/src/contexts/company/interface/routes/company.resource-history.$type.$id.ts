@@ -2,6 +2,7 @@ import { zValidator } from "@hono/zod-validator"
 import { createFactory } from "hono/factory"
 import { z } from "zod"
 import { companyResourceTypes } from "@/contexts/company/domain/catalogs/company-resource-type.catalog"
+import { canReadCompanyResource } from "@/contexts/company/interface/operations/company-resource-read-permission"
 import { CompanySnapshotRevisionError } from "@/contexts/company/domain/errors"
 import { CompanyResourceHistoryRepository } from "@/contexts/company/infrastructure/repositories/core/company-resource-history.repository"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
@@ -21,7 +22,7 @@ const revision = z
   .transform(Number)
   .pipe(z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER))
 
-// @authorization service - 指定会社のcompany:readで属性・原資料を含む資源履歴を取得する
+// @authorization service - 人事資源の属性・原資料には従業員閲覧資格も要求する
 export const GET = factory.createHandlers(
   zValidator(
     "header",
@@ -55,10 +56,10 @@ export const GET = factory.createHandlers(
     const actor = context.var.companyActor
     if (actor === undefined) throw new CompanyAuthenticationRequiredError()
     const organizationId = context.req.valid("header")["x-company-organization-id"]
-    if (!actor.canAccessOrganization(organizationId) || !actor.hasCapability("company:read"))
+    const { type, id } = context.req.valid("param")
+    if (!actor.canAccessOrganization(organizationId) || !canReadCompanyResource(actor, type))
       throw new CompanyAccessDeniedError()
     if (context.env.DB === undefined) throw new CompanyDatabaseUnavailableError()
-    const { type, id } = context.req.valid("param")
     const query = context.req.valid("query")
     const page = await new CompanyResourceHistoryRepository(context.env.DB).list({
       organizationId,

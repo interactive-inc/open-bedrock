@@ -437,6 +437,7 @@
     "src/contexts/company/interface/capabilities/company-capabilities.ts",
     "src/contexts/company/interface/errors.ts",
     "src/contexts/company/interface/module.ts",
+    "src/contexts/company/interface/operations/company-resource-read-permission.ts",
     "src/contexts/company/interface/operations/dispatch-personnel-action.ts",
     "src/contexts/company/interface/operations/employee-lifecycle/get-lifecycle-state.ts",
     "src/contexts/company/interface/operations/prepare-company-organization-revision-guard.ts",

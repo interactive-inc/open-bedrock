@@ -79,11 +79,13 @@ resource参照用のGETは`id` queryを繰り返して最大100件へ絞れる�
 
 `GET /company/profile`、`/company/people`、`/company/employees`、`/company/employments`、`/company/definitions`、`/company/organization-snapshots`、`/company/account-employee-links`、`/company/legacy-personnel-action-records`は`organization_revision`で会社版を固定できる。同じ会社版と有効日を各APIへ渡すことで、取得途中の更新を混ぜずに関連情報を参照できる。応答の`organizationRevision`とETagは指定版に一致する。指定版より後の遡及訂正は含めない。存在しない未来版や安全な非負整数でない値は400となり、最新版へ置き換えない。会社へのアクセス資格と読取能力がなければ、版の存在を照会せず403となる。
 
+人物・従業員・雇用・Account対応・旧人事発令の参照には`employee:read`を追加で要求する。`org:read`だけの主体には組織snapshotの等級割当を返さず、等級割当の属性・履歴には`employee:attributes:read`を要求する。`company:read`は会社共通の入口であり、人事情報の閲覧資格を代替しない。
+
 resource更新用のPOSTはendpointが所有するresource種別以外を拒否する。例えば`/people`からEmployeeを書いたり、`/organization-changes`からPositionを書いたりできない。人物・従業員・雇用を同時に変更する場合は、`/organization-changes`に各resourceの次版、期待会社版、理由、冪等キーを送る。保存の途中でいずれかが失敗した場合、全resourceの変更と会社版は取り消す。
 
 原資料を伴う変更は`evidenceReferences`へ出所のcontext、kind、id、versionを指定する。既存の事実を訂正するときは`corrections`に変更するresourceのtype、id、revisionと訂正元の`correctsRevision`を指定し、原資料参照も必須とする。訂正元は同一resourceのより古いrevisionだけを指せる。開始日を後ろへ訂正して旧期間の取消と代替を同じ会社版に保存する場合、各revisionから訂正元を明示する。過去のrevisionは上書きせず、原資料が確認できない既存履歴へ訂正関係を推測して付けない。
 
-`GET /company/resource-history/:type/:id`は`company:read`と会社scopeを確認し、一資源の有効・取消を含む全revisionを昇順に返す。各要素はresourceの全属性と、会社版、command、actor、理由、原資料参照、訂正元、記録時刻を含む。`limit`は1から100件、`after_revision`は最後に受け取った資源revisionを指定する。最初の応答の`throughRevision`を後続requestの`through_revision`に渡すと、取得中に別の変更が確定しても同じ会社版で履歴を読み切れる。存在しない未来の会社版は400で拒否する。
+`GET /company/resource-history/:type/:id`は`company:read`と会社scopeを確認し、人事資源には`employee:read`、等級割当には`employee:attributes:read`を追加で要求する。一資源の有効・取消を含む全revisionを昇順に返す。各要素はresourceの全属性と、会社版、command、actor、理由、原資料参照、訂正元、記録時刻を含む。`limit`は1から100件、`after_revision`は最後に受け取った資源revisionを指定する。最初の応答の`throughRevision`を後続requestの`through_revision`に渡すと、取得中に別の変更が確定しても同じ会社版で履歴を読み切れる。存在しない未来の会社版は400で拒否する。
 
 Account対応はSystem AccountとEmployeeの一対一の同一性を固定し、その対応が有効な期間を改訂する。同じresourceの相手の変更、別resourceによるAccountまたはEmployeeの重複所有、存在しないSystem Accountへの対応を拒否する。対応期間は公開Employeeの存在期間に収まる必要があり、Employee側の訂正でも参照を孤立させない。
 
@@ -397,7 +399,7 @@ Webは表示内容と確認条件を同じ組織行に保持し、再読み込�
 
 公開GradeとPositionは、code・officialNameに加え、rankとdescriptionを保持できる。rankは整数またはnull、descriptionは文字列またはnullであり、省略された値を推測で補わない。各変更はresourceの新しい版として記録し、将来の変更で過去の名称・並び順・説明を書き換えない。
 
-`POST /company/organization-changes`はGradeとGradeAssignmentを同じ会社版で作成・訂正・取消できる。GradeAssignmentのattributesはemployeeId・employmentId・gradeIdを必須とする。`GET /company/organization-snapshots`は指定した有効日の等級割当も返す。
+`POST /company/organization-changes`はGradeとGradeAssignmentを同じ会社版で作成・訂正・取消できる。GradeAssignmentのattributesはemployeeId・employmentId・gradeIdを必須とする。`GET /company/organization-snapshots`は`employee:attributes:read`を持つ主体に限り、指定した有効日の等級割当も返す。
 
 等級割当の有効期間は、同じ会社のEmployee、本人が所有するEmployment、Gradeの有効期間で覆われなければならない。一つの雇用への複数の割当が重なる変更と、同じ割当IDを別の従業員・雇用へ付け替える変更を拒否する。期間の終了と後続割当の開始が同日であれば重複としない。将来の定義変更や取消も含め、会社版の確定時にDBで検査する。
 
@@ -449,7 +451,7 @@ CLIは保存直前に最新版を取得して確認条件を置き換えず、�
 
 ## 会社の変更取得
 
-GET /company/changesは、指定会社の公開資源履歴に保存された変更を会社版、資源種別、資源ID、資源改訂番号の順で返す。x-company-organization-idで会社を指定し、その会社へのアクセス範囲とcompany:read能力を要求する。等級・役職だけの管理権限では参照できない。
+GET /company/changesは、指定会社の公開資源履歴に保存された変更を会社版、資源種別、資源ID、資源改訂番号の順で返す。x-company-organization-idで会社を指定し、その会社へのアクセス範囲とcompany:read能力を要求する。人事資源の変更は`employee:read`、等級割当の変更は`employee:attributes:read`を持つ主体にだけ返す。任意の`resource_type` queryで一種類に限定でき、閲覧できない種類の指定は403となる。等級・役職だけの管理権限では参照できない。
 
 応答には資源の識別子と改訂番号、会社版、command ID、変更者、理由、原資料参照、訂正元revision、状態、有効期間、記録時点を含める。訂正元のないrevisionでは`corrects_revision`はnull、確認した原資料参照がないrevisionでは`evidence_references`は空配列を返す。属性本文と判断の実行許可は含めない。現在値だけでなく訂正・取消・将来発効の記録も取得できる。将来の有効日を迎えたときに同じ変更を再配信する契約ではない。公開履歴へ未接続の旧台帳は対象に含めず、過去の変更を推測しない。
 

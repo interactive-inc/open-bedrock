@@ -54,6 +54,7 @@ function fixture() {
       employeeId: null,
       organizationIds: ["company:a"],
       capabilities: ["company:read"],
+      permissions: ["employee:read", "employee:attributes:read"],
     }),
   }
   const app = new Hono<CompanyHttpEnvironment>()
@@ -73,6 +74,41 @@ function fixture() {
     )
   return { database, actors, request }
 }
+
+test("組織閲覧だけでは人事変更を返さず、指定した組織資源だけを追跡できる", async () => {
+  const f = fixture()
+  await f.database.exec(`
+    INSERT INTO company_resource_revisions
+      (organization_id, organization_revision, resource_type, resource_id, revision,
+       command_id, state, effective_from, effective_to, recorded_at)
+    VALUES ('company:a', 3, 'person', 'person:private', 1,
+            'command:person', 'active', '2020-01-01', NULL, 30)
+  `)
+  f.actors.value = CompanyActorValue.restore({
+    accountId: "account:org-reader",
+    employeeId: null,
+    organizationIds: ["company:a"],
+    capabilities: ["company:read"],
+    permissions: ["org:read"],
+  })
+
+  const all = await f.request({ limit: "100" })
+  expect(all.status).toBe(200)
+  const data = z
+    .object({ data: z.array(z.object({ resource_type: z.string() })) })
+    .parse(await all.json()).data
+  expect(data.some((item) => item.resource_type === "person")).toBe(false)
+  expect(data.some((item) => item.resource_type === "grade")).toBe(true)
+  expect((await f.request({ resource_type: "person" })).status).toBe(403)
+  const grades = await f.request({ resource_type: "grade" })
+  expect(grades.status).toBe(200)
+  expect(
+    z
+      .object({ data: z.array(z.object({ resource_type: z.string() })) })
+      .parse(await grades.json())
+      .data.every((item) => item.resource_type === "grade"),
+  ).toBe(true)
+})
 
 test("変更取得は保存済みの変更者と理由を同じ会社版に返す", async () => {
   const f = fixture()
@@ -277,6 +313,7 @@ test("実際の人事発令と公開履歴の全改訂を再構築し、旧台�
     ...f.creator,
     organizationIds: ["organization:default"],
     capabilities: ["company:read"],
+    permissions: ["employee:read", "employee:attributes:read"],
   })
   const app = new Hono<CompanyHttpEnvironment>()
     .use("*", async (context, next) => {
@@ -352,6 +389,7 @@ test("独立consumerは変更feedで発見したIDだけから同じ会社版の
     ...f.creator,
     organizationIds: ["organization:default"],
     capabilities: ["company:read"],
+    permissions: ["employee:read", "employee:attributes:read"],
   })
   const app = new Hono<CompanyHttpEnvironment>()
     .use("*", async (context, next) => {
@@ -366,7 +404,7 @@ test("独立consumerは変更feedで発見したIDだけから同じ会社版の
   const headers = { "x-company-organization-id": "organization:default" }
   const env = f.context.env
   const fetchPage = async (query: URLSearchParams) => {
-    const response = await app.request(`/changes?${query}`, { headers }, env)
+    const response = await app.request(`/changes?${query.toString()}`, { headers }, env)
     expect(response.status).toBe(200)
     return z
       .object({
@@ -437,7 +475,7 @@ test("独立consumerは変更feedで発見したIDだけから同じ会社版の
       effective_on: "2030-02-01",
     })
     for (const id of ids ?? []) query.append("id", id)
-    const response = await app.request(`${path}?${query}`, { headers }, env)
+    const response = await app.request(`${path}?${query.toString()}`, { headers }, env)
     expect(response.status).toBe(200)
     return z
       .object({ organizationRevision: z.number(), resources: z.array(z.unknown()) })

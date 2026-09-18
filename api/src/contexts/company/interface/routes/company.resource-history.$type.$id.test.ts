@@ -61,7 +61,7 @@ test("資源履歴は取消と訂正元・原資料を含み、会社版を固�
   await record(1)
   await record(2, { name: "Corrected", correction: true })
 
-  const access = { allowed: true }
+  const access = { allowed: true, employeeRead: true }
   const app = new Hono<CompanyHttpEnvironment>()
   app.use("*", async (context, next) => {
     context.set(
@@ -71,6 +71,7 @@ test("資源履歴は取消と訂正元・原資料を含み、会社版を固�
         employeeId: null,
         organizationIds: [access.allowed ? "organization:default" : "organization:other"],
         capabilities: ["company:read"],
+        permissions: access.employeeRead ? ["employee:read"] : ["org:read"],
       }),
     )
     await next()
@@ -84,6 +85,9 @@ test("資源履歴は取消と訂正元・原資料を含み、会社版を固�
   const headers = { "x-company-organization-id": "organization:default" }
   const first = await app.request(`${url}?limit=1`, { headers }, { DB: database })
   expect(first.status).toBe(200)
+  access.employeeRead = false
+  expect((await app.request(url, { headers }, { DB: database })).status).toBe(403)
+  access.employeeRead = true
   expect(first.headers.get("etag")).toBe('"2"')
   expect(await first.json()).toMatchObject({
     throughRevision: 2,
