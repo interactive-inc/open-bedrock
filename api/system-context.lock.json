@@ -520,6 +520,8 @@
     "src/contexts/system/interface/iam/list-system-scoped-role-bindings.ts": "31c1c679195faf623f2fe7f20f64674ee826f02afb2dc5f7137665505a8090c4",
     "src/contexts/system/interface/iam/prepare-system-account-invitation-consumption.test.ts": "05a98ae15d10e04e8999742d8354f3a001840506d3fea99d794082d51a2b860b",
     "src/contexts/system/interface/iam/prepare-system-account-invitation-consumption.ts": "8e8468fe8d069b9e7354bd401a7164ee49acd5a74367b6147cdc28b7d64bf3c9",
+    "src/contexts/system/interface/iam/prepare-system-password-account-registration.test.ts": "b99b34d543ebd3fbe51700c742aedeb32c38e30215f116e5c92d69afe001c6e8",
+    "src/contexts/system/interface/iam/prepare-system-password-account-registration.ts": "5190c2642d23b6506b340e82d2c86a9e3e931bfe5d1b57935732ec5cc84c6651",
     "src/contexts/system/interface/iam/prepare-system-role-grant-guard.ts": "d6a8042839329bc1a42f0c0ba093baefe2ba1fedca54cf95367b3e714b3230df",
     "src/contexts/system/interface/iam/read-system-account-directory.test.ts": "0ce1a96c49d1f8864f059061bc7c6d7fcee93f0484c26b4303d2ae74ed575ba7",
     "src/contexts/system/interface/iam/read-system-account-directory.ts": "68bf272b462eb4736c46d738edb14a934480c358f528108cc60d41a215e5cfc3",
