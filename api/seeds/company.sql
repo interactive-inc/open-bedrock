@@ -1,2 +1,0 @@
--- Company workforce は employee / org / employee-lifecycle seed が canonical table へ直接投入する。
--- company_resource_* へ同じ事実を複製しない。

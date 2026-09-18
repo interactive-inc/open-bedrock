@@ -46,11 +46,10 @@ bun run deploy
 bun run deploy:preview
 ```
 
-初期 seed（`seeds/<domain>.sql` を依存順に投入）を流す。
+開発用の初期 seed（`seeds/<domain>.sql` を依存順に投入）はローカルD1にのみ流す。
 
 ```sh
 bun run db:seed:local
-bun run db:seed
 ```
 
 ## シークレット
@@ -75,7 +74,7 @@ npm run build
 
 スキーマは `migrations/` に SQL で置く。基盤テーブル（employees や departments など）を先に作るため `0001_employee.sql` や `0002_org.sql` のように番号で順序付けし、各ドメインは `migrations/<domain>.sql` を追加する。
 
-seed は `seeds/<domain>.sql`（INSERT のみ）に置く。`scripts/seed.sh` が依存順に適用する。巨大な単一ファイルは作らず、個別ファイルを順次流す。
+開発用seedは `seeds/<domain>.sql` に置く。`scripts/seed.sh` が依存順にローカルへ適用する。公開Company履歴の初期化には `company-public-workforce.sql` を使う。巨大な単一ファイルは作らず、個別ファイルを順次流す。
 
 seed の整合性は `bun scripts/verify-seed.ts` で確認できる。全 migration と全 seed をインメモリ SQLite に流し、テーブルごとの行数を表示する。
 
