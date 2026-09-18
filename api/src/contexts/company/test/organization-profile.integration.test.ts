@@ -2,8 +2,50 @@ import { describe, expect, spyOn, test } from "bun:test"
 import { createOrganizationProfileFixture } from "@/contexts/company/test/organization-profile.test-support"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import { D1OrganizationProfileAdapter } from "@/contexts/company/infrastructure/adapters/organization/d1-organization-profile.adapter"
+import { readCompanyOrganizationProfile } from "@/contexts/company/interface/operations/read-company-organization-profile"
+import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 
 describe("会社プロフィールの正本と表示の接続", () => {
+  test("指定会社版では公開済みの法人プロフィールだけを読み、後続変更を混ぜない", async () => {
+    const f = await createOrganizationProfileFixture()
+    const atRevision = (organizationRevision: number) =>
+      readCompanyOrganizationProfile({
+        database: f.database,
+        organizationId: "organization:default",
+        effectiveOn: restoreCalendarDate("2026-09-07"),
+        organizationRevision,
+      })
+    expect(await atRevision(0)).toBeNull()
+    expect(Number((await f.write(await f.input())).status)).toBe(200)
+    const first = (await f.publicRead()).resources[0]
+    if (first === undefined) throw new Error("profile missing")
+    expect(await atRevision(1)).toMatchObject({
+      name: f.defaults.name,
+      version: { organizationRevision: 1, resourceRevision: 1 },
+    })
+    expect(
+      Number(
+        (
+          await f.publicWrite(
+            {
+              ...first,
+              revision: 2,
+              attributes: { ...first.attributes, displayName: "Later Company" },
+            },
+            1,
+            "profile:later-version",
+          )
+        ).status,
+      ),
+    ).toBe(201)
+    expect((await atRevision(1))?.name).toBe(f.defaults.name)
+    expect(await atRevision(2)).toMatchObject({
+      name: "Later Company",
+      version: { organizationRevision: 2, resourceRevision: 2 },
+    })
+    expect(await atRevision(3)).toBeInstanceOf(Error)
+  })
+
   test("既存情報を保全して公開履歴へ接続し、両方のAPIから同じ情報を変更する", async () => {
     const f = await createOrganizationProfileFixture()
     const baseline = await f.baseline()
