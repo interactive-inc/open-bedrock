@@ -64,6 +64,7 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/employee-lifecycle/:code/state", ...employeeLifecycleCodeState.GET)
   .get("/employee-resource-adoptions", ...employeeResourceAdoptions.GET)
   .get("/employees", ...employees.GET)
+  .get("/employment-start-corrections", ...employmentStartCorrections.GET)
   .get("/employments", ...employments.GET)
   .get("/grade-assignment-history", ...gradeAssignmentHistory.GET)
   .get(

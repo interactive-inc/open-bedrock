@@ -1,11 +1,14 @@
 import { ApplyOrganizationChange } from "@/contexts/company/application/organization/apply-organization-change"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { CompanyEmploymentStartCorrectionTargetValue } from "@/contexts/company/domain/values/company-employment-start-correction-target.value"
 import {
   CompanySnapshotRevisionError,
   CompanyResourceValidationError,
 } from "@/contexts/company/domain/errors"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { planEmploymentStartCorrection } from "@/contexts/company/interface/operations/plan-employment-start-correction"
+import { readEmploymentStartCorrectionHistory } from "@/contexts/company/interface/operations/read-employment-start-correction-history"
+import { canReadCompanyResource } from "@/contexts/company/interface/operations/company-resource-read-permission"
 import {
   CompanyAccessDeniedError,
   CompanyAuthenticationRequiredError,
@@ -28,6 +31,64 @@ import { createFactory } from "hono/factory"
 import { z } from "zod"
 
 const factory = createFactory<CompanyHttpEnvironment>()
+
+/** 訂正の確認対象となる開始境界と、その元revisionを同じ会社版から返す。 */
+// @authorization service
+export const GET = factory.createHandlers(
+  zValidator(
+    "header",
+    z.object({ "x-company-organization-id": z.literal("organization:default") }),
+    (validation) => {
+      if (!validation.success) throw new CompanyHeadersInvalidError(validation.error)
+    },
+  ),
+  zValidator(
+    "query",
+    z.strictObject({
+      employment_id: z.string().regex(/^[A-Za-z0-9][A-Za-z0-9._:-]{0,127}$/),
+      organization_revision: z
+        .string()
+        .regex(/^(0|[1-9]\d*)$/)
+        .transform(Number)
+        .pipe(z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER))
+        .optional(),
+    }),
+    (validation) => {
+      if (!validation.success) throw new CompanyQueryInvalidError(validation.error)
+    },
+  ),
+  async (context) => {
+    const actor = context.var.companyActor
+    if (actor === undefined) throw new CompanyAuthenticationRequiredError()
+    if (
+      !actor.canAccessOrganization("organization:default") ||
+      !canReadCompanyResource(actor, "employment")
+    )
+      throw new CompanyAccessDeniedError()
+    if (context.env.DB === undefined) throw new CompanyDatabaseUnavailableError()
+    const query = context.req.valid("query")
+    const history = await readEmploymentStartCorrectionHistory({
+      database: context.env.DB,
+      organizationId: "organization:default",
+      employmentId: query.employment_id,
+      throughRevision: query.organization_revision,
+    })
+    if (history === null) throw new CompanyEmployeeNotFoundError()
+    if (history instanceof CompanySnapshotRevisionError) throw new CompanyQueryInvalidError(history)
+    if (history instanceof Error) throw new CompanyReadUnavailableError(history)
+    const target = CompanyEmploymentStartCorrectionTargetValue.create(history.resources)
+    if (target instanceof Error) throw new CompanyReadUnavailableError(target)
+    context.header("etag", `"${history.organizationRevision}"`)
+    return context.json({
+      organizationId: "organization:default",
+      organizationRevision: history.organizationRevision,
+      employmentId: query.employment_id,
+      startsOn: target.startsOn,
+      correctsRevision: target.correctsRevision,
+      latestRevision: target.latestRevision,
+    })
+  },
+)
 
 /** 確認済みの原資料から雇用開始日を訂正し、後続の在籍履歴を保全する。 */
 // @authorization service
