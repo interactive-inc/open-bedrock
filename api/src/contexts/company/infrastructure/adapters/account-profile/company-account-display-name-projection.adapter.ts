@@ -36,10 +36,18 @@ export class CompanyAccountDisplayNameProjectionAdapter {
         AND display_link.organization_id = ${organizationId}
     ) THEN (
       SELECT CASE WHEN count(*) = 1 THEN min(json_extract(display_person.attributes_json, '$.officialName')) ELSE NULL END
-      FROM company_account_employee_link_periods display_link
-      JOIN company_account_employee_resource_bindings display_account_binding
-        ON display_account_binding.resource_id = display_link.resource_id
-        AND display_account_binding.organization_id = ${organizationId}
+      FROM company_account_employee_resource_bindings display_link
+      JOIN company_resource_revisions display_link_revision
+        ON display_link_revision.organization_id = display_link.organization_id
+        AND display_link_revision.resource_type = 'account-employee-link'
+        AND display_link_revision.resource_id = display_link.resource_id
+        AND display_link_revision.revision = (
+          SELECT revision FROM company_resource_revisions current_display_link
+          WHERE current_display_link.organization_id = display_link.organization_id
+            AND current_display_link.resource_type = 'account-employee-link'
+            AND current_display_link.resource_id = display_link.resource_id
+            AND current_display_link.effective_from <= ${asOf}
+          ORDER BY effective_from DESC, revision DESC LIMIT 1)
       JOIN company_workforce_resource_bindings display_binding
         ON display_binding.employee_id = display_link.employee_id
         AND display_binding.resource_type = 'employee'
@@ -66,11 +74,13 @@ export class CompanyAccountDisplayNameProjectionAdapter {
             AND current_display_person.effective_from <= ${asOf}
           ORDER BY effective_from DESC, revision DESC LIMIT 1)
       WHERE display_link.account_id = ${accountId}
-        AND display_link.source = 'public'
+        AND display_link.organization_id = ${organizationId}
+        AND display_link_revision.state = 'active'
+        AND (display_link_revision.effective_to IS NULL OR ${asOf} < display_link_revision.effective_to)
+        AND json_extract(display_link_revision.attributes_json, '$.accountId') = display_link.account_id
+        AND json_extract(display_link_revision.attributes_json, '$.employeeId') = display_link.employee_id
         AND display_employee.state = 'active' AND (display_employee.effective_to IS NULL OR ${asOf} < display_employee.effective_to)
         AND display_person.state = 'active' AND (display_person.effective_to IS NULL OR ${asOf} < display_person.effective_to)
-        AND display_link.starts_on <= ${asOf}
-        AND (display_link.ends_on IS NULL OR ${asOf} < display_link.ends_on)
     ) ELSE ${displayName} END`
   }
 }
