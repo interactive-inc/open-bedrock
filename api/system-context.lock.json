@@ -518,6 +518,8 @@
     "src/contexts/system/interface/iam/prepare-system-role-grant-guard.ts": "d6a8042839329bc1a42f0c0ba093baefe2ba1fedca54cf95367b3e714b3230df",
     "src/contexts/system/interface/iam/read-system-account-directory.test.ts": "0ce1a96c49d1f8864f059061bc7c6d7fcee93f0484c26b4303d2ae74ed575ba7",
     "src/contexts/system/interface/iam/read-system-account-directory.ts": "68bf272b462eb4736c46d738edb14a934480c358f528108cc60d41a215e5cfc3",
+    "src/contexts/system/interface/iam/read-system-account-invitation-candidates.test.ts": "42235fd25e4c01d50f8fe62aa91cf0c7e6252ae7a4754736b80dfb59f912dd95",
+    "src/contexts/system/interface/iam/read-system-account-invitation-candidates.ts": "fb86e01403a31305a1448c851044b28506dc549fdee239ab93bba32034867b4f",
     "src/contexts/system/interface/iam/read-system-role-summary.ts": "1ee9a634bbcbaef401815a0f4caaaf37e505387b3ee6bbf8a5502f8d76c8286b",
     "src/contexts/system/interface/iam/replace-system-scoped-role-binding.test.ts": "aff3d2b255eec6a9e5481adf10f30e980f1a29b8f24d0226d12b67c9c50623ee",
     "src/contexts/system/interface/iam/replace-system-scoped-role-binding.ts": "366e3a0ad4dfb1126bff6ac29e724c49f2eba708235f109f474112aee46bee8f",
