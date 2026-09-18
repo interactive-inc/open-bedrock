@@ -1,5 +1,5 @@
 import { RoleBindingEntity } from "@system/domain/entities/role-binding.entity"
-import type { SystemScopedRoleBinding } from "@system/interface/iam/list-system-scoped-role-bindings"
+import type { SystemScopedRoleBinding } from "@system/application/iam/system-iam-read-models"
 
 type Context = D1Database
 

@@ -1,5 +1,5 @@
 import { AccountEntity } from "@system/domain/entities/account.entity"
-import type { SystemAccountDirectoryEntry } from "@system/interface/iam/read-system-account-directory"
+import type { SystemAccountDirectoryEntry } from "@system/application/iam/system-iam-read-models"
 
 type Context = D1Database
 type Row = Readonly<{

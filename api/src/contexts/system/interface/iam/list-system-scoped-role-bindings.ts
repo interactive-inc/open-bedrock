@@ -1,14 +1,6 @@
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { ListSystemScopedRoleBindingsAdapter } from "@system/infrastructure/adapters/iam/list-system-scoped-role-bindings.adapter"
-
-export type SystemScopedRoleBinding = Readonly<{
-  id: string
-  accountId: string
-  roleId: string
-  resourceId: string
-  createdAt: Date
-  permissionKeys: ReadonlyArray<string>
-}>
+import type { SystemScopedRoleBinding } from "@system/application/iam/system-iam-read-models"
 
 /** 他contextにopaque resource上の有効なbindingと権限を公開する。 */
 export async function listSystemScopedRoleBindings(
