@@ -1,9 +1,7 @@
 import { describe, expect, test } from "bun:test"
 import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-database.test-support"
-import {
-  prepareSystemAccountInvitationCreation,
-  revokeSystemAccountInvitation,
-} from "@system/interface/iam/system-account-invitations"
+import { prepareSystemAccountInvitationCreation } from "@system/interface/iam/system-account-invitations"
+import { revokeSystemAccountInvitation } from "@system/interface/iam/revoke-system-account-invitation"
 
 const schema = `
   CREATE TABLE system_account_invitations (
