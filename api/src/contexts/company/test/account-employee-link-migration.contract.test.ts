@@ -25,6 +25,10 @@ async function fixture() {
       .join("\n"),
   )
   const auditMigrations = await prepareHistoricalCompanyResourceRevisionFixture(database)
+  // 移行前schemaを現行writerで準備する間だけ、当時の対応表を読取用に投影する。
+  await database.exec(`CREATE VIEW company_account_employee_resource_bindings AS
+    SELECT 'organization:default' AS organization_id, account_id, employee_id
+    FROM company_account_employee_links`)
   const c = await createExternalIdentityImportTestContext("oidc", database)
   expect((await c.application.execute(c.input)).kind).toBe("applied")
   const repository = new D1CompanyResourceRepository({ database })
@@ -63,12 +67,15 @@ async function fixture() {
     expect((await repository.write(change)).kind).toBe("applied")
   }
   const migrate = async () => {
-    for (const file of files.filter((file) => file >= first && !auditMigrations.has(file)))
+    for (const file of files.filter((file) => file >= first && !auditMigrations.has(file))) {
+      if (file === first)
+        await database.exec("DROP VIEW company_account_employee_resource_bindings")
       await database.batch(
         splitSqlStatements(readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8")).map(
           (sql) => database.prepare(sql),
         ),
       )
+    }
   }
   return { ...c, link, revise, migrate }
 }

@@ -33,6 +33,9 @@ describe("所属移行の上長対応を追加するmigration", () => {
     // Account履歴のmigrationに達したら破棄し、実際のviewへ置き換える。
     await database.exec(`CREATE VIEW company_account_employee_link_periods AS
       SELECT account_id, employee_id, NULL AS starts_on, NULL AS ends_on FROM company_account_employee_links`)
+    await database.exec(`CREATE VIEW company_account_employee_resource_bindings AS
+      SELECT 'organization:default' AS organization_id, account_id, employee_id
+      FROM company_account_employee_links`)
     // 責務の公開接続がまだ存在しない旧schemaでは、現行writerの参照結果を空に固定する。
     // 対象のmigrationを適用する直前に破棄し、実際のtableを作る。
     await database.exec(`CREATE VIEW company_responsibility_resource_bindings AS SELECT
@@ -68,6 +71,8 @@ describe("所属移行の上長対応を追加するmigration", () => {
     expect(before).toHaveLength(1)
     const history = await f.publicReporting("2030-03-01")
     for (const file of files.filter((file) => file >= first && !auditMigrations.has(file))) {
+      if (file.endsWith("_bind_company_account_employee_resources.sql"))
+        await database.exec("DROP VIEW company_account_employee_resource_bindings")
       if (file.endsWith("_create_company_account_employee_link_periods.sql"))
         await database.exec("DROP VIEW company_account_employee_link_periods")
       if (file.endsWith("_connect_company_responsibility_resources.sql")) {
