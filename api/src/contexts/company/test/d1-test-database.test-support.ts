@@ -72,10 +72,12 @@ class SqliteD1Statement {
 }
 
 /** canonical Company integration testが両製品で共有する最小D1 adapter。 */
-export function createCompanyD1TestDatabase(schemaSql: string): D1Database {
-  const sqlite = new Database(":memory:")
-  sqlite.exec("PRAGMA foreign_keys = ON")
-  sqlite.exec(schemaSql)
+export function createCompanyD1TestDatabase(source: string | Database): D1Database {
+  const sqlite = typeof source === "string" ? new Database(":memory:") : source
+  if (typeof source === "string") {
+    sqlite.exec("PRAGMA foreign_keys = ON")
+    sqlite.exec(source)
+  }
 
   const database = {
     prepare(sql: string): D1PreparedStatement {

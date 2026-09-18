@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "28ff2bf97e0e409e1e6d46873067ea421479bacb8b4858fcd413f624186b1dff",
+    "company-context.manifest.json": "a8847485bf2181526099fb83f246a03e1ffc2fb1c82b7a0b0ddd0ab2d38e7e4f",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -576,15 +576,17 @@
     "src/contexts/company/test/company-workforce-organization-command.integration.test.ts": "c09bc4e495a0b5393b03f344a4af86572a1738e7864caab5b8f8604414aa27c4",
     "src/contexts/company/test/company-workforce-resource-projection.integration.test.ts": "3744f3b3887beb9e06362553d56b1e7b4ba5a9a9ac29099ebdd7372cbbe238cb",
     "src/contexts/company/test/company.definition-permissions.api.integration.test.ts": "e9e3b39af6922859888c44cc637f6b009c33e064c2e35595eeea3ddc9a9e5f8e",
-    "src/contexts/company/test/d1-test-database.test-support.ts": "160ffda7e0f331adf5fe95c705ce0d45f0716c4388827cf223e0aab9dc852135",
+    "src/contexts/company/test/create-company-d1-test-database-template.test-support.ts": "0e04b3072b9628400261b7be8b42ca7600bd8ceef4f335987253246abb1c68c4",
+    "src/contexts/company/test/create-company-d1-test-database-template.test.ts": "a643d69708cf941afb6040f64ddd16cda05e27e77611ed0ebc04c3d4236b4fd5",
+    "src/contexts/company/test/d1-test-database.test-support.ts": "d6122a0c43fe404653751693c995a823f48b2f32524fe77cce4394998d2873a4",
     "src/contexts/company/test/employee-profile.integration.test.ts": "a6cc3e80be8096185cfdb71ecb9b76a2a8de5f7ba2932e7c12088292f24b5a0b",
     "src/contexts/company/test/employee-resource-adoption-batch-limits.integration.test.ts": "4872a5adfb6d2617b4a7d01ab931cb6617397ce8bb7858685faa01762a52c730",
     "src/contexts/company/test/employee-resource-adoption-batch.integration.test.ts": "86e105a5193e20eac3d713d3e81225e006849d39e42c10c45047020fda501487",
     "src/contexts/company/test/employee-resource-adoption-batch.test-support.ts": "ea16623e40baa270d82149ec48c18ecec164c2c39e9b0197758071b171700070",
     "src/contexts/company/test/employee-resource-adoption-correction.integration.test.ts": "286e7e9c83170cc73df99e9cce0e0f9b79ec57c0b0922e870088a368d4dc7a6e",
     "src/contexts/company/test/employee-resource-adoption-termination.integration.test.ts": "b68ec48f08f87faa66be032bd8524868604e1c6e6b497714c4c182c61a7569d5",
-    "src/contexts/company/test/employee-resource-adoption.integration.test.ts": "0a9b075c61a7a2094adb7f5446904b45f9c2cc4094515d8faa68bed90d77084c",
-    "src/contexts/company/test/employee-resource-adoption.test-support.ts": "9e85ac02aa1cb7b0d6aad7841f73a1a8c3011445cfcbca1bb0d1c565747e429c",
+    "src/contexts/company/test/employee-resource-adoption.integration.test.ts": "ae3a90ec2d96600a0fdd8aa9b676029e96a9d4bd24415b76897267f22cd0c957",
+    "src/contexts/company/test/employee-resource-adoption.test-support.ts": "5199a6c89a415526a63b3c75e836caa7e3b582d5f4d0a3c9abcee13abca4a7a6",
     "src/contexts/company/test/existing-employee-resource-adoption.integration.test.ts": "76e56f788d6397d7332193124ab9182f57a58e293322506299b4a66d0484396a",
     "src/contexts/company/test/external-identity-effective-person.integration.test.ts": "e36fe88743201bee423aecfec565af779719a27087dc2a165bd0a367e85b7032",
     "src/contexts/company/test/external-identity-import.integration.test.ts": "790ddc7852bd48ae63b5bb5b4de1b21d7713f725b68757b43de76ae4ab0687f8",
@@ -604,7 +606,7 @@
     "src/contexts/company/test/organization-period-coverage.integration.test.ts": "3c01579386fb3d4f88f9ed0684f41a04d0b750c1e49fd9576fb3584f9a5cdb57",
     "src/contexts/company/test/organization-profile.integration.test.ts": "38a3b2c87bc4066d9380e59445d6d210b87d06168a4b6712e906a61c5de83d82",
     "src/contexts/company/test/organization-profile.test-support.ts": "b3d57cbb942b8f7da3b60dba4415b5d6104869cccca02842fb7004df532b2336",
-    "src/contexts/company/test/organization-resource-connection.integration.test.ts": "aaae187519fcb18a97f0e14d3ff8bf6f784624119b40e676c7178b1c9bb92893",
+    "src/contexts/company/test/organization-resource-connection.integration.test.ts": "904b4fd7aeccf6ff758904cdbfcbf1369b62b0280376b785c961320227cde2c0",
     "src/contexts/company/test/personnel-annotation-preservation.test.ts": "4d3f458b62dced0f759a7f7666bd8efec361d5ab0edfc2c838f97864a96c23dc",
     "src/contexts/company/test/personnel-company-revision.integration.test.ts": "2bef414b4ce8e8a4d2887fdcb8389607c2ee9a7c7d0a407894a5bb2071f89243",
     "src/contexts/company/test/personnel-execution.integration.test.ts": "092ca01afe971b1a39f4f2e68dcdb0dd3121ddf40d5c59073d7ceb5cdb1f0cea",
@@ -613,6 +615,6 @@
     "src/contexts/company/test/read-company-employment-person-names.integration.test.ts": "8b440b4e2d7498a53231d1c00c717fe2ca03b561112457ae157c3a150777fe8f",
     "src/contexts/company/test/read-company-employment-resource-chain.integration.test.ts": "841538b25127b6a7b8b3d33dd0d5ae438da58ed824a0d9513944febd40708df3",
     "src/contexts/company/test/record-preservation-execution.integration.test.ts": "6fb89877730222fe43bd5f44fee68bfeda6991a6485bc1db16427a17706ead0b",
-    "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts": "beba929c951949a0c4fdefdabfeec2d91a6bd610d6de7d4334af944383d52c49"
+    "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts": "426625f351ca9bf7f43aba30e7a3aae44cfbb020e3cbd246a3a8ee8eae7052d9"
   }
 }

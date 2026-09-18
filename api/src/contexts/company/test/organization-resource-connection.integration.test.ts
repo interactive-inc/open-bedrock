@@ -1,7 +1,7 @@
 import { describe, expect, test, spyOn } from "bun:test"
 import { hc } from "hono/client"
 import { z } from "zod"
-import { createEmployeeAdoptionFixture } from "@/contexts/company/test/employee-resource-adoption.test-support"
+import { createEmployeeAdoptionFixtureScope } from "@/contexts/company/test/employee-resource-adoption.test-support"
 import {
   companyAuthenticatedRoutes,
   companyAuditedRoutes,
@@ -41,7 +41,9 @@ const snapshotSchema = z.object({
   resources: z.array(resourceSchema),
 })
 
-async function fixture() {
+async function createOrganizationFixture(
+  createEmployeeAdoptionFixture: ReturnType<typeof createEmployeeAdoptionFixtureScope>,
+) {
   const base = await createEmployeeAdoptionFixture()
   const employeeAdoption = await base.post(
     await base.input(),
@@ -176,6 +178,9 @@ async function fixture() {
 }
 
 describe("organization resources and the company period ledger", () => {
+  const createEmployeeAdoptionFixture = createEmployeeAdoptionFixtureScope()
+  const fixture = () => createOrganizationFixture(createEmployeeAdoptionFixture)
+
   test("初期履歴の確認を省略すると書き込まず、証跡保存の失敗でも訂正全体を戻す", async () => {
     const f = await fixture()
     const input = await f.preview(f.root.id)
