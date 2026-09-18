@@ -1,4 +1,10 @@
-import { systemAccountInvitations, systemIamRoles } from "@system/infrastructure/schema/system-core"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import {
+  systemAccountInvitations,
+  systemAccounts,
+  systemIamRoles,
+} from "@system/infrastructure/schema/system-core"
+import type { SystemAccountSnapshot } from "@system/interface/iam/read-system-account-snapshot"
 import { and, eq, gt, isNull, sql, type SQL } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/d1"
 
@@ -16,10 +22,12 @@ export function prepareSystemAccountInvitationConsumption(
     expectedRoleResourceType: string | null
     acceptedByAccountId: string
     consumedAt: Date
+    expectedExistingAccount: SystemAccountSnapshot | null
     /** 他contextの条件はSystemの条件へANDで追加し、緩和できない。 */
     additionalConditions: ReadonlyArray<SQL>
   }>,
 ) {
+  const accountId = zAccountId.safeParse(input.acceptedByAccountId)
   if (
     input.id.length < 1 ||
     input.id.length > 255 ||
@@ -27,14 +35,17 @@ export function prepareSystemAccountInvitationConsumption(
     input.storedToken.length > 255 ||
     input.roleId.length < 1 ||
     input.roleId.length > 255 ||
-    input.acceptedByAccountId.length < 1 ||
-    input.acceptedByAccountId.length > 255 ||
+    !accountId.success ||
     [
       input.expectedUpdatedAt,
       input.expectedExpiresAt,
       input.expectedRoleUpdatedAt,
       input.consumedAt,
-    ].some((date) => !Number.isSafeInteger(date.getTime()))
+    ].some((date) => !Number.isSafeInteger(date.getTime())) ||
+    (input.expectedExistingAccount !== null &&
+      (input.expectedExistingAccount.id !== input.acceptedByAccountId ||
+        !Number.isSafeInteger(input.expectedExistingAccount.updatedAt.getTime()) ||
+        !Number.isSafeInteger(input.expectedExistingAccount.tokenVersion)))
   ) {
     return new Error("Invalid System account invitation consumption")
   }
@@ -58,6 +69,15 @@ export function prepareSystemAccountInvitationConsumption(
           eq(systemIamRoles.updatedAt, input.expectedRoleUpdatedAt),
           sql`${systemIamRoles.resourceType} IS ${input.expectedRoleResourceType}`,
         )})`,
+        input.expectedExistingAccount === null
+          ? sql`1 = 1`
+          : sql`EXISTS (SELECT 1 FROM ${systemAccounts} WHERE ${and(
+              eq(systemAccounts.id, accountId.data),
+              eq(systemAccounts.status, "active"),
+              isNull(systemAccounts.closedAt),
+              eq(systemAccounts.updatedAt, input.expectedExistingAccount.updatedAt),
+              eq(systemAccounts.tokenVersion, input.expectedExistingAccount.tokenVersion),
+            )})`,
         ...input.additionalConditions,
       ),
     )
