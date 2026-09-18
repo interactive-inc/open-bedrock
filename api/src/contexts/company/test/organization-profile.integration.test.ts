@@ -6,6 +6,87 @@ import { readCompanyOrganizationProfile } from "@/contexts/company/interface/ope
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 
 describe("会社プロフィールの正本と表示の接続", () => {
+  test("遡及訂正後の現在表示と指定会社版の表示が同じ確定事実を返す", async () => {
+    const f = await createOrganizationProfileFixture()
+    expect(Number((await f.write(await f.input())).status)).toBe(200)
+    const first = (await f.publicRead()).resources[0]
+    if (first === undefined) throw new Error("profile missing")
+    const correction = {
+      reason: "Correct original company profile",
+      evidenceReferences: [
+        {
+          context: "company",
+          kind: "source-document",
+          id: "profile-source:1",
+          version: "1",
+        },
+      ],
+      corrections: [
+        {
+          type: "company-profile",
+          id: first.id,
+          revision: 2,
+          correctsRevision: 1,
+        },
+      ],
+      resources: [
+        {
+          ...first,
+          revision: 2,
+          effectiveFrom: "2026-08-01",
+          attributes: { ...first.attributes, displayName: "Corrected Company" },
+        },
+      ],
+    }
+    const headers = {
+      "content-type": "application/json",
+      "x-company-organization-id": "organization:default",
+      "if-match": "1",
+      "idempotency-key": "profile:retroactive-correction",
+    }
+    const missingEvidence = await f.request("/company/profile", {
+      method: "POST",
+      headers,
+      body: JSON.stringify({ ...correction, evidenceReferences: undefined }),
+    })
+    expect(missingEvidence.status).toBe(422)
+    expect((await f.publicRead()).organizationRevision).toBe(1)
+    const response = await f.request("/company/profile", {
+      method: "POST",
+      headers,
+      body: JSON.stringify(correction),
+    })
+    expect(response.status).toBe(201)
+    const persisted = await f.database
+      .prepare(
+        "SELECT corrects_revision, evidence_references_json FROM company_resource_revisions WHERE resource_type = 'company-profile' AND resource_id = ? AND revision = 2",
+      )
+      .bind(first.id)
+      .first<{ corrects_revision: number; evidence_references_json: string }>()
+    expect(persisted?.corrects_revision).toBe(1)
+    expect(JSON.parse(persisted?.evidence_references_json ?? "null")).toEqual(
+      correction.evidenceReferences,
+    )
+    expect((await f.publicRead()).resources[0]?.attributes.displayName).toBe("Corrected Company")
+    expect((await f.read()).name).toBe("Corrected Company")
+    expect(
+      await readCompanyOrganizationProfile({
+        database: f.database,
+        organizationId: "organization:default",
+        effectiveOn: restoreCalendarDate("2026-09-07"),
+        organizationRevision: 1,
+      }),
+    ).toMatchObject({ name: f.defaults.name })
+    expect(
+      await readCompanyOrganizationProfile({
+        database: f.database,
+        organizationId: "organization:default",
+        effectiveOn: restoreCalendarDate("2026-09-07"),
+        organizationRevision: 2,
+      }),
+    ).toMatchObject({ name: "Corrected Company" })
+  })
+
   test("指定会社版では公開済みの法人プロフィールだけを読み、後続変更を混ぜない", async () => {
     const f = await createOrganizationProfileFixture()
     const atRevision = (organizationRevision: number) =>

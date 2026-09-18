@@ -15,6 +15,18 @@ export function organizationProfileSnapshotSql(): string {
     AND effective.revision = (SELECT resource.revision FROM company_resource_revisions resource
       WHERE resource.organization_id = organization.id AND resource.resource_type = 'company-profile'
         AND resource.resource_id = head.resource_id AND resource.organization_revision <= organization.revision
-        AND resource.effective_from <= ?2 ORDER BY resource.effective_from DESC, resource.revision DESC LIMIT 1)
+        AND resource.effective_from <= ?2
+        AND NOT EXISTS (SELECT 1 FROM company_resource_revisions newer
+          WHERE newer.organization_id = resource.organization_id
+            AND newer.resource_type = resource.resource_type AND newer.resource_id = resource.resource_id
+            AND newer.effective_from = resource.effective_from AND newer.revision > resource.revision
+            AND newer.organization_revision <= organization.revision)
+        AND NOT (resource.state = 'void' AND resource.corrects_revision IS NOT NULL)
+        AND NOT EXISTS (SELECT 1 FROM company_resource_revisions correction
+          WHERE correction.organization_id = resource.organization_id
+            AND correction.resource_type = resource.resource_type AND correction.resource_id = resource.resource_id
+            AND correction.corrects_revision = resource.revision
+            AND correction.organization_revision <= organization.revision)
+      ORDER BY resource.effective_from DESC, resource.revision DESC LIMIT 1)
   WHERE organization.id = ?1`
 }
