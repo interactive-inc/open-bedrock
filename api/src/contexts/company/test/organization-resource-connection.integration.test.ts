@@ -529,7 +529,7 @@ describe("organization resources and the company period ledger", () => {
     }
   })
 
-  test("同じ移行依頼の競合を一回の接続として確定する", async () => {
+  test("同じ冪等キーの二重送信を一回の接続として確定する", async () => {
     const f = await fixture()
     const input = await f.preview(f.root.id)
     const responses = await Promise.all([
@@ -544,7 +544,11 @@ describe("organization resources and the company period ledger", () => {
         .prepare("SELECT count(*) AS count FROM company_organization_resource_adoptions")
         .first<number>("count"),
     ).toBe(1)
+  })
 
+  // 冪等キーが違う競合は別 test にする。fixture は 1 つで 8 秒前後かかるので、
+  // 2 つ作ると CI の 15 秒制限に張り付いて反映のたびに落ちる（#4516 / #4517）。
+  test("冪等キーが違う同時の移行依頼は後から来た方を拒否する", async () => {
     const other = await fixture()
     const otherInput = await other.preview(other.root.id)
     const conflicting = await Promise.all([
