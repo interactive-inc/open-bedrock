@@ -9,9 +9,12 @@ type Context = Readonly<{
   requiredPermissionKey: string
   managerPermissionKey: string
   bindingIds: ReadonlyArray<string>
+  invitationRelatedResourceIds: ReadonlyArray<string>
+  invitationIds: ReadonlyArray<string>
   now: Date
   effects: ReadonlyArray<D1PreparedStatement>
   auditStatements: ReadonlyArray<D1PreparedStatement>
+  invitationAuditStatements: ReadonlyArray<D1PreparedStatement>
 }>
 
 /** 外部effectも含むD1 batchで、System role履歴と監査を原子的に確定する。 */
@@ -23,6 +26,8 @@ export class RevokeSystemScopedRoleBindingsWithEffectsAdapter {
   async execute(): Promise<"revoked" | "forbidden" | "conflict" | "last_manager" | Error> {
     const { c } = this
     const bindingIds = JSON.stringify(c.bindingIds)
+    const invitationIds = JSON.stringify(c.invitationIds)
+    const relatedResourceIds = JSON.stringify(c.invitationRelatedResourceIds)
     const now = c.now.getTime()
     const statements: D1PreparedStatement[] = [
       c.database
@@ -72,6 +77,66 @@ export class RevokeSystemScopedRoleBindingsWithEffectsAdapter {
           c.requiredPermissionKey,
           bindingIds,
         ),
+      ...(c.invitationRelatedResourceIds.length === 0
+        ? []
+        : [
+            c.database
+              .prepare(
+                `SELECT CASE WHEN NOT EXISTS (
+                 SELECT 1 FROM system_account_invitations invitation
+                 WHERE invitation.resource_type = ?1 AND invitation.resource_id = ?2
+                   AND invitation.related_resource_id IN (SELECT value FROM json_each(?3))
+                   AND invitation.accepted_by_account_id IS NULL AND invitation.revoked_at IS NULL
+                   AND invitation.expires_at > ?4 AND invitation.created_at <= ?4
+                   AND (invitation.id NOT IN (SELECT value FROM json_each(?5)) OR EXISTS (
+                     SELECT 1 FROM system_iam_role_permissions target_permission
+                     WHERE target_permission.role_id = invitation.role_id AND NOT EXISTS (
+                       SELECT 1 FROM system_role_bindings actor_role
+                       JOIN system_iam_role_permissions actor_permission
+                         ON actor_permission.role_id = actor_role.role_id
+                       WHERE actor_role.account_id = ?6 AND actor_role.revoked_at IS NULL
+                         AND (actor_role.resource_type IS NULL OR
+                           (actor_role.resource_type = ?1 AND actor_role.resource_id = ?2))
+                         AND actor_permission.permission_key = target_permission.permission_key
+                     )
+                   ))
+               ) AND NOT EXISTS (
+                 SELECT 1 FROM json_each(?5) expected
+                 WHERE NOT EXISTS (
+                   SELECT 1 FROM system_account_invitations invitation
+                   WHERE invitation.id = expected.value
+                     AND invitation.resource_type = ?1 AND invitation.resource_id = ?2
+                     AND invitation.related_resource_id IN (SELECT value FROM json_each(?3))
+                     AND invitation.accepted_by_account_id IS NULL AND invitation.revoked_at IS NULL
+                     AND invitation.expires_at > ?4 AND invitation.created_at <= ?4
+                 )
+               ) THEN 1 ELSE json_extract('', '$') END AS ok`,
+              )
+              .bind(
+                c.resourceType,
+                c.resourceId,
+                relatedResourceIds,
+                now,
+                invitationIds,
+                c.actorAccountId,
+              ),
+            c.database
+              .prepare(
+                `UPDATE system_account_invitations SET revoked_at = ?1, updated_at = max(updated_at, ?1)
+                 WHERE id IN (SELECT value FROM json_each(?2))
+                   AND resource_type = ?3 AND resource_id = ?4
+                   AND related_resource_id IN (SELECT value FROM json_each(?5))
+                   AND accepted_by_account_id IS NULL AND revoked_at IS NULL
+                   AND expires_at > ?1 AND created_at <= ?1`,
+              )
+              .bind(now, invitationIds, c.resourceType, c.resourceId, relatedResourceIds),
+            c.database
+              .prepare(
+                "SELECT CASE WHEN changes() = ?1 THEN 1 ELSE json_extract('', '$') END AS ok",
+              )
+              .bind(c.invitationIds.length),
+            ...c.invitationAuditStatements,
+          ]),
       ...c.effects,
       c.database
         .prepare(
