@@ -4,6 +4,8 @@ import { SystemRoleCatalogRepository } from "@system/infrastructure/repositories
 export type SystemRoleSummary = Readonly<{
   id: string
   resourceType: string | null
+  name: string
+  kind: "managed" | "custom"
   permissionKeys: ReadonlyArray<string>
 }>
 
@@ -21,6 +23,8 @@ export async function readSystemRoleSummary(
   return Object.freeze({
     id: role.id,
     resourceType: role.resourceType,
+    name: role.name,
+    kind: role.kind,
     permissionKeys: Object.freeze([...role.permissionKeys]),
   })
 }
