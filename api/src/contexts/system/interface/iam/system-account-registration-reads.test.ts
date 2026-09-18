@@ -3,6 +3,7 @@ import { readSystemAccountSnapshot } from "@system/interface/iam/read-system-acc
 import { readSystemRoleRevision } from "@system/interface/iam/read-system-role-revision"
 import { readSystemRoleGrants } from "@system/interface/iam/read-system-role-grants"
 import { readSystemIdentityEmailEligibility } from "@system/interface/iam/read-system-identity-email-eligibility"
+import { readSystemRoleBindingGrants } from "@system/interface/iam/read-system-role-binding-grants"
 import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import { expect, test } from "bun:test"
 
@@ -68,6 +69,9 @@ test("招待作成用のSystem読取はRole権限とIdentityの受信可否を�
     fixture.sqlite.run(
       "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('role-1', 'demo:write'), ('role-1', 'demo:read')",
     )
+    fixture.sqlite.run(
+      "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('binding-1', 'usr_person', 'role-1', 100), ('binding-2', 'usr_person', 'role-2', 100)",
+    )
     const database = fixture.context.env.DB
 
     expect(await readSystemRoleGrants(database, "role-1")).toEqual({
@@ -79,6 +83,12 @@ test("招待作成用のSystem読取はRole権限とIdentityの受信可否を�
       permissionKeys: [],
     })
     expect(await readSystemRoleGrants(database, "missing")).toBeNull()
+    expect(await readSystemRoleBindingGrants(database, "binding-1")).toEqual([
+      "demo:read",
+      "demo:write",
+    ])
+    expect(await readSystemRoleBindingGrants(database, "binding-2")).toEqual([])
+    expect(await readSystemRoleBindingGrants(database, "missing")).toEqual([])
     expect(
       await readSystemIdentityEmailEligibility(database, {
         provider: "password",
