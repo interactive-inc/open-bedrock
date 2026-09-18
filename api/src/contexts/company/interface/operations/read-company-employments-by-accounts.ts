@@ -6,6 +6,7 @@ import { readCompanyEmploymentsByEmployee } from "@/contexts/company/interface/o
 
 export type CompanyEmploymentsByAccounts = Readonly<{
   organizationRevision: number
+  employeeIdsByAccount: ReadonlyMap<string, string>
   employmentIdsByAccount: ReadonlyMap<string, ReadonlyArray<string>>
   employmentStatusesById: ReadonlyMap<string, EmploymentStatus>
 }>
@@ -61,6 +62,7 @@ export async function readCompanyEmploymentsByAccounts(
   if (employeeIdByAccount.size === 0) {
     return {
       organizationRevision: links.organizationRevision,
+      employeeIdsByAccount: employeeIdByAccount,
       employmentIdsByAccount,
       employmentStatusesById: new Map(),
     }
@@ -81,6 +83,7 @@ export async function readCompanyEmploymentsByAccounts(
 
   return {
     organizationRevision: links.organizationRevision,
+    employeeIdsByAccount: employeeIdByAccount,
     employmentIdsByAccount,
     employmentStatusesById: employments.employmentStatusesById,
   }

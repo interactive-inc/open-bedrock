@@ -54,6 +54,7 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
     }),
   ).toEqual({
     organizationRevision: found.organizationRevision,
+    employeeId: person.employeeId,
     employmentIds: [employmentId],
     employmentStatusesById: new Map([[employmentId, "ACTIVE"]]),
   })
@@ -67,6 +68,7 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
     }),
   ).toEqual({
     organizationRevision: found.organizationRevision,
+    employeeId: null,
     employmentIds: [],
     employmentStatusesById: new Map(),
   })
@@ -80,6 +82,7 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
     }),
   ).toEqual({
     organizationRevision: found.organizationRevision,
+    employeeIdsByAccount: new Map([[person.accountId, person.employeeId]]),
     employmentIdsByAccount: new Map([
       [person.accountId, [employmentId]],
       ["account:missing", []],
