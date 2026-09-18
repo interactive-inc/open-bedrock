@@ -212,8 +212,22 @@ export class CompanyEmployeeDirectoryReadAdapter {
         this.c.env.DB.prepare(
           `${companyEmployeeDirectorySql()} ${this.selectSql()}, link.account_id
          ${this.fromSql()}
-         JOIN company_account_employee_link_periods AS link ON link.employee_id = employee.id
-           AND (link.starts_on IS NULL OR link.starts_on <= ?1) AND (link.ends_on IS NULL OR ?1 < link.ends_on)
+         JOIN company_account_employee_resource_bindings AS link ON link.employee_id = employee.id
+         JOIN company_resource_revisions AS link_revision
+           ON link_revision.organization_id = link.organization_id
+           AND link_revision.resource_type = 'account-employee-link'
+           AND link_revision.resource_id = link.resource_id
+           AND link_revision.revision = (
+             SELECT current_link.revision FROM company_resource_revisions AS current_link
+             WHERE current_link.organization_id = link.organization_id
+               AND current_link.resource_type = 'account-employee-link'
+               AND current_link.resource_id = link.resource_id
+               AND current_link.effective_from <= ?1
+             ORDER BY current_link.effective_from DESC, current_link.revision DESC LIMIT 1)
+           AND link_revision.state = 'active'
+           AND (link_revision.effective_to IS NULL OR ?1 < link_revision.effective_to)
+           AND json_extract(link_revision.attributes_json, '$.accountId') = link.account_id
+           AND json_extract(link_revision.attributes_json, '$.employeeId') = link.employee_id
          WHERE link.account_id IN (${placeholders}) ORDER BY link.account_id`,
         ).bind(businessDate, ...chunk),
       )

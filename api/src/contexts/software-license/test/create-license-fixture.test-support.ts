@@ -34,6 +34,7 @@ import { POST as release } from "@/contexts/software-license/interface/routes/so
 import { licenseResponseSchema } from "@/contexts/software-license/interface/http/response-schemas"
 import { HTTPException } from "hono/http-exception"
 import { publishTestEmployeeResources } from "@tests/api/support/company/publish-test-employee-resources"
+import { publishTestAccountEmployeeLink } from "@tests/api/support/company/publish-test-account-employee-link"
 
 const schema = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
   .filter((file) => file.endsWith(".sql"))
@@ -108,6 +109,12 @@ export async function createLicenseFixture(databaseOverride?: D1Database) {
       employeeCode: suffix.toUpperCase(),
       employmentType: "FULL_TIME",
       employmentStatus: "ACTIVE",
+      effectiveFrom: "2020-01-01",
+      recordedAt: 0,
+    })
+    await publishTestAccountEmployeeLink(database, {
+      accountId: `account:${suffix}`,
+      employeeId: `employee:${suffix}`,
       effectiveFrom: "2020-01-01",
       recordedAt: 0,
     })
