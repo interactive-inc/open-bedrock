@@ -4,31 +4,27 @@ import {
   type SystemAccountInvitationStorageRow,
 } from "@system/interface/iam/system-account-invitation-record"
 
-/** 保存されたtokenの候補をSystemの公開読み取り境界から取得する。照合方針は呼び出し側が決める。 */
-export async function readSystemAccountInvitationCandidates(
+/** 未受諾のSystem招待を新しい順に取得する。業務固有のプロフィールは含めない。 */
+export async function listSystemAccountInvitations(
   database: D1Database,
-  storedTokens: ReadonlyArray<string>,
+  limit = 300,
 ): Promise<ReadonlyArray<SystemAccountInvitationRecord> | Error> {
-  const tokens = [...new Set(storedTokens)]
-  if (
-    tokens.length < 1 ||
-    tokens.length > 2 ||
-    tokens.some((token) => token.length < 1 || token.length > 255)
-  ) {
-    return new Error("Invalid System account invitation token candidates")
+  if (!Number.isSafeInteger(limit) || limit < 1 || limit > 300) {
+    return new Error("Invalid System account invitation list limit")
   }
 
   try {
-    const placeholders = tokens.map((_, index) => `?${index + 1}`).join(", ")
     const rows = await database
       .prepare(
         `SELECT id, token, subject, role_id, resource_type, resource_id, related_resource_id,
                 accepted_by_account_id, expires_at, revoked_at, created_at, updated_at
-         FROM system_account_invitations WHERE token IN (${placeholders}) ORDER BY id`,
+         FROM system_account_invitations
+         WHERE accepted_by_account_id IS NULL
+         ORDER BY created_at DESC LIMIT ?1`,
       )
-      .bind(...tokens)
+      .bind(limit)
       .all<SystemAccountInvitationStorageRow>()
-    if (!rows.success) return new Error("System account invitation lookup failed")
+    if (!rows.success) return new Error("System account invitation list failed")
     const records: SystemAccountInvitationRecord[] = []
     for (const row of rows.results) {
       const record = toSystemAccountInvitationRecord(row)
@@ -37,6 +33,6 @@ export async function readSystemAccountInvitationCandidates(
     }
     return records
   } catch (cause) {
-    return cause instanceof Error ? cause : new Error("System account invitation lookup failed")
+    return cause instanceof Error ? cause : new Error("System account invitation list failed")
   }
 }
