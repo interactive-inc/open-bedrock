@@ -15,6 +15,7 @@ import * as employeeLifecycleCodeState from "@/contexts/company/interface/routes
 import * as employeeResourceAdoptionBatches from "@/contexts/company/interface/routes/company.employee-resource-adoption-batches"
 import * as employeeResourceAdoptions from "@/contexts/company/interface/routes/company.employee-resource-adoptions"
 import * as employees from "@/contexts/company/interface/routes/company.employees"
+import * as employmentStartCorrections from "@/contexts/company/interface/routes/company.employment-start-corrections"
 import * as employments from "@/contexts/company/interface/routes/company.employments"
 import * as externalIdentityImports from "@/contexts/company/interface/routes/company.external-identity-imports"
 import * as gradeAssignmentHistory from "@/contexts/company/interface/routes/company.grade-assignment-history"
@@ -97,6 +98,7 @@ export const companyAuditedRoutes = new Hono<CompanyHttpEnvironment>()
   .post("/employee-resource-adoption-batches", ...employeeResourceAdoptionBatches.POST)
   .post("/employee-resource-adoptions", ...employeeResourceAdoptions.POST)
   .post("/employees", ...employees.POST)
+  .post("/employment-start-corrections", ...employmentStartCorrections.POST)
   .post("/employments", ...employments.POST)
   .put("/my-profile", ...myProfile.PUT)
   .post("/organization-changes", ...organizationChanges.POST)

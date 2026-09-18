@@ -31,6 +31,16 @@ export const companyRouteManifest = [
     },
   },
   {
+    method: "POST",
+    path: "/company/employment-start-corrections",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.employment-start-corrections",
+      exportName: "POST",
+    },
+  },
+  {
     method: "GET",
     path: "/company/grade-award-archives/by-employee/:employeeId",
     phase: "authenticated",

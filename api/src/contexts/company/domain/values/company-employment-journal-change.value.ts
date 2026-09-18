@@ -15,10 +15,11 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 
 type Props = Readonly<{
   organizationId: string
-  history: ReadonlyArray<CompanyResourceProps>
+  history: ReadonlyArray<CompanyResourceProps & Readonly<{ correctsRevision?: number | null }>>
   employment: EmploymentPeriod
   statuses: ReadonlyArray<EmployeeStatusPeriod>
   initialAttributes: CompanyJsonObject
+  correctingStartRevision?: number
 }>
 
 /** 訂正後の期間と既存の発効境界を突き合わせ、公開雇用の変更点だけを追記する。 */
@@ -61,6 +62,17 @@ export class CompanyEmploymentJournalChangeValue {
     const effective = CompanyResourceEffectiveHistoryValue.create(history)
     if (effective instanceof Error) return effective
     const currentHistory = effective.resources.map((resource) => resource.toProps())
+    if (props.correctingStartRevision !== undefined) {
+      const firstActive = currentHistory
+        .filter((resource) => resource.state === "active")
+        .toSorted((left, right) => left.effectiveFrom.localeCompare(right.effectiveFrom))[0]
+      if (
+        firstActive === undefined ||
+        firstActive.revision !== props.correctingStartRevision ||
+        firstActive.effectiveFrom === employment.startsOn
+      )
+        return new CompanyResourceValidationError("invalid_resource")
+    }
     const statuses = props.statuses.filter(
       (period) => !period.isVoid && period.employmentPeriodId === employment.employmentId,
     )
@@ -124,6 +136,7 @@ export class CompanyEmploymentJournalChangeValue {
         return new CompanyResourceValidationError("invalid_resource")
       if (
         current?.effectiveFrom === date &&
+        current.revision !== props.correctingStartRevision &&
         current.effectiveTo === next &&
         current.state === state &&
         beforeJson.toString() === afterJson.toString()

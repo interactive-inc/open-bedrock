@@ -300,6 +300,7 @@ import * as companyEmployeeLifecycleCodeStateRoute from "@/contexts/company/inte
 import * as companyEmployeeResourceAdoptionBatchesRoute from "@/contexts/company/interface/routes/company.employee-resource-adoption-batches"
 import * as companyEmployeeResourceAdoptionsRoute from "@/contexts/company/interface/routes/company.employee-resource-adoptions"
 import * as companyEmployeesRoute from "@/contexts/company/interface/routes/company.employees"
+import * as companyEmploymentStartCorrectionsRoute from "@/contexts/company/interface/routes/company.employment-start-corrections"
 import * as companyEmploymentsRoute from "@/contexts/company/interface/routes/company.employments"
 import * as companyExternalIdentityImportsRoute from "@/contexts/company/interface/routes/company.external-identity-imports"
 import * as companyGradeAssignmentHistoryRoute from "@/contexts/company/interface/routes/company.grade-assignment-history"
@@ -2145,6 +2146,7 @@ const routePart29 = createRouteApp()
   .post("/company/employee-resource-adoptions", ...companyEmployeeResourceAdoptionsRoute.POST)
   .get("/company/employees", ...companyEmployeesRoute.GET)
   .post("/company/employees", ...companyEmployeesRoute.POST)
+  .post("/company/employment-start-corrections", ...companyEmploymentStartCorrectionsRoute.POST)
   .get("/company/employments", ...companyEmploymentsRoute.GET)
   .post("/company/employments", ...companyEmploymentsRoute.POST)
   .post("/company/external-identity-imports", ...companyExternalIdentityImportsRoute.POST)
@@ -2172,9 +2174,9 @@ const routePart29 = createRouteApp()
   )
   .get("/company/organization-snapshots", ...companyOrganizationSnapshotsRoute.GET)
   .get("/company/organization-tree", ...companyOrganizationTreeRoute.GET)
-  .get("/company/organization-units", ...companyOrganizationUnitsRoute.GET)
 
 const routePart30 = createRouteApp()
+  .get("/company/organization-units", ...companyOrganizationUnitsRoute.GET)
   .post("/company/organization-units", ...companyOrganizationUnitsRoute.POST)
   .get("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.GET)
   .put("/company/organization-units/:code", ...companyOrganizationUnitsCodeRoute.PUT)
