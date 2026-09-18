@@ -442,6 +442,7 @@
     "src/contexts/company/interface/operations/company-resource-read-permission.ts",
     "src/contexts/company/interface/operations/dispatch-personnel-action.ts",
     "src/contexts/company/interface/operations/employee-lifecycle/get-lifecycle-state.ts",
+    "src/contexts/company/interface/operations/plan-employment-start-correction.ts",
     "src/contexts/company/interface/operations/prepare-company-organization-revision-guard.ts",
     "src/contexts/company/interface/operations/read-company-account-display-names.ts",
     "src/contexts/company/interface/operations/read-company-employee-names.ts",

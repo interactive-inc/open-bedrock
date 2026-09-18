@@ -2,6 +2,7 @@ import { expect, test } from "bun:test"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CompanyEmploymentStartCorrectionValue } from "@/contexts/company/domain/values/company-employment-start-correction.value"
 import { CompanyEmploymentResourceTimelineValue } from "@/contexts/company/domain/values/company-employment-resource-timeline.value"
+import { CompanyResourceEffectiveHistoryValue } from "@/contexts/company/domain/values/company-resource-effective-history.value"
 
 const initial = {
   organizationId: "organization:default",
@@ -77,4 +78,55 @@ test("訂正元が古い場合と後続状態を消す開始日は拒否する",
   expect(plan("2026-07-01")).toMatchObject({ code: "invalid_period" })
   expect(plan("2026-08-01")).toMatchObject({ code: "invalid_period" })
   expect(plan("2026-01-01")).toMatchObject({ code: "invalid_period" })
+})
+
+test("開始日訂正は後続の契約更新と休職の属性を変更しない", () => {
+  const fixedTerm = { kind: "FIXED_TERM", startsOn: "2026-01-01", endsBefore: "2026-12-31" }
+  const indefinite = { kind: "INDEFINITE", startsOn: "2026-04-01" }
+  const source = [
+    {
+      ...initial,
+      effectiveTo: restoreCalendarDate("2026-04-01"),
+      attributes: { ...initial.attributes, contractTerm: fixedTerm },
+    },
+    {
+      ...initial,
+      revision: 2,
+      effectiveFrom: restoreCalendarDate("2026-04-01"),
+      attributes: { ...initial.attributes, contractTerm: indefinite },
+    },
+    {
+      ...leave,
+      revision: 3,
+      attributes: { ...leave.attributes, contractTerm: indefinite },
+    },
+  ]
+  const result = CompanyEmploymentStartCorrectionValue.create({
+    history: source,
+    correctsRevision: 1,
+    startsOn: restoreCalendarDate("2026-02-01"),
+    commandId: "correct:contract-start",
+    recordedAt: 1_000,
+  })
+  if (result instanceof Error) throw result
+  const effective = CompanyResourceEffectiveHistoryValue.create([
+    ...source,
+    ...result.resources.map((resource) => ({
+      ...resource,
+      correctsRevision: result.corrections.find(
+        (correction) => correction.revision === resource.revision,
+      )?.correctsRevision,
+    })),
+  ])
+  if (effective instanceof Error) throw effective
+  expect(
+    effective.resources
+      .filter((resource) => resource.state === "active")
+      .toSorted((left, right) => left.effectiveFrom.localeCompare(right.effectiveFrom))
+      .map((resource) => [resource.effectiveFrom.toString(), resource.attributes.contractTerm]),
+  ).toEqual([
+    ["2026-02-01", fixedTerm],
+    ["2026-04-01", indefinite],
+    ["2026-07-01", indefinite],
+  ])
 })
