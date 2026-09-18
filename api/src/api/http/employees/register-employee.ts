@@ -268,7 +268,7 @@ export class RegisterEmployee {
                 ) AS has_expected_role
            FROM company_personnel_actions AS action
            JOIN company_employees AS employee ON employee.id = action.employee_id
-           JOIN company_account_employee_links AS link ON link.employee_id = employee.id
+           JOIN company_account_employee_resource_bindings AS link ON link.employee_id = employee.id
            LEFT JOIN system_identity_bindings AS identity
              ON identity.account_id = link.account_id
             AND identity.provider = 'password'

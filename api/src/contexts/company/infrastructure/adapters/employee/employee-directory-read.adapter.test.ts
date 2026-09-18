@@ -14,6 +14,22 @@ function directory(database: D1Database, now: string) {
   })
 }
 
+const publicAccountLinkSchema = `
+  CREATE TABLE company_account_employee_resource_bindings (
+    resource_id TEXT, organization_id TEXT, account_id TEXT, employee_id TEXT
+  );
+`
+
+function publicAccountLink(accountId: string, employeeId: string, resourceId = accountId) {
+  return `
+    INSERT INTO company_account_employee_resource_bindings VALUES
+      ('${resourceId}', 'organization:default', '${accountId}', '${employeeId}');
+    INSERT INTO company_resource_revisions VALUES
+      ('organization:default', 'account-employee-link', '${resourceId}', 1, 'active',
+       '2026-01-01', NULL, '{"accountId":"${accountId}","employeeId":"${employeeId}"}');
+  `
+}
+
 const page = {
   query: null,
   organizationUnit: null,
@@ -401,10 +417,8 @@ describe("Company directoryの在籍時点", () => {
 
   test("Accountの解決も同じ在籍と所属の終了境界を使う", async () => {
     const database = createEmployeeEmploymentTestDatabase(`
-      CREATE TABLE company_account_employee_links (account_id TEXT, employee_id TEXT);
-      CREATE VIEW company_account_employee_link_periods AS
-        SELECT account_id, employee_id, NULL AS starts_on, NULL AS ends_on FROM company_account_employee_links;
-      INSERT INTO company_account_employee_links VALUES ('account:1', 'employee:1');
+      ${publicAccountLinkSchema}
+      ${publicAccountLink("account:1", "employee:1")}
       INSERT INTO company_organization_unit_period_versions VALUES
         ('unit-period:1', 1, 'unit:1', 'UNIT', 'Example Unit', '2026-01-01', '2026-10-01', 0);
       INSERT INTO company_organization_assignment_period_versions VALUES
@@ -438,16 +452,15 @@ describe("Company directoryの在籍時点", () => {
 
   test("一つのAccountに複数の従業員がある場合は選ばずに拒否する", async () => {
     const database = createEmployeeEmploymentTestDatabase(`
-      CREATE TABLE company_account_employee_links (account_id TEXT, employee_id TEXT);
-      CREATE VIEW company_account_employee_link_periods AS
-        SELECT account_id, employee_id, NULL AS starts_on, NULL AS ends_on FROM company_account_employee_links;
+      ${publicAccountLinkSchema}
       INSERT INTO company_employees VALUES ('employee:2', 'Another Person', 'E002', NULL, NULL);
       INSERT INTO company_workforce_resource_bindings VALUES
         ('employee', 'employee:2', 'organization:default', 'employee:2');
       INSERT INTO company_resource_revisions VALUES
         ('organization:default', 'person', 'person:2', 1, 'active', '2026-01-01', NULL, '{"officialName":"Another Person"}'),
         ('organization:default', 'employee', 'employee:2', 1, 'active', '2026-01-01', NULL, '{"personId":"person:2","employeeCode":"E002"}');
-      INSERT INTO company_account_employee_links VALUES ('account:1', 'employee:1'), ('account:1', 'employee:2');
+      ${publicAccountLink("account:1", "employee:1", "link:1")}
+      ${publicAccountLink("account:1", "employee:2", "link:2")}
     `)
     expect(
       await directory(database, "2026-09-01T00:00:00Z").findForAccountIds([
@@ -458,10 +471,8 @@ describe("Company directoryの在籍時点", () => {
 
   test("100件を超えるAccountも分割し、未紐付けは候補に含めない", async () => {
     const database = createEmployeeEmploymentTestDatabase(`
-      CREATE TABLE company_account_employee_links (account_id TEXT, employee_id TEXT);
-      CREATE VIEW company_account_employee_link_periods AS
-        SELECT account_id, employee_id, NULL AS starts_on, NULL AS ends_on FROM company_account_employee_links;
-      INSERT INTO company_account_employee_links VALUES ('account:200', 'employee:1');
+      ${publicAccountLinkSchema}
+      ${publicAccountLink("account:200", "employee:1")}
     `)
     const accountIds = Array.from({ length: 201 }, (_, index) =>
       zAccountId.parse(`account:${index}`),
@@ -469,6 +480,19 @@ describe("Company directoryの在籍時点", () => {
     expect(
       await directory(database, "2026-09-01T00:00:00Z").findForAccountIds(accountIds),
     ).toMatchObject([{ accountId: "account:200", employee: { employment: { status: "ACTIVE" } } }])
+  })
+
+  test("旧対応表だけのAccountは従業員として解決しない", async () => {
+    const database = createEmployeeEmploymentTestDatabase(`
+      ${publicAccountLinkSchema}
+      CREATE TABLE company_account_employee_links (account_id TEXT, employee_id TEXT);
+      INSERT INTO company_account_employee_links VALUES ('account:legacy', 'employee:1');
+    `)
+    expect(
+      await directory(database, "2026-09-01T00:00:00Z").findForAccountIds([
+        zAccountId.parse("account:legacy"),
+      ]),
+    ).toEqual([])
   })
 
   test("退職予約済みでも発効前は在籍し、発効後は退職と表示する", async () => {

@@ -34,8 +34,8 @@ describe("所属移行の上長対応を追加するmigration", () => {
     await database.exec(`CREATE VIEW company_account_employee_link_periods AS
       SELECT account_id, employee_id, NULL AS starts_on, NULL AS ends_on FROM company_account_employee_links`)
     await database.exec(`CREATE VIEW company_account_employee_resource_bindings AS
-      SELECT 'organization:default' AS organization_id, account_id, employee_id
-      FROM company_account_employee_links`)
+      SELECT 'organization:default' AS organization_id, NULL AS resource_id, account_id, employee_id
+      FROM company_account_employee_links WHERE 0`)
     // 責務の公開接続がまだ存在しない旧schemaでは、現行writerの参照結果を空に固定する。
     // 対象のmigrationを適用する直前に破棄し、実際のtableを作る。
     await database.exec(`CREATE VIEW company_responsibility_resource_bindings AS SELECT

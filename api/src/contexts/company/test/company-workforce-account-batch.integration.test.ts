@@ -50,6 +50,68 @@ test("千人を超える会社のAccountを問い合わせ上限内で読み、�
       .prepare(`INSERT INTO company_account_employee_links (account_id, employee_id)
       SELECT json_extract(value, '$.accountId'), json_extract(value, '$.employeeId') FROM json_each(?1)`)
       .bind(input),
+    database.prepare(`INSERT OR IGNORE INTO company_organizations
+      (id, revision, name, representative_name, created_at, updated_at)
+      VALUES ('organization:default', 1, 'Example', '', 0, 0)`),
+    database
+      .prepare(`INSERT INTO company_resource_revisions
+        (organization_id, resource_type, resource_id, revision, organization_revision,
+         state, effective_from, attributes_json, command_id, actor_account_id, reason, recorded_at)
+      SELECT 'organization:default', 'person', 'person:' || json_extract(value, '$.employeeId'),
+        1, 1, 'active', '2020-01-01', json_object('officialName', 'Member'),
+        'test:workforce-people', 'system:test', 'Confirmed test person', 0
+      FROM json_each(?1)`)
+      .bind(input),
+    database.prepare(`INSERT INTO company_resource_heads
+      (organization_id, resource_type, resource_id, revision, organization_revision,
+       state, effective_from, effective_to, attributes_json, updated_at)
+      SELECT organization_id, resource_type, resource_id, revision, organization_revision,
+        state, effective_from, effective_to, attributes_json, recorded_at
+      FROM company_resource_revisions WHERE command_id = 'test:workforce-people'`),
+    database
+      .prepare(`INSERT INTO company_resource_revisions
+        (organization_id, resource_type, resource_id, revision, organization_revision,
+         state, effective_from, attributes_json, command_id, actor_account_id, reason, recorded_at)
+      SELECT 'organization:default', 'employee', json_extract(value, '$.employeeId'),
+        1, 1, 'active', '2020-01-01',
+        json_object('personId', 'person:' || json_extract(value, '$.employeeId')),
+        'test:workforce-employees', 'system:test', 'Confirmed test employee', 0
+      FROM json_each(?1)`)
+      .bind(input),
+    database.prepare(`INSERT INTO company_resource_heads
+      (organization_id, resource_type, resource_id, revision, organization_revision,
+       state, effective_from, effective_to, attributes_json, updated_at)
+      SELECT organization_id, resource_type, resource_id, revision, organization_revision,
+        state, effective_from, effective_to, attributes_json, recorded_at
+      FROM company_resource_revisions WHERE command_id = 'test:workforce-employees'`),
+    database
+      .prepare(`INSERT INTO company_workforce_resource_bindings
+        (resource_type, resource_id, organization_id, employee_id, resource_revision, lifecycle_revision)
+      SELECT 'employee', json_extract(value, '$.employeeId'), 'organization:default',
+        json_extract(value, '$.employeeId'), 1, 0 FROM json_each(?1)`)
+      .bind(input),
+    database
+      .prepare(`INSERT INTO company_resource_revisions
+        (organization_id, resource_type, resource_id, revision, organization_revision,
+         state, effective_from, attributes_json, command_id, actor_account_id, reason, recorded_at)
+      SELECT 'organization:default', 'account-employee-link', 'link:' || json_extract(value, '$.accountId'),
+        1, 1, 'active', '2020-01-01',
+        json_object('accountId', json_extract(value, '$.accountId'),
+          'employeeId', json_extract(value, '$.employeeId')),
+        'test:workforce-account-batch', 'system:test', 'Confirmed test correspondence', 0
+      FROM json_each(?1)`)
+      .bind(input),
+    database.prepare(`INSERT INTO company_resource_heads
+      (organization_id, resource_type, resource_id, revision, organization_revision,
+       state, effective_from, effective_to, attributes_json, updated_at)
+      SELECT organization_id, resource_type, resource_id, revision, organization_revision,
+        state, effective_from, effective_to, attributes_json, recorded_at
+      FROM company_resource_revisions WHERE command_id = 'test:workforce-account-batch'`),
+    database.prepare(`INSERT INTO company_account_employee_resource_bindings
+      (resource_id, organization_id, account_id, employee_id, recorded_at)
+      SELECT resource_id, organization_id,
+        json_extract(attributes_json, '$.accountId'), json_extract(attributes_json, '$.employeeId'), 0
+      FROM company_resource_heads WHERE resource_type = 'account-employee-link'`),
   ])
   reading = true
   const result = await new OrganizationWorkforceSnapshotAdapter({

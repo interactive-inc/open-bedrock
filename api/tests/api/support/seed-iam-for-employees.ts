@@ -1,4 +1,5 @@
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
+import { publishTestAccountEmployeeLink } from "@tests/api/support/company/publish-test-account-employee-link"
 
 /** 認証・認可情報を持つ seed 従業員の最小形。 */
 export type IamSeedEmployee = {
@@ -46,6 +47,13 @@ export async function seedIamForEmployees(
       )
       .bind(String(employee.id), employee.id)
       .run()
+
+    await publishTestAccountEmployeeLink(db, {
+      accountId: String(employee.id),
+      employeeId: String(employee.id),
+      effectiveFrom: "2024-01-01",
+      recordedAt: 0,
+    })
 
     await db
       .prepare(

@@ -90,8 +90,15 @@ describe("POST /company/employee-registrations", () => {
       types: ["account-employee-link"],
     })
     if (!links.ok) throw links.cause
-    expect(links.resources).toHaveLength(1)
-    const link = links.resources[0]!
+    const registeredEmployeeId = await db
+      .prepare("SELECT id FROM company_employees WHERE employee_code = 'E100'")
+      .first<string>("id")
+    if (registeredEmployeeId === null) throw new Error("registered employee is missing")
+    const registeredLinks = links.resources.filter(
+      (candidate) => candidate.readText("employeeId") === registeredEmployeeId,
+    )
+    expect(registeredLinks).toHaveLength(1)
+    const link = registeredLinks[0]!
     const employeeId = link.readText("employeeId")
     const accountId = link.readText("accountId")
     if (employeeId === null || accountId === null)
