@@ -326,7 +326,7 @@
     "src/contexts/system/infrastructure/adapters/events/system-managed-job-runner.adapter.ts": "1840f6c1962a49ded510914da215d46b443344942e947d006eb31bda2644c1e6",
     "src/contexts/system/infrastructure/adapters/iam/d1-system-root-bootstrap.adapter.ts": "331630687fec40814a3d7f8e6a20f458bbf9cf41abab6b9eb10d086712dbe10d",
     "src/contexts/system/infrastructure/adapters/iam/grant-system-scoped-role-binding-with-effects.adapter.ts": "17371b699f6ce869ce2b6c605154d19006d79cc7d19cdfd7f04f5877872ff007",
-    "src/contexts/system/infrastructure/adapters/iam/list-system-scoped-role-bindings.adapter.ts": "7e6882c810dc4dfd844cd7972c5597b833566471cb4c037a080c3e4e952482a1",
+    "src/contexts/system/infrastructure/adapters/iam/list-system-scoped-role-bindings.adapter.ts": "31595806ca458b0f1c6a71885b367c372a9cebca58d8c330d389874e19cda9a1",
     "src/contexts/system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter.ts": "ac06361d330b49b8469e5d738197e31f26b727738238aad43631a13a2b070064",
     "src/contexts/system/infrastructure/adapters/iam/replace-system-scoped-role-binding.adapter.ts": "c1600bdb0d4f64666a83f6d6b63c94dc19440dee25aaab5ba6cda50184cbf4a1",
     "src/contexts/system/infrastructure/adapters/iam/revoke-system-scoped-role-binding.adapter.ts": "bd71c56a6f1a5f75ee7b2f326acc5dde1447edcdd752c8d370eeb5774a5c3460",

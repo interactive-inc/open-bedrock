@@ -1,6 +1,8 @@
 import { RoleBindingEntity } from "@system/domain/entities/role-binding.entity"
 import type { SystemScopedRoleBinding } from "@system/interface/iam/list-system-scoped-role-bindings"
 
+type Context = D1Database
+
 type Row = Readonly<{
   id: unknown
   account_id: unknown
@@ -13,7 +15,7 @@ type Row = Readonly<{
 
 /** Systemのbinding/role表を、他context用の安定した読み取り結果へ変換する。 */
 export class ListSystemScopedRoleBindingsAdapter {
-  constructor(private readonly database: D1Database) {
+  constructor(private readonly c: Context) {
     Object.freeze(this)
   }
 
@@ -26,7 +28,7 @@ export class ListSystemScopedRoleBindingsAdapter {
     }>,
   ): Promise<ReadonlyArray<SystemScopedRoleBinding> | Error> {
     try {
-      const result = await this.database
+      const result = await this.c
         .prepare(
           `SELECT binding.id, binding.account_id, binding.role_id,
                 binding.resource_type, binding.resource_id, binding.created_at,
