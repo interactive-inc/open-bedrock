@@ -1,12 +1,11 @@
 import { ApplyOrganizationChange } from "@/contexts/company/application/organization/apply-organization-change"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
-import { CompanyEmploymentStartCorrectionValue } from "@/contexts/company/domain/values/company-employment-start-correction.value"
 import {
   CompanySnapshotRevisionError,
   CompanyResourceValidationError,
 } from "@/contexts/company/domain/errors"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
-import { CompanyResourceHistoryRepository } from "@/contexts/company/infrastructure/repositories/core/company-resource-history.repository"
+import { planEmploymentStartCorrection } from "@/contexts/company/interface/operations/plan-employment-start-correction"
 import {
   CompanyAccessDeniedError,
   CompanyAuthenticationRequiredError,
@@ -82,46 +81,22 @@ export const POST = factory.createHandlers(
     if (!Number.isSafeInteger(expectedRevision))
       throw new CompanyHeadersInvalidError(new Error("Invalid revision"))
 
-    const historyRepository = new CompanyResourceHistoryRepository(database)
-    const history: Array<
-      Parameters<typeof CompanyEmploymentStartCorrectionValue.create>[0]["history"][number]
-    > = []
-    let afterRevision = 0
-    while (true) {
-      const page = await historyRepository.list({
-        organizationId: "organization:default",
-        type: "employment",
-        id: body.employmentId,
-        afterRevision,
-        throughRevision: expectedRevision,
-        limit: 100,
-      })
-      if (page instanceof CompanySnapshotRevisionError) throw new CompanyQueryInvalidError(page)
-      if (page instanceof Error) throw new CompanyReadUnavailableError(page)
-      history.push(
-        ...page.data.map(({ change, resource }) => ({
-          ...resource,
-          correctsRevision: change.corrects_revision,
-        })),
-      )
-      if (!page.hasMore) break
-      if (history.length >= 10_000 || page.nextAfterRevision <= afterRevision)
-        throw new CompanyInvariantValidationError(
-          "invalid_resource",
-          new CompanyResourceValidationError("invalid_resource"),
-        )
-      afterRevision = page.nextAfterRevision
-    }
-    if (history.length === 0) throw new CompanyEmployeeNotFoundError()
     const recordedAt = resolveCompanyRecordedAt(context.var.companyClock)
-    const planned = CompanyEmploymentStartCorrectionValue.create({
-      history,
+    const planned = await planEmploymentStartCorrection({
+      database,
+      organizationId: "organization:default",
+      employmentId: body.employmentId,
+      expectedRevision,
       correctsRevision: body.correctsRevision,
       startsOn: restoreCalendarDate(body.startsOn),
       commandId: headers["idempotency-key"],
       recordedAt,
     })
-    if (planned instanceof Error) throw new CompanyInvariantValidationError(planned.code, planned)
+    if (planned === null) throw new CompanyEmployeeNotFoundError()
+    if (planned instanceof CompanySnapshotRevisionError) throw new CompanyQueryInvalidError(planned)
+    if (planned instanceof CompanyResourceValidationError)
+      throw new CompanyInvariantValidationError(planned.code, planned)
+    if (planned instanceof Error) throw new CompanyReadUnavailableError(planned)
     const result = await new ApplyOrganizationChange({
       actor,
       repository: new D1CompanyResourceRepository({ database }),

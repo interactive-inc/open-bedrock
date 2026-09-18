@@ -1148,6 +1148,16 @@ describe("公開Company APIから実際の従業員台帳と在籍判定まで",
         .bind(overlapping.id)
         .first(),
     ).toBeNull()
+    expect(
+      (await f.correctStart("2026-02-01", 5, "correct:prior-employment-start", 2)).status,
+    ).toBe(201)
+    expect(await f.access("2026-01-15T00:00:00Z")).toBeNull()
+    expect(await f.directory("2026-03-01T00:00:00Z")).toMatchObject({
+      employment: { id: employment.id, status: "ACTIVE" },
+    })
+    expect(await f.directory("2026-05-01T00:00:00Z")).toMatchObject({
+      employment: { id: "employment:rehire", status: "ACTIVE" },
+    })
   })
 
   test("PersonとEmployeeの有効期間に空白がある場合は雇用期間を作らない", async () => {
