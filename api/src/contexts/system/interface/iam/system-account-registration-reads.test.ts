@@ -4,6 +4,7 @@ import { readSystemRoleRevision } from "@system/interface/iam/read-system-role-r
 import { readSystemRoleGrants } from "@system/interface/iam/read-system-role-grants"
 import { readSystemIdentityEmailEligibility } from "@system/interface/iam/read-system-identity-email-eligibility"
 import { readSystemRoleBindingGrants } from "@system/interface/iam/read-system-role-binding-grants"
+import { readSystemInitialPasswordTarget } from "@system/interface/iam/read-system-initial-password-target"
 import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import { expect, test } from "bun:test"
 
@@ -45,6 +46,50 @@ test("招待登録用のSystem読取はIdentity重複、Account状態、Role版�
       name: "Member",
       resourceType: "demo:scope",
       updatedAt: new Date(200),
+    })
+  } finally {
+    fixture.sqlite.close()
+  }
+})
+
+test("初期password発行のSystem読取はcredentialを返さず有効なroot割当だけを評価する", async () => {
+  const fixture = new SystemSessionTestContext()
+  try {
+    fixture.sqlite.run(
+      "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('usr_person', 'active', 0, 100, 200)",
+    )
+    fixture.sqlite.run(
+      "INSERT INTO system_identity_bindings (id, account_id, provider, subject, created_at) VALUES ('identity-1', 'usr_person', 'password', 'person@example.com', 100)",
+    )
+    fixture.sqlite.run(
+      "INSERT INTO system_identity_profiles (identity_id, email, can_receive_email, updated_at) VALUES ('identity-1', 'person@example.com', 0, 100)",
+    )
+    fixture.sqlite.run(
+      "INSERT INTO system_password_credentials (identity_id, password_hash, changed_at, created_at, updated_at) VALUES ('identity-1', 'secret-hash', 100, 100, 100)",
+    )
+    fixture.sqlite.run(
+      "INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at) VALUES ('root-role', 'legacy-root', 'managed', 'Root', 100, 100)",
+    )
+    fixture.sqlite.run(
+      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('root-role', 'system:admin')",
+    )
+    fixture.sqlite.run(
+      "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('root-binding', 'usr_person', 'root-role', 100)",
+    )
+    const database = fixture.context.env.DB
+
+    expect(await readSystemInitialPasswordTarget(database, "usr_person")).toEqual({
+      user: { id: "usr_person", disabledAt: null },
+      identities: [{ id: "identity-1", email: "person@example.com", canReceiveEmail: false }],
+      targetHasRootGrant: true,
+    })
+    fixture.sqlite.run("UPDATE system_role_bindings SET revoked_at = 201 WHERE id = 'root-binding'")
+    expect(await readSystemInitialPasswordTarget(database, "usr_person")).toMatchObject({
+      targetHasRootGrant: false,
+    })
+    fixture.sqlite.run("UPDATE system_accounts SET status = 'locked' WHERE id = 'usr_person'")
+    expect(await readSystemInitialPasswordTarget(database, "usr_person")).toMatchObject({
+      user: { disabledAt: new Date(200) },
     })
   } finally {
     fixture.sqlite.close()
