@@ -4,10 +4,8 @@ import type { CompanyResourceProps } from "@/contexts/company/domain/entities/co
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import { CompanyEmploymentStartCorrectionValue } from "@/contexts/company/domain/values/company-employment-start-correction.value"
 import { CompanyWorkforceIdentityStartCorrectionValue } from "@/contexts/company/domain/values/company-workforce-identity-start-correction.value"
-import {
-  readCompanyStartCorrectionHistory,
-  readEmploymentStartCorrectionHistory,
-} from "@/contexts/company/interface/operations/read-employment-start-correction-history"
+import { readCompanyStartCorrectionHistory } from "@/contexts/company/interface/operations/read-company-start-correction-history"
+import { readEmploymentStartCorrectionHistory } from "@/contexts/company/interface/operations/read-employment-start-correction-history"
 
 type Plan = Readonly<{
   resources: ReadonlyArray<CompanyResourceProps>
