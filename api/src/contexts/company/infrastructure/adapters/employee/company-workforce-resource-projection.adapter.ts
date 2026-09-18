@@ -43,8 +43,22 @@ export class CompanyWorkforceResourceProjectionAdapter {
         statements.push(...this.personStatements(resource, change.recordedAt))
       }
     }
+    const employeeHistories = new Map<string, CompanyResourceEntity[]>()
     for (const resource of change.resources.filter((resource) => resource.type === "employee")) {
-      const prepared = await this.employeeStatements(resource, change.recordedAt)
+      const history = employeeHistories.get(resource.id) ?? []
+      history.push(resource)
+      employeeHistories.set(resource.id, history)
+    }
+    for (const history of employeeHistories.values()) {
+      const resource = history.at(-1)
+      const firstStaged = history[0]
+      if (resource === undefined || firstStaged === undefined)
+        return new CompanyResourceValidationError("invalid_resource")
+      const prepared = await this.employeeStatements(
+        resource,
+        firstStaged.revision,
+        change.recordedAt,
+      )
       if (prepared instanceof Error) return prepared
       statements.push(...prepared)
     }
@@ -155,6 +169,7 @@ export class CompanyWorkforceResourceProjectionAdapter {
 
   private async employeeStatements(
     resource: CompanyResourceEntity,
+    firstStagedRevision: number,
     recordedAt: number,
   ): Promise<ReadonlyArray<D1PreparedStatement> | Error> {
     const binding = await this.c
@@ -163,10 +178,10 @@ export class CompanyWorkforceResourceProjectionAdapter {
       .bind(resource.id)
       .first<{ organization_id: string; resource_revision: number }>()
     if (
-      (binding === null && resource.revision !== 1) ||
+      (binding === null && firstStagedRevision !== 1) ||
       (binding !== null &&
         (binding.organization_id !== resource.organizationId ||
-          binding.resource_revision !== resource.revision - 1))
+          binding.resource_revision !== firstStagedRevision - 1))
     ) {
       return new CompanyResourceValidationError("invalid_resource")
     }
