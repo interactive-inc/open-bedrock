@@ -141,11 +141,12 @@ export class CompanyWorkforceResourceProjectionAdapter {
         .prepare(`UPDATE company_account_profiles
         SET display_name = ?1, updated_at = max(updated_at, ?2)
         WHERE organization_id = ?3 AND account_id IN (
-          SELECT link.account_id FROM company_account_employee_links AS link
+          SELECT link.account_id FROM company_account_employee_resource_bindings AS link
           JOIN company_workforce_resource_bindings AS binding ON binding.employee_id = link.employee_id
           JOIN company_resource_heads AS employee ON employee.organization_id = binding.organization_id
             AND employee.resource_type = 'employee' AND employee.resource_id = binding.resource_id
           WHERE binding.resource_type = 'employee' AND binding.organization_id = ?3
+            AND link.organization_id = ?3
             AND json_extract(employee.attributes_json, '$.personId') = ?4
         )`)
         .bind(resource.readText("officialName"), recordedAt, resource.organizationId, resource.id),
