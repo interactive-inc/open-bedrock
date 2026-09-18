@@ -274,6 +274,8 @@
     "src/contexts/company/domain/values/company-responsibility-journal-change.value.ts",
     "src/contexts/company/domain/values/company-responsibility-resource-timeline.value.ts",
     "src/contexts/company/domain/values/company-session.value.ts",
+    "src/contexts/company/domain/values/company-workforce-identity-start-correction.value.test.ts",
+    "src/contexts/company/domain/values/company-workforce-identity-start-correction.value.ts",
     "src/contexts/company/domain/values/definition-resource-adoption-snapshot.value.ts",
     "src/contexts/company/domain/values/employee-resource-adoption-correction.value.ts",
     "src/contexts/company/domain/values/employee-resource-adoption-snapshot.value.ts",

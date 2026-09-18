@@ -279,6 +279,132 @@ describe("公開Company APIから実際の従業員台帳と在籍判定まで",
     expect((await limited.readCorrectionTarget()).status).toBe(403)
   })
 
+  test("入社日を初期Person・Employeeより前へ訂正し、同じ会社版の参照を保つ", async () => {
+    const f = fixture()
+    await f.initialize()
+    const corrected = await f.correctStart("2025-12-01", 3, "correct:initial-start")
+    expect({ status: corrected.status, body: await corrected.json() }).toMatchObject({
+      status: 201,
+      body: { organizationRevision: 4, replayed: false },
+    })
+    expect((await f.correctStart("2025-12-01", 3, "correct:initial-start")).status).toBe(200)
+    expect(await (await f.readCorrectionTarget(3)).json()).toMatchObject({
+      organizationRevision: 3,
+      startsOn: "2026-01-01",
+    })
+    expect(await (await f.readCorrectionTarget(4)).json()).toMatchObject({
+      organizationRevision: 4,
+      startsOn: "2025-12-01",
+    })
+    const rows = await f.database
+      .prepare(`SELECT resource_type, revision, effective_from, corrects_revision
+        FROM company_resource_revisions WHERE organization_id = ?1 AND organization_revision = 4
+        ORDER BY resource_type, revision`)
+      .bind(organizationId)
+      .all<{
+        resource_type: string
+        revision: number
+        effective_from: string
+        corrects_revision: number | null
+      }>()
+    expect(
+      rows.results.map((row) => [
+        row.resource_type,
+        row.revision,
+        row.effective_from,
+        row.corrects_revision,
+      ]),
+    ).toEqual([
+      ["employee", 2, "2025-12-01", 1],
+      ["employment", 2, "2025-12-01", 1],
+      ["employment", 3, "2026-01-01", 1],
+      ["person", 2, "2025-12-01", 1],
+    ])
+    expect(await (await f.readEmployment("2025-12-15")).json()).toMatchObject({
+      resources: [{ id: employment.id }],
+    })
+    const heads = await f.database
+      .prepare(`SELECT resource_type, revision, effective_from FROM company_resource_heads
+        WHERE organization_id = ?1 AND resource_type IN ('person', 'employee', 'employment')
+        ORDER BY resource_type`)
+      .bind(organizationId)
+      .all<{ resource_type: string; revision: number; effective_from: string }>()
+    expect(heads.results.map((row) => [row.resource_type, row.revision])).toEqual([
+      ["employee", 2],
+      ["employment", 3],
+      ["person", 2],
+    ])
+    const second = await f.correctStart("2025-11-01", 4, "correct:initial-start-again", 2)
+    expect({ status: second.status, body: await second.json() }).toMatchObject({
+      status: 201,
+      body: { organizationRevision: 5 },
+    })
+    expect(await (await f.readCorrectionTarget(5)).json()).toMatchObject({
+      startsOn: "2025-11-01",
+    })
+  })
+
+  test("後続の氏名・従業員番号を保ったまま初期の入社日を訂正する", async () => {
+    const f = fixture()
+    await f.initialize()
+    expect(
+      (
+        await f.write(
+          {
+            ...person,
+            revision: 2,
+            effectiveFrom: "2026-06-01",
+            attributes: { ...person.attributes, officialName: "Later Name" },
+          },
+          3,
+          "change:later-person",
+        )
+      ).status,
+    ).toBe(201)
+    expect(
+      (
+        await f.write(
+          {
+            ...employee,
+            revision: 2,
+            effectiveFrom: "2026-06-01",
+            attributes: { ...employee.attributes, employeeCode: "RESOURCE-002" },
+          },
+          4,
+          "change:later-employee",
+        )
+      ).status,
+    ).toBe(201)
+    const corrected = await f.correctStart("2025-12-01", 5, "correct:initial-with-later")
+    expect({ status: corrected.status, body: await corrected.json() }).toMatchObject({
+      status: 201,
+      body: { organizationRevision: 6 },
+    })
+    const heads = await f.database
+      .prepare(`SELECT resource_type, revision, effective_from, attributes_json
+        FROM company_resource_heads WHERE organization_id = ?1
+          AND resource_type IN ('person', 'employee') ORDER BY resource_type`)
+      .bind(organizationId)
+      .all<{
+        resource_type: string
+        revision: number
+        effective_from: string
+        attributes_json: string
+      }>()
+    expect(
+      heads.results.map((row) => [row.resource_type, row.revision, row.effective_from]),
+    ).toEqual([
+      ["employee", 4, "2026-06-01"],
+      ["person", 4, "2026-06-01"],
+    ])
+    expect(JSON.parse(heads.results[0]?.attributes_json ?? "{}")).toMatchObject({
+      employeeCode: "RESOURCE-002",
+    })
+    expect(JSON.parse(heads.results[1]?.attributes_json ?? "{}")).toMatchObject({
+      officialName: "Later Name",
+    })
+  })
+
   test("開始日訂正APIは原資料・訂正元を保全し、既存休職と再送を維持する", async () => {
     const f = fixture()
     expect((await f.write({ ...person, effectiveFrom: "2025-01-01" }, 0)).status).toBe(201)
