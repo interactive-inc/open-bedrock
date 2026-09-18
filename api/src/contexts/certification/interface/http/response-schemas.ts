@@ -1,9 +1,10 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { z } from "zod"
 
 /** 資格マスタ 1 件のレスポンス。 */
 export const zAppCertification = z.object({
-  id: z.number(),
+  id: uuidSchema,
   code: z.string(),
   name: z.string(),
   issuer: z.string().nullable(),
@@ -19,9 +20,9 @@ export const zAppCertificationList = z.object({
 
 /** 従業員の資格保有記録 1 件のレスポンス。 */
 export const zAppEmployeeCertification = z.object({
-  id: z.number(),
+  id: uuidSchema,
   employee_id: zEmployeeId,
-  certification_id: z.number(),
+  certification_id: uuidSchema,
   acquired_on: z.string(),
   expires_on: z.string().nullable(),
   note: z.string().nullable(),

@@ -16,6 +16,12 @@ import { executeSql } from "../../scripts/sql-statements"
 
 const apiRoot = resolve(import.meta.dir, "../..")
 
+/**
+ * 対象 migration を番号ではなく名前で特定する。rebase で採番が変わっても追随させる。
+ * 番号は前置きなので `startsWith` ではなく `includes` で照合する。
+ */
+const MIGRATION = "uuid_announcements"
+
 const migrationsDir = resolve(apiRoot, "migrations")
 
 const seedsDir = resolve(apiRoot, "seeds")
@@ -33,14 +39,29 @@ const seedOrder = [
   "company",
 ]
 
-/** 指定した migration より前までを適用し、seed も入れた DB を作る。 */
-function createDatabaseBefore(migrationPrefix: string, skipSeeds: readonly string[]): Database {
+/**
+ * 指定した migration より前までを適用し、seed も入れた DB を作る。
+ *
+ * 対象が1つも見つからなければ即座に落とす。ここを黙って通すと「何も除外しない DB」が
+ * できあがり、対象 migration まで先に適用されてしまう。実際に採番し直しで
+ * `0080_uuid_announcements` が `0116_` へ変わったとき、番号で照合していたこの関数が
+ * 何も除外せず、test が別のことを検証している状態になった。
+ */
+function createDatabaseBefore(migrationName: string, skipSeeds: readonly string[]): Database {
   const database = new Database(":memory:")
   const files = readdirSync(migrationsDir)
     .filter((name) => name.endsWith(".sql"))
     .sort()
+  const excluded = files.filter((name) => name.includes(migrationName))
 
-  for (const file of files.filter((name) => name.startsWith(migrationPrefix) === false)) {
+  if (excluded.length !== 1) {
+    throw new Error(
+      `${migrationName} を含む migration が ${excluded.length} 件です。1 件でなければ` +
+        "「対象より前の状態」を作れません",
+    )
+  }
+
+  for (const file of files.filter((name) => name.includes(migrationName) === false)) {
     executeSql(database, readFileSync(resolve(migrationsDir, file), "utf8"), `migration ${file}`)
   }
 
@@ -66,23 +87,23 @@ function createDatabaseBefore(migrationPrefix: string, skipSeeds: readonly strin
 }
 
 /** 対象の migration だけを適用する。 */
-function applyMigration(database: Database, migrationPrefix: string): void {
+function applyMigration(database: Database, migrationName: string): void {
   const file = readdirSync(migrationsDir)
     .filter((name) => name.endsWith(".sql"))
     .sort()
-    .find((name) => name.startsWith(migrationPrefix))
+    .find((name) => name.includes(migrationName))
 
   if (file === undefined) {
-    throw new Error(`${migrationPrefix} で始まる migration がありません`)
+    throw new Error(`${migrationName} を含む migration がありません`)
   }
 
   executeSql(database, readFileSync(resolve(migrationsDir, file), "utf8"), `migration ${file}`)
 }
 
-describe("0080 announcements の UUID 移行", () => {
-  /** 連番の announcements が入った状態を作り、0080 を当てる。 */
+describe("announcements の UUID 移行", () => {
+  /** 連番の announcements が入った状態を作り、対象 migration を当てる。 */
   function cutover(): Database {
-    const database = createDatabaseBefore("0080", ["announcement.sql"])
+    const database = createDatabaseBefore(MIGRATION, ["announcement.sql"])
 
     database.run(
       `INSERT INTO announcements (id, title, body_md, published_on, author_employee_id, status, created_at)
@@ -91,7 +112,7 @@ describe("0080 announcements の UUID 移行", () => {
               (7, 'c', 'body c', NULL, '1', 'draft', '2026-02-03T09:00:00Z')`,
     )
 
-    applyMigration(database, "0080")
+    applyMigration(database, MIGRATION)
 
     return database
   }

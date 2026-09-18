@@ -5,7 +5,7 @@ import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppItIncident } from "@/contexts/it-incident/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
 
@@ -21,7 +21,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const updated = await (async () => {
     const command = {
       session,
-      id: validateIntParam(c.req.param("id"), "it_incident"),
+      id: validateUuidParam(c.req.param("id"), "it_incident"),
       resolvedAt: c.env.NOW ?? new Date().toISOString(),
     }
 

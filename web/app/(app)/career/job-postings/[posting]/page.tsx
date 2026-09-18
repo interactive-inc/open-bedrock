@@ -8,6 +8,7 @@ import { PageHeader } from "@/components/page-header"
 import { DetailSkeleton } from "@/components/detail-skeleton"
 import { Button } from "@/components/ui/button"
 import { getMe } from "@/lib/api/get-me"
+import { toUuidParam } from "@/lib/routing/to-uuid-param"
 import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
 
 export const metadata = { title: "公募の詳細" }
@@ -22,9 +23,9 @@ type Props = {
 export default async function CareerPostingDetailPage(props: Props) {
   const params = await props.params
 
-  const postingId = Number(params.posting)
+  const postingId = toUuidParam(params.posting)
 
-  if (Number.isInteger(postingId) === false || postingId <= 0) {
+  if (postingId === null) {
     notFound()
   }
 

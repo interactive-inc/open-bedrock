@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { CreateEmployeeCertification } from "@/contexts/certification/application/create-employee-certification"
 import { EmployeeCertificationRepository } from "@/contexts/certification/infrastructure/repositories/employee-certification.repository"
@@ -69,7 +70,7 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       employee_id: zEmployeeId,
-      certification_id: z.number().int().positive(),
+      certification_id: uuidSchema,
       acquired_on: isoDate,
       expires_on: isoDate.nullable().optional(),
       note: z.string().max(3_000).nullable().optional(),

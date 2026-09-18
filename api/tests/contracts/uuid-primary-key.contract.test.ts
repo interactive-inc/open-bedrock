@@ -59,15 +59,8 @@ const PERMANENTLY_NON_UUID: ReadonlySet<string> = new Set([
  * (Issue #1311 の判断 3)、これらは ID の振り直しではなく CHECK 追加だけで完了する。
  */
 const NOT_YET_CONVERTED: ReadonlySet<string> = new Set([
-  "announcements", // 連番
-  "asset_lendings", // 連番
   "assets", // 業務コード/prefix
-  "attendance_records", // 連番
-  "career_applications", // 連番
-  "career_postings", // 連番
   "career_sheets", // 連番
-  "certification_definitions", // 連番
-  "commendations", // 連番
   "company_account_employee_links", // 連番
   "company_account_profiles", // 複合PK
   "company_audit_append_guard", // 連番
@@ -76,7 +69,6 @@ const NOT_YET_CONVERTED: ReadonlySet<string> = new Set([
   "company_audit_event_appends", // 連番
   "company_audit_event_employee_contexts", // 連番
   "company_audit_events", // 連番
-  "company_calendar_days", // 連番
   "company_command_receipts", // 複合PK
   "company_employee_events", // 連番
   "company_employee_grades", // 連番
@@ -104,12 +96,7 @@ const NOT_YET_CONVERTED: ReadonlySet<string> = new Set([
   "company_position_definitions", // 連番
   "company_resource_heads", // 複合PK
   "company_resource_revisions", // 複合PK
-  "decision_records", // 連番
-  "disciplinary_actions", // 連番
-  "document_ledger_entries", // 連番
-  "employee_certifications", // 連番
   "employee_skills", // 複合PK
-  "employee_work_styles", // 連番
   "evaluation_sheet_audit_logs", // 連番
   "evaluation_sheets", // 連番
   "evaluation_templates", // 連番
@@ -124,13 +111,8 @@ const NOT_YET_CONVERTED: ReadonlySet<string> = new Set([
   "governance_org_role_assignments", // 連番
   "governance_org_roles", // 業務コード/prefix
   "governance_publication_approvals", // 複合PK
-  "headcount_plans", // 連番
-  "health_checkups", // 連番
-  "it_incidents", // 連番
   "job_openings", // 連番
-  "knowledge_articles", // 連番
   "leave_balances", // 複合PK
-  "leave_requests", // 連番
   "meeting_minutes_records", // 連番
   "meetings", // 連番
   "onboarding_assignments", // 連番
@@ -193,7 +175,6 @@ const NOT_YET_CONVERTED: ReadonlySet<string> = new Set([
   "thanks_rewards", // 連番
   "training_courses", // 連番
   "training_enrollments", // 連番
-  "work_accidents", // 連番
   "antisocial_checks", // 既に UUID v4。CHECK 制約の追加だけが残る
   "business_trips", // 既に UUID v4。CHECK 制約の追加だけが残る
   "certificate_requests", // 既に UUID v4。CHECK 制約の追加だけが残る
@@ -317,6 +298,21 @@ describe("主キーは UUID に統一する (#1311)", () => {
     )
 
     expect(stale).toEqual([])
+  })
+
+  test("変換済みの table の CHECK は uuidCheckPredicate と完全に一致する", () => {
+    // migration には述語を文字列として埋め込むため、述語を直した後に過去の
+    // migration が古い CHECK を持ち続けても気づけない。ここで乖離を落とす。
+    const converted = tableNames.filter(
+      (table) => !PERMANENTLY_NON_UUID.has(table) && !NOT_YET_CONVERTED.has(table),
+    )
+    const drifted = converted.flatMap((table) =>
+      primaryKeyColumns(table)
+        .filter((column) => !hasUuidCheck(table, column.name))
+        .map((column) => `${table}.${column.name}`),
+    )
+
+    expect(drifted).toEqual([])
   })
 
   test("同じ table を両方の list に載せない", () => {

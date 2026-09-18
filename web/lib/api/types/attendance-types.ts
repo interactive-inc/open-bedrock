@@ -6,7 +6,7 @@
  * status は open（打刻中）/ closed（退勤済）など api 側の文字列。
  */
 export type AttendanceRecord = {
-  id: number
+  id: string
   employee_id: string
   work_date: string
   clock_in_at: string | null

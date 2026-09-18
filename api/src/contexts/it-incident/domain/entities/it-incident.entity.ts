@@ -1,8 +1,10 @@
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import type { ItIncidentRow } from "@/contexts/it-incident/infrastructure/schema/it-incident"
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: uuidSchema,
   occurredAt: z.string(),
   title: z.string(),
   summary: z.string(),
@@ -49,7 +51,7 @@ export class ItIncident implements Props {
     createdAt: string
   }): ItIncident {
     return new ItIncident({
-      id: null,
+      id: createUuidV7(),
       occurredAt: props.occurredAt,
       title: props.title,
       summary: props.summary,

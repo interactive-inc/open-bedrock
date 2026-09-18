@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import {
   leaveTypeSchema,
@@ -7,7 +8,7 @@ import { z } from "zod"
 
 /** 休暇申請 1 件のレスポンス（作成・承認・却下時）。approver_id と decided_comment を含む。 */
 export const zAppLeaveRequest = z.object({
-  id: z.number(),
+  id: uuidSchema,
   employee_id: zEmployeeId,
   leave_type: leaveTypeSchema,
   start_date: z.string(),
@@ -24,7 +25,7 @@ export const zAppLeaveRequest = z.object({
 
 /** 休暇申請の詳細レスポンス（GET/PUT /requests/:id）。approver_id と decided_comment を含まない。 */
 export const zAppLeaveRequestDetail = z.object({
-  id: z.number(),
+  id: uuidSchema,
   employee_id: zEmployeeId,
   leave_type: leaveTypeSchema,
   start_date: z.string(),
@@ -39,7 +40,7 @@ export const zAppLeaveRequestDetail = z.object({
 
 /** 本人の休暇申請一覧 1 件（GET /requests/me）。 */
 export const zAppLeaveRequestSummary = z.object({
-  id: z.number(),
+  id: uuidSchema,
   leave_type: leaveTypeSchema,
   start_date: z.string(),
   end_date: z.string(),
@@ -58,7 +59,7 @@ export const zAppLeaveRequestSummaryList = z.object({
 
 /** 承認待ち休暇申請一覧 1 件（GET /requests/inbox）。applicant_name を含む。 */
 export const zAppLeaveRequestInbox = z.object({
-  id: z.number(),
+  id: uuidSchema,
   applicant_name: z.string(),
   leave_type: leaveTypeSchema,
   start_date: z.string(),
@@ -79,7 +80,7 @@ export const zAppLeaveRequestInboxList = z.object({
 
 /** 全社休暇申請一覧（GET /leave-requests/admin）の 1 件。 */
 export const zAppLeaveRequestAdminItem = z.object({
-  id: z.number(),
+  id: uuidSchema,
   applicant_id: zEmployeeId,
   applicant_name: z.string(),
   applicant_dept_name: z.string().nullable(),

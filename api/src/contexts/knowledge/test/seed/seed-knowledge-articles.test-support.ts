@@ -2,7 +2,7 @@ import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 type SeedKnowledgeArticle = {
-  id: number
+  id: string
   title: string
   category: string
   tags: string | null
@@ -13,7 +13,7 @@ type SeedKnowledgeArticle = {
 
 export const seedKnowledgeArticles: ReadonlyArray<SeedKnowledgeArticle> = [
   {
-    id: 1,
+    id: "0190001d-0000-7000-8000-000000000001",
     title: "リモートワーク規程",
     category: "規程",
     tags: "リモートワーク,勤怠,在宅勤務",
@@ -23,7 +23,7 @@ export const seedKnowledgeArticles: ReadonlyArray<SeedKnowledgeArticle> = [
     createdAt: "2026-01-05T00:00:00Z",
   },
   {
-    id: 2,
+    id: "0190001d-0000-7000-8000-000000000002",
     title: "経費精算手続き",
     category: "経理",
     tags: "経費,精算,立替",
@@ -33,7 +33,7 @@ export const seedKnowledgeArticles: ReadonlyArray<SeedKnowledgeArticle> = [
     createdAt: "2026-01-10T00:00:00Z",
   },
   {
-    id: 3,
+    id: "0190001d-0000-7000-8000-000000000003",
     title: "オンボーディングガイド",
     category: "オンボーディング",
     tags: "オンボーディング,研修,新入社員",
@@ -43,7 +43,7 @@ export const seedKnowledgeArticles: ReadonlyArray<SeedKnowledgeArticle> = [
     createdAt: "2026-02-01T00:00:00Z",
   },
   {
-    id: 4,
+    id: "0190001d-0000-7000-8000-000000000004",
     title: "目標設定と評価",
     category: "評価",
     tags: "目標,評価,MBO",
@@ -53,7 +53,7 @@ export const seedKnowledgeArticles: ReadonlyArray<SeedKnowledgeArticle> = [
     createdAt: "2026-02-15T00:00:00Z",
   },
   {
-    id: 5,
+    id: "0190001d-0000-7000-8000-000000000005",
     title: "会議室予約ルール",
     category: "総務",
     tags: "会議室,予約,設備",
@@ -62,7 +62,7 @@ export const seedKnowledgeArticles: ReadonlyArray<SeedKnowledgeArticle> = [
     createdAt: "2026-03-01T00:00:00Z",
   },
   {
-    id: 6,
+    id: "0190001d-0000-7000-8000-000000000006",
     title: "情報セキュリティ規程",
     category: "セキュリティ",
     tags: "セキュリティ,情報管理,コンプライアンス",

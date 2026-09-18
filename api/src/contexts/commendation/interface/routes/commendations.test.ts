@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
@@ -65,7 +66,7 @@ describe("commendations", () => {
 
     const id = await createCommendation(db)
 
-    expect(id).toBeGreaterThan(0)
+    expect(uuidSchema.safeParse(id).success).toBe(true)
 
     const list = await requestWithContext({
       db,

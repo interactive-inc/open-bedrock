@@ -18,7 +18,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "certification_definitions", [
     {
-      id: 1,
+      id: "01900010-0000-7000-8000-000000000001",
       code: "FE",
       name: "基本情報技術者",
       issuer: "IPA",

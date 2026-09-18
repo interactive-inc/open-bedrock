@@ -1,6 +1,6 @@
 /** GET /health-checkups の要素。api は snake_case で返す。 */
 export type HealthCheckupResponse = {
-  id: number
+  id: string
   employee_id: string
   fiscal_year: number
   checkup_kind: string

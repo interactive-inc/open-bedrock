@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { CompanyCalendarDay } from "@/contexts/company-calendar/domain/entities/company-calendar-day.entity"
 import { describe, expect, test } from "bun:test"
 
@@ -11,7 +12,7 @@ describe("CompanyCalendarDay.create", () => {
     })
 
     expect(day).toBeInstanceOf(CompanyCalendarDay)
-    expect(day.id).toBe(null)
+    expect(uuidSchema.safeParse(day.id).success).toBe(true)
     expect(day.calendarDate).toBe("2026-01-01")
     expect(day.kind).toBe("holiday")
     expect(day.name).toBe("元日")

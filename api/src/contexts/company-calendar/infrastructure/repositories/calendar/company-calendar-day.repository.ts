@@ -53,7 +53,7 @@ export class CompanyCalendarDayRepository {
     }
   }
 
-  async findById(id: number): Promise<CompanyCalendarDay | null | Error> {
+  async findById(id: string): Promise<CompanyCalendarDay | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -74,6 +74,7 @@ export class CompanyCalendarDayRepository {
       const rows = await this.c.var.database
         .insert(companyCalendarDays)
         .values({
+          id: day.id,
           calendarDate: day.calendarDate,
           kind: day.kind,
           name: day.name,
@@ -96,7 +97,6 @@ export class CompanyCalendarDayRepository {
   }
 
   async delete(calendarDay: CompanyCalendarDay): Promise<null | Error> {
-    if (calendarDay.id === null) return new Error("cannot delete unsaved company calendar day")
     try {
       await this.c.var.database
         .delete(companyCalendarDays)

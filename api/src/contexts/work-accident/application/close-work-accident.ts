@@ -13,7 +13,7 @@ export class CloseWorkAccident {
     Object.freeze(this)
   }
 
-  async run(props: { id: number }): Promise<WorkAccident | ApplicationError> {
+  async run(props: { id: string }): Promise<WorkAccident | ApplicationError> {
     const repository = new WorkAccidentRepository(this.c)
 
     const existing = await repository.findById(props.id)

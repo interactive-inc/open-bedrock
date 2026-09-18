@@ -3,7 +3,7 @@ export type WorkStyle = "regular" | "flextime" | "discretionary" | "shift"
 
 /** GET /employee-work-styles のレスポンス要素。 */
 export type EmployeeWorkStyleResponse = {
-  id: number
+  id: string
   employee_id: string
   style: WorkStyle
   starts_on: string

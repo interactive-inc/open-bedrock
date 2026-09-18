@@ -1,5 +1,5 @@
 type SeedDocument = {
-  id: number
+  id: string
   title: string
   category: string | null
   location: string
@@ -11,7 +11,7 @@ type SeedDocument = {
 
 export const seedDocuments: ReadonlyArray<SeedDocument> = [
   {
-    id: 1,
+    id: "01900018-0000-7000-8000-000000000001",
     title: "オフィス賃貸借契約書",
     category: "contract",
     location: "cabinet-A/lease",
@@ -21,7 +21,7 @@ export const seedDocuments: ReadonlyArray<SeedDocument> = [
     createdAt: "2026-01-05T09:00:00Z",
   },
   {
-    id: 2,
+    id: "01900018-0000-7000-8000-000000000002",
     title: "事業許可証",
     category: "license",
     location: "https://example.com/docs/license",
@@ -31,7 +31,7 @@ export const seedDocuments: ReadonlyArray<SeedDocument> = [
     createdAt: "2026-01-06T09:00:00Z",
   },
   {
-    id: 3,
+    id: "01900018-0000-7000-8000-000000000003",
     title: "従業員ハンドブック",
     category: null,
     location: "cabinet-B/handbook",

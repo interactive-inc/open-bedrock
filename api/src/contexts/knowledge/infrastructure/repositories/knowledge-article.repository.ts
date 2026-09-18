@@ -7,7 +7,7 @@ export class KnowledgeArticleRepository {
   constructor(private readonly c: Context) {}
 
   /** 記事 id で1件取得する。存在しなければ null。 */
-  async findById(id: number): Promise<KnowledgeArticle | null | Error> {
+  async findById(id: string): Promise<KnowledgeArticle | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -28,6 +28,7 @@ export class KnowledgeArticleRepository {
       const rows = await this.c.var.database
         .insert(knowledgeArticles)
         .values({
+          id: article.id,
           title: article.title,
           category: article.category,
           tags: article.tags,
@@ -53,10 +54,6 @@ export class KnowledgeArticleRepository {
    */
   async update(article: KnowledgeArticle): Promise<KnowledgeArticle | null | Error> {
     try {
-      if (article.id === null) {
-        return new Error("cannot update unsaved knowledge_article")
-      }
-
       const rows = await this.c.var.database
         .update(knowledgeArticles)
         .set({
@@ -77,7 +74,7 @@ export class KnowledgeArticleRepository {
   }
 
   /** 記事を削除する。 */
-  async delete(id: number): Promise<null | Error> {
+  async delete(id: string): Promise<null | Error> {
     try {
       await this.c.var.database.delete(knowledgeArticles).where(eq(knowledgeArticles.id, id))
 

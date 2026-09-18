@@ -8,7 +8,7 @@ import {
 import { UpdateKnowledgeArticle } from "@/contexts/knowledge/application/update-knowledge-article"
 import { factory } from "@/api/http/factory"
 import { knowledgeArticles } from "@/contexts/knowledge/infrastructure/schema/knowledge"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
@@ -27,7 +27,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const articleId = validateIntParam(c.req.param("id"), "knowledge")
+  const articleId = validateUuidParam(c.req.param("id"), "knowledge")
 
   const rows = await c.var.database
     .select()
@@ -74,7 +74,7 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const articleId = validateIntParam(c.req.param("id"), "knowledge")
+    const articleId = validateUuidParam(c.req.param("id"), "knowledge")
 
     const json = c.req.valid("json")
 
@@ -112,7 +112,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const articleId = validateIntParam(c.req.param("id"), "knowledge")
+  const articleId = validateUuidParam(c.req.param("id"), "knowledge")
 
   const result = await (async () => {
     const command = {

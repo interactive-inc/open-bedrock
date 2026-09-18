@@ -15,7 +15,7 @@ export const PersonalView: Story = {
     withEmployeeId: false,
     records: [
       {
-        id: 1,
+        id: "01900015-0000-7000-8000-000000000001",
         employee_id: "101",
         work_date: "2026-06-09",
         clock_in_at: "09:00",
@@ -24,7 +24,7 @@ export const PersonalView: Story = {
         status: "closed",
       },
       {
-        id: 2,
+        id: "01900015-0000-7000-8000-000000000002",
         employee_id: "101",
         work_date: "2026-06-10",
         clock_in_at: "08:45",
@@ -33,7 +33,7 @@ export const PersonalView: Story = {
         status: "closed",
       },
       {
-        id: 3,
+        id: "01900015-0000-7000-8000-000000000003",
         employee_id: "101",
         work_date: "2026-06-11",
         clock_in_at: "09:15",
@@ -50,7 +50,7 @@ export const AdminView: Story = {
     withEmployeeId: true,
     records: [
       {
-        id: 10,
+        id: "01900015-0000-7000-8000-000000000010",
         employee_id: "101",
         work_date: "2026-06-09",
         clock_in_at: "09:00",
@@ -59,7 +59,7 @@ export const AdminView: Story = {
         status: "closed",
       },
       {
-        id: 11,
+        id: "01900015-0000-7000-8000-000000000011",
         employee_id: "102",
         work_date: "2026-06-09",
         clock_in_at: "10:00",
@@ -68,7 +68,7 @@ export const AdminView: Story = {
         status: "closed",
       },
       {
-        id: 12,
+        id: "01900015-0000-7000-8000-000000000012",
         employee_id: "103",
         work_date: "2026-06-09",
         clock_in_at: null,

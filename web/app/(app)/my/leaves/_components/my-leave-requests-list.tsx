@@ -207,7 +207,7 @@ function UpdateLeaveRequestDialog(props: { leaveRequest: LeaveRequestMineRespons
 }
 
 /** 休暇申請取り下げボタン。成功・失敗の通知は action の結果を見て toast() で出す。 */
-function CancelLeaveRequestButton(props: { leaveRequestId: number }) {
+function CancelLeaveRequestButton(props: { leaveRequestId: string }) {
   async function reduce(
     previousState: LeaveActionState,
     formData: FormData,

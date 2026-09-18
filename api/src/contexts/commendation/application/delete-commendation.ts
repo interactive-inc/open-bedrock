@@ -7,7 +7,7 @@ import type { Commendation } from "@/contexts/commendation/domain/entities/comme
 
 export type Command = {
   session: CompanySessionValue
-  id: number
+  id: string
 }
 
 /**

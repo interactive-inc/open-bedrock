@@ -4,27 +4,33 @@ import type {
   LeaveType,
   LeaveUnit,
 } from "@/contexts/leave/domain/definitions/leave-request.definition"
+import { uuidCheckPredicate } from "@/lib/uuid/uuid.schema"
+import { sql } from "drizzle-orm"
 import type { InferSelectModel } from "drizzle-orm"
-import { integer, primaryKey, real, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { check, integer, primaryKey, real, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 /** 休暇申請（本人の申請・承認/却下の記録）。id は自動採番。 */
-export const leaveRequests = sqliteTable("leave_requests", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  employeeId: text("employee_id").$type<EmployeeId>().notNull(),
-  leaveType: text("leave_type").notNull().$type<LeaveType>(),
-  startDate: text("start_date").notNull(),
-  endDate: text("end_date").notNull(),
-  days: integer("days").notNull(),
-  unit: text("unit").notNull().$type<LeaveUnit>(),
-  hours: real("hours"),
-  // 残数消費量（按分計算後）。半休=0.5、時間休=時間数/8、全休=days と同じ。
-  consumedDays: real("consumed_days").notNull(),
-  reason: text("reason"),
-  status: text("status").notNull().$type<LeaveStatus>(),
-  approverId: text("approver_id").$type<EmployeeId>(),
-  decidedComment: text("decided_comment"),
-  createdAt: text("created_at").notNull(),
-})
+export const leaveRequests = sqliteTable(
+  "leave_requests",
+  {
+    id: text("id").primaryKey(),
+    employeeId: text("employee_id").$type<EmployeeId>().notNull(),
+    leaveType: text("leave_type").notNull().$type<LeaveType>(),
+    startDate: text("start_date").notNull(),
+    endDate: text("end_date").notNull(),
+    days: integer("days").notNull(),
+    unit: text("unit").notNull().$type<LeaveUnit>(),
+    hours: real("hours"),
+    // 残数消費量（按分計算後）。半休=0.5、時間休=時間数/8、全休=days と同じ。
+    consumedDays: real("consumed_days").notNull(),
+    reason: text("reason"),
+    status: text("status").notNull().$type<LeaveStatus>(),
+    approverId: text("approver_id").$type<EmployeeId>(),
+    decidedComment: text("decided_comment"),
+    createdAt: text("created_at").notNull(),
+  },
+  () => [check("leave_requests_id_uuid", sql.raw(uuidCheckPredicate("id")))],
+)
 
 export type LeaveRequestRow = InferSelectModel<typeof leaveRequests>
 

@@ -35,7 +35,7 @@ export function PostingManagement(props: Props) {
 }
 
 type DeleteProps = {
-  postingId: number | null
+  postingId: string | null
 }
 
 /** 公募を削除するボタン。Server Action を呼び、成功時は一覧が revalidate される。 */

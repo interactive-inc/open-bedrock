@@ -3,7 +3,7 @@ export type AnnouncementStatus = "draft" | "published" | "archived"
 
 /** GET /announcements の各要素（API は snake_case で返す）。 */
 export type AnnouncementListItem = {
-  id: number
+  id: string
   title: string
   status: string
   published_on: string | null
@@ -13,7 +13,7 @@ export type AnnouncementListItem = {
 
 /** GET /announcements/:id の詳細（本文を含む）。 */
 export type AnnouncementResponse = {
-  id: number
+  id: string
   title: string
   body_md: string
   status: string

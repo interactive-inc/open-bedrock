@@ -1,3 +1,5 @@
+import { createUuidV7 } from "@/lib/uuid/create-uuid-v7"
+import { uuidSchema } from "@/lib/uuid/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { toBusinessDate } from "@/lib/to-business-date"
@@ -5,7 +7,7 @@ import type { AttendanceRecordRow } from "@/contexts/attendance/infrastructure/s
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: uuidSchema,
   employeeId: zEmployeeId,
   workDate: z.string(),
   clockInAt: z.string().nullable(),
@@ -51,7 +53,7 @@ export class AttendanceRecord implements Props {
     note: string | null
   }): AttendanceRecord {
     return new AttendanceRecord({
-      id: null,
+      id: createUuidV7(),
       employeeId: props.employeeId,
       workDate: toBusinessDate(props.clockInAt),
       clockInAt: props.clockInAt,

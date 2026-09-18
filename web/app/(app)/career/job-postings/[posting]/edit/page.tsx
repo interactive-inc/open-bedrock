@@ -5,6 +5,7 @@ import { FetchError } from "@/components/fetch-error"
 import { PageHeader } from "@/components/page-header"
 import { Card } from "@/components/ui/card"
 import { getCareerPosting } from "@/lib/api/get-career-posting"
+import { toUuidParam } from "@/lib/routing/to-uuid-param"
 import { getMe } from "@/lib/api/get-me"
 import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
 
@@ -20,9 +21,9 @@ type Props = {
 export default async function EditCareerPostingPage(props: Props) {
   const params = await props.params
 
-  const postingId = Number(params.posting)
+  const postingId = toUuidParam(params.posting)
 
-  if (Number.isInteger(postingId) === false || postingId <= 0) {
+  if (postingId === null) {
     notFound()
   }
 
