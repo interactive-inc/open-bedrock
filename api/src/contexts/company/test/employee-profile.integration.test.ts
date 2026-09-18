@@ -227,13 +227,14 @@ test("人物履歴の開始前は接続済みAccountの古いprofileを表示せ
   expect([...names]).toEqual([["account:unlinked", "Unlinked Person"]])
 })
 
-test("旧Account対応表を除いても公開対応と人物履歴から表示名を取得する", async () => {
+test("旧Account対応表と互換ビューを除いても公開対応と人物履歴から表示名を取得する", async () => {
   const context = await fixture()
   // 移行後の旧台帳撤去を再現するため、テストDBだけの削除ガードを外す。
   await context.database.exec("DROP TRIGGER IF EXISTS company_account_employee_links_delete_guard")
   await context.database
     .prepare("DELETE FROM company_account_employee_links WHERE account_id = 'account:profile'")
     .run()
+  await context.database.exec("DROP VIEW IF EXISTS company_account_employee_link_periods")
   const names = await new ReadCompanyAccountDisplayNamesAdapter({
     database: context.database,
     organizationIds: ["organization:default"],
@@ -351,6 +352,52 @@ test("Account対応の終了日には古いprofile名へ戻らず、会社上の
       )
       .first<string>("display_name"),
   ).toBe("Example Person")
+})
+
+test("Account対応の空白期間と再接続を公開revisionだけで判定する", async () => {
+  const context = await fixture()
+  for (const [revision, expectedRevision, state, effectiveFrom] of [
+    [2, 1, "void", "2026-07-01"],
+    [3, 2, "active", "2026-09-01"],
+  ] as const) {
+    const change = CompanyResourceChangeEntity.create({
+      commandId: `account-link:${revision}`,
+      expectedRevision,
+      actorAccountId: context.actor.accountId,
+      reason: "Confirmed Account correspondence",
+      recordedAt: revision,
+      resources: [
+        {
+          organizationId: "organization:default",
+          type: "account-employee-link",
+          id: "link:profile",
+          revision,
+          state,
+          effectiveFrom: restoreCalendarDate(effectiveFrom),
+          effectiveTo: null,
+          attributes: { accountId: "account:profile", employeeId },
+        },
+      ],
+    })
+    if (change instanceof Error) throw change
+    expect(
+      await new D1CompanyResourceRepository({ database: context.database }).write(change),
+    ).toMatchObject({ kind: "applied" })
+  }
+  for (const [now, expectedName] of [
+    ["2026-06-30T14:59:59Z", "Example Person"],
+    ["2026-06-30T15:00:00Z", undefined],
+    ["2026-08-31T15:00:00Z", "Example Person"],
+  ] as const) {
+    const names = await new ReadCompanyAccountDisplayNamesAdapter({
+      database: context.database,
+      organizationIds: ["organization:default"],
+      accountIds: ["account:profile"],
+      now,
+      timeZone: "Asia/Tokyo",
+    }).readCompanyAccountDisplayNames()
+    expect(names.get("account:profile")).toBe(expectedName)
+  }
 })
 
 describe("employee profile writes share the public Person history", () => {
