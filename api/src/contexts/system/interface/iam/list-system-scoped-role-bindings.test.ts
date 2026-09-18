@@ -1,5 +1,6 @@
 import { listSystemScopedRoleBindings } from "@system/interface/iam/list-system-scoped-role-bindings"
 import { readSystemRoleSummary } from "@system/interface/iam/read-system-role-summary"
+import { listSystemRoleSummaries } from "@system/interface/iam/list-system-role-summaries"
 import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import { expect, test } from "bun:test"
 
@@ -56,8 +57,24 @@ test("Systemの公開読取は指定resource・時点・Accountの有効なbindi
     ).toEqual({
       id: "manager-role",
       resourceType: "demo:resource",
+      name: "Manager",
+      kind: "managed",
       permissionKeys: ["demo:manage", "demo:read"],
     })
+    expect(
+      await listSystemRoleSummaries({
+        database: fixture.context.env.DB,
+        resourceType: "demo:resource",
+      }),
+    ).toEqual([
+      {
+        id: "manager-role",
+        resourceType: "demo:resource",
+        name: "Manager",
+        kind: "managed",
+        permissionKeys: ["demo:manage", "demo:read"],
+      },
+    ])
   } finally {
     fixture.sqlite.close()
   }
