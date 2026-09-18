@@ -404,6 +404,12 @@ describe("employee profile writes share the public Person history", () => {
   test("氏名の成功応答、名簿、人物履歴、Account表示名が一致し、過去の氏名を保全する", async () => {
     const context = await fixture()
     const profile = await context.version()
+    await context.database.exec(
+      "DROP TRIGGER IF EXISTS company_account_employee_links_delete_guard",
+    )
+    await context.database
+      .prepare("DELETE FROM company_account_employee_links WHERE account_id = 'account:profile'")
+      .run()
     const response = await context.write(
       { name: "Changed Person", profile },
       "name-change",
