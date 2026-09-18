@@ -64,6 +64,7 @@ JSON envelopeはCompany coreの版・期間・原子性を一つに揃えるた�
 - `GET|POST /company/people`: Person
 - `GET|POST /company/employees`: Employee
 - `GET|POST /company/employments`: Employment
+- `POST /company/employment-start-corrections`: 原資料で確認した雇用開始日の遡及訂正
 - `GET /company/resource-history/:type/:id`: 一資源の全revisionと変更の出所
 - `GET /company/organization-snapshots`: OrgUnit、Assignment、ReportingRelation、OrganizationalAuthority
 - `POST /company/organization-changes`: 人物・従業員・雇用・組織・任用・法人・拠点・勤務場所の関連変更を一つのcommandとして適用
@@ -84,6 +85,8 @@ resource参照用のGETは`id` queryを繰り返して最大100件へ絞れる�
 resource更新用のPOSTはendpointが所有するresource種別以外を拒否する。例えば`/people`からEmployeeを書いたり、`/organization-changes`からPositionを書いたりできない。人物・従業員・雇用を同時に変更する場合は、`/organization-changes`に各resourceの次版、期待会社版、理由、冪等キーを送る。保存の途中でいずれかが失敗した場合、全resourceの変更と会社版は取り消す。
 
 原資料を伴う変更は`evidenceReferences`へ出所のcontext、kind、id、versionを指定する。既存の事実を訂正するときは`corrections`に変更するresourceのtype、id、revisionと訂正元の`correctsRevision`を指定し、原資料参照も必須とする。訂正元は同一resourceのより古いrevisionだけを指せる。開始日を後ろへ訂正して旧期間の取消と代替を同じ会社版に保存する場合、各revisionから訂正元を明示する。過去のrevisionは上書きせず、原資料が確認できない既存履歴へ訂正関係を推測して付けない。
+
+`POST /company/employment-start-corrections`は`company:write`または`company:workforce:update`、既定organizationへのアクセス、共通の書込headerを要求する。bodyには`employmentId`、確認した元の`correctsRevision`、訂正後の`startsOn`、`reason`と1件以上の`evidenceReferences`を指定する。指定会社版までの全雇用revisionから後続の在籍状態を再構成し、元の開始境界と新しい開始境界を同じcommandで訂正する。旧開始日を後ろへずらす場合は旧期間を取消す。履歴を推測せず、指定した訂正元が現在の開始revisionでない場合や新開始日が次の在籍状態境界を越える場合は422で拒否する。別の会社版が先に確定した場合は409で拒否し、同じ入力と冪等キーの再送は元の結果を返す。
 
 `GET /company/resource-history/:type/:id`は`company:read`と会社scopeを確認し、人事資源には`employee:read`、等級割当には`employee:attributes:read`を追加で要求する。一資源の有効・取消を含む全revisionを昇順に返す。各要素はresourceの全属性と、会社版、command、actor、理由、原資料参照、訂正元、記録時刻を含む。`limit`は1から100件、`after_revision`は最後に受け取った資源revisionを指定する。最初の応答の`throughRevision`を後続requestの`through_revision`に渡すと、取得中に別の変更が確定しても同じ会社版で履歴を読み切れる。存在しない未来の会社版は400で拒否する。
 

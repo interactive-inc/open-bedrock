@@ -17,6 +17,7 @@ import { ResolveLiveEmployeeAccessAdapter } from "@/contexts/company/infrastruct
 import { POST as POST_PEOPLE } from "@/contexts/company/interface/routes/company.people"
 import { POST as POST_EMPLOYEES } from "@/contexts/company/interface/routes/company.employees"
 import { POST as POST_ORGANIZATION_CHANGES } from "@/contexts/company/interface/routes/company.organization-changes"
+import { POST as POST_EMPLOYMENT_START_CORRECTIONS } from "@/contexts/company/interface/routes/company.employment-start-corrections"
 import {
   GET as GET_EMPLOYMENTS,
   POST as POST_EMPLOYMENTS,
@@ -91,6 +92,7 @@ function fixture() {
     .post("/company/employees", ...POST_EMPLOYEES)
     .post("/company/employments", ...POST_EMPLOYMENTS)
     .post("/company/organization-changes", ...POST_ORGANIZATION_CHANGES)
+    .post("/company/employment-start-corrections", ...POST_EMPLOYMENT_START_CORRECTIONS)
     .get("/company/employments", ...GET_EMPLOYMENTS)
   const write = (
     resource: Resource,
@@ -166,6 +168,38 @@ function fixture() {
     database,
     write,
     writeBatch,
+    correctStart: (
+      startsOn: string,
+      expectedRevision: number,
+      key: string,
+      correctsRevision = 1,
+      evidenceReferences: ReadonlyArray<{
+        context: string
+        kind: string
+        id: string
+        version: string
+      }> = [{ context: "system", kind: "document", id: "employment:original", version: "1" }],
+    ) =>
+      app.request(
+        "/company/employment-start-corrections",
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-company-organization-id": organizationId,
+            "idempotency-key": key,
+            "if-match": `"${expectedRevision}"`,
+          },
+          body: JSON.stringify({
+            employmentId: employment.id,
+            correctsRevision,
+            startsOn,
+            reason: "Confirm original employment document",
+            evidenceReferences,
+          }),
+        },
+        { DB: database },
+      ),
     directory: (now: string) =>
       new CompanyEmployeeDirectoryReadAdapter(context(now)).findById(employeeId),
     access: (now: string) =>
@@ -219,6 +253,115 @@ function fixture() {
 }
 
 describe("公開Company APIから実際の従業員台帳と在籍判定まで", () => {
+  test("開始日訂正APIは原資料・訂正元を保全し、既存休職と再送を維持する", async () => {
+    const f = fixture()
+    expect((await f.write({ ...person, effectiveFrom: "2025-01-01" }, 0)).status).toBe(201)
+    expect((await f.write({ ...employee, effectiveFrom: "2025-01-01" }, 1)).status).toBe(201)
+    expect(
+      (
+        await f.writeBatch(
+          [
+            { ...employment, effectiveTo: "2026-07-01" },
+            {
+              ...employment,
+              revision: 2,
+              effectiveFrom: "2026-07-01",
+              attributes: { ...employment.attributes, status: "ON_LEAVE" },
+            },
+          ],
+          2,
+          "create:employment-with-leave",
+        )
+      ).status,
+    ).toBe(201)
+    expect((await f.correctStart("2025-12-01", 3, "missing-source", 1, [])).status).toBe(400)
+    expect((await f.correctStart("2025-12-01", 3, "wrong-source", 2)).status).toBe(422)
+    const corrected = await f.correctStart("2025-12-01", 3, "correct:employment-start")
+    expect({ status: corrected.status, body: await corrected.json() }).toMatchObject({
+      status: 201,
+      body: { organizationRevision: 4, replayed: false },
+    })
+    expect((await f.correctStart("2025-12-01", 3, "correct:employment-start")).status).toBe(200)
+    expect((await f.correctStart("2026-02-01", 3, "different-command")).status).toBe(409)
+    const corrections = await f.database
+      .prepare(`SELECT revision, corrects_revision, reason, evidence_references_json
+        FROM company_resource_revisions WHERE organization_id = ?1
+        AND resource_type = 'employment' AND resource_id = ?2 AND revision > 2
+        ORDER BY revision`)
+      .bind(organizationId, employment.id)
+      .all<{
+        revision: number
+        corrects_revision: number | null
+        reason: string
+        evidence_references_json: string
+      }>()
+    expect(corrections.results.map((row) => [row.revision, row.corrects_revision])).toEqual([
+      [3, 1],
+      [4, 1],
+    ])
+    expect(
+      corrections.results.every((row) => row.reason === "Confirm original employment document"),
+    ).toBe(true)
+    expect(
+      corrections.results.every((row) =>
+        row.evidence_references_json.includes("employment:original"),
+      ),
+    ).toBe(true)
+    expect(await (await f.readEmployment("2025-12-15")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ACTIVE" } }],
+    })
+    expect(await (await f.readEmployment("2026-04-01")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ACTIVE" } }],
+    })
+    expect(await (await f.readEmployment("2026-07-02")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ON_LEAVE" } }],
+    })
+    expect((await f.correctStart("2025-11-01", 4, "correct:second-start", 3)).status).toBe(201)
+    expect(await (await f.readEmployment("2025-11-15")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ACTIVE" } }],
+    })
+    expect(await (await f.readEmployment("2026-07-02")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ON_LEAVE" } }],
+    })
+  })
+
+  test("開始日訂正APIは後ろ倒しの旧期間を取消し、後続の休職を復活・消去しない", async () => {
+    const f = fixture()
+    expect((await f.write(person, 0)).status).toBe(201)
+    expect((await f.write(employee, 1)).status).toBe(201)
+    expect(
+      (
+        await f.writeBatch(
+          [
+            { ...employment, effectiveTo: "2026-07-01" },
+            {
+              ...employment,
+              revision: 2,
+              effectiveFrom: "2026-07-01",
+              attributes: { ...employment.attributes, status: "ON_LEAVE" },
+            },
+          ],
+          2,
+          "create:later-correction-source",
+        )
+      ).status,
+    ).toBe(201)
+    expect((await f.correctStart("2026-02-01", 3, "correct:later-start")).status).toBe(201)
+    expect(await (await f.readEmployment("2026-01-15")).json()).toMatchObject({ resources: [] })
+    expect(await (await f.readEmployment("2026-02-15")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ACTIVE" } }],
+    })
+    expect(await (await f.readEmployment("2026-07-02")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ON_LEAVE" } }],
+    })
+    expect(
+      await f.database
+        .prepare("SELECT hire_date FROM company_employments WHERE id = ?1")
+        .bind(employment.id)
+        .first<{ hire_date: string }>(),
+    ).toEqual({ hire_date: "2026-02-01" })
+  })
+
   test("新規雇用の複数revisionを一つの会社版で登録して時点参照を揃える", async () => {
     const f = fixture()
     expect((await f.write(person, 0)).status).toBe(201)
