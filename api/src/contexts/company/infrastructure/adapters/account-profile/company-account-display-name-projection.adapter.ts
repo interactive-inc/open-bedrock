@@ -31,15 +31,15 @@ export class CompanyAccountDisplayNameProjectionAdapter {
     const displayName = sql`${sql.identifier(getTableName(columns.displayName.table))}.${sql.identifier(columns.displayName.name)}`
 
     return sql<string | null>`CASE WHEN EXISTS (
-      SELECT 1 FROM company_account_employee_links display_link
-      JOIN company_workforce_resource_bindings display_binding
-        ON display_binding.employee_id = display_link.employee_id
-        AND display_binding.resource_type = 'employee'
-        AND display_binding.organization_id = ${organizationId}
+      SELECT 1 FROM company_account_employee_resource_bindings display_link
       WHERE display_link.account_id = ${accountId}
+        AND display_link.organization_id = ${organizationId}
     ) THEN (
       SELECT CASE WHEN count(*) = 1 THEN min(json_extract(display_person.attributes_json, '$.officialName')) ELSE NULL END
-      FROM company_account_employee_links display_link
+      FROM company_account_employee_link_periods display_link
+      JOIN company_account_employee_resource_bindings display_account_binding
+        ON display_account_binding.resource_id = display_link.resource_id
+        AND display_account_binding.organization_id = ${organizationId}
       JOIN company_workforce_resource_bindings display_binding
         ON display_binding.employee_id = display_link.employee_id
         AND display_binding.resource_type = 'employee'
@@ -66,13 +66,11 @@ export class CompanyAccountDisplayNameProjectionAdapter {
             AND current_display_person.effective_from <= ${asOf}
           ORDER BY effective_from DESC, revision DESC LIMIT 1)
       WHERE display_link.account_id = ${accountId}
+        AND display_link.source = 'public'
         AND display_employee.state = 'active' AND (display_employee.effective_to IS NULL OR ${asOf} < display_employee.effective_to)
         AND display_person.state = 'active' AND (display_person.effective_to IS NULL OR ${asOf} < display_person.effective_to)
-        AND EXISTS (SELECT 1 FROM company_account_employee_link_periods effective_display_link
-          WHERE effective_display_link.account_id = display_link.account_id
-            AND effective_display_link.employee_id = display_link.employee_id
-            AND (effective_display_link.starts_on IS NULL OR effective_display_link.starts_on <= ${asOf})
-            AND (effective_display_link.ends_on IS NULL OR ${asOf} < effective_display_link.ends_on))
+        AND display_link.starts_on <= ${asOf}
+        AND (display_link.ends_on IS NULL OR ${asOf} < display_link.ends_on)
     ) ELSE ${displayName} END`
   }
 }
