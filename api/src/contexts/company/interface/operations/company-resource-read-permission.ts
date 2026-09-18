@@ -3,9 +3,7 @@ import type { CompanyPermissionKey } from "@/contexts/company/domain/catalogs/ia
 import type { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 
 /** 資源の公開属性と履歴・変更理由に必要な、会社共通の閲覧資格。 */
-function companyResourceReadPermission(
-  type: CompanyResourceType,
-): CompanyPermissionKey | null {
+function companyResourceReadPermission(type: CompanyResourceType): CompanyPermissionKey | null {
   if (type === "grade-assignment") return "employee:attributes:read"
   if (
     type === "person" ||

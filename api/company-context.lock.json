@@ -437,7 +437,7 @@
     "src/contexts/company/interface/capabilities/company-capabilities.ts": "4bc30bf75a5234fa4bb02fd9332c3827d5806e559aa7cd108add35405e05e98a",
     "src/contexts/company/interface/errors.ts": "a1477c1c8934f5a1fb4c42c7e1fe2ad68d718c8a82f013c18abc5dd7dfcb0c6a",
     "src/contexts/company/interface/module.ts": "e44fa7373176c32b372cf5c4962ce089775f85dacdfebc853c16d46935a450ee",
-    "src/contexts/company/interface/operations/company-resource-read-permission.ts": "696b58414ade15e4db2a3914a29452b7097b484d54e59d3e03e7dc36b6e7f30d",
+    "src/contexts/company/interface/operations/company-resource-read-permission.ts": "4203cbd4d3be2da289602f85ff3bdefa817d293efa54e623963069fe04b08d4a",
     "src/contexts/company/interface/operations/dispatch-personnel-action.ts": "db8dab0e17d872cc97d072cab533ee45c617c2e0a040aff06aefeaf77f4a0303",
     "src/contexts/company/interface/operations/employee-lifecycle/get-lifecycle-state.ts": "2c885d30657fa7640b6df00f67ccb07ff2b0b6486d8ac4e7f22fb1cb82930cef",
     "src/contexts/company/interface/operations/prepare-company-organization-revision-guard.ts": "34a3f9cd7c5905f0dd9c0b9867b9a01a7320855afc1acc5eeba1af593cf00a81",
