@@ -78,6 +78,7 @@ async function fixture(type: "person" | "grade") {
         employeeId: null,
         organizationIds: [organizationId],
         capabilities: ["company:read"],
+        permissions: ["employee:read"],
       }),
     )
     await next()

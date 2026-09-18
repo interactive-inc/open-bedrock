@@ -488,6 +488,9 @@ CREATE TABLE system_account_invitations (
   subject TEXT,
   role_id TEXT NOT NULL
     REFERENCES system_iam_roles(id) ON DELETE RESTRICT,
+  resource_type TEXT,
+  resource_id TEXT,
+  related_resource_id TEXT,
   accepted_by_account_id TEXT
     REFERENCES system_accounts(id) ON DELETE RESTRICT,
   expires_at INTEGER NOT NULL,
@@ -498,7 +501,18 @@ CREATE TABLE system_account_invitations (
     updated_at >= created_at
     AND expires_at >= created_at
     AND (revoked_at IS NULL OR revoked_at >= created_at)
-  )
+  ),
+  CHECK (
+    (resource_type IS NULL AND resource_id IS NULL) OR (
+      resource_type IS NOT NULL AND resource_id IS NOT NULL
+      AND length(resource_type) BETWEEN 3 AND 100
+      AND length(resource_id) BETWEEN 1 AND 255
+    )
+  ),
+  CHECK (related_resource_id IS NULL OR (
+    resource_type IS NOT NULL AND resource_id IS NOT NULL
+    AND length(related_resource_id) BETWEEN 1 AND 255
+  ))
 );
 
 CREATE UNIQUE INDEX system_account_invitations_token_uniq
@@ -507,6 +521,8 @@ CREATE INDEX system_account_invitations_role_idx
   ON system_account_invitations (role_id, created_at);
 CREATE INDEX system_account_invitations_subject_idx
   ON system_account_invitations (subject, created_at);
+CREATE INDEX system_account_invitations_resource_idx
+  ON system_account_invitations (resource_type, resource_id);
 
 CREATE TABLE system_notification_messages (
   id TEXT PRIMARY KEY NOT NULL
@@ -519,6 +535,8 @@ CREATE TABLE system_notification_messages (
     CHECK (body IS NULL OR length(body) BETWEEN 1 AND 10000),
   action_url TEXT
     CHECK (action_url IS NULL OR length(action_url) BETWEEN 1 AND 2048),
+  action_type TEXT,
+  action_id TEXT,
   priority TEXT NOT NULL DEFAULT 'normal'
     CHECK (priority IN ('low', 'normal', 'high', 'critical')),
   dedupe_key TEXT,
@@ -530,6 +548,13 @@ CREATE TABLE system_notification_messages (
       source_type IS NOT NULL AND source_id IS NOT NULL
       AND length(source_type) BETWEEN 3 AND 100
       AND length(source_id) BETWEEN 1 AND 512
+    )
+  ),
+  CHECK (
+    (action_type IS NULL AND action_id IS NULL) OR (
+      action_type IS NOT NULL AND action_id IS NOT NULL
+      AND length(action_type) BETWEEN 3 AND 100
+      AND length(action_id) BETWEEN 1 AND 512
     )
   )
 );
@@ -576,7 +601,9 @@ CREATE TABLE system_notification_deliveries (
     REFERENCES system_accounts(id) ON DELETE RESTRICT,
   delivered_at INTEGER NOT NULL,
   read_at INTEGER
-    CHECK (read_at IS NULL OR read_at >= delivered_at)
+    CHECK (read_at IS NULL OR read_at >= delivered_at),
+  dismissed_at INTEGER
+    CHECK (dismissed_at IS NULL OR dismissed_at >= delivered_at)
 );
 
 CREATE UNIQUE INDEX system_notification_deliveries_message_account_uniq
@@ -585,7 +612,7 @@ CREATE INDEX system_notification_deliveries_account_idx
   ON system_notification_deliveries (recipient_account_id, delivered_at);
 CREATE INDEX system_notification_deliveries_unread_idx
   ON system_notification_deliveries (recipient_account_id, delivered_at)
-  WHERE read_at IS NULL;
+  WHERE read_at IS NULL AND dismissed_at IS NULL;
 
 /* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_notification_deliveries_monotonic_read
@@ -596,8 +623,10 @@ WHEN
   OR NEW.recipient_account_id IS NOT OLD.recipient_account_id
   OR NEW.delivered_at IS NOT OLD.delivered_at
   OR (OLD.read_at IS NOT NULL AND NEW.read_at IS NOT OLD.read_at)
+  OR (OLD.dismissed_at IS NOT NULL AND NEW.dismissed_at IS NOT OLD.dismissed_at)
+  OR (OLD.dismissed_at IS NOT NULL AND NEW.read_at IS NOT OLD.read_at)
 BEGIN
-  SELECT RAISE(ABORT, 'notification delivery is immutable except first read');
+  SELECT RAISE(ABORT, 'notification delivery is immutable except first read and dismiss');
 END;
 
 CREATE TABLE system_batch_jobs (

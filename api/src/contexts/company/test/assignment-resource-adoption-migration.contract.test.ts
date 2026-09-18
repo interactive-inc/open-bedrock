@@ -6,6 +6,7 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
 import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/test/company-assignment-resource.test-support"
+import { prepareHistoricalCompanyResourceRevisionFixture } from "@/contexts/company/test/historical-company-resource-revision.test-support"
 
 describe("所属移行の上長対応を追加するmigration", () => {
   test("既存発令の上長対応とrowidを保持し、更新禁止と通常の上長変更が移行後も働く", async () => {
@@ -27,10 +28,14 @@ describe("所属移行の上長対応を追加するmigration", () => {
         .replaceAll("initialization:company:root", "fixture:confirmed-organization")
         .replaceAll("system:initialization", "fixture:organization-recorder"),
     )
+    const auditMigrations = await prepareHistoricalCompanyResourceRevisionFixture(database)
     // 旧schemaのfixtureを現行readerで準備する間だけ、当時の対応表を投影する。
     // Account履歴のmigrationに達したら破棄し、実際のviewへ置き換える。
     await database.exec(`CREATE VIEW company_account_employee_link_periods AS
       SELECT account_id, employee_id, NULL AS starts_on, NULL AS ends_on FROM company_account_employee_links`)
+    await database.exec(`CREATE VIEW company_account_employee_resource_bindings AS
+      SELECT 'organization:default' AS organization_id, NULL AS resource_id, account_id, employee_id
+      FROM company_account_employee_links WHERE 0`)
     // 責務の公開接続がまだ存在しない旧schemaでは、現行writerの参照結果を空に固定する。
     // 対象のmigrationを適用する直前に破棄し、実際のtableを作る。
     await database.exec(`CREATE VIEW company_responsibility_resource_bindings AS SELECT
@@ -65,7 +70,9 @@ describe("所属移行の上長対応を追加するmigration", () => {
     ).results
     expect(before).toHaveLength(1)
     const history = await f.publicReporting("2030-03-01")
-    for (const file of files.filter((file) => file >= first)) {
+    for (const file of files.filter((file) => file >= first && !auditMigrations.has(file))) {
+      if (file.endsWith("_bind_company_account_employee_resources.sql"))
+        await database.exec("DROP VIEW company_account_employee_resource_bindings")
       if (file.endsWith("_create_company_account_employee_link_periods.sql"))
         await database.exec("DROP VIEW company_account_employee_link_periods")
       if (file.endsWith("_connect_company_responsibility_resources.sql")) {
@@ -136,6 +143,7 @@ test("既存の移行証跡へ接続先を推測して補わず、新しい列�
       .replaceAll("initialization:company:root", "fixture:confirmed-organization")
       .replaceAll("system:initialization", "fixture:organization-recorder"),
   )
+  const auditMigrations = await prepareHistoricalCompanyResourceRevisionFixture(database)
   const f = await createCompanyAssignmentResourceTestContext(database, "confirmed")
   const sourceJson = JSON.stringify({
     employeeId: f.people[0]!.employeeId,
@@ -151,7 +159,7 @@ test("既存の移行証跡へ接続先を推測して補わず、新しい列�
   const before = (
     await database.prepare("SELECT rowid, * FROM company_assignment_resource_adoptions").all()
   ).results
-  for (const file of files.filter((file) => file >= first)) {
+  for (const file of files.filter((file) => file >= first && !auditMigrations.has(file))) {
     await database.batch(
       splitSqlStatements(readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8")).map((sql) =>
         database.prepare(sql),

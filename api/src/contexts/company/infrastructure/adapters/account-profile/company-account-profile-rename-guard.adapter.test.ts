@@ -6,8 +6,10 @@ import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-dat
 describe("Companyの表示名所有者ガード", () => {
   test("同一transactionの先行変更を取り消し、紐付けを保全する", async () => {
     const database = createCompanyD1TestDatabase(`
-      CREATE TABLE company_account_employee_links (account_id TEXT PRIMARY KEY, employee_id TEXT);
-      INSERT INTO company_account_employee_links VALUES ('account-1', 'employee-1');
+      CREATE TABLE company_account_employee_resource_bindings
+        (resource_id TEXT PRIMARY KEY, account_id TEXT NOT NULL, employee_id TEXT NOT NULL);
+      INSERT INTO company_account_employee_resource_bindings
+        VALUES ('link-1', 'account-1', 'employee-1');
       CREATE TABLE writes (value TEXT);
     `)
     const query = new CompanyAccountProfileRenameGuardAdapter(drizzle(database))
@@ -25,8 +27,9 @@ describe("Companyの表示名所有者ガード", () => {
     expect(CompanyAccountProfileRenameGuardAdapter.isBlocked(failure)).toBe(true)
     expect((await database.prepare("SELECT * FROM writes").all()).results).toEqual([])
     expect(
-      (await database.prepare("SELECT * FROM company_account_employee_links").all()).results,
-    ).toEqual([{ account_id: "account-1", employee_id: "employee-1" }])
+      (await database.prepare("SELECT * FROM company_account_employee_resource_bindings").all())
+        .results,
+    ).toEqual([{ resource_id: "link-1", account_id: "account-1", employee_id: "employee-1" }])
     expect(
       await new CompanyAccountProfileRenameGuardAdapter(drizzle(database))
         .build("unlinked-account")
@@ -55,7 +58,7 @@ describe("Companyの表示名所有者ガード", () => {
     expect(
       CompanyAccountProfileRenameGuardAdapter.isBlocked(
         new Error("Failed query: company_account_name_managed_by_employee", {
-          cause: new Error("no such table: company_account_employee_links"),
+          cause: new Error("no such table: company_account_employee_resource_bindings"),
         }),
       ),
     ).toBe(false)

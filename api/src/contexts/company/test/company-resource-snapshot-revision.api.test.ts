@@ -77,7 +77,7 @@ test("会社の各台帳は同じ会社版で取得でき、遡及更新後も�
     if (command instanceof Error) throw command
     expect(await repository.write(command)).toMatchObject({ kind: "applied" })
   }
-  const state = { authorized: true }
+  const state = { authorized: true, employeeRead: true }
   const app = new Hono<CompanyHttpEnvironment>()
   app.use("*", async (context, next) => {
     context.set("companyClock", () => new Date("2030-06-01T00:00:00Z"))
@@ -88,6 +88,9 @@ test("会社の各台帳は同じ会社版で取得でき、遡及更新後も�
         employeeId: null,
         organizationIds: [state.authorized ? "organization:default" : "organization:other"],
         capabilities: ["company:read"],
+        permissions: state.employeeRead
+          ? ["employee:read", "employee:attributes:read"]
+          : ["org:read"],
       }),
     )
     await next()
@@ -153,4 +156,65 @@ test("会社の各台帳は同じ会社版で取得でき、遡及更新後も�
     expect(forbidden.status).toBe(403)
     state.authorized = true
   }
+
+  const headers = { "x-company-organization-id": "organization:default" }
+  state.employeeRead = false
+  for (const path of [
+    "people",
+    "employees",
+    "employments",
+    "account-employee-links",
+    "legacy-personnel-action-records",
+  ]) {
+    expect(
+      (await app.request(`/${path}`, { headers }, { DB: database, COMPANY_TIME_ZONE: "UTC" }))
+        .status,
+    ).toBe(403)
+  }
+  expect(
+    (await app.request("/profile", { headers }, { DB: database, COMPANY_TIME_ZONE: "UTC" })).status,
+  ).toBe(200)
+  state.employeeRead = true
+  const endedEmployment = await app.request(
+    "/employments?organization_revision=2&effective_on=2030-08-01&include_ended=true",
+    { headers },
+    { DB: database, COMPANY_TIME_ZONE: "UTC" },
+  )
+  expect(endedEmployment.status).toBe(200)
+  expect(await endedEmployment.json()).toMatchObject({
+    organizationRevision: 2,
+    resources: [{ id: "employment:test", revision: 2, effectiveTo: "2030-07-01" }],
+  })
+  const employeeEmployment = await app.request(
+    "/employments?organization_revision=2&effective_on=2030-08-01&include_ended=true&employee_id=employee:test",
+    { headers },
+    { DB: database, COMPANY_TIME_ZONE: "UTC" },
+  )
+  expect(employeeEmployment.status).toBe(200)
+  expect(await employeeEmployment.json()).toMatchObject({
+    organizationRevision: 2,
+    resources: [{ id: "employment:test" }],
+  })
+  const unrelatedEmployee = await app.request(
+    "/employments?organization_revision=2&effective_on=2030-08-01&include_ended=true&employee_id=employee:other",
+    { headers },
+    { DB: database, COMPANY_TIME_ZONE: "UTC" },
+  )
+  expect(unrelatedEmployee.status).toBe(200)
+  expect(await unrelatedEmployee.json()).toMatchObject({
+    organizationRevision: 2,
+    resources: [],
+  })
+  const duplicateEmployee = await app.request(
+    "/employments?employee_id=employee:test&employee_id=employee:test",
+    { headers },
+    { DB: database, COMPANY_TIME_ZONE: "UTC" },
+  )
+  expect(duplicateEmployee.status).toBe(400)
+  const missingDate = await app.request(
+    "/employments?include_ended=true",
+    { headers },
+    { DB: database, COMPANY_TIME_ZONE: "UTC" },
+  )
+  expect(missingDate.status).toBe(400)
 })

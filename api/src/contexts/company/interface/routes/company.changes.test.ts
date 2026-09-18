@@ -12,6 +12,10 @@ import { GET as peopleGET } from "@/contexts/company/interface/routes/company.pe
 import { GET as employeesGET } from "@/contexts/company/interface/routes/company.employees"
 import { GET as employmentsGET } from "@/contexts/company/interface/routes/company.employments"
 import { GET as organizationSnapshotsGET } from "@/contexts/company/interface/routes/company.organization-snapshots"
+import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
+import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
+import { CompanyChangeFeedRepository } from "@/contexts/company/infrastructure/repositories/core/company-change-feed.repository"
+import { createCompanyPlaceTestContext } from "@/contexts/company/test/company-place.test-support"
 
 const pageSchema = z.object({
   data: z.array(
@@ -36,6 +40,13 @@ function fixture() {
       ('company:a', 2, 'position', 'p', 1, 'command:two', 'active', '2040-01-01', NULL, 20),
       ('company:a', 3, 'grade', 'a', 2, 'command:three', 'void', '2040-01-01', NULL, 30),
       ('company:b', 1, 'person', 'private:person', 1, 'command:private', 'active', '2020-01-01', NULL, 10);
+    ALTER TABLE company_resource_revisions ADD COLUMN actor_account_id TEXT NOT NULL DEFAULT 'account:writer';
+    ALTER TABLE company_resource_revisions ADD COLUMN reason TEXT NOT NULL DEFAULT 'Confirmed company fact';
+    ALTER TABLE company_resource_revisions ADD COLUMN evidence_references_json TEXT NOT NULL DEFAULT '[]';
+    ALTER TABLE company_resource_revisions ADD COLUMN corrects_revision INTEGER;
+    UPDATE company_resource_revisions SET evidence_references_json =
+      '[{"context":"system","kind":"document","id":"source:hire","version":"1"}]'
+      WHERE command_id = 'command:one';
   `)
   const actors: { value: CompanyActorValue | null } = {
     value: CompanyActorValue.restore({
@@ -43,6 +54,7 @@ function fixture() {
       employeeId: null,
       organizationIds: ["company:a"],
       capabilities: ["company:read"],
+      permissions: ["employee:read", "employee:attributes:read"],
     }),
   }
   const app = new Hono<CompanyHttpEnvironment>()
@@ -62,6 +74,118 @@ function fixture() {
     )
   return { database, actors, request }
 }
+
+test("組織閲覧だけでは人事変更を返さず、指定した組織資源だけを追跡できる", async () => {
+  const f = fixture()
+  await f.database.exec(`
+    INSERT INTO company_resource_revisions
+      (organization_id, organization_revision, resource_type, resource_id, revision,
+       command_id, state, effective_from, effective_to, recorded_at)
+    VALUES ('company:a', 3, 'person', 'person:private', 1,
+            'command:person', 'active', '2020-01-01', NULL, 30)
+  `)
+  f.actors.value = CompanyActorValue.restore({
+    accountId: "account:org-reader",
+    employeeId: null,
+    organizationIds: ["company:a"],
+    capabilities: ["company:read"],
+    permissions: ["org:read"],
+  })
+
+  const all = await f.request({ limit: "100" })
+  expect(all.status).toBe(200)
+  const data = z
+    .object({ data: z.array(z.object({ resource_type: z.string() })) })
+    .parse(await all.json()).data
+  expect(data.some((item) => item.resource_type === "person")).toBe(false)
+  expect(data.some((item) => item.resource_type === "grade")).toBe(true)
+  expect((await f.request({ resource_type: "person" })).status).toBe(403)
+  const grades = await f.request({ resource_type: "grade" })
+  expect(grades.status).toBe(200)
+  expect(
+    z
+      .object({ data: z.array(z.object({ resource_type: z.string() })) })
+      .parse(await grades.json())
+      .data.every((item) => item.resource_type === "grade"),
+  ).toBe(true)
+})
+
+test("変更取得は保存済みの変更者と理由を同じ会社版に返す", async () => {
+  const f = fixture()
+  const page = z
+    .object({
+      data: z.array(
+        z.object({
+          organization_revision: z.number(),
+          resource_id: z.string(),
+          actor_account_id: z.string(),
+          reason: z.string(),
+          evidence_references: z.array(z.object({ id: z.string() })),
+        }),
+      ),
+    })
+    .parse(await (await f.request()).json())
+  expect(page.data[0]).toEqual({
+    organization_revision: 1,
+    resource_id: "legal:a",
+    actor_account_id: "account:writer",
+    reason: "Confirmed company fact",
+    evidence_references: [{ id: "source:hire" }],
+  })
+})
+
+test("原資料参照は正式revisionに残り、変更取得と再送判定に反映される", async () => {
+  const f = createCompanyPlaceTestContext()
+  const repository = new D1CompanyResourceRepository({ database: f.database })
+  const props = {
+    commandId: "evidence:initial",
+    actorAccountId: "account:writer",
+    reason: "Verified from signed source",
+    recordedAt: 10,
+    expectedRevision: 0,
+    evidenceReferences: [
+      { context: "system", kind: "document", id: "hire:original", version: "1" },
+    ],
+    resources: f.resources,
+  }
+  const command = CompanyResourceChangeEntity.create(props)
+  if (command instanceof Error) throw command
+  expect(await repository.write(command)).toMatchObject({ kind: "applied" })
+  expect(await repository.write(command)).toMatchObject({ kind: "applied", replayed: true })
+  const changedEvidence = CompanyResourceChangeEntity.create({
+    ...props,
+    evidenceReferences: [{ ...props.evidenceReferences[0]!, version: "2" }],
+  })
+  if (changedEvidence instanceof Error) throw changedEvidence
+  expect(await repository.write(changedEvidence)).toMatchObject({ kind: "command_conflict" })
+  const correction = CompanyResourceChangeEntity.create({
+    ...props,
+    commandId: "evidence:correction",
+    expectedRevision: 1,
+    corrections: [{ type: "legal-entity", id: f.legalEntity.id, revision: 2, correctsRevision: 1 }],
+    resources: [{ ...f.legalEntity, revision: 2 }],
+  })
+  if (correction instanceof Error) throw correction
+  expect(await repository.write(correction)).toMatchObject({ kind: "applied", replayed: false })
+  expect(await repository.write(correction)).toMatchObject({ kind: "applied", replayed: true })
+  const page = await new CompanyChangeFeedRepository(f.database).list({
+    organizationId: "organization:default",
+    afterRevision: 0,
+    afterType: null,
+    afterId: null,
+    afterResourceRevision: null,
+    throughRevision: null,
+    limit: 25,
+  })
+  if (page instanceof Error) throw page
+  expect(page.changes).toHaveLength(f.resources.length + 1)
+  expect(page.changes[0]?.evidence_references).toEqual(props.evidenceReferences)
+  expect(page.changes.find((change) => change.revision === 2)).toMatchObject({
+    resource_type: "legal-entity",
+    corrects_revision: 1,
+    evidence_references: props.evidenceReferences,
+  })
+})
 
 test("同じcommandの変更をページ境界で失わず、停止・再送・独立consumerの再構築が一致する", async () => {
   const f = fixture()
@@ -92,7 +216,10 @@ test("取得中に追加された変更は固定した上限を越えず、完�
   const f = fixture()
   const first = pageSchema.parse(await (await f.request({ limit: "2" })).json())
   await f.database.exec(`UPDATE company_organizations SET revision = 4 WHERE id = 'company:a';
-    INSERT INTO company_resource_revisions VALUES ('company:a', 4, 'responsibility', 'later', 1, 'command:later', 'active', '2010-01-01', NULL, 40);`)
+    INSERT INTO company_resource_revisions
+      (organization_id, organization_revision, resource_type, resource_id, revision,
+       command_id, state, effective_from, effective_to, recorded_at)
+      VALUES ('company:a', 4, 'responsibility', 'later', 1, 'command:later', 'active', '2010-01-01', NULL, 40);`)
   const pinned = pageSchema.parse(
     await (await f.request({ cursor: first.next_cursor, through_revision: "3" })).json(),
   )
@@ -154,7 +281,10 @@ test("保存データや取得の異常を空の完了ページとして返さ�
 test("一つの会社版にある同一資源の複数改訂もページ境界で取りこぼさない", async () => {
   const f = fixture()
   await f.database.exec(
-    "INSERT INTO company_resource_revisions VALUES ('company:a', 2, 'grade', 'a', 2, 'command:two', 'void', '2040-01-01', NULL, 20)",
+    `INSERT INTO company_resource_revisions
+      (organization_id, organization_revision, resource_type, resource_id, revision,
+       command_id, state, effective_from, effective_to, recorded_at)
+      VALUES ('company:a', 2, 'grade', 'a', 2, 'command:two', 'void', '2040-01-01', NULL, 20)`,
   )
   const first = pageSchema.parse(await (await f.request({ limit: "2" })).json())
   const second = pageSchema.parse(
@@ -183,6 +313,7 @@ test("実際の人事発令と公開履歴の全改訂を再構築し、旧台�
     ...f.creator,
     organizationIds: ["organization:default"],
     capabilities: ["company:read"],
+    permissions: ["employee:read", "employee:attributes:read"],
   })
   const app = new Hono<CompanyHttpEnvironment>()
     .use("*", async (context, next) => {
@@ -207,6 +338,8 @@ test("実際の人事発令と公開履歴の全改訂を再構築し、旧台�
             resource_type: z.string(),
             resource_id: z.string(),
             revision: z.number(),
+            actor_account_id: z.string().min(1),
+            reason: z.string().min(1),
           }),
         ),
         has_more: z.boolean(),
@@ -256,6 +389,7 @@ test("独立consumerは変更feedで発見したIDだけから同じ会社版の
     ...f.creator,
     organizationIds: ["organization:default"],
     capabilities: ["company:read"],
+    permissions: ["employee:read", "employee:attributes:read"],
   })
   const app = new Hono<CompanyHttpEnvironment>()
     .use("*", async (context, next) => {
@@ -270,7 +404,7 @@ test("独立consumerは変更feedで発見したIDだけから同じ会社版の
   const headers = { "x-company-organization-id": "organization:default" }
   const env = f.context.env
   const fetchPage = async (query: URLSearchParams) => {
-    const response = await app.request(`/changes?${query}`, { headers }, env)
+    const response = await app.request(`/changes?${query.toString()}`, { headers }, env)
     expect(response.status).toBe(200)
     return z
       .object({
@@ -341,7 +475,7 @@ test("独立consumerは変更feedで発見したIDだけから同じ会社版の
       effective_on: "2030-02-01",
     })
     for (const id of ids ?? []) query.append("id", id)
-    const response = await app.request(`${path}?${query}`, { headers }, env)
+    const response = await app.request(`${path}?${query.toString()}`, { headers }, env)
     expect(response.status).toBe(200)
     return z
       .object({ organizationRevision: z.number(), resources: z.array(z.unknown()) })

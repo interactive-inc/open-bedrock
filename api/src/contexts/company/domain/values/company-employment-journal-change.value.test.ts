@@ -118,6 +118,129 @@ describe("期間訂正から公開雇用の追記を作る", () => {
       periods: [{ startsOn: "2026-02-01", endsOn: null, status: "active" }],
     })
   })
+  test("開始日を前へ訂正しても後続の旧発効境界で雇用開始日を戻さない", () => {
+    const history = [
+      initial().toProps(),
+      {
+        ...initial().toProps(),
+        revision: 2,
+        effectiveFrom: restoreCalendarDate("2026-07-01"),
+        attributes: { ...attributes, status: "ON_LEAVE" },
+      },
+    ]
+    const result = changes({
+      history,
+      employment: { ...employment, startsOn: "2025-12-01" },
+      statuses: [
+        { ...status, startsOn: "2025-12-01", endsOn: "2026-07-01" },
+        {
+          ...status,
+          periodId: "status:leave",
+          startsOn: "2026-07-01",
+          status: "leave",
+        },
+      ],
+    })
+    if (result instanceof Error) throw result
+    const timeline = CompanyEmploymentResourceTimelineValue.create([
+      ...history,
+      ...result.resources,
+    ])
+    expect(timeline).toMatchObject({
+      startsOn: "2025-12-01",
+      periods: [
+        { startsOn: "2025-12-01", endsOn: "2026-07-01", status: "active" },
+        { startsOn: "2026-07-01", endsOn: null, status: "leave" },
+      ],
+    })
+  })
+  test("元の開始revisionを訂正しても既存の休職までの在籍期間を失わない", () => {
+    const history = [
+      { ...initial().toProps(), effectiveTo: restoreCalendarDate("2026-07-01") },
+      {
+        ...initial().toProps(),
+        revision: 2,
+        effectiveFrom: restoreCalendarDate("2026-07-01"),
+        attributes: { ...attributes, status: "ON_LEAVE" },
+      },
+    ]
+    const result = changes({
+      history,
+      correctingStartRevision: 1,
+      employment: { ...employment, startsOn: "2025-12-01" },
+      statuses: [
+        { ...status, startsOn: "2025-12-01", endsOn: "2026-07-01" },
+        { ...status, periodId: "status:leave", startsOn: "2026-07-01", status: "leave" },
+      ],
+    })
+    if (result instanceof Error) throw result
+    expect(result.resources.map((resource) => resource.effectiveFrom.toString())).toEqual([
+      "2025-12-01",
+      "2026-01-01",
+    ])
+    const corrected = result.resources.map((resource) => ({
+      ...resource.toProps(),
+      correctsRevision: 1,
+    }))
+    expect(CompanyEmploymentResourceTimelineValue.create([...history, ...corrected])).toMatchObject(
+      {
+        startsOn: "2025-12-01",
+        periods: [
+          { startsOn: "2025-12-01", endsOn: "2026-07-01", status: "active" },
+          { startsOn: "2026-07-01", endsOn: null, status: "leave" },
+        ],
+      },
+    )
+    expect(
+      changes({
+        history,
+        correctingStartRevision: 2,
+        employment: { ...employment, startsOn: "2025-12-01" },
+        statuses: [{ ...status, startsOn: "2025-12-01" }],
+      }),
+    ).toMatchObject({ code: "invalid_resource" })
+  })
+  test("開始日を後ろへ訂正しても既存の休職と雇用区分を維持する", () => {
+    const history = [
+      { ...initial().toProps(), effectiveTo: restoreCalendarDate("2026-07-01") },
+      {
+        ...initial().toProps(),
+        revision: 2,
+        effectiveFrom: restoreCalendarDate("2026-07-01"),
+        attributes: { ...attributes, status: "ON_LEAVE" },
+      },
+    ]
+    const result = changes({
+      history,
+      correctingStartRevision: 1,
+      employment: { ...employment, startsOn: "2026-02-01" },
+      statuses: [
+        { ...status, startsOn: "2026-02-01", endsOn: "2026-07-01" },
+        { ...status, periodId: "status:leave", startsOn: "2026-07-01", status: "leave" },
+      ],
+    })
+    if (result instanceof Error) throw result
+    expect(
+      result.resources.map((resource) => [resource.state, resource.effectiveFrom.toString()]),
+    ).toEqual([
+      ["void", "2026-01-01"],
+      ["active", "2026-02-01"],
+    ])
+    const corrected = result.resources.map((resource) => ({
+      ...resource.toProps(),
+      correctsRevision: 1,
+    }))
+    expect(CompanyEmploymentResourceTimelineValue.create([...history, ...corrected])).toMatchObject(
+      {
+        startsOn: "2026-02-01",
+        employmentType: "PART_TIME",
+        periods: [
+          { startsOn: "2026-02-01", endsOn: "2026-07-01", status: "active" },
+          { startsOn: "2026-07-01", endsOn: null, status: "leave" },
+        ],
+      },
+    )
+  })
   test("期間取消は古い発効境界も取り消す", () => {
     const result = changes({ employment: { ...employment, isVoid: true }, statuses: [] })
     if (result instanceof Error) throw result

@@ -17,6 +17,7 @@ const propsSchema = z
     recipientAccountId: zAccountId,
     deliveredAt: z.date(),
     readAt: z.date().nullable(),
+    dismissedAt: z.date().nullable().optional(),
   })
   .strict()
 
@@ -29,6 +30,7 @@ export class NotificationDeliveryEntity {
   readonly recipientAccountId: AccountId
   readonly #deliveredAtEpochMilliseconds: number
   readonly #readAtEpochMilliseconds: number | null
+  readonly #dismissedAtEpochMilliseconds: number | null
 
   private constructor(props: ParsedProps) {
     this.id = props.id
@@ -36,6 +38,7 @@ export class NotificationDeliveryEntity {
     this.recipientAccountId = props.recipientAccountId
     this.#deliveredAtEpochMilliseconds = props.deliveredAt.getTime()
     this.#readAtEpochMilliseconds = props.readAt?.getTime() ?? null
+    this.#dismissedAtEpochMilliseconds = props.dismissedAt?.getTime() ?? null
     Object.freeze(this)
   }
 
@@ -50,6 +53,12 @@ export class NotificationDeliveryEntity {
       parsed.data.readAt.getTime() < parsed.data.deliveredAt.getTime()
     ) {
       return new InvalidNotificationDeliveryError("read_before_delivery")
+    }
+    if (
+      parsed.data.dismissedAt != null &&
+      parsed.data.dismissedAt.getTime() < parsed.data.deliveredAt.getTime()
+    ) {
+      return new InvalidNotificationDeliveryError("dismiss_before_delivery")
     }
 
     return new NotificationDeliveryEntity(parsed.data)
@@ -67,6 +76,16 @@ export class NotificationDeliveryEntity {
     return this.#readAtEpochMilliseconds !== null
   }
 
+  get dismissedAt(): Date | null {
+    return this.#dismissedAtEpochMilliseconds === null
+      ? null
+      : new Date(this.#dismissedAtEpochMilliseconds)
+  }
+
+  get isDismissed(): boolean {
+    return this.#dismissedAtEpochMilliseconds !== null
+  }
+
   markRead(at: unknown): NotificationDeliveryEntity | InvalidNotificationDeliveryError {
     const parsedAt = z.date().safeParse(at)
 
@@ -75,6 +94,8 @@ export class NotificationDeliveryEntity {
     }
 
     const atEpochMilliseconds = parsedAt.data.getTime()
+
+    if (this.isDismissed) return new InvalidNotificationDeliveryError("dismissed")
 
     if (
       this.#readAtEpochMilliseconds !== null &&
@@ -87,6 +108,16 @@ export class NotificationDeliveryEntity {
     return NotificationDeliveryEntity.create({ ...this.toProps(), readAt: parsedAt.data })
   }
 
+  dismiss(at: unknown): NotificationDeliveryEntity | InvalidNotificationDeliveryError {
+    const parsedAt = z.date().safeParse(at)
+    if (!parsedAt.success) return new InvalidNotificationDeliveryError("invalid_shape", parsedAt.error)
+    if (this.isDismissed) return this
+    if (parsedAt.data.getTime() < this.#deliveredAtEpochMilliseconds) {
+      return new InvalidNotificationDeliveryError("dismiss_before_delivery")
+    }
+    return NotificationDeliveryEntity.create({ ...this.toProps(), dismissedAt: parsedAt.data })
+  }
+
   private toProps(): ParsedProps {
     return {
       id: this.id,
@@ -94,6 +125,7 @@ export class NotificationDeliveryEntity {
       recipientAccountId: this.recipientAccountId,
       deliveredAt: this.deliveredAt,
       readAt: this.readAt,
+      dismissedAt: this.dismissedAt,
     }
   }
 }

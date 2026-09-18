@@ -134,6 +134,8 @@ test("公開履歴の追記も確認digestへ含め、確認後の変更で接�
   const context = await fixture()
   const input = { ...(await context.input()), reuseExistingHistory: true }
   await context.database.exec(`INSERT INTO company_resource_revisions
+    (organization_id, resource_type, resource_id, revision, organization_revision, state,
+      effective_from, effective_to, attributes_json, command_id, actor_account_id, reason, recorded_at)
     SELECT organization_id, resource_type, resource_id, 3, 3, state, '2027-01-01', effective_to,
       attributes_json, 'later-public-change', actor_account_id, 'Later evidence', 20
     FROM company_resource_revisions WHERE resource_type = 'person' AND revision = 2`)

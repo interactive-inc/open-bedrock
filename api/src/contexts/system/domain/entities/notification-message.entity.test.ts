@@ -49,6 +49,28 @@ describe("NotificationMessageEntity", () => {
     if (!(message instanceof NotificationMessageEntity)) return
     expect(message.body).toBeNull()
     expect(message.source).toBeNull()
+    expect(message.action).toBeNull()
+    expect(message.resourceScope).toBeNull()
+    expect(message.priority).toBe("normal")
+  })
+
+  test("opaque actionとresource scopeをimmutableな参照として保持する", () => {
+    const action = { type: "care:shift_request", id: "facility-1" }
+    const resourceScope = { type: "care:facility", id: "facility-1" }
+    const message = NotificationMessageEntity.create({
+      ...validProps,
+      action,
+      resourceScope,
+      priority: "high",
+    })
+    expect(message).toBeInstanceOf(NotificationMessageEntity)
+    if (!(message instanceof NotificationMessageEntity)) return
+    action.id = "facility-2"
+    resourceScope.id = "facility-2"
+    expect(message.action?.id).toBe("facility-1")
+    expect(message.resourceScope?.id).toBe("facility-1")
+    expect(Object.isFrozen(message.action)).toBe(true)
+    expect(Object.isFrozen(message.resourceScope)).toBe(true)
   })
 
   test.each([
@@ -62,6 +84,11 @@ describe("NotificationMessageEntity", () => {
     ["oversized body", { ...validProps, body: "x".repeat(10_001) }],
     ["unnamespaced source", { ...validProps, source: { type: "account", id: "1" } }],
     ["empty source id", { ...validProps, source: { type: "system:account", id: "" } }],
+    ["empty publication key", { ...validProps, publicationKey: "" }],
+    ["oversized publication key", { ...validProps, publicationKey: "x".repeat(513) }],
+    ["invalid priority", { ...validProps, priority: "urgent" }],
+    ["unnamespaced action", { ...validProps, action: { type: "shift", id: "1" } }],
+    ["empty scope id", { ...validProps, resourceScope: { type: "care:facility", id: "" } }],
     ["invalid clock", { ...validProps, createdAt: new Date(Number.NaN) }],
     ["unknown field", { ...validProps, recipientAccountId: "account-1" }],
   ])("fails closed for %s", (_name, input) => {

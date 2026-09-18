@@ -1,3 +1,5 @@
+import { publishTestAccountEmployeeLink } from "@tests/api/support/company/publish-test-account-employee-link"
+
 type TestEmployeeResources = Readonly<{
   employeeId: string
   employmentId: string
@@ -122,5 +124,20 @@ export async function publishTestEmployeeResources(
   const results = await db.batch(statements)
   if (results.length !== statements.length || results.some((result) => !result.success)) {
     throw new Error(`test Company employee ${input.employeeId} was not published`)
+  }
+  const accountLinks = await db
+    .prepare(`SELECT account_id FROM company_account_employee_links WHERE employee_id = ?1`)
+    .bind(input.employeeId)
+    .all<{ account_id: string }>()
+  if (!accountLinks.success || accountLinks.results.length > 1)
+    throw new Error(`test Company employee ${input.employeeId} has ambiguous Account links`)
+  const accountLink = accountLinks.results[0]
+  if (accountLink !== undefined) {
+    await publishTestAccountEmployeeLink(db, {
+      accountId: accountLink.account_id,
+      employeeId: input.employeeId,
+      effectiveFrom: input.effectiveFrom,
+      recordedAt: input.recordedAt,
+    })
   }
 }

@@ -5,10 +5,15 @@
 #
 # usage:
 #   scripts/seed.sh --local    # ローカル D1 (miniflare)
-#   scripts/seed.sh --remote   # 本番 D1
+#   scripts/seed.sh --remote   # 拒否する
 set -euo pipefail
 
 TARGET="${1:---local}"
+if [ "$TARGET" != "--local" ] || [ "$#" -gt 1 ] ||
+  [ "${WRANGLER_ENV:-}" = "production" ] || [ "${CLOUDFLARE_ENV:-}" = "production" ]; then
+  echo "ERROR: development seed is local only." >&2
+  exit 1
+fi
 # wrangler.jsonc の d1_databases[].database_name と一致させる。
 DB_NAME="bedrock"
 SEEDS_DIR="$(cd "$(dirname "$0")/../seeds" && pwd)"
@@ -24,7 +29,7 @@ ORDER=(
   personnel-action
   position
   grade
-  company
+  company-public-workforce
 )
 
 apply() {
@@ -36,7 +41,7 @@ apply() {
   echo "seeding $(basename "$file")"
   # bunx で devDependency に固定した wrangler を使う。素の `wrangler` はグローバル版に
   # 解決され、migration を流した版と miniflare の状態形式が食い違って落ちる。
-  bunx wrangler d1 execute "$DB_NAME" "$TARGET" --file="$file"
+  bunx wrangler d1 execute "$DB_NAME" --local --file="$file"
 }
 
 # 先に基盤ドメイン

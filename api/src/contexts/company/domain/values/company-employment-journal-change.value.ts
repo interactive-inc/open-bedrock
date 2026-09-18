@@ -15,10 +15,11 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 
 type Props = Readonly<{
   organizationId: string
-  history: ReadonlyArray<CompanyResourceProps>
+  history: ReadonlyArray<CompanyResourceProps & Readonly<{ correctsRevision?: number | null }>>
   employment: EmploymentPeriod
   statuses: ReadonlyArray<EmployeeStatusPeriod>
   initialAttributes: CompanyJsonObject
+  correctingStartRevision?: number
 }>
 
 /** 訂正後の期間と既存の発効境界を突き合わせ、公開雇用の変更点だけを追記する。 */
@@ -60,6 +61,18 @@ export class CompanyEmploymentJournalChangeValue {
       return new CompanyResourceValidationError("invalid_resource")
     const effective = CompanyResourceEffectiveHistoryValue.create(history)
     if (effective instanceof Error) return effective
+    const currentHistory = effective.resources.map((resource) => resource.toProps())
+    if (props.correctingStartRevision !== undefined) {
+      const firstActive = currentHistory
+        .filter((resource) => resource.state === "active")
+        .toSorted((left, right) => left.effectiveFrom.localeCompare(right.effectiveFrom))[0]
+      if (
+        firstActive === undefined ||
+        firstActive.revision !== props.correctingStartRevision ||
+        firstActive.effectiveFrom === employment.startsOn
+      )
+        return new CompanyResourceValidationError("invalid_resource")
+    }
     const statuses = props.statuses.filter(
       (period) => !period.isVoid && period.employmentPeriodId === employment.employmentId,
     )
@@ -76,11 +89,11 @@ export class CompanyEmploymentJournalChangeValue {
     const boundaries = [
       ...new Set([
         employment.startsOn,
-        ...history.map((resource) => resource.effectiveFrom),
+        ...currentHistory.map((resource) => resource.effectiveFrom),
         ...statuses.map((period) => period.startsOn),
         ...[
           employment.endsOn,
-          ...history.map((resource) => resource.effectiveTo),
+          ...currentHistory.map((resource) => resource.effectiveTo),
           ...statuses.map((period) => period.endsOn),
         ].filter((date): date is string => date !== null),
       ]),
@@ -88,13 +101,14 @@ export class CompanyEmploymentJournalChangeValue {
     const changes: CompanyResourceEntity[] = []
     let revision = history.length
     for (const [index, date] of boundaries.entries()) {
-      const current = history
+      const current = currentHistory
         .filter((resource) => resource.effectiveFrom <= date)
         .toSorted(
           (left, right) =>
             right.effectiveFrom.localeCompare(left.effectiveFrom) || right.revision - left.revision,
         )[0]
-      const attributes = current?.attributes ?? history[0]?.attributes ?? props.initialAttributes
+      const attributes =
+        current?.attributes ?? currentHistory[0]?.attributes ?? props.initialAttributes
       const containsEmployment =
         !employment.isVoid &&
         employment.startsOn <= date &&
@@ -122,6 +136,7 @@ export class CompanyEmploymentJournalChangeValue {
         return new CompanyResourceValidationError("invalid_resource")
       if (
         current?.effectiveFrom === date &&
+        current.revision !== props.correctingStartRevision &&
         current.effectiveTo === next &&
         current.state === state &&
         beforeJson.toString() === afterJson.toString()

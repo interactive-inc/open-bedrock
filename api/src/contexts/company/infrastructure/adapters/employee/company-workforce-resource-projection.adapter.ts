@@ -43,23 +43,47 @@ export class CompanyWorkforceResourceProjectionAdapter {
         statements.push(...this.personStatements(resource, change.recordedAt))
       }
     }
+    const employeeHistories = new Map<string, CompanyResourceEntity[]>()
     for (const resource of change.resources.filter((resource) => resource.type === "employee")) {
-      const prepared = await this.employeeStatements(resource, change.recordedAt)
+      const history = employeeHistories.get(resource.id) ?? []
+      history.push(resource)
+      employeeHistories.set(resource.id, history)
+    }
+    for (const history of employeeHistories.values()) {
+      const resource = history.at(-1)
+      const firstStaged = history[0]
+      if (resource === undefined || firstStaged === undefined)
+        return new CompanyResourceValidationError("invalid_resource")
+      const prepared = await this.employeeStatements(
+        resource,
+        firstStaged.revision,
+        change.recordedAt,
+      )
       if (prepared instanceof Error) return prepared
       statements.push(...prepared)
     }
-    const employments = change.resources
-      .filter((resource) => resource.type === "employment")
-      .toSorted(
-        (left, right) =>
-          Number(left.effectiveTo === null && left.readText("status") !== "TERMINATED") -
-          Number(right.effectiveTo === null && right.readText("status") !== "TERMINATED"),
+    const employmentHistories = new Map<string, CompanyResourceEntity[]>()
+    for (const resource of change.resources.filter((resource) => resource.type === "employment")) {
+      const history = employmentHistories.get(resource.id) ?? []
+      history.push(resource)
+      employmentHistories.set(resource.id, history)
+    }
+    const employments = [...employmentHistories.values()].toSorted((left, right) => {
+      const leftFinal = left.at(-1)
+      const rightFinal = right.at(-1)
+      return (
+        Number(leftFinal?.effectiveTo === null && leftFinal.readText("status") !== "TERMINATED") -
+        Number(rightFinal?.effectiveTo === null && rightFinal.readText("status") !== "TERMINATED")
       )
-    for (const resource of employments) {
+    })
+    for (const history of employments) {
+      const resource = history.at(-1)
+      if (resource === undefined) return new CompanyResourceValidationError("invalid_resource")
       const employeeId = resource.readText("employeeId")
       if (employeeId === null) return new CompanyResourceValidationError("invalid_resource")
       const prepared = await new CompanyEmploymentResourceProjectionAdapter(this.c).prepare({
         resource,
+        stagedHistory: history,
         change,
         fingerprint,
         revisionOffset: revisions.get(employeeId) ?? 0,
@@ -131,11 +155,12 @@ export class CompanyWorkforceResourceProjectionAdapter {
         .prepare(`UPDATE company_account_profiles
         SET display_name = ?1, updated_at = max(updated_at, ?2)
         WHERE organization_id = ?3 AND account_id IN (
-          SELECT link.account_id FROM company_account_employee_links AS link
+          SELECT link.account_id FROM company_account_employee_resource_bindings AS link
           JOIN company_workforce_resource_bindings AS binding ON binding.employee_id = link.employee_id
           JOIN company_resource_heads AS employee ON employee.organization_id = binding.organization_id
             AND employee.resource_type = 'employee' AND employee.resource_id = binding.resource_id
           WHERE binding.resource_type = 'employee' AND binding.organization_id = ?3
+            AND link.organization_id = ?3
             AND json_extract(employee.attributes_json, '$.personId') = ?4
         )`)
         .bind(resource.readText("officialName"), recordedAt, resource.organizationId, resource.id),
@@ -144,6 +169,7 @@ export class CompanyWorkforceResourceProjectionAdapter {
 
   private async employeeStatements(
     resource: CompanyResourceEntity,
+    firstStagedRevision: number,
     recordedAt: number,
   ): Promise<ReadonlyArray<D1PreparedStatement> | Error> {
     const binding = await this.c
@@ -152,10 +178,10 @@ export class CompanyWorkforceResourceProjectionAdapter {
       .bind(resource.id)
       .first<{ organization_id: string; resource_revision: number }>()
     if (
-      (binding === null && resource.revision !== 1) ||
+      (binding === null && firstStagedRevision !== 1) ||
       (binding !== null &&
         (binding.organization_id !== resource.organizationId ||
-          binding.resource_revision !== resource.revision - 1))
+          binding.resource_revision !== firstStagedRevision - 1))
     ) {
       return new CompanyResourceValidationError("invalid_resource")
     }

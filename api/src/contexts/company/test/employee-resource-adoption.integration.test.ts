@@ -1,7 +1,7 @@
 import { describe, expect, test, spyOn } from "bun:test"
 import { z } from "zod"
 import {
-  createEmployeeAdoptionFixture,
+  createEmployeeAdoptionFixtureScope,
   adoptionEmployeeId,
 } from "@/contexts/company/test/employee-resource-adoption.test-support"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
@@ -18,6 +18,8 @@ const counts = (database: D1Database) =>
     .first()
 
 describe("existing employee resource adoption", () => {
+  const createEmployeeAdoptionFixture = createEmployeeAdoptionFixtureScope()
+
   test("人物の旧名と全雇用・在籍revisionを保全し、一回だけ接続する", async () => {
     const f = await createEmployeeAdoptionFixture()
     const input = await f.input()

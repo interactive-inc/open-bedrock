@@ -15,6 +15,7 @@ import * as employeeLifecycleCodeState from "@/contexts/company/interface/routes
 import * as employeeResourceAdoptionBatches from "@/contexts/company/interface/routes/company.employee-resource-adoption-batches"
 import * as employeeResourceAdoptions from "@/contexts/company/interface/routes/company.employee-resource-adoptions"
 import * as employees from "@/contexts/company/interface/routes/company.employees"
+import * as employmentStartCorrections from "@/contexts/company/interface/routes/company.employment-start-corrections"
 import * as employments from "@/contexts/company/interface/routes/company.employments"
 import * as externalIdentityImports from "@/contexts/company/interface/routes/company.external-identity-imports"
 import * as gradeAssignmentHistory from "@/contexts/company/interface/routes/company.grade-assignment-history"
@@ -39,6 +40,7 @@ import * as personnelActions from "@/contexts/company/interface/routes/company.p
 import * as personnelAnnotations from "@/contexts/company/interface/routes/company.personnel-annotations"
 import * as profile from "@/contexts/company/interface/routes/company.profile"
 import * as reportingLinesEmployeeCode from "@/contexts/company/interface/routes/company.reporting-lines.$employeeCode"
+import * as resourceHistoryTypeId from "@/contexts/company/interface/routes/company.resource-history.$type.$id"
 import * as responsibilityResourceAdoptions from "@/contexts/company/interface/routes/company.responsibility-resource-adoptions"
 
 // `bun run gen:app` の生成物。手で編集せず、routeは所有contextのinterface/route-manifest.tsへ足す。
@@ -62,6 +64,7 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/employee-lifecycle/:code/state", ...employeeLifecycleCodeState.GET)
   .get("/employee-resource-adoptions", ...employeeResourceAdoptions.GET)
   .get("/employees", ...employees.GET)
+  .get("/employment-start-corrections", ...employmentStartCorrections.GET)
   .get("/employments", ...employments.GET)
   .get("/grade-assignment-history", ...gradeAssignmentHistory.GET)
   .get(
@@ -86,6 +89,7 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/personnel-annotations", ...personnelAnnotations.GET)
   .get("/profile", ...profile.GET)
   .get("/reporting-lines/:employeeCode", ...reportingLinesEmployeeCode.GET)
+  .get("/resource-history/:type/:id", ...resourceHistoryTypeId.GET)
 
 export const companyAuditedRoutes = new Hono<CompanyHttpEnvironment>()
   .post("/account-employee-links", ...accountEmployeeLinks.POST)
@@ -95,6 +99,7 @@ export const companyAuditedRoutes = new Hono<CompanyHttpEnvironment>()
   .post("/employee-resource-adoption-batches", ...employeeResourceAdoptionBatches.POST)
   .post("/employee-resource-adoptions", ...employeeResourceAdoptions.POST)
   .post("/employees", ...employees.POST)
+  .post("/employment-start-corrections", ...employmentStartCorrections.POST)
   .post("/employments", ...employments.POST)
   .put("/my-profile", ...myProfile.PUT)
   .post("/organization-changes", ...organizationChanges.POST)

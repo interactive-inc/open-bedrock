@@ -31,21 +31,34 @@ export class CompanyAccountEmployeeLinksReadAdapter {
     try {
       const parameters: string[] = [asOf]
       const filters = [
-        "(starts_on IS NULL OR starts_on <= ?1)",
-        "(ends_on IS NULL OR ?1 < ends_on)",
+        "revision.state = 'active'",
+        "(revision.effective_to IS NULL OR ?1 < revision.effective_to)",
+        "json_extract(revision.attributes_json, '$.accountId') = link.account_id",
+        "json_extract(revision.attributes_json, '$.employeeId') = link.employee_id",
       ]
       for (const [column, ids] of [
-        ["account_id", query.accountIds],
-        ["employee_id", query.employeeIds],
+        ["link.account_id", query.accountIds],
+        ["link.employee_id", query.employeeIds],
       ] satisfies ReadonlyArray<readonly [string, ReadonlyArray<string> | undefined]>) {
         if (ids === undefined) continue
         parameters.push(JSON.stringify([...new Set(ids)]))
         filters.push(`${column} IN (SELECT value FROM json_each(?${parameters.length}))`)
       }
-      const rows = await this.c.env.DB.prepare(`SELECT account_id, employee_id
-        FROM company_account_employee_link_periods
+      const rows = await this.c.env.DB.prepare(`SELECT link.account_id, link.employee_id
+        FROM company_account_employee_resource_bindings link
+        JOIN company_resource_revisions revision
+          ON revision.organization_id = link.organization_id
+          AND revision.resource_type = 'account-employee-link'
+          AND revision.resource_id = link.resource_id
+          AND revision.revision = (
+            SELECT current_link.revision FROM company_resource_revisions current_link
+            WHERE current_link.organization_id = link.organization_id
+              AND current_link.resource_type = 'account-employee-link'
+              AND current_link.resource_id = link.resource_id
+              AND current_link.effective_from <= ?1
+            ORDER BY current_link.effective_from DESC, current_link.revision DESC LIMIT 1)
         WHERE ${filters.join(" AND ")}
-        ORDER BY employee_id, account_id`)
+        ORDER BY link.employee_id, link.account_id`)
         .bind(...parameters)
         .all()
       if (!rows.success) return new Error("Company Account links are unavailable")

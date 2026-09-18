@@ -503,6 +503,9 @@ export const systemAccountInvitations = sqliteTable(
     roleId: text("role_id")
       .notNull()
       .references(() => systemIamRoles.id, { onDelete: "restrict" }),
+    resourceType: text("resource_type"),
+    resourceId: text("resource_id"),
+    relatedResourceId: text("related_resource_id"),
     usedBy: text("accepted_by_account_id").references(() => systemAccounts.id, {
       onDelete: "restrict",
     }),
@@ -515,12 +518,28 @@ export const systemAccountInvitations = sqliteTable(
     uniqueIndex("system_account_invitations_token_uniq").on(table.token),
     index("system_account_invitations_role_idx").on(table.roleId, table.createdAt),
     index("system_account_invitations_subject_idx").on(table.email, table.createdAt),
+    index("system_account_invitations_resource_idx").on(table.resourceType, table.resourceId),
     check("system_account_invitations_id_length", sql`length(${table.id}) BETWEEN 1 AND 255`),
     check(
       "system_account_invitations_chronology",
       sql`${table.updatedAt} >= ${table.createdAt}
         AND ${table.expiresAt} >= ${table.createdAt}
         AND (${table.revokedAt} IS NULL OR ${table.revokedAt} >= ${table.createdAt})`,
+    ),
+    check(
+      "system_account_invitations_resource_pair",
+      sql`(${table.resourceType} IS NULL AND ${table.resourceId} IS NULL) OR (
+        ${table.resourceType} IS NOT NULL AND ${table.resourceId} IS NOT NULL
+        AND length(${table.resourceType}) BETWEEN 3 AND 100
+        AND length(${table.resourceId}) BETWEEN 1 AND 255
+      )`,
+    ),
+    check(
+      "system_account_invitations_related_resource",
+      sql`${table.relatedResourceId} IS NULL OR (
+        ${table.resourceType} IS NOT NULL AND ${table.resourceId} IS NOT NULL
+        AND length(${table.relatedResourceId}) BETWEEN 1 AND 255
+      )`,
     ),
   ],
 )
@@ -536,6 +555,8 @@ export const systemNotificationMessages = sqliteTable(
     title: text("title").notNull(),
     body: text("body"),
     actionUrl: text("action_url"),
+    actionType: text("action_type"),
+    actionId: text("action_id"),
     priority: text("priority", { enum: ["low", "normal", "high", "critical"] })
       .notNull()
       .default("normal"),
@@ -572,6 +593,14 @@ export const systemNotificationMessages = sqliteTable(
         ${table.sourceType} IS NOT NULL AND ${table.sourceId} IS NOT NULL
         AND length(${table.sourceType}) BETWEEN 3 AND 100
         AND length(${table.sourceId}) BETWEEN 1 AND 512
+      )`,
+    ),
+    check(
+      "system_notification_messages_action_pair",
+      sql`(${table.actionType} IS NULL AND ${table.actionId} IS NULL) OR (
+        ${table.actionType} IS NOT NULL AND ${table.actionId} IS NOT NULL
+        AND length(${table.actionType}) BETWEEN 3 AND 100
+        AND length(${table.actionId}) BETWEEN 1 AND 512
       )`,
     ),
   ],
@@ -623,6 +652,7 @@ export const systemNotificationDeliveries = sqliteTable(
       .references(() => systemAccounts.id, { onDelete: "restrict" }),
     deliveredAt: integer("delivered_at", { mode: "timestamp_ms" }).notNull(),
     readAt: integer("read_at", { mode: "timestamp_ms" }),
+    dismissedAt: integer("dismissed_at", { mode: "timestamp_ms" }),
   },
   (table) => [
     uniqueIndex("system_notification_deliveries_message_account_uniq").on(
@@ -635,11 +665,15 @@ export const systemNotificationDeliveries = sqliteTable(
     ),
     index("system_notification_deliveries_unread_idx")
       .on(table.recipientAccountId, table.deliveredAt)
-      .where(sql`${table.readAt} IS NULL`),
+      .where(sql`${table.readAt} IS NULL AND ${table.dismissedAt} IS NULL`),
     check("system_notification_deliveries_id_length", sql`length(${table.id}) BETWEEN 1 AND 255`),
     check(
       "system_notification_deliveries_read_chronology",
       sql`${table.readAt} IS NULL OR ${table.readAt} >= ${table.deliveredAt}`,
+    ),
+    check(
+      "system_notification_deliveries_dismiss_chronology",
+      sql`${table.dismissedAt} IS NULL OR ${table.dismissedAt} >= ${table.deliveredAt}`,
     ),
   ],
 )

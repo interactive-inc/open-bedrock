@@ -26,9 +26,11 @@ const schemaSql = `
     updated_at INTEGER NOT NULL,
     PRIMARY KEY (organization_id, account_id)
   );
-  CREATE TABLE company_account_employee_links (
-    account_id TEXT PRIMARY KEY NOT NULL,
-    employee_id TEXT NOT NULL UNIQUE
+  CREATE TABLE company_account_employee_resource_bindings (
+    organization_id TEXT NOT NULL,
+    resource_id TEXT NOT NULL,
+    account_id TEXT NOT NULL,
+    employee_id TEXT NOT NULL
   );
   INSERT INTO company_organizations (id, revision, created_at, updated_at)
     VALUES ('organization:default', 0, 0, 0);
@@ -44,7 +46,9 @@ describe("Company Account Profile", () => {
     const commit = database.batch.bind(database)
     database.batch = async (statements) => {
       await database
-        .prepare("INSERT INTO company_account_employee_links VALUES ('account-1', 'employee-1')")
+        .prepare(
+          "INSERT INTO company_account_employee_resource_bindings VALUES ('organization:default', 'link-1', 'account-1', 'employee-1')",
+        )
         .run()
       return commit(statements)
     }
@@ -66,7 +70,7 @@ describe("Company Account Profile", () => {
     const database = createCompanyD1TestDatabase(`${schemaSql}
       INSERT INTO system_accounts VALUES ('account-1', 'active', 7, 100, 100);
       INSERT INTO company_account_profiles VALUES ('organization:default', 'account-1', 'Employee name', 100, 100);
-      INSERT INTO company_account_employee_links VALUES ('account-1', 'employee-1');
+      INSERT INTO company_account_employee_resource_bindings VALUES ('organization:default', 'link-1', 'account-1', 'employee-1');
     `)
     const result = await new UpdateCompanyAccountProfile(
       new D1CompanyAccountProfileRepository(database),

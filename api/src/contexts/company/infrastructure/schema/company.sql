@@ -64,6 +64,9 @@ CREATE TABLE company_resource_revisions (
   command_id TEXT NOT NULL,
   actor_account_id TEXT NOT NULL,
   reason TEXT NOT NULL CHECK (length(reason) BETWEEN 1 AND 2000),
+  evidence_references_json TEXT NOT NULL DEFAULT '[]'
+    CHECK (json_valid(evidence_references_json) AND json_type(evidence_references_json) = 'array'),
+  corrects_revision INTEGER CHECK (corrects_revision IS NULL OR (corrects_revision >= 1 AND corrects_revision < revision)),
   recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
   PRIMARY KEY (organization_id, resource_type, resource_id, revision)
 );
@@ -73,6 +76,10 @@ CREATE UNIQUE INDEX company_resource_revisions_org_revision_idx
 
 CREATE INDEX company_resource_revisions_command_idx
   ON company_resource_revisions (organization_id, command_id);
+
+CREATE INDEX company_resource_revisions_account_link_idx
+  ON company_resource_revisions (organization_id, resource_id)
+  WHERE resource_type = 'account-employee-link';
 
 CREATE TABLE company_command_receipts (
   organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE RESTRICT ON UPDATE CASCADE,

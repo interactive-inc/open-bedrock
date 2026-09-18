@@ -10,6 +10,38 @@ import type { ApplicationWorkflowStep } from "@/contexts/company/domain/definiti
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 describe("Company Taskの判断時点の資格", () => {
+  test("旧Account対応を撤去しても公開対応先の従業員変更を保存時に検知する", async () => {
+    const fixture = await createExternalIdentityImportTestContext()
+    expect((await fixture.application.execute(fixture.input)).kind).toBe("applied")
+    const database = fixture.database
+    const link = await database
+      .prepare("SELECT account_id, employee_id FROM company_account_employee_resource_bindings")
+      .first<{ account_id: string; employee_id: string }>()
+    if (link === null) throw new Error("public Account correspondence missing")
+    await database.exec("DROP TRIGGER IF EXISTS company_account_employee_links_delete_guard")
+    await database
+      .prepare("DELETE FROM company_account_employee_links WHERE account_id = ?1")
+      .bind(link.account_id)
+      .run()
+    const guard = await new CompanyAuthoritySnapshotGuardAdapter({ database }).prepare({
+      employeeCodes: [],
+      accountIds: [zAccountId.parse(link.account_id)],
+    })
+    if (guard instanceof Error) throw guard
+    await database
+      .prepare(`UPDATE company_workforce_resource_bindings
+        SET lifecycle_revision = lifecycle_revision + 1
+        WHERE resource_type = 'employee' AND employee_id = ?1`)
+      .bind(link.employee_id)
+      .run()
+    expect(
+      await database.batch([guard]).then(
+        () => null,
+        (cause: unknown) => cause,
+      ),
+    ).toBeInstanceOf(Error)
+  })
+
   test("両製品の実migrationで、従業員指定の再検査と保存時の変更検知を行う", async () => {
     const fixture = await createExternalIdentityImportTestContext()
     expect((await fixture.application.execute(fixture.input)).kind).toBe("applied")

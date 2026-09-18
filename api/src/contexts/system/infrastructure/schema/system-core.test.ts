@@ -331,10 +331,18 @@ describe("canonical System core schema", () => {
          VALUES ('bad-message', 'system:test', 'Bad', 'example:event', NULL, 100)`,
       ),
     ).toThrow()
+    expect(() =>
+      database.run(
+        `INSERT INTO system_notification_messages
+           (id, kind, title, action_type, created_at)
+         VALUES ('bad-action', 'system:test', 'Bad', 'example:action', 100)`,
+      ),
+    ).toThrow()
     database.run(
       `INSERT INTO system_notification_messages
-         (id, kind, title, body, source_type, source_id, created_at)
-       VALUES ('message-1', 'system:test', 'Title', 'Body', 'example:event', 'event-1', 100)`,
+         (id, kind, title, body, source_type, source_id, action_type, action_id, created_at)
+       VALUES ('message-1', 'system:test', 'Title', 'Body', 'example:event', 'event-1',
+               'example:action', 'target-1', 100)`,
     )
     expect(() =>
       database.run(

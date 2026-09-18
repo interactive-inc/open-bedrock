@@ -12,9 +12,15 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
+import { readCompanyEmploymentStartDates } from "@/contexts/company/interface/operations/read-company-employment-start-dates"
 import { ResolveLiveEmployeeAccessAdapter } from "@/contexts/company/infrastructure/adapters/employee/resolve-live-employee-access.adapter"
 import { POST as POST_PEOPLE } from "@/contexts/company/interface/routes/company.people"
 import { POST as POST_EMPLOYEES } from "@/contexts/company/interface/routes/company.employees"
+import { POST as POST_ORGANIZATION_CHANGES } from "@/contexts/company/interface/routes/company.organization-changes"
+import {
+  GET as GET_EMPLOYMENT_START_CORRECTIONS,
+  POST as POST_EMPLOYMENT_START_CORRECTIONS,
+} from "@/contexts/company/interface/routes/company.employment-start-corrections"
 import {
   GET as GET_EMPLOYMENTS,
   POST as POST_EMPLOYMENTS,
@@ -35,6 +41,7 @@ const actor = CompanyActorValue.restore({
   employeeId: "employee:operator",
   organizationIds: [organizationId],
   capabilities: ["company:read", "company:write"],
+  permissions: ["employee:read"],
 })
 type Resource = {
   organizationId: string
@@ -69,14 +76,14 @@ const employment: Resource = {
   attributes: { employeeId, status: "ACTIVE", employmentType: "FULL_TIME" },
 }
 
-function fixture() {
+function fixture(companyActor = actor) {
   const database = createCompanyD1TestDatabase(schemaSql)
   const app = new Hono<{
     Bindings: { DB: D1Database }
     Variables: { companyActor: CompanyActorValue }
   }>()
   app.use("*", async (c, next) => {
-    c.set("companyActor", actor)
+    c.set("companyActor", companyActor)
     await next()
   })
   app.onError((error, c) => {
@@ -87,6 +94,9 @@ function fixture() {
     .post("/company/people", ...POST_PEOPLE)
     .post("/company/employees", ...POST_EMPLOYEES)
     .post("/company/employments", ...POST_EMPLOYMENTS)
+    .post("/company/organization-changes", ...POST_ORGANIZATION_CHANGES)
+    .post("/company/employment-start-corrections", ...POST_EMPLOYMENT_START_CORRECTIONS)
+    .get("/company/employment-start-corrections", ...GET_EMPLOYMENT_START_CORRECTIONS)
     .get("/company/employments", ...GET_EMPLOYMENTS)
   const write = (
     resource: Resource,
@@ -104,6 +114,42 @@ function fixture() {
           "if-match": `"${expectedRevision}"`,
         },
         body: JSON.stringify({ reason: "Record confirmed workforce facts", resources: [resource] }),
+      },
+      { DB: database },
+    )
+  const writeBatch = (
+    resources: Resource[],
+    expectedRevision: number,
+    key: string,
+    corrections: ReadonlyArray<{
+      type: Resource["type"]
+      id: string
+      revision: number
+      correctsRevision: number
+    }> = [],
+  ) =>
+    app.request(
+      "/company/organization-changes",
+      {
+        method: "POST",
+        headers: {
+          "content-type": "application/json",
+          "x-company-organization-id": organizationId,
+          "idempotency-key": key,
+          "if-match": `"${expectedRevision}"`,
+        },
+        body: JSON.stringify({
+          reason: "Correct confirmed workforce start",
+          ...(corrections.length > 0
+            ? {
+                evidenceReferences: [
+                  { context: "system", kind: "document", id: "employment:original", version: "1" },
+                ],
+                corrections,
+              }
+            : {}),
+          resources,
+        }),
       },
       { DB: database },
     )
@@ -125,6 +171,45 @@ function fixture() {
   return {
     database,
     write,
+    writeBatch,
+    correctStart: (
+      startsOn: string,
+      expectedRevision: number,
+      key: string,
+      correctsRevision = 1,
+      evidenceReferences: ReadonlyArray<{
+        context: string
+        kind: string
+        id: string
+        version: string
+      }> = [{ context: "system", kind: "document", id: "employment:original", version: "1" }],
+    ) =>
+      app.request(
+        "/company/employment-start-corrections",
+        {
+          method: "POST",
+          headers: {
+            "content-type": "application/json",
+            "x-company-organization-id": organizationId,
+            "idempotency-key": key,
+            "if-match": `"${expectedRevision}"`,
+          },
+          body: JSON.stringify({
+            employmentId: employment.id,
+            correctsRevision,
+            startsOn,
+            reason: "Confirm original employment document",
+            evidenceReferences,
+          }),
+        },
+        { DB: database },
+      ),
+    readCorrectionTarget: (throughRevision?: number) =>
+      app.request(
+        `/company/employment-start-corrections?employment_id=${employment.id}${throughRevision === undefined ? "" : `&organization_revision=${throughRevision}`}`,
+        { headers: { "x-company-organization-id": organizationId } },
+        { DB: database },
+      ),
     directory: (now: string) =>
       new CompanyEmployeeDirectoryReadAdapter(context(now)).findById(employeeId),
     access: (now: string) =>
@@ -178,6 +263,545 @@ function fixture() {
 }
 
 describe("公開Company APIから実際の従業員台帳と在籍判定まで", () => {
+  test("開始日訂正対象の参照は従業員閲覧資格と存在する会社版を要求する", async () => {
+    const f = fixture()
+    expect((await f.readCorrectionTarget()).status).toBe(404)
+    await f.initialize()
+    expect((await f.readCorrectionTarget(4)).status).toBe(400)
+    const limited = fixture(
+      CompanyActorValue.restore({
+        accountId: "account:operator",
+        employeeId: "employee:operator",
+        organizationIds: [organizationId],
+        capabilities: ["company:read"],
+      }),
+    )
+    expect((await limited.readCorrectionTarget()).status).toBe(403)
+  })
+
+  test("入社日を初期Person・Employeeより前へ訂正し、同じ会社版の参照を保つ", async () => {
+    const f = fixture()
+    await f.initialize()
+    const corrected = await f.correctStart("2025-12-01", 3, "correct:initial-start")
+    expect({ status: corrected.status, body: await corrected.json() }).toMatchObject({
+      status: 201,
+      body: { organizationRevision: 4, replayed: false },
+    })
+    expect((await f.correctStart("2025-12-01", 3, "correct:initial-start")).status).toBe(200)
+    expect(await (await f.readCorrectionTarget(3)).json()).toMatchObject({
+      organizationRevision: 3,
+      startsOn: "2026-01-01",
+    })
+    expect(await (await f.readCorrectionTarget(4)).json()).toMatchObject({
+      organizationRevision: 4,
+      startsOn: "2025-12-01",
+    })
+    const rows = await f.database
+      .prepare(`SELECT resource_type, revision, effective_from, corrects_revision
+        FROM company_resource_revisions WHERE organization_id = ?1 AND organization_revision = 4
+        ORDER BY resource_type, revision`)
+      .bind(organizationId)
+      .all<{
+        resource_type: string
+        revision: number
+        effective_from: string
+        corrects_revision: number | null
+      }>()
+    expect(
+      rows.results.map((row) => [
+        row.resource_type,
+        row.revision,
+        row.effective_from,
+        row.corrects_revision,
+      ]),
+    ).toEqual([
+      ["employee", 2, "2025-12-01", 1],
+      ["employment", 2, "2025-12-01", 1],
+      ["employment", 3, "2026-01-01", 1],
+      ["person", 2, "2025-12-01", 1],
+    ])
+    expect(await (await f.readEmployment("2025-12-15")).json()).toMatchObject({
+      resources: [{ id: employment.id }],
+    })
+    const heads = await f.database
+      .prepare(`SELECT resource_type, revision, effective_from FROM company_resource_heads
+        WHERE organization_id = ?1 AND resource_type IN ('person', 'employee', 'employment')
+        ORDER BY resource_type`)
+      .bind(organizationId)
+      .all<{ resource_type: string; revision: number; effective_from: string }>()
+    expect(heads.results.map((row) => [row.resource_type, row.revision])).toEqual([
+      ["employee", 2],
+      ["employment", 3],
+      ["person", 2],
+    ])
+    const second = await f.correctStart("2025-11-01", 4, "correct:initial-start-again", 2)
+    expect({ status: second.status, body: await second.json() }).toMatchObject({
+      status: 201,
+      body: { organizationRevision: 5 },
+    })
+    expect(await (await f.readCorrectionTarget(5)).json()).toMatchObject({
+      startsOn: "2025-11-01",
+    })
+  })
+
+  test("後続の氏名・従業員番号を保ったまま初期の入社日を訂正する", async () => {
+    const f = fixture()
+    await f.initialize()
+    expect(
+      (
+        await f.write(
+          {
+            ...person,
+            revision: 2,
+            effectiveFrom: "2026-06-01",
+            attributes: { ...person.attributes, officialName: "Later Name" },
+          },
+          3,
+          "change:later-person",
+        )
+      ).status,
+    ).toBe(201)
+    expect(
+      (
+        await f.write(
+          {
+            ...employee,
+            revision: 2,
+            effectiveFrom: "2026-06-01",
+            attributes: { ...employee.attributes, employeeCode: "RESOURCE-002" },
+          },
+          4,
+          "change:later-employee",
+        )
+      ).status,
+    ).toBe(201)
+    const corrected = await f.correctStart("2025-12-01", 5, "correct:initial-with-later")
+    expect({ status: corrected.status, body: await corrected.json() }).toMatchObject({
+      status: 201,
+      body: { organizationRevision: 6 },
+    })
+    const heads = await f.database
+      .prepare(`SELECT resource_type, revision, effective_from, attributes_json
+        FROM company_resource_heads WHERE organization_id = ?1
+          AND resource_type IN ('person', 'employee') ORDER BY resource_type`)
+      .bind(organizationId)
+      .all<{
+        resource_type: string
+        revision: number
+        effective_from: string
+        attributes_json: string
+      }>()
+    expect(
+      heads.results.map((row) => [row.resource_type, row.revision, row.effective_from]),
+    ).toEqual([
+      ["employee", 4, "2026-06-01"],
+      ["person", 4, "2026-06-01"],
+    ])
+    expect(JSON.parse(heads.results[0]?.attributes_json ?? "{}")).toMatchObject({
+      employeeCode: "RESOURCE-002",
+    })
+    expect(JSON.parse(heads.results[1]?.attributes_json ?? "{}")).toMatchObject({
+      officialName: "Later Name",
+    })
+  })
+
+  test("開始日訂正APIは原資料・訂正元を保全し、既存休職と再送を維持する", async () => {
+    const f = fixture()
+    expect((await f.write({ ...person, effectiveFrom: "2025-01-01" }, 0)).status).toBe(201)
+    expect((await f.write({ ...employee, effectiveFrom: "2025-01-01" }, 1)).status).toBe(201)
+    expect(
+      (
+        await f.writeBatch(
+          [
+            { ...employment, effectiveTo: "2026-07-01" },
+            {
+              ...employment,
+              revision: 2,
+              effectiveFrom: "2026-07-01",
+              attributes: { ...employment.attributes, status: "ON_LEAVE" },
+            },
+          ],
+          2,
+          "create:employment-with-leave",
+        )
+      ).status,
+    ).toBe(201)
+    const targetBefore = await f.readCorrectionTarget()
+    expect({ status: targetBefore.status, etag: targetBefore.headers.get("etag") }).toEqual({
+      status: 200,
+      etag: '"3"',
+    })
+    expect(await targetBefore.json()).toMatchObject({
+      organizationRevision: 3,
+      startsOn: "2026-01-01",
+      correctsRevision: 1,
+      latestRevision: 2,
+    })
+    expect((await f.correctStart("2025-12-01", 3, "missing-source", 1, [])).status).toBe(400)
+    expect((await f.correctStart("2025-12-01", 3, "wrong-source", 2)).status).toBe(422)
+    const corrected = await f.correctStart("2025-12-01", 3, "correct:employment-start")
+    expect({ status: corrected.status, body: await corrected.json() }).toMatchObject({
+      status: 201,
+      body: { organizationRevision: 4, replayed: false },
+    })
+    expect((await f.correctStart("2025-12-01", 3, "correct:employment-start")).status).toBe(200)
+    expect(await (await f.readCorrectionTarget()).json()).toMatchObject({
+      organizationRevision: 4,
+      startsOn: "2025-12-01",
+      correctsRevision: 3,
+      latestRevision: 4,
+    })
+    expect(await (await f.readCorrectionTarget(3)).json()).toMatchObject({
+      organizationRevision: 3,
+      startsOn: "2026-01-01",
+      correctsRevision: 1,
+    })
+    expect((await f.correctStart("2026-02-01", 3, "different-command")).status).toBe(409)
+    const corrections = await f.database
+      .prepare(`SELECT revision, corrects_revision, reason, evidence_references_json
+        FROM company_resource_revisions WHERE organization_id = ?1
+        AND resource_type = 'employment' AND resource_id = ?2 AND revision > 2
+        ORDER BY revision`)
+      .bind(organizationId, employment.id)
+      .all<{
+        revision: number
+        corrects_revision: number | null
+        reason: string
+        evidence_references_json: string
+      }>()
+    expect(corrections.results.map((row) => [row.revision, row.corrects_revision])).toEqual([
+      [3, 1],
+      [4, 1],
+    ])
+    expect(
+      corrections.results.every((row) => row.reason === "Confirm original employment document"),
+    ).toBe(true)
+    expect(
+      corrections.results.every((row) =>
+        row.evidence_references_json.includes("employment:original"),
+      ),
+    ).toBe(true)
+    expect(await (await f.readEmployment("2025-12-15")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ACTIVE" } }],
+    })
+    expect(await (await f.readEmployment("2026-04-01")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ACTIVE" } }],
+    })
+    expect(await (await f.readEmployment("2026-07-02")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ON_LEAVE" } }],
+    })
+    expect((await f.correctStart("2025-11-01", 4, "correct:second-start", 3)).status).toBe(201)
+    expect(await (await f.readEmployment("2025-11-15")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ACTIVE" } }],
+    })
+    expect(await (await f.readEmployment("2026-07-02")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ON_LEAVE" } }],
+    })
+  })
+
+  test("開始日訂正APIは後ろ倒しの旧期間を取消し、後続の休職を復活・消去しない", async () => {
+    const f = fixture()
+    expect((await f.write(person, 0)).status).toBe(201)
+    expect((await f.write(employee, 1)).status).toBe(201)
+    expect(
+      (
+        await f.writeBatch(
+          [
+            { ...employment, effectiveTo: "2026-07-01" },
+            {
+              ...employment,
+              revision: 2,
+              effectiveFrom: "2026-07-01",
+              attributes: { ...employment.attributes, status: "ON_LEAVE" },
+            },
+          ],
+          2,
+          "create:later-correction-source",
+        )
+      ).status,
+    ).toBe(201)
+    expect((await f.correctStart("2026-02-01", 3, "correct:later-start")).status).toBe(201)
+    expect(await (await f.readEmployment("2026-01-15")).json()).toMatchObject({ resources: [] })
+    expect(await (await f.readEmployment("2026-02-15")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ACTIVE" } }],
+    })
+    expect(await (await f.readEmployment("2026-07-02")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ON_LEAVE" } }],
+    })
+    expect(
+      await f.database
+        .prepare("SELECT hire_date FROM company_employments WHERE id = ?1")
+        .bind(employment.id)
+        .first<{ hire_date: string }>(),
+    ).toEqual({ hire_date: "2026-02-01" })
+  })
+
+  test("新規雇用の複数revisionを一つの会社版で登録して時点参照を揃える", async () => {
+    const f = fixture()
+    expect((await f.write(person, 0)).status).toBe(201)
+    expect((await f.write(employee, 1)).status).toBe(201)
+    const response = await f.writeBatch(
+      [
+        employment,
+        {
+          ...employment,
+          revision: 2,
+          effectiveFrom: "2026-07-01",
+          attributes: { ...employment.attributes, status: "ON_LEAVE" },
+        },
+      ],
+      2,
+      "create:employment-history",
+    )
+    expect({ status: response.status, body: await response.json() }).toMatchObject({ status: 201 })
+    expect(await (await f.readEmployment("2026-04-01")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ACTIVE" } }],
+    })
+    expect(await (await f.readEmployment("2026-07-02")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ON_LEAVE" } }],
+    })
+  })
+
+  test("元の入社発令がない雇用の開始日を後ろ倒しすると旧期間を取消して投影を揃える", async () => {
+    const f = fixture()
+    await f.initialize()
+    const revision = await f.database
+      .prepare("SELECT revision FROM company_organizations WHERE id = ?1")
+      .bind(organizationId)
+      .first<number>("revision")
+    if (revision === null) throw new Error("missing company revision")
+    const unlinked = await f.writeBatch(
+      [
+        { ...employment, revision: 2, state: "void", effectiveTo: "2026-02-01" },
+        { ...employment, revision: 3, effectiveFrom: "2026-02-01" },
+      ],
+      revision,
+      "correct:later-employment-start-without-source",
+    )
+    expect(unlinked.status).toBe(422)
+    expect(await unlinked.json()).toMatchObject({ code: "unlinked_start_correction" })
+    expect(
+      await f.database
+        .prepare("SELECT revision FROM company_organizations WHERE id = ?1")
+        .bind(organizationId)
+        .first<number>("revision"),
+    ).toBe(revision)
+    expect(
+      await f.database
+        .prepare("SELECT hire_date FROM company_employments WHERE id = ?1")
+        .bind(employment.id)
+        .first<{ hire_date: string }>(),
+    ).toEqual({ hire_date: "2026-01-01" })
+    const correction = await f.writeBatch(
+      [
+        { ...employment, revision: 2, state: "void", effectiveTo: "2026-02-01" },
+        { ...employment, revision: 3, effectiveFrom: "2026-02-01" },
+      ],
+      revision,
+      "correct:later-employment-start",
+      [
+        { type: "employment", id: employment.id, revision: 2, correctsRevision: 1 },
+        { type: "employment", id: employment.id, revision: 3, correctsRevision: 1 },
+      ],
+    )
+    expect({ status: correction.status, body: await correction.json() }).toMatchObject({
+      status: 201,
+    })
+    expect(
+      await f.database
+        .prepare("SELECT hire_date FROM company_employments WHERE id = ?1")
+        .bind(employment.id)
+        .first<{ hire_date: string }>(),
+    ).toEqual({ hire_date: "2026-02-01" })
+    expect(await (await f.readEmployment("2026-01-15")).json()).toMatchObject({ resources: [] })
+    expect(await (await f.readEmployment("2026-02-15")).json()).toMatchObject({
+      resources: [{ id: employment.id, effectiveFrom: "2026-02-01" }],
+    })
+    expect(
+      (
+        await f.writeBatch(
+          [
+            { ...employment, revision: 2, state: "void", effectiveTo: "2026-02-01" },
+            { ...employment, revision: 3, effectiveFrom: "2026-02-01" },
+          ],
+          revision,
+          "correct:later-employment-start",
+          [
+            { type: "employment", id: employment.id, revision: 2, correctsRevision: 1 },
+            { type: "employment", id: employment.id, revision: 3, correctsRevision: 1 },
+          ],
+        )
+      ).status,
+    ).toBe(200)
+    expect(
+      await f.applyPersonnelAction(
+        {
+          kind: "leave_started",
+          employeeCode: "RESOURCE-001",
+          eventOn: restoreCalendarDate("2026-07-01"),
+        },
+        "later-start:leave",
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(await (await f.readEmployment("2026-07-02")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ON_LEAVE" } }],
+    })
+  })
+
+  test("入社日の遡及訂正後に新しい状態変更があっても旧開始日を復活させない", async () => {
+    const f = fixture()
+    expect((await f.write({ ...person, effectiveFrom: "2025-01-01" }, 0)).status).toBe(201)
+    expect((await f.write({ ...employee, effectiveFrom: "2025-01-01" }, 1)).status).toBe(201)
+    expect((await f.write(employment, 2)).status).toBe(201)
+    const correction = await f.writeBatch(
+      [{ ...employment, revision: 2, effectiveFrom: "2025-12-01" }],
+      3,
+      "correct:earlier-employment-start",
+      [{ type: "employment", id: employment.id, revision: 2, correctsRevision: 1 }],
+    )
+    if (correction.status !== 201) throw new Error(await correction.text())
+    expect(
+      await f.applyPersonnelAction(
+        {
+          kind: "leave_started",
+          employeeCode: "RESOURCE-001",
+          eventOn: restoreCalendarDate("2026-07-01"),
+        },
+        "earlier-start:leave",
+      ),
+    ).toMatchObject({ replayed: false })
+    expect(
+      await f.database
+        .prepare("SELECT hire_date, status FROM company_employments WHERE id = ?1")
+        .bind(employment.id)
+        .first<{ hire_date: string; status: string }>(),
+    ).toEqual({
+      hire_date: "2025-12-01",
+      status: "ON_LEAVE",
+    })
+    expect(await (await f.readEmployment("2025-12-15")).json()).toMatchObject({
+      resources: [{ id: employment.id, effectiveFrom: "2025-12-01" }],
+    })
+    expect(await (await f.readEmployment("2026-04-01")).json()).toMatchObject({
+      resources: [
+        { id: employment.id, effectiveFrom: "2025-12-01", attributes: { status: "ACTIVE" } },
+      ],
+    })
+    expect(await (await f.readEmployment("2026-07-02")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ON_LEAVE" } }],
+    })
+    const organizationRevision = await f.database
+      .prepare("SELECT revision FROM company_organizations WHERE id = ?1")
+      .bind(organizationId)
+      .first<number>("revision")
+    if (organizationRevision === null) throw new Error("missing company revision")
+    const startsOn = await readCompanyEmploymentStartDates({
+      database: f.database,
+      organizationId,
+      employmentIds: [employment.id],
+      organizationRevision,
+    })
+    expect(startsOn).toBeInstanceOf(Map)
+    if (startsOn instanceof Error) throw startsOn
+    expect(startsOn.get(employment.id)).toBe(restoreCalendarDate("2025-12-01"))
+  })
+
+  test("休職履歴がある雇用の開始日を後ろ倒ししても後続状態を保つ", async () => {
+    const f = fixture()
+    await f.initialize()
+    expect(
+      await f.applyPersonnelAction(
+        {
+          kind: "leave_started",
+          employeeCode: "RESOURCE-001",
+          eventOn: restoreCalendarDate("2026-07-01"),
+        },
+        "existing:leave",
+      ),
+    ).toMatchObject({ replayed: false })
+    const revision = await f.database
+      .prepare("SELECT revision FROM company_organizations WHERE id = ?1")
+      .bind(organizationId)
+      .first<number>("revision")
+    if (revision === null) throw new Error("missing company revision")
+    const correction = [
+      { ...employment, revision: 4, state: "void" as const, effectiveTo: "2026-02-01" },
+      { ...employment, revision: 5, effectiveFrom: "2026-02-01", effectiveTo: "2026-07-01" },
+      {
+        ...employment,
+        revision: 6,
+        effectiveFrom: "2026-07-01",
+        attributes: { ...employment.attributes, status: "ON_LEAVE" },
+      },
+    ]
+    const response = await f.writeBatch(correction, revision, "correct:later-start-with-leave", [
+      { type: "employment", id: employment.id, revision: 4, correctsRevision: 2 },
+      { type: "employment", id: employment.id, revision: 5, correctsRevision: 2 },
+    ])
+    expect({ status: response.status, body: await response.json() }).toMatchObject({ status: 201 })
+    expect(
+      await f.database
+        .prepare("SELECT hire_date, status FROM company_employments WHERE id = ?1")
+        .bind(employment.id)
+        .first<{ hire_date: string; status: string }>(),
+    ).toEqual({ hire_date: "2026-02-01", status: "ON_LEAVE" })
+    expect(await (await f.readEmployment("2026-01-15")).json()).toMatchObject({ resources: [] })
+    expect(await (await f.readEmployment("2026-04-01")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ACTIVE" } }],
+    })
+    expect(await (await f.readEmployment("2026-07-02")).json()).toMatchObject({
+      resources: [{ id: employment.id, attributes: { status: "ON_LEAVE" } }],
+    })
+  })
+
+  test("元の入社発令がない公開雇用も開始日を前倒しして時点参照と投影を揃える", async () => {
+    const f = fixture()
+    await f.initialize()
+    const revision = await f.database
+      .prepare("SELECT revision FROM company_organizations WHERE id = ?1")
+      .bind(organizationId)
+      .first<number>("revision")
+    if (revision === null) throw new Error("missing company revision")
+    expect(
+      Number(
+        (
+          await f.writeBatch(
+            [
+              { ...person, revision: 2, effectiveFrom: "2025-12-01" },
+              { ...employee, revision: 2, effectiveFrom: "2025-12-01" },
+              { ...employment, revision: 2, effectiveFrom: "2025-12-01" },
+            ],
+            revision,
+            "correct:employment-start",
+            [
+              { type: "person", id: person.id, revision: 2, correctsRevision: 1 },
+              { type: "employee", id: employee.id, revision: 2, correctsRevision: 1 },
+              { type: "employment", id: employment.id, revision: 2, correctsRevision: 1 },
+            ],
+          )
+        ).status,
+      ),
+    ).toBe(201)
+    expect(
+      await f.database
+        .prepare("SELECT hire_date FROM company_employments WHERE id = ?1")
+        .bind(employment.id)
+        .first<{ hire_date: string }>(),
+    ).toEqual({ hire_date: "2025-12-01" })
+    expect(await (await f.readEmployment("2025-12-15")).json()).toMatchObject({
+      resources: [{ id: employment.id, effectiveFrom: "2025-12-01" }],
+    })
+    expect(await (await f.readEmployment("2026-01-15")).json()).toMatchObject({
+      resources: [
+        {
+          id: employment.id,
+          effectiveFrom: "2025-12-01",
+          attributes: { status: "ACTIVE" },
+        },
+      ],
+    })
+  })
+
   test("公開APIで作った雇用への人事発令が公開履歴へ戻り、次の公開writeも続けられる", async () => {
     const f = fixture()
     await f.initialize()
@@ -698,6 +1322,16 @@ describe("公開Company APIから実際の従業員台帳と在籍判定まで",
         .bind(overlapping.id)
         .first(),
     ).toBeNull()
+    expect(
+      (await f.correctStart("2026-02-01", 5, "correct:prior-employment-start", 2)).status,
+    ).toBe(201)
+    expect(await f.access("2026-01-15T00:00:00Z")).toBeNull()
+    expect(await f.directory("2026-03-01T00:00:00Z")).toMatchObject({
+      employment: { id: employment.id, status: "ACTIVE" },
+    })
+    expect(await f.directory("2026-05-01T00:00:00Z")).toMatchObject({
+      employment: { id: "employment:rehire", status: "ACTIVE" },
+    })
   })
 
   test("PersonとEmployeeの有効期間に空白がある場合は雇用期間を作らない", async () => {

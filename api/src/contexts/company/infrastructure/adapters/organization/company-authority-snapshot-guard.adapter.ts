@@ -2,7 +2,7 @@ import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 type Context = Readonly<{ database: D1Database }>
 
-/** 期間と対応表は追記専用。従業員番号は可変なので、条件で参照する対応を直接比較する。 */
+/** 従業員番号は可変。公開対応と移行中の旧対応が指す従業員を保存直前に再検査する。 */
 const snapshotSql = `SELECT json_array(
   (SELECT revision FROM company_organization_lifecycle_states WHERE id = 1),
   (SELECT count(*) FROM company_organization_change_operations WHERE status = 'PENDING'),
@@ -13,11 +13,15 @@ const snapshotSql = `SELECT json_array(
   (SELECT count(*) FROM company_organization_responsibility_period_versions),
   (SELECT count(*) FROM company_personnel_actions),
   (SELECT count(*) FROM company_account_employee_links),
+  (SELECT count(*) FROM company_account_employee_resource_bindings),
   (SELECT count(*) FROM company_resource_revisions),
   (SELECT json_group_array(json_array(resource_type, resource_id, organization_id,
     employee_id, resource_revision, lifecycle_revision, last_action_id)) FROM (
     SELECT * FROM company_workforce_resource_bindings
     WHERE employee_id IN (
+      SELECT employee_id FROM company_account_employee_resource_bindings
+      WHERE account_id IN (SELECT value FROM json_each(?1, '$.accountIds'))
+      UNION
       SELECT employee_id FROM company_account_employee_links
       WHERE account_id IN (SELECT value FROM json_each(?1, '$.accountIds'))
     ) ORDER BY resource_type, resource_id
@@ -27,6 +31,9 @@ const snapshotSql = `SELECT json_array(
     SELECT id, employee_code FROM company_employees
     WHERE employee_code IN (SELECT value FROM json_each(?1, '$.employeeCodes'))
       OR id IN (
+        SELECT employee_id FROM company_account_employee_resource_bindings
+        WHERE account_id IN (SELECT value FROM json_each(?1, '$.accountIds'))
+        UNION
         SELECT employee_id FROM company_account_employee_links
         WHERE account_id IN (SELECT value FROM json_each(?1, '$.accountIds'))
       )

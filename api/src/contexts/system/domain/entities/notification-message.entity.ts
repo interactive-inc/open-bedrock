@@ -52,6 +52,10 @@ const propsSchema = z
     title: titleSchema,
     body: bodySchema.nullable(),
     source: notificationSourceReferenceSchema.nullable(),
+    action: notificationSourceReferenceSchema.nullable().optional(),
+    resourceScope: notificationSourceReferenceSchema.nullable().optional(),
+    priority: z.enum(["low", "normal", "high", "critical"]).default("normal"),
+    publicationKey: z.string().min(1).max(512).nullable().optional(),
     createdAt: z.date(),
   })
   .strict()
@@ -68,6 +72,10 @@ export class NotificationMessageEntity {
   readonly title: string
   readonly body: string | null
   readonly source: NotificationSourceReference | null
+  readonly action: NotificationSourceReference | null
+  readonly resourceScope: NotificationSourceReference | null
+  readonly priority: "low" | "normal" | "high" | "critical"
+  readonly publicationKey: string | null
   readonly #createdAtEpochMilliseconds: number
 
   private constructor(props: ParsedProps) {
@@ -77,6 +85,14 @@ export class NotificationMessageEntity {
     this.body = props.body
     this.source =
       props.source === null ? null : Object.freeze({ type: props.source.type, id: props.source.id })
+    this.action =
+      props.action == null ? null : Object.freeze({ type: props.action.type, id: props.action.id })
+    this.resourceScope =
+      props.resourceScope == null
+        ? null
+        : Object.freeze({ type: props.resourceScope.type, id: props.resourceScope.id })
+    this.priority = props.priority
+    this.publicationKey = props.publicationKey ?? null
     this.#createdAtEpochMilliseconds = props.createdAt.getTime()
     Object.freeze(this)
   }

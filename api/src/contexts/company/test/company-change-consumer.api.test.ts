@@ -85,6 +85,7 @@ function fixture() {
         employeeId: null,
         organizationIds: ["organization:default"],
         capabilities: ["company:read"],
+        permissions: ["employee:read", "employee:attributes:read"],
       }),
     )
     await next()

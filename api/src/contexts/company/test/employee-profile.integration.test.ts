@@ -37,6 +37,8 @@ const responseSchema = z.object({
 
 async function fixture() {
   const database = createCompanyD1TestDatabase(schemaSql)
+  await database.exec(`INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
+    VALUES ('account:profile', 'active', 0, 0, 0), ('account:unlinked', 'active', 0, 0, 0)`)
   const clock = { now: new Date("2026-06-01T15:00:00Z") }
   const actor = CompanyActorValue.restore({
     accountId: "account:profile",
@@ -110,16 +112,23 @@ async function fixture() {
         effectiveTo: null,
         attributes: { employeeId, status: "ACTIVE", employmentType: "FULL_TIME" },
       },
+      {
+        organizationId: "organization:default",
+        type: "account-employee-link",
+        id: "link:profile",
+        revision: 1,
+        state: "active",
+        effectiveFrom: restoreCalendarDate("2026-01-01"),
+        effectiveTo: null,
+        attributes: { accountId: "account:profile", employeeId },
+      },
     ],
   })
   if (initial instanceof Error) throw initial
   expect(await new D1CompanyResourceRepository({ database }).write(initial)).toMatchObject({
     kind: "applied",
   })
-  await database.exec(`INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-      VALUES ('account:profile', 'active', 0, 0, 0), ('account:unlinked', 'active', 0, 0, 0);
-    INSERT INTO company_account_employee_links (account_id, employee_id) VALUES ('account:profile', 'employee:profile');
-    INSERT INTO company_account_profiles (organization_id, account_id, display_name, created_at, updated_at)
+  await database.exec(`INSERT INTO company_account_profiles (organization_id, account_id, display_name, created_at, updated_at)
       VALUES ('organization:default', 'account:profile', 'Example Person', 0, 0),
       ('organization:default', 'account:unlinked', 'Unlinked Person', 0, 0);`)
   const read = (path = "/company/my-profile") => app.request(path, {}, environment)
@@ -218,6 +227,24 @@ test("人物履歴の開始前は接続済みAccountの古いprofileを表示せ
   expect([...names]).toEqual([["account:unlinked", "Unlinked Person"]])
 })
 
+test("旧Account対応表と互換ビューを除いても公開対応と人物履歴から表示名を取得する", async () => {
+  const context = await fixture()
+  // 移行後の旧台帳撤去を再現するため、テストDBだけの削除ガードを外す。
+  await context.database.exec("DROP TRIGGER IF EXISTS company_account_employee_links_delete_guard")
+  await context.database
+    .prepare("DELETE FROM company_account_employee_links WHERE account_id = 'account:profile'")
+    .run()
+  await context.database.exec("DROP VIEW IF EXISTS company_account_employee_link_periods")
+  const names = await new ReadCompanyAccountDisplayNamesAdapter({
+    database: context.database,
+    organizationIds: ["organization:default"],
+    accountIds: ["account:profile"],
+    now: "2026-06-01T00:00:00Z",
+    timeZone: "Asia/Tokyo",
+  }).readCompanyAccountDisplayNames()
+  expect(names.get("account:profile")).toBe("Example Person")
+})
+
 test("Account表示名の参照範囲と複数会社の優先順を守り、大量のIDも一つの参照で扱う", async () => {
   const context = await fixture()
   await context.database.exec(`INSERT INTO company_organizations
@@ -296,7 +323,7 @@ test("Account対応の終了日には古いprofile名へ戻らず、会社上の
         organizationId: "organization:default",
         type: "account-employee-link",
         id: "link:profile",
-        revision: 1,
+        revision: 2,
         state: "active",
         effectiveFrom: restoreCalendarDate("2026-01-01"),
         effectiveTo: restoreCalendarDate("2026-07-01"),
@@ -327,10 +354,62 @@ test("Account対応の終了日には古いprofile名へ戻らず、会社上の
   ).toBe("Example Person")
 })
 
+test("Account対応の空白期間と再接続を公開revisionだけで判定する", async () => {
+  const context = await fixture()
+  for (const [revision, expectedRevision, state, effectiveFrom] of [
+    [2, 1, "void", "2026-07-01"],
+    [3, 2, "active", "2026-09-01"],
+  ] as const) {
+    const change = CompanyResourceChangeEntity.create({
+      commandId: `account-link:${revision}`,
+      expectedRevision,
+      actorAccountId: context.actor.accountId,
+      reason: "Confirmed Account correspondence",
+      recordedAt: revision,
+      resources: [
+        {
+          organizationId: "organization:default",
+          type: "account-employee-link",
+          id: "link:profile",
+          revision,
+          state,
+          effectiveFrom: restoreCalendarDate(effectiveFrom),
+          effectiveTo: null,
+          attributes: { accountId: "account:profile", employeeId },
+        },
+      ],
+    })
+    if (change instanceof Error) throw change
+    expect(
+      await new D1CompanyResourceRepository({ database: context.database }).write(change),
+    ).toMatchObject({ kind: "applied" })
+  }
+  for (const [now, expectedName] of [
+    ["2026-06-30T14:59:59Z", "Example Person"],
+    ["2026-06-30T15:00:00Z", undefined],
+    ["2026-08-31T15:00:00Z", "Example Person"],
+  ] as const) {
+    const names = await new ReadCompanyAccountDisplayNamesAdapter({
+      database: context.database,
+      organizationIds: ["organization:default"],
+      accountIds: ["account:profile"],
+      now,
+      timeZone: "Asia/Tokyo",
+    }).readCompanyAccountDisplayNames()
+    expect(names.get("account:profile")).toBe(expectedName)
+  }
+})
+
 describe("employee profile writes share the public Person history", () => {
   test("氏名の成功応答、名簿、人物履歴、Account表示名が一致し、過去の氏名を保全する", async () => {
     const context = await fixture()
     const profile = await context.version()
+    await context.database.exec(
+      "DROP TRIGGER IF EXISTS company_account_employee_links_delete_guard",
+    )
+    await context.database
+      .prepare("DELETE FROM company_account_employee_links WHERE account_id = 'account:profile'")
+      .run()
     const response = await context.write(
       { name: "Changed Person", profile },
       "name-change",

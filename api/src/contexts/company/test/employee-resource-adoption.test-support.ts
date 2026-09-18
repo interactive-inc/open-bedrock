@@ -1,3 +1,4 @@
+import { afterAll, afterEach, beforeAll } from "bun:test"
 import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { Hono } from "hono"
@@ -18,6 +19,7 @@ import {
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { createCompanyD1TestDatabaseTemplate } from "@/contexts/company/test/create-company-d1-test-database-template.test-support"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
 
 const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
@@ -45,8 +47,10 @@ const actor = CompanyActorValue.restore({
 })
 
 /** 保存済み台帳だけの従業員を実際の期間・発令機構で準備する。 */
-export async function createEmployeeAdoptionFixture() {
-  const database = createCompanyD1TestDatabase(schemaSql)
+export async function createEmployeeAdoptionFixture(
+  createDatabase = () => createCompanyD1TestDatabase(schemaSql),
+) {
+  const database = createDatabase()
   const clock = { now: new Date("2026-09-07T00:00:00Z") }
   const actors: { current: CompanyActorValue | undefined } = { current: actor }
   const environment = { DB: database, COMPANY_TIME_ZONE: "Asia/Tokyo" }
@@ -240,4 +244,31 @@ export async function createEmployeeAdoptionFixture() {
     legacy,
     personnel,
   }
+}
+
+/** describe 内で登録し、schema だけを共有する。テストの変更は独立 DB ごと破棄する。 */
+export function createEmployeeAdoptionFixtureScope() {
+  const template: {
+    createDatabase: ReturnType<typeof createCompanyD1TestDatabaseTemplate> | null
+  } = { createDatabase: null }
+  const databases = new Set<{ close: () => void }>()
+
+  beforeAll(() => {
+    template.createDatabase = createCompanyD1TestDatabaseTemplate(schemaSql)
+  })
+  afterEach(() => {
+    for (const database of databases) database.close()
+    databases.clear()
+  })
+  afterAll(() => {
+    template.createDatabase = null
+  })
+
+  return () =>
+    createEmployeeAdoptionFixture(() => {
+      if (template.createDatabase === null) throw new Error("fixture template is not initialized")
+      const database = template.createDatabase()
+      databases.add(database)
+      return database
+    })
 }

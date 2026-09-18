@@ -44,7 +44,7 @@ const order = [
   "personnel-action",
   "position",
   "grade",
-  "company",
+  "company-public-workforce",
 ]
 
 const seedFiles = readdirSync(seedsDir)
@@ -103,6 +103,66 @@ const accountLinkCount = (
     count: number
   }
 ).count
+const publicWorkforceGapCount = (
+  db
+    .query(`SELECT count(*) AS count FROM company_employees employee
+    JOIN company_employments employment ON employment.employee_id = employee.id
+    WHERE NOT EXISTS (
+      SELECT 1 FROM company_workforce_resource_bindings binding
+      JOIN company_resource_heads head ON head.organization_id = binding.organization_id
+        AND head.resource_type = binding.resource_type AND head.resource_id = binding.resource_id
+      WHERE binding.resource_type = 'employee' AND binding.employee_id = employee.id
+        AND head.state = 'active'
+        AND json_extract(head.attributes_json, '$.employeeCode') IS employee.employee_code
+        AND json_extract(head.attributes_json, '$.personId') = 'person:seed:' || employee.id
+    ) OR NOT EXISTS (
+      SELECT 1 FROM company_resource_heads person
+      WHERE person.resource_type = 'person' AND person.resource_id = 'person:seed:' || employee.id
+        AND person.state = 'active'
+        AND json_extract(person.attributes_json, '$.officialName') = employee.official_name
+        AND json_extract(person.attributes_json, '$.email') IS employee.email
+    ) OR NOT EXISTS (
+      SELECT 1 FROM company_workforce_resource_bindings binding
+      JOIN company_resource_heads head ON head.organization_id = binding.organization_id
+        AND head.resource_type = binding.resource_type AND head.resource_id = binding.resource_id
+      WHERE binding.resource_type = 'employment' AND binding.resource_id = employment.id
+        AND binding.employee_id = employee.id AND head.state = 'active'
+        AND json_extract(head.attributes_json, '$.employeeId') = employee.id
+        AND json_extract(head.attributes_json, '$.status') = employment.status
+        AND json_extract(head.attributes_json, '$.employmentType') = employment.employment_type
+    )`)
+    .get() as { count: number }
+).count
+const publicAccountLinkGapCount = (
+  db
+    .query(`SELECT count(*) AS count FROM company_account_employee_links legacy
+    WHERE NOT EXISTS (
+      SELECT 1 FROM company_account_employee_resource_bindings binding
+      JOIN company_resource_heads head ON head.organization_id = binding.organization_id
+        AND head.resource_type = 'account-employee-link' AND head.resource_id = binding.resource_id
+      WHERE binding.account_id = legacy.account_id AND binding.employee_id = legacy.employee_id
+        AND head.state = 'active'
+        AND json_extract(head.attributes_json, '$.accountId') = legacy.account_id
+        AND json_extract(head.attributes_json, '$.employeeId') = legacy.employee_id
+    )`)
+    .get() as { count: number }
+).count
+const publicEffectiveAccountLinkCount = (
+  db
+    .query(`SELECT count(*) AS count FROM company_account_employee_link_periods
+    WHERE source = 'public' AND starts_on <= '2026-01-01'
+      AND (ends_on IS NULL OR '2026-01-01' < ends_on)`)
+    .get() as { count: number }
+).count
+const retiredEmployeeHistory = db
+  .query(`SELECT revision, effective_from, status FROM (
+  SELECT revision, effective_from,
+    json_extract(attributes_json, '$.status') AS status
+  FROM company_resource_revisions
+  WHERE resource_type = 'employment' AND resource_id = 'employment:seed-employment-18'
+  ORDER BY revision
+)`)
+  .all() as Array<{ revision: number; effective_from: string; status: string }>
 const localSeedCredential = db
   .query(
     `SELECT credential.password_hash AS passwordHash
@@ -125,9 +185,19 @@ if (
   lifecycleEmploymentCount !== employeeCount ||
   statusCount !== employmentCount ||
   accountLinkCount > employeeCount ||
+  publicWorkforceGapCount !== 0 ||
+  publicAccountLinkGapCount !== 0 ||
+  publicEffectiveAccountLinkCount !== accountLinkCount ||
+  JSON.stringify(retiredEmployeeHistory) !==
+    JSON.stringify([
+      { revision: 1, effective_from: "2025-01-01", status: "ACTIVE" },
+      { revision: 2, effective_from: "2025-12-31", status: "TERMINATED" },
+    ]) ||
   !localSeedCredentialValid
 ) {
-  throw new Error("employee lifecycle or local login seed is incomplete")
+  throw new Error(
+    `employee lifecycle or local login seed is incomplete: publicWorkforceGaps=${publicWorkforceGapCount}, publicAccountLinkGaps=${publicAccountLinkGapCount}, effectivePublicAccountLinks=${publicEffectiveAccountLinkCount}/${accountLinkCount}, retiredHistory=${JSON.stringify(retiredEmployeeHistory)}`,
+  )
 }
 
 const pendingOrganizationChanges = (

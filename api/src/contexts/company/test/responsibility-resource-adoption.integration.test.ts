@@ -20,6 +20,7 @@ import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { prepareHistoricalCompanyResourceRevisionFixture } from "@/contexts/company/test/historical-company-resource-revision.test-support"
 import { splitSqlStatements } from "@/lib/database/split-sql-statements"
 
 function resourceProps(resource: CompanyResourceEntity): CompanyResourceProps {
@@ -689,6 +690,9 @@ test("同時再送は一度だけ接続し、別の依頼・別の主体・キ�
   )
   expect(Number((await f.adopt()).status)).toBe(409)
   expect(await f.state()).toEqual(before)
+})
+
+test("冪等キーが違う同時の移行依頼は後から来た方を拒否する", async () => {
   const other = await fixture()
   expect(
     (await Promise.all([other.adopt("responsibility:first"), other.adopt("responsibility:second")]))
@@ -696,7 +700,7 @@ test("同時再送は一度だけ接続し、別の依頼・別の主体・キ�
       .sort((a, b) => a - b),
   ).toEqual([201, 409])
   expect((await other.state()).receipts).toHaveLength(1)
-}, 15_000)
+})
 
 test("保存直前の会社版変更を拒否し、再確認した同じキーで接続する", async () => {
   const f = await fixture()
@@ -911,6 +915,7 @@ test("既存の期間重複があるmigrationは一意制約を置換する前�
       .replaceAll("initialization:company:root", "fixture:confirmed-organization")
       .replaceAll("system:initialization", "fixture:organization-recorder"),
   )
+  await prepareHistoricalCompanyResourceRevisionFixture(database)
   const f = await fixture(database, "confirmed")
   const responsibility: CompanyResourceProps = {
     organizationId: "organization:default",

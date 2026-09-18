@@ -70,6 +70,28 @@ describe("NotificationDeliveryEntity", () => {
     }
   })
 
+  test("破棄の記録を保ち、破棄後の既読を拒否する", () => {
+    const delivery = NotificationDeliveryEntity.create(validProps)
+    expect(delivery).toBeInstanceOf(NotificationDeliveryEntity)
+    if (!(delivery instanceof NotificationDeliveryEntity)) return
+
+    const dismissedAt = new Date("2026-08-11T00:02:00.000Z")
+    const dismissed = delivery.dismiss(dismissedAt)
+    expect(dismissed).toBeInstanceOf(NotificationDeliveryEntity)
+    if (!(dismissed instanceof NotificationDeliveryEntity)) return
+
+    expect(delivery.isDismissed).toBe(false)
+    expect(dismissed.isDismissed).toBe(true)
+    expect(dismissed.dismissedAt).toEqual(dismissedAt)
+    expect(dismissed.dismiss(new Date("2026-08-11T00:03:00.000Z"))).toBe(dismissed)
+    expect(dismissed.markRead(new Date("2026-08-11T00:03:00.000Z"))).toMatchObject({
+      reason: "dismissed",
+    })
+    expect(delivery.dismiss(new Date("2026-08-10T23:59:59.999Z"))).toMatchObject({
+      reason: "dismiss_before_delivery",
+    })
+  })
+
   test.each([
     ["empty delivery id", { ...validProps, id: "" }],
     ["empty message id", { ...validProps, messageId: "" }],

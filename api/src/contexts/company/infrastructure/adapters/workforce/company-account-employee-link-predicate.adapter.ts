@@ -4,7 +4,7 @@ import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definition
 
 type Context = Readonly<{ asOf: CalendarDate } | { now: Date; timeZone: string | undefined }>
 
-/** 既存の対応表を参照するjoinにも、公開履歴の終了・取消・将来予約を適用する。 */
+/** Account対応を公開履歴の指定時点から解決する。 */
 export class CompanyAccountEmployeeLinkPredicateAdapter {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -19,9 +19,23 @@ export class CompanyAccountEmployeeLinkPredicateAdapter {
             timeZone: this.c.timeZone,
           })
     if (asOf instanceof Error) throw asOf
-    return sql`EXISTS (SELECT 1 FROM company_account_employee_link_periods effective_link
-      WHERE effective_link.account_id = ${columns.accountId} AND effective_link.employee_id = ${columns.employeeId}
-        AND (effective_link.starts_on IS NULL OR effective_link.starts_on <= ${asOf})
-        AND (effective_link.ends_on IS NULL OR ${asOf} < effective_link.ends_on))`
+    return sql`EXISTS (SELECT 1 FROM company_account_employee_resource_bindings effective_link
+      JOIN company_resource_revisions link_revision
+        ON link_revision.organization_id = effective_link.organization_id
+        AND link_revision.resource_type = 'account-employee-link'
+        AND link_revision.resource_id = effective_link.resource_id
+        AND link_revision.revision = (
+          SELECT current_link.revision FROM company_resource_revisions current_link
+          WHERE current_link.organization_id = effective_link.organization_id
+            AND current_link.resource_type = 'account-employee-link'
+            AND current_link.resource_id = effective_link.resource_id
+            AND current_link.effective_from <= ${asOf}
+          ORDER BY current_link.effective_from DESC, current_link.revision DESC LIMIT 1)
+      WHERE effective_link.account_id = ${columns.accountId}
+        AND effective_link.employee_id = ${columns.employeeId}
+        AND link_revision.state = 'active'
+        AND (link_revision.effective_to IS NULL OR ${asOf} < link_revision.effective_to)
+        AND json_extract(link_revision.attributes_json, '$.accountId') = effective_link.account_id
+        AND json_extract(link_revision.attributes_json, '$.employeeId') = effective_link.employee_id)`
   }
 }

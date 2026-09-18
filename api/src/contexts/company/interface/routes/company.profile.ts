@@ -177,6 +177,28 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       reason: z.string().trim().min(1).max(2_000),
+      evidenceReferences: z
+        .array(
+          z.strictObject({
+            context: z.string().trim().min(1).max(100),
+            kind: z.string().trim().min(1).max(100),
+            id: z.string().trim().min(1).max(512),
+            version: z.string().trim().min(1).max(255),
+          }),
+        )
+        .max(100)
+        .optional(),
+      corrections: z
+        .array(
+          z.strictObject({
+            type: z.enum(["legal-entity", "company-profile"]),
+            id: z.string().regex(/^\S{1,255}$/),
+            revision: z.number().int().min(2),
+            correctsRevision: z.number().int().min(1),
+          }),
+        )
+        .max(100)
+        .optional(),
       resources: z
         .array(
           z.discriminatedUnion("type", [
@@ -248,6 +270,8 @@ export const POST = factory.createHandlers(
       commandId: headers["idempotency-key"],
       expectedRevision: Number(headers["if-match"].replace(/^W\//, "").replace(/^"|"$/g, "")),
       reason: body.reason,
+      evidenceReferences: body.evidenceReferences,
+      corrections: body.corrections,
       recordedAt: resolveCompanyRecordedAt(context.var.companyClock),
       resources: body.resources.map((resource) => ({
         ...resource,

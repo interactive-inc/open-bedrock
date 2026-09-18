@@ -108,6 +108,8 @@ export type InvalidNotificationDeliveryBatchReason =
 export const invalidNotificationDeliveryReasons = Object.freeze([
   "invalid_shape",
   "read_before_delivery",
+  "dismiss_before_delivery",
+  "dismissed",
   "transition_before_last_update",
 ] as const)
 

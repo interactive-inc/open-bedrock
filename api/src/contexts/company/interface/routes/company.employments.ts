@@ -1,3 +1,4 @@
+import { canReadCompanyResource } from "@/contexts/company/interface/operations/company-resource-read-permission"
 import { resolveCompanyRecordedAt } from "@/contexts/company/interface/request-environment/resolve-company-recorded-at"
 /** /company/employments */
 import { CreateEmployments } from "@/contexts/company/application/employments/create-employments"
@@ -54,6 +55,9 @@ export const GET = factory.createHandlers(
       id: z
         .union([z.string().regex(/^\S{1,255}$/), z.array(z.string().regex(/^\S{1,255}$/)).max(100)])
         .optional(),
+      employee_id: z
+        .union([z.string().regex(/^\S{1,255}$/), z.array(z.string().regex(/^\S{1,255}$/)).max(100)])
+        .optional(),
       organization_revision: z
         .string()
         .regex(/^(0|[1-9]\d*)$/)
@@ -62,6 +66,10 @@ export const GET = factory.createHandlers(
         .optional(),
       effective_on: z.string().date().optional(),
       as_of: z.string().date().optional(),
+      include_ended: z
+        .enum(["true", "false"])
+        .transform((value) => value === "true")
+        .optional(),
     }),
     (validation) => {
       if (!validation.success) {
@@ -89,6 +97,13 @@ export const GET = factory.createHandlers(
     ) {
       throw new CompanyEffectiveDateQueryConflictError()
     }
+    if (
+      requestQuery.include_ended === true &&
+      requestQuery.effective_on === undefined &&
+      requestQuery.as_of === undefined
+    ) {
+      throw new CompanyQueryInvalidError(new CompanyResourceValidationError("invalid_query"))
+    }
 
     const ids =
       requestQuery.id === undefined
@@ -96,12 +111,20 @@ export const GET = factory.createHandlers(
         : Array.isArray(requestQuery.id)
           ? requestQuery.id
           : [requestQuery.id]
+    const employeeIds =
+      requestQuery.employee_id === undefined
+        ? []
+        : Array.isArray(requestQuery.employee_id)
+          ? requestQuery.employee_id
+          : [requestQuery.employee_id]
     const effectiveOn = requestQuery.effective_on ?? requestQuery.as_of
     const query = {
       organizationId: headers["x-company-organization-id"],
       organizationRevision: requestQuery.organization_revision,
       types: ["employment"] as const,
+      includeEnded: requestQuery.include_ended,
       ...(ids.length === 0 ? {} : { ids }),
+      ...(employeeIds.length === 0 ? {} : { employmentEmployeeIds: employeeIds }),
       ...(effectiveOn === undefined ? {} : { effectiveOn: restoreCalendarDate(effectiveOn) }),
     }
     if (
@@ -114,6 +137,11 @@ export const GET = factory.createHandlers(
           query.ids.length > 100 ||
           new Set(query.ids).size !== query.ids.length ||
           !query.ids.every((id) => CompanyResourceEntity.isIdentifier(id)))) ||
+      (query.employmentEmployeeIds !== undefined &&
+        (query.employmentEmployeeIds.length < 1 ||
+          query.employmentEmployeeIds.length > 100 ||
+          new Set(query.employmentEmployeeIds).size !== query.employmentEmployeeIds.length ||
+          !query.employmentEmployeeIds.every((id) => CompanyResourceEntity.isIdentifier(id)))) ||
       (query.effectiveOn !== undefined && !isCalendarDate(query.effectiveOn))
     ) {
       throw new CompanyQueryInvalidError(new CompanyResourceValidationError("invalid_query"))
@@ -121,8 +149,7 @@ export const GET = factory.createHandlers(
     if (
       (!actor.organizationIds.includes(query.organizationId) &&
         !actor.organizationIds.includes("*")) ||
-      (!actor.capabilities.includes("company:admin") &&
-        !actor.capabilities.includes("company:read"))
+      !canReadCompanyResource(actor, "employment")
     ) {
       throw new CompanyAccessDeniedError()
     }

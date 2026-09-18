@@ -246,7 +246,17 @@ const schema = `
     body TEXT,
     source_type TEXT,
     source_id TEXT,
+    action_type TEXT,
+    action_id TEXT,
+    priority TEXT NOT NULL DEFAULT 'normal',
+    dedupe_key TEXT UNIQUE,
     created_at INTEGER NOT NULL
+  );
+
+  CREATE TABLE system_notification_resource_scopes (
+    message_id TEXT PRIMARY KEY NOT NULL REFERENCES system_notification_messages(id) ON DELETE CASCADE,
+    resource_type TEXT NOT NULL,
+    resource_id TEXT NOT NULL
   );
 
   CREATE TABLE system_notification_deliveries (
@@ -254,7 +264,8 @@ const schema = `
     message_id TEXT NOT NULL REFERENCES system_notification_messages(id) ON DELETE RESTRICT,
     recipient_account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE RESTRICT,
     delivered_at INTEGER NOT NULL,
-    read_at INTEGER
+    read_at INTEGER,
+    dismissed_at INTEGER
   );
 
   CREATE UNIQUE INDEX system_notification_deliveries_message_account_uniq

@@ -12,12 +12,42 @@ export const companyRouteManifest = [
   },
   {
     method: "GET",
+    path: "/company/resource-history/:type/:id",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.resource-history.$type.$id",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
     path: "/company/grade-assignment-history",
     phase: "authenticated",
     handler: {
       kind: "module",
       module: "@/contexts/company/interface/routes/company.grade-assignment-history",
       exportName: "GET",
+    },
+  },
+  {
+    method: "GET",
+    path: "/company/employment-start-corrections",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.employment-start-corrections",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/company/employment-start-corrections",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.employment-start-corrections",
+      exportName: "POST",
     },
   },
   {
