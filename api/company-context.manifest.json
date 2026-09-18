@@ -450,6 +450,7 @@
     "src/contexts/company/interface/operations/read-company-employments-by-account.ts",
     "src/contexts/company/interface/operations/read-company-employments-by-accounts.ts",
     "src/contexts/company/interface/operations/read-company-employments-by-employee.ts",
+    "src/contexts/company/interface/operations/read-company-organization-profile.ts",
     "src/contexts/company/interface/operations/resolve-personnel-action-input.ts",
     "src/contexts/company/interface/operations/to-company-personnel-session.ts",
     "src/contexts/company/interface/operations/to-http-exception.ts",
