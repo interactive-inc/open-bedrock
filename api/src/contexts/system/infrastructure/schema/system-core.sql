@@ -488,6 +488,9 @@ CREATE TABLE system_account_invitations (
   subject TEXT,
   role_id TEXT NOT NULL
     REFERENCES system_iam_roles(id) ON DELETE RESTRICT,
+  resource_type TEXT,
+  resource_id TEXT,
+  related_resource_id TEXT,
   accepted_by_account_id TEXT
     REFERENCES system_accounts(id) ON DELETE RESTRICT,
   expires_at INTEGER NOT NULL,
@@ -498,7 +501,18 @@ CREATE TABLE system_account_invitations (
     updated_at >= created_at
     AND expires_at >= created_at
     AND (revoked_at IS NULL OR revoked_at >= created_at)
-  )
+  ),
+  CHECK (
+    (resource_type IS NULL AND resource_id IS NULL) OR (
+      resource_type IS NOT NULL AND resource_id IS NOT NULL
+      AND length(resource_type) BETWEEN 3 AND 100
+      AND length(resource_id) BETWEEN 1 AND 255
+    )
+  ),
+  CHECK (related_resource_id IS NULL OR (
+    resource_type IS NOT NULL AND resource_id IS NOT NULL
+    AND length(related_resource_id) BETWEEN 1 AND 255
+  ))
 );
 
 CREATE UNIQUE INDEX system_account_invitations_token_uniq
@@ -507,6 +521,8 @@ CREATE INDEX system_account_invitations_role_idx
   ON system_account_invitations (role_id, created_at);
 CREATE INDEX system_account_invitations_subject_idx
   ON system_account_invitations (subject, created_at);
+CREATE INDEX system_account_invitations_resource_idx
+  ON system_account_invitations (resource_type, resource_id);
 
 CREATE TABLE system_notification_messages (
   id TEXT PRIMARY KEY NOT NULL

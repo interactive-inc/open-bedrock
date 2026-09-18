@@ -503,6 +503,9 @@ export const systemAccountInvitations = sqliteTable(
     roleId: text("role_id")
       .notNull()
       .references(() => systemIamRoles.id, { onDelete: "restrict" }),
+    resourceType: text("resource_type"),
+    resourceId: text("resource_id"),
+    relatedResourceId: text("related_resource_id"),
     usedBy: text("accepted_by_account_id").references(() => systemAccounts.id, {
       onDelete: "restrict",
     }),
@@ -515,12 +518,28 @@ export const systemAccountInvitations = sqliteTable(
     uniqueIndex("system_account_invitations_token_uniq").on(table.token),
     index("system_account_invitations_role_idx").on(table.roleId, table.createdAt),
     index("system_account_invitations_subject_idx").on(table.email, table.createdAt),
+    index("system_account_invitations_resource_idx").on(table.resourceType, table.resourceId),
     check("system_account_invitations_id_length", sql`length(${table.id}) BETWEEN 1 AND 255`),
     check(
       "system_account_invitations_chronology",
       sql`${table.updatedAt} >= ${table.createdAt}
         AND ${table.expiresAt} >= ${table.createdAt}
         AND (${table.revokedAt} IS NULL OR ${table.revokedAt} >= ${table.createdAt})`,
+    ),
+    check(
+      "system_account_invitations_resource_pair",
+      sql`(${table.resourceType} IS NULL AND ${table.resourceId} IS NULL) OR (
+        ${table.resourceType} IS NOT NULL AND ${table.resourceId} IS NOT NULL
+        AND length(${table.resourceType}) BETWEEN 3 AND 100
+        AND length(${table.resourceId}) BETWEEN 1 AND 255
+      )`,
+    ),
+    check(
+      "system_account_invitations_related_resource",
+      sql`${table.relatedResourceId} IS NULL OR (
+        ${table.resourceType} IS NOT NULL AND ${table.resourceId} IS NOT NULL
+        AND length(${table.relatedResourceId}) BETWEEN 1 AND 255
+      )`,
     ),
   ],
 )
