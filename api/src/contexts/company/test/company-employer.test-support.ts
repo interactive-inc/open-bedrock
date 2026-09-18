@@ -60,6 +60,7 @@ export async function createCompanyEmployerTestContext(databaseOverride?: D1Data
     ...f.creator,
     organizationIds: ["organization:default"],
     capabilities: ["company:read"],
+    permissions: ["employee:read"],
   })
   const app = new Hono<CompanyHttpEnvironment>()
     .use("*", async (context, next) => {

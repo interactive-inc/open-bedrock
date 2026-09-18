@@ -1,3 +1,4 @@
+import { canReadCompanyResource } from "@/contexts/company/interface/operations/company-resource-read-permission"
 import {
   CompanyResourceValidationError,
   CompanySnapshotRevisionError,
@@ -108,8 +109,7 @@ export const GET = factory.createHandlers(
     if (
       (!actor.organizationIds.includes(query.organizationId) &&
         !actor.organizationIds.includes("*")) ||
-      (!actor.capabilities.includes("company:admin") &&
-        !actor.capabilities.includes("company:read"))
+      !canReadCompanyResource(actor, "personnel-action")
     ) {
       throw new CompanyAccessDeniedError()
     }

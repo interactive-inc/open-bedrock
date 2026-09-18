@@ -37,6 +37,7 @@ const actor = CompanyActorValue.restore({
   employeeId: "employee:operator",
   organizationIds: [organizationId],
   capabilities: ["company:read", "company:write"],
+  permissions: ["employee:read"],
 })
 type Resource = {
   organizationId: string

@@ -1,6 +1,8 @@
 import { CompanyChangeFeedRepository } from "@/contexts/company/infrastructure/repositories/core/company-change-feed.repository"
 import { CompanySnapshotRevisionError } from "@/contexts/company/domain/errors"
 import { CompanyChangeCursorValue } from "@/contexts/company/domain/values/company-change-cursor.value"
+import { companyResourceTypes } from "@/contexts/company/domain/catalogs/company-resource-type.catalog"
+import { canReadCompanyResource } from "@/contexts/company/interface/operations/company-resource-read-permission"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import {
   CompanyAuthenticationRequiredError,
@@ -16,7 +18,7 @@ import { z } from "zod"
 
 const factory = createFactory<CompanyHttpEnvironment>()
 
-// @authorization service - 指定会社のcompany:readで全資源の変更位置を取得する
+// @authorization service - 資源ごとの閲覧資格で変更理由・証跡を絞って取得する
 export const GET = factory.createHandlers(
   zValidator(
     "header",
@@ -36,6 +38,7 @@ export const GET = factory.createHandlers(
         .max(Number.MAX_SAFE_INTEGER)
         .optional(),
       limit: z.coerce.number().int().min(1).max(100).default(25),
+      resource_type: z.enum(companyResourceTypes).optional(),
     }),
     (validation) => {
       if (!validation.success) throw new CompanyQueryInvalidError(validation.error)
@@ -49,10 +52,19 @@ export const GET = factory.createHandlers(
       throw new CompanyAccessDeniedError()
     if (context.env.DB === undefined) throw new CompanyDatabaseUnavailableError()
     const query = context.req.valid("query")
+    const visibleTypes = companyResourceTypes.filter(
+      (type) =>
+        (query.resource_type === undefined || type === query.resource_type) &&
+        canReadCompanyResource(actor, type),
+    )
+    if (visibleTypes.length === 0) throw new CompanyAccessDeniedError()
     const cursor = CompanyChangeCursorValue.restore(query.cursor, organizationId)
     if (cursor instanceof Error) throw new CompanyQueryInvalidError(cursor)
+    if (cursor.props.type !== null && !visibleTypes.includes(cursor.props.type))
+      throw new CompanyQueryInvalidError(new Error("Cursor resource type is not visible"))
     const page = await new CompanyChangeFeedRepository(context.env.DB).list({
       organizationId,
+      visibleTypes,
       afterRevision: cursor.props.revision,
       afterType: cursor.props.type,
       afterId: cursor.props.id,
