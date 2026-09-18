@@ -4,6 +4,7 @@ import { readCompanyEmploymentsByAccounts } from "@/contexts/company/interface/o
 
 export type CompanyEmploymentsByAccount = Readonly<{
   organizationRevision: number
+  employeeId: string | null
   employmentIds: ReadonlyArray<string>
   employmentStatusesById: ReadonlyMap<string, EmploymentStatus>
 }>
@@ -30,6 +31,7 @@ export async function readCompanyEmploymentsByAccount(
   if (employments instanceof Error) return employments
   return {
     organizationRevision: employments.organizationRevision,
+    employeeId: employments.employeeIdsByAccount.get(input.accountId) ?? null,
     employmentIds: employments.employmentIdsByAccount.get(input.accountId) ?? [],
     employmentStatusesById: employments.employmentStatusesById,
   }
