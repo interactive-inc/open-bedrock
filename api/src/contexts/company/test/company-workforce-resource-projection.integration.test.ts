@@ -17,7 +17,10 @@ import { ResolveLiveEmployeeAccessAdapter } from "@/contexts/company/infrastruct
 import { POST as POST_PEOPLE } from "@/contexts/company/interface/routes/company.people"
 import { POST as POST_EMPLOYEES } from "@/contexts/company/interface/routes/company.employees"
 import { POST as POST_ORGANIZATION_CHANGES } from "@/contexts/company/interface/routes/company.organization-changes"
-import { POST as POST_EMPLOYMENT_START_CORRECTIONS } from "@/contexts/company/interface/routes/company.employment-start-corrections"
+import {
+  GET as GET_EMPLOYMENT_START_CORRECTIONS,
+  POST as POST_EMPLOYMENT_START_CORRECTIONS,
+} from "@/contexts/company/interface/routes/company.employment-start-corrections"
 import {
   GET as GET_EMPLOYMENTS,
   POST as POST_EMPLOYMENTS,
@@ -73,14 +76,14 @@ const employment: Resource = {
   attributes: { employeeId, status: "ACTIVE", employmentType: "FULL_TIME" },
 }
 
-function fixture() {
+function fixture(companyActor = actor) {
   const database = createCompanyD1TestDatabase(schemaSql)
   const app = new Hono<{
     Bindings: { DB: D1Database }
     Variables: { companyActor: CompanyActorValue }
   }>()
   app.use("*", async (c, next) => {
-    c.set("companyActor", actor)
+    c.set("companyActor", companyActor)
     await next()
   })
   app.onError((error, c) => {
@@ -93,6 +96,7 @@ function fixture() {
     .post("/company/employments", ...POST_EMPLOYMENTS)
     .post("/company/organization-changes", ...POST_ORGANIZATION_CHANGES)
     .post("/company/employment-start-corrections", ...POST_EMPLOYMENT_START_CORRECTIONS)
+    .get("/company/employment-start-corrections", ...GET_EMPLOYMENT_START_CORRECTIONS)
     .get("/company/employments", ...GET_EMPLOYMENTS)
   const write = (
     resource: Resource,
@@ -200,6 +204,12 @@ function fixture() {
         },
         { DB: database },
       ),
+    readCorrectionTarget: (throughRevision?: number) =>
+      app.request(
+        `/company/employment-start-corrections?employment_id=${employment.id}${throughRevision === undefined ? "" : `&organization_revision=${throughRevision}`}`,
+        { headers: { "x-company-organization-id": organizationId } },
+        { DB: database },
+      ),
     directory: (now: string) =>
       new CompanyEmployeeDirectoryReadAdapter(context(now)).findById(employeeId),
     access: (now: string) =>
@@ -253,6 +263,22 @@ function fixture() {
 }
 
 describe("公開Company APIから実際の従業員台帳と在籍判定まで", () => {
+  test("開始日訂正対象の参照は従業員閲覧資格と存在する会社版を要求する", async () => {
+    const f = fixture()
+    expect((await f.readCorrectionTarget()).status).toBe(404)
+    await f.initialize()
+    expect((await f.readCorrectionTarget(4)).status).toBe(400)
+    const limited = fixture(
+      CompanyActorValue.restore({
+        accountId: "account:operator",
+        employeeId: "employee:operator",
+        organizationIds: [organizationId],
+        capabilities: ["company:read"],
+      }),
+    )
+    expect((await limited.readCorrectionTarget()).status).toBe(403)
+  })
+
   test("開始日訂正APIは原資料・訂正元を保全し、既存休職と再送を維持する", async () => {
     const f = fixture()
     expect((await f.write({ ...person, effectiveFrom: "2025-01-01" }, 0)).status).toBe(201)
@@ -274,6 +300,17 @@ describe("公開Company APIから実際の従業員台帳と在籍判定まで",
         )
       ).status,
     ).toBe(201)
+    const targetBefore = await f.readCorrectionTarget()
+    expect({ status: targetBefore.status, etag: targetBefore.headers.get("etag") }).toEqual({
+      status: 200,
+      etag: '"3"',
+    })
+    expect(await targetBefore.json()).toMatchObject({
+      organizationRevision: 3,
+      startsOn: "2026-01-01",
+      correctsRevision: 1,
+      latestRevision: 2,
+    })
     expect((await f.correctStart("2025-12-01", 3, "missing-source", 1, [])).status).toBe(400)
     expect((await f.correctStart("2025-12-01", 3, "wrong-source", 2)).status).toBe(422)
     const corrected = await f.correctStart("2025-12-01", 3, "correct:employment-start")
@@ -282,6 +319,17 @@ describe("公開Company APIから実際の従業員台帳と在籍判定まで",
       body: { organizationRevision: 4, replayed: false },
     })
     expect((await f.correctStart("2025-12-01", 3, "correct:employment-start")).status).toBe(200)
+    expect(await (await f.readCorrectionTarget()).json()).toMatchObject({
+      organizationRevision: 4,
+      startsOn: "2025-12-01",
+      correctsRevision: 3,
+      latestRevision: 4,
+    })
+    expect(await (await f.readCorrectionTarget(3)).json()).toMatchObject({
+      organizationRevision: 3,
+      startsOn: "2026-01-01",
+      correctsRevision: 1,
+    })
     expect((await f.correctStart("2026-02-01", 3, "different-command")).status).toBe(409)
     const corrections = await f.database
       .prepare(`SELECT revision, corrects_revision, reason, evidence_references_json

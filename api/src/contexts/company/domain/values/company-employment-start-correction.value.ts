@@ -6,7 +6,7 @@ import type { CompanyResourceProps } from "@/contexts/company/domain/entities/co
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import { CompanyEmploymentJournalChangeValue } from "@/contexts/company/domain/values/company-employment-journal-change.value"
 import { CompanyEmploymentResourceTimelineValue } from "@/contexts/company/domain/values/company-employment-resource-timeline.value"
-import { CompanyResourceEffectiveHistoryValue } from "@/contexts/company/domain/values/company-resource-effective-history.value"
+import { CompanyEmploymentStartCorrectionTargetValue } from "@/contexts/company/domain/values/company-employment-start-correction-target.value"
 
 type HistoricalEmployment = CompanyResourceProps & Readonly<{ correctsRevision?: number | null }>
 
@@ -46,17 +46,18 @@ export class CompanyEmploymentStartCorrectionValue {
     )
       return new CompanyResourceValidationError("invalid_period")
 
-    const effective = CompanyResourceEffectiveHistoryValue.create(input.history)
-    if (effective instanceof Error) return effective
-    const firstActive = effective.resources
-      .filter((resource) => resource.state === "active")
-      .toSorted((left, right) => left.effectiveFrom.localeCompare(right.effectiveFrom))[0]
+    const target = CompanyEmploymentStartCorrectionTargetValue.create(input.history)
     if (
-      firstActive === undefined ||
-      firstActive.revision !== input.correctsRevision ||
-      firstActive.effectiveFrom !== timeline.startsOn
+      target instanceof Error ||
+      target.correctsRevision !== input.correctsRevision ||
+      target.startsOn !== timeline.startsOn
     )
       return new CompanyResourceValidationError("invalid_resource")
+
+    const firstActive = input.history.find(
+      (resource) => resource.revision === target.correctsRevision,
+    )
+    if (firstActive === undefined) return new CompanyResourceValidationError("invalid_resource")
 
     const employeeId = restoreWorkforceId("employee", timeline.employeeId)
     const employmentId = restoreWorkforceId("employment", timeline.employmentId)

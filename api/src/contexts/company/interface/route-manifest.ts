@@ -31,6 +31,16 @@ export const companyRouteManifest = [
     },
   },
   {
+    method: "GET",
+    path: "/company/employment-start-corrections",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.employment-start-corrections",
+      exportName: "GET",
+    },
+  },
+  {
     method: "POST",
     path: "/company/employment-start-corrections",
     phase: "audited",
