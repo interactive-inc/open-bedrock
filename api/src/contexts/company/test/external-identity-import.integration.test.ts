@@ -49,6 +49,10 @@ describe("外部identityとCompany正本の同期", () => {
           .all()
       ).results,
     ).toEqual([{ starts_on: "2030-07-01", source: "public" }])
+    await c.database.exec("DROP TRIGGER IF EXISTS company_account_employee_links_delete_guard")
+    await c.database.exec("DELETE FROM company_account_employee_links")
+    await c.database.exec("DROP VIEW company_account_employee_link_periods")
+    expect(await reader.findMany({ asOf: restoreCalendarDate("2030-07-01") })).toEqual(active)
   })
   test.each([
     "UPDATE system_role_bindings SET revoked_at = 1 WHERE id = 'import-provider-binding'",

@@ -10,7 +10,6 @@ import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
-import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 
 async function fixture() {
   const files = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
@@ -140,12 +139,7 @@ describe("Account対応の履歴接続migration", () => {
       await new CompanyAccountEmployeeLinksReadAdapter({ env: { DB: c.database } }).findMany({
         asOf: restoreCalendarDate("2030-01-01"),
       }),
-    ).toEqual([
-      {
-        accountId: restoreWorkforceId("system_account", "legacy-account"),
-        employeeId: restoreWorkforceId("employee", "legacy-employee"),
-      },
-    ])
+    ).toEqual([])
     expect(
       (
         await c.database
