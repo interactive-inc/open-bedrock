@@ -32,6 +32,10 @@ jobs:
         run: bun run verify:core-worker-isolation
         working-directory: api
 
+      - name: Business context removal
+        run: bun run verify:business-context-removal room knowledge
+        working-directory: api
+
       - name: cli test
         run: bun test
         working-directory: cli
