@@ -25,9 +25,9 @@ const roomReservationResponseSchema = z.object({
 
 const jwtSecret = "room-reservations-crud-test-secret"
 
-const ownReservationId = "00000000-0000-0000-0000-000000000002"
+const ownReservationId = "01900005-0000-7000-8000-000000000002"
 
-const othersReservationId = "00000000-0000-0000-0000-000000000001"
+const othersReservationId = "01900005-0000-7000-8000-000000000001"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())

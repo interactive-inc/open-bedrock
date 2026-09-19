@@ -56,9 +56,9 @@ const businessTripResponseSchema = z.object({
 
 const jwtSecret = "business-trips-crud-test-secret"
 
-const ownBusinessTripId = "10000000-0000-0000-0000-000000000002"
+const ownBusinessTripId = "01900007-0000-7000-8000-000000000002"
 
-const othersBusinessTripId = "10000000-0000-0000-0000-000000000001"
+const othersBusinessTripId = "01900007-0000-7000-8000-000000000001"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())

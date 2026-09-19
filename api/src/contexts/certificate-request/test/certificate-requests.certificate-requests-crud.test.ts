@@ -55,9 +55,9 @@ const certificateRequestResponseSchema = z.object({
 
 const jwtSecret = "certificate-requests-crud-test-secret"
 
-const ownCertificateRequestId = "20000000-0000-0000-0000-000000000002"
+const ownCertificateRequestId = "01900009-0000-7000-8000-000000000002"
 
-const othersCertificateRequestId = "20000000-0000-0000-0000-000000000001"
+const othersCertificateRequestId = "01900009-0000-7000-8000-000000000001"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())

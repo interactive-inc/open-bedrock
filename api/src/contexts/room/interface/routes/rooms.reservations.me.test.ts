@@ -57,7 +57,7 @@ async function createTestDb(): Promise<D1Database> {
   // employee 4 の予約を 3 件挿入する
   await seedD1(db, "room_reservations", [
     {
-      id: "aaaaaaaa-0000-0000-0000-000000000001",
+      id: "01900005-0000-7000-8000-000000000001",
       room_id: 1,
       reserver_id: "4",
       start_at: "2026-06-01T01:00:00Z",
@@ -65,7 +65,7 @@ async function createTestDb(): Promise<D1Database> {
       purpose: "Standup",
     },
     {
-      id: "aaaaaaaa-0000-0000-0000-000000000002",
+      id: "01900005-0000-7000-8000-000000000002",
       room_id: 2,
       reserver_id: "4",
       start_at: "2026-06-02T01:00:00Z",
@@ -73,7 +73,7 @@ async function createTestDb(): Promise<D1Database> {
       purpose: "Retro",
     },
     {
-      id: "aaaaaaaa-0000-0000-0000-000000000003",
+      id: "01900005-0000-7000-8000-000000000003",
       room_id: 1,
       reserver_id: "4",
       start_at: "2026-06-03T01:00:00Z",
