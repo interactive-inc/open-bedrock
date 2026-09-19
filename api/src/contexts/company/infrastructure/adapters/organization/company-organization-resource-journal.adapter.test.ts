@@ -16,12 +16,18 @@ const untouchableDatabase = new Proxy(
 function changeWith(
   props: Pick<OrganizationWorkforceChangeEntity, "assignments" | "responsibilities">,
 ): OrganizationWorkforceChangeEntity {
-  return { unitPeriods: [], organizationUnits: [], ...props } as unknown as OrganizationWorkforceChangeEntity
+  return {
+    unitPeriods: [],
+    organizationUnits: [],
+    ...props,
+  } as unknown as OrganizationWorkforceChangeEntity
 }
 
 describe("既存の組織変更の公開履歴への反映", () => {
   test("所属を含む変更は旧台帳だけへ保存させず拒否する", async () => {
-    const assignment = { periodId: "assignment-period:1" } as OrganizationWorkforceChangeEntity["assignments"][number]
+    const assignment = {
+      periodId: "assignment-period:1",
+    } as OrganizationWorkforceChangeEntity["assignments"][number]
     const result = await new CompanyOrganizationResourceJournalAdapter(untouchableDatabase).prepare(
       changeWith({ assignments: [assignment], responsibilities: [] }),
     )

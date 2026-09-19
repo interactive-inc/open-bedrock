@@ -357,7 +357,7 @@
     "src/contexts/company/infrastructure/adapters/organization/company-governance-authority-resolution.adapter.ts": "a3cdbda8352934c9afc2c15645086c1c75db0aa5b481678182ab15296443b7ac",
     "src/contexts/company/infrastructure/adapters/organization/company-governance-procedure-task.adapter.test.ts": "022eb1640b91741666678f61981f1e4947fcca4f52c96fb9ec310090116c60f9",
     "src/contexts/company/infrastructure/adapters/organization/company-governance-procedure-task.adapter.ts": "bd80bdc8319e40a795f9042770a7fa0d2d3db9a465259c445370c76f88c3234a",
-    "src/contexts/company/infrastructure/adapters/organization/company-organization-resource-journal.adapter.test.ts": "46f8007550083fddf79499d19a5d6700ddc66e863fc287207ffb6682a63cbde0",
+    "src/contexts/company/infrastructure/adapters/organization/company-organization-resource-journal.adapter.test.ts": "f3ed1e8545bf02736943f7f1e708678f813ee585e2663078de60ce2d6c58f7df",
     "src/contexts/company/infrastructure/adapters/organization/company-organization-resource-journal.adapter.ts": "ee4af3f09c53be88fe97d240c1a6549c71055d1797323383c60523cce229a31a",
     "src/contexts/company/infrastructure/adapters/organization/company-organization-resource-projection.adapter.ts": "391ce2e0c79376c025e0abcb9ae7eb1516427b07195564ff573815cb71741fec",
     "src/contexts/company/infrastructure/adapters/organization/company-responsibility-journal.adapter.ts": "9ef8318cbfc437d5ef3c8f6694515b4f3711380f308d54e1323d12eb20066c59",
