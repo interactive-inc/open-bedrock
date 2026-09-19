@@ -71,12 +71,12 @@ export class PrepareDocumentRetirementPageAdapter {
     if (stored instanceof Error) return stored
     if (stored === null) return new Error("coverage page disappeared")
     const cursor = stored.snapshot.afterCursor
-    if (cursor !== null && !/^[1-9][0-9]*$/.test(cursor))
+    if (cursor !== null && !/^(0|-?[1-9][0-9]*)$/.test(cursor))
       return new Error("invalid coverage cursor")
     const captured = await new CaptureFrozenDocumentRecordPageAdapter(this.c).prepare({
       freezeId: request.freezeId,
       sourceNamespace: request.sourceNamespace,
-      afterId: cursor === null ? 0 : Number(cursor),
+      afterId: cursor === null ? null : Number(cursor),
       limit: 10,
     })
     if (captured instanceof Error) return captured
