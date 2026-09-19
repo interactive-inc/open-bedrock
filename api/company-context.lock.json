@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "a8847485bf2181526099fb83f246a03e1ffc2fb1c82b7a0b0ddd0ab2d38e7e4f",
+    "company-context.manifest.json": "95c5aa212729d0e9d9ef2acaa98282297c5343938ff2a7c04c5d5d18aa3a592a",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -357,7 +357,8 @@
     "src/contexts/company/infrastructure/adapters/organization/company-governance-authority-resolution.adapter.ts": "a3cdbda8352934c9afc2c15645086c1c75db0aa5b481678182ab15296443b7ac",
     "src/contexts/company/infrastructure/adapters/organization/company-governance-procedure-task.adapter.test.ts": "022eb1640b91741666678f61981f1e4947fcca4f52c96fb9ec310090116c60f9",
     "src/contexts/company/infrastructure/adapters/organization/company-governance-procedure-task.adapter.ts": "bd80bdc8319e40a795f9042770a7fa0d2d3db9a465259c445370c76f88c3234a",
-    "src/contexts/company/infrastructure/adapters/organization/company-organization-resource-journal.adapter.ts": "ae1b81f1ff6b6ed732be87adcd590f6e4d210f991e5726c04c544c0df12b3d99",
+    "src/contexts/company/infrastructure/adapters/organization/company-organization-resource-journal.adapter.test.ts": "46f8007550083fddf79499d19a5d6700ddc66e863fc287207ffb6682a63cbde0",
+    "src/contexts/company/infrastructure/adapters/organization/company-organization-resource-journal.adapter.ts": "ee4af3f09c53be88fe97d240c1a6549c71055d1797323383c60523cce229a31a",
     "src/contexts/company/infrastructure/adapters/organization/company-organization-resource-projection.adapter.ts": "391ce2e0c79376c025e0abcb9ae7eb1516427b07195564ff573815cb71741fec",
     "src/contexts/company/infrastructure/adapters/organization/company-responsibility-journal.adapter.ts": "9ef8318cbfc437d5ef3c8f6694515b4f3711380f308d54e1323d12eb20066c59",
     "src/contexts/company/infrastructure/adapters/organization/company-responsibility-resource-history.adapter.ts": "7089736f6004aed2b20ae083d1a7d7f714119a0e79d2c2f8495f5f54b16d09b2",
