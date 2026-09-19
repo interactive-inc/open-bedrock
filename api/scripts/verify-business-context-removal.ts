@@ -14,7 +14,9 @@ const AGGREGATE_FILES = [
   "src/api/http/permissions/business-permission-key.catalog.ts",
 ] as const
 const REGISTRY_FILE = "src/api/route-module.registry.ts"
-const GENERATED_APP_FILE = "src/api/app.ts"
+const GENERATED_FILES = ["src/api/app.ts", "src/api/scheduled/jobs.ts"] as const
+/** 一覧を生成するため、対象contextと一緒にファイルごと外せるcomposition。 */
+const REMOVABLE_COMPOSITION_PATTERN = /^src\/api\/scheduled\/run-[a-z0-9-]+\.ts$/u
 
 export type AggregateRemoval = Readonly<{ source: string; identifiers: ReadonlyArray<string> }>
 
@@ -62,7 +64,7 @@ export function removeContextFromAggregate(source: string, context: string): Agg
  */
 export async function listCompositionDependents(root: string, context: string): Promise<string[]> {
   const dependents: string[] = []
-  const ignored = new Set<string>([...AGGREGATE_FILES, GENERATED_APP_FILE])
+  const ignored = new Set<string>([...AGGREGATE_FILES, ...GENERATED_FILES])
   for await (const file of new Glob("{src,tests}/**/*.{ts,tsx}").scan(root)) {
     if (file.startsWith(`src/contexts/${context}/`) || ignored.has(file)) continue
     if (readFileSync(join(root, file), "utf8").includes(`@/contexts/${context}/`))
@@ -85,8 +87,10 @@ function run(command: string[], cwd: string): { ok: boolean; output: string } {
  */
 export async function verifyBusinessContextRemoval(context: string): Promise<string[]> {
   const dependents = await listCompositionDependents(PROJECT_ROOT, context)
-  if (dependents.length > 0)
-    return dependents.map((file) => `${context}: 同時に外すcompositionが残っています: ${file}`)
+  const removable = dependents.filter((file) => REMOVABLE_COMPOSITION_PATTERN.test(file))
+  const blocking = dependents.filter((file) => !REMOVABLE_COMPOSITION_PATTERN.test(file))
+  if (blocking.length > 0)
+    return blocking.map((file) => `${context}: 同時に外すcompositionが残っています: ${file}`)
 
   const workspace = mkdtempSync(join(tmpdir(), "business-context-removal-"))
   try {
@@ -115,8 +119,11 @@ export async function verifyBusinessContextRemoval(context: string): Promise<str
     }
     if (failures.length > 0) return failures
 
-    const generated = run(["bun", "run", "scripts/gen-app.ts"], workspace)
-    if (!generated.ok) return [`${context}: routeの再生成に失敗しました\n${generated.output}`]
+    for (const file of removable) rmSync(join(workspace, file))
+    for (const generator of ["scripts/gen-app.ts", "scripts/gen-scheduled.ts"]) {
+      const generated = run(["bun", "run", generator], workspace)
+      if (!generated.ok) return [`${context}: 再生成に失敗しました\n${generated.output}`]
+    }
     // Workerの入口から到達するproduction sourceだけを検査する。共有テスト支援は対象にしない。
     writeFileSync(
       join(workspace, "tsconfig.removal.json"),

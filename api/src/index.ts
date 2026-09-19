@@ -1,5 +1,4 @@
-import { runScheduledLeaveNotifications } from "@/api/scheduled/run-leave-notifications"
-import { runScheduledOnboarding } from "@/api/scheduled/run-onboarding"
+import { SCHEDULED_JOBS } from "@/api/scheduled/jobs"
 import type { Bindings } from "@/env"
 
 export default {
@@ -8,10 +7,9 @@ export default {
     return app.fetch(request, env, context)
   },
   async scheduled(_controller: ScheduledController, env: Bindings): Promise<void> {
-    const deliveries = await Promise.allSettled([
-      runScheduledOnboarding({ env, clock: () => new Date() }),
-      runScheduledLeaveNotifications({ env, clock: () => new Date() }),
-    ])
+    const deliveries = await Promise.allSettled(
+      SCHEDULED_JOBS.map((job) => job({ env, clock: () => new Date() })),
+    )
     for (const delivery of deliveries) {
       if (delivery.status === "rejected") throw delivery.reason
       if (delivery.value instanceof Error) throw delivery.value
