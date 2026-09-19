@@ -357,6 +357,7 @@
     "src/contexts/company/infrastructure/adapters/organization/company-governance-authority-resolution.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/company-governance-procedure-task.adapter.test.ts",
     "src/contexts/company/infrastructure/adapters/organization/company-governance-procedure-task.adapter.ts",
+    "src/contexts/company/infrastructure/adapters/organization/company-organization-resource-journal.adapter.test.ts",
     "src/contexts/company/infrastructure/adapters/organization/company-organization-resource-journal.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/company-organization-resource-projection.adapter.ts",
     "src/contexts/company/infrastructure/adapters/organization/company-responsibility-journal.adapter.ts",
