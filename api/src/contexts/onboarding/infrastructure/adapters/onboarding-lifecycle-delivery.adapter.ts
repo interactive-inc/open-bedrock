@@ -24,7 +24,7 @@ const templateSelection = `SELECT template.id, template.code, template.name, tem
  binding.updated_at AS binding_updated_at,
  (SELECT json_group_array(json_object('code', code, 'title', title, 'order', sort_order, 'ownerRole', owner_role))
    FROM (SELECT * FROM onboarding_template_tasks WHERE template_code = template.code ORDER BY sort_order, code)) AS tasks_json
- FROM company_lifecycle_effect_template_bindings binding JOIN onboarding_templates template ON template.code = binding.template_code
+ FROM onboarding_lifecycle_template_bindings binding JOIN onboarding_templates template ON template.code = binding.template_code
  WHERE binding.effect_type = ?1`
 const templateSchema = z.object({
   id: z.number(),

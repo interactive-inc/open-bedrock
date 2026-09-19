@@ -1,4 +1,5 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { InferSelectModel } from "drizzle-orm"
 import { sql } from "drizzle-orm"
 import {
@@ -23,6 +24,17 @@ export const onboardingTemplates = sqliteTable("onboarding_templates", {
 })
 
 export type OnboardingTemplateRow = InferSelectModel<typeof onboardingTemplates>
+
+/** 入社・退職の発令ごとに自動で割り当てるテンプレートの設定 */
+export const onboardingLifecycleTemplateBindings = sqliteTable(
+  "onboarding_lifecycle_template_bindings",
+  {
+    effectType: text("effect_type").primaryKey().$type<"hire" | "retired">(),
+    templateCode: text("template_code").notNull(),
+    updatedAt: integer("updated_at").notNull(),
+    updatedByAccountId: text("updated_by_account_id").$type<AccountId>(),
+  },
+)
 
 /** テンプレートに含まれるタスク定義（並び順・担当ロール） */
 export const onboardingTemplateTasks = sqliteTable(

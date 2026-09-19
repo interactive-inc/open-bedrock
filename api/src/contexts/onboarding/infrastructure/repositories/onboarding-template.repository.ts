@@ -76,7 +76,7 @@ export class OnboardingTemplateRepository {
          WHERE code = ?1
            AND (
              kind = ?3 OR NOT EXISTS (
-               SELECT 1 FROM company_lifecycle_effect_template_bindings
+               SELECT 1 FROM onboarding_lifecycle_template_bindings
                WHERE template_code = ?1
              )
            )
@@ -111,7 +111,7 @@ export class OnboardingTemplateRepository {
                  WHERE template_code = ?1 AND status = 'in_progress'
                )
                AND NOT EXISTS (
-                 SELECT 1 FROM company_lifecycle_effect_template_bindings
+                 SELECT 1 FROM onboarding_lifecycle_template_bindings
                  WHERE template_code = ?1
                )`,
           )
@@ -136,7 +136,7 @@ export class OnboardingTemplateRepository {
   }): Promise<boolean | Error> {
     try {
       const saved = await this.c.env.DB.prepare(
-        `INSERT INTO company_lifecycle_effect_template_bindings
+        `INSERT INTO onboarding_lifecycle_template_bindings
            (effect_type, template_code, updated_at, updated_by_account_id)
          SELECT ?1, ?2, ?3, ?4
          FROM onboarding_templates
@@ -165,7 +165,7 @@ export class OnboardingTemplateRepository {
   async removeLifecycleBinding(template: OnboardingTemplate): Promise<boolean | Error> {
     try {
       const removed = await this.c.env.DB.prepare(
-        `DELETE FROM company_lifecycle_effect_template_bindings
+        `DELETE FROM onboarding_lifecycle_template_bindings
          WHERE template_code = ?1
          RETURNING effect_type`,
       )

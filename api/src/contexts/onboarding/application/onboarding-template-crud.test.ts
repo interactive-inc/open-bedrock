@@ -164,7 +164,7 @@ describe("UpdateOnboardingTemplate", () => {
     const { context } = await createTestContext()
     await seedTemplate(context)
     await context.env.DB.prepare(
-      `INSERT INTO company_lifecycle_effect_template_bindings
+      `INSERT INTO onboarding_lifecycle_template_bindings
          (effect_type, template_code, updated_at, updated_by_account_id)
        VALUES ('hire', 'join-default', 1, NULL)`,
     ).run()
@@ -220,7 +220,7 @@ describe("DeleteOnboardingTemplate", () => {
     const { context } = await createTestContext()
     await seedTemplate(context)
     await context.env.DB.prepare(
-      `INSERT INTO company_lifecycle_effect_template_bindings
+      `INSERT INTO onboarding_lifecycle_template_bindings
          (effect_type, template_code, updated_at, updated_by_account_id)
        VALUES ('hire', 'join-default', 1, NULL)`,
     ).run()
