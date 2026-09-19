@@ -194,17 +194,3 @@ export const lifecycleOutbox = sqliteTable(
 )
 
 export type LifecycleOutboxRow = InferSelectModel<typeof lifecycleOutbox>
-
-export const lifecycleEffectTemplateBindings = sqliteTable(
-  "company_lifecycle_effect_template_bindings",
-  {
-    effectType: text("effect_type").primaryKey().$type<"hire" | "retired">(),
-    templateCode: text("template_code").notNull(),
-    updatedAt: integer("updated_at").notNull(),
-    updatedByAccountId: text("updated_by_account_id").$type<AccountId>(),
-  },
-)
-
-export type LifecycleEffectTemplateBindingRow = InferSelectModel<
-  typeof lifecycleEffectTemplateBindings
->
