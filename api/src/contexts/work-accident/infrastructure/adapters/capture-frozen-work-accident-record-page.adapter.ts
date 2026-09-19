@@ -7,7 +7,7 @@ type Context = WorkAccidentContext
 const requestSchema = z.strictObject({
   freezeId: z.uuid(),
   sourceNamespace: z.string().regex(/^\S{1,255}$/),
-  afterId: z.number().int().nonnegative().safe(),
+  afterId: z.number().int().safe().nullable(),
   limit: z.number().int().min(1).max(10),
 })
 

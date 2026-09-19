@@ -7,7 +7,7 @@ type Context = DisciplinaryActionContext
 const inputSchema = z.strictObject({
   freezeId: z.uuid(),
   sourceNamespace: z.string().min(1).max(255).regex(/^\S+$/),
-  afterId: z.number().int().nonnegative().safe(),
+  afterId: z.number().int().safe().nullable(),
   limit: z.number().int().min(1).max(100),
 })
 
@@ -34,7 +34,7 @@ export class ListFrozenDisciplinaryActionRecordPageAdapter {
     if (generation instanceof Error) return generation
     try {
       const page =
-        request.afterId === 0
+        request.afterId === null
           ? this.c.env.DB.prepare("SELECT id FROM disciplinary_actions ORDER BY id LIMIT ?1").bind(
               request.limit + 1,
             )
