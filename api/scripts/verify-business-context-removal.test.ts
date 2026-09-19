@@ -1,4 +1,4 @@
-import { removeContextFromAggregate } from "./verify-business-context-removal"
+import { isRemovableComposition, removeContextFromAggregate } from "./verify-business-context-removal"
 import { describe, expect, test } from "bun:test"
 
 describe("束ねるだけのファイルからの業務contextの除去", () => {
@@ -58,5 +58,14 @@ describe("束ねるだけのファイルからの業務contextの除去", () => 
     const removal = removeContextFromAggregate(source, "room")
 
     expect(removal.source).toContain("ROOM_KEYS.length")
+  })
+
+  test("生成対象のrunnerとcomposite routeだけを、対象と一緒に外せるcompositionとして扱う", () => {
+    expect(isRemovableComposition("src/api/scheduled/run-onboarding.ts")).toBe(true)
+    expect(isRemovableComposition("src/api/routes/governance.governance-documents.sync.ts")).toBe(true)
+    expect(isRemovableComposition("src/api/routes/company.dashboard.test.ts")).toBe(true)
+    expect(isRemovableComposition("src/api/scheduled/jobs.ts")).toBe(false)
+    expect(isRemovableComposition("src/api/http/dashboard/read-dashboard.ts")).toBe(false)
+    expect(isRemovableComposition("src/api/http/inbox/read-inbox-business-counts.ts")).toBe(false)
   })
 })

@@ -15,8 +15,16 @@ const AGGREGATE_FILES = [
 ] as const
 const REGISTRY_FILE = "src/api/route-module.registry.ts"
 const GENERATED_FILES = ["src/api/app.ts", "src/api/scheduled/jobs.ts"] as const
-/** 一覧を生成するため、対象contextと一緒にファイルごと外せるcomposition。 */
-const REMOVABLE_COMPOSITION_PATTERN = /^src\/api\/scheduled\/run-[a-z0-9-]+\.ts$/u
+/**
+ * 一覧を生成するため、対象contextと一緒にファイルごと外せるcomposition。
+ * 複数の業務を束ねるrouteは、束ねる業務の一つが無くなれば成立しないので一緒に外す。
+ */
+const REMOVABLE_COMPOSITION_PATTERN =
+  /^src\/api\/(?:scheduled\/run-[a-z0-9-]+|routes\/[a-z0-9.$-]+?(?:\.test)?)\.ts$/iu
+
+export function isRemovableComposition(file: string): boolean {
+  return REMOVABLE_COMPOSITION_PATTERN.test(file)
+}
 
 export type AggregateRemoval = Readonly<{ source: string; identifiers: ReadonlyArray<string> }>
 
@@ -73,6 +81,37 @@ export async function listCompositionDependents(root: string, context: string): 
   return dependents.toSorted()
 }
 
+/**
+ * 対象を名指しするcompositionのうち、対象と一緒に外せるものを求める。
+ * API rootのhelperは、import元がすべて一緒に外れる場合に限って外せる。
+ */
+export async function partitionDependents(
+  root: string,
+  dependents: ReadonlyArray<string>,
+): Promise<{ removable: string[]; blocking: string[] }> {
+  const removable = new Set(dependents.filter((file) => isRemovableComposition(file)))
+  const sources = new Map<string, string>()
+  for await (const file of new Glob("{src,tests}/**/*.{ts,tsx}").scan(root))
+    sources.set(file, readFileSync(join(root, file), "utf8"))
+  let changed = true
+  while (changed) {
+    changed = false
+    for (const file of dependents) {
+      if (removable.has(file) || !file.startsWith("src/api/http/")) continue
+      const specifier = `"@/${file.slice("src/".length).replace(/\.tsx?$/u, "")}"`
+      const importers = [...sources].filter(([, text]) => text.includes(specifier)).map(([f]) => f)
+      if (importers.length > 0 && importers.every((importer) => removable.has(importer))) {
+        removable.add(file)
+        changed = true
+      }
+    }
+  }
+  return {
+    removable: [...removable].toSorted(),
+    blocking: dependents.filter((file) => !removable.has(file)),
+  }
+}
+
 function run(command: string[], cwd: string): { ok: boolean; output: string } {
   const result = Bun.spawnSync(command, { cwd, stdout: "pipe", stderr: "pipe" })
   return {
@@ -87,8 +126,7 @@ function run(command: string[], cwd: string): { ok: boolean; output: string } {
  */
 export async function verifyBusinessContextRemoval(context: string): Promise<string[]> {
   const dependents = await listCompositionDependents(PROJECT_ROOT, context)
-  const removable = dependents.filter((file) => REMOVABLE_COMPOSITION_PATTERN.test(file))
-  const blocking = dependents.filter((file) => !REMOVABLE_COMPOSITION_PATTERN.test(file))
+  const { removable, blocking } = await partitionDependents(PROJECT_ROOT, dependents)
   if (blocking.length > 0)
     return blocking.map((file) => `${context}: 同時に外すcompositionが残っています: ${file}`)
 
