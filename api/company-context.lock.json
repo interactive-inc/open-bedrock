@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "56d697886bfecbea53bd92b63aeeac7964684c6b4baee1d1df883fb154c9e7ca",
+    "company-context.manifest.json": "a8614d0d336538a2da38232321737bfd3235158b0fb307e77abdcca80ecf7e52",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -473,6 +473,7 @@
     "src/contexts/company/interface/operations/read-company-employment-person-names.ts": "4f2ce46639b56fe16673932cf1e979832e3e8c8e47b3ab7af55d72419a0a3a70",
     "src/contexts/company/interface/operations/read-company-employment-resource-chain.ts": "78e0c9f184531d69ff0fe0710c1f44222b436a075c114b6eff687ca4b62577f5",
     "src/contexts/company/interface/operations/read-company-employment-start-dates.ts": "b822fd6734efdb618363407f6eb38217b1c1cc3f8317530d3a5064045486271f",
+    "src/contexts/company/interface/operations/read-company-employment-states.ts": "627be3d27b031aebef7f476cc8724f41a2184c97c598520e8ef35e7e411f2051",
     "src/contexts/company/interface/operations/read-company-employments-by-account.ts": "f074ee3937486e799807d6c2943e3e2f5a487307b89709a92812dfd187fca623",
     "src/contexts/company/interface/operations/read-company-employments-by-accounts.ts": "0f85ec20ed216e332548382938a1e8811668fbb79917473ffb307ca981557f68",
     "src/contexts/company/interface/operations/read-company-employments-by-employee.ts": "4b28575f9ffb6dc59ad435f921c198288bfc421aecc9461e0140c2df7342295d",
@@ -636,6 +637,7 @@
     "src/contexts/company/test/read-company-employment-account.integration.test.ts": "4f5dc11d8fbe28bec5d7c4b17f1ee25534daa280692a3259b028d8dc6dd37f0c",
     "src/contexts/company/test/read-company-employment-person-names.integration.test.ts": "8b440b4e2d7498a53231d1c00c717fe2ca03b561112457ae157c3a150777fe8f",
     "src/contexts/company/test/read-company-employment-resource-chain.integration.test.ts": "841538b25127b6a7b8b3d33dd0d5ae438da58ed824a0d9513944febd40708df3",
+    "src/contexts/company/test/read-company-employment-states.integration.test.ts": "303a8b3c940fdbc1610a2203088a73d33691cab7e48263d59ca3ee5e6b150b5f",
     "src/contexts/company/test/record-preservation-execution.integration.test.ts": "6fb89877730222fe43bd5f44fee68bfeda6991a6485bc1db16427a17706ead0b",
     "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts": "426625f351ca9bf7f43aba30e7a3aae44cfbb020e3cbd246a3a8ee8eae7052d9"
   }
