@@ -1,10 +1,10 @@
-import type { AuditEventDetail } from "@/api/http/audit/company-audit-event.definition"
+import type { AuditEventDetail } from "@/contexts/company/domain/definitions/company-audit-event.definition"
 import { PayloadTooLargeError } from "@/lib/errors"
 import {
   AUDIT_CSV_HEADER,
   AUDIT_CSV_MAX_BYTES,
   toAuditCsvRow,
-} from "@/api/http/audit/to-audit-csv-row"
+} from "@/contexts/company/domain/definitions/to-audit-csv-row.definition"
 
 const UTF8_ENCODER = new TextEncoder()
 

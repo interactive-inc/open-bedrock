@@ -1,16 +1,16 @@
-import type { RequestAuditContext } from "@/env"
+import type { SystemRequestAudit } from "@system/configuration/system-context"
 import {
   auditOutcomeSchema,
   createCompanyAuditRecord,
-} from "@/api/http/audit/company-audit-record.definition"
+} from "@/contexts/company/domain/definitions/company-audit-record.definition"
 import type {
   AuditJsonValue,
   AuditOutcome,
   CompanyAuditDetail,
   CompanyAuditRecord,
   CompanyAuditSummary,
-} from "@/api/http/audit/company-audit-record.definition"
-import { ValidationError } from "@/lib/errors"
+} from "@/contexts/company/domain/definitions/company-audit-record.definition"
+import { CompanyValidationError } from "@/contexts/company/domain/errors"
 import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
@@ -136,10 +136,10 @@ function parseManagedValue<Output>(
   try {
     parsed = schema.safeParse(value)
   } catch (error) {
-    throw new ValidationError(message, code, { cause: error })
+    throw new CompanyValidationError(message, code, { cause: error })
   }
   if (!parsed.success) {
-    throw new ValidationError(message, code, { cause: parsed.error })
+    throw new CompanyValidationError(message, code, { cause: parsed.error })
   }
   return parsed.data
 }
@@ -147,7 +147,7 @@ function parseManagedValue<Output>(
 /** Company の閉じた語彙と Employee 文脈を System の汎用監査エンベロープへ合成する。 */
 export function createAuditEvent(
   input: AuditEventInput,
-  context: RequestAuditContext,
+  context: SystemRequestAudit,
 ): AuditEventRecord {
   const eventInput = parseManagedValue(
     eventEnvelopeSchema,

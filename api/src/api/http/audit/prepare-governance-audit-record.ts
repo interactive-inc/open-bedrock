@@ -1,12 +1,12 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
-import type { AuditJsonValue } from "@/api/http/audit/company-audit-record.definition"
+import type { AuditJsonValue } from "@/contexts/company/domain/definitions/company-audit-record.definition"
 import {
   createAuditEvent,
   type AuditAction,
   type AuditTargetType,
-} from "@/api/http/audit/company-audit-event.definition"
+} from "@/contexts/company/domain/definitions/company-audit-event.definition"
 import type { Context } from "@/env"
-import { AuditEventAdapter } from "@/api/http/audit/audit-event.adapter"
+import { AuditEventAdapter } from "@/contexts/company/infrastructure/adapters/audit/audit-event.adapter"
 
 /** Company監査の識別子と永続化断片を、呼出側の同一transactionへ渡す。 */
 export function prepareGovernanceAuditRecord(props: {

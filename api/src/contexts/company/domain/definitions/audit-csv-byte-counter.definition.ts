@@ -1,10 +1,10 @@
-import type { AuditEventDetail } from "@/api/http/audit/company-audit-event.definition"
-import { PayloadTooLargeError } from "@/lib/errors"
+import type { AuditEventDetail } from "@/contexts/company/domain/definitions/company-audit-event.definition"
+import { CompanyPayloadTooLargeError } from "@/contexts/company/domain/errors"
 import {
   AUDIT_CSV_HEADER,
   AUDIT_CSV_MAX_BYTES,
   toAuditCsvRow,
-} from "@/api/http/audit/to-audit-csv-row"
+} from "@/contexts/company/domain/definitions/to-audit-csv-row.definition"
 
 const UTF8_ENCODER = new TextEncoder()
 
@@ -19,7 +19,7 @@ export class AuditCsvByteCounter {
   add(row: AuditEventDetail): void {
     this.byteLength += UTF8_ENCODER.encode(toAuditCsvRow(row)).byteLength
     if (this.byteLength > AUDIT_CSV_MAX_BYTES) {
-      throw new PayloadTooLargeError("audit export is too large", "audit_export_too_large")
+      throw new CompanyPayloadTooLargeError("audit export is too large", "audit_export_too_large")
     }
   }
 }

@@ -1,7 +1,10 @@
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import type { SystemJsonValue } from "@system/domain/definitions/audit/system-json-value.definition"
-import { PayloadTooLargeError, ValidationError } from "@/lib/errors"
+import {
+  CompanyPayloadTooLargeError,
+  CompanyValidationError,
+} from "@/contexts/company/domain/errors"
 import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { z } from "zod"
 
@@ -101,10 +104,10 @@ function parseManagedValue<Output>(
   try {
     parsed = schema.safeParse(value)
   } catch (error) {
-    throw new ValidationError(message, code, { cause: error })
+    throw new CompanyValidationError(message, code, { cause: error })
   }
   if (!parsed.success) {
-    throw new ValidationError(message, code, { cause: parsed.error })
+    throw new CompanyValidationError(message, code, { cause: parsed.error })
   }
   return parsed.data
 }
@@ -113,12 +116,19 @@ function serializeOptionalProjection(value: AuditJsonValue | undefined): string 
   if (value === undefined) return null
   const serialized = CanonicalSystemJsonValue.create(value)
   if (serialized instanceof Error) {
-    throw new ValidationError("audit JSON contains an unsupported value", "audit_invalid_json", {
-      cause: serialized,
-    })
+    throw new CompanyValidationError(
+      "audit JSON contains an unsupported value",
+      "audit_invalid_json",
+      {
+        cause: serialized,
+      },
+    )
   }
   if (new TextEncoder().encode(serialized.toString()).byteLength > 65_536) {
-    throw new PayloadTooLargeError("audit JSON exceeds the 64 KiB limit", "audit_payload_too_large")
+    throw new CompanyPayloadTooLargeError(
+      "audit JSON exceeds the 64 KiB limit",
+      "audit_payload_too_large",
+    )
   }
   return serialized.toString()
 }
@@ -148,7 +158,7 @@ export function createCompanyAuditRecord(
   )
   const timestamp = Date.prototype.getTime.call(eventTime)
   if (!Number.isFinite(timestamp)) {
-    throw new ValidationError("audit event time is invalid", "audit_invalid_timestamp")
+    throw new CompanyValidationError("audit event time is invalid", "audit_invalid_timestamp")
   }
 
   const event = SystemAuditEventEntity.create({
@@ -165,7 +175,7 @@ export function createCompanyAuditRecord(
     occurredAt: eventTime,
   })
   if (event instanceof Error) {
-    throw new ValidationError("audit event input is invalid", "audit_invalid_event", {
+    throw new CompanyValidationError("audit event input is invalid", "audit_invalid_event", {
       cause: event,
     })
   }

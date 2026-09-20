@@ -1,4 +1,4 @@
-import type { AuditEventDetail } from "@/api/http/audit/company-audit-event.definition"
+import type { AuditEventDetail } from "@/contexts/company/domain/definitions/company-audit-event.definition"
 
 export const AUDIT_CSV_MAX_BYTES = 16 * 1024 * 1024
 

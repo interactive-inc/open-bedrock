@@ -1,4 +1,4 @@
-import { AuditEventAdapter } from "@/api/http/audit/audit-event.adapter"
+import { AuditEventAdapter } from "@/contexts/company/infrastructure/adapters/audit/audit-event.adapter"
 import type { Context } from "@/env"
 
 export type CompanyAuditExportRows = Awaited<ReturnType<AuditEventAdapter["export"]>>

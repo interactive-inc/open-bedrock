@@ -4,19 +4,25 @@ import type {
   AuditEventDetail,
   AuditEventRecord,
   AuditEventSummary,
-} from "@/api/http/audit/company-audit-event.definition"
+} from "@/contexts/company/domain/definitions/company-audit-event.definition"
 import {
   auditClientNameSchema,
   auditOutcomeSchema,
-} from "@/api/http/audit/company-audit-record.definition"
-import type { AuditOutcome } from "@/api/http/audit/company-audit-record.definition"
-import type { Context } from "@/env"
-import { AuditCursor } from "@/lib/audit/audit-cursor"
-import type { AuditCursorAnchor, AuditCursorPosition } from "@/lib/audit/audit-cursor"
-import { AuditCsvByteCounter } from "@/api/http/audit/audit-csv-byte-counter"
-import { AUDIT_CSV_MAX_BYTES } from "@/api/http/audit/to-audit-csv-row"
+} from "@/contexts/company/domain/definitions/company-audit-record.definition"
+import type { AuditOutcome } from "@/contexts/company/domain/definitions/company-audit-record.definition"
+import { AuditCursor } from "@/contexts/company/domain/definitions/audit-cursor.definition"
+import type {
+  AuditCursorAnchor,
+  AuditCursorPosition,
+} from "@/contexts/company/domain/definitions/audit-cursor.definition"
+import { AuditCsvByteCounter } from "@/contexts/company/domain/definitions/audit-csv-byte-counter.definition"
+import { AUDIT_CSV_MAX_BYTES } from "@/contexts/company/domain/definitions/to-audit-csv-row.definition"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
-import { PayloadTooLargeError, UnavailableError, ValidationError } from "@/lib/errors"
+import {
+  CompanyPayloadTooLargeError,
+  CompanyUnavailableError,
+  CompanyValidationError,
+} from "@/contexts/company/domain/errors"
 import { z } from "zod"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
@@ -429,20 +435,20 @@ type PageRange = {
   hasNext: boolean
 }
 
-function unavailable(cause: unknown): UnavailableError {
-  return new UnavailableError("audit events are unavailable", "audit_unavailable", { cause })
+function unavailable(cause: unknown): CompanyUnavailableError {
+  return new CompanyUnavailableError("audit events are unavailable", "audit_unavailable", { cause })
 }
 
-function exportTooLarge(): PayloadTooLargeError {
-  return new PayloadTooLargeError("audit export is too large", "audit_export_too_large")
+function exportTooLarge(): CompanyPayloadTooLargeError {
+  return new CompanyPayloadTooLargeError("audit export is too large", "audit_export_too_large")
 }
 
-function invalidQuery(cause: unknown): ValidationError {
-  return new ValidationError("audit query is invalid", "audit_invalid_query", { cause })
+function invalidQuery(cause: unknown): CompanyValidationError {
+  return new CompanyValidationError("audit query is invalid", "audit_invalid_query", { cause })
 }
 
-function invalidCursorBinding(cause?: unknown): ValidationError {
-  return new ValidationError("audit cursor is invalid", "invalid_audit_cursor", { cause })
+function invalidCursorBinding(cause?: unknown): CompanyValidationError {
+  return new CompanyValidationError("audit cursor is invalid", "invalid_audit_cursor", { cause })
 }
 
 function parseQuery<T>(schema: z.ZodType<T>, value: unknown): T {
@@ -452,7 +458,7 @@ function parseQuery<T>(schema: z.ZodType<T>, value: unknown): T {
 
     return parsed.data
   } catch (error) {
-    if (error instanceof ValidationError) throw error
+    if (error instanceof CompanyValidationError) throw error
     throw invalidQuery(error)
   }
 }
@@ -1257,15 +1263,18 @@ const EXPORT_SEGMENT_SQL = `
 
 function rethrowRepositoryError(error: unknown): never {
   if (
-    error instanceof ValidationError ||
-    error instanceof PayloadTooLargeError ||
-    error instanceof UnavailableError
+    error instanceof CompanyValidationError ||
+    error instanceof CompanyPayloadTooLargeError ||
+    error instanceof CompanyUnavailableError
   ) {
     throw error
   }
 
   throw unavailable(error)
 }
+
+/** 監査台帳の読み書きに必要な最小限のbinding。製品ごとのenv全体には依存しない。 */
+type Context = Readonly<{ env: Readonly<{ DB: D1Database }> }>
 
 export class AuditEventAdapter {
   constructor(private readonly c: Context) {
@@ -1673,7 +1682,7 @@ export class AuditEventAdapter {
     ]
   }): AuditDecisionAppendFragment<TDecision> {
     const invalid = (cause?: unknown) =>
-      new ValidationError(
+      new CompanyValidationError(
         "audit decision fragment is invalid",
         "audit_invalid_decision_fragment",
         cause === undefined ? undefined : { cause },

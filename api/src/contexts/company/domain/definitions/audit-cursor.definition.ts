@@ -1,4 +1,4 @@
-import { ValidationError } from "@/lib/errors"
+import { CompanyValidationError } from "@/contexts/company/domain/errors"
 import { z } from "zod"
 
 const BASE64URL_PATTERN = /^[A-Za-z0-9_-]+$/u
@@ -93,8 +93,8 @@ type PackedAuditCursor = readonly [
   number | null,
 ]
 
-function invalidCursor(cause?: unknown): ValidationError {
-  return new ValidationError("audit cursor is invalid", "invalid_audit_cursor", { cause })
+function invalidCursor(cause?: unknown): CompanyValidationError {
+  return new CompanyValidationError("audit cursor is invalid", "invalid_audit_cursor", { cause })
 }
 
 function bytesToBase64Url(bytes: Uint8Array): string {
@@ -251,7 +251,7 @@ export class AuditCursor {
       if (AuditCursor.encode(position) !== token) throw invalidCursor()
       return position
     } catch (error) {
-      if (error instanceof ValidationError) throw error
+      if (error instanceof CompanyValidationError) throw error
       throw invalidCursor(error)
     }
   }
