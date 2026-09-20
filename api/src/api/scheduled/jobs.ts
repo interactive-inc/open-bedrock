@@ -1,4 +1,4 @@
-// このファイルは `bun run gen:scheduled` が生成する。手で編集しない。
+// このファイルは `bun run gen:composition` が生成する。手で編集しない。
 import { runScheduledLeaveNotifications } from "@/api/scheduled/run-leave-notifications"
 import { runScheduledOnboarding } from "@/api/scheduled/run-onboarding"
 

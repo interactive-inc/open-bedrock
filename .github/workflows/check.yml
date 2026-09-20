@@ -33,7 +33,7 @@ jobs:
         working-directory: api
 
       - name: Business context removal
-        run: bun run verify:business-context-removal room onboarding company-calendar
+        run: bun run verify:business-context-removal room onboarding company-calendar thanks
         working-directory: api
 
       - name: cli test

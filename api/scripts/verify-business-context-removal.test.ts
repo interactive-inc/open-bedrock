@@ -67,5 +67,7 @@ describe("束ねるだけのファイルからの業務contextの除去", () => 
     expect(isRemovableComposition("src/api/scheduled/jobs.ts")).toBe(false)
     expect(isRemovableComposition("src/api/http/dashboard/read-dashboard.ts")).toBe(false)
     expect(isRemovableComposition("src/api/http/inbox/read-inbox-business-counts.ts")).toBe(false)
+    expect(isRemovableComposition("src/api/http/inbox/providers/thanks.ts")).toBe(true)
+    expect(isRemovableComposition("src/api/http/inbox/inbox-count-providers.ts")).toBe(false)
   })
 })
