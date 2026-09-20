@@ -1,3 +1,4 @@
+import { ResponsibilitySourceLedgerAdapter } from "@/contexts/company/infrastructure/adapters/organization/responsibility-source-ledger.adapter"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import {
   governanceResponsibilityCutoverReceiptSchema,
@@ -6,6 +7,12 @@ import {
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 import { z } from "zod"
+
+const governanceResponsibilitySource = {
+  organizationId: "organization:default",
+  sourceContext: "governance",
+  sourceKind: "org-role-assignment",
+} as const
 
 type Audit = Readonly<{ eventId: string; statements: ReadonlyArray<D1PreparedStatement> }>
 type Context = Readonly<{
@@ -61,26 +68,19 @@ export class GovernanceResponsibilityCutoverAdapter {
     const sourceCount = await this.c.database
       .prepare("SELECT count(*) AS total FROM governance_org_role_assignments")
       .first<number>("total")
-    const rows = await this.c.database
-      .prepare(`SELECT source_id AS sourceId, source_version AS sourceVersion
-      FROM company_responsibility_source_adoptions
-      WHERE organization_id = 'organization:default' AND source_context = 'governance'
-        AND source_kind = 'org-role-assignment' AND source_namespace = ?1 AND freeze_id = ?2
-      ORDER BY CAST(source_id AS INTEGER), source_id`)
-      .bind(sourceNamespace, props.freezeId)
-      .all()
-    const entries = z.array(governanceResponsibilityManifestEntrySchema).safeParse(rows.results)
+    const ledger = new ResponsibilitySourceLedgerAdapter(this.c.database)
+    const rows = await ledger.listAdoptedSources({
+      ...governanceResponsibilitySource,
+      sourceNamespace,
+      freezeId: props.freezeId,
+    })
+    const entries = z.array(governanceResponsibilityManifestEntrySchema).safeParse(rows)
     if (sourceCount === null || !entries.success) return { kind: "unavailable" }
     const manifest = CanonicalSystemJsonValue.create(entries.data)
     if (manifest instanceof Error) return { kind: "unavailable", cause: manifest }
     const digest = await ProposalDigestValue.create(manifest)
     if (digest instanceof Error) return { kind: "unavailable", cause: digest }
-    const existing = await this.c.database
-      .prepare(`SELECT freeze_id, source_count, adopted_count,
-      source_manifest_digest, completed_at FROM company_responsibility_source_cutovers
-      WHERE organization_id = 'organization:default' AND source_context = 'governance'
-        AND source_kind = 'org-role-assignment'`)
-      .first()
+    const existing = await ledger.findCutover(governanceResponsibilitySource)
     if (existing !== null) {
       const receipt = governanceResponsibilityCutoverReceiptSchema.safeParse(existing)
       if (
@@ -106,21 +106,17 @@ export class GovernanceResponsibilityCutoverAdapter {
         source_manifest_digest: digest.toString(),
       },
     })
-    const insert = this.c.database
-      .prepare(`INSERT INTO company_responsibility_source_cutovers
-      (organization_id, source_context, source_kind, source_namespace, freeze_id, source_count,
-       adopted_count, source_manifest_digest, source_manifest_json, audit_event_id, actor_account_id, completed_at)
-      VALUES ('organization:default', 'governance', 'org-role-assignment', ?1, ?2, ?3, ?3, ?4, ?5, ?6, ?7, ?8)`)
-      .bind(
-        sourceNamespace,
-        props.freezeId,
-        sourceCount,
-        digest.toString(),
-        manifest.toString(),
-        audit.eventId,
-        props.session.accountId,
-        completedAt,
-      )
+    const insert = ledger.prepareCutover({
+      ...governanceResponsibilitySource,
+      sourceNamespace,
+      freezeId: props.freezeId,
+      sourceCount,
+      manifestDigest: digest.toString(),
+      manifestJson: manifest.toString(),
+      auditEventId: audit.eventId,
+      actorAccountId: props.session.accountId,
+      completedAt,
+    })
     try {
       const statements = [...audit.statements, insert]
       const results = await this.c.database.batch(statements)

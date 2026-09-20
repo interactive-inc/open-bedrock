@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "9a496206350a9d5d3e2d55ad334d4d8ecc62edf6e23d0db390e95d3faf86357f",
+    "company-context.manifest.json": "4372df1c277140964c66e8fe3b1368a834559a2c54043a7120bbb4de29fca209",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -388,6 +388,8 @@
     "src/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter.ts": "4a568ba04654350bb517a88cd9212f8884f8736b541fbb653fcade2a40feb4df",
     "src/contexts/company/infrastructure/adapters/organization/resolve-organizational-authority-candidates.adapter.ts": "02ecfe80ac173d274509b08564fb184e5493801a5747eff0103ec635b684848d",
     "src/contexts/company/infrastructure/adapters/organization/responsibility-resource-adoption-snapshot.adapter.ts": "68bb2e5b26b46ebaefd4060eaab5692958c153974263aef55e193c4da4dce6a6",
+    "src/contexts/company/infrastructure/adapters/organization/responsibility-source-ledger.adapter.test.ts": "314c777425be12a06ff35adad4b8df4f978ca5180e0f22b2cdae4661915bbb15",
+    "src/contexts/company/infrastructure/adapters/organization/responsibility-source-ledger.adapter.ts": "1a67e6f159a103c38fc8bf4499e616f88770d422da91a2ce2a33b20aed1443eb",
     "src/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-authority.adapter.ts": "ec8f4a292065291c6864088553793448bb85e083edd53d92c5467c9681411906",
     "src/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-execution.adapter.ts": "913d3cef120002935ebbe8dd273e7aba13dcd7b59a72b2a5df40b73e153fccf6",
     "src/contexts/company/infrastructure/adapters/organization/revalidate-record-preservation-execution.adapter.ts": "c24e018a1c8687e2bf4a5ae8b47a385325c300244f754b476528a269578dd04e",
@@ -461,6 +463,8 @@
     "src/contexts/company/interface/operations/read-company-employments-by-accounts.ts": "0f85ec20ed216e332548382938a1e8811668fbb79917473ffb307ca981557f68",
     "src/contexts/company/interface/operations/read-company-employments-by-employee.ts": "4b28575f9ffb6dc59ad435f921c198288bfc421aecc9461e0140c2df7342295d",
     "src/contexts/company/interface/operations/read-company-organization-profile.ts": "ec8efb306205cebd0de3cdda6708c6ae3bb60832df7b4b696d612f06a6e68735",
+    "src/contexts/company/interface/operations/read-company-organization-revision.test.ts": "3b4eae2d48eeb16359726671578214d978e5296d2c44ab4f9c41eee49a0e1750",
+    "src/contexts/company/interface/operations/read-company-organization-revision.ts": "8e2508fd96103181826bad84f6f1373cf87f565167338deb6ed521842ad7eb9a",
     "src/contexts/company/interface/operations/read-company-start-correction-history.ts": "b6321d91fc4002a683a48f20c7f494e610fd6a957dbb6aa9fb72bcb36f974f77",
     "src/contexts/company/interface/operations/read-employment-start-correction-history.ts": "a2fc43015aafc5d155e93f9a68b24c699f5a6873bac446661f3e32bff534a4c5",
     "src/contexts/company/interface/operations/resolve-personnel-action-input.ts": "4c44b8ac38b9d7f05c43b558bc3fc76dd4ccb6b16ee1dd8263fc018da5c17367",

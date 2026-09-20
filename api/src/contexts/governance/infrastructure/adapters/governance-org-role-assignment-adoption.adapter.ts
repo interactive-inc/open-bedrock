@@ -1,3 +1,4 @@
+import { ResponsibilitySourceLedgerAdapter } from "@/contexts/company/infrastructure/adapters/organization/responsibility-source-ledger.adapter"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
@@ -5,6 +6,12 @@ import { findGovernanceOrgRole } from "@/contexts/governance/domain/catalogs/gov
 import { CompanyGovernanceRoleAssignmentWriteAdapter } from "@/contexts/governance/infrastructure/adapters/company-governance-role-assignment-write.adapter"
 import { GovernanceRoleAssignmentAdoptionSnapshotAdapter } from "@/contexts/governance/infrastructure/adapters/governance-role-assignment-adoption-snapshot.adapter"
 import type { SystemJsonValue } from "@system/domain/definitions/audit/system-json-value.definition"
+
+const governanceResponsibilitySource = {
+  organizationId: "organization:default",
+  sourceContext: "governance",
+  sourceKind: "org-role-assignment",
+} as const
 
 type Context = Readonly<{
   database: D1Database
@@ -100,28 +107,22 @@ export class GovernanceOrgRoleAssignmentAdoptionAdapter {
         snapshotDigest: snapshot.snapshotDigest,
       },
       prepareAdditionalStatements: (assignment) => [
-        this.c.database
-          .prepare(`INSERT INTO company_responsibility_source_adoptions
-        (organization_id, source_context, source_kind, source_namespace, freeze_id, source_id, source_version,
-         command_id, resource_type, resource_id, resource_revision, snapshot_digest, source_json,
-         actor_account_id, reason, expected_revision, organization_revision, recorded_at)
-        VALUES ('organization:default', 'governance', 'org-role-assignment', ?1, ?2, ?3, ?4, ?5,
-         'responsibility-assignment', ?6, ?7, ?4, ?8, ?9, ?10, ?11, ?12, ?13)`)
-          .bind(
-            sourceNamespace,
-            props.freezeId,
-            String(snapshot.source.id),
-            snapshot.snapshotDigest,
-            props.commandId,
-            assignment.assignmentId,
-            assignment.resourceRevision,
-            snapshot.sourceJson,
-            assignment.actorAccountId,
-            assignment.reason,
-            assignment.expectedRevision,
-            assignment.organizationRevision,
-            assignment.recordedAt,
-          ),
+        new ResponsibilitySourceLedgerAdapter(this.c.database).prepareAdoption({
+          ...governanceResponsibilitySource,
+          sourceNamespace,
+          freezeId: props.freezeId,
+          sourceId: String(snapshot.source.id),
+          snapshotDigest: snapshot.snapshotDigest,
+          sourceJson: snapshot.sourceJson,
+          commandId: props.commandId,
+          resourceId: assignment.assignmentId,
+          resourceRevision: assignment.resourceRevision,
+          actorAccountId: assignment.actorAccountId,
+          reason: assignment.reason,
+          expectedRevision: assignment.expectedRevision,
+          organizationRevision: assignment.organizationRevision,
+          recordedAt: assignment.recordedAt,
+        }),
       ],
     })
   }

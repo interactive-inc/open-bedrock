@@ -1,3 +1,4 @@
+import { readCompanyOrganizationRevision } from "@/contexts/company/interface/operations/read-company-organization-revision"
 import { prepareGovernanceAudit } from "@/api/http/audit/prepare-governance-audit"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
@@ -45,10 +46,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       new NotFoundError("組織責任の元記録がありません", "governance_assignment_not_found"),
     )
   }
-  const organizationRevision =
-    (await c.env.DB.prepare(
-      "SELECT revision FROM company_organizations WHERE id = 'organization:default'",
-    ).first<number>("revision")) ?? 0
+  const organizationRevision = await readCompanyOrganizationRevision({
+    database: c.env.DB,
+    organizationId: "organization:default",
+  })
+  if (organizationRevision instanceof Error) throw organizationRevision
 
   return c.json({
     assignment_id: assignmentId,
