@@ -1,3 +1,4 @@
+import { PersonnelActionRequestLedgerAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-request-ledger.adapter"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import type {
   PersonnelActionRequestRecord,
@@ -27,42 +28,14 @@ export class ListPersonnelActionRequests {
     filters: Filters,
   ): Promise<ReadonlyArray<PersonnelActionRequestRecord> | UnexpectedError> {
     try {
-      const rows = await this.c.env.DB.prepare(
-        `SELECT request.id, request.application_id, request.system_proposal_series_id,
-                request.target_employee_id, request.target_department_code,
-                json_extract(request.subject_snapshot_json, '$.employeeCode')
-                  AS target_employee_code,
-                json_extract(request.subject_snapshot_json, '$.employeeName')
-                  AS target_employee_name,
-                request.kind, request.payload_json, request.payload_fingerprint,
-                request.requested_by_employee_id,
-                request.base_employee_revision, request.base_organization_revision, request.base_company_revision,
-                request.created_at, request.applied_action_id, request.withdrawn_at
-         FROM company_personnel_action_requests AS request
-         ORDER BY request.created_at DESC, request.id DESC`,
-      ).all<{
-        id: string
-        application_id: number
-        system_proposal_series_id: string | null
-        target_employee_id: EmployeeId | null
-        target_department_code: string | null
-        target_employee_code: string | null
-        target_employee_name: string | null
-        kind: string
-        payload_json: string
-        payload_fingerprint: string | null
-        requested_by_employee_id: EmployeeId
-        base_employee_revision: number | null
-        base_organization_revision: number | null
-        base_company_revision: number | null
-        created_at: number
-        applied_action_id: string | null
-        withdrawn_at: number | null
-      }>()
+      const rows = await new PersonnelActionRequestLedgerAdapter(this.c.env.DB).list()
+      if (rows instanceof Error) {
+        return new UnexpectedError("人事変更申請の一覧を取得できません", { cause: rows })
+      }
       const workflows = await new ReadSystemWorkflowReferencesAdapter({
         env: { DB: this.c.env.DB },
       }).readSystemWorkflowReferences({
-        numbers: rows.results.map((row) => row.application_id),
+        numbers: rows.map((row) => row.application_id),
         actorAccountId: session.accountId,
         includeAll: session.hasPermission("employee:lifecycle:read:all"),
         at: new Date(this.c.env.NOW ?? Date.now()),
@@ -71,7 +44,7 @@ export class ListPersonnelActionRequests {
         return new UnexpectedError("人事変更申請の一覧を取得できません", { cause: workflows })
       }
       const workflowByNumber = new Map(workflows.map((workflow) => [workflow.number, workflow]))
-      const visibleRows = rows.results.filter((row) => workflowByNumber.has(row.application_id))
+      const visibleRows = rows.filter((row) => workflowByNumber.has(row.application_id))
       const employees = await new CompanyEmployeeDirectoryReadAdapter({
         env: this.c.env,
       }).findForEmployeeIds(

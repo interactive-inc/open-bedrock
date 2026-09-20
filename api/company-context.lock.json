@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "47c4147990d6525f00f036d1d2cc41759d0f861ae3bf23ce7f9783f465aed41b",
+    "company-context.manifest.json": "e65fc08e8e595ba1b01f760ec24d5f5bd09db651198b72e0ca312ad99cda5aba",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -319,6 +319,8 @@
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/lib/personnel-action-persistence-props.ts": "3179f69da7cb5a437af08b9b56791f02eb7d4f06ffa8900fe68b49958ff135f0",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-completion-preparation.adapter.ts": "8c2d791a44f08b57c9e413aa3a789e6542442c3571bfe2e85e29cb5663482fed",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter.ts": "7c3c44342ad607e31f062872f74e65bdfcd9755c26e7c0040b441ebd66b4e991",
+    "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-request-ledger.adapter.test.ts": "6a35f19726db455f0d45d68c0d711942c305ea70708fffa1d990886680e513af",
+    "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-request-ledger.adapter.ts": "a9694d5eef70ac81951c0fecb96101574592ba8cc4cc4560193e6efcfc04341c",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action.adapter.ts": "da814e79b1af6fdc2c88adc226284f442c01f49668109ba6e76432135e7ca809",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/revalidate-personnel-action-execution.adapter.ts": "0537f442da1668a8ee570ad49e63b863807ba8eeb50f43213c32936eeabc37c1",
     "src/contexts/company/infrastructure/adapters/employee-resource-adoption/employee-resource-adoption-correction.adapter.ts": "8f33630cf99240393c2ed002e44cf88633a8a5215dcbf96ea1f9b7f7514743ea",

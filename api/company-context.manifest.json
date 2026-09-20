@@ -319,6 +319,8 @@
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/lib/personnel-action-persistence-props.ts",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-completion-preparation.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter.ts",
+    "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-request-ledger.adapter.test.ts",
+    "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-request-ledger.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/revalidate-personnel-action-execution.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee-resource-adoption/employee-resource-adoption-correction.adapter.ts",
