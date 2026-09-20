@@ -1,3 +1,5 @@
+import { prepareCompanyOrganizationRevisionStatement } from "@/contexts/company/interface/operations/prepare-company-organization-revision-statement"
+import { readCompanyOrganizationLifecycleRevision } from "@/contexts/company/interface/operations/read-company-organization-lifecycle-revision"
 import { validatePersonnelPositionReference } from "@/contexts/company/domain/policies/validate-personnel-position-reference.policy"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active-system-account-id"
@@ -278,15 +280,19 @@ export class CreatePersonnelActionRequest {
           command.baseCompanyRevision ?? null,
           createdAtSeconds,
         )
+        const companyRevisionStatement =
+          command.baseCompanyRevision === undefined
+            ? null
+            : prepareCompanyOrganizationRevisionStatement({
+                database: this.c.env.DB,
+                organizationId: "organization:default",
+                expectedRevision: command.baseCompanyRevision,
+              })
+        if (companyRevisionStatement instanceof Error) return companyRevisionStatement
+        const companyRevisionGuard = companyRevisionStatement === null ? [] : [companyRevisionStatement]
         try {
           const results = await this.c.env.DB.batch<{ number: number }>([
-            ...(command.baseCompanyRevision === undefined
-              ? []
-              : [
-                  this.c.env.DB.prepare(
-                    "SELECT CASE WHEN EXISTS (SELECT 1 FROM company_organizations WHERE id = 'organization:default' AND revision = ?) THEN 1 ELSE json_extract('', '$') END",
-                  ).bind(command.baseCompanyRevision),
-                ]),
+            ...companyRevisionGuard,
             ...systemStatements.slice(0, -1),
             association,
             abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
@@ -455,9 +461,8 @@ export class CreatePersonnelActionRequest {
       return new ValidationError("人事revisionが不正です", "personnel_action_stale")
     }
     if (input.prospective) {
-      const revision = await this.c.env.DB.prepare(
-        "SELECT revision FROM company_organization_lifecycle_states WHERE id = 1",
-      ).first<number>("revision")
+      const revision = await readCompanyOrganizationLifecycleRevision({ database: this.c.env.DB })
+      if (revision instanceof Error) return new UnexpectedError("人事情報を確認できません", { cause: revision })
       return input.employeeRevision === 0 &&
         (input.organizationRevision === null || input.organizationRevision === revision)
         ? true

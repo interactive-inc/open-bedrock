@@ -1,3 +1,4 @@
+import { readCompanyOrganizationLifecycleRevision } from "@/contexts/company/interface/operations/read-company-organization-lifecycle-revision"
 import type { Context } from "@/env"
 import {
   ApplicationError,
@@ -134,10 +135,12 @@ export class RegisterEmployee {
     if (existingIdentity !== null) {
       return new ConflictError("email already exists", "email_conflict")
     }
-    const organizationRevision =
-      (await this.c.env.DB.prepare(
-        "SELECT revision FROM company_organization_lifecycle_states WHERE id = 1",
-      ).first<number>("revision")) ?? 0
+    const lifecycleRevision = await readCompanyOrganizationLifecycleRevision({
+      database: this.c.env.DB,
+    })
+    if (lifecycleRevision instanceof Error)
+      return new UnexpectedError("人事情報を確認できません", { cause: lifecycleRevision })
+    const organizationRevision = lifecycleRevision ?? 0
     const prepared = await new PersonnelActionCompletionPreparationAdapter(company).prepare({
       session,
       employeeId: null,
