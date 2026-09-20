@@ -16,6 +16,7 @@ const governanceResponsibilitySource = {
 type Context = Readonly<{
   database: D1Database
   now?: string | number
+  timeZone?: string
   sourceNamespace?: string
   prepareAudit: (props: {
     session: CompanySessionValue
@@ -59,6 +60,8 @@ export class GovernanceOrgRoleAssignmentAdoptionAdapter {
     if (freeze === null) return { kind: "source_not_frozen" }
     const snapshot = await new GovernanceRoleAssignmentAdoptionSnapshotAdapter({
       database: this.c.database,
+      now: this.c.now,
+      timeZone: this.c.timeZone,
     }).find(props.assignmentId)
     if (snapshot instanceof Error) return { kind: "source_unavailable", cause: snapshot }
     if (snapshot === null) return { kind: "source_not_found" }

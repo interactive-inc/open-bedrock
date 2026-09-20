@@ -50,6 +50,7 @@ async function fixture() {
   const adapter = new GovernanceOrgRoleAssignmentAdoptionAdapter({
     database: context.database,
     now: context.at.getTime(),
+    timeZone: "Asia/Tokyo",
     sourceNamespace: "9664c95f-412f-472f-9e09-9772f55485e1",
     prepareAudit: (audit) => [
       context.database
@@ -73,8 +74,11 @@ async function fixture() {
   })
   const snapshot = await new GovernanceRoleAssignmentAdoptionSnapshotAdapter({
     database: context.database,
+    now: context.at.getTime(),
+    timeZone: "Asia/Tokyo",
   }).find(7)
-  if (snapshot === null || snapshot instanceof Error) throw new Error("snapshot failed")
+  if (snapshot === null || snapshot instanceof Error)
+    throw new Error("snapshot failed", { cause: snapshot })
 
   return { ...context, application, session, snapshot }
 }

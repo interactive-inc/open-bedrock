@@ -46,14 +46,10 @@ export function resolveTableOwner(
   return candidates[0] ?? null
 }
 
-/**
- * 業務contextがCompanyのtableをSQLで直接読む、解消待ちの箇所。
- * 保存元snapshotのdigestに従業員番号を含むため、参照時点の決定を待っている。増やさない。
- */
+/** CompanyのtableをSQLで直接読む、解消待ちの箇所。増やさない。 */
 const API_COMPOSITION = "api-composition"
 
 const PENDING_COMPANY_TABLE_READS = new Set([
-  "src/contexts/governance/infrastructure/adapters/governance-role-assignment-adoption-snapshot.adapter.ts",
   // Companyの監査台帳の保存・検索・出力。依存する定義と補助を含めてCompanyへ移す。
   "src/api/http/audit/audit-event.adapter.ts",
 ])
