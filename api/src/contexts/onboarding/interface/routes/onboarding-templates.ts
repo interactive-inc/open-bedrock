@@ -14,8 +14,8 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { lifecycleEffectTemplateBindings } from "@/contexts/company/infrastructure/schema/employee-lifecycle"
 import {
+  onboardingLifecycleTemplateBindings,
   onboardingTemplates,
   onboardingTemplateTasks,
 } from "@/contexts/onboarding/infrastructure/schema/onboarding"
@@ -86,11 +86,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       ? []
       : await c.var.database
           .select({
-            templateCode: lifecycleEffectTemplateBindings.templateCode,
-            effectType: lifecycleEffectTemplateBindings.effectType,
+            templateCode: onboardingLifecycleTemplateBindings.templateCode,
+            effectType: onboardingLifecycleTemplateBindings.effectType,
           })
-          .from(lifecycleEffectTemplateBindings)
-          .where(inArray(lifecycleEffectTemplateBindings.templateCode, templateCodes))
+          .from(onboardingLifecycleTemplateBindings)
+          .where(inArray(onboardingLifecycleTemplateBindings.templateCode, templateCodes))
 
   const lifecycleEffectMap = new Map(
     bindingRows.map((row) => [row.templateCode, row.effectType] as const),

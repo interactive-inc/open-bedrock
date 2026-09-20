@@ -28,7 +28,7 @@ async function fixture() {
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('binding:lifecycle','worker:lifecycle','role:lifecycle',0);
     INSERT INTO onboarding_templates (id,code,name,kind) VALUES (90001,'auto-join','Join','join'),(90002,'auto-leave','Leave','leave');
     INSERT INTO onboarding_template_tasks (template_code,code,title,sort_order) VALUES ('auto-join','join-task','Prepare access',1),('auto-leave','leave-task','Confirm return',1);
-    INSERT INTO company_lifecycle_effect_template_bindings (effect_type,template_code,updated_at) VALUES ('hire','auto-join',0),('retired','auto-leave',0);`)
+    INSERT INTO onboarding_lifecycle_template_bindings (effect_type,template_code,updated_at) VALUES ('hire','auto-join',0),('retired','auto-leave',0);`)
   const clock = { at: new Date("2030-06-30T14:59:59.999Z") }
   const env = {
     ENABLED_OPT_IN_APPS: "onboarding",

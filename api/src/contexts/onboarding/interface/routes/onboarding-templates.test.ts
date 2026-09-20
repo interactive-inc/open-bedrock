@@ -98,7 +98,7 @@ async function createTestDb(): Promise<D1Database> {
     })),
   )
 
-  await seedD1(db, "company_lifecycle_effect_template_bindings", [
+  await seedD1(db, "onboarding_lifecycle_template_bindings", [
     {
       effect_type: "hire",
       template_code: "engineer_join",
