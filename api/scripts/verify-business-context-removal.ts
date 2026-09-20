@@ -14,13 +14,17 @@ const AGGREGATE_FILES = [
   "src/api/http/permissions/business-permission-key.catalog.ts",
 ] as const
 const REGISTRY_FILE = "src/api/route-module.registry.ts"
-const GENERATED_FILES = ["src/api/app.ts", "src/api/scheduled/jobs.ts"] as const
+const GENERATED_FILES = [
+  "src/api/app.ts",
+  "src/api/scheduled/jobs.ts",
+  "src/api/http/inbox/inbox-count-providers.ts",
+] as const
 /**
  * 一覧を生成するため、対象contextと一緒にファイルごと外せるcomposition。
  * 複数の業務を束ねるrouteは、束ねる業務の一つが無くなれば成立しないので一緒に外す。
  */
 const REMOVABLE_COMPOSITION_PATTERN =
-  /^src\/api\/(?:scheduled\/run-[a-z0-9-]+|routes\/[a-z0-9.$-]+?(?:\.test)?)\.ts$/iu
+  /^src\/api\/(?:scheduled\/run-[a-z0-9-]+|http\/inbox\/providers\/[a-z0-9-]+|routes\/[a-z0-9.$-]+?(?:\.test)?)\.ts$/iu
 
 export function isRemovableComposition(file: string): boolean {
   return REMOVABLE_COMPOSITION_PATTERN.test(file)
@@ -158,7 +162,7 @@ export async function verifyBusinessContextRemoval(context: string): Promise<str
     if (failures.length > 0) return failures
 
     for (const file of removable) rmSync(join(workspace, file))
-    for (const generator of ["scripts/gen-app.ts", "scripts/gen-scheduled.ts"]) {
+    for (const generator of ["scripts/gen-app.ts", "scripts/gen-composition-lists.ts"]) {
       const generated = run(["bun", "run", generator], workspace)
       if (!generated.ok) return [`${context}: 再生成に失敗しました\n${generated.output}`]
     }
