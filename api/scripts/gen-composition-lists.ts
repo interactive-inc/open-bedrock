@@ -43,6 +43,24 @@ export const COMPOSITION_LIST_TARGETS: ReadonlyArray<CompositionListTarget> = [
     description:
       "業務contextごとの未処理件数の取得。src/api/http/inbox/providers/*.ts から生成する。",
   },
+  {
+    directory: "http/dashboard/providers",
+    filePattern: /^[a-z0-9-]+\.ts$/u,
+    exportPrefix: "readDashboardMetrics",
+    output: "../dashboard-metric-providers.ts",
+    listName: "DASHBOARD_METRIC_PROVIDERS",
+    description:
+      "業務contextごとのdashboardの値の取得。src/api/http/dashboard/providers/*.ts から生成する。",
+  },
+  {
+    directory: "http/dashboard/management/providers",
+    filePattern: /^[a-z0-9-]+\.ts$/u,
+    exportPrefix: "readManagementMetrics",
+    output: "../management-dashboard-metric-providers.ts",
+    listName: "MANAGEMENT_DASHBOARD_METRIC_PROVIDERS",
+    description:
+      "業務contextごとの経営dashboardの値の取得。src/api/http/dashboard/management/providers/*.ts から生成する。",
+  },
 ]
 
 export type CompositionPart = Readonly<{ file: string; name: string }>

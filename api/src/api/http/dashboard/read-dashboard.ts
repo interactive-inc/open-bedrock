@@ -1,45 +1,38 @@
 import { buildDashboardMonthLabels } from "@/api/http/dashboard/build-dashboard-month-labels"
 import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
-import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"
-import { surveys } from "@/contexts/survey/infrastructure/schema/survey"
+import {
+  EMPTY_DASHBOARD_BUSINESS_METRICS,
+  type DashboardBusinessMetrics,
+} from "@/api/http/dashboard/dashboard-business-metrics"
+import { DASHBOARD_METRIC_PROVIDERS } from "@/api/http/dashboard/dashboard-metric-providers"
 import type { Context } from "@/env"
 import { CountPendingSystemCasesAdapter } from "@system/infrastructure/adapters/workflow/count-pending-system-cases.adapter"
 import { ListSystemCaseMonthlyCountsAdapter } from "@system/infrastructure/adapters/workflow/list-system-case-monthly-counts.adapter"
-import { count, eq } from "drizzle-orm"
 
-/** System・Company・評価・Surveyの集計を製品dashboard responseへ合成する。 */
+/**
+ * System・Companyの集計と、業務contextごとのproviderの値を製品dashboard responseへ合成する。
+ * 業務contextが無い構成では、その業務の値を0として同じ形の応答を返す。
+ */
 export async function readDashboard(context: Context, now: string) {
   const monthLabels = buildDashboardMonthLabels(now)
   const firstMonth = monthLabels[0]
   if (firstMonth === undefined) return new Error("dashboard month window is empty")
   const windowStartDate = new Date(`${firstMonth}-01T00:00:00Z`)
 
-  const [pendingApplicationCount, applicationTrendRows, companySnapshot, dashboardRows] =
+  const [pendingApplicationCount, applicationTrendRows, companySnapshot, providerMetrics] =
     await Promise.all([
       new CountPendingSystemCasesAdapter({ env: { DB: context.env.DB } }).countPendingSystemCases(),
       new ListSystemCaseMonthlyCountsAdapter({
         env: { DB: context.env.DB },
       }).listSystemCaseMonthlyCounts(windowStartDate),
       new ReadCanonicalOrganizationStateAdapter(context).readCanonicalOrganizationState(),
-      context.var.database.batch([
-        context.var.database
-          .select({ total: count() })
-          .from(goals)
-          .where(eq(goals.status, "in_progress")),
-        context.var.database
-          .select({ total: count() })
-          .from(surveys)
-          .where(eq(surveys.status, "open")),
-        context.var.database
-          .select({ status: goals.status, total: count() })
-          .from(goals)
-          .groupBy(goals.status),
-      ]),
+      Promise.all(DASHBOARD_METRIC_PROVIDERS.map((provider) => provider(context))),
     ])
   if (pendingApplicationCount instanceof Error) return pendingApplicationCount
   if (applicationTrendRows instanceof Error) return applicationTrendRows
   if (companySnapshot instanceof Error) return companySnapshot
-  const [openGoalRows, openSurveyRows, goalStatusRows] = dashboardRows
+  const business: DashboardBusinessMetrics = { ...EMPTY_DASHBOARD_BUSINESS_METRICS }
+  for (const metrics of providerMetrics) Object.assign(business, metrics)
   const unitById = new Map(
     companySnapshot.organization.units.map((unit) => [unit.organizationUnitId, unit]),
   )
@@ -52,31 +45,19 @@ export async function readDashboard(context: Context, now: string) {
         : (unitById.get(state.primaryAssignment.organizationUnitId)?.officialName ?? "未所属")
     departmentCounts.set(name, (departmentCounts.get(name) ?? 0) + 1)
   }
-  const goalStatusCounts: Record<string, number> = {}
-  let goalTotal = 0
-  for (const row of goalStatusRows) {
-    goalStatusCounts[row.status] = row.total
-    goalTotal += row.total
-  }
-  const completedGoals = goalStatusCounts.completed ?? 0
   const trendByMonth = new Map(applicationTrendRows.map((row) => [row.month, row.total]))
 
   return {
     employee_count: activeStates.length,
-    open_goal_count: openGoalRows.at(0)?.total ?? 0,
+    open_goal_count: business.open_goal_count,
     pending_application_count: pendingApplicationCount,
-    open_survey_count: openSurveyRows.at(0)?.total ?? 0,
+    open_survey_count: business.open_survey_count,
     department_breakdown: [...departmentCounts].map(([dept_name, count]) => ({
       dept_name,
       count,
     })),
-    goal_status_summary: {
-      draft: goalStatusCounts.draft ?? 0,
-      in_progress: goalStatusCounts.in_progress ?? 0,
-      completed: completedGoals,
-    },
-    goal_completion_rate:
-      goalTotal === 0 ? 0 : Math.round((completedGoals / goalTotal) * 1000) / 10,
+    goal_status_summary: business.goal_status_summary,
+    goal_completion_rate: business.goal_completion_rate,
     application_trend: monthLabels.map((month) => ({
       month,
       count: trendByMonth.get(month) ?? 0,
