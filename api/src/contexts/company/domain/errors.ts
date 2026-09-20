@@ -133,6 +133,13 @@ export class CompanyTimeZoneError extends DomainError {
   }
 }
 
+/** 監査のJSONやCSV exportが容量上限を超え、処理を継続できない。 */
+export class CompanyPayloadTooLargeError extends CompanyOperationError {
+  constructor(message: string, code: string, options?: ErrorOptions) {
+    super(message, code, options)
+  }
+}
+
 export class CompanyUnavailableError extends CompanyOperationError {
   constructor(message: string, code: string, options?: ErrorOptions) {
     super(message, code, options)

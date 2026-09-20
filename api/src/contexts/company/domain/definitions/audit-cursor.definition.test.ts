@@ -1,7 +1,7 @@
 import { describe, expect, test } from "bun:test"
-import { AuditCursor } from "@/lib/audit/audit-cursor"
-import type { AuditCursorPosition } from "@/lib/audit/audit-cursor"
-import { ValidationError } from "@/lib/errors"
+import { AuditCursor } from "@/contexts/company/domain/definitions/audit-cursor.definition"
+import type { AuditCursorPosition } from "@/contexts/company/domain/definitions/audit-cursor.definition"
+import { CompanyValidationError } from "@/contexts/company/domain/errors"
 
 function encodeRawJson(json: string): string {
   const bytes = new TextEncoder().encode(json)
@@ -72,9 +72,13 @@ describe("audit cursor", () => {
   test("rejects reversed ranges, anchors beyond the snapshot, and unavailable directions", () => {
     expect(() =>
       AuditCursor.encode(position({ sourceFirst: [99, 1], sourceLast: [100, 1] })),
-    ).toThrow(ValidationError)
-    expect(() => AuditCursor.encode(position({ sourceFirst: [100, 401] }))).toThrow(ValidationError)
-    expect(() => AuditCursor.encode(position({ sourceHasNext: false }))).toThrow(ValidationError)
+    ).toThrow(CompanyValidationError)
+    expect(() => AuditCursor.encode(position({ sourceFirst: [100, 401] }))).toThrow(
+      CompanyValidationError,
+    )
+    expect(() => AuditCursor.encode(position({ sourceHasNext: false }))).toThrow(
+      CompanyValidationError,
+    )
   })
 
   test.each(["not+base64url", "eyJ2ZXJzaW9uIjoyfQ==", "a".repeat(257), "bm90LWpzb24", "_w"])(
@@ -84,9 +88,9 @@ describe("audit cursor", () => {
         AuditCursor.decode(token)
         throw new Error("expected cursor rejection")
       } catch (error) {
-        expect(error).toBeInstanceOf(ValidationError)
-        expect((error as ValidationError).code).toBe("invalid_audit_cursor")
-        expect((error as ValidationError).message).toBe("audit cursor is invalid")
+        expect(error).toBeInstanceOf(CompanyValidationError)
+        expect((error as CompanyValidationError).code).toBe("invalid_audit_cursor")
+        expect((error as CompanyValidationError).message).toBe("audit cursor is invalid")
       }
     },
   )
@@ -119,7 +123,7 @@ describe("audit cursor", () => {
     ],
     ['{"version":2}', "object payload"],
   ])("rejects a decoded payload with %s", (json) => {
-    expect(() => AuditCursor.decode(encodeRawJson(json))).toThrow(ValidationError)
+    expect(() => AuditCursor.decode(encodeRawJson(json))).toThrow(CompanyValidationError)
   })
 
   test("rejects noncanonical JSON whitespace", () => {
@@ -131,7 +135,9 @@ describe("audit cursor", () => {
       ),
     )
 
-    expect(() => AuditCursor.decode(encodeRawJson(` ${decodedJson}`))).toThrow(ValidationError)
+    expect(() => AuditCursor.decode(encodeRawJson(` ${decodedJson}`))).toThrow(
+      CompanyValidationError,
+    )
   })
 
   test("accepts next and previous as the two directions", () => {

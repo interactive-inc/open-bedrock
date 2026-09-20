@@ -46,13 +46,13 @@ export function resolveTableOwner(
   return candidates[0] ?? null
 }
 
-/** CompanyのtableをSQLで直接読む、解消待ちの箇所。増やさない。 */
 const API_COMPOSITION = "api-composition"
 
-const PENDING_COMPANY_TABLE_READS = new Set([
-  // Companyの監査台帳の保存・検索・出力。依存する定義と補助を含めてCompanyへ移す。
-  "src/api/http/audit/audit-event.adapter.ts",
-])
+/**
+ * CompanyのtableをSQLで直接読む、解消待ちのfile。現在は0件で、増やさない。
+ * 移行の途中でやむを得ず置くときだけ、理由のコメントとともにpathを追加する。
+ */
+const PENDING_COMPANY_TABLE_READS: ReadonlySet<string> = new Set<string>()
 
 /** 業務はCompanyの保存先を公開operation経由で使う。外部キーによる参照整合性は許可する。 */
 export function canSourceQueryOwner(file: string, source: string, target: string): boolean {

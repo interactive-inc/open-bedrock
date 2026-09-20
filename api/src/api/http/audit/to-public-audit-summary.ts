@@ -1,4 +1,4 @@
-import type { AuditEventSummary } from "@/api/http/audit/company-audit-event.definition"
+import type { AuditEventSummary } from "@/contexts/company/domain/definitions/company-audit-event.definition"
 import { toAuditIsoString } from "@/api/http/audit/to-audit-iso-string"
 import { zAppAuditEventSummary } from "@/api/http/audit/response-schemas"
 import type { AppAuditEventSummary } from "@/api/http/audit/response-schemas"

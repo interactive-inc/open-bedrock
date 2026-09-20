@@ -9,6 +9,7 @@ import { auditExportValidation } from "@/api/http/middlewares/audit-export-valid
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { toAuditCsv } from "@/api/http/audit/to-audit-csv"
 import { PayloadTooLargeError } from "@/lib/errors"
+import { CompanyPayloadTooLargeError } from "@/contexts/company/domain/errors"
 import { factory } from "@/api/http/factory"
 
 // @authorization permission - 権限キーで判定する
@@ -24,7 +25,8 @@ export const POST = factory.createHandlers(
       rows = await createCompanyAuditEventAdapter(c).export({ filters: range.filters })
       csv = toAuditCsv(rows)
     } catch (error) {
-      if (error instanceof PayloadTooLargeError) {
+      // 容量超過はCompanyの監査台帳（export）とAPI rootのCSV整形（toAuditCsv）の両方から届く。
+      if (error instanceof PayloadTooLargeError || error instanceof CompanyPayloadTooLargeError) {
         try {
           await new AuditTrail(c).appendExportTooLarge(range.filters)
         } catch (auditError) {

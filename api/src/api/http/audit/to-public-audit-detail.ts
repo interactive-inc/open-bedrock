@@ -1,4 +1,4 @@
-import type { AuditEventDetail } from "@/api/http/audit/company-audit-event.definition"
+import type { AuditEventDetail } from "@/contexts/company/domain/definitions/company-audit-event.definition"
 import { auditUnavailable } from "@/api/http/audit/audit-unavailable"
 import { toPublicAuditSummary } from "@/api/http/audit/to-public-audit-summary"
 import { zAppAuditEventDetail } from "@/api/http/audit/response-schemas"
