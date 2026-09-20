@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "4372df1c277140964c66e8fe3b1368a834559a2c54043a7120bbb4de29fca209",
+    "company-context.manifest.json": "47c4147990d6525f00f036d1d2cc41759d0f861ae3bf23ce7f9783f465aed41b",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -452,6 +452,8 @@
     "src/contexts/company/interface/operations/list-due-employment-lifecycle-actions.ts": "4a8d4e4b242a6646eab6187aed65abcb0f8d7e951d439dec294c414c5fd0529b",
     "src/contexts/company/interface/operations/plan-employment-start-correction.ts": "aa2930e902398a51664d1089ad68c562e1f387ddc1900d44db246ab15a0c8f00",
     "src/contexts/company/interface/operations/prepare-company-organization-revision-guard.ts": "34a3f9cd7c5905f0dd9c0b9867b9a01a7320855afc1acc5eeba1af593cf00a81",
+    "src/contexts/company/interface/operations/prepare-company-organization-revision-statement.test.ts": "e1c3531109cd2a9ae6000b8950167fdc762c84c822d26558e3cdccae50ae932a",
+    "src/contexts/company/interface/operations/prepare-company-organization-revision-statement.ts": "21f13cf64ca09560091545bec3fba2417fbe8512f088c4d2d9a33760e0a3cfee",
     "src/contexts/company/interface/operations/read-company-account-display-names.ts": "6fa21fe2d17b89bb924447cb43f0e18aa4dc20691f03889daa11873512d06456",
     "src/contexts/company/interface/operations/read-company-employee-names.ts": "5430c39769279048095c0bea338715f3b13cc65e752edfa2ebf24dff78682641",
     "src/contexts/company/interface/operations/read-company-employment-account.ts": "cb7ea0c455d20614c4aef413259c04678b03589d53468cbd37125c1534e25103",
@@ -462,6 +464,7 @@
     "src/contexts/company/interface/operations/read-company-employments-by-account.ts": "f074ee3937486e799807d6c2943e3e2f5a487307b89709a92812dfd187fca623",
     "src/contexts/company/interface/operations/read-company-employments-by-accounts.ts": "0f85ec20ed216e332548382938a1e8811668fbb79917473ffb307ca981557f68",
     "src/contexts/company/interface/operations/read-company-employments-by-employee.ts": "4b28575f9ffb6dc59ad435f921c198288bfc421aecc9461e0140c2df7342295d",
+    "src/contexts/company/interface/operations/read-company-organization-lifecycle-revision.ts": "ef478fe731a2f5c7c74a4cbfe7f9dec3f2c56a731a93dde804b033e0e3869c1d",
     "src/contexts/company/interface/operations/read-company-organization-profile.ts": "ec8efb306205cebd0de3cdda6708c6ae3bb60832df7b4b696d612f06a6e68735",
     "src/contexts/company/interface/operations/read-company-organization-revision.test.ts": "3b4eae2d48eeb16359726671578214d978e5296d2c44ab4f9c41eee49a0e1750",
     "src/contexts/company/interface/operations/read-company-organization-revision.ts": "8e2508fd96103181826bad84f6f1373cf87f565167338deb6ed521842ad7eb9a",
