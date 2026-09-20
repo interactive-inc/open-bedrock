@@ -1,3 +1,4 @@
+import { PersonnelActionRequestLedgerAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-request-ledger.adapter"
 import { prepareCompanyOrganizationRevisionStatement } from "@/contexts/company/interface/operations/prepare-company-organization-revision-statement"
 import { readCompanyOrganizationLifecycleRevision } from "@/contexts/company/interface/operations/read-company-organization-lifecycle-revision"
 import { validatePersonnelPositionReference } from "@/contexts/company/domain/policies/validate-personnel-position-reference.policy"
@@ -257,29 +258,21 @@ export class CreatePersonnelActionRequest {
         const finalNumberRead = systemStatements.at(-1)
         if (finalNumberRead === undefined)
           return new Error("System proposal number read is missing")
-        const association = this.c.env.DB.prepare(
-          `INSERT INTO company_personnel_action_requests
-             (id, application_id, system_proposal_series_id, target_employee_id,
-              subject_snapshot_json, target_department_code, kind, payload_json,
-              payload_fingerprint, requested_by_employee_id, base_employee_revision,
-              base_organization_revision, base_company_revision, created_at, applied_action_id)
-           VALUES (?1, (SELECT number FROM system_proposal_numbers WHERE series_id = ?2),
-                   ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12, ?13, NULL)`,
-        ).bind(
-          requestId,
-          seriesId,
-          target?.id ?? null,
+        const association = new PersonnelActionRequestLedgerAdapter(this.c.env.DB).prepareInsert({
+          id: requestId,
+          systemProposalSeriesId: seriesId,
+          targetEmployeeId: target?.id ?? null,
           subjectSnapshotJson,
           targetDepartmentCode,
-          command.input.kind,
-          payload.toString(),
-          fingerprint,
-          requester.id,
-          command.baseEmployeeRevision,
-          command.baseOrganizationRevision,
-          command.baseCompanyRevision ?? null,
-          createdAtSeconds,
-        )
+          kind: command.input.kind,
+          payloadJson: payload.toString(),
+          payloadFingerprint: fingerprint,
+          requestedByEmployeeId: requester.id,
+          baseEmployeeRevision: command.baseEmployeeRevision,
+          baseOrganizationRevision: command.baseOrganizationRevision,
+          baseCompanyRevision: command.baseCompanyRevision ?? null,
+          createdAt: createdAtSeconds,
+        })
         const companyRevisionStatement =
           command.baseCompanyRevision === undefined
             ? null
