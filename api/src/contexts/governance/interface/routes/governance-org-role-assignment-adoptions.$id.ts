@@ -35,6 +35,8 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const assignmentId = validateIntParam(c.req.param("id"), "governance assignment adoption")
   const snapshot = await new GovernanceRoleAssignmentAdoptionSnapshotAdapter({
     database: c.env.DB,
+    now: c.env.NOW,
+    timeZone: c.env.COMPANY_TIME_ZONE,
   }).find(assignmentId)
   if (snapshot instanceof Error) {
     throw toHttpException(
@@ -80,6 +82,7 @@ export const POST = factory.createHandlers(verifyBearer, zValidator("json", requ
   const adapter = new GovernanceOrgRoleAssignmentAdoptionAdapter({
     database: c.env.DB,
     now: c.env.NOW,
+    timeZone: c.env.COMPANY_TIME_ZONE,
     sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE,
     prepareAudit: (audit) => prepareGovernanceAudit({ c, ...audit }),
   })
