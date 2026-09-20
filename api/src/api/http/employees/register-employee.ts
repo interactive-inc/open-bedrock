@@ -1,3 +1,5 @@
+import { InitialAccountProfileStatementAdapter } from "@/contexts/company/infrastructure/adapters/account-profile/initial-account-profile-statement.adapter"
+import { FindRegisteredEmployeeByOperationAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/find-registered-employee-by-operation.adapter"
 import { readCompanyOrganizationLifecycleRevision } from "@/contexts/company/interface/operations/read-company-organization-lifecycle-revision"
 import type { Context } from "@/env"
 import {
@@ -191,11 +193,12 @@ export class RegisterEmployee {
       const executions = await this.c.env.DB.batch([
         system.accountStatement,
         ...companyStatements,
-        this.c.env.DB.prepare(
-          `INSERT INTO company_account_profiles
-               (organization_id, account_id, display_name, created_at, updated_at)
-             VALUES ('organization:default', ?1, ?2, ?3, ?3)`,
-        ).bind(system.accountId, input.action.employeeName, input.now.getTime()),
+        new InitialAccountProfileStatementAdapter(this.c.env.DB).prepare({
+          organizationId: "organization:default",
+          accountId: system.accountId,
+          displayName: input.action.employeeName,
+          at: input.now.getTime(),
+        }),
         ...system.identityStatements,
       ])
       if (executions.some((execution) => !execution.success)) {
@@ -256,43 +259,47 @@ export class RegisterEmployee {
     | null
   > {
     try {
-      const row = await this.c.env.DB.prepare(
-        `SELECT action.kind, action.payload_fingerprint, action.recorded_by_account_id,
-                employee.employee_code, employee.official_name,
-                identity_profile.email, credential.password_hash,
+      const registered = await new FindRegisteredEmployeeByOperationAdapter(this.c.env.DB).find(
+        input.idempotencyKey,
+      )
+      if (registered instanceof Error) throw registered
+      if (registered === null) return null
+      const credential = await this.c.env.DB.prepare(
+        `SELECT identity_profile.email, credential.password_hash,
                 EXISTS (
                   SELECT 1
                     FROM system_role_bindings AS binding
                     JOIN system_iam_roles AS role ON role.id = binding.role_id
-                   WHERE binding.account_id = link.account_id
+                   WHERE binding.account_id = ?1
                      AND binding.resource_type IS NULL
                      AND binding.revoked_at IS NULL
                      AND role.key = ?2
                 ) AS has_expected_role
-           FROM company_personnel_actions AS action
-           JOIN company_employees AS employee ON employee.id = action.employee_id
-           JOIN company_account_employee_resource_bindings AS link ON link.employee_id = employee.id
+           FROM (SELECT 1) AS account
            LEFT JOIN system_identity_bindings AS identity
-             ON identity.account_id = link.account_id
+             ON identity.account_id = ?1
             AND identity.provider = 'password'
             AND identity.revoked_at IS NULL
            LEFT JOIN system_identity_profiles AS identity_profile
              ON identity_profile.identity_id = identity.id
            LEFT JOIN system_password_credentials AS credential
-             ON credential.identity_id = identity.id
-          WHERE action.operation_id = ?1`,
+             ON credential.identity_id = identity.id`,
       )
-        .bind(input.idempotencyKey, `company:${input.roleKey}`)
-        .first<{
-          kind: string
-          payload_fingerprint: string
-          recorded_by_account_id: string | null
-          employee_code: string
-          official_name: string
-          email: string | null
-          password_hash: string | null
-          has_expected_role: number
-        }>()
+        .bind(registered.accountId, `company:${input.roleKey}`)
+        .first<{ email: string | null; password_hash: string | null; has_expected_role: number }>()
+      const row =
+        credential === null
+          ? null
+          : {
+              kind: registered.kind,
+              payload_fingerprint: registered.payloadFingerprint,
+              recorded_by_account_id: registered.recordedByAccountId,
+              employee_code: registered.employeeCode,
+              official_name: registered.officialName,
+              email: credential.email,
+              password_hash: credential.password_hash,
+              has_expected_role: credential.has_expected_role,
+            }
       if (row === null) return null
       if (row.password_hash === null || row.email === null) {
         return new UnexpectedError("完了済み従業員登録のSystem資格情報が見つかりません")

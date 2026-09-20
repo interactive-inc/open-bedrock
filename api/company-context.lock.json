@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "e65fc08e8e595ba1b01f760ec24d5f5bd09db651198b72e0ca312ad99cda5aba",
+    "company-context.manifest.json": "9d5d1c217977a18ab9b7300995c53a37142fb53d9725a1583719630127da005c",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -296,6 +296,7 @@
     "src/contexts/company/infrastructure/adapters/account-profile/company-account-display-name-projection.adapter.ts": "c250300969caf3845bd8b11196a4042679a6611210d13e51ded4bc4225a0a053",
     "src/contexts/company/infrastructure/adapters/account-profile/company-account-profile-rename-guard.adapter.test.ts": "54c2985b000be81343a9a0154816b6a9bd15edfacea6508bef9c926def0d8a36",
     "src/contexts/company/infrastructure/adapters/account-profile/company-account-profile-rename-guard.adapter.ts": "2da7af0c096e3e7b4dea3b48dc1c81455fb4391829a5abbee1f6cf3810ab212a",
+    "src/contexts/company/infrastructure/adapters/account-profile/initial-account-profile-statement.adapter.ts": "ada041b2fb2c2835c1729758e4c498f618fd6bcda7bea3d2469d99c7e4378ee0",
     "src/contexts/company/infrastructure/adapters/account-profile/read-company-account-display-names.adapter.ts": "171a4d67d5c7cf1c85d3866ab94a2caa3472d5d3c6f1b6a6faa11fc5eb361ce2",
     "src/contexts/company/infrastructure/adapters/account-profile/resolve-active-system-account-id.adapter.ts": "e621d4c481c93136c62e7d9b45eb6b0133cdb5207096ba763f30fc65bd742eca",
     "src/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter.ts": "b708b70fcdc22bac6da7667b1b0ab422fa0865d05acd1a96b88d1c3a8ee4ae95",
@@ -312,6 +313,8 @@
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/employee-lifecycle-read.adapter.ts": "99603faa4216eb704eac9b68a69fe9419418a608b245209a2eb87fb252edd9a3",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/employee-lifecycle.adapter.ts": "2ccf540c0a7c0bdb73250201f023a38a9866638ae0c93d898b47db06cd637b38",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/find-personnel-action-request.adapter.ts": "7cc2426bea528779233cf569e66934c9e70dec080362b368c1300fab115a5240",
+    "src/contexts/company/infrastructure/adapters/employee-lifecycle/find-registered-employee-by-operation.adapter.test.ts": "6063d37fbcef8508cfaa095c37c1c89ff2e12e89acafac19ba78b16e3c7c6bb1",
+    "src/contexts/company/infrastructure/adapters/employee-lifecycle/find-registered-employee-by-operation.adapter.ts": "18cdebe3a436255300969cf75c0f95cebb91691bb201fec3fc2cb3b83b908b03",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/lib/create-company-system-audit-event.ts": "87e1f6ce3dca118f69fd42068a2555aad2e432baca3b0c43fb020007eabe08e7",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/lib/is-aborted-by-guard.test.ts": "2c14c9a536966dc19c1f22d9f44511e67cab1d42184bcb5d8f0d92491e627336",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/lib/is-aborted-by-guard.ts": "7917dc59714ddb07b35de92872a9cbefbb88bfe1b6a645b2fc69673a0060d14b",
