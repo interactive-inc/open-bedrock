@@ -19,6 +19,12 @@ export class CompanyOrganizationResourceJournalAdapter {
   async prepare(
     change: OrganizationWorkforceChangeEntity,
   ): Promise<ReadonlyArray<D1PreparedStatement> | CompanyOperationError> {
+    // この経路は組織単位の期間だけを公開履歴へ写す。所属と責務を旧台帳だけへ保存させない。
+    if (change.assignments.length > 0 || change.responsibilities.length > 0)
+      return new CompanyValidationError(
+        "所属と責務の変更は組織変更または人事発令で記録してください",
+        "invalid_change",
+      )
     if (change.unitPeriods.length === 0) return []
     try {
       const bindings = await this.c
