@@ -50,13 +50,18 @@ export function resolveTableOwner(
  * 業務contextがCompanyのtableをSQLで直接読む、解消待ちの箇所。
  * 保存元snapshotのdigestに従業員番号を含むため、参照時点の決定を待っている。増やさない。
  */
+const API_COMPOSITION = "api-composition"
+
 const PENDING_COMPANY_TABLE_READS = new Set([
   "src/contexts/governance/infrastructure/adapters/governance-role-assignment-adoption-snapshot.adapter.ts",
+  // Companyの監査台帳の保存・検索・出力。依存する定義と補助を含めてCompanyへ移す。
+  "src/api/http/audit/audit-event.adapter.ts",
 ])
 
 /** 業務はCompanyの保存先を公開operation経由で使う。外部キーによる参照整合性は許可する。 */
 export function canSourceQueryOwner(file: string, source: string, target: string): boolean {
-  if (!canOwnerReference(source, target)) return false
+  // API compositionは複数contextのread modelを束ねるため、業務とSystemのtableは読める。
+  if (source !== API_COMPOSITION && !canOwnerReference(source, target)) return false
   if (target !== "company" || source === "company") return true
   return PENDING_COMPANY_TABLE_READS.has(file)
 }
@@ -171,6 +176,11 @@ export async function collectTableOwnershipViolations(): Promise<TableOwnershipV
         reason: `${owner} の ${table} が ${target} の ${foreignKey.table} へ外部キーで依存しています`,
       })
     }
+  }
+
+  for await (const file of new Glob("**/*.ts").scan(resolve(PROJECT_ROOT, "src", "api"))) {
+    if (isTestFile(file)) continue
+    sources.push({ context: API_COMPOSITION, path: resolve(PROJECT_ROOT, "src", "api", file) })
   }
 
   for (const source of sources) {

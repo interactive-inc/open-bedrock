@@ -95,6 +95,20 @@ describe("table の所有境界", () => {
     expect(canSourceQueryOwner("src/example.ts", "leave", "system")).toBe(true)
   })
 
+  test("API composition は業務と System の table を読めるが、Company の table は読めない", () => {
+    expect(canSourceQueryOwner("src/api/http/example.ts", "api-composition", "leave")).toBe(true)
+    expect(canSourceQueryOwner("src/api/http/example.ts", "api-composition", "system")).toBe(true)
+    expect(canSourceQueryOwner("src/api/http/example.ts", "api-composition", "company")).toBe(false)
+    expect(
+      inspectTableReferences(
+        "src/api/http/example.ts",
+        "api-composition",
+        'db.prepare("SELECT 1 FROM company_employees")',
+        owners,
+      ),
+    ).toHaveLength(1)
+  })
+
   test("現在の migration と production source に違反がない", async () => {
     expect(await collectTableOwnershipViolations()).toEqual([])
   })
