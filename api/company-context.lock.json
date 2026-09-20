@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "95c5aa212729d0e9d9ef2acaa98282297c5343938ff2a7c04c5d5d18aa3a592a",
+    "company-context.manifest.json": "9a496206350a9d5d3e2d55ad334d4d8ecc62edf6e23d0db390e95d3faf86357f",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -446,6 +446,8 @@
     "src/contexts/company/interface/operations/company-resource-read-permission.ts": "4203cbd4d3be2da289602f85ff3bdefa817d293efa54e623963069fe04b08d4a",
     "src/contexts/company/interface/operations/dispatch-personnel-action.ts": "db8dab0e17d872cc97d072cab533ee45c617c2e0a040aff06aefeaf77f4a0303",
     "src/contexts/company/interface/operations/employee-lifecycle/get-lifecycle-state.ts": "2c885d30657fa7640b6df00f67ccb07ff2b0b6486d8ac4e7f22fb1cb82930cef",
+    "src/contexts/company/interface/operations/list-due-employment-lifecycle-actions.test.ts": "c4841084b133c7b2cead8cb4a6d78e0e6a9a630042ee56e86b8d8073ce3b4d72",
+    "src/contexts/company/interface/operations/list-due-employment-lifecycle-actions.ts": "4a8d4e4b242a6646eab6187aed65abcb0f8d7e951d439dec294c414c5fd0529b",
     "src/contexts/company/interface/operations/plan-employment-start-correction.ts": "aa2930e902398a51664d1089ad68c562e1f387ddc1900d44db246ab15a0c8f00",
     "src/contexts/company/interface/operations/prepare-company-organization-revision-guard.ts": "34a3f9cd7c5905f0dd9c0b9867b9a01a7320855afc1acc5eeba1af593cf00a81",
     "src/contexts/company/interface/operations/read-company-account-display-names.ts": "6fa21fe2d17b89bb924447cb43f0e18aa4dc20691f03889daa11873512d06456",

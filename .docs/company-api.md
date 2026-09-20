@@ -332,6 +332,8 @@ CLIは`bedrock employees assignment-adoption --employee-id <id>`で確認し、`
 
 各行はsequence、発令ID、従業員ID、種類、発効日、記録時刻、内容fingerprint、訂正元と訂正先、要約を持つ。入社・再入社・退職には`employment_effect`として`kind`、`eventOn`、`effectiveOn`を返す。退職の`effectiveOn`は最終在籍日の翌日である。訂正発令の要約には置換後の`replacementEventOn`を保持する。過去の訂正にこの日付がない場合は`employment_effect_unresolved`をtrueにし、効果をnullで返す。
 
+同じprocess内の受領先には、入社・再入社・退職の効果を持ち、指定した会社営業日までに発効した発令だけをsequence順に返す参照を提供する。入力は記録時刻の下限と上限、営業日、前回のsequence、1から100の件数である。置換後の発効日を持たない訂正も返す。受領先は発令の保存先を直接読まず、受領済みの判定を自分の台帳だけで行う。
+
 この一覧は現在の雇用に対する実行許可や消費済みの記録ではない。受領先は発令の重複を排除し、訂正と現在の雇用を保存直前に再検査する。Companyの配送元Repositoryは、この照合に使う履歴snapshotと保存時のDB guardを提供する。
 
 ## 人事変更で確認した会社版
