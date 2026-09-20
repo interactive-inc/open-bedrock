@@ -1,23 +1,22 @@
-import { leaveProcedureStatusSql } from "@/contexts/leave/infrastructure/adapters/lib/leave-procedure-status-sql"
+import {
+  EMPTY_MANAGEMENT_DASHBOARD_BUSINESS_METRICS,
+  type ManagementDashboardBusinessMetrics,
+} from "@/api/http/dashboard/management/management-dashboard-business-metrics"
+import { MANAGEMENT_DASHBOARD_METRIC_PROVIDERS } from "@/api/http/dashboard/management/management-dashboard-metric-providers"
 import type { Context } from "@/env"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { toManagementDashboardRanges } from "@/api/http/dashboard/management/to-management-dashboard-ranges"
 import type { AppManagementDashboard } from "@/api/http/company/response-schemas"
-import { attendanceRecords } from "@/contexts/attendance/infrastructure/schema/attendance"
 import { CompanyEmploymentMovementsRepository } from "@/contexts/company/infrastructure/repositories/employee-lifecycle/company-employment-movements.repository"
 import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
-import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
-import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"
-import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
-import { reviewCycles } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { CountPendingSystemCasesAdapter } from "@system/infrastructure/adapters/workflow/count-pending-system-cases.adapter"
-import { count, eq, like } from "drizzle-orm"
 
 /**
- * 経営ダッシュボードの横断集計。予測・計算は持たず、在籍・入退社・勤怠・休暇・経費・評価・
- * 目標・申請の件数を素直に数えるだけ。基準時刻は c.env.NOW(テスト固定)か実時計。
+ * 経営ダッシュボードの横断集計。予測・計算は持たず、在籍・入退社・申請の件数と、業務contextごとの
+ * providerの値を数えるだけ。業務contextが無い構成では、その業務の値を0として同じ形の応答を返す。
+ * 基準時刻は c.env.NOW(テスト固定)か実時計。
  */
 export class GetManagementDashboard {
   constructor(private readonly c: Context) {}
@@ -81,45 +80,13 @@ export class GetManagementDashboard {
         )
       }
 
-      const [
-        attendanceRows,
-        leaveMonthRows,
-        leavePendingRows,
-        expenseMonthRows,
-        expensePendingRows,
-        openReviewCycleRows,
-      ] = await database.batch([
-        database
-          .select({ total: count() })
-          .from(attendanceRecords)
-          .where(like(attendanceRecords.workDate, monthLike)),
-        database
-          .select({ total: count() })
-          .from(leaveRequests)
-          .where(like(leaveRequests.createdAt, monthLike)),
-        database
-          .select({ total: count() })
-          .from(leaveRequests)
-          .where(eq(leaveProcedureStatusSql, "pending")),
-        database
-          .select({ total: count() })
-          .from(expenses)
-          .where(like(expenses.createdAt, monthLike)),
-        database.select({ total: count() }).from(expenses).where(eq(expenses.status, "pending")),
-        database
-          .select({ total: count() })
-          .from(reviewCycles)
-          .where(eq(reviewCycles.status, "open")),
-      ])
-
-      const goalRows = await database
-        .select({
-          period: goals.period,
-          status: goals.status,
-          total: count(),
-        })
-        .from(goals)
-        .groupBy(goals.period, goals.status)
+      const providerMetrics = await Promise.all(
+        MANAGEMENT_DASHBOARD_METRIC_PROVIDERS.map((provider) => provider(this.c, { monthLike })),
+      )
+      const business: ManagementDashboardBusinessMetrics = {
+        ...EMPTY_MANAGEMENT_DASHBOARD_BUSINESS_METRICS,
+      }
+      for (const metrics of providerMetrics) Object.assign(business, metrics)
 
       return {
         employee_count: activeStates.length,
@@ -128,51 +95,17 @@ export class GetManagementDashboard {
           .toSorted((left, right) => right.headcount - left.headcount),
         recent_join_count: movements.joinCount,
         recent_retire_count: movements.retireCount,
-        attendance_record_count: attendanceRows.at(0)?.total ?? 0,
-        leave_request_count: leaveMonthRows.at(0)?.total ?? 0,
-        leave_pending_count: leavePendingRows.at(0)?.total ?? 0,
-        expense_count: expenseMonthRows.at(0)?.total ?? 0,
-        expense_pending_count: expensePendingRows.at(0)?.total ?? 0,
-        open_review_cycle_count: openReviewCycleRows.at(0)?.total ?? 0,
+        attendance_record_count: business.attendance_record_count,
+        leave_request_count: business.leave_request_count,
+        leave_pending_count: business.leave_pending_count,
+        expense_count: business.expense_count,
+        expense_pending_count: business.expense_pending_count,
+        open_review_cycle_count: business.open_review_cycle_count,
         pending_application_count: pendingApplicationCount,
-        goal_done_rates: this.toGoalDoneRates(goalRows),
+        goal_done_rates: business.goal_done_rates,
       }
     } catch (error) {
       return new UnexpectedError("failed to aggregate management dashboard", { cause: error })
     }
-  }
-
-  /** period ごとに done 件数と総数から done 率(0-1)を出す。 */
-  private toGoalDoneRates(
-    rows: ReadonlyArray<{ period: string; status: string; total: number }>,
-  ): AppManagementDashboard["goal_done_rates"] {
-    const totalsByPeriod = new Map<string, { total: number; done: number }>()
-
-    for (const row of rows) {
-      const entry = totalsByPeriod.get(row.period) ?? { total: 0, done: 0 }
-
-      const done = row.status === "done" ? entry.done + row.total : entry.done
-
-      totalsByPeriod.set(row.period, { total: entry.total + row.total, done })
-    }
-
-    const rates: Array<{ period: string; total: number; done: number; done_rate: number }> = []
-
-    for (const entry of totalsByPeriod.entries()) {
-      const period = entry[0]
-
-      const value = entry[1]
-
-      rates.push({
-        period,
-        total: value.total,
-        done: value.done,
-        done_rate: value.total === 0 ? 0 : value.done / value.total,
-      })
-    }
-
-    rates.sort((a, b) => (a.period < b.period ? 1 : -1))
-
-    return rates
   }
 }

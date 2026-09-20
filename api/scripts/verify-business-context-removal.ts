@@ -18,13 +18,15 @@ const GENERATED_FILES = [
   "src/api/app.ts",
   "src/api/scheduled/jobs.ts",
   "src/api/http/inbox/inbox-count-providers.ts",
+  "src/api/http/dashboard/dashboard-metric-providers.ts",
+  "src/api/http/dashboard/management/management-dashboard-metric-providers.ts",
 ] as const
 /**
  * 一覧を生成するため、対象contextと一緒にファイルごと外せるcomposition。
  * 複数の業務を束ねるrouteは、束ねる業務の一つが無くなれば成立しないので一緒に外す。
  */
 const REMOVABLE_COMPOSITION_PATTERN =
-  /^src\/api\/(?:scheduled\/run-[a-z0-9-]+|http\/inbox\/providers\/[a-z0-9-]+|routes\/[a-z0-9.$-]+?(?:\.test)?)\.ts$/iu
+  /^src\/api\/(?:scheduled\/run-[a-z0-9-]+|http\/(?:inbox|dashboard|dashboard\/management)\/providers\/[a-z0-9-]+|routes\/[a-z0-9.$-]+?(?:\.test)?)\.ts$/iu
 
 export function isRemovableComposition(file: string): boolean {
   return REMOVABLE_COMPOSITION_PATTERN.test(file)
