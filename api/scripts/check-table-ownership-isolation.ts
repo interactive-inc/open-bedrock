@@ -46,6 +46,21 @@ export function resolveTableOwner(
   return candidates[0] ?? null
 }
 
+/**
+ * 業務contextがCompanyのtableをSQLで直接読む、解消待ちの箇所。
+ * 保存元snapshotのdigestに従業員番号を含むため、参照時点の決定を待っている。増やさない。
+ */
+const PENDING_COMPANY_TABLE_READS = new Set([
+  "src/contexts/governance/infrastructure/adapters/governance-role-assignment-adoption-snapshot.adapter.ts",
+])
+
+/** 業務はCompanyの保存先を公開operation経由で使う。外部キーによる参照整合性は許可する。 */
+export function canSourceQueryOwner(file: string, source: string, target: string): boolean {
+  if (!canOwnerReference(source, target)) return false
+  if (target !== "company" || source === "company") return true
+  return PENDING_COMPANY_TABLE_READS.has(file)
+}
+
 /** SQL文字列が参照するtableのうち、所有者が依存方向に反するものを検出する。 */
 export function inspectTableReferences(
   file: string,
@@ -68,7 +83,7 @@ export function inspectTableReferences(
         const table = match[1]?.toLowerCase()
         if (table === undefined) continue
         const owner = owners.get(table)
-        if (owner === undefined || canOwnerReference(sourceContext, owner)) continue
+        if (owner === undefined || canSourceQueryOwner(file, sourceContext, owner)) continue
         violations.set(table, {
           file,
           reason: `${sourceContext} が ${owner} の table を SQL で直接参照しています: ${table}`,
