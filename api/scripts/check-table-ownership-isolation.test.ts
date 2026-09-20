@@ -1,5 +1,6 @@
 import {
   canOwnerReference,
+  canSourceQueryOwner,
   collectTableOwnershipViolations,
   inspectTableReferences,
   resolveTableOwner,
@@ -74,11 +75,24 @@ describe("table の所有境界", () => {
     ).toHaveLength(1)
   })
 
-  test("自分の table と基盤の table への参照は許可する", () => {
+  test("自分の table と System の table への参照は許可する", () => {
     const source =
-      "db.prepare(`SELECT 1 FROM leave_requests l JOIN company_employees e ON e.id = l.employee_id JOIN system_accounts a ON a.id = ?1`)"
+      "db.prepare(`SELECT 1 FROM leave_requests l JOIN system_accounts a ON a.id = ?1`)"
 
     expect(inspectTableReferences("src/example.ts", "leave", source, owners)).toEqual([])
+  })
+
+  test("業務から Company の table への SQL 参照を拒否し、Company 自身の参照は許可する", () => {
+    const source = "db.prepare(`SELECT 1 FROM company_employees WHERE id = ?1`)"
+
+    expect(inspectTableReferences("src/example.ts", "leave", source, owners)).toEqual([
+      {
+        file: "src/example.ts",
+        reason: "leave が company の table を SQL で直接参照しています: company_employees",
+      },
+    ])
+    expect(inspectTableReferences("src/example.ts", "company", source, owners)).toEqual([])
+    expect(canSourceQueryOwner("src/example.ts", "leave", "system")).toBe(true)
   })
 
   test("現在の migration と production source に違反がない", async () => {
