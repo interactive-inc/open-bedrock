@@ -1,3 +1,4 @@
+import { ListUndeliveredLifecycleActionsAdapter } from "@/contexts/onboarding/infrastructure/adapters/list-undelivered-lifecycle-actions.adapter"
 import { CompanyPersonnelEventRepository } from "@/contexts/company/infrastructure/repositories/employee-lifecycle/company-personnel-event.repository"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
@@ -72,30 +73,17 @@ export class OnboardingLifecycleDeliveryAdapter {
     try {
       const authorization = await this.authorize(now)
       if (authorization instanceof Error) return authorization
-      const candidates =
-        await this.c.env.DB.prepare(`SELECT action.id, action.payload_fingerprint FROM company_personnel_actions action
-        WHERE action.recorded_at >= ?1 AND action.recorded_at <= ?2
-          AND (action.kind IN ('hire', 'rehire', 'retired') OR (action.kind = 'corrected' AND json_extract(action.summary_json, '$.replacementKind') IN ('hire', 'rehire', 'retired')))
-          AND (CASE
-            WHEN action.kind = 'retired' THEN date(action.event_on, '+1 day')
-            WHEN action.kind = 'corrected' AND json_extract(action.summary_json, '$.replacementKind') = 'retired' THEN date(json_extract(action.summary_json, '$.replacementEventOn'), '+1 day')
-            WHEN action.kind = 'corrected' THEN json_extract(action.summary_json, '$.replacementEventOn')
-            ELSE action.event_on END <= ?3
-            OR (action.kind = 'corrected' AND json_extract(action.summary_json, '$.replacementEventOn') IS NULL))
-          AND NOT EXISTS (SELECT 1 FROM onboarding_lifecycle_deliveries delivery WHERE delivery.action_id = action.id)
-        ORDER BY action.rowid LIMIT ?4`)
-          .bind(
-            Math.ceil(this.c.recordedSince.getTime() / 1000),
-            Math.floor(now.getTime() / 1000),
-            observedOn,
-            limit,
-          )
-          .all<{ id: string; payload_fingerprint: string }>()
-      if (!candidates.success) return new Error("failed to list lifecycle deliveries")
-      for (const candidate of candidates.results) {
+      const candidates = await new ListUndeliveredLifecycleActionsAdapter(this.c.env.DB).list({
+        recordedFrom: Math.ceil(this.c.recordedSince.getTime() / 1000),
+        recordedUntil: Math.floor(now.getTime() / 1000),
+        observedOn,
+        limit,
+      })
+      if (candidates instanceof Error) return candidates
+      for (const candidate of candidates) {
         const queued = await this.enqueue(
-          candidate.id,
-          candidate.payload_fingerprint,
+          candidate.actionId,
+          candidate.payloadFingerprint,
           now,
           authorization.assertions,
         )
