@@ -1,3 +1,4 @@
+import { PublishedInitialWorkforceAdapter } from "@/contexts/company/infrastructure/adapters/employee/published-initial-workforce.adapter"
 import type { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import type { PersonnelActionPersistenceProps } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/personnel-action-persistence-props"
 import { CompanyEmploymentJournalChangeValue } from "@/contexts/company/domain/values/company-employment-journal-change.value"
@@ -10,12 +11,6 @@ import {
 import { CompanyEmploymentResourceHistoryAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-employment-resource-history.adapter"
 import { AbortWhenPreviousStatementChangedNoRowsAdapter } from "@/contexts/company/infrastructure/adapters/database/abort-when-previous-statement-changed-no-rows.adapter"
 import { z } from "zod"
-import { initialWorkforceResources } from "@/contexts/company/domain/definitions/initial-workforce-resources.definition"
-import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
-import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
-import { CompanyWorkforceResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-workforce-resource-projection.adapter"
-import { CompanyEmploymentResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-employment-resource-projection.adapter"
-import { drizzle } from "drizzle-orm/d1"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 
 const bindingRow = z.object({
@@ -88,102 +83,46 @@ export class CompanyEmploymentJournalAdapter {
           const expectedRevision = revision.data?.revision
           if (expectedRevision === undefined)
             return new CompanyUnexpectedError("公開Companyの会社版を参照できません")
-          const lifecycleRevision = props.revisions.employeeRevision + 1
-          const change = CompanyResourceChangeEntity.create({
+          const published = await new PublishedInitialWorkforceAdapter(this.c).prepare({
+            employeeId: props.action.employeeId,
+            employmentId: period.employmentId,
+            officialName: props.prospectiveEmployee.name,
+            employeeCode: props.prospectiveEmployee.code,
+            email: props.prospectiveEmployee.email ?? null,
+            phone: null,
+            employmentType: props.projection.newEmploymentType,
+            status: "active",
+            effectiveOn: restoreCalendarDate(period.startsOn),
+            accountLink:
+              props.prospectiveEmployee.accountId === undefined
+                ? undefined
+                : {
+                    accountId: props.prospectiveEmployee.accountId,
+                    effectiveOn: restoreCalendarDate(
+                      props.businessDate < period.startsOn ? period.startsOn : props.businessDate,
+                    ),
+                  },
             commandId: `initial-workforce:${props.action.id}`,
             actorAccountId: props.command.session.accountId,
-            expectedRevision,
             reason: `personnel_action:${props.action.kind}:${props.action.id}`,
             recordedAt: props.action.recordedAt * 1000,
-            resources: [
-              ...initialWorkforceResources({
-                employeeId: props.action.employeeId,
-                employmentId: period.employmentId,
-                officialName: props.prospectiveEmployee.name,
-                employeeCode: props.prospectiveEmployee.code,
-                email: props.prospectiveEmployee.email ?? null,
-                phone: null,
-                employmentType: props.projection.newEmploymentType,
-                status: "active",
-                effectiveOn: restoreCalendarDate(period.startsOn),
-                accountLink:
-                  props.prospectiveEmployee.accountId === undefined
-                    ? undefined
-                    : {
-                        accountId: props.prospectiveEmployee.accountId,
-                        effectiveOn: restoreCalendarDate(
-                          props.businessDate < period.startsOn
-                            ? period.startsOn
-                            : props.businessDate,
-                        ),
-                      },
-              }),
-            ],
+            expectedOrganizationRevision: expectedRevision,
+            actionId: props.action.id,
+            businessDate: props.businessDate,
+            lifecycleRevision: props.revisions.employeeRevision + 1,
           })
-          if (change instanceof Error)
+          if (published instanceof Error)
             return new CompanyUnexpectedError("公開Companyの初期記録を準備できません", {
-              cause: change,
-            })
-          const journal = await new CompanyResourceJournalAdapter({
-            database: drizzle(this.c),
-            d1: this.c,
-          }).prepare(change)
-          if (journal instanceof Error)
-            return new CompanyUnexpectedError("公開Companyの初期記録を準備できません", {
-              cause: journal,
-            })
-          const identity = await new CompanyWorkforceResourceProjectionAdapter(
-            this.c,
-          ).prepareIdentity(change)
-          const employmentResource = change.resources.find(
-            (resource) => resource.type === "employment",
-          )
-          if (identity instanceof Error || employmentResource === undefined)
-            return new CompanyUnexpectedError("公開Companyの初期記録を投影できません", {
-              cause: identity,
-            })
-          const employmentProjection = await new CompanyEmploymentResourceProjectionAdapter(
-            this.c,
-          ).prepare({
-            resource: employmentResource,
-            stagedHistory: [employmentResource],
-            change,
-            fingerprint: journal.fingerprint,
-            revisionOffset: 0,
-            recordedBy: { actionId: props.action.id, businessDate: props.businessDate },
-          })
-          if (employmentProjection instanceof Error)
-            return new CompanyUnexpectedError("公開Companyの初期記録を投影できません", {
-              cause: employmentProjection,
+              cause: published,
             })
           return {
-            identityStatements: [...journal.statements, ...identity],
-            openingEmploymentStatements: employmentProjection,
+            identityStatements: published.identityStatements,
+            openingEmploymentStatements: published.employmentStatements,
             projectedEmploymentIds: [period.employmentId],
-            statements: [
-              this.c
-                .prepare(`UPDATE company_workforce_resource_bindings
-                SET lifecycle_revision = ?1, last_action_id = ?2
-                WHERE resource_type = 'employee' AND resource_id = ?3`)
-                .bind(lifecycleRevision, props.action.id, props.action.employeeId),
-              new AbortWhenPreviousStatementChangedNoRowsAdapter(
-                this.c,
-              ).abortWhenPreviousStatementChangedNoRows(),
-              this.c
-                .prepare(`INSERT INTO company_workforce_resource_bindings
-                (resource_type, resource_id, organization_id, employee_id, resource_revision, lifecycle_revision, last_action_id)
-                VALUES ('employment', ?1, 'organization:default', ?2, 1, ?3, ?4)`)
-                .bind(
-                  period.employmentId,
-                  props.action.employeeId,
-                  lifecycleRevision,
-                  props.action.id,
-                ),
-              journal.commit,
-            ],
+            statements: published.commitStatements,
             bindings: [],
             resources: [],
-            organizationRevision: expectedRevision + 1,
+            organizationRevision: published.organizationRevision,
           }
         }
         return { statements: [], bindings: [], resources: [], organizationRevision: null }
