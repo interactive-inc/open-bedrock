@@ -352,7 +352,7 @@
     "src/contexts/company/infrastructure/adapters/employee/initial-employment-persistence.adapter.test.ts": "028bfc105ea766df32a249cfd9b57b275125b746b1644a798c04c28c51f46fb3",
     "src/contexts/company/infrastructure/adapters/employee/initial-employment-persistence.adapter.ts": "a2a8d2c8aabd63ef20b130cc3f67aedbbc0fd2ff0ccada8226ae295de3a29ea1",
     "src/contexts/company/infrastructure/adapters/employee/initial-workforce-resource-journal.adapter.test.ts": "c4e02140d6f4c02756817f691253de8dcb67bfc35c5cf56c6aef514571f30dd3",
-    "src/contexts/company/infrastructure/adapters/employee/initial-workforce-resource-journal.adapter.ts": "f46d9bbb466c1035e3f367f43e2e3cafb84634940782158b4215eb8c2856acc5",
+    "src/contexts/company/infrastructure/adapters/employee/initial-workforce-resource-journal.adapter.ts": "5aaf003f8b06b1313d40f7ef73eae71593a8f79dc35d4b13e4fc478beb14095e",
     "src/contexts/company/infrastructure/adapters/employee/lib/CLAUDE.md": "84b426e3a6063e14f888048a2ed54026c0bd2a9379fd8051f2da52cf5029eaf7",
     "src/contexts/company/infrastructure/adapters/employee/lib/company-employee-directory-sql.ts": "d6a3e80db728a0b46eca87b6a3f1d5133789b522b474ef67cac3dda18c47fd0c",
     "src/contexts/company/infrastructure/adapters/employee/lib/company-employment-state-sql.ts": "a91896d7e83d3b1b12978036cc064756d1f3a1496f07bcf1d426a8e0ff038a87",

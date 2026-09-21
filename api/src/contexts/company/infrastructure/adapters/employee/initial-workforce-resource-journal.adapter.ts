@@ -5,7 +5,6 @@ import type {
 } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { EmploymentType } from "@/contexts/company/domain/definitions/employment-type.definition"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
-import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
 import {
   CompanyResourceJournalAdapter,
   type CompanyResourceJournalStatement,
