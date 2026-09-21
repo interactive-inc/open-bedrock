@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "9b20aa843768699c9f5c9d6a99385cedb5ed23ffcb6545d280140c70b53ae25c",
+    "company-context.manifest.json": "2e2df16844136dff9703d078eaa02148456026a4ab30e4b66379c767bd0aa56b",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -554,6 +554,7 @@
     "src/contexts/company/lib/workforce/to-lifecycle-status.test.ts": "dd564cb1df037a32017bbf78d6b6a5afd9df4240c965f1755d1c365980df7411",
     "src/contexts/company/lib/workforce/to-lifecycle-status.ts": "8f36e7277388433b24048a2a0432257456aabaf4284db189e344ee010bd68b4c",
     "src/contexts/company/lib/workforce/validate-organization-change.ts": "7a4e70ede0cbbdbdc5d6d4692abb40e6589554ccce4d3734e12598fe624591ce",
+    "src/contexts/company/test/__snapshots__/personnel-ledger-characterization.integration.test.ts.snap": "a63c9f8cae5e5228f97d47020dbcdf96cecbc3e32e8e7ca47b1d15829a28f8ac",
     "src/contexts/company/test/account-employee-link-history.integration.test.ts": "df95e9291b54940f571f098e61194aac3072367288803176e1409f6ca7bf5092",
     "src/contexts/company/test/account-employee-link-migration.contract.test.ts": "fecf0f21cc8cbc37939c7c7fd8ac9c4b3dd283b0c2aaeed26746a12e63ed6c7f",
     "src/contexts/company/test/account-employee-link-projection.integration.test.ts": "922fccd0bfe3466fa8785e37b8bb801df8f762fb62d7eabf02b8e0fc6504b3b5",
@@ -634,6 +635,7 @@
     "src/contexts/company/test/personnel-annotation-preservation.test.ts": "4d3f458b62dced0f759a7f7666bd8efec361d5ab0edfc2c838f97864a96c23dc",
     "src/contexts/company/test/personnel-company-revision.integration.test.ts": "2bef414b4ce8e8a4d2887fdcb8389607c2ee9a7c7d0a407894a5bb2071f89243",
     "src/contexts/company/test/personnel-execution.integration.test.ts": "092ca01afe971b1a39f4f2e68dcdb0dd3121ddf40d5c59073d7ceb5cdb1f0cea",
+    "src/contexts/company/test/personnel-ledger-characterization.integration.test.ts": "07567f9a2b6be6164b361e1f2ba428a56659c43d124658b0038051cc2ce59672",
     "src/contexts/company/test/personnel-position-snapshot.integration.test.ts": "68d544b6e554e880ba906a08f805403642d54d0e0f117005054961fe53e1b0c3",
     "src/contexts/company/test/read-company-employment-account.integration.test.ts": "4f5dc11d8fbe28bec5d7c4b17f1ee25534daa280692a3259b028d8dc6dd37f0c",
     "src/contexts/company/test/read-company-employment-person-names.integration.test.ts": "8b440b4e2d7498a53231d1c00c717fe2ca03b561112457ae157c3a150777fe8f",
