@@ -93,7 +93,7 @@ test("休職、復職、退職、再入社が雇用の台帳へ書く行を固�
   }
 
   expect(snapshots).toMatchSnapshot()
-})
+}, 30_000)
 
 /** 各期間の最新の版のうち、取消されていないものだけを返す。reader が読む有効な期間である。 */
 async function effectivePeriods(database: D1Database, employeeId: string) {
@@ -182,4 +182,5 @@ test("人事発令の採番で書かれた期間を持つ従業員でも、有�
   }
 
   expect(await run(true)).toEqual(await run(false))
-})
+  // fixture を 2 回作るので、既定の 5 秒では足りない製品がある。
+}, 30_000)

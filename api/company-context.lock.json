@@ -635,7 +635,7 @@
     "src/contexts/company/test/personnel-annotation-preservation.test.ts": "4d3f458b62dced0f759a7f7666bd8efec361d5ab0edfc2c838f97864a96c23dc",
     "src/contexts/company/test/personnel-company-revision.integration.test.ts": "2bef414b4ce8e8a4d2887fdcb8389607c2ee9a7c7d0a407894a5bb2071f89243",
     "src/contexts/company/test/personnel-execution.integration.test.ts": "092ca01afe971b1a39f4f2e68dcdb0dd3121ddf40d5c59073d7ceb5cdb1f0cea",
-    "src/contexts/company/test/personnel-ledger-characterization.integration.test.ts": "1a4b2099b1a6ff049149288cbca2befdb86779a1139564d6c9d51161978601e8",
+    "src/contexts/company/test/personnel-ledger-characterization.integration.test.ts": "5860a9e54baa993e300fe71f8aadc8c808850ce99e5cb2d5de4e2d9299047ff7",
     "src/contexts/company/test/personnel-position-snapshot.integration.test.ts": "68d544b6e554e880ba906a08f805403642d54d0e0f117005054961fe53e1b0c3",
     "src/contexts/company/test/read-company-employment-account.integration.test.ts": "4f5dc11d8fbe28bec5d7c4b17f1ee25534daa280692a3259b028d8dc6dd37f0c",
     "src/contexts/company/test/read-company-employment-person-names.integration.test.ts": "8b440b4e2d7498a53231d1c00c717fe2ca03b561112457ae157c3a150777fe8f",
