@@ -349,6 +349,8 @@
     "src/contexts/company/infrastructure/adapters/employee/employee-profile-snapshot.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee/initial-account-employment-statement.adapter.test.ts",
     "src/contexts/company/infrastructure/adapters/employee/initial-account-employment-statement.adapter.ts",
+    "src/contexts/company/infrastructure/adapters/employee/initial-employment-action.adapter.test.ts",
+    "src/contexts/company/infrastructure/adapters/employee/initial-employment-action.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee/initial-employment-persistence.adapter.test.ts",
     "src/contexts/company/infrastructure/adapters/employee/initial-employment-persistence.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee/initial-workforce-resource-journal.adapter.test.ts",

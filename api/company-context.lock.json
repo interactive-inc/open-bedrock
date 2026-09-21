@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "c11a9aebc97dc8cf7b4aebadcbb809e8863078e3a564fe4ec23a953b3805c4c1",
+    "company-context.manifest.json": "447fd9d3f90ddcbd09a42df97d07b398a1de590a4a53a19da278cde8bde6d4a6",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -349,6 +349,8 @@
     "src/contexts/company/infrastructure/adapters/employee/employee-profile-snapshot.adapter.ts": "c45f85654a64dde2362248b7ade2b3f29589649a64f64d20eec458831168cfe4",
     "src/contexts/company/infrastructure/adapters/employee/initial-account-employment-statement.adapter.test.ts": "75a4ef88d48699eddcf96c1dfa33e5ea7caad11d0c0d5c946e09a1914820302e",
     "src/contexts/company/infrastructure/adapters/employee/initial-account-employment-statement.adapter.ts": "dd5b2e1f16d70812cb7dd0b7a517b6846d5fd69b0109c90fad0415d800a56c09",
+    "src/contexts/company/infrastructure/adapters/employee/initial-employment-action.adapter.test.ts": "4f66d4502cce1333f859c068a1b74ba0d17e51974dbb4ccc029a15a313f96d17",
+    "src/contexts/company/infrastructure/adapters/employee/initial-employment-action.adapter.ts": "e631abbc19215c126399017d3d915d34ec64eace9f09eedd788c56048957b468",
     "src/contexts/company/infrastructure/adapters/employee/initial-employment-persistence.adapter.test.ts": "028bfc105ea766df32a249cfd9b57b275125b746b1644a798c04c28c51f46fb3",
     "src/contexts/company/infrastructure/adapters/employee/initial-employment-persistence.adapter.ts": "a2a8d2c8aabd63ef20b130cc3f67aedbbc0fd2ff0ccada8226ae295de3a29ea1",
     "src/contexts/company/infrastructure/adapters/employee/initial-workforce-resource-journal.adapter.test.ts": "c4e02140d6f4c02756817f691253de8dcb67bfc35c5cf56c6aef514571f30dd3",
