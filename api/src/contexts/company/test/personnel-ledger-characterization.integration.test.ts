@@ -94,3 +94,92 @@ test("休職、復職、退職、再入社が雇用の台帳へ書く行を固�
 
   expect(snapshots).toMatchSnapshot()
 })
+
+/** 各期間の最新の版のうち、取消されていないものだけを返す。reader が読む有効な期間である。 */
+async function effectivePeriods(database: D1Database, employeeId: string) {
+  const rows = async (sql: string) => (await database.prepare(sql).bind(employeeId).all()).results
+  return {
+    employments: await rows(
+      `SELECT employment_type, hire_date, status, termination_date FROM company_employments
+       WHERE employee_id = ?1 ORDER BY hire_date, id`,
+    ),
+    employmentPeriods: await rows(
+      `SELECT starts_on, ends_on FROM company_employment_period_versions AS period
+       WHERE employee_id = ?1 AND is_void = 0 AND NOT EXISTS (
+         SELECT 1 FROM company_employment_period_versions AS newer
+         WHERE newer.period_id = period.period_id AND newer.revision > period.revision)
+       ORDER BY starts_on`,
+    ),
+    statusPeriods: await rows(
+      `SELECT status, starts_on, ends_on FROM company_employee_status_period_versions AS period
+       WHERE employee_id = ?1 AND is_void = 0 AND NOT EXISTS (
+         SELECT 1 FROM company_employee_status_period_versions AS newer
+         WHERE newer.period_id = period.period_id AND newer.revision > period.revision)
+       ORDER BY starts_on`,
+    ),
+  }
+}
+
+test("人事発令の採番で書かれた期間を持つ従業員でも、有効な期間は同じになる", async () => {
+  const steps = [
+    [
+      "leave",
+      {
+        kind: "leave_started",
+        employeeCode: "EMPLOYEE-001",
+        eventOn: restoreCalendarDate("2030-02-01"),
+      },
+    ],
+    [
+      "return",
+      {
+        kind: "returned",
+        employeeCode: "EMPLOYEE-001",
+        eventOn: restoreCalendarDate("2030-03-01"),
+      },
+    ],
+    [
+      "retire",
+      {
+        kind: "retired",
+        employeeCode: "EMPLOYEE-001",
+        retirementOn: restoreCalendarDate("2030-04-30"),
+      },
+    ],
+  ] as const
+  const run = async (renameStatusPeriods: boolean) => {
+    const f = await createCompanyAssignmentResourceTestContext()
+    await f.assignEmployeeCode()
+    if (renameStatusPeriods) {
+      // 投影の採番ではない ID の期間を、過去の人事発令が書いた行として用意する。
+      const guards = await f.database
+        .prepare(
+          "SELECT name FROM sqlite_master WHERE type = 'trigger' AND tbl_name = 'company_employee_status_period_versions'",
+        )
+        .all<{ name: string }>()
+      const definitions = await f.database
+        .prepare(
+          "SELECT sql FROM sqlite_master WHERE type = 'trigger' AND tbl_name = 'company_employee_status_period_versions'",
+        )
+        .all<{ sql: string }>()
+      for (const guard of guards.results) await f.database.exec(`DROP TRIGGER "${guard.name}"`)
+      await f.database
+        .prepare(
+          "UPDATE company_employee_status_period_versions SET period_id = 'past-action:status:1' WHERE employee_id = ?1",
+        )
+        .bind(f.creator.employeeId)
+        .run()
+      for (const definition of definitions.results)
+        await f.database.exec(definition.sql.replaceAll("\n", " "))
+    }
+    const views: unknown[] = []
+    for (const [name, input] of steps) {
+      const applied = await f.personnel(input, `transition:${name}`)
+      if (applied instanceof Error) throw applied
+      views.push(await effectivePeriods(f.database, f.creator.employeeId))
+    }
+    return views
+  }
+
+  expect(await run(true)).toEqual(await run(false))
+})

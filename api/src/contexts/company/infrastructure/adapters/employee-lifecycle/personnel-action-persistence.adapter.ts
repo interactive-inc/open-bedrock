@@ -86,11 +86,14 @@ function mutationStatements(
     businessDate: string
     newEmploymentType: PersonnelActionProjection["newEmploymentType"]
     publicAssignmentPeriodIds: ReadonlySet<string>
+    projectedEmploymentIds: ReadonlySet<string>
   },
 ): ReadonlyArray<D1PreparedStatement> {
   switch (mutation.periodType) {
     case "employment": {
       const period = mutation.after
+      // 公開した雇用は投影が期間と雇用の表を書く。公開履歴へ未接続の雇用だけをここで書く。
+      if (context.projectedEmploymentIds.has(period.employmentId)) return []
       return [
         db
           .prepare(
@@ -152,6 +155,7 @@ function mutationStatements(
     }
     case "status": {
       const period = mutation.after
+      if (context.projectedEmploymentIds.has(period.employmentPeriodId)) return []
       return [
         db
           .prepare(
@@ -349,6 +353,8 @@ function preparePersistenceStatements(
   props: PersonnelActionPersistenceProps,
   journalStatements: ReadonlyArray<D1PreparedStatement>,
   publicAssignmentPeriodIds: ReadonlySet<string>,
+  projectedEmploymentIds: ReadonlySet<string>,
+  openingEmploymentStatements: ReadonlyArray<D1PreparedStatement>,
 ): D1PreparedStatement[] | CompanyOperationError {
   const db = c.env.DB
   const nextEmployeeRevision = props.revisions.employeeRevision + 1
@@ -512,11 +518,13 @@ function preparePersistenceStatements(
     new AbortWhenPreviousStatementChangedNoRowsAdapter(
       db,
     ).abortWhenPreviousStatementChangedNoRows(),
+    ...openingEmploymentStatements,
     ...persistenceMutations.flatMap((mutation) =>
       mutationStatements(db, mutation, {
         businessDate: props.businessDate,
         newEmploymentType: props.projection.newEmploymentType,
         publicAssignmentPeriodIds,
+        projectedEmploymentIds,
       }),
     ),
     ...journalStatements,
@@ -595,6 +603,8 @@ export class PersonnelActionPersistenceAdapter {
       { ...props, action },
       journal.statements,
       journal.assignmentPeriodIds,
+      journal.projectedEmploymentIds,
+      journal.openingEmploymentStatements,
     )
     if (statements instanceof CompanyOperationError) return statements
     if (props.command.expectedCompanyRevision !== undefined) {

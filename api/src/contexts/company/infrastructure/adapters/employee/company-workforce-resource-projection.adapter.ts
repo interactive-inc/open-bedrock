@@ -15,6 +15,7 @@ export class CompanyWorkforceResourceProjectionAdapter {
   async prepare(
     change: CompanyResourceChangeEntity,
     fingerprint: string,
+    recordedBy?: Readonly<{ actionId: string; businessDate: string }>,
   ): Promise<ReadonlyArray<D1PreparedStatement> | Error> {
     const statements: D1PreparedStatement[] = []
     const revisions = new Map<string, number>()
@@ -91,6 +92,7 @@ export class CompanyWorkforceResourceProjectionAdapter {
         change,
         fingerprint,
         revisionOffset: revisions.get(employeeId) ?? 0,
+        recordedBy,
       })
       if (prepared instanceof Error) return prepared
       statements.push(...prepared)

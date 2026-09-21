@@ -1,3 +1,4 @@
+import { CompanyEmploymentResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-employment-resource-projection.adapter"
 import { CompanyResponsibilityJournalAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-responsibility-journal.adapter"
 import type { OrgResponsibilityPeriod } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 import type { OrgResponsibilityPeriod as LifecycleResponsibilityPeriod } from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
@@ -35,6 +36,10 @@ export class CompanyPersonnelResourceJournalAdapter {
     | Readonly<{
         statements: ReadonlyArray<D1PreparedStatement>
         assignmentPeriodIds: ReadonlySet<string>
+        /** 雇用と在籍状態の期間を、公開履歴からの投影が書く雇用。 */
+        projectedEmploymentIds: ReadonlySet<string>
+        /** 雇用を開く投影。配属と責務は開いた雇用を参照するので、期間の書込みより前に置く。 */
+        openingEmploymentStatements: ReadonlyArray<D1PreparedStatement>
         summary: PersonnelActionSummary
       }>
     | CompanyOperationError
@@ -90,6 +95,9 @@ export class CompanyPersonnelResourceJournalAdapter {
       if (resources.length !== 0 && employment.organizationRevision === null)
         return new CompanyUnexpectedError("公開Companyの従業員対応がありません")
       const statements = [...employment.statements]
+      const projectedEmploymentIds = new Set<string>()
+      const openingEmploymentStatements: D1PreparedStatement[] = []
+      const closingEmploymentStatements: D1PreparedStatement[] = []
       if (resources.length > 0) {
         const change = CompanyResourceChangeEntity.createHistoryBatch({
           commandId: `lifecycle:${props.action.id}:0`,
@@ -111,7 +119,41 @@ export class CompanyPersonnelResourceJournalAdapter {
           return new CompanyUnexpectedError("人事発令の公開履歴を準備できません", {
             cause: journal,
           })
+        // 雇用と在籍状態の期間、雇用の表は、公開した雇用から投影する。発令の行と改訂番号は
+        // 人事発令の保存が書くので、その発令を期間の記録元として渡す。
+        const histories = new Map<string, CompanyResourceEntity[]>()
+        for (const resource of change.resources) {
+          if (resource.type !== "employment") continue
+          const history = histories.get(resource.id) ?? []
+          history.push(resource)
+          histories.set(resource.id, history)
+        }
+        const closing: D1PreparedStatement[] = []
+        for (const [employmentId, history] of histories) {
+          const resource = history.at(-1)
+          if (resource === undefined) continue
+          const projection = await new CompanyEmploymentResourceProjectionAdapter(this.c).prepare({
+            resource,
+            stagedHistory: history,
+            change,
+            fingerprint: journal.fingerprint,
+            revisionOffset: 0,
+            recordedBy: { actionId: props.action.id, businessDate: props.businessDate },
+          })
+          if (projection instanceof Error)
+            return new CompanyValidationError(
+              "人事発令を雇用の期間へ投影できません",
+              "lifecycle_projection_mismatch",
+              { cause: projection },
+            )
+          projectedEmploymentIds.add(employmentId)
+          // 終了していない雇用は子の期間より先に開き、終了する雇用は子を閉じた後に閉じる。
+          if (resource.state === "active" && resource.effectiveTo === null)
+            openingEmploymentStatements.push(...projection)
+          else closing.push(...projection)
+        }
         statements.push(...journal.statements, journal.commit)
+        closingEmploymentStatements.push(...closing)
       }
       return {
         statements: [
@@ -120,8 +162,12 @@ export class CompanyPersonnelResourceJournalAdapter {
           ...employment.bindings,
           ...assignment.bindings,
           ...reporting.bindings,
+          // 雇用を閉じる投影は、配属と責務を閉じ終えた後に置く。
+          ...closingEmploymentStatements,
         ],
         assignmentPeriodIds: assignment.periodIds,
+        projectedEmploymentIds,
+        openingEmploymentStatements,
         summary: reporting.summary,
       }
     } catch (cause) {

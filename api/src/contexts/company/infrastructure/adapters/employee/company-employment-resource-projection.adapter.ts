@@ -33,6 +33,12 @@ type Props = Readonly<{
   change: CompanyResourceChangeEntity
   fingerprint: string
   revisionOffset: number
+  /**
+   * 人事発令が原因の変更で、発令の行と改訂番号を呼び出し側が書く場合に渡す。
+   * 渡された場合は発令を合成せず、この発令を期間の記録元にする。在籍状態の列は、
+   * 発令の基準日を含む期間があるときだけ更新する。
+   */
+  recordedBy?: Readonly<{ actionId: string; businessDate: string }>
 }>
 
 /** 雇用resourceの変更を、所有者とEmployee revisionを固定して期間履歴へ反映する。 */
@@ -150,8 +156,10 @@ export class CompanyEmploymentResourceProjectionAdapter {
     }
     const isVoid = timeline.periods.length === 0
     const endsOn = isVoid ? (previous.data?.ends_on ?? null) : timeline.endsOn
-    const expectedRevision = baseRevision + props.revisionOffset
-    const actionId = crypto.randomUUID()
+    // 人事発令は雇用が複数でも改訂番号を1回だけ進めるので、雇用ごとのずれを足さない。
+    const expectedRevision =
+      baseRevision + (props.recordedBy === undefined ? props.revisionOffset : 0)
+    const actionId = props.recordedBy?.actionId ?? crypto.randomUUID()
     const recordedAt = Math.floor(props.change.recordedAt / 1000)
     const summary = CanonicalSystemJsonValue.create({
       kind: "employment_revised",
@@ -171,50 +179,66 @@ export class CompanyEmploymentResourceProjectionAdapter {
     if (summary instanceof Error) return summary
     const actionKind = "employment_revised"
     const statements: D1PreparedStatement[] = []
-    if (revision.data === null && props.revisionOffset === 0) {
+    if (props.recordedBy === undefined) {
+      if (revision.data === null && props.revisionOffset === 0) {
+        statements.push(
+          this.c
+            .prepare(`INSERT INTO company_employee_lifecycle_revisions (employee_id, revision, updated_at)
+          VALUES (?1, 0, ?2)`)
+            .bind(timeline.employeeId, recordedAt),
+        )
+      }
       statements.push(
         this.c
-          .prepare(`INSERT INTO company_employee_lifecycle_revisions (employee_id, revision, updated_at)
-        VALUES (?1, 0, ?2)`)
-          .bind(timeline.employeeId, recordedAt),
+          .prepare(`UPDATE company_employee_lifecycle_revisions SET revision = revision + 1, updated_at = ?1
+        WHERE employee_id = ?2 AND revision = ?3`)
+          .bind(recordedAt, timeline.employeeId, expectedRevision),
+      )
+      statements.push(
+        new AbortWhenPreviousStatementChangedNoRowsAdapter(
+          this.c,
+        ).abortWhenPreviousStatementChangedNoRows(),
+      )
+      statements.push(
+        this.c
+          .prepare(`INSERT INTO company_personnel_actions
+        (id, employee_id, kind, event_on, recorded_at, recorded_by_account_id, requested_by_employee_id,
+         source_type, source_application_id, corrects_action_id, operation_id, payload_fingerprint, summary_json)
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, NULL, 'system', NULL, ?7, ?8, ?9, ?10)`)
+          .bind(
+            actionId,
+            timeline.employeeId,
+            actionKind,
+            resource.effectiveFrom,
+            recordedAt,
+            props.change.actorAccountId,
+            null,
+            `resource:${props.fingerprint}:${props.change.resources.indexOf(resource)}`,
+            props.fingerprint,
+            summary.toString(),
+          ),
       )
     }
-    statements.push(
-      this.c
-        .prepare(`UPDATE company_employee_lifecycle_revisions SET revision = revision + 1, updated_at = ?1
-      WHERE employee_id = ?2 AND revision = ?3`)
-        .bind(recordedAt, timeline.employeeId, expectedRevision),
-    )
-    statements.push(
-      new AbortWhenPreviousStatementChangedNoRowsAdapter(
-        this.c,
-      ).abortWhenPreviousStatementChangedNoRows(),
-    )
-    statements.push(
-      this.c
-        .prepare(`INSERT INTO company_personnel_actions
-      (id, employee_id, kind, event_on, recorded_at, recorded_by_account_id, requested_by_employee_id,
-       source_type, source_application_id, corrects_action_id, operation_id, payload_fingerprint, summary_json)
-      VALUES (?1, ?2, ?3, ?4, ?5, ?6, NULL, 'system', NULL, ?7, ?8, ?9, ?10)`)
-        .bind(
-          actionId,
-          timeline.employeeId,
-          actionKind,
-          resource.effectiveFrom,
-          recordedAt,
-          props.change.actorAccountId,
-          null,
-          `resource:${props.fingerprint}:${props.change.resources.indexOf(resource)}`,
-          props.fingerprint,
-          summary.toString(),
-        ),
-    )
+    const businessDate = props.recordedBy?.businessDate
+    const statusPeriod =
+      businessDate === undefined
+        ? timeline.periods.at(-1)
+        : timeline.periods.find(
+            (period) =>
+              period.startsOn <= businessDate &&
+              (period.endsOn === null || businessDate < period.endsOn),
+          )
+    // 基準日を含む期間が無い発令は、新しい雇用を在籍で作り、既存の雇用の状態は変えない。
     const status =
       isVoid || endsOn !== null
         ? "TERMINATED"
-        : timeline.periods.at(-1)?.status === "leave"
-          ? "ON_LEAVE"
-          : "ACTIVE"
+        : statusPeriod === undefined
+          ? businessDate === undefined || binding.data === null
+            ? "ACTIVE"
+            : null
+          : statusPeriod.status === "leave"
+            ? "ON_LEAVE"
+            : "ACTIVE"
     if (binding.data === null) {
       statements.push(
         this.c
@@ -238,7 +262,9 @@ export class CompanyEmploymentResourceProjectionAdapter {
       statements.push(
         this.c
           .prepare(`UPDATE company_employments SET
-        contract_name = coalesce(?1, contract_name), employment_type = ?2, hire_date = ?3, status = ?4,
+        contract_name = coalesce(?1, contract_name), employment_type = ?2,
+        hire_date = CASE WHEN ?10 = 1 THEN hire_date ELSE ?3 END,
+        status = coalesce(?4, status),
         termination_date = CASE WHEN ?5 = 1 THEN termination_date WHEN ?6 IS NULL THEN NULL ELSE date(?6, '-1 day') END,
         updated_at = max(updated_at, ?7) WHERE id = ?8 AND employee_id = ?9`)
           .bind(
@@ -251,6 +277,8 @@ export class CompanyEmploymentResourceProjectionAdapter {
             props.change.recordedAt,
             resource.id,
             timeline.employeeId,
+            // 人事発令は既存の雇用の開始日を変えない。開始日の訂正は公開履歴の訂正として扱う。
+            props.recordedBy === undefined ? 0 : 1,
           ),
       )
     }
@@ -259,48 +287,61 @@ export class CompanyEmploymentResourceProjectionAdapter {
         this.c,
       ).abortWhenPreviousStatementChangedNoRows(),
     )
-    statements.push(
-      this.c
-        .prepare(`INSERT INTO company_employment_period_versions
-      (period_id, revision, employee_id, starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
-      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)`)
-        .bind(
-          resource.id,
-          (previous.data?.revision ?? 0) + 1,
-          timeline.employeeId,
-          startsOn,
-          endsOn,
-          isVoid ? 1 : 0,
-          actionId,
-          recordedAt,
-        ),
-    )
+    // 人事発令は変わった期間だけを版として残す。値が同じ版を原記録へ重ねない。
+    const employmentPeriodUnchanged =
+      props.recordedBy !== undefined &&
+      previous.data !== null &&
+      previous.data.starts_on === startsOn &&
+      previous.data.ends_on === endsOn &&
+      previous.data.is_void === (isVoid ? 1 : 0)
+    if (!employmentPeriodUnchanged) {
+      statements.push(
+        this.c
+          .prepare(`INSERT INTO company_employment_period_versions
+        (period_id, revision, employee_id, starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
+        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8)`)
+          .bind(
+            resource.id,
+            (previous.data?.revision ?? 0) + 1,
+            timeline.employeeId,
+            startsOn,
+            endsOn,
+            isVoid ? 1 : 0,
+            actionId,
+            recordedAt,
+          ),
+      )
+    }
     const statusStatements = await this.statusStatements({
       timeline,
       previous: statuses.data,
       actionId,
       recordedAt,
+      skipUnchanged: props.recordedBy !== undefined,
     })
     if (statusStatements instanceof Error) return statusStatements
     statements.push(...statusStatements)
-    statements.push(
-      this.c
-        .prepare(`INSERT INTO company_workforce_resource_bindings
-      (resource_type, resource_id, organization_id, employee_id, resource_revision, lifecycle_revision, last_action_id)
-      VALUES ('employment', ?1, ?2, ?3, ?4, ?5, ?6)
-      ON CONFLICT (resource_type, resource_id) DO UPDATE SET resource_revision = excluded.resource_revision,
-        lifecycle_revision = excluded.lifecycle_revision, last_action_id = excluded.last_action_id
-      WHERE company_workforce_resource_bindings.organization_id = excluded.organization_id
-        AND company_workforce_resource_bindings.employee_id = excluded.employee_id`)
-        .bind(
-          resource.id,
-          resource.organizationId,
-          timeline.employeeId,
-          resource.revision,
-          expectedRevision + 1,
-          actionId,
-        ),
-    )
+    // 人事発令は公開履歴を書いた後に同じbindingを自分で進める。版を参照するので先には書けない。
+    if (props.recordedBy === undefined) {
+      statements.push(
+        this.c
+          .prepare(`INSERT INTO company_workforce_resource_bindings
+        (resource_type, resource_id, organization_id, employee_id, resource_revision, lifecycle_revision, last_action_id)
+        VALUES ('employment', ?1, ?2, ?3, ?4, ?5, ?6)
+        ON CONFLICT (resource_type, resource_id) DO UPDATE SET resource_revision = excluded.resource_revision,
+          lifecycle_revision = excluded.lifecycle_revision, last_action_id = excluded.last_action_id
+        WHERE company_workforce_resource_bindings.organization_id = excluded.organization_id
+          AND company_workforce_resource_bindings.employee_id = excluded.employee_id`)
+          .bind(
+            resource.id,
+            resource.organizationId,
+            timeline.employeeId,
+            resource.revision,
+            expectedRevision + 1,
+            actionId,
+          ),
+      )
+    }
     return statements
   }
 
@@ -310,6 +351,7 @@ export class CompanyEmploymentResourceProjectionAdapter {
       previous: ReadonlyArray<StatusRow>
       actionId: string
       recordedAt: number
+      skipUnchanged: boolean
     }>,
   ): Promise<ReadonlyArray<D1PreparedStatement> | Error> {
     const periods = new Map<string, CompanyEmploymentResourceTimelineValue["periods"][number]>()
@@ -335,6 +377,16 @@ export class CompanyEmploymentResourceProjectionAdapter {
       if (startsOn === undefined || status === undefined)
         return new CompanyResourceValidationError("invalid_resource")
       const endsOn = current === undefined ? (previous?.ends_on ?? null) : current.endsOn
+      if (
+        props.skipUnchanged &&
+        previous !== undefined &&
+        current !== undefined &&
+        previous.is_void === 0 &&
+        previous.status === status &&
+        previous.starts_on === startsOn &&
+        previous.ends_on === endsOn
+      )
+        continue
       statements.push(
         this.c
           .prepare(`INSERT INTO company_employee_status_period_versions
