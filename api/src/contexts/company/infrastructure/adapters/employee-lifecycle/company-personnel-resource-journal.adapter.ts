@@ -40,6 +40,8 @@ export class CompanyPersonnelResourceJournalAdapter {
         projectedEmploymentIds: ReadonlySet<string>
         /** 雇用を開く投影。配属と責務は開いた雇用を参照するので、期間の書込みより前に置く。 */
         openingEmploymentStatements: ReadonlyArray<D1PreparedStatement>
+        /** 新しい従業員の公開 resource と、人と従業員の投影。発令の行より前に置く。 */
+        identityStatements: ReadonlyArray<D1PreparedStatement>
         summary: PersonnelActionSummary
       }>
     | CompanyOperationError
@@ -95,8 +97,10 @@ export class CompanyPersonnelResourceJournalAdapter {
       if (resources.length !== 0 && employment.organizationRevision === null)
         return new CompanyUnexpectedError("公開Companyの従業員対応がありません")
       const statements = [...employment.statements]
-      const projectedEmploymentIds = new Set<string>()
-      const openingEmploymentStatements: D1PreparedStatement[] = []
+      const projectedEmploymentIds = new Set<string>(employment.projectedEmploymentIds ?? [])
+      const openingEmploymentStatements: D1PreparedStatement[] = [
+        ...(employment.openingEmploymentStatements ?? []),
+      ]
       if (resources.length > 0) {
         const change = CompanyResourceChangeEntity.createHistoryBatch({
           commandId: `lifecycle:${props.action.id}:0`,
@@ -171,6 +175,7 @@ export class CompanyPersonnelResourceJournalAdapter {
         assignmentPeriodIds: assignment.periodIds,
         projectedEmploymentIds,
         openingEmploymentStatements,
+        identityStatements: employment.identityStatements ?? [],
         summary: reporting.summary,
       }
     } catch (cause) {

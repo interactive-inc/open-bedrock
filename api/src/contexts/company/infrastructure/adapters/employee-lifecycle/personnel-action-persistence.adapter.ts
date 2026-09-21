@@ -377,6 +377,7 @@ function preparePersistenceStatements(
   publicAssignmentPeriodIds: ReadonlySet<string>,
   projectedEmploymentIds: ReadonlySet<string>,
   openingEmploymentStatements: ReadonlyArray<D1PreparedStatement>,
+  identityStatements: ReadonlyArray<D1PreparedStatement>,
 ): D1PreparedStatement[] | CompanyOperationError {
   const db = c.env.DB
   const nextEmployeeRevision = props.revisions.employeeRevision + 1
@@ -443,26 +444,11 @@ function preparePersistenceStatements(
   }
   const statements: Array<D1PreparedStatement> = []
 
+  // 新しい従業員は、公開した人と従業員からの投影として作る。発令の行が参照するので先に置く。
   if (props.prospectiveEmployee !== undefined) {
-    statements.push(
-      db
-        .prepare(
-          `INSERT INTO company_employees
-             (id, official_name, employee_code, email, phone, created_at, updated_at)
-           VALUES (?1, ?2, ?3, ?4, NULL, ?5, ?5)
-           RETURNING id`,
-        )
-        .bind(
-          props.action.employeeId,
-          props.prospectiveEmployee.name,
-          props.prospectiveEmployee.code,
-          props.prospectiveEmployee.email ?? null,
-          props.action.recordedAt * 1_000,
-        ),
-      new AbortWhenPreviousStatementChangedNoRowsAdapter(
-        db,
-      ).abortWhenPreviousStatementChangedNoRows(),
-    )
+    if (identityStatements.length === 0)
+      return new CompanyUnexpectedError("新しい従業員の公開記録がありません")
+    statements.push(...identityStatements)
   }
 
   if (props.projection.affectsOrganization) {
@@ -630,6 +616,7 @@ export class PersonnelActionPersistenceAdapter {
       journal.assignmentPeriodIds,
       journal.projectedEmploymentIds,
       journal.openingEmploymentStatements,
+      journal.identityStatements,
     )
     if (statements instanceof CompanyOperationError) return statements
     if (props.command.expectedCompanyRevision !== undefined) {

@@ -233,9 +233,14 @@ export class CompanyEmploymentResourceProjectionAdapter {
       isVoid || endsOn !== null
         ? "TERMINATED"
         : statusPeriod === undefined
-          ? businessDate === undefined || binding.data === null
-            ? "ACTIVE"
-            : null
+          ? binding.data === null
+            ? // 新しい雇用は、基準日より後に始まる場合も最初の期間の状態で作る。
+              timeline.periods.at(-1)?.status === "leave"
+              ? "ON_LEAVE"
+              : "ACTIVE"
+            : businessDate === undefined
+              ? "ACTIVE"
+              : null
           : statusPeriod.status === "leave"
             ? "ON_LEAVE"
             : "ACTIVE"

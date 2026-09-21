@@ -15,10 +15,75 @@ export class CompanyWorkforceResourceProjectionAdapter {
   async prepare(
     change: CompanyResourceChangeEntity,
     fingerprint: string,
-    recordedBy?: Readonly<{ actionId: string; businessDate: string }>,
+    recordedBy?: Readonly<{
+      actionId: string
+      businessDate: string
+      /**
+       * 発令の行と改訂番号の文。発令は従業員を参照し、期間は発令を参照するので、
+       * 従業員の投影の後、雇用の投影の前に置く。
+       */
+      afterEmployees?: ReadonlyArray<D1PreparedStatement>
+    }>,
+  ): Promise<ReadonlyArray<D1PreparedStatement> | Error> {
+    const identity = await this.prepareIdentity(change)
+    if (identity instanceof Error) return identity
+    const statements: D1PreparedStatement[] = [...identity]
+    const revisions = new Map<string, number>()
+    statements.push(...(recordedBy?.afterEmployees ?? []))
+    const employmentHistories = new Map<string, CompanyResourceEntity[]>()
+    for (const resource of change.resources.filter((resource) => resource.type === "employment")) {
+      const history = employmentHistories.get(resource.id) ?? []
+      history.push(resource)
+      employmentHistories.set(resource.id, history)
+    }
+    const employments = [...employmentHistories.values()].toSorted((left, right) => {
+      const leftFinal = left.at(-1)
+      const rightFinal = right.at(-1)
+      return (
+        Number(leftFinal?.effectiveTo === null && leftFinal.readText("status") !== "TERMINATED") -
+        Number(rightFinal?.effectiveTo === null && rightFinal.readText("status") !== "TERMINATED")
+      )
+    })
+    for (const history of employments) {
+      const resource = history.at(-1)
+      if (resource === undefined) return new CompanyResourceValidationError("invalid_resource")
+      const employeeId = resource.readText("employeeId")
+      if (employeeId === null) return new CompanyResourceValidationError("invalid_resource")
+      const prepared = await new CompanyEmploymentResourceProjectionAdapter(this.c).prepare({
+        resource,
+        stagedHistory: history,
+        change,
+        fingerprint,
+        revisionOffset: revisions.get(employeeId) ?? 0,
+        recordedBy:
+          recordedBy === undefined
+            ? undefined
+            : { actionId: recordedBy.actionId, businessDate: recordedBy.businessDate },
+      })
+      if (prepared instanceof Error) return prepared
+      statements.push(...prepared)
+      revisions.set(employeeId, (revisions.get(employeeId) ?? 0) + 1)
+    }
+    for (const employeeId of revisions.keys()) {
+      statements.push(
+        this.c
+          .prepare(`UPDATE company_workforce_resource_bindings
+        SET lifecycle_revision = (SELECT revision FROM company_employee_lifecycle_revisions WHERE employee_id = ?1)
+        WHERE employee_id = ?1`)
+          .bind(employeeId),
+      )
+    }
+    return statements
+  }
+
+  /**
+   * 人、従業員、Accountとの対応だけを投影する。雇用の投影の前に発令の行を挟む呼び出し側が使う。
+   * 新しい従業員の binding は改訂番号 0 で作る。
+   */
+  async prepareIdentity(
+    change: CompanyResourceChangeEntity,
   ): Promise<ReadonlyArray<D1PreparedStatement> | Error> {
     const statements: D1PreparedStatement[] = []
-    const revisions = new Map<string, number>()
 
     // 既存業務台帳は単一Companyを所有し、organizationを分離する列を持たない。
     // 別organizationのresourceを同じ台帳へ混ぜると既存業務の参照範囲を広げてしまう。
@@ -67,46 +132,6 @@ export class CompanyWorkforceResourceProjectionAdapter {
     const linkStatements = this.accountEmployeeLinkStatements(change)
     if (linkStatements instanceof Error) return linkStatements
     statements.push(...linkStatements)
-    const employmentHistories = new Map<string, CompanyResourceEntity[]>()
-    for (const resource of change.resources.filter((resource) => resource.type === "employment")) {
-      const history = employmentHistories.get(resource.id) ?? []
-      history.push(resource)
-      employmentHistories.set(resource.id, history)
-    }
-    const employments = [...employmentHistories.values()].toSorted((left, right) => {
-      const leftFinal = left.at(-1)
-      const rightFinal = right.at(-1)
-      return (
-        Number(leftFinal?.effectiveTo === null && leftFinal.readText("status") !== "TERMINATED") -
-        Number(rightFinal?.effectiveTo === null && rightFinal.readText("status") !== "TERMINATED")
-      )
-    })
-    for (const history of employments) {
-      const resource = history.at(-1)
-      if (resource === undefined) return new CompanyResourceValidationError("invalid_resource")
-      const employeeId = resource.readText("employeeId")
-      if (employeeId === null) return new CompanyResourceValidationError("invalid_resource")
-      const prepared = await new CompanyEmploymentResourceProjectionAdapter(this.c).prepare({
-        resource,
-        stagedHistory: history,
-        change,
-        fingerprint,
-        revisionOffset: revisions.get(employeeId) ?? 0,
-        recordedBy,
-      })
-      if (prepared instanceof Error) return prepared
-      statements.push(...prepared)
-      revisions.set(employeeId, (revisions.get(employeeId) ?? 0) + 1)
-    }
-    for (const employeeId of revisions.keys()) {
-      statements.push(
-        this.c
-          .prepare(`UPDATE company_workforce_resource_bindings
-        SET lifecycle_revision = (SELECT revision FROM company_employee_lifecycle_revisions WHERE employee_id = ?1)
-        WHERE employee_id = ?1`)
-          .bind(employeeId),
-      )
-    }
     return statements
   }
 

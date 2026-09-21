@@ -93,6 +93,8 @@
     "src/contexts/company/domain/definitions/fingerprint-personnel-action.definition.ts",
     "src/contexts/company/domain/definitions/has-management-cycle.definition.test.ts",
     "src/contexts/company/domain/definitions/has-management-cycle.definition.ts",
+    "src/contexts/company/domain/definitions/initial-workforce-resources.definition.test.ts",
+    "src/contexts/company/domain/definitions/initial-workforce-resources.definition.ts",
     "src/contexts/company/domain/definitions/is-calendar-date.definition.test.ts",
     "src/contexts/company/domain/definitions/is-calendar-date.definition.ts",
     "src/contexts/company/domain/definitions/is-canonical-company-resource-attributes.definition.test.ts",
