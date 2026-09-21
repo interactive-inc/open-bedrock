@@ -87,13 +87,35 @@ function mutationStatements(
     newEmploymentType: PersonnelActionProjection["newEmploymentType"]
     publicAssignmentPeriodIds: ReadonlySet<string>
     projectedEmploymentIds: ReadonlySet<string>
+    /** 訂正で元の発令を戻している段階か。 */
+    restoring: boolean
   },
 ): ReadonlyArray<D1PreparedStatement> {
   switch (mutation.periodType) {
     case "employment": {
       const period = mutation.after
       // 公開した雇用は投影が期間と雇用の表を書く。公開履歴へ未接続の雇用だけをここで書く。
-      if (context.projectedEmploymentIds.has(period.employmentId)) return []
+      if (context.projectedEmploymentIds.has(period.employmentId)) {
+        // 訂正は元の発令を戻してから置き換える。戻す段階で子の期間を開き直せるよう、雇用の表だけを
+        // 一時的に戻す。期間の版と最終の値は、batch の最後に投影が書く。
+        if (!context.restoring || mutation.before === null) return []
+        return [
+          db
+            .prepare(
+              `UPDATE company_employments
+               SET termination_date = CASE WHEN ?2 IS NULL THEN NULL ELSE date(?2, '-1 day') END,
+                   status = CASE WHEN ?2 IS NULL AND ?3 = 0 THEN status ELSE 'TERMINATED' END,
+                   updated_at = max(updated_at, ?4)
+               WHERE id = ?1`,
+            )
+            .bind(
+              period.employmentId,
+              period.endsOn,
+              period.isVoid ? 1 : 0,
+              period.recordedAt * 1_000,
+            ),
+        ]
+      }
       return [
         db
           .prepare(
@@ -518,15 +540,18 @@ function preparePersistenceStatements(
     new AbortWhenPreviousStatementChangedNoRowsAdapter(
       db,
     ).abortWhenPreviousStatementChangedNoRows(),
-    ...openingEmploymentStatements,
-    ...persistenceMutations.flatMap((mutation) =>
-      mutationStatements(db, mutation, {
+    // 訂正では元の発令を戻し終えてから新しい雇用を開く。同じ従業員の有効な雇用を並べない。
+    ...persistenceMutations.flatMap((mutation, index) => [
+      ...(index === restored ? openingEmploymentStatements : []),
+      ...mutationStatements(db, mutation, {
+        restoring: index < restored,
         businessDate: props.businessDate,
         newEmploymentType: props.projection.newEmploymentType,
         publicAssignmentPeriodIds,
         projectedEmploymentIds,
       }),
-    ),
+    ]),
+    ...(persistenceMutations.length <= restored ? openingEmploymentStatements : []),
     ...journalStatements,
   )
 

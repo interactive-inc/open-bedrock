@@ -97,7 +97,6 @@ export class CompanyPersonnelResourceJournalAdapter {
       const statements = [...employment.statements]
       const projectedEmploymentIds = new Set<string>()
       const openingEmploymentStatements: D1PreparedStatement[] = []
-      const closingEmploymentStatements: D1PreparedStatement[] = []
       if (resources.length > 0) {
         const change = CompanyResourceChangeEntity.createHistoryBatch({
           commandId: `lifecycle:${props.action.id}:0`,
@@ -148,12 +147,18 @@ export class CompanyPersonnelResourceJournalAdapter {
             )
           projectedEmploymentIds.add(employmentId)
           // 終了していない雇用は子の期間より先に開き、終了する雇用は子を閉じた後に閉じる。
-          if (resource.state === "active" && resource.effectiveTo === null)
+          // 退職は終了日ではなく TERMINATED の状態の版で表されるので、状態でも閉じる変更と判定する。
+          if (
+            resource.state === "active" &&
+            resource.effectiveTo === null &&
+            resource.readText("status") !== "TERMINATED"
+          )
             openingEmploymentStatements.push(...projection)
           else closing.push(...projection)
         }
-        statements.push(...journal.statements, journal.commit)
-        closingEmploymentStatements.push(...closing)
+        // 雇用を閉じる投影は、子の期間を閉じた後、会社版を確定する前に置く。確定時の検査は
+        // 配属が雇用期間に収まることを照合する。
+        statements.push(...journal.statements, ...closing, journal.commit)
       }
       return {
         statements: [
@@ -162,8 +167,6 @@ export class CompanyPersonnelResourceJournalAdapter {
           ...employment.bindings,
           ...assignment.bindings,
           ...reporting.bindings,
-          // 雇用を閉じる投影は、配属と責務を閉じ終えた後に置く。
-          ...closingEmploymentStatements,
         ],
         assignmentPeriodIds: assignment.periodIds,
         projectedEmploymentIds,
