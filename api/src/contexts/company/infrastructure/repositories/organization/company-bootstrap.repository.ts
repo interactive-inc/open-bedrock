@@ -7,12 +7,10 @@ import {
 } from "@/contexts/company/domain/errors"
 import { InitialCompanyResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/organization/initial-company-resource-journal.adapter"
 import { OrganizationResourceAdoptionSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/organization/organization-resource-adoption-snapshot.adapter"
-import { InitialWorkforceResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/employee/initial-workforce-resource-journal.adapter"
-import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
+import { PublishedInitialWorkforceAdapter } from "@/contexts/company/infrastructure/adapters/employee/published-initial-workforce.adapter"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
-import { drizzle } from "drizzle-orm/d1"
 import { z } from "zod"
 type Context = Readonly<{
   env: Readonly<{ DB: D1Database; COMPANY_TIME_ZONE?: string }>
@@ -107,12 +105,10 @@ export class CompanyBootstrapRepository {
     const digest = await ProposalDigestValue.create(summary)
     if (digest instanceof Error) return digest
     const summaryJson = summary.toString()
-    const initialResources = await new InitialWorkforceResourceJournalAdapter({
-      env: { DB: this.c.env.DB },
-      var: { database: drizzle(this.c.env.DB) },
-    }).prepare({
-      employeeId: restoreWorkforceId("employee", employeeId),
-      employmentId: restoreWorkforceId("employment", employmentId),
+    // 最初の従業員と雇用は公開 resource を正本として作り、表と期間はその投影として書く。
+    const initialWorkforce = await new PublishedInitialWorkforceAdapter(this.c.env.DB).prepare({
+      employeeId,
+      employmentId,
       officialName: write.employeeName,
       employeeCode: write.employeeCode,
       email: null,
@@ -120,14 +116,16 @@ export class CompanyBootstrapRepository {
       employmentType: write.employmentType,
       status: "active",
       effectiveOn: restoreCalendarDate(write.effectiveOn),
-      occurredAt: new Date(write.recordedAt),
+      commandId: `initial-workforce:${actionId}`,
       actorAccountId: write.accountId,
-      operationId: actionId,
       reason: write.reason,
-      lifecycleRevision: 0,
+      recordedAt: write.recordedAt,
       expectedOrganizationRevision: 1,
+      actionId,
+      businessDate: write.observedOn,
+      lifecycleRevision: 0,
     })
-    if (initialResources instanceof Error) return initialResources
+    if (initialWorkforce instanceof Error) return initialWorkforce
 
     const statements: D1PreparedStatement[] = [
       ...(this.c.commitAssertions ?? []),
@@ -144,24 +142,7 @@ export class CompanyBootstrapRepository {
         write.representativeName,
       ),
       ...companyResources.beginning,
-      this.c.env.DB.prepare(
-        `INSERT INTO company_employees
-             (id, official_name, employee_code, email, phone, created_at, updated_at)
-           VALUES (?1, ?2, ?3, NULL, NULL, ?4, ?4)`,
-      ).bind(employeeId, write.employeeName, write.employeeCode, recordedAt),
-      this.c.env.DB.prepare(
-        `INSERT INTO company_employments
-             (id, employee_id, contract_name, employment_type, hire_date, status,
-              termination_date, created_at, updated_at)
-           VALUES (?1, ?2, ?3, ?6, ?4, 'ACTIVE', NULL, ?5, ?5)`,
-      ).bind(
-        employmentId,
-        employeeId,
-        write.employeeName,
-        write.effectiveOn,
-        recordedAt,
-        write.employmentType,
-      ),
+      ...initialWorkforce.identityStatements,
       this.c.env.DB.prepare(
         `INSERT INTO company_account_employee_links (account_id, employee_id)
            VALUES (?1, ?2)`,
@@ -188,30 +169,12 @@ export class CompanyBootstrapRepository {
         summaryJson,
       ),
       this.c.env.DB.prepare(
-        `INSERT INTO company_employment_period_versions
-             (period_id, revision, employee_id, starts_on, ends_on, is_void,
-              recorded_by_action_id, recorded_at)
-           VALUES (?1, 1, ?2, ?3, NULL, 0, ?4, ?5)`,
-      ).bind(employmentId, employeeId, write.effectiveOn, actionId, actionRecordedAt),
-      this.c.env.DB.prepare(
-        `INSERT INTO company_employee_status_period_versions
-             (period_id, revision, employment_period_id, employee_id, status,
-              starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
-           VALUES (?1, 1, ?2, ?3, 'active', ?4, NULL, 0, ?5, ?6)`,
-      ).bind(
-        `bootstrap-status:${employeeId}`,
-        employmentId,
-        employeeId,
-        write.effectiveOn,
-        actionId,
-        actionRecordedAt,
-      ),
-      this.c.env.DB.prepare(
         `INSERT INTO company_employee_lifecycle_revisions
              (employee_id, revision, updated_at)
            VALUES (?1, 0, ?2)`,
       ).bind(employeeId, actionRecordedAt),
-      ...initialResources,
+      ...initialWorkforce.employmentStatements,
+      ...initialWorkforce.commitStatements,
       this.c.env.DB.prepare(
         `INSERT INTO company_organization_change_operations
              (id, expected_revision, change_count, applied_count, resulting_revision,
