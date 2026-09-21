@@ -339,6 +339,7 @@
     "src/contexts/company/infrastructure/adapters/employee-resource-adoption/employee-resource-adoption-snapshot.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee-resource-adoption/employee-resource-adoption-termination.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee-resource-adoption/lib/employee-resource-adoption-snapshot-sql.ts",
+    "src/contexts/company/infrastructure/adapters/employee/__snapshots__/initial-employment-action.adapter.test.ts.snap",
     "src/contexts/company/infrastructure/adapters/employee/additional-employment-persistence.adapter.test.ts",
     "src/contexts/company/infrastructure/adapters/employee/additional-employment-persistence.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee/company-employment-resource-history.adapter.ts",
@@ -347,14 +348,8 @@
     "src/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter.test.ts",
     "src/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee/employee-profile-snapshot.adapter.ts",
-    "src/contexts/company/infrastructure/adapters/employee/initial-account-employment-statement.adapter.test.ts",
-    "src/contexts/company/infrastructure/adapters/employee/initial-account-employment-statement.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee/initial-employment-action.adapter.test.ts",
     "src/contexts/company/infrastructure/adapters/employee/initial-employment-action.adapter.ts",
-    "src/contexts/company/infrastructure/adapters/employee/initial-employment-persistence.adapter.test.ts",
-    "src/contexts/company/infrastructure/adapters/employee/initial-employment-persistence.adapter.ts",
-    "src/contexts/company/infrastructure/adapters/employee/initial-workforce-resource-journal.adapter.test.ts",
-    "src/contexts/company/infrastructure/adapters/employee/initial-workforce-resource-journal.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee/lib/CLAUDE.md",
     "src/contexts/company/infrastructure/adapters/employee/lib/company-employee-directory-sql.ts",
     "src/contexts/company/infrastructure/adapters/employee/lib/company-employment-state-sql.ts",
@@ -647,7 +642,8 @@
     "src/contexts/company/test/read-company-employment-resource-chain.integration.test.ts",
     "src/contexts/company/test/read-company-employment-states.integration.test.ts",
     "src/contexts/company/test/record-preservation-execution.integration.test.ts",
-    "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts"
+    "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts",
+    "src/contexts/company/test/unpublished-employment.test-support.ts"
   ],
   "implementedCapabilities": [
     "account-employee-link",

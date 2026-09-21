@@ -4,7 +4,7 @@ import { Thanks } from "@/contexts/thanks/domain/entities/thanks.entity"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import { employments } from "@/contexts/company/infrastructure/schema/employment"
-import { InitialEmploymentPersistenceAdapter } from "@/contexts/company/infrastructure/adapters/employee/initial-employment-persistence.adapter"
+import { prepareUnpublishedEmployment } from "@/contexts/company/test/unpublished-employment.test-support"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
@@ -41,7 +41,7 @@ async function seedEmployee(
     updatedAt: new Date(0),
   })
 
-  const initialEmployment = await new InitialEmploymentPersistenceAdapter(context).prepare({
+  const initialEmployment = await prepareUnpublishedEmployment(context.env.DB, {
     employeeId,
     employmentId: restoreWorkforceId("employment", `employment:${code}`),
     effectiveOn: restoreCalendarDate("1970-01-01"),
@@ -51,7 +51,6 @@ async function seedEmployee(
     operationId: `seed:${code}`,
     reason: "Initial test employment",
   })
-  if (initialEmployment instanceof Error) throw initialEmployment
   await context.env.DB.batch([...initialEmployment])
   await publishTestEmployeeResources(context.env.DB, {
     employeeId: String(employeeId),

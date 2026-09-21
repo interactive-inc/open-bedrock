@@ -1,7 +1,6 @@
-import { drizzle } from "drizzle-orm/d1"
 import { createEmployeeAdoptionFixture } from "@/contexts/company/test/employee-resource-adoption.test-support"
 import type { AdoptionResource } from "@/contexts/company/test/employee-resource-adoption.test-support"
-import { InitialEmploymentPersistenceAdapter } from "@/contexts/company/infrastructure/adapters/employee/initial-employment-persistence.adapter"
+import { prepareUnpublishedEmployment } from "@/contexts/company/test/unpublished-employment.test-support"
 import { EmployeeResourceAdoptionSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/employee-resource-adoption/employee-resource-adoption-snapshot.adapter"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
@@ -47,10 +46,7 @@ export async function createEmployeeAdoptionBatchFixture(
         VALUES ('organization:default', ?1, ?2, 0, 0)`)
         .bind(accountId, officialName),
     ])
-    const initial = await new InitialEmploymentPersistenceAdapter({
-      env: context.environment,
-      var: { database: drizzle(context.database) },
-    }).prepare({
+    const initial = await prepareUnpublishedEmployment(context.database, {
       employeeId,
       employmentId,
       effectiveOn: restoreCalendarDate("2020-01-01"),
@@ -60,7 +56,6 @@ export async function createEmployeeAdoptionBatchFixture(
       operationId: `historical-${index}`,
       reason: "Confirmed historical registration",
     })
-    if (initial instanceof Error) throw initial
     await context.database.batch([...initial])
     const person: AdoptionResource = {
       organizationId: "organization:default",
