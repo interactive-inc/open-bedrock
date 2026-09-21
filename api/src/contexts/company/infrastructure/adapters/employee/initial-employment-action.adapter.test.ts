@@ -128,7 +128,8 @@ test("公開 resource を先に書く初回雇用は、表を先に書く経路�
   const after = (await published()).rows
 
   expect(after).toEqual(before)
-})
+  // 全 migration を適用した DB を 2 つ作るので、既定の 5 秒では足りない製品がある。
+}, 30_000)
 
 test("同じ従業員の 2 回目の初回雇用は、発令を重ねず全体を中断する", async () => {
   const { database, rows: first } = await published()
@@ -137,4 +138,4 @@ test("同じ従業員の 2 回目の初回雇用は、発令を重ねず全体�
 
   await expect(database.batch([...action.statements])).rejects.toThrow()
   expect(await rows(database)).toEqual(first)
-})
+}, 30_000)
