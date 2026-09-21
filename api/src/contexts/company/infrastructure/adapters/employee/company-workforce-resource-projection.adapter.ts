@@ -62,6 +62,10 @@ export class CompanyWorkforceResourceProjectionAdapter {
       if (prepared instanceof Error) return prepared
       statements.push(...prepared)
     }
+    // 対応は従業員を参照するため、従業員の投影の後に置く。
+    const linkStatements = this.accountEmployeeLinkStatements(change)
+    if (linkStatements instanceof Error) return linkStatements
+    statements.push(...linkStatements)
     const employmentHistories = new Map<string, CompanyResourceEntity[]>()
     for (const resource of change.resources.filter((resource) => resource.type === "employment")) {
       const history = employmentHistories.get(resource.id) ?? []
@@ -99,6 +103,44 @@ export class CompanyWorkforceResourceProjectionAdapter {
         SET lifecycle_revision = (SELECT revision FROM company_employee_lifecycle_revisions WHERE employee_id = ?1)
         WHERE employee_id = ?1`)
           .bind(employeeId),
+      )
+    }
+    return statements
+  }
+
+  /**
+   * 公開したAccountと従業員の対応を、既存業務が読む対応表へ投影する。
+   *
+   * 対応表は更新と削除を拒否するので挿入だけを行う。同じ対が既にあれば何もせず、Accountか従業員が
+   * 別の相手と対応済みなら、推測で上書きせずbatch全体を中断する。終了と取消は対応表へ反映しない。
+   */
+  private accountEmployeeLinkStatements(
+    change: CompanyResourceChangeEntity,
+  ): ReadonlyArray<D1PreparedStatement> | Error {
+    const statements: D1PreparedStatement[] = []
+    const finalLinks = new Map<string, CompanyResourceEntity>()
+    for (const resource of change.resources) {
+      if (resource.type === "account-employee-link") finalLinks.set(resource.id, resource)
+    }
+    for (const resource of finalLinks.values()) {
+      if (resource.organizationId !== "organization:default")
+        return new CompanyResourceValidationError("invalid_resource")
+      if (resource.state === "void" || resource.effectiveTo !== null) continue
+      const accountId = resource.readText("accountId")
+      const employeeId = resource.readText("employeeId")
+      if (accountId === null || employeeId === null)
+        return new CompanyResourceValidationError("invalid_resource")
+      statements.push(
+        this.c
+          .prepare(`INSERT INTO company_account_employee_links (account_id, employee_id)
+        SELECT ?1, ?2 WHERE NOT EXISTS (
+          SELECT 1 FROM company_account_employee_links WHERE account_id = ?1 OR employee_id = ?2)`)
+          .bind(accountId, employeeId),
+        this.c
+          .prepare(`SELECT CASE WHEN EXISTS (
+          SELECT 1 FROM company_account_employee_links WHERE account_id = ?1 AND employee_id = ?2)
+          THEN 1 ELSE json_extract('', '$') END AS ok`)
+          .bind(accountId, employeeId),
       )
     }
     return statements

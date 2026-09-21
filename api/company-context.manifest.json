@@ -556,6 +556,7 @@
     "src/contexts/company/lib/workforce/validate-organization-change.ts",
     "src/contexts/company/test/account-employee-link-history.integration.test.ts",
     "src/contexts/company/test/account-employee-link-migration.contract.test.ts",
+    "src/contexts/company/test/account-employee-link-projection.integration.test.ts",
     "src/contexts/company/test/assignment-resource-adoption-migration.contract.test.ts",
     "src/contexts/company/test/assignment-resource-adoption.integration.test.ts",
     "src/contexts/company/test/company-account-profile.integration.test.ts",

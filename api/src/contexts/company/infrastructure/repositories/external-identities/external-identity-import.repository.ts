@@ -445,9 +445,6 @@ export class ExternalIdentityImportRepository {
       resources,
       before: [account.accountStatement, ...account.identityStatements],
       after: [
-        this.c.env.DB.prepare(
-          "INSERT INTO company_account_employee_links (account_id, employee_id) VALUES (?1, ?2)",
-        ).bind(account.accountId, employeeId),
         this.c.env.DB.prepare(`INSERT INTO company_account_profiles
           (organization_id, account_id, display_name, created_at, updated_at) VALUES (?1, ?2, ?3, ?4, ?4)`).bind(
           organizationId,

@@ -221,6 +221,24 @@ describe("公開Companyから業務Taskへの接続", () => {
     )
     if (first === undefined || second === undefined) throw new Error("link fixtures are missing")
     await c.database.exec("DROP TRIGGER company_account_employee_resource_owner_guard")
+    // 対応の投影は別の相手への付け替えを中断するので、対応表も同じ形に壊してから公開側を書く。
+    await c.database.exec("DROP TRIGGER company_account_employee_links_delete_guard")
+    const swapped = [
+      [first.attributes.accountId, second.attributes.employeeId],
+      [second.attributes.accountId, first.attributes.employeeId],
+    ] as const
+    await c.database
+      .prepare("DELETE FROM company_account_employee_links WHERE account_id IN (?1, ?2)")
+      .bind(first.attributes.accountId, second.attributes.accountId)
+      .run()
+    for (const [accountId, employeeId] of swapped) {
+      await c.database
+        .prepare(
+          "INSERT INTO company_account_employee_links (account_id, employee_id) VALUES (?1, ?2)",
+        )
+        .bind(accountId, employeeId)
+        .run()
+    }
     await c.write([
       {
         ...first,
