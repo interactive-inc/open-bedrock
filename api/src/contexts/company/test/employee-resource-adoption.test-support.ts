@@ -10,7 +10,7 @@ import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restor
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import type { PersonnelActionInput } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
-import { InitialEmploymentPersistenceAdapter } from "@/contexts/company/infrastructure/adapters/employee/initial-employment-persistence.adapter"
+import { prepareUnpublishedEmployment } from "@/contexts/company/test/unpublished-employment.test-support"
 import { DirectPersonnelActionAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/direct-personnel-action.adapter"
 import {
   companyAuthenticatedRoutes,
@@ -70,10 +70,7 @@ export async function createEmployeeAdoptionFixture(
     INSERT INTO company_account_employee_links (account_id, employee_id) VALUES ('account:adoption', 'employee:adoption');
     INSERT INTO company_account_profiles (organization_id, account_id, display_name, created_at, updated_at)
     VALUES ('organization:default', 'account:adoption', 'Current Person', 0, 0);`)
-  const initial = await new InitialEmploymentPersistenceAdapter({
-    env: environment,
-    var: { database: drizzle(database) },
-  }).prepare({
+  const initial = await prepareUnpublishedEmployment(database, {
     employeeId: adoptionEmployeeId,
     employmentId,
     effectiveOn: restoreCalendarDate("2020-01-01"),
@@ -83,7 +80,6 @@ export async function createEmployeeAdoptionFixture(
     operationId: "legacy-initial",
     reason: "Confirmed historical registration",
   })
-  if (initial instanceof Error) throw initial
   await database.batch([...initial])
   const personnel = async (input: PersonnelActionInput, key: string) => {
     const employeeRevision = await database

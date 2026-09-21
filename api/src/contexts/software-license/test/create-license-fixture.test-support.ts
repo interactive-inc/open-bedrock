@@ -12,7 +12,7 @@ import { join } from "node:path"
 import { drizzle } from "drizzle-orm/d1"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
 import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-database.test-support"
-import { InitialEmploymentPersistenceAdapter } from "@/contexts/company/infrastructure/adapters/employee/initial-employment-persistence.adapter"
+import { prepareUnpublishedEmployment } from "@/contexts/company/test/unpublished-employment.test-support"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
@@ -87,10 +87,7 @@ export async function createLicenseFixture(databaseOverride?: D1Database) {
       .prepare("INSERT INTO company_account_employee_links (account_id,employee_id) VALUES (?1,?2)")
       .bind(`account:${suffix}`, `employee:${suffix}`)
       .run()
-    const initial = await new InitialEmploymentPersistenceAdapter({
-      env,
-      var: { database: drizzle(database) },
-    }).prepare({
+    const initial = await prepareUnpublishedEmployment(database, {
       employeeId: restoreWorkforceId("employee", `employee:${suffix}`),
       employmentId: restoreWorkforceId("employment", `employment:${suffix}`),
       effectiveOn: restoreCalendarDate("2020-01-01"),
@@ -100,7 +97,6 @@ export async function createLicenseFixture(databaseOverride?: D1Database) {
       operationId: `initial:${suffix}`,
       reason: "Recorded employment",
     })
-    if (initial instanceof Error) throw initial
     await database.batch([...initial])
     await publishTestEmployeeResources(database, {
       employeeId: `employee:${suffix}`,
