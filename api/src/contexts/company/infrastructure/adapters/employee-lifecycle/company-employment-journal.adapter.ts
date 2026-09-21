@@ -10,7 +10,11 @@ import {
 import { CompanyEmploymentResourceHistoryAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-employment-resource-history.adapter"
 import { AbortWhenPreviousStatementChangedNoRowsAdapter } from "@/contexts/company/infrastructure/adapters/database/abort-when-previous-statement-changed-no-rows.adapter"
 import { z } from "zod"
-import { InitialWorkforceResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/employee/initial-workforce-resource-journal.adapter"
+import { initialWorkforceResources } from "@/contexts/company/domain/definitions/initial-workforce-resources.definition"
+import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
+import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
+import { CompanyWorkforceResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-workforce-resource-projection.adapter"
+import { CompanyEmploymentResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-employment-resource-projection.adapter"
 import { drizzle } from "drizzle-orm/d1"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 
@@ -24,6 +28,15 @@ export type PreparedCompanyEmploymentJournal = Readonly<{
   bindings: ReadonlyArray<D1PreparedStatement>
   resources: ReadonlyArray<CompanyResourceEntity>
   organizationRevision: number | null
+  /**
+   * 新しい従業員の公開 resource と、人と従業員の投影。発令の行は従業員を参照するので、
+   * 発令の行より前に置く。
+   */
+  identityStatements?: ReadonlyArray<D1PreparedStatement>
+  /** 新しい従業員の雇用の投影。発令の行の後、子の期間の書込みより前に置く。 */
+  openingEmploymentStatements?: ReadonlyArray<D1PreparedStatement>
+  /** 公開履歴からの投影が期間と雇用の表を書く雇用。 */
+  projectedEmploymentIds?: ReadonlyArray<string>
 }>
 type Context = D1Database
 
@@ -71,45 +84,107 @@ export class CompanyEmploymentJournalAdapter {
           const period = props.projection.schedule.employments[0]
           if (period === undefined || props.projection.schedule.employments.length !== 1)
             return new CompanyUnexpectedError("新規従業員の雇用期間が不正です")
-          const initial = await new InitialWorkforceResourceJournalAdapter({
-            env: { DB: this.c },
-            var: { database: drizzle(this.c) },
-          }).prepare({
-            employeeId: props.action.employeeId,
-            employmentId: period.employmentId,
-            officialName: props.prospectiveEmployee.name,
-            employeeCode: props.prospectiveEmployee.code,
-            email: props.prospectiveEmployee.email ?? null,
-            phone: null,
-            employmentType: props.projection.newEmploymentType,
-            status: "active",
-            effectiveOn: restoreCalendarDate(period.startsOn),
-            occurredAt: new Date(props.action.recordedAt * 1000),
+          // 新しい従業員は公開 resource を先に書き、従業員と雇用の表、期間はその投影として作る。
+          const expectedRevision = revision.data?.revision
+          if (expectedRevision === undefined)
+            return new CompanyUnexpectedError("公開Companyの会社版を参照できません")
+          const lifecycleRevision = props.revisions.employeeRevision + 1
+          const change = CompanyResourceChangeEntity.create({
+            commandId: `initial-workforce:${props.action.id}`,
             actorAccountId: props.command.session.accountId,
-            operationId: props.action.id,
+            expectedRevision,
             reason: `personnel_action:${props.action.kind}:${props.action.id}`,
-            lifecycleRevision: props.revisions.employeeRevision + 1,
-            expectedOrganizationRevision: revision.data?.revision,
-            accountLink:
-              props.prospectiveEmployee.accountId === undefined
-                ? undefined
-                : {
-                    accountId: props.prospectiveEmployee.accountId,
-                    effectiveOn: restoreCalendarDate(
-                      props.businessDate < period.startsOn ? period.startsOn : props.businessDate,
-                    ),
-                  },
+            recordedAt: props.action.recordedAt * 1000,
+            resources: [
+              ...initialWorkforceResources({
+                employeeId: props.action.employeeId,
+                employmentId: period.employmentId,
+                officialName: props.prospectiveEmployee.name,
+                employeeCode: props.prospectiveEmployee.code,
+                email: props.prospectiveEmployee.email ?? null,
+                phone: null,
+                employmentType: props.projection.newEmploymentType,
+                status: "active",
+                effectiveOn: restoreCalendarDate(period.startsOn),
+                accountLink:
+                  props.prospectiveEmployee.accountId === undefined
+                    ? undefined
+                    : {
+                        accountId: props.prospectiveEmployee.accountId,
+                        effectiveOn: restoreCalendarDate(
+                          props.businessDate < period.startsOn
+                            ? period.startsOn
+                            : props.businessDate,
+                        ),
+                      },
+              }),
+            ],
           })
-          return initial instanceof Error
-            ? new CompanyUnexpectedError("公開Companyの初期記録を準備できません", {
-                cause: initial,
-              })
-            : {
-                statements: initial,
-                bindings: [],
-                resources: [],
-                organizationRevision: (revision.data?.revision ?? 0) + 1,
-              }
+          if (change instanceof Error)
+            return new CompanyUnexpectedError("公開Companyの初期記録を準備できません", {
+              cause: change,
+            })
+          const journal = await new CompanyResourceJournalAdapter({
+            database: drizzle(this.c),
+            d1: this.c,
+          }).prepare(change)
+          if (journal instanceof Error)
+            return new CompanyUnexpectedError("公開Companyの初期記録を準備できません", {
+              cause: journal,
+            })
+          const identity = await new CompanyWorkforceResourceProjectionAdapter(
+            this.c,
+          ).prepareIdentity(change)
+          const employmentResource = change.resources.find(
+            (resource) => resource.type === "employment",
+          )
+          if (identity instanceof Error || employmentResource === undefined)
+            return new CompanyUnexpectedError("公開Companyの初期記録を投影できません", {
+              cause: identity,
+            })
+          const employmentProjection = await new CompanyEmploymentResourceProjectionAdapter(
+            this.c,
+          ).prepare({
+            resource: employmentResource,
+            stagedHistory: [employmentResource],
+            change,
+            fingerprint: journal.fingerprint,
+            revisionOffset: 0,
+            recordedBy: { actionId: props.action.id, businessDate: props.businessDate },
+          })
+          if (employmentProjection instanceof Error)
+            return new CompanyUnexpectedError("公開Companyの初期記録を投影できません", {
+              cause: employmentProjection,
+            })
+          return {
+            identityStatements: [...journal.statements, ...identity],
+            openingEmploymentStatements: employmentProjection,
+            projectedEmploymentIds: [period.employmentId],
+            statements: [
+              this.c
+                .prepare(`UPDATE company_workforce_resource_bindings
+                SET lifecycle_revision = ?1, last_action_id = ?2
+                WHERE resource_type = 'employee' AND resource_id = ?3`)
+                .bind(lifecycleRevision, props.action.id, props.action.employeeId),
+              new AbortWhenPreviousStatementChangedNoRowsAdapter(
+                this.c,
+              ).abortWhenPreviousStatementChangedNoRows(),
+              this.c
+                .prepare(`INSERT INTO company_workforce_resource_bindings
+                (resource_type, resource_id, organization_id, employee_id, resource_revision, lifecycle_revision, last_action_id)
+                VALUES ('employment', ?1, 'organization:default', ?2, 1, ?3, ?4)`)
+                .bind(
+                  period.employmentId,
+                  props.action.employeeId,
+                  lifecycleRevision,
+                  props.action.id,
+                ),
+              journal.commit,
+            ],
+            bindings: [],
+            resources: [],
+            organizationRevision: expectedRevision + 1,
+          }
         }
         return { statements: [], bindings: [], resources: [], organizationRevision: null }
       }

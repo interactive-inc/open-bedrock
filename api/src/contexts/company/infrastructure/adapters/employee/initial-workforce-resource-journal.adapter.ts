@@ -5,7 +5,6 @@ import type {
 } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { EmploymentType } from "@/contexts/company/domain/definitions/employment-type.definition"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
-import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
 import {
   CompanyResourceJournalAdapter,
   type CompanyResourceJournalStatement,
@@ -17,6 +16,7 @@ import {
 import type { DrizzleD1Database } from "drizzle-orm/d1"
 import { eq, sql } from "drizzle-orm"
 import { z } from "zod"
+import { initialWorkforceResources } from "@/contexts/company/domain/definitions/initial-workforce-resources.definition"
 
 export type InitialWorkforceResource = Readonly<{
   employeeId: EmployeeId
@@ -76,14 +76,7 @@ export class InitialWorkforceResourceJournalAdapter {
       for (const [index, input] of inputs.entries()) {
         if (!Number.isSafeInteger(input.lifecycleRevision) || input.lifecycleRevision < 0)
           return new Error("invalid initial lifecycle revision")
-        const personId = `person:${input.employeeId}`
         const recordedAt = input.occurredAt.getTime()
-        const base = {
-          organizationId,
-          revision: 1,
-          effectiveFrom: input.effectiveOn,
-          effectiveTo: null,
-        }
         const status = input.status === "active" ? "ACTIVE" : "ON_LEAVE"
         const change = CompanyResourceChangeEntity.create({
           commandId: `initial-workforce:${input.operationId}`,
@@ -91,55 +84,7 @@ export class InitialWorkforceResourceJournalAdapter {
           expectedRevision: input.expectedOrganizationRevision ?? revision.data + index,
           reason: input.reason,
           recordedAt,
-          resources: [
-            {
-              ...base,
-              type: "person",
-              id: personId,
-              state: "active",
-              attributes: {
-                officialName: input.officialName,
-                email: input.email,
-                phone: input.phone,
-              },
-            },
-            {
-              ...base,
-              type: "employee",
-              id: input.employeeId,
-              state: "active",
-              attributes: {
-                personId,
-                employeeCode: input.employeeCode,
-              },
-            },
-            {
-              ...base,
-              type: "employment",
-              id: input.employmentId,
-              state: "active",
-              attributes: {
-                employeeId: input.employeeId,
-                employmentType: input.employmentType,
-                status,
-              },
-            },
-            ...(input.accountLink === undefined
-              ? []
-              : [
-                  {
-                    ...base,
-                    type: "account-employee-link",
-                    id: `account-link:${input.employeeId}`,
-                    state: "active",
-                    effectiveFrom: input.accountLink.effectiveOn,
-                    attributes: {
-                      accountId: input.accountLink.accountId,
-                      employeeId: input.employeeId,
-                    },
-                  } satisfies CompanyResourceProps,
-                ]),
-          ],
+          resources: initialWorkforceResources(input),
         })
         if (change instanceof Error) return change
         const journal = await new CompanyResourceJournalAdapter({ database }).build(change)
