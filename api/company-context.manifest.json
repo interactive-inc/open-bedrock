@@ -600,6 +600,7 @@
     "src/contexts/company/test/company-workforce-account-batch.integration.test.ts",
     "src/contexts/company/test/company-workforce-organization-command.integration.test.ts",
     "src/contexts/company/test/company-workforce-resource-projection.integration.test.ts",
+    "src/contexts/company/test/company-workforce-table-writers.contract.test.ts",
     "src/contexts/company/test/company.definition-permissions.api.integration.test.ts",
     "src/contexts/company/test/create-company-d1-test-database-template.test-support.ts",
     "src/contexts/company/test/create-company-d1-test-database-template.test.ts",

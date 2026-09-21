@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "1100f1acbb7bcc1a448497e06d28436405797860c70a2fc1d4971a195caeb837",
+    "company-context.manifest.json": "1b511bc04615b7a1960ba5e8f51b09ef2e8a2a780097b2ce24db690b7fd44725",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -600,6 +600,7 @@
     "src/contexts/company/test/company-workforce-account-batch.integration.test.ts": "7f9d020d375e8aed0300d0cb9f0db5d51cf9b12f904bb5b5f08ee7b6e9fee7ab",
     "src/contexts/company/test/company-workforce-organization-command.integration.test.ts": "c09bc4e495a0b5393b03f344a4af86572a1738e7864caab5b8f8604414aa27c4",
     "src/contexts/company/test/company-workforce-resource-projection.integration.test.ts": "3744f3b3887beb9e06362553d56b1e7b4ba5a9a9ac29099ebdd7372cbbe238cb",
+    "src/contexts/company/test/company-workforce-table-writers.contract.test.ts": "4802f46cabd234a219269dd3590265ac880859af1869096dbf76ca83c74b4e5b",
     "src/contexts/company/test/company.definition-permissions.api.integration.test.ts": "e9e3b39af6922859888c44cc637f6b009c33e064c2e35595eeea3ddc9a9e5f8e",
     "src/contexts/company/test/create-company-d1-test-database-template.test-support.ts": "0e04b3072b9628400261b7be8b42ca7600bd8ceef4f335987253246abb1c68c4",
     "src/contexts/company/test/create-company-d1-test-database-template.test.ts": "a643d69708cf941afb6040f64ddd16cda05e27e77611ed0ebc04c3d4236b4fd5",
