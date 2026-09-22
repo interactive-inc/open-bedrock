@@ -51,7 +51,7 @@ export const GET = factory.createHandlers(async (context) => {
   const employee = await new EmployeeRepository({
     env: { DB: context.env.DB },
     var: { database: context.var.database, auditContext: context.var.auditContext },
-  }).find({ id: actor.employeeId })
+  }).find({ id: actor.employeeId, asOf: effectiveOn })
   if (employee instanceof Error) throw new CompanyReadUnavailableError(employee)
   if (employee === null) throw new CompanyEmployeeNotFoundError()
   return context.json({ name: employee.officialName, phone: employee.phone, profile: null }, 200)
