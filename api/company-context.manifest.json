@@ -352,6 +352,8 @@
     "src/contexts/company/infrastructure/adapters/employee/initial-employment-action.adapter.ts",
     "src/contexts/company/infrastructure/adapters/employee/lib/CLAUDE.md",
     "src/contexts/company/infrastructure/adapters/employee/lib/company-employee-directory-sql.ts",
+    "src/contexts/company/infrastructure/adapters/employee/lib/company-employee-profile-sql.test.ts",
+    "src/contexts/company/infrastructure/adapters/employee/lib/company-employee-profile-sql.ts",
     "src/contexts/company/infrastructure/adapters/employee/lib/company-employment-state-sql.ts",
     "src/contexts/company/infrastructure/adapters/employee/lib/company-employment-state-table-sql.ts",
     "src/contexts/company/infrastructure/adapters/employee/lib/create-employee-employment-test-database.test-support.ts",
