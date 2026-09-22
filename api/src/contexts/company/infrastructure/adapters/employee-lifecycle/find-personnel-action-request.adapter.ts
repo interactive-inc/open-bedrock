@@ -1,3 +1,5 @@
+import { companyEmployeeProfileSql } from "@/contexts/company/infrastructure/adapters/employee/lib/company-employee-profile-sql"
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import type { PersonnelActionRequestRecord } from "@/contexts/company/domain/definitions/personnel-action-request-record.definition"
 import { personnelActionInputSchema } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
@@ -19,8 +21,16 @@ async function findPersonnelActionRequest(
 ): Promise<PersonnelActionRequestRecord | null | CompanyOperationError> {
   try {
     const byId = "id" in selector
+    // 対象者と申請者の従業員 code と氏名は、会社営業日の正本から読む。
+    const effectiveOn = resolveCompanyBusinessDate({
+      now: context.env.NOW ?? new Date().toISOString(),
+      timeZone: context.env.COMPANY_TIME_ZONE,
+    })
+    if (effectiveOn instanceof Error)
+      return new CompanyUnexpectedError("人事変更申請を取得できません", { cause: effectiveOn })
     const row = await context.env.DB.prepare(
-      `SELECT request.id, request.application_id, request.system_proposal_series_id,
+      `${companyEmployeeProfileSql()}
+       SELECT request.id, request.application_id, request.system_proposal_series_id,
               request.target_employee_id, request.target_department_code,
               COALESCE(target.employee_code, json_extract(request.subject_snapshot_json, '$.employeeCode'))
                 AS target_employee_code,
@@ -33,11 +43,11 @@ async function findPersonnelActionRequest(
               request.base_employee_revision, request.base_organization_revision, request.base_company_revision,
               request.created_at, request.applied_action_id, request.withdrawn_at
        FROM company_personnel_action_requests AS request
-       LEFT JOIN company_employees AS target ON target.id = request.target_employee_id
-       JOIN company_employees AS requester ON requester.id = request.requested_by_employee_id
-       WHERE ${byId ? "request.id" : "request.application_id"} = ?1`,
+       LEFT JOIN employee_profiles AS target ON target.id = request.target_employee_id
+       JOIN employee_profiles AS requester ON requester.id = request.requested_by_employee_id
+       WHERE ${byId ? "request.id" : "request.application_id"} = ?2`,
     )
-      .bind(byId ? selector.id : selector.applicationId)
+      .bind(effectiveOn, byId ? selector.id : selector.applicationId)
       .first<{
         id: string
         application_id: number
@@ -51,7 +61,7 @@ async function findPersonnelActionRequest(
         payload_fingerprint: string | null
         requested_by_employee_id: EmployeeId
         requested_by_employee_code: string
-        requested_by_employee_name: string
+        requested_by_employee_name: string | null
         base_employee_revision: number | null
         base_organization_revision: number | null
         base_company_revision: number | null
@@ -60,6 +70,8 @@ async function findPersonnelActionRequest(
         withdrawn_at: number | null
       }>()
     if (row === null) return null
+    if (row.requested_by_employee_name === null)
+      return new CompanyUnexpectedError("人事変更申請の申請者を解決できません")
 
     const workflows = await new ReadSystemWorkflowReferencesAdapter({
       env: { DB: context.env.DB },
