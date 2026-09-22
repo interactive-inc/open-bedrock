@@ -1,4 +1,39 @@
 import { Database } from "bun:sqlite"
+import { createCompanySqliteTestDatabaseTemplate } from "@/contexts/company/test/create-company-sqlite-test-database-template.test-support"
+
+// 全 migration 級だけを複製する。32 KiB 相当の文字数未満のインライン SQL は通常 1 ms 未満。
+const SCHEMA_CACHE_MIN_LENGTH = 32 * 1024
+// 全 migration の serialize は約 5 MB。variant が増えても約 40 MB 分までに抑える。
+const SCHEMA_CACHE_MAX_ENTRIES = 8
+const schemaTemplates = new Map<
+  string,
+  ReturnType<typeof createCompanySqliteTestDatabaseTemplate>
+>()
+
+function createSqliteDatabase(schemaSql: string): Database {
+  if (schemaSql.length >= SCHEMA_CACHE_MIN_LENGTH) {
+    const template =
+      schemaTemplates.get(schemaSql) ?? createCompanySqliteTestDatabaseTemplate(schemaSql)
+    // Map の挿入順を利用し、hit した schema も最新へ移す。適用に失敗した SQL は登録しない。
+    schemaTemplates.delete(schemaSql)
+    schemaTemplates.set(schemaSql, template)
+    if (schemaTemplates.size > SCHEMA_CACHE_MAX_ENTRIES) {
+      const oldest = schemaTemplates.keys().next().value
+      if (oldest !== undefined) schemaTemplates.delete(oldest)
+    }
+    return template.createDatabase()
+  }
+
+  const sqlite = new Database(":memory:")
+  try {
+    sqlite.exec("PRAGMA foreign_keys = ON")
+    sqlite.exec(schemaSql)
+    return sqlite
+  } catch (error) {
+    sqlite.close()
+    throw error
+  }
+}
 
 type SqliteBinding = string | number | bigint | boolean | null | Uint8Array
 
@@ -73,11 +108,7 @@ class SqliteD1Statement {
 
 /** canonical Company integration testが両製品で共有する最小D1 adapter。 */
 export function createCompanyD1TestDatabase(source: string | Database): D1Database {
-  const sqlite = typeof source === "string" ? new Database(":memory:") : source
-  if (typeof source === "string") {
-    sqlite.exec("PRAGMA foreign_keys = ON")
-    sqlite.exec(source)
-  }
+  const sqlite = typeof source === "string" ? createSqliteDatabase(source) : source
 
   const database = {
     prepare(sql: string): D1PreparedStatement {
