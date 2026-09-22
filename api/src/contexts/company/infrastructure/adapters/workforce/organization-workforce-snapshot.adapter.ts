@@ -1,3 +1,4 @@
+import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
 import type {
@@ -23,7 +24,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 type EmployeeRow = Readonly<{
   id: EmployeeId
   employeeCode: string | null
-  officialName: string
+  officialName: string | null
   email: string | null
   phone: string | null
 }>
@@ -43,16 +44,74 @@ export class OrganizationWorkforceSnapshotAdapter implements WorkforceSnapshotRe
     Object.freeze(this)
   }
 
+  /**
+   * 従業員の氏名、従業員 code、連絡先を、従業員ごとの正本から読む。
+   *
+   * 公開履歴へ接続済みの従業員は、公開 Person と従業員の resource から読む。snapshot は退職者と入社前の
+   * 従業員も含むので、会社営業日に有効な版を優先し、無ければ最も新しい版を使う。最も新しい版が取消なら
+   * 空のまま返し、正規の形式の検証で拒否させる。表の列で補わない。
+   *
+   * 公開履歴へ未接続の従業員は、接続されるまで従業員の表が唯一の原記録なので、表の列を読む。
+   */
+  private async readEmployees(asOf?: CalendarDate): Promise<D1Result<EmployeeRow>> {
+    const effectiveOn =
+      asOf ??
+      resolveCompanyBusinessDate({
+        now: this.c.env.NOW ?? new Date().toISOString(),
+        timeZone: this.c.env.COMPANY_TIME_ZONE,
+      })
+    if (effectiveOn instanceof Error) throw effectiveOn
+    return this.c.env.DB.prepare(
+      `WITH ranked_profiles AS (
+         SELECT resource.*, row_number() OVER (
+           PARTITION BY organization_id, resource_type, resource_id
+           ORDER BY CASE WHEN effective_from <= ?1 AND (effective_to IS NULL OR ?1 < effective_to)
+               THEN 0 ELSE 1 END,
+             effective_from DESC, revision DESC) AS profile_rank
+         FROM company_resource_revisions AS resource
+         WHERE resource_type IN ('person', 'employee')
+       ),
+       profiles AS (SELECT * FROM ranked_profiles WHERE profile_rank = 1 AND state = 'active'),
+       connected_employees AS (
+         SELECT employee_id, organization_id, resource_id FROM company_workforce_resource_bindings
+         WHERE resource_type = 'employee'
+       ),
+       published_employees AS (
+         SELECT connected.employee_id AS id,
+           json_extract(person.attributes_json, '$.officialName') AS official_name,
+           json_extract(employee.attributes_json, '$.employeeCode') AS employee_code,
+           json_extract(person.attributes_json, '$.email') AS email,
+           json_extract(person.attributes_json, '$.phone') AS phone
+         FROM connected_employees AS connected
+         JOIN profiles AS employee ON employee.organization_id = connected.organization_id
+           AND employee.resource_type = 'employee' AND employee.resource_id = connected.resource_id
+         JOIN profiles AS person ON person.organization_id = employee.organization_id
+           AND person.resource_type = 'person'
+           AND person.resource_id = json_extract(employee.attributes_json, '$.personId')
+       )
+       SELECT employee.id,
+         CASE WHEN connected.employee_id IS NULL THEN employee.employee_code
+           ELSE published.employee_code END AS employeeCode,
+         CASE WHEN connected.employee_id IS NULL THEN employee.official_name
+           ELSE published.official_name END AS officialName,
+         CASE WHEN connected.employee_id IS NULL THEN employee.email ELSE published.email END AS email,
+         CASE WHEN connected.employee_id IS NULL THEN employee.phone ELSE published.phone END AS phone
+       FROM company_employees AS employee
+       LEFT JOIN (SELECT DISTINCT employee_id FROM connected_employees) AS connected
+         ON connected.employee_id = employee.id
+       LEFT JOIN published_employees AS published ON published.id = employee.id
+       ORDER BY employee.id`,
+    )
+      .bind(effectiveOn)
+      .all<EmployeeRow>()
+  }
+
   async readAllSnapshot(asOf?: CalendarDate): Promise<WorkforceSnapshotReadResult> {
     try {
       const [sourceSchedules, employees, links, assignments, responsibilities, baselineStates] =
         await Promise.all([
           new EmployeeLifecycleAdapter(this.c).loadOrganizationSchedules(),
-          this.c.env.DB.prepare(
-            `SELECT id, employee_code AS employeeCode, official_name AS officialName, email, phone
-             FROM company_employees
-             ORDER BY id`,
-          ).all<EmployeeRow>(),
+          this.readEmployees(asOf),
           new CompanyAccountEmployeeLinksReadAdapter(this.c).findMany({ asOf }),
           this.c.env.DB.prepare(
             `SELECT period_id AS periodId, revision, employment_id AS employmentId,
@@ -120,7 +179,8 @@ export class OrganizationWorkforceSnapshotAdapter implements WorkforceSnapshotRe
           return {
             employee: {
               id: employeeId,
-              officialName: employee.officialName,
+              // 接続済みで有効な公開 resource の無い従業員は空の氏名で返し、正規の形式の検証で拒否させる。
+              officialName: employee.officialName ?? "",
               employeeCode: employee.employeeCode,
               email: employee.email,
               phone: employee.phone,
