@@ -8,15 +8,20 @@ function createDatabase(): D1Database {
   const sqlite = new Database(":memory:")
   sqlite.run(`CREATE TABLE company_personnel_actions (id TEXT PRIMARY KEY, employee_id TEXT, kind TEXT,
     payload_fingerprint TEXT, recorded_by_account_id TEXT, operation_id TEXT)`)
-  sqlite.run(
-    "CREATE TABLE company_employees (id TEXT PRIMARY KEY, employee_code TEXT, official_name TEXT)",
-  )
+  sqlite.run(`CREATE TABLE company_resource_revisions (organization_id TEXT, resource_type TEXT,
+    resource_id TEXT, revision INTEGER, command_id TEXT, attributes_json TEXT)`)
   sqlite.run(
     "CREATE TABLE company_account_employee_resource_bindings (employee_id TEXT, account_id TEXT)",
   )
   sqlite.run(`CREATE TABLE company_account_profiles (organization_id TEXT, account_id TEXT,
     display_name TEXT, created_at INTEGER, updated_at INTEGER)`)
-  sqlite.run("INSERT INTO company_employees VALUES ('employee-1', 'E900', 'Example Person')")
+  sqlite.run(`INSERT INTO company_resource_revisions VALUES
+    ('organization:default', 'employee', 'employee-1', 1, 'initial-workforce:action-1',
+      '{"personId":"person:employee-1","employeeCode":"E900"}'),
+    ('organization:default', 'person', 'person:employee-1', 1, 'initial-workforce:action-1',
+      '{"officialName":"Example Person","email":null,"phone":null}'),
+    ('organization:default', 'person', 'person:employee-1', 2, 'rename',
+      '{"officialName":"Renamed Person","email":null,"phone":null}')`)
   sqlite.run(
     "INSERT INTO company_account_employee_resource_bindings VALUES ('employee-1', 'account-1')",
   )
@@ -26,7 +31,7 @@ function createDatabase(): D1Database {
   return createCompanyD1TestDatabase(sqlite)
 }
 
-test("冪等keyで確定済みの入社発令、従業員、対応するAccountを返す", async () => {
+test("冪等keyで確定済みの入社発令と、登録時に公開した値、対応するAccountを返す", async () => {
   const adapter = new FindRegisteredEmployeeByOperationAdapter(createDatabase())
 
   expect(await adapter.find("operation-1")).toEqual({
