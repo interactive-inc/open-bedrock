@@ -602,7 +602,7 @@
     "src/contexts/company/test/company-workforce-account-batch.integration.test.ts": "7f9d020d375e8aed0300d0cb9f0db5d51cf9b12f904bb5b5f08ee7b6e9fee7ab",
     "src/contexts/company/test/company-workforce-organization-command.integration.test.ts": "c09bc4e495a0b5393b03f344a4af86572a1738e7864caab5b8f8604414aa27c4",
     "src/contexts/company/test/company-workforce-resource-projection.integration.test.ts": "3744f3b3887beb9e06362553d56b1e7b4ba5a9a9ac29099ebdd7372cbbe238cb",
-    "src/contexts/company/test/company-workforce-table-writers.contract.test.ts": "4802f46cabd234a219269dd3590265ac880859af1869096dbf76ca83c74b4e5b",
+    "src/contexts/company/test/company-workforce-table-writers.contract.test.ts": "2aa9dab028539f4d813d92b8e762cabd4000181b20057e55a2d1ccf86427bbdd",
     "src/contexts/company/test/company.definition-permissions.api.integration.test.ts": "e9e3b39af6922859888c44cc637f6b009c33e064c2e35595eeea3ddc9a9e5f8e",
     "src/contexts/company/test/create-company-d1-test-database-template.test-support.ts": "2cbe21ed1a6e11769cb5f515a6b3837759c12e37034fb6b4183ad36352188628",
     "src/contexts/company/test/create-company-d1-test-database-template.test.ts": "a643d69708cf941afb6040f64ddd16cda05e27e77611ed0ebc04c3d4236b4fd5",
