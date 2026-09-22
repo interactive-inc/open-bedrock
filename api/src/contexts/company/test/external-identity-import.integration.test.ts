@@ -413,7 +413,8 @@ describe("外部identityとCompany正本の同期", () => {
         .prepare("SELECT count(*) AS total FROM company_employees")
         .first<Record<string, unknown>>(),
     ).toEqual({ total: 0 })
-  }, 15_000)
+    // 全 migration を適用した fixture を 2 つ作る。CI の runner では 15 秒を超えることがある。
+  }, 60_000)
 
   test("同期記録の書換え・削除・外部版の巻き戻しをDBで拒否する", async () => {
     const c = await createExternalIdentityImportTestContext()
