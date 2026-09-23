@@ -3,7 +3,10 @@ import {
   type CompanyResourceWriteResult,
 } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 
-export type CompanyResourceStore = D1CompanyResourceRepository
+export type CompanyResourceStore = Pick<
+  D1CompanyResourceRepository,
+  "findMany" | "write" | "writeOrganizationChange"
+>
 
 export type CompanyResourceStoreWriteResult = CompanyResourceWriteResult
 

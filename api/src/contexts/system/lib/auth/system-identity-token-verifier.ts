@@ -8,6 +8,8 @@ const claimsSchema = z.object({
   email_verified: z.boolean(),
   name: z.string().min(1).max(200),
   iat: z.number(),
+  /** 利用者が認証した時刻。再認証の新しさはこの値で判定する。 */
+  auth_time: z.number().optional(),
   exp: z.number(),
   jti: z.string().min(1),
 })
