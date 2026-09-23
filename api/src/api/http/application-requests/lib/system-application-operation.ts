@@ -1,3 +1,7 @@
+import { findCompanyPersonnelActionRequest } from "@/contexts/company/interface/operations/find-company-personnel-action-request"
+import { revalidateCompanyProcedureAuthority } from "@/contexts/company/interface/operations/revalidate-company-procedure-authority"
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
+import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
 import { PrepareSystemCaseReadGuardAdapter } from "@system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter"
 import { RecordPreservationProposalValue } from "@system/domain/values/records/record-preservation-proposal.value"
@@ -7,13 +11,10 @@ import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active
 import { resolveActiveCompanyAccountParticipant } from "@/api/http/accounts/resolve-active-company-account-participant"
 import { resolveCompanyAccountParticipants } from "@/api/http/accounts/resolve-company-account-participants"
 import { resolveSystemAccountIdsForEmployees } from "@/api/http/accounts/resolve-system-account-ids-for-employees"
-import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
-import { RevalidateCompanyProcedureAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-authority.adapter"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { ResolveCompanyProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task.adapter"
 import { type CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { CompleteApprovedPersonnelActionRequest } from "@/contexts/company/application/employee-lifecycle/procedure/complete-approved-personnel-action-request"
 import {
   CompanyOperationError,
@@ -21,7 +22,6 @@ import {
   CompanyConflictError,
   CompanyNotFoundError,
 } from "@/contexts/company/domain/errors"
-import { FindPersonnelActionRequestAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/find-personnel-action-request.adapter"
 import type { Context, Variables } from "@/env"
 import { canRepairWorkflow } from "@/api/http/application-requests/lib/can-repair-workflow"
 import { parseJsonValue } from "@/api/http/application-requests/lib/parse-json-value"
@@ -380,9 +380,9 @@ export async function decideSystemApplication(
       cause: candidateAccountIds,
     })
   }
-  const authorityGuard = await new CompanyAuthoritySnapshotGuardAdapter({
+  const authorityGuard = await prepareCompanyAuthoritySnapshotGuard({
     database: c.env.DB,
-  }).prepare({
+  }, {
     accountIds: [...candidateAccountIds, proposal.createdByAccountId, actorAccountId],
     employeeCodes: (policy.workflow?.steps ?? []).flatMap((workflowStep) =>
       [...workflowStep.approvers, ...workflowStep.escalation_approvers].flatMap((selector) =>
@@ -441,7 +441,7 @@ export async function decideSystemApplication(
       cause: applicantParticipant instanceof Error ? applicantParticipant : undefined,
     })
   }
-  const applicant = await new CompanyEmployeeDirectoryReadAdapter(c).findById(
+  const applicant = await openCompanyEmployeeDirectory(c).findById(
     applicantParticipant.employeeId,
   )
   if (applicant instanceof Error || applicant === null) {
@@ -460,9 +460,7 @@ export async function decideSystemApplication(
     targetDepartmentCode = null
   }
   if (proposal.completionOperationKey === "company.personnel-action.apply") {
-    const personnelRequest = await new FindPersonnelActionRequestAdapter(
-      c,
-    ).findPersonnelActionRequest(session, { applicationId: proposal.number })
+    const personnelRequest = await findCompanyPersonnelActionRequest(c, session, { applicationId: proposal.number })
     if (personnelRequest instanceof CompanyConflictError)
       return new ConflictError(personnelRequest.message, personnelRequest.code)
     if (personnelRequest instanceof Error)
@@ -478,7 +476,7 @@ export async function decideSystemApplication(
         : [personnelRequest.requestedByEmployeeId, personnelRequest.targetEmployeeId],
     )
   }
-  const hasCurrentAuthority = await new RevalidateCompanyProcedureAuthorityAdapter(c).revalidate({
+  const hasCurrentAuthority = await revalidateCompanyProcedureAuthority(c, {
     step,
     payload: payload.value,
     task: decisionTask,
@@ -818,7 +816,7 @@ async function startSystemApplication(
       cause: payload,
     })
   }
-  const applicant = await new CompanyEmployeeDirectoryReadAdapter(c).findById(input.applicantId)
+  const applicant = await openCompanyEmployeeDirectory(c).findById(input.applicantId)
   if (applicant instanceof Error) {
     return new UnexpectedError("failed to find applicant", { cause: applicant })
   }

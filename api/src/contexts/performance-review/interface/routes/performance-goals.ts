@@ -1,4 +1,4 @@
-import { ResolveEmployeeRelationAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-employee-relation.adapter"
+import { resolveCompanyEmployeeRelation } from "@/contexts/company/interface/operations/resolve-company-employee-relation"
 import {
   ForbiddenError,
   InternalError,
@@ -217,7 +217,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     const isViewingOthers = targetEmployeeId !== session.employeeId
 
     if (isViewingOthers) {
-      const relation = await new ResolveEmployeeRelationAdapter(c).resolveEmployeeRelation({
+      const relation = await resolveCompanyEmployeeRelation(c, {
         viewerEmployeeId: session.employeeId,
         targetEmployeeId,
       })

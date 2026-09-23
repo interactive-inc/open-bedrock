@@ -1,6 +1,6 @@
+import { readCompanyAccountEmployeeLinks } from "@/contexts/company/interface/operations/read-company-account-employee-links"
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { ReadCompanyAccountDisplayNamesAdapter } from "@/contexts/company/infrastructure/adapters/account-profile/read-company-account-display-names.adapter"
-import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
 import type { IdentityProvider } from "@system/domain/schemas/identity/identity-provider.schema"
@@ -54,7 +54,7 @@ export class IdentityAdapter {
 
     try {
       const now = this.c.env.NOW ?? new Date().toISOString()
-      const employees = await new CompanyEmployeeDirectoryReadAdapter({
+      const employees = await openCompanyEmployeeDirectory({
         env: { ...this.c.env, NOW: now },
       }).findForAccountIds([login.account.id])
       if (employees instanceof Error) return employees
@@ -94,7 +94,7 @@ export class IdentityAdapter {
     if (account === null || account instanceof Error) return account
 
     try {
-      const links = await new CompanyAccountEmployeeLinksReadAdapter(this.c).findMany({
+      const links = await readCompanyAccountEmployeeLinks(this.c, {
         accountIds: [accountId],
       })
       if (links instanceof Error) return links
@@ -118,7 +118,7 @@ export class IdentityAdapter {
     if (identity === null || identity instanceof Error) return identity
 
     try {
-      const links = await new CompanyAccountEmployeeLinksReadAdapter(this.c).findMany({
+      const links = await readCompanyAccountEmployeeLinks(this.c, {
         accountIds: [identity.accountId],
       })
       if (links instanceof Error) return links
@@ -134,7 +134,7 @@ export class IdentityAdapter {
     if (employeeIds.length === 0) return new Map()
 
     try {
-      const links = await new CompanyAccountEmployeeLinksReadAdapter(this.c).findMany({
+      const links = await readCompanyAccountEmployeeLinks(this.c, {
         employeeIds,
       })
       if (links instanceof Error) return links

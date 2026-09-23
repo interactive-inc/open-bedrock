@@ -1,3 +1,4 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { Thanks } from "@/contexts/thanks/domain/entities/thanks.entity"
 import {
@@ -12,7 +13,6 @@ import type { ApplicationError } from "@/lib/errors"
 import { periodOf } from "@/contexts/thanks/domain/definitions/thanks-period.definition"
 import { toNonNegativePoints } from "@/contexts/thanks/domain/policies/non-negative-points.policy"
 import type { Context as HonoContext } from "@/env"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { ThanksPointBudgetRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-point-budget.repository"
 import { ThanksRepository } from "@/contexts/thanks/infrastructure/repositories/thanks.repository"
 
@@ -47,7 +47,7 @@ export class SendThanks {
   }
 
   async run(command: Command): Promise<Thanks | ApplicationError> {
-    const employeeRepository = new CompanyEmployeeDirectoryReadAdapter(this.c.context)
+    const employeeRepository = openCompanyEmployeeDirectory(this.c.context)
 
     const sender = await employeeRepository.findById(command.senderEmployeeId)
 

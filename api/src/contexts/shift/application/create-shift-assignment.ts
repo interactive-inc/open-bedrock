@@ -1,9 +1,9 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-assignment.entity"
 import type { Context } from "@/env"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { UniqueConstraintError } from "@/lib/d1/errors"
 import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
 import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/repositories/shift-pattern.repository"
@@ -29,7 +29,7 @@ export class CreateShiftAssignment {
       return new ForbiddenError("cannot manage shift", "forbidden")
     }
 
-    const employeeRepository = new CompanyEmployeeDirectoryReadAdapter(this.c)
+    const employeeRepository = openCompanyEmployeeDirectory(this.c)
 
     const employee = await employeeRepository.findByCode(input.employeeCode)
 

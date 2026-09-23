@@ -1,3 +1,4 @@
+import { prepareCompanyRecordProcedureTask } from "@/contexts/company/interface/operations/prepare-company-record-procedure-task"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { softwareLicenseFactory } from "@/contexts/software-license/interface/request-environment/software-license-factory"
@@ -12,7 +13,6 @@ import {
   SoftwareLicenseConflictError,
   SoftwareLicenseUnavailableError,
 } from "@/contexts/software-license/interface/errors"
-import { PrepareCompanyRecordProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-task.adapter"
 import { recordPreservationRequestSchema } from "@system/domain/schemas/records/record-preservation-input.schema"
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
 import { SubmitRecordPreservationAdapter } from "@system/infrastructure/adapters/records/submit-record-preservation.adapter"
@@ -60,7 +60,7 @@ export function createLicensePreservationSubmissionHandlers(mode: "create" | "re
           authorize: () => new LicenseActorReadAdapter(c).prepare(),
           capture: () => new CaptureLicenseRecordAdapter(c).prepare({ licenseId, sourceNamespace }),
         },
-        prepareTask: (input) => new PrepareCompanyRecordProcedureTaskAdapter(c).prepare(input),
+        prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })
       const common = {
         authentication,

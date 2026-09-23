@@ -1,14 +1,12 @@
+import { readCompanyCanonicalOrganizationState } from "@/contexts/company/interface/operations/read-company-canonical-organization-state"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
-import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 
 export async function loadCurrentEmployeeDepartmentNames(
   c: Context,
   employeeIds: ReadonlyArray<EmployeeId>,
 ): Promise<ReadonlyMap<EmployeeId, string | null> | Error> {
-  const snapshot = await new ReadCanonicalOrganizationStateAdapter(
-    c,
-  ).readCanonicalOrganizationState()
+  const snapshot = await readCompanyCanonicalOrganizationState(c)
   if (snapshot instanceof Error) return snapshot
   const requested = new Set(employeeIds)
   const unitNameById = new Map(

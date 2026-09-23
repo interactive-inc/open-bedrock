@@ -1,8 +1,8 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
+import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import type { Context } from "@/env"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
-import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 
 /** 現在の本人対応と在籍を確認し、保存時にも同じ会社資格を要求する。 */
@@ -12,15 +12,15 @@ export class PrepareLeaveHumanEmployeeAdapter {
   }
 
   async prepare(input: Readonly<{ accountId: AccountId; employeeId: EmployeeId; now: Date }>) {
-    const guard = await new CompanyAuthoritySnapshotGuardAdapter({
+    const guard = await prepareCompanyAuthoritySnapshotGuard({
       database: this.c.env.DB,
-    }).prepare({
+    }, {
       accountIds: [input.accountId],
       employeeCodes: [],
     })
     if (guard instanceof Error)
       return new UnexpectedError("会社資格を固定できません", { cause: guard })
-    const linked = await new CompanyEmployeeDirectoryReadAdapter({
+    const linked = await openCompanyEmployeeDirectory({
       ...this.c,
       env: { ...this.c.env, NOW: input.now.toISOString() },
     }).findForAccountIds([input.accountId])

@@ -1,3 +1,4 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { Asset } from "@/contexts/asset/domain/entities/asset.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -5,7 +6,6 @@ import { isAssetRecordSourceFrozenError } from "@/contexts/asset/infrastructure/
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 
 export type Command = {
   session: CompanySessionValue
@@ -26,7 +26,7 @@ export class LendAsset {
   async run(command: Command): Promise<Asset | ApplicationError> {
     const assetRepository = new AssetRepository(this.c)
 
-    const employeeRepository = new CompanyEmployeeDirectoryReadAdapter(this.c)
+    const employeeRepository = openCompanyEmployeeDirectory(this.c)
 
     if (command.session.hasPermission("asset:manage") === false) {
       return new ForbiddenError("cannot manage assets", "forbidden")

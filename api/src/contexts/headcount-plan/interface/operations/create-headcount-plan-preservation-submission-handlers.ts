@@ -1,3 +1,4 @@
+import { prepareCompanyRecordProcedureTask } from "@/contexts/company/interface/operations/prepare-company-record-procedure-task"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { headcountPlanFactory } from "@/contexts/headcount-plan/interface/request-environment/headcount-plan-factory"
@@ -11,7 +12,6 @@ import {
   HeadcountPlanConflictError,
   HeadcountPlanUnavailableError,
 } from "@/contexts/headcount-plan/interface/errors"
-import { PrepareCompanyRecordProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-task.adapter"
 import { recordPreservationRequestSchema } from "@system/domain/schemas/records/record-preservation-input.schema"
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
 import { SubmitRecordPreservationAdapter } from "@system/infrastructure/adapters/records/submit-record-preservation.adapter"
@@ -59,7 +59,7 @@ export function createHeadcountPlanPreservationSubmissionHandlers(mode: "create"
           capture: () =>
             new CaptureHeadcountPlanRecordAdapter(c).prepare({ headcountPlanId, sourceNamespace }),
         },
-        prepareTask: (input) => new PrepareCompanyRecordProcedureTaskAdapter(c).prepare(input),
+        prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })
       const common = {
         authentication,

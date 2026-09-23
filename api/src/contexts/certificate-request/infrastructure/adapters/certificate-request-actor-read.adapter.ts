@@ -1,7 +1,7 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
+import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import type { CertificateRequestContext } from "@/contexts/certificate-request/configuration/certificate-request-context"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
-import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { CertificateRequestError } from "@/contexts/certificate-request/domain/errors"
@@ -31,9 +31,9 @@ export class CertificateRequestActorReadAdapter {
       })
     if (authorization === "forbidden")
       return new CertificateRequestError("forbidden", "human certificate-request manager is required")
-    const guard = await new CompanyAuthoritySnapshotGuardAdapter({
+    const guard = await prepareCompanyAuthoritySnapshotGuard({
       database: this.c.env.DB,
-    }).prepare({
+    }, {
       accountIds: [account.data],
       employeeCodes: [],
     })
@@ -41,7 +41,7 @@ export class CertificateRequestActorReadAdapter {
       return new CertificateRequestError("certificate_request_unavailable", "Company snapshot is unavailable", {
         cause: guard,
       })
-    const directory = new CompanyEmployeeDirectoryReadAdapter({
+    const directory = openCompanyEmployeeDirectory({
       env: {
         DB: this.c.env.DB,
         COMPANY_TIME_ZONE: this.c.env.COMPANY_TIME_ZONE,

@@ -1,3 +1,4 @@
+import { revalidateCompanyRecordPreservationExecution } from "@/contexts/company/interface/operations/revalidate-company-record-preservation-execution"
 import { ExecuteRecordPreservationAdapter } from "@system/infrastructure/adapters/records/execute-record-preservation.adapter"
 import { RecordPreservationExecutionError } from "@system/infrastructure/adapters/records/errors"
 import {
@@ -7,7 +8,6 @@ import {
   CareerConflictError,
   CareerUnavailableError,
 } from "@/contexts/career/interface/errors"
-import { RevalidateRecordPreservationExecutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/revalidate-record-preservation-execution.adapter"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { careerFactory } from "@/contexts/career/interface/request-environment/career-factory"
@@ -41,7 +41,7 @@ export const POST = careerFactory.createHandlers(
           }).prepare(source),
       },
       prepareExecution: (input) =>
-        new RevalidateRecordPreservationExecutionAdapter(c).prepare(input),
+        revalidateCompanyRecordPreservationExecution(c, input),
     }).execute({
       authentication,
       number: c.req.valid("param").number,

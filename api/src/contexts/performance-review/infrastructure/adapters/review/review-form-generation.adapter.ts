@@ -1,4 +1,4 @@
-import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
+import { readCompanyCanonicalOrganizationState } from "@/contexts/company/interface/operations/read-company-canonical-organization-state"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
 import type { ReviewCyclePolicy } from "@/contexts/performance-review/domain/definitions/review-cycle-policy.definition"
@@ -23,9 +23,7 @@ async function loadReviewPopulation(c: Context): Promise<{
   employeeRows: ReadonlyArray<ReviewEmployee>
   membershipRows: ReadonlyArray<ReviewMembership>
 }> {
-  const snapshot = await new ReadCanonicalOrganizationStateAdapter(
-    c,
-  ).readCanonicalOrganizationState()
+  const snapshot = await readCompanyCanonicalOrganizationState(c)
   if (snapshot instanceof Error) throw snapshot
 
   const employeeProfiles = await c.var.database

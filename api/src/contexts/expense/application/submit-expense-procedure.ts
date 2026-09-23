@@ -1,9 +1,9 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
 import { PrepareExpenseApprovalScopeAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-approval-scope.adapter"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { zOrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { ResolveCompanyProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task.adapter"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
 import { Expense } from "@/contexts/expense/domain/entities/expense.entity"
@@ -88,7 +88,7 @@ export class SubmitExpenseProcedure {
     const companyGuard = await repository.prepareSubmissionGuard(command.session.accountId)
     if (companyGuard instanceof Error)
       return new UnexpectedError("会社資格を固定できません", { cause: companyGuard })
-    const people = await new CompanyEmployeeDirectoryReadAdapter({
+    const people = await openCompanyEmployeeDirectory({
       ...this.c,
       env: { ...this.c.env, NOW: command.createdAt.toISOString() },
     }).findForAccountIds([command.session.accountId])

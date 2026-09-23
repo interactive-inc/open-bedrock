@@ -1,6 +1,6 @@
+import { prepareCompanyRecordProcedureTask } from "@/contexts/company/interface/operations/prepare-company-record-procedure-task"
 import { certificateRequestRetirementSubmissionCommandSchema } from "@/contexts/certificate-request/domain/schemas/certificate-request-retirement-submission-command.schema"
 import { PrepareCertificateRequestRetirementCurrentStateAdapter } from "@/contexts/certificate-request/infrastructure/adapters/prepare-certificate-request-retirement-current-state.adapter"
-import { PrepareCompanyRecordProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-task.adapter"
 import { RecordRetirementVerificationReceiptRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
 import { RecordRetirementProposalValue } from "@system/domain/values/records/record-retirement-proposal.value"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
@@ -140,7 +140,7 @@ export class SubmitCertificateRequestRetirementRequestAdapter {
     if (existing instanceof Error) return existing
     if (existing !== null) return { created: false, request: existing }
     const at = this.c.var.now()
-    const task = await new PrepareCompanyRecordProcedureTaskAdapter(this.c).prepare({
+    const task = await prepareCompanyRecordProcedureTask(this.c, {
       procedureKey: command.procedureKey,
       proposal,
       applicantAccountId: authentication.accountId,

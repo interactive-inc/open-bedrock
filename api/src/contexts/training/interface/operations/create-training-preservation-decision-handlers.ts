@@ -1,8 +1,8 @@
+import { prepareCompanyRecordProcedureDecision } from "@/contexts/company/interface/operations/prepare-company-record-procedure-decision"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { trainingFactory } from "@/contexts/training/interface/request-environment/training-factory"
 import { trainingRecordRouteSchema } from "@/contexts/training/interface/http/training-input-schemas"
-import { PrepareCompanyRecordProcedureDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-decision.adapter"
 import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 import { DecideRecordPreservationAdapter } from "@system/infrastructure/adapters/records/decide-record-preservation.adapter"
 import { RecordPreservationDecisionError } from "@system/infrastructure/adapters/records/errors"
@@ -43,7 +43,7 @@ export function createTrainingPreservationDecisionHandlers(action: "approve" | "
           sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
         },
         prepareDecision: async (input) => {
-          const decision = await new PrepareCompanyRecordProcedureDecisionAdapter(c).prepare(input)
+          const decision = await prepareCompanyRecordProcedureDecision(c, input)
           if (decision instanceof CompanyConflictError)
             return new RecordPreservationDecisionError("conflict")
           if (decision instanceof CompanyUnexpectedError)

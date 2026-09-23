@@ -1,6 +1,6 @@
+import { readCompanyAccountEmployeeLinks } from "@/contexts/company/interface/operations/read-company-account-employee-links"
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { Announcement } from "@/contexts/announcement/domain/entities/announcement.entity"
-import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { Context } from "@/env"
 import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
@@ -19,9 +19,9 @@ export class PublishAnnouncementNotificationAdapter {
     createdAtValue: string,
   ): Promise<null | Error> {
     try {
-      const links = await new CompanyAccountEmployeeLinksReadAdapter(this.c).findMany({})
+      const links = await readCompanyAccountEmployeeLinks(this.c, {})
       if (links instanceof Error) return links
-      const employees = await new CompanyEmployeeDirectoryReadAdapter({
+      const employees = await openCompanyEmployeeDirectory({
         env: this.c.env,
       }).findForAccountIds(links.map((link) => zAccountId.parse(link.accountId)))
       if (employees instanceof Error) return employees

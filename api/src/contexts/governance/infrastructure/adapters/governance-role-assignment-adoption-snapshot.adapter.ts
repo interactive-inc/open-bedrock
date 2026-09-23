@@ -1,4 +1,4 @@
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
@@ -51,7 +51,7 @@ export class GovernanceRoleAssignmentAdoptionSnapshotAdapter {
       if (!employeeId.success)
         return new Error("invalid governance responsibility source", { cause: employeeId.error })
       // 従業員番号はCompanyの会社営業日の名簿から取る。会社に存在しない従業員の割当は元記録として扱わない。
-      const employees = await new CompanyEmployeeDirectoryReadAdapter({
+      const employees = await openCompanyEmployeeDirectory({
         env: {
           DB: this.c.database,
           NOW: this.c.now === undefined ? undefined : new Date(this.c.now).toISOString(),

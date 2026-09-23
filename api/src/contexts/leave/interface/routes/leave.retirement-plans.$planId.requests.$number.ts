@@ -1,10 +1,10 @@
+import { prepareCompanyRecordProcedureDecision } from "@/contexts/company/interface/operations/prepare-company-record-procedure-decision"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { leaveFactory } from "@/contexts/leave/interface/request-environment/leave-factory"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { ReviewRecordRetirementAdapter } from "@system/infrastructure/adapters/records/review-record-retirement.adapter"
 import { RecordRetirementReviewError } from "@system/infrastructure/adapters/records/errors"
-import { PrepareCompanyRecordProcedureDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-decision.adapter"
 import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 import { SystemForbiddenError, SystemHTTPException } from "@system/interface/errors"
 
@@ -29,7 +29,7 @@ export const GET = leaveFactory.createHandlers(
         ownerContext: "leave",
       },
       prepareDecision: async (input) => {
-        const decision = await new PrepareCompanyRecordProcedureDecisionAdapter(c).prepare(input)
+        const decision = await prepareCompanyRecordProcedureDecision(c, input)
         if (decision instanceof CompanyConflictError)
           return new RecordRetirementReviewError("conflict")
         if (decision instanceof CompanyUnexpectedError)

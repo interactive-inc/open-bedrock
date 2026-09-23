@@ -1,3 +1,4 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { SalaryRevision } from "@/contexts/compensation-change/domain/entities/salary-revision.entity"
@@ -6,7 +7,6 @@ import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { SalaryRevisionRepository } from "@/contexts/compensation-change/infrastructure/repositories/salary-revision/salary-revision.repository"
 import { isCompensationChangeRecordSourceFrozenError } from "@/contexts/compensation-change/infrastructure/repositories/lib/is-compensation-change-record-source-frozen-error"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { UniqueConstraintError } from "@/lib/d1/errors"
 
 export type Command = {
@@ -33,7 +33,7 @@ export class CreateSalaryRevision {
       return new ForbiddenError("cannot manage salary revisions", "forbidden")
     }
 
-    const employee = await new CompanyEmployeeDirectoryReadAdapter(this.c).findById(
+    const employee = await openCompanyEmployeeDirectory(this.c).findById(
       command.employeeId,
     )
 

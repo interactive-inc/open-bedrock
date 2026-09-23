@@ -1,7 +1,7 @@
-import { EmployeeProfileSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-profile-snapshot.adapter"
+import { findCompanyEmployeeProfileSnapshot } from "@/contexts/company/interface/operations/find-company-employee-profile-snapshot"
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import type { Context } from "@/env"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { zAppAuthMe } from "@/api/http/company/response-schemas"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
@@ -16,7 +16,7 @@ export class GetCurrentCompanyProfile {
     const session = this.c.var.session
     if (session === null) throw new UnauthorizedError()
     if (session.employeeId === null) throw new NotFoundError("employee not found")
-    const employee = await new CompanyEmployeeDirectoryReadAdapter(this.c).findById(
+    const employee = await openCompanyEmployeeDirectory(this.c).findById(
       restoreWorkforceId("employee", String(session.employeeId)),
     )
     if (employee instanceof Error) throw new InternalError("failed to load employee profile")
@@ -27,7 +27,7 @@ export class GetCurrentCompanyProfile {
       timeZone: this.c.env.COMPANY_TIME_ZONE,
     })
     if (effectiveOn instanceof Error) throw new InternalError("failed to resolve company date")
-    const profile = await new EmployeeProfileSnapshotAdapter(this.c.env.DB).find({
+    const profile = await findCompanyEmployeeProfileSnapshot(this.c.env.DB, {
       employeeId: employee.id,
       effectiveOn,
     })

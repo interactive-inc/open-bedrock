@@ -1,3 +1,4 @@
+import { prepareCompanyRecordProcedureTask } from "@/contexts/company/interface/operations/prepare-company-record-procedure-task"
 import { UnexpectedError } from "@/lib/errors"
 import { expenseRecordKindSchema } from "@/contexts/expense/domain/schemas/expense-record-kind.schema"
 import { z } from "zod"
@@ -5,7 +6,6 @@ import { zValidator } from "@hono/zod-validator"
 import { expenseFactory } from "@/contexts/expense/interface/request-environment/expense-factory"
 import { PrepareExpensePreservationReadAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-preservation-read.adapter"
 import { CaptureExpenseSourceAdapter } from "@/contexts/expense/infrastructure/adapters/capture-expense-source.adapter"
-import { PrepareCompanyRecordProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-task.adapter"
 import { SystemForbiddenError, SystemHTTPException } from "@system/interface/errors"
 import { recordPreservationRequestSchema } from "@system/domain/schemas/records/record-preservation-input.schema"
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
@@ -80,7 +80,7 @@ export function createExpensePreservationSubmissionHandlers(mode: "create" | "re
               reader,
             ),
         },
-        prepareTask: (input) => new PrepareCompanyRecordProcedureTaskAdapter(c).prepare(input),
+        prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })
       const common = {
         authentication,

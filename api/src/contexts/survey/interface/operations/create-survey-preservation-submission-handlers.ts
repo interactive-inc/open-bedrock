@@ -1,3 +1,4 @@
+import { prepareCompanyRecordProcedureTask } from "@/contexts/company/interface/operations/prepare-company-record-procedure-task"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { surveyFactory } from "@/contexts/survey/interface/request-environment/survey-factory"
@@ -11,7 +12,6 @@ import {
   SurveyConflictError,
   SurveyUnavailableError,
 } from "@/contexts/survey/interface/errors"
-import { PrepareCompanyRecordProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-task.adapter"
 import { recordPreservationRequestSchema } from "@system/domain/schemas/records/record-preservation-input.schema"
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
 import { SubmitRecordPreservationAdapter } from "@system/infrastructure/adapters/records/submit-record-preservation.adapter"
@@ -55,7 +55,7 @@ export function createSurveyPreservationSubmissionHandlers(mode: "create" | "res
           authorize: () => new SurveyActorReadAdapter(c).prepare(),
           capture: () => new CaptureSurveyRecordAdapter(c).prepare({ recordKind, recordId, sourceNamespace }),
         },
-        prepareTask: (input) => new PrepareCompanyRecordProcedureTaskAdapter(c).prepare(input),
+        prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })
       const common = {
         authentication,

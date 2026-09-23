@@ -1,6 +1,6 @@
+import { loadCompanyCurrentOrganization } from "@/contexts/company/interface/operations/load-company-current-organization"
 import { ResolveGovernanceOrgRoleAdapter } from "@/contexts/governance/infrastructure/adapters/resolve-governance-org-role.adapter"
 import { GovernanceAdapter } from "@/contexts/governance/infrastructure/adapters/governance.adapter"
-import { CurrentOrganizationReadModelAdapter } from "@/contexts/company/infrastructure/adapters/organization/current-organization-read-model.adapter"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
@@ -36,7 +36,7 @@ export async function readGovernanceImpact(
     repository.listDocuments(true),
     repository.listOrgRoles(),
     repository.listCapabilities(),
-    new CurrentOrganizationReadModelAdapter(c).loadCurrentOrganization(),
+    loadCompanyCurrentOrganization(c),
     c.var.database.select({ name: employees.officialName }).from(employees),
     c.var.database
       .select({ code: governanceDocuments.code, kind: governanceDocuments.kind })

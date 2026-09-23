@@ -1,5 +1,5 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { PersonnelActionRequestLedgerAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-request-ledger.adapter"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import type {
   PersonnelActionRequestRecord,
   PersonnelActionRequestStatus,
@@ -45,7 +45,7 @@ export class ListPersonnelActionRequests {
       }
       const workflowByNumber = new Map(workflows.map((workflow) => [workflow.number, workflow]))
       const visibleRows = rows.filter((row) => workflowByNumber.has(row.application_id))
-      const employees = await new CompanyEmployeeDirectoryReadAdapter({
+      const employees = await openCompanyEmployeeDirectory({
         env: this.c.env,
       }).findForEmployeeIds(
         visibleRows.flatMap((row) =>

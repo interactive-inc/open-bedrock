@@ -1,12 +1,12 @@
+import { prepareCompanyProcedureDecision } from "@/contexts/company/interface/operations/prepare-company-procedure-decision"
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
+import { revalidateCompanyProcedureExecution } from "@/contexts/company/interface/operations/revalidate-company-procedure-execution"
 import { PrepareLeaveHumanEmployeeAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-human-employee.adapter"
 import { LeaveProcedureRepository } from "@/contexts/leave/infrastructure/repositories/leave-procedure.repository"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 import type { Context } from "@/env"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { CompanyOperationError } from "@/contexts/company/domain/errors"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
-import { PrepareCompanyProcedureDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-procedure-decision.adapter"
-import { RevalidateCompanyProcedureExecutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-execution.adapter"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
@@ -90,7 +90,7 @@ export class LeaveProcedureReadAdapter {
       if (human !== "forbidden") {
         let guards: ReadonlyArray<D1PreparedStatement> = []
         if (proposal.status === "pending") {
-          const authority = await new PrepareCompanyProcedureDecisionAdapter(this.c).prepare({
+          const authority = await prepareCompanyProcedureDecision(this.c, {
             proposal,
             decisionTarget: {
               proposalVersion: target.proposal_version,
@@ -118,7 +118,7 @@ export class LeaveProcedureReadAdapter {
             )
           }
         } else if (proposal.status === "approved" && binding !== null) {
-          const authority = await new RevalidateCompanyProcedureExecutionAdapter(this.c).prepare({
+          const authority = await revalidateCompanyProcedureExecution(this.c, {
             applicationId: binding.applicationId,
             expectedCaseId: binding.caseId,
             expectedSeriesId: binding.seriesId,
@@ -178,7 +178,7 @@ export class LeaveProcedureReadAdapter {
     const isOwner = request.employeeId === input.session.employeeId
     if (!isOwner && !input.session.hasPermission("leave:read:all") && !canReview)
       return new ForbiddenError("この休暇を参照する権限がありません", "forbidden")
-    const directory = new CompanyEmployeeDirectoryReadAdapter(this.c)
+    const directory = openCompanyEmployeeDirectory(this.c)
     const people = await directory.findForEmployeeIds([
       request.employeeId,
       ...(request.approverId === null ? [] : [request.approverId]),

@@ -1,8 +1,8 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { Context } from "@/env"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { EmploymentStatus } from "@/contexts/company/domain/definitions/employment-status.definition"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 
 export type CompanyAccountParticipant = Readonly<{
   accountId: AccountId
@@ -18,7 +18,7 @@ export async function resolveCompanyAccountParticipants(
   c: Context,
   accountIds: ReadonlyArray<AccountId>,
 ): Promise<ReadonlyArray<CompanyAccountParticipant> | Error> {
-  const entries = await new CompanyEmployeeDirectoryReadAdapter(c).findForAccountIds(accountIds)
+  const entries = await openCompanyEmployeeDirectory(c).findForAccountIds(accountIds)
   if (entries instanceof Error) return entries
 
   return entries.map((entry) => ({

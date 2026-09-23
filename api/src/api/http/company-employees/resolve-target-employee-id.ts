@@ -1,5 +1,5 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { Context } from "@/env"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 
 export type Props = {
   c: Context
@@ -14,7 +14,7 @@ export type Props = {
  */
 export async function resolveTargetEmployeeId(props: Props): Promise<EmployeeId | null | Error> {
   if (props.employeeCodeParam !== undefined) {
-    const repository = new CompanyEmployeeDirectoryReadAdapter(props.c)
+    const repository = openCompanyEmployeeDirectory(props.c)
 
     const employee = await repository.findByCode(props.employeeCodeParam)
 

@@ -1,7 +1,7 @@
+import { resolveCompanyOrganizationAuthority } from "@/contexts/company/interface/operations/resolve-company-organization-authority"
 import { LeaveProcedureStatusReadAdapter } from "@/contexts/leave/infrastructure/adapters/leave-procedure-status-read.adapter"
 import type { LeaveProcedureStatus } from "@/contexts/leave/domain/definitions/leave-procedure.definition"
 import { ConflictError } from "@/lib/errors"
-import { ResolveOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter"
 import {
   ForbiddenError,
   NotFoundError as ApplicationNotFoundError,
@@ -104,9 +104,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       }
 
       if (command.session.hasPermission("org:manage") === false) {
-        const organizationAuthority = await new ResolveOrganizationAuthorityAdapter(
-          c,
-        ).resolveOrganizationAuthority(command.employeeId, leaveRequest.employeeId)
+        const organizationAuthority = await resolveCompanyOrganizationAuthority(c, command.employeeId, leaveRequest.employeeId)
 
         if (organizationAuthority instanceof Error) {
           return new UnexpectedError("failed to resolve organization authority", {

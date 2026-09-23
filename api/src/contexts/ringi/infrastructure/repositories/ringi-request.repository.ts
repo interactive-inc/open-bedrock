@@ -1,10 +1,10 @@
+import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
 import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
 import { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
 import { SystemNotificationRepository } from "@system/infrastructure/repositories/notifications/system-notification.repository"
 import { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
-import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
 import { ringiRequests } from "@/contexts/ringi/infrastructure/schema/ringi"
 import {
   ringiProcedureBindingSchema,
@@ -161,7 +161,7 @@ export class RingiRequestRepository {
   }
 
   async prepareSubmissionGuard(accountId: AccountId): Promise<D1PreparedStatement | Error> {
-    return new CompanyAuthoritySnapshotGuardAdapter({ database: this.c.env.DB }).prepare({
+    return prepareCompanyAuthoritySnapshotGuard({ database: this.c.env.DB }, {
       accountIds: [accountId],
       employeeCodes: [],
     })

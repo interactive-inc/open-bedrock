@@ -1,6 +1,6 @@
+import { prepareCompanyApprovedEvidenceRevalidation } from "@/contexts/company/interface/operations/prepare-company-approved-evidence-revalidation"
 import { z } from "zod"
 import { PrepareLeaveRetirementCurrentStateAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-retirement-current-state.adapter"
-import { RevalidateCompanyProcedureExecutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-execution.adapter"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { RecordRetirementProposalValue } from "@system/domain/values/records/record-retirement-proposal.value"
 import { RecordSourceRetirementEntity } from "@system/domain/entities/record-source-retirement.entity"
@@ -96,9 +96,7 @@ export class ExecuteLeaveRetirementAdapter {
     if (proposal.status !== "approved")
       return new LeaveRetirementConflictError("retirement is not approved")
     const at = this.c.var.now()
-    const qualification = await new RevalidateCompanyProcedureExecutionAdapter(
-      this.c,
-    ).prepareApprovedEvidence({
+    const qualification = await prepareCompanyApprovedEvidenceRevalidation(this.c, {
       applicationId: proposal.number,
       expectedCaseId: proposal.caseId,
       expectedSeriesId: proposal.seriesId,

@@ -1,3 +1,4 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { isTrainingRecordSourceFrozenError } from "@/contexts/training/infrastructure/repositories/lib/is-training-record-source-frozen-error"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
@@ -10,7 +11,6 @@ import {
 } from "@/lib/errors"
 import { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
 import type { Context } from "@/env"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
 import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
 
@@ -91,7 +91,7 @@ export class EnrollTraining {
       return new ForbiddenError("cannot enroll others", "forbidden")
     }
 
-    const employeeRepository = new CompanyEmployeeDirectoryReadAdapter(this.c)
+    const employeeRepository = openCompanyEmployeeDirectory(this.c)
 
     const employee = await employeeRepository.findByCode(command.enrolleeEmployeeCode)
 

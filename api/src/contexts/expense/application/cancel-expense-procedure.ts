@@ -1,5 +1,5 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/repositories/expense-procedure.repository"
@@ -53,7 +53,7 @@ export class CancelExpenseProcedure {
     const companyGuard = await repository.prepareSubmissionGuard(command.session.accountId)
     if (companyGuard instanceof Error)
       return new UnexpectedError("会社資格を固定できません", { cause: companyGuard })
-    const people = await new CompanyEmployeeDirectoryReadAdapter({
+    const people = await openCompanyEmployeeDirectory({
       env: { ...this.c.env, NOW: command.cancelledAt.toISOString() },
     }).findForAccountIds([command.session.accountId])
     if (people instanceof Error)

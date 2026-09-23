@@ -1,10 +1,10 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
+import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
 import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
 import { PrepareSystemCaseReadGuardAdapter } from "@system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter"
-import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { ExpenseProcedureReadAdapter } from "@/contexts/expense/infrastructure/adapters/expense-procedure-read.adapter"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -41,12 +41,12 @@ export class PrepareExpenseRecordReadAdapter {
       return new UnexpectedError("閲覧資格を確認できません", { cause: authorization })
     if (authorization === null || input.authentication.accountId !== input.session.accountId)
       return new ForbiddenError("閲覧資格が失効しています", "read_authorization_changed")
-    const company = await new CompanyAuthoritySnapshotGuardAdapter({
+    const company = await prepareCompanyAuthoritySnapshotGuard({
       database: this.c.env.DB,
-    }).prepare({ accountIds: [input.session.accountId], employeeCodes: [] })
+    }, { accountIds: [input.session.accountId], employeeCodes: [] })
     if (company instanceof Error)
       return new UnexpectedError("会社資格を固定できません", { cause: company })
-    const people = await new CompanyEmployeeDirectoryReadAdapter({
+    const people = await openCompanyEmployeeDirectory({
       env: { ...this.c.env, NOW: input.at.toISOString() },
     }).findForAccountIds([input.session.accountId])
     if (people instanceof Error)

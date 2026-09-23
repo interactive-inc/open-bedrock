@@ -1,3 +1,4 @@
+import { prepareCompanyRecordProcedureDecision } from "@/contexts/company/interface/operations/prepare-company-record-procedure-decision"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { softwareLicenseFactory } from "@/contexts/software-license/interface/request-environment/software-license-factory"
@@ -13,7 +14,6 @@ import {
   SoftwareLicenseConflictError,
   SoftwareLicenseUnavailableError,
 } from "@/contexts/software-license/interface/errors"
-import { PrepareCompanyRecordProcedureDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-decision.adapter"
 import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 // @authorization service - 明示した提案閲覧権限と現在のCompany承認資格で判断対象を取得する
 export const GET = softwareLicenseFactory.createHandlers(
@@ -41,7 +41,7 @@ export const GET = softwareLicenseFactory.createHandlers(
         sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
       },
       prepareDecision: async (input) => {
-        const decision = await new PrepareCompanyRecordProcedureDecisionAdapter(c).prepare(input)
+        const decision = await prepareCompanyRecordProcedureDecision(c, input)
         if (decision instanceof CompanyConflictError)
           return new RecordPreservationReviewError("conflict")
         if (decision instanceof CompanyUnexpectedError)

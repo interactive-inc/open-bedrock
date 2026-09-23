@@ -1,3 +1,4 @@
+import { readCompanyCanonicalOrganizationState } from "@/contexts/company/interface/operations/read-company-canonical-organization-state"
 import { CreateBudget } from "@/contexts/expense/application/budget/create-budget"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -12,7 +13,6 @@ import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { zOrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
-import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 import { InternalError } from "@/lib/http/errors"
 
 // @authorization permission - 権限キーで判定する
@@ -67,9 +67,7 @@ export const GET = factory.createHandlers(
       .where(where)
       .orderBy(asc(budgets.organizationUnitId), asc(budgets.fiscalPeriod))
 
-    const snapshot = await new ReadCanonicalOrganizationStateAdapter(
-      c,
-    ).readCanonicalOrganizationState()
+    const snapshot = await readCompanyCanonicalOrganizationState(c)
     if (snapshot instanceof Error) throw new InternalError("failed to load organization units")
     const unitNames = new Map(
       snapshot.organization.units.map((unit) => [unit.organizationUnitId, unit.officialName]),

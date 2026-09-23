@@ -1,3 +1,4 @@
+import { resolveCompanyEmployeeRelation } from "@/contexts/company/interface/operations/resolve-company-employee-relation"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import {
@@ -5,7 +6,6 @@ import {
   type GoalEvaluationKind,
 } from "@/contexts/performance-review/domain/entities/goal-evaluation.entity"
 import { resolveEvaluationPermission } from "@/contexts/performance-review/domain/policies/goal-evaluation-permission.policy"
-import { ResolveEmployeeRelationAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-employee-relation.adapter"
 import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
 import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -142,7 +142,7 @@ export class CreateGoalEvaluation {
       return { isSelf: false, isReport: false, isSameDepartment: false }
     }
 
-    return new ResolveEmployeeRelationAdapter(this.c).resolveEmployeeRelation({
+    return resolveCompanyEmployeeRelation(this.c, {
       viewerEmployeeId: evaluatorId,
       targetEmployeeId: goalEmployeeId,
     })

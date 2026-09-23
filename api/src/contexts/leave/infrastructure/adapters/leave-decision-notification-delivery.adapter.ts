@@ -1,6 +1,6 @@
+import { readCompanyAccountEmployeeLinks } from "@/contexts/company/interface/operations/read-company-account-employee-links"
+import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import { LeaveDecisionNotificationValue } from "@/contexts/leave/domain/values/leave-decision-notification.value"
-import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
-import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { toSha256Hex } from "@/lib/crypto/to-sha256-hex"
 import { SystemManagedJobRunnerAdapter } from "@system/infrastructure/adapters/events/system-managed-job-runner.adapter"
@@ -71,16 +71,16 @@ export class LeaveDecisionNotificationDeliveryAdapter {
       return new Error("notification identity changed")
     if (at.getTime() < notification.props.decidedAt)
       return new Error("notification delivery precedes decision")
-    const companyGuard = await new CompanyAuthoritySnapshotGuardAdapter({
+    const companyGuard = await prepareCompanyAuthoritySnapshotGuard({
       database: this.c.env.DB,
-    }).prepare({ accountIds: [], employeeCodes: [] })
+    }, { accountIds: [], employeeCodes: [] })
     if (companyGuard instanceof Error) return companyGuard
     const asOf = resolveCompanyBusinessDate({
       now: at.toISOString(),
       timeZone: this.c.env.COMPANY_TIME_ZONE,
     })
     if (asOf instanceof Error) return asOf
-    const links = await new CompanyAccountEmployeeLinksReadAdapter(this.c).findMany({
+    const links = await readCompanyAccountEmployeeLinks(this.c, {
       employeeIds: [notification.props.recipientEmployeeId],
       asOf,
     })

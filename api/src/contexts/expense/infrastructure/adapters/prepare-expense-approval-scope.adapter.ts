@@ -1,7 +1,7 @@
+import { readCompanyCanonicalOrganizationState } from "@/contexts/company/interface/operations/read-company-canonical-organization-state"
+import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { OrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
-import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 
 type Context = CompanyContext
 
@@ -12,14 +12,14 @@ export class PrepareExpenseApprovalScopeAdapter {
   }
 
   async prepare(input: Readonly<{ organizationUnitId: OrganizationUnitId; at: Date }>) {
-    const guard = await new CompanyAuthoritySnapshotGuardAdapter({
+    const guard = await prepareCompanyAuthoritySnapshotGuard({
       database: this.c.env.DB,
-    }).prepare({ accountIds: [], employeeCodes: [] })
+    }, { accountIds: [], employeeCodes: [] })
     if (guard instanceof Error) return guard
-    const snapshot = await new ReadCanonicalOrganizationStateAdapter({
+    const snapshot = await readCompanyCanonicalOrganizationState({
       var: this.c.var,
       env: { ...this.c.env, NOW: input.at.toISOString() },
-    }).readCanonicalOrganizationState()
+    })
     if (snapshot instanceof Error) return snapshot
     const organization = snapshot.organization.units.find(
       (unit) => unit.organizationUnitId === input.organizationUnitId,

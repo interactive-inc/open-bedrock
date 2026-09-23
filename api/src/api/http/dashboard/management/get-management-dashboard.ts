@@ -1,3 +1,5 @@
+import { readCompanyCanonicalOrganizationState } from "@/contexts/company/interface/operations/read-company-canonical-organization-state"
+import { readCompanyEmploymentMovements } from "@/contexts/company/interface/operations/read-company-employment-movements"
 import {
   EMPTY_MANAGEMENT_DASHBOARD_BUSINESS_METRICS,
   type ManagementDashboardBusinessMetrics,
@@ -9,8 +11,6 @@ import { UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { toManagementDashboardRanges } from "@/api/http/dashboard/management/to-management-dashboard-ranges"
 import type { AppManagementDashboard } from "@/api/http/company/response-schemas"
-import { CompanyEmploymentMovementsRepository } from "@/contexts/company/infrastructure/repositories/employee-lifecycle/company-employment-movements.repository"
-import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 import { CountPendingSystemCasesAdapter } from "@system/infrastructure/adapters/workflow/count-pending-system-cases.adapter"
 
 /**
@@ -47,15 +47,13 @@ export class GetManagementDashboard {
         })
       }
 
-      const companySnapshot = await new ReadCanonicalOrganizationStateAdapter(
-        this.c,
-      ).readCanonicalOrganizationState()
+      const companySnapshot = await readCompanyCanonicalOrganizationState(this.c)
       if (companySnapshot instanceof Error) {
         return new UnexpectedError("failed to aggregate management dashboard", {
           cause: companySnapshot,
         })
       }
-      const movements = await new CompanyEmploymentMovementsRepository(this.c).find({
+      const movements = await readCompanyEmploymentMovements(this.c, {
         organizationId: "organization:default",
         organizationRevision: companySnapshot.companyRevision,
         from: employmentRanges.since,

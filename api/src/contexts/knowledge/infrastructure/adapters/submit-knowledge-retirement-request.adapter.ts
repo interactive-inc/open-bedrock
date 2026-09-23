@@ -1,6 +1,6 @@
+import { prepareCompanyRecordProcedureTask } from "@/contexts/company/interface/operations/prepare-company-record-procedure-task"
 import { knowledgeRetirementSubmissionCommandSchema } from "@/contexts/knowledge/domain/schemas/knowledge-retirement-submission-command.schema"
 import { PrepareKnowledgeRetirementCurrentStateAdapter } from "@/contexts/knowledge/infrastructure/adapters/prepare-knowledge-retirement-current-state.adapter"
-import { PrepareCompanyRecordProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-task.adapter"
 import { RecordRetirementVerificationReceiptRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
 import { RecordRetirementProposalValue } from "@system/domain/values/records/record-retirement-proposal.value"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
@@ -140,7 +140,7 @@ export class SubmitKnowledgeRetirementRequestAdapter {
     if (existing instanceof Error) return existing
     if (existing !== null) return { created: false, request: existing }
     const at = this.c.var.now()
-    const task = await new PrepareCompanyRecordProcedureTaskAdapter(this.c).prepare({
+    const task = await prepareCompanyRecordProcedureTask(this.c, {
       procedureKey: command.procedureKey,
       proposal,
       applicantAccountId: authentication.accountId,

@@ -1,3 +1,4 @@
+import { revalidateCompanyProcedureExecution } from "@/contexts/company/interface/operations/revalidate-company-procedure-execution"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
 import { toFiscalYear } from "@/contexts/leave/domain/definitions/fiscal-year.definition"
 import { hasLeaveBalanceTracking } from "@/contexts/leave/domain/policies/has-balance-tracking.policy"
@@ -5,7 +6,6 @@ import { LeaveDecisionNotificationValue } from "@/contexts/leave/domain/values/l
 import { PrepareLeaveDecisionNotificationAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-decision-notification.adapter"
 import type { Context } from "@/env"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
-import { RevalidateCompanyProcedureExecutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-execution.adapter"
 import { LeaveProcedureRepository } from "@/contexts/leave/infrastructure/repositories/leave-procedure.repository"
 import type { LeaveProcedureBinding } from "@/contexts/leave/domain/definitions/leave-procedure.definition"
 import type { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
@@ -72,7 +72,7 @@ export class CompleteApprovedLeaveProcedure {
       })
     if (request.status !== "pending")
       return new ConflictError("休暇は確定できません", "already_decided")
-    const guards = await new RevalidateCompanyProcedureExecutionAdapter(this.c).prepare({
+    const guards = await revalidateCompanyProcedureExecution(this.c, {
       applicationId: binding.applicationId,
       expectedCaseId: binding.caseId,
       expectedSeriesId: binding.seriesId,

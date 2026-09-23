@@ -1,3 +1,4 @@
+import { prepareCompanyRecordProcedureDecision } from "@/contexts/company/interface/operations/prepare-company-record-procedure-decision"
 import { expenseRecordKindSchema } from "@/contexts/expense/domain/schemas/expense-record-kind.schema"
 import { SystemForbiddenError, SystemHTTPException } from "@system/interface/errors"
 import { z } from "zod"
@@ -6,7 +7,6 @@ import { expenseFactory } from "@/contexts/expense/interface/request-environment
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { ReviewRecordPreservationAdapter } from "@system/infrastructure/adapters/records/review-record-preservation.adapter"
 import { RecordPreservationReviewError } from "@system/infrastructure/adapters/records/errors"
-import { PrepareCompanyRecordProcedureDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-decision.adapter"
 import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 // @authorization service - 明示した提案閲覧権限と現在のCompany承認資格で判断対象を取得する
 export const GET = expenseFactory.createHandlers(
@@ -37,7 +37,7 @@ export const GET = expenseFactory.createHandlers(
         sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
       },
       prepareDecision: async (input) => {
-        const decision = await new PrepareCompanyRecordProcedureDecisionAdapter(c).prepare(input)
+        const decision = await prepareCompanyRecordProcedureDecision(c, input)
         if (decision instanceof CompanyConflictError)
           return new RecordPreservationReviewError("conflict")
         if (decision instanceof CompanyUnexpectedError)

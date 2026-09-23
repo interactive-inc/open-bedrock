@@ -1,6 +1,6 @@
+import { resolveCompanyEmployeeRelation } from "@/contexts/company/interface/operations/resolve-company-employee-relation"
 import { toFiscalYear } from "@/contexts/leave/domain/definitions/fiscal-year.definition"
 import { canReadLeaveOf } from "@/contexts/leave/interface/http/leave-requests/can-read-leave-of"
-import { ResolveEmployeeRelationAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-employee-relation.adapter"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ForbiddenError, InternalError, UnauthorizedError } from "@/lib/http/errors"
@@ -32,7 +32,7 @@ export const GET = factory.createHandlers(
 
     const targetEmployeeId = requestedEmployeeId === null ? session.employeeId : requestedEmployeeId
 
-    const relation = await new ResolveEmployeeRelationAdapter(c).resolveEmployeeRelation({
+    const relation = await resolveCompanyEmployeeRelation(c, {
       viewerEmployeeId: session.employeeId,
       targetEmployeeId,
     })

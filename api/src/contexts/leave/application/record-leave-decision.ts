@@ -1,3 +1,4 @@
+import { prepareCompanyProcedureDecision } from "@/contexts/company/interface/operations/prepare-company-procedure-decision"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
 import type { Context } from "@/env"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
@@ -6,7 +7,6 @@ import {
   CompanyConflictError,
   CompanyUnexpectedError,
 } from "@/contexts/company/domain/errors"
-import { PrepareCompanyProcedureDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-procedure-decision.adapter"
 import { LeaveProcedureRepository } from "@/contexts/leave/infrastructure/repositories/leave-procedure.repository"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
@@ -107,7 +107,7 @@ export class RecordLeaveDecision {
         replayed: true,
       }
     }
-    const prepared = await new PrepareCompanyProcedureDecisionAdapter(this.c).prepare({
+    const prepared = await prepareCompanyProcedureDecision(this.c, {
       proposal,
       decisionTarget: command.decisionTarget,
       actorAccountId: command.session.accountId,

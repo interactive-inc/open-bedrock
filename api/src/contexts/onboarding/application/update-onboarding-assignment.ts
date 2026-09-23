@@ -1,10 +1,10 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingAssignment } from "@/contexts/onboarding/domain/entities/onboarding-assignment.entity"
 import type { Context } from "@/env"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
 
 export type Command = {
@@ -53,7 +53,7 @@ export class UpdateOnboardingAssignment {
       return new UnexpectedError("failed to update assignment", { cause: updated })
     }
 
-    const employeeRepository = new CompanyEmployeeDirectoryReadAdapter(this.c)
+    const employeeRepository = openCompanyEmployeeDirectory(this.c)
 
     const employee = await employeeRepository.findById(updated.employeeId)
 
