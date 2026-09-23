@@ -155,7 +155,7 @@ async function LeaveBalanceCard() {
 
   const annual =
     balances instanceof Error
-      ? null
+      ? balances
       : (balances.find((balance) => balance.leave_type === "annual") ?? null)
 
   return (
@@ -167,8 +167,10 @@ async function LeaveBalanceCard() {
           <CardTitle>休暇残</CardTitle>
         </div>
 
-        {annual === null ? (
+        {annual instanceof Error ? (
           <CardDescription>残日数を取得できませんでした。</CardDescription>
+        ) : annual === null ? (
+          <CardDescription>年次有給はまだ付与されていません。</CardDescription>
         ) : (
           <CardDescription>
             年次有給 残 {annual.remaining_days} 日（付与 {annual.granted_days} 日）
