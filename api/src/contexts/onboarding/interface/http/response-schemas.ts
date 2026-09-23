@@ -1,5 +1,8 @@
 import { z } from "zod"
-import { onboardingRecordKindSchema } from "@/contexts/onboarding/domain/definitions/onboarding-record-kind.definition"
+import {
+  onboardingRecordKindSchema,
+  onboardingRecordKinds,
+} from "@/contexts/onboarding/domain/definitions/onboarding-record-kind.definition"
 import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records/record-source-freeze.schema"
 
 export const onboardingSourceFreezeResponseSchema = z.strictObject({
@@ -21,7 +24,7 @@ export const zAppOnboardingRetirementPlan = z.strictObject({
   freezeId: z.uuid(),
   digest: z.string().regex(/^[0-9a-f]{64}$/),
   totalPages: z.number().int().positive().safe(),
-  recordKinds: z.array(onboardingRecordKindSchema).length(5),
+  recordKinds: z.array(onboardingRecordKindSchema).length(onboardingRecordKinds.length),
   createdAt: z.iso.datetime(),
 })
 export const zAppOnboardingRetirementVerificationReceipt = z.strictObject({

@@ -14,7 +14,10 @@ import { PrepareRecordRetirementDisclosureAdapter } from "@system/infrastructure
 import { PrepareRecordRetirementSourceAttachmentsAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-source-attachments.adapter"
 import { PrepareRecordRetirementStorageKeysAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-storage-keys.adapter"
 import { ForbiddenError } from "@/lib/errors"
-import { onboardingRecordKinds } from "@/contexts/onboarding/domain/definitions/onboarding-record-kind.definition"
+import {
+  onboardingRecordCapabilityRevision,
+  onboardingRecordKinds,
+} from "@/contexts/onboarding/domain/definitions/onboarding-record-kind.definition"
 
 const requestSchema = z.strictObject({
   planId: z.uuid(),
@@ -56,7 +59,7 @@ export class PrepareOnboardingRetirementCurrentStateAdapter {
       plan.digest !== request.planDigest ||
       plan.snapshot.sourceNamespace !== request.sourceNamespace ||
       plan.snapshot.ownerContext !== "onboarding" ||
-      plan.snapshot.capability.revision !== 1 ||
+      plan.snapshot.capability.revision !== onboardingRecordCapabilityRevision ||
       JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(onboardingRecordKinds)
     )
       return new Error("retirement plan or source capability differs")

@@ -5,7 +5,10 @@ import { OnboardingActorReadAdapter } from "@/contexts/onboarding/infrastructure
 import { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
 import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
-import { onboardingRecordKinds } from "@/contexts/onboarding/domain/definitions/onboarding-record-kind.definition"
+import {
+  onboardingRecordCapabilityRevision,
+  onboardingRecordKinds,
+} from "@/contexts/onboarding/domain/definitions/onboarding-record-kind.definition"
 
 type Context = OnboardingContext
 
@@ -58,7 +61,10 @@ export class PrepareOnboardingRetirementPlanAdapter {
       const plan = await RecordRetirementVerificationPlanEntity.create({
         ...request,
         ownerContext: "onboarding",
-        capability: { revision: 1, recordKinds: onboardingRecordKinds },
+        capability: {
+          revision: onboardingRecordCapabilityRevision,
+          recordKinds: onboardingRecordKinds,
+        },
         coverage: chains.map(({ summary }) => ({
           recordKind: summary.recordKind,
           terminalPageId: summary.terminalPageId,
