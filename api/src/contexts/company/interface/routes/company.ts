@@ -41,6 +41,7 @@ import * as personnelAnnotations from "@/contexts/company/interface/routes/compa
 import * as profile from "@/contexts/company/interface/routes/company.profile"
 import * as reportingLinesEmployeeCode from "@/contexts/company/interface/routes/company.reporting-lines.$employeeCode"
 import * as resourceHistoryTypeId from "@/contexts/company/interface/routes/company.resource-history.$type.$id"
+import * as workforceConnectionCompletions from "@/contexts/company/interface/routes/company.workforce-connection-completions"
 import * as responsibilityResourceAdoptions from "@/contexts/company/interface/routes/company.responsibility-resource-adoptions"
 
 // `bun run gen:app` の生成物。手で編集せず、routeは所有contextのinterface/route-manifest.tsへ足す。
@@ -90,6 +91,7 @@ export const companyAuthenticatedRoutes = new Hono<CompanyHttpEnvironment>()
   .get("/profile", ...profile.GET)
   .get("/reporting-lines/:employeeCode", ...reportingLinesEmployeeCode.GET)
   .get("/resource-history/:type/:id", ...resourceHistoryTypeId.GET)
+  .get("/workforce-connection-completions", ...workforceConnectionCompletions.GET)
 
 export const companyAuditedRoutes = new Hono<CompanyHttpEnvironment>()
   .post("/account-employee-links", ...accountEmployeeLinks.POST)
@@ -111,5 +113,6 @@ export const companyAuditedRoutes = new Hono<CompanyHttpEnvironment>()
   .post("/people", ...people.POST)
   .post("/personnel-action-executions", ...personnelActionExecutions.POST)
   .post("/profile", ...profile.POST)
+  .post("/workforce-connection-completions", ...workforceConnectionCompletions.POST)
   .get("/responsibility-resource-adoptions", ...responsibilityResourceAdoptions.GET)
   .post("/responsibility-resource-adoptions", ...responsibilityResourceAdoptions.POST)

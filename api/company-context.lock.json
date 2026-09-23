@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "b7c6f990951130149eec784ea18e9612852d660b2a400b34f646eeb41db59f0e",
+    "company-context.manifest.json": "3b36cc81008de681ac3cc944d7cff56431b14c1ed190d89b87b6982b5f0ca2a3",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -28,6 +28,7 @@
     "src/contexts/company/application/employee-lifecycle/transfer-employee.ts": "263ae8a9310cd62160e915be8e7cdc0e5838dbb0bbb4a662496a93e1b146e3a4",
     "src/contexts/company/application/employees/apply-employee-resource-adoption-batch.ts": "c95816358f88f35c4b201b6201ddd694b9630916ab9a7ae542385c1b6c24f305",
     "src/contexts/company/application/employees/apply-employee-resource-adoption.ts": "73801b677ceb4ee6a25713f9c4167bebd70fce3b63d51a47972d9144a41c0609",
+    "src/contexts/company/application/employees/complete-workforce-connection.ts": "77a4ad659c4387168c9797f803ca63ba86bbf40e0138cb1d9b6a14f2754d6413",
     "src/contexts/company/application/employees/create-employees.ts": "86ebbd692e37b0690cb1dfdf89dd833df5a4762ba1b60358fdafa5933e718753",
     "src/contexts/company/application/employees/delete-employees.ts": "9fad4ae6b429dbd2905e8dd0735a8089f9e020a7cb0fccdcdd801b659bce8eef",
     "src/contexts/company/application/employees/update-employee-name.ts": "120e77ad9250691bcedf6c81832e40647bfd8c90f8a8e5ec00270f78bd2632cf",
@@ -178,6 +179,7 @@
     "src/contexts/company/domain/entities/personnel-annotation.entity.test.ts": "4ae8db3cc7beb369b73030ab8bcfd6af4175c479a5aca0cef2d229fefeaf2316",
     "src/contexts/company/domain/entities/personnel-annotation.entity.ts": "ff4fa93fc8a919bbcbb7e8f01a2d1f65a55e408b33ceb80f138a211be6f9f8f4",
     "src/contexts/company/domain/entities/responsibility-resource-adoption.entity.ts": "b38ef3f851554d289bf36896ac5cd4549c3b7d05e1075e2b680160d627865154",
+    "src/contexts/company/domain/entities/workforce-connection-completion.entity.ts": "6a35b0917634d0af4fba415f87289f791b908b6ecc4079ac187e01a897342f75",
     "src/contexts/company/domain/entities/workforce-schedule.entity.test.ts": "09185c25147978729005c18d765628fa8f966f89130a05b4b5d659db3c6be884",
     "src/contexts/company/domain/entities/workforce-schedule.entity.ts": "cc150590f475b99345ada51a720248617dde07b6805df601807379d8d513c022",
     "src/contexts/company/domain/errors.ts": "f4d536f65a16cb384b9ea9a5179f4afda876f9fea27b2084307380a72bbc0192",
@@ -314,7 +316,7 @@
     "src/contexts/company/infrastructure/adapters/definitions/definition-resource-adoption-read.adapter.ts": "ecb7476fa93f80c9774cb35e3f784d0b3eee18877f04d7a4d1c782a3d872b155",
     "src/contexts/company/infrastructure/adapters/definitions/grade-award-archive-read.adapter.ts": "ba74270e023788a65eae185a87bffe0d07aa623d4bef8a537f37d8d6f7bceaed",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/company-assignment-journal.adapter.ts": "b377668c62c105f74321f95bfca9d834cd6d1351c6eaae930909928fce10d28a",
-    "src/contexts/company/infrastructure/adapters/employee-lifecycle/company-employment-journal.adapter.ts": "31014e192b210987b497e323d6d2575b6713574cb1f7afbf2ef6ea7b8a8f93e9",
+    "src/contexts/company/infrastructure/adapters/employee-lifecycle/company-employment-journal.adapter.ts": "3ba561781d20b9a1578097006cd431e23ffa399b1b0cfb73ccc8726431d98aec",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/company-personnel-reporting-journal.adapter.ts": "fb2f4f4a504eaf44c3df5fb89d3def552d0526141e836ff41879cb7e69c023a4",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/company-personnel-resource-journal.adapter.ts": "874ecfe285abb1195294d5dbda34bad330f44a668a810051605eb9e1328f9beb",
     "src/contexts/company/infrastructure/adapters/employee-lifecycle/direct-personnel-action.adapter.ts": "768efa074e7fd115111db86b1eaa0c5d508f684017928dd55eb647870ea6df31",
@@ -438,6 +440,7 @@
     "src/contexts/company/infrastructure/repositories/employee/employee-profile.repository.ts": "03c77087d5e3dc89bb92bed6869c0debdeb9e96988736adf31a311ef324f7e43",
     "src/contexts/company/infrastructure/repositories/employee/employee.repository.ts": "8a55605de5c584f4d22626eb72ee3cd6cba29d87ba7da96ffe5f4501a5327128",
     "src/contexts/company/infrastructure/repositories/employee/lib/is-company-unique-constraint-error.ts": "9f537c07d467c2d9d67cb840c05f51a4ce87c59244d084f8d3bb60d2f1bd3645",
+    "src/contexts/company/infrastructure/repositories/employee/workforce-connection-completion.repository.ts": "95d8578c020b86d54dce996f9acab2bf1a04214da100a8586e5adb6bb1b2ae8b",
     "src/contexts/company/infrastructure/repositories/external-identities/external-identity-import.repository.ts": "bd423d243544290636916db59cc842701cb056a8d6830bbc347b071e25bf7969",
     "src/contexts/company/infrastructure/repositories/organization/assignment-resource-adoption.repository.ts": "dfe0b839680f02bb6925ede9655dffd7d78b1c7de4b87a0511ee6fc7d1e32d8b",
     "src/contexts/company/infrastructure/repositories/organization/company-bootstrap.repository.ts": "7b4c181d3c319cd87826bb4ac9afcd62565ac25d96e6aa8df6d22772e62d9d24",
@@ -548,7 +551,7 @@
     "src/contexts/company/interface/operations/validate-company-employee-active.ts": "0c67ad7a411577a584da1d6c75cd2789fa80742fdb9b0d5d74e402afa574eace",
     "src/contexts/company/interface/request-environment/company-request-environment.ts": "a3a530a47ed8278f638c55eafa0564ea94dd6a97037e068beb6f6edbbb937683",
     "src/contexts/company/interface/request-environment/resolve-company-recorded-at.ts": "52e9b3262f6f47895a4e1433f953015941f4f680ed2aa33a903d4a0420d9c400",
-    "src/contexts/company/interface/route-manifest.ts": "48a484349cd6d15795ff63b3fca8bb97868fed2b8251db802eb919e5fdcaf4c0",
+    "src/contexts/company/interface/route-manifest.ts": "4a422be3278ca0d20bfc8e2d57b17b9eb6ff8452c84d3dffc8a2b8a439208853",
     "src/contexts/company/interface/routes/company.account-employee-links.ts": "0bd7c7a17174d05e9b92761388a10da951744c25abbb334e08c1bb201bee94c6",
     "src/contexts/company/interface/routes/company.assignment-resource-adoptions.ts": "8ecb6c9b26003f681392c4a24425694eed353b16501005e6881e2b81893ce8c8",
     "src/contexts/company/interface/routes/company.authority-resolutions.test.ts": "683b930b7677396521839c2179c926d369a2d963918da3a49f442906e330179c",
@@ -598,7 +601,8 @@
     "src/contexts/company/interface/routes/company.resource-history.$type.$id.test.ts": "ca167a0354e302d7e7bff5f76bf389e4c07fe58b78557c69aae4336cc7f51cea",
     "src/contexts/company/interface/routes/company.resource-history.$type.$id.ts": "4653e2dc33c9eeaddd82f1c12a568060c95c300bf015fcaaa28575cb4b810c76",
     "src/contexts/company/interface/routes/company.responsibility-resource-adoptions.ts": "e80a96cb957a2026edd1b7ea0d32dcede26cbd74b49351a344136a1eb2f6b4cc",
-    "src/contexts/company/interface/routes/company.ts": "7de336d05f80863b03c11bfdbbb97000b48a2cf551042f8902ac670d2e7ce7a4",
+    "src/contexts/company/interface/routes/company.ts": "a1a8fa84a7a1cadab8e8df334375799c5f3367e2bacbf48870f0e8a61978935f",
+    "src/contexts/company/interface/routes/company.workforce-connection-completions.ts": "cf1c219185bf2033235bac9d90bb7490dfd60feb62c06cc68f2a34fd365a74a1",
     "src/contexts/company/lib/workforce/CLAUDE.md": "fbdf55de84b7848a96e85c4d166d1a6b886fd799835e736ae56d61309522fcb2",
     "src/contexts/company/lib/workforce/apply-organization-workforce-changes.ts": "36a92b7029da22a5df92f76935e3256f373b9fcd46a5ffda939ff795cfd8a75f",
     "src/contexts/company/lib/workforce/employee-lifecycle-state.ts": "43e33a70de7dbb68a3ce3f36c38a5d9b0011afb02f21616e1e9cf3e753eef586",
@@ -708,6 +712,7 @@
     "src/contexts/company/test/read-company-employment-states.integration.test.ts": "303a8b3c940fdbc1610a2203088a73d33691cab7e48263d59ca3ee5e6b150b5f",
     "src/contexts/company/test/record-preservation-execution.integration.test.ts": "6fb89877730222fe43bd5f44fee68bfeda6991a6485bc1db16427a17706ead0b",
     "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts": "426625f351ca9bf7f43aba30e7a3aae44cfbb020e3cbd246a3a8ee8eae7052d9",
-    "src/contexts/company/test/unpublished-employment.test-support.ts": "0638ae9929296893ef2d46c676094b44bda08e1535ca800d06b10c012e4babe1"
+    "src/contexts/company/test/unpublished-employment.test-support.ts": "0638ae9929296893ef2d46c676094b44bda08e1535ca800d06b10c012e4babe1",
+    "src/contexts/company/test/workforce-connection-completion.integration.test.ts": "2c7edfe3fa6ecab50e5d9642f5a64f76bfce791de06729cb85dfa18a7921f168"
   }
 }
