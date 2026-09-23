@@ -93,13 +93,15 @@ export function renderList(
     (part) => `import { ${part.name} } from "${importPath(target, part.file)}"`,
   )
   const entries = sorted.map((part) => `  ${part.name},`)
+  const inline = `export const ${target.listName} = [${sorted.map((part) => part.name).join(", ")}] as const`
+  // formatter と同じく、100 文字に収まる一覧は 1 行で書く。
   return [
     "// このファイルは `bun run gen:composition` が生成する。手で編集しない。",
     ...imports,
     "",
     `/** ${target.description} */`,
-    entries.length === 0
-      ? `export const ${target.listName} = [] as const`
+    inline.length <= 100
+      ? inline
       : [`export const ${target.listName} = [`, ...entries, "] as const"].join("\n"),
     "",
   ].join("\n")

@@ -401,9 +401,24 @@ describe("外部identityとCompany正本の同期", () => {
   })
 
   test("許可provider以外と失効credentialで会社情報を変更しない", async () => {
+    // fixture は全 migration を適用するので 1 回だけ作り、provider の付与を失効と再付与で差し替える。
     const c = await createExternalIdentityImportTestContext()
-    const other = await createExternalIdentityImportTestContext("other-provider")
-    expect((await other.application.execute(other.input)).kind).toBe("forbidden")
+    const grant = (id: string, provider: string) =>
+      c.database
+        .prepare(`INSERT INTO system_role_bindings
+          (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
+          VALUES (?1, 'external-import-service', 'import-provider', 'system:identity_provider', ?2, 0, NULL)`)
+        .bind(id, provider)
+        .run()
+    await c.database.exec(
+      "UPDATE system_role_bindings SET revoked_at = 1 WHERE id = 'import-provider-binding'",
+    )
+    await grant("import-other-provider-binding", "other-provider")
+    expect((await c.application.execute(c.input)).kind).toBe("forbidden")
+    await c.database.exec(
+      "UPDATE system_role_bindings SET revoked_at = 1 WHERE id = 'import-other-provider-binding'",
+    )
+    await grant("import-restored-provider-binding", "oidc")
     await c.database.exec(
       "UPDATE system_machine_credentials SET status = 'revoked', revoked_at = updated_at",
     )

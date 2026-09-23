@@ -110,7 +110,8 @@ export class NotificationDeliveryEntity {
 
   dismiss(at: unknown): NotificationDeliveryEntity | InvalidNotificationDeliveryError {
     const parsedAt = z.date().safeParse(at)
-    if (!parsedAt.success) return new InvalidNotificationDeliveryError("invalid_shape", parsedAt.error)
+    if (!parsedAt.success)
+      return new InvalidNotificationDeliveryError("invalid_shape", parsedAt.error)
     if (this.isDismissed) return this
     if (parsedAt.data.getTime() < this.#deliveredAtEpochMilliseconds) {
       return new InvalidNotificationDeliveryError("dismiss_before_delivery")

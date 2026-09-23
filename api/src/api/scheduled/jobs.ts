@@ -3,7 +3,4 @@ import { runScheduledLeaveNotifications } from "@/api/scheduled/run-leave-notifi
 import { runScheduledOnboarding } from "@/api/scheduled/run-onboarding"
 
 /** Workerの定期起動で実行するrunner。src/api/scheduled/run-*.ts から生成する。 */
-export const SCHEDULED_JOBS = [
-  runScheduledLeaveNotifications,
-  runScheduledOnboarding,
-] as const
+export const SCHEDULED_JOBS = [runScheduledLeaveNotifications, runScheduledOnboarding] as const
