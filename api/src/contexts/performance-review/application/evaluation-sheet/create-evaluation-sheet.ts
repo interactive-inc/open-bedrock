@@ -172,10 +172,7 @@ export class CreateEvaluationSheet {
     role: "primary" | "secondary",
     businessDate: string,
   ): Promise<ApplicationError | null> {
-    const result = await validateCompanyEmployeeActive(this.c, 
-      evaluatorId,
-      businessDate,
-    )
+    const result = await validateCompanyEmployeeActive(this.c, evaluatorId, businessDate)
 
     if (result instanceof Error) {
       return new UnexpectedError(`failed to validate ${role} evaluator active status`, {
@@ -232,10 +229,7 @@ export class CreateEvaluationSheet {
     }
 
     // 未指定 → 直属上長を自動解決（基準日 = 会社営業日）
-    const managerId = await resolveCompanyDirectManagerId(this.c, 
-      command.employeeId,
-      businessDate,
-    )
+    const managerId = await resolveCompanyDirectManagerId(this.c, command.employeeId, businessDate)
 
     if (managerId instanceof Error) {
       return new UnexpectedError("failed to resolve direct manager", {
@@ -305,7 +299,11 @@ export class CreateEvaluationSheet {
     }
 
     // 未指定 → 部門長を自動解決（ベストエフォート、失敗時は null）
-    const deptManagerId = await resolveCompanyDepartmentManagerId(this.c, command.employeeId, businessDate)
+    const deptManagerId = await resolveCompanyDepartmentManagerId(
+      this.c,
+      command.employeeId,
+      businessDate,
+    )
 
     if (deptManagerId instanceof Error) {
       return new UnexpectedError("failed to resolve department manager", {

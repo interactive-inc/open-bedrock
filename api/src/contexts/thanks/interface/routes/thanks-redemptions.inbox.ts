@@ -8,7 +8,7 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { factory } from "@/api/http/factory"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { readCompanyEmployeeProfiles } from "@/contexts/company/interface/operations/read-company-employee-profiles"
 import { thanksRedemptions, thanksRewards } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { and, count, desc, eq, ne } from "drizzle-orm"
 import { loadCurrentEmployeeDepartmentNames } from "@/api/http/company-employees/current-employee-departments"
@@ -44,11 +44,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const rows = await c.var.database
     .select({
       redemption: thanksRedemptions,
-      employeeName: employees.officialName,
       rewardName: thanksRewards.name,
     })
     .from(thanksRedemptions)
-    .leftJoin(employees, eq(employees.id, thanksRedemptions.employeeId))
     .leftJoin(thanksRewards, eq(thanksRewards.id, thanksRedemptions.rewardId))
     .where(
       and(
@@ -59,6 +57,15 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .orderBy(desc(thanksRedemptions.createdAt))
     .limit(limit)
     .offset(offset)
+
+  // 従業員の表示名は、Company の従業員ごとの正本から読む。
+  const profiles = await readCompanyEmployeeProfiles({
+    database: c.env.DB,
+    employeeIds: rows.map((row) => row.redemption.employeeId),
+    now: c.env.NOW,
+    timeZone: c.env.COMPANY_TIME_ZONE,
+  })
+  if (profiles instanceof Error) throw profiles
 
   const totalRows = await c.var.database
     .select({ total: count() })
@@ -79,10 +86,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const responseBody = zAppThanksRedemptionAdminList.parse({
-    data: rows.map(({ redemption, employeeName, rewardName }) => ({
+    data: rows.map(({ redemption, rewardName }) => ({
       id: redemption.id,
       employee_id: redemption.employeeId,
-      employee_name: employeeName ?? "",
+      employee_name: profiles.get(redemption.employeeId)?.officialName ?? "",
       employee_dept_name: currentDepartments.get(redemption.employeeId) ?? null,
       reward_id: redemption.rewardId,
       reward_name: rewardName ?? "",

@@ -3,7 +3,7 @@ import { ResolveGovernanceOrgRoleAdapter } from "@/contexts/governance/infrastru
 import { GovernanceAdapter } from "@/contexts/governance/infrastructure/adapters/governance.adapter"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { governanceDocuments } from "@/contexts/governance/infrastructure/schema/governance"
 import {
   findAuthorityRuleOverlaps,
@@ -37,12 +37,12 @@ export async function readGovernanceImpact(
     repository.listOrgRoles(),
     repository.listCapabilities(),
     loadCompanyCurrentOrganization(c),
-    c.var.database.select({ name: employees.officialName }).from(employees),
+    readAllEmployeeNames({ env: c.env }),
     c.var.database
       .select({ code: governanceDocuments.code, kind: governanceDocuments.kind })
       .from(governanceDocuments),
   ])
-  const failure = [records, roles, capabilities, organization].find(
+  const failure = [records, roles, capabilities, organization, employeeRows].find(
     (result) => result instanceof Error,
   )
   if (failure instanceof Error) {
@@ -52,7 +52,8 @@ export async function readGovernanceImpact(
     records instanceof Error ||
     roles instanceof Error ||
     capabilities instanceof Error ||
-    organization instanceof Error
+    organization instanceof Error ||
+    employeeRows instanceof Error
   ) {
     return new UnexpectedError("規程の影響検査に必要な状態を取得できません")
   }
@@ -240,5 +241,25 @@ export async function readGovernanceImpact(
       warnings: deduped.filter((item) => item.severity === "warning").length,
     },
     issues: deduped,
+  }
+}
+
+/** 会社営業日の従業員名簿の全員の氏名を、名簿の頁を順に読んで集める。 */
+async function readAllEmployeeNames(
+  c: Parameters<typeof openCompanyEmployeeDirectory>[0],
+): Promise<ReadonlyArray<{ name: string }> | Error> {
+  const directory = openCompanyEmployeeDirectory(c)
+  const names: Array<{ name: string }> = []
+  for (let offset = 0; ; offset += 100) {
+    const page = await directory.list({
+      query: null,
+      organizationUnit: null,
+      status: null,
+      limit: 100,
+      offset,
+    })
+    if (page instanceof Error) return page
+    names.push(...page.employees.map((employee) => ({ name: employee.officialName })))
+    if (page.employees.length < 100 || names.length >= page.total) return names
   }
 }

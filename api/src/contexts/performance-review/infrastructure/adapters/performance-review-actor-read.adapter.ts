@@ -35,12 +35,15 @@ export class PerformanceReviewActorReadAdapter {
       )
     if (authorization === "forbidden")
       return new PerformanceReviewError("forbidden", "human record preserver is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
       return new PerformanceReviewError(
         "performance_review_unavailable",

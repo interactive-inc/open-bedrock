@@ -1,8 +1,8 @@
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { assetLendings, assets } from "@/contexts/asset/infrastructure/schema/asset"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { and, asc, count, eq, isNull } from "drizzle-orm"
+import { readCompanyEmployeeProfiles } from "@/contexts/company/interface/operations/read-company-employee-profiles"
+import { and, asc, count, eq, isNotNull, isNull } from "drizzle-orm"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { zAppAssetHoldingList } from "@/contexts/asset/interface/http/response-schemas"
 import {
@@ -47,18 +47,15 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       assetCode: assets.code,
       assetName: assets.name,
       kind: assets.kind,
-      holderId: employees.id,
-      holderCode: employees.employeeCode,
-      holderName: employees.officialName,
+      holderId: assets.holderEmployeeId,
       lentAt: assetLendings.lentAt,
     })
     .from(assets)
-    .innerJoin(employees, eq(employees.id, assets.holderEmployeeId))
     .leftJoin(
       assetLendings,
       and(eq(assetLendings.assetCode, assets.code), isNull(assetLendings.returnedAt)),
     )
-    .where(eq(assets.status, "lent"))
+    .where(and(eq(assets.status, "lent"), isNotNull(assets.holderEmployeeId)))
     .orderBy(asc(assets.code))
     .limit(limit)
     .offset(offset)
@@ -66,8 +63,16 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const totalRows = await c.var.database
     .select({ total: count() })
     .from(assets)
-    .innerJoin(employees, eq(employees.id, assets.holderEmployeeId))
-    .where(eq(assets.status, "lent"))
+    .where(and(eq(assets.status, "lent"), isNotNull(assets.holderEmployeeId)))
+
+  // 借り手の従業員 code と表示名は、Company の従業員ごとの正本から読む。
+  const profiles = await readCompanyEmployeeProfiles({
+    database: c.env.DB,
+    employeeIds: rows.flatMap((row) => (row.holderId === null ? [] : [row.holderId])),
+    now: c.env.NOW,
+    timeZone: c.env.COMPANY_TIME_ZONE,
+  })
+  if (profiles instanceof Error) throw profiles
 
   const responseBody = zAppAssetHoldingList.parse({
     data: rows.map((row) => ({
@@ -75,8 +80,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       asset_name: row.assetName,
       kind: row.kind,
       holder_employee_id: row.holderId,
-      holder_employee_code: row.holderCode,
-      holder_employee_name: row.holderName,
+      holder_employee_code:
+        row.holderId === null ? null : (profiles.get(row.holderId)?.employeeCode ?? null),
+      holder_employee_name:
+        row.holderId === null ? "" : (profiles.get(row.holderId)?.officialName ?? ""),
       lent_at: row.lentAt,
     })),
     total: totalRows.at(0)?.total ?? 0,

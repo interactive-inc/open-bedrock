@@ -9,7 +9,7 @@ import {
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { zAppAntisocialCheckAdminList } from "@/contexts/antisocial-check/interface/http/response-schemas"
 import { antisocialChecks } from "@/contexts/antisocial-check/infrastructure/schema/antisocial-check"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { readCompanyEmployeeProfiles } from "@/contexts/company/interface/operations/read-company-employee-profiles"
 import { zValidator } from "@hono/zod-validator"
 import type { SQL } from "drizzle-orm"
 import { and, count, desc, eq, ne } from "drizzle-orm"
@@ -64,13 +64,21 @@ export const GET = factory.createHandlers(
     })
 
     const rows = await c.var.database
-      .select({ check: antisocialChecks, requesterName: employees.officialName })
+      .select({ check: antisocialChecks })
       .from(antisocialChecks)
-      .leftJoin(employees, eq(employees.id, antisocialChecks.requesterId))
       .where(and(...conditions))
       .orderBy(desc(antisocialChecks.createdAt))
       .limit(limit)
       .offset(offset)
+
+    // 依頼者の表示名は、Company の従業員ごとの正本から読む。
+    const profiles = await readCompanyEmployeeProfiles({
+      database: c.env.DB,
+      employeeIds: rows.map((row) => row.check.requesterId),
+      now: c.env.NOW,
+      timeZone: c.env.COMPANY_TIME_ZONE,
+    })
+    if (profiles instanceof Error) throw profiles
 
     const totalRows = await c.var.database
       .select({ total: count() })
@@ -79,10 +87,10 @@ export const GET = factory.createHandlers(
 
     return c.json(
       zAppAntisocialCheckAdminList.parse({
-        data: rows.map(({ check, requesterName }) => ({
+        data: rows.map(({ check }) => ({
           id: check.id,
           requester_id: check.requesterId,
-          requester_name: requesterName ?? "",
+          requester_name: profiles.get(check.requesterId)?.officialName ?? "",
           partner_name: check.partnerName,
           partner_address: check.partnerAddress,
           representative_name: check.representativeName,

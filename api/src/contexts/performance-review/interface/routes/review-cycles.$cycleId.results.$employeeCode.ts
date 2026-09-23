@@ -5,7 +5,7 @@ import { toReviewResultView } from "@/contexts/performance-review/interface/http
 import { factory } from "@/api/http/factory"
 import { zAppReviewResult } from "@/contexts/performance-review/interface/http/response-schemas"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { findCompanyEmployeeIdByCode } from "@/contexts/company/interface/operations/find-company-employee-id-by-code"
 import {
   reviewCycles,
   reviewForms,
@@ -32,19 +32,20 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (cycleRow === undefined) {
     throw new NotFoundError("review cycle not found")
   }
-  const employeeRows = await c.var.database
-    .select({ id: employees.id })
-    .from(employees)
-    .where(eq(employees.employeeCode, validateCodeParam(c.req.param("employeeCode"), "employee")))
-    .limit(1)
-  const employeeRow = employeeRows.at(0)
-  if (employeeRow === undefined) {
+  const employeeId = await findCompanyEmployeeIdByCode({
+    database: c.env.DB,
+    employeeCode: validateCodeParam(c.req.param("employeeCode"), "employee"),
+    now: c.env.NOW,
+    timeZone: c.env.COMPANY_TIME_ZONE,
+  })
+  if (employeeId instanceof Error) throw employeeId
+  if (employeeId === null) {
     throw new NotFoundError("employee not found")
   }
   const formRows = await c.var.database
     .select()
     .from(reviewForms)
-    .where(and(eq(reviewForms.cycleId, cycleId), eq(reviewForms.subjectEmployeeId, employeeRow.id)))
+    .where(and(eq(reviewForms.cycleId, cycleId), eq(reviewForms.subjectEmployeeId, employeeId)))
     .orderBy(asc(reviewForms.id))
   const canAdminister = session.hasPermission("review:administer")
   let visibleFormRows = formRows
@@ -54,7 +55,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       throw new ForbiddenError()
     }
 
-    if (employeeRow.id !== session.employeeId) {
+    if (employeeId !== session.employeeId) {
       visibleFormRows = formRows.filter(
         (form) => form.reviewerEmployeeId === session.employeeId && form.status === "submitted",
       )
@@ -72,13 +73,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     status: toReviewCycleStatus(cycleRow.status),
     dueDate: cycleRow.dueDate,
   })
-  const view = toReviewResultView(cycle, forms, employeeRow.id)
+  const view = toReviewResultView(cycle, forms, employeeId)
   if (view instanceof Error) {
     throw new InternalError("internal server error")
   }
   // 360-degree review confidentiality: when the subject employee views their own
   // results as a non-admin, strip reviewer identity to keep feedback anonymous.
-  const isSelfView = canAdminister === false && employeeRow.id === session.employeeId
+  const isSelfView = canAdminister === false && employeeId === session.employeeId
   const responseBody = zAppReviewResult.parse({
     cycle_id: view.cycleId,
     subject_employee_id: view.subjectEmployeeId,

@@ -1,4 +1,5 @@
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { findCompanyEmployeeIdByCode } from "@/contexts/company/interface/operations/find-company-employee-id-by-code"
+import { readCompanyEmployeeProfiles } from "@/contexts/company/interface/operations/read-company-employee-profiles"
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
@@ -11,7 +12,6 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { EnrollTraining } from "@/contexts/training/application/enroll-training"
 import { trainingEnrollments } from "@/contexts/training/infrastructure/schema/training"
-import { type Variables } from "@/env"
 import {
   zAppTrainingEnrollment,
   zAppTrainingEnrollmentList,
@@ -108,11 +108,7 @@ export const GET = factory.createHandlers(
       throw new ForbiddenError()
     }
 
-    const targetEmployeeId = await resolveTargetEmployeeId(
-      c.var.database,
-      query,
-      session.employeeId,
-    )
+    const targetEmployeeId = await resolveTargetEmployeeId(c.env, query, session.employeeId)
 
     if (targetEmployeeId === null) {
       throw new NotFoundError("employee not found")
@@ -149,33 +145,31 @@ export const GET = factory.createHandlers(
 )
 
 async function resolveTargetEmployeeId(
-  database: Variables["database"],
+  env: Readonly<{ DB: D1Database; NOW?: string; COMPANY_TIME_ZONE?: string }>,
   query: { employee_id?: EmployeeId; employee_code?: string },
   viewerEmployeeId: EmployeeId,
 ): Promise<EmployeeId | null> {
   if (query.employee_code !== undefined) {
-    const rows = await database
-      .select({ id: employees.id })
-      .from(employees)
-      .where(eq(employees.employeeCode, query.employee_code))
-      .limit(1)
-
-    const row = rows.at(0)
-
-    return row === undefined ? null : row.id
+    const employeeId = await findCompanyEmployeeIdByCode({
+      database: env.DB,
+      employeeCode: query.employee_code,
+      now: env.NOW,
+      timeZone: env.COMPANY_TIME_ZONE,
+    })
+    if (employeeId instanceof Error) throw employeeId
+    return employeeId
   }
 
   if (query.employee_id !== undefined) {
     // employee_code 指定時と同様に実在確認する（挙動の対称性を保つ）。
-    const rows = await database
-      .select({ id: employees.id })
-      .from(employees)
-      .where(eq(employees.id, query.employee_id))
-      .limit(1)
-
-    const row = rows.at(0)
-
-    return row === undefined ? null : row.id
+    const profiles = await readCompanyEmployeeProfiles({
+      database: env.DB,
+      employeeIds: [query.employee_id],
+      now: env.NOW,
+      timeZone: env.COMPANY_TIME_ZONE,
+    })
+    if (profiles instanceof Error) throw profiles
+    return profiles.has(query.employee_id) ? query.employee_id : null
   }
 
   return viewerEmployeeId

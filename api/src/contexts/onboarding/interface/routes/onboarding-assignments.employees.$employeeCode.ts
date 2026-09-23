@@ -9,7 +9,7 @@ import {
 import { validateCodeParam } from "@/lib/http/validate-code-param"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import {
   onboardingAssignments,
   onboardingTasks,
@@ -32,15 +32,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const code = validateCodeParam(c.req.param("employeeCode"), "employee")
 
-  const employeeRows = await c.var.database
-    .select()
-    .from(employees)
-    .where(eq(employees.employeeCode, code))
-    .limit(1)
+  const employee = await openCompanyEmployeeDirectory({ env: c.env }).findByCode(code)
+  if (employee instanceof Error) throw employee
 
-  const employee = employeeRows.at(0)
-
-  if (employee === undefined) {
+  if (employee === null) {
     throw new NotFoundError("employee not found")
   }
 

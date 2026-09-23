@@ -11,33 +11,25 @@ import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { oneOnOnes } from "@/contexts/one-on-one/infrastructure/schema/one-on-one"
+import { readCompanyEmployeeProfiles } from "@/contexts/company/interface/operations/read-company-employee-profiles"
 import { zValidator } from "@hono/zod-validator"
-import { aliasedTable, eq } from "drizzle-orm"
 import { z } from "zod"
 
-const members = aliasedTable(employees, "members")
-
-const managers = aliasedTable(employees, "managers")
-
-/** 1on1 を参加者名込みの snake_case レスポンスへ整形する。名前は別クエリで解決する。 */
+/** 1on1 を参加者名込みの snake_case レスポンスへ整形する。名前は Company の従業員ごとの正本から読む。 */
 async function toResponseBody(c: Context, oneOnOne: OneOnOne) {
-  const nameRows = await c.var.database
-    .select({ memberName: members.officialName, managerName: managers.officialName })
-    .from(oneOnOnes)
-    .leftJoin(members, eq(members.id, oneOnOnes.memberId))
-    .leftJoin(managers, eq(managers.id, oneOnOnes.managerId))
-    .where(eq(oneOnOnes.id, oneOnOne.id))
-    .limit(1)
-
-  const nameRow = nameRows.at(0)
+  const profiles = await readCompanyEmployeeProfiles({
+    database: c.env.DB,
+    employeeIds: [oneOnOne.memberId, oneOnOne.managerId],
+    now: c.env.NOW,
+    timeZone: c.env.COMPANY_TIME_ZONE,
+  })
+  if (profiles instanceof Error) throw profiles
 
   return {
     id: oneOnOne.id,
     held_at: oneOnOne.heldAt,
-    member_name: nameRow?.memberName ?? "",
-    manager_name: nameRow?.managerName ?? "",
+    member_name: profiles.get(oneOnOne.memberId)?.officialName ?? "",
+    manager_name: profiles.get(oneOnOne.managerId)?.officialName ?? "",
     topics: oneOnOne.topics,
     manager_note: oneOnOne.managerNote,
     next_action: oneOnOne.nextAction,
@@ -169,7 +161,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
     if (deleted instanceof Error) {
       if (isOneOnOneRecordSourceFrozenError(deleted)) {
-        return new ConflictError("one-on-one writes are frozen", "record_source_frozen", { cause: deleted })
+        return new ConflictError("one-on-one writes are frozen", "record_source_frozen", {
+          cause: deleted,
+        })
       }
       return new UnexpectedError("failed to delete one-on-one", { cause: deleted })
     }

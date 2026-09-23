@@ -1,9 +1,8 @@
 import { readCompanyCanonicalOrganizationState } from "@/contexts/company/interface/operations/read-company-canonical-organization-state"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { readCompanyEmployeeProfiles } from "@/contexts/company/interface/operations/read-company-employee-profiles"
 import type { ReviewCyclePolicy } from "@/contexts/performance-review/domain/definitions/review-cycle-policy.definition"
 import type { Context } from "@/env"
-import { asc } from "drizzle-orm"
 
 type Assignment = {
   subjectEmployeeId: EmployeeId
@@ -26,17 +25,20 @@ async function loadReviewPopulation(c: Context): Promise<{
   const snapshot = await readCompanyCanonicalOrganizationState(c)
   if (snapshot instanceof Error) throw snapshot
 
-  const employeeProfiles = await c.var.database
-    .select({ id: employees.id, code: employees.employeeCode })
-    .from(employees)
-    .orderBy(asc(employees.id))
-
+  const activeStates = snapshot.employees.filter((state) => state.status === "ACTIVE")
+  // 在籍者の従業員 code は、Company の従業員ごとの正本から読む。
+  const employeeProfiles = await readCompanyEmployeeProfiles({
+    database: c.env.DB,
+    employeeIds: activeStates.map((state) => state.employeeId),
+    now: c.env.NOW,
+    timeZone: c.env.COMPANY_TIME_ZONE,
+  })
+  if (employeeProfiles instanceof Error) throw employeeProfiles
   const profileByEmployeeId = new Map<EmployeeId, ReviewEmployee>(
-    employeeProfiles.flatMap((employee) =>
-      employee.code === null ? [] : [[employee.id, { id: employee.id, code: employee.code }]],
+    [...employeeProfiles].flatMap(([id, profile]) =>
+      profile.employeeCode === null ? [] : [[id, { id, code: profile.employeeCode }]],
     ),
   )
-  const activeStates = snapshot.employees.filter((state) => state.status === "ACTIVE")
   const activeProfileByEmployeeId = new Map<EmployeeId, ReviewEmployee>(
     activeStates.flatMap((state) => {
       const profile = profileByEmployeeId.get(state.employeeId)

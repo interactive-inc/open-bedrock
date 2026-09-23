@@ -20,16 +20,12 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { readCompanyEmployeeProfiles } from "@/contexts/company/interface/operations/read-company-employee-profiles"
 import { oneOnOnes } from "@/contexts/one-on-one/infrastructure/schema/one-on-one"
 import { zValidator } from "@hono/zod-validator"
-import { aliasedTable, and, count, desc, eq, inArray, or } from "drizzle-orm"
+import { and, count, desc, eq, inArray, or } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { z } from "zod"
-
-const members = aliasedTable(employees, "members")
-
-const managers = aliasedTable(employees, "managers")
 
 // @authorization permission - 権限キーで判定する
 /**
@@ -105,27 +101,29 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const where = conditions.length === 0 ? undefined : and(...conditions)
 
   const rows = await c.var.database
-    .select({
-      oneOnOne: oneOnOnes,
-      memberName: members.officialName,
-      managerName: managers.officialName,
-    })
+    .select({ oneOnOne: oneOnOnes })
     .from(oneOnOnes)
-    .leftJoin(members, eq(members.id, oneOnOnes.memberId))
-    .leftJoin(managers, eq(managers.id, oneOnOnes.managerId))
     .where(where)
     .orderBy(desc(oneOnOnes.heldAt))
     .limit(limit)
     .offset(offset)
 
   const totalRows = await c.var.database.select({ total: count() }).from(oneOnOnes).where(where)
+  // 面談者と上長の表示名は、Company の従業員ごとの正本から読む。
+  const profiles = await readCompanyEmployeeProfiles({
+    database: c.env.DB,
+    employeeIds: rows.flatMap((row) => [row.oneOnOne.memberId, row.oneOnOne.managerId]),
+    now: c.env.NOW,
+    timeZone: c.env.COMPANY_TIME_ZONE,
+  })
+  if (profiles instanceof Error) throw profiles
 
   const responseBody = zAppOneOnOneList.parse({
     data: rows.map((row) => ({
       id: row.oneOnOne.id,
       held_at: row.oneOnOne.heldAt,
-      member_name: row.memberName ?? "",
-      manager_name: row.managerName ?? "",
+      member_name: profiles.get(row.oneOnOne.memberId)?.officialName ?? "",
+      manager_name: profiles.get(row.oneOnOne.managerId)?.officialName ?? "",
       topics: row.oneOnOne.topics,
       manager_note:
         scope === "department"
@@ -180,21 +178,19 @@ export const POST = factory.createHandlers(
       throw toHttpException(created)
     }
 
-    const nameRows = await c.var.database
-      .select({ memberName: members.officialName, managerName: managers.officialName })
-      .from(oneOnOnes)
-      .leftJoin(members, eq(members.id, oneOnOnes.memberId))
-      .leftJoin(managers, eq(managers.id, oneOnOnes.managerId))
-      .where(eq(oneOnOnes.id, created.id))
-      .limit(1)
-
-    const nameRow = nameRows.at(0)
+    const profiles = await readCompanyEmployeeProfiles({
+      database: c.env.DB,
+      employeeIds: [created.memberId, created.managerId],
+      now: c.env.NOW,
+      timeZone: c.env.COMPANY_TIME_ZONE,
+    })
+    if (profiles instanceof Error) throw profiles
 
     const responseBody = zAppOneOnOne.parse({
       id: created.id,
       held_at: created.heldAt,
-      member_name: nameRow?.memberName ?? "",
-      manager_name: nameRow?.managerName ?? "",
+      member_name: profiles.get(created.memberId)?.officialName ?? "",
+      manager_name: profiles.get(created.managerId)?.officialName ?? "",
       topics: created.topics,
       manager_note: created.managerNote,
       next_action: created.nextAction,

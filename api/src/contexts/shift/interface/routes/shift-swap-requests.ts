@@ -15,11 +15,10 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { readCompanyEmployeeProfiles } from "@/contexts/company/interface/operations/read-company-employee-profiles"
 import { shiftSwapRequests } from "@/contexts/shift/infrastructure/schema/shift"
 import { zValidator } from "@hono/zod-validator"
 import { and, count, eq, ne } from "drizzle-orm"
-import { alias } from "drizzle-orm/sqlite-core"
 import { z } from "zod"
 import { codeSchema } from "@/lib/validation/code.schema"
 
@@ -50,18 +49,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
-  const requester = alias(employees, "requester")
-  const target = alias(employees, "target")
-
   const rows = await c.var.database
-    .select({
-      swapRequest: shiftSwapRequests,
-      requesterCode: requester.employeeCode,
-      targetCode: target.employeeCode,
-    })
+    .select({ swapRequest: shiftSwapRequests })
     .from(shiftSwapRequests)
-    .leftJoin(requester, eq(requester.id, shiftSwapRequests.requesterEmployeeId))
-    .leftJoin(target, eq(target.id, shiftSwapRequests.targetEmployeeId))
     .where(
       and(
         eq(shiftSwapRequests.status, "pending"),
@@ -83,11 +73,24 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       ),
     )
 
+  // 従業員の従業員 code と表示名は、Company の従業員ごとの正本から読む。
+  const profiles = await readCompanyEmployeeProfiles({
+    database: c.env.DB,
+    employeeIds: rows.flatMap((row) => [
+      row.swapRequest.requesterEmployeeId,
+      row.swapRequest.targetEmployeeId,
+    ]),
+    now: c.env.NOW,
+    timeZone: c.env.COMPANY_TIME_ZONE,
+  })
+  if (profiles instanceof Error) throw profiles
+
   const responseBody = zAppShiftSwapRequestPendingList.parse({
     data: rows.map((row) => ({
       id: row.swapRequest.id,
-      requester_employee_code: row.requesterCode ?? "",
-      target_employee_code: row.targetCode ?? "",
+      requester_employee_code:
+        profiles.get(row.swapRequest.requesterEmployeeId)?.employeeCode ?? "",
+      target_employee_code: profiles.get(row.swapRequest.targetEmployeeId)?.employeeCode ?? "",
       date: row.swapRequest.date,
       note: row.swapRequest.note,
       status: row.swapRequest.status,

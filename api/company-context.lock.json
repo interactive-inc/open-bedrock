@@ -1,7 +1,7 @@
 {
   "version": 1,
   "files": {
-    "company-context.manifest.json": "1649d1b966991a6b7ab79bab7562467ae0a6da2d182313d4b073cae498f49c4b",
+    "company-context.manifest.json": "13cb965c2384396cf21c4c03cd04f0db8dc59929145ef7e57b2b0f58e3e2fc1b",
     "src/contexts/company/CLAUDE.md": "3d0dc1a9f6b424d37b4565cfc2c23bea199349e9840d61596adbdb1f060d3e6d",
     "src/contexts/company/application/account-employee-links/create-account-employee-links.ts": "ca3b3ebfa9f6389facba7baf9f43f1300807f7b548d4fda164fc3fd1edd4447a",
     "src/contexts/company/application/account-employee-links/delete-account-employee-links.ts": "4b692c21c8788265f45a99ecb3181dde96291902815ea8b248821a727eb451af",
@@ -463,6 +463,7 @@
     "src/contexts/company/interface/operations/company-resource-read-permission.ts": "4203cbd4d3be2da289602f85ff3bdefa817d293efa54e623963069fe04b08d4a",
     "src/contexts/company/interface/operations/dispatch-personnel-action.ts": "db8dab0e17d872cc97d072cab533ee45c617c2e0a040aff06aefeaf77f4a0303",
     "src/contexts/company/interface/operations/employee-lifecycle/get-lifecycle-state.ts": "2c885d30657fa7640b6df00f67ccb07ff2b0b6486d8ac4e7f22fb1cb82930cef",
+    "src/contexts/company/interface/operations/find-company-employee-id-by-code.ts": "1b65735ecd1437f362bfb3ad2269e36a247d990740736294870b720261bad21f",
     "src/contexts/company/interface/operations/find-company-employee-profile-snapshot.ts": "7b95e25c8fc3911f51650e8714b85ae2f816178a5c5b7405dff429cfc1bba185",
     "src/contexts/company/interface/operations/find-company-personnel-action-request.ts": "3d1aa827166d7ff24b61d4642c08914e06f4e960b91bd95315b9359d3bce07b2",
     "src/contexts/company/interface/operations/find-company-registered-employee-by-operation.ts": "c85d92426691969c399bc4fb5ee93912c5e8394e21733c101868dc6180092885",
@@ -488,6 +489,7 @@
     "src/contexts/company/interface/operations/read-company-active-headcount.ts": "4abb20cfbdb26afe38472a0ca57f6877cf1cf68420b007a65c307ab5fe77953c",
     "src/contexts/company/interface/operations/read-company-canonical-organization-state.ts": "f616f3355b9e72832158b76a946552cb3a048ff505cf1a42fe0ab4ac49c560c9",
     "src/contexts/company/interface/operations/read-company-employee-names.ts": "5430c39769279048095c0bea338715f3b13cc65e752edfa2ebf24dff78682641",
+    "src/contexts/company/interface/operations/read-company-employee-profiles.ts": "ad115106d82cdeb3c02743a123841bcaf808e2afb33768fc7b47c002e53a98e0",
     "src/contexts/company/interface/operations/read-company-employment-account.ts": "cb7ea0c455d20614c4aef413259c04678b03589d53468cbd37125c1534e25103",
     "src/contexts/company/interface/operations/read-company-employment-directory.ts": "ca770467ff4331e685edeb8a722f8947ad1324e20cbff712da89801f1a5eaea5",
     "src/contexts/company/interface/operations/read-company-employment-movements.ts": "ce250c63ce603c3fea635534c193a28fc870473bdb0afde39d37d816e3fa31af",
@@ -671,6 +673,7 @@
     "src/contexts/company/test/personnel-execution.integration.test.ts": "092ca01afe971b1a39f4f2e68dcdb0dd3121ddf40d5c59073d7ceb5cdb1f0cea",
     "src/contexts/company/test/personnel-ledger-characterization.integration.test.ts": "5860a9e54baa993e300fe71f8aadc8c808850ce99e5cb2d5de4e2d9299047ff7",
     "src/contexts/company/test/personnel-position-snapshot.integration.test.ts": "68d544b6e554e880ba906a08f805403642d54d0e0f117005054961fe53e1b0c3",
+    "src/contexts/company/test/read-company-employee-profiles.integration.test.ts": "13a83c9e6a3a9798fb7b5ef51295e8a7f5981a37d932f77d6c0e255f97111194",
     "src/contexts/company/test/read-company-employment-account.integration.test.ts": "4f5dc11d8fbe28bec5d7c4b17f1ee25534daa280692a3259b028d8dc6dd37f0c",
     "src/contexts/company/test/read-company-employment-person-names.integration.test.ts": "8b440b4e2d7498a53231d1c00c717fe2ca03b561112457ae157c3a150777fe8f",
     "src/contexts/company/test/read-company-employment-resource-chain.integration.test.ts": "841538b25127b6a7b8b3d33dd0d5ae438da58ed824a0d9513944febd40708df3",
