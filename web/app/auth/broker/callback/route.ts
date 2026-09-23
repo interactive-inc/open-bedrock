@@ -1,10 +1,14 @@
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
+import { issueExternalIdentityStepUpGrant } from "@/lib/api/issue-external-identity-step-up-grant"
 import { postIdentityLogin } from "@/lib/api/post-identity-login"
 import { setSessionCookies } from "@/lib/auth/set-session-cookies"
 import { exchangeIdentityCode } from "@/lib/auth/exchange-identity-code"
 import { identityLoginCookieNames } from "@/lib/auth/identity-login-cookie-names"
 import { isSecureIdentityIssuer } from "@/lib/auth/is-secure-identity-issuer"
+import { resolveStepUpReturnPath } from "@/lib/auth/resolve-step-up-return-path"
+import { setStepUpCookie } from "@/lib/auth/set-step-up-cookie"
+import { stepUpCookieMaxAge } from "@/lib/auth/step-up-cookie-max-age"
 
 /**
  * 外部 identity provider（SSO ブローカー）からの戻り先。
@@ -50,6 +54,21 @@ export async function GET(request: NextRequest): Promise<NextResponse> {
   const token = await exchangeIdentityCode({ code, codeVerifier, redirectUri, issuer })
   if (token instanceof Error) {
     return clearIdentityCookies(redirectToError(request, "login_failed"), names)
+  }
+
+  // 再認証として始めたときは、ログインし直さず現在のsessionへ再認証grantを発行する。
+  const stepUpReturn = request.cookies.get(names.stepUpReturn)?.value ?? null
+  if (stepUpReturn !== null) {
+    const grant = await issueExternalIdentityStepUpGrant(token)
+    const maxAge = grant instanceof Error ? null : stepUpCookieMaxAge(grant.expiresAt, new Date())
+    if (grant instanceof Error || maxAge === null) {
+      return clearIdentityCookies(redirectToError(request, "step_up_failed"), names)
+    }
+    const returnPath = resolveStepUpReturnPath(stepUpReturn) ?? "/"
+    const response = NextResponse.redirect(new URL(returnPath, requestOrigin(request)))
+    setStepUpCookie({ cookieStore: response.cookies, stepUpToken: grant.stepUpToken, maxAge })
+
+    return clearIdentityCookies(response, names)
   }
 
   const loginResult = await postIdentityLogin({ token })
@@ -109,6 +128,13 @@ function clearIdentityCookies(
     path: "/",
   })
   response.cookies.set(names.verifier, "", {
+    expires: new Date(0),
+    httpOnly: true,
+    secure,
+    sameSite: "lax",
+    path: "/",
+  })
+  response.cookies.set(names.stepUpReturn, "", {
     expires: new Date(0),
     httpOnly: true,
     secure,
