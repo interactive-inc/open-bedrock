@@ -85,13 +85,16 @@ export const POST = systemFactory.createHandlers(
         audience,
         now,
       })
-      const issuedAt = "reason" in claims ? Number.NaN : claims.iat * 1_000
+      // token の発行時刻は更新でも新しくなるので、利用者が認証した時刻で新しさを判定する。
+      // 認証時刻を載せない IdP の token は、再認証の証拠にならないので拒否する。
+      const authenticatedAt =
+        "reason" in claims || claims.auth_time === undefined ? Number.NaN : claims.auth_time * 1_000
       if (
         "reason" in claims ||
         !claims.email_verified ||
-        !Number.isSafeInteger(issuedAt) ||
-        issuedAt > now.getTime() ||
-        now.getTime() - issuedAt > EXTERNAL_IDENTITY_FRESHNESS_MILLISECONDS
+        !Number.isSafeInteger(authenticatedAt) ||
+        authenticatedAt > now.getTime() ||
+        now.getTime() - authenticatedAt > EXTERNAL_IDENTITY_FRESHNESS_MILLISECONDS
       ) {
         throw new SystemCredentialsInvalidError()
       }

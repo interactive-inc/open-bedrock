@@ -11,6 +11,8 @@ export type SystemIdentityTokenOverrides = {
   issuer?: string
   audience?: string
   iat?: number
+  /** 利用者が認証した時刻。null なら claim を載せない。 */
+  authTime?: number | null
   exp?: number
   alg?: string
   keyId?: string
@@ -28,6 +30,7 @@ export function createSystemIdentityToken(
     email_verified: overrides.emailVerified ?? true,
     name: overrides.name ?? "External Worker",
     jti: overrides.jti ?? "token-jti-1",
+    ...(overrides.authTime === null ? {} : { auth_time: overrides.authTime ?? nowEpoch }),
   }
 
   return new SignJWT(claims)

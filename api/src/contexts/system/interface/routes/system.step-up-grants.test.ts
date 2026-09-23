@@ -20,7 +20,7 @@ const subject = "external-step-up-subject"
 const jwtSecret = "external-step-up-jwt-secret"
 
 describe("POST /system/step-up-grants", () => {
-  test("freshな外部Identity tokenを現在のAccountへ束縛し、replayと古いtokenを拒否する", async () => {
+  test("直前に認証した外部Identity tokenを現在のAccountへ束縛し、replay・古い認証・認証時刻なしを拒否する", async () => {
     const fixture = new SystemSessionTestContext()
     seedIdentity(fixture)
     const accessToken = await issueAccessToken(fixture)
@@ -53,14 +53,26 @@ describe("POST /system/step-up-grants", () => {
       sub: subject,
       jti: "external-step-up-stale",
       keyId: identityKey.keyId,
-      iat: nowEpoch - 301,
-      exp: nowEpoch + 60,
+      // 発行は新しくても、認証が古ければ token の更新にすぎないので再認証として扱わない。
+      authTime: nowEpoch - 301,
       audience: identityAudience,
     })
     const stale = await client.system["step-up-grants"].$post({
       json: { method: "external_identity", token: staleToken },
     })
     expect(Number(stale.status)).toBe(401)
+
+    const unauthenticatedToken = await createSystemIdentityToken(identityKey.signingKey, nowEpoch, {
+      sub: subject,
+      jti: "external-step-up-without-auth-time",
+      keyId: identityKey.keyId,
+      authTime: null,
+      audience: identityAudience,
+    })
+    const unauthenticated = await client.system["step-up-grants"].$post({
+      json: { method: "external_identity", token: unauthenticatedToken },
+    })
+    expect(Number(unauthenticated.status)).toBe(401)
     expect(
       fixture.sqlite
         .query(
