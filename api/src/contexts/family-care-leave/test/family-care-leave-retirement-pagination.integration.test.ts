@@ -24,8 +24,9 @@ test("11件のfamily care leave記録を全件保全し、人の承認・取消�
     request: apiRequest,
   } = await createFamilyCareLeavePreservationFixture()
   const creator = zAccountId.parse(creatorPerson.accountId)
-  const familyCareLeaveIds = Array.from({ length: 11 }, (_, index) =>
-    `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+  const familyCareLeaveIds = Array.from(
+    { length: 11 },
+    (_, index) => `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
   )
   const conditions = {
     reason: "Preserve original",
@@ -56,7 +57,11 @@ test("11件のfamily care leave記録を全件保全し、人の承認・取消�
       )
       .run()
   }
-  expect(await database.prepare("SELECT count(*) AS total FROM family_care_leaves").first<number>("total")).toBe(11)
+  expect(
+    await database
+      .prepare("SELECT count(*) AS total FROM family_care_leaves")
+      .first<number>("total"),
+  ).toBe(11)
   const at = new Date()
   const token = await tokenFor(creator)
   const stepUpToken = "e".repeat(64)
@@ -84,8 +89,11 @@ test("11件のfamily care leave記録を全件保全し、人の承認・取消�
     )
   const freezeId = crypto.randomUUID()
   expect(
-    (await post("/family-care-leave/record-source-freezes", freezeId, { reason: "Preserve family-care-leave" }))
-      .status,
+    (
+      await post("/family-care-leave/record-source-freezes", freezeId, {
+        reason: "Preserve family-care-leave",
+      })
+    ).status,
   ).toBe(201)
   const frozenInsert = await database
     .prepare(`INSERT INTO family_care_leaves
@@ -93,7 +101,10 @@ test("11件のfamily care leave記録を全件保全し、人の承認・取消�
       VALUES (?1,?2,'family_care','2030-01-01','2030-01-02',NULL,'requested','2030-01-01T00:00:00Z')`)
     .bind(crypto.randomUUID(), creatorPerson.employeeId)
     .run()
-    .then(() => null, (error: unknown) => error)
+    .then(
+      () => null,
+      (error: unknown) => error,
+    )
   expect(frozenInsert).toBeInstanceOf(Error)
   const frozenFamilyCareLeavePath = `/family-care-leave/family-care-leaves/${familyCareLeaveIds[0]}`
   const frozenUpdate = await apiRequest(frozenFamilyCareLeavePath, {
@@ -106,7 +117,9 @@ test("11件のfamily care leave記録を全件保全し、人の承認・取消�
     },
   })
   if (frozenUpdate.status !== 409)
-    throw new Error(`unexpected frozen update response: ${frozenUpdate.status} ${await frozenUpdate.text()}`)
+    throw new Error(
+      `unexpected frozen update response: ${frozenUpdate.status} ${await frozenUpdate.text()}`,
+    )
   expect((await apiRequest(frozenFamilyCareLeavePath, { method: "DELETE" })).status).toBe(409)
   const mappings = []
   for (const id of familyCareLeaveIds) {

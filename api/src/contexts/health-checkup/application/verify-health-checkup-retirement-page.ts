@@ -45,7 +45,8 @@ export class VerifyHealthCheckupRetirementPage {
       plan.snapshot.sourceNamespace !== command.sourceNamespace ||
       plan.snapshot.ownerContext !== "health-checkup" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(["health-checkup-record"])
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(["health-checkup-record"])
     )
       return new HealthCheckupRetirementConflictError(
         "retirement plan unavailable or capability changed",

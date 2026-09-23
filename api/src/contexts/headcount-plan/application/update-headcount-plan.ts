@@ -44,7 +44,9 @@ export class UpdateHeadcountPlan {
 
     if (updated instanceof Error) {
       if (isHeadcountPlanRecordSourceFrozenError(updated)) {
-        return new ConflictError("headcount plan writes are frozen", "record_source_frozen", { cause: updated })
+        return new ConflictError("headcount plan writes are frozen", "record_source_frozen", {
+          cause: updated,
+        })
       }
       return new UnexpectedError("failed to update headcount plan", { cause: updated })
     }

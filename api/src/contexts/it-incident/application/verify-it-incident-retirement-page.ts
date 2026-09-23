@@ -45,7 +45,8 @@ export class VerifyItIncidentRetirementPage {
       plan.snapshot.sourceNamespace !== command.sourceNamespace ||
       plan.snapshot.ownerContext !== "it-incident" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(["it-incident-record"])
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(["it-incident-record"])
     )
       return new ItIncidentRetirementConflictError(
         "retirement plan unavailable or capability changed",

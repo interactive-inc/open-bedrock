@@ -40,8 +40,14 @@ export const POST = compensationChangeFactory.createHandlers(
         code: "record_retirement_unavailable",
         detail: "Record source configuration unavailable",
       })
-    const receipt = await new VerifyCompensationChangeRetirementPage(c).execute(command.data, stepUpToken)
-    if (receipt instanceof CompensationChangeRetirementForbiddenError || receipt instanceof ForbiddenError)
+    const receipt = await new VerifyCompensationChangeRetirementPage(c).execute(
+      command.data,
+      stepUpToken,
+    )
+    if (
+      receipt instanceof CompensationChangeRetirementForbiddenError ||
+      receipt instanceof ForbiddenError
+    )
       throw new SystemForbiddenError()
     if (receipt instanceof CompensationChangeRetirementConflictError)
       throw new SystemHTTPException({

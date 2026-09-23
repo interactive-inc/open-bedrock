@@ -33,7 +33,10 @@ export function createBusinessTripPreservationSubmissionHandlers(mode: "create" 
   return businessTripFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: businessTripIdSchema, number: z.coerce.number().int().positive().safe().optional() }),
+      z.strictObject({
+        id: businessTripIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +56,8 @@ export function createBusinessTripPreservationSubmissionHandlers(mode: "create" 
           recordId: String(businessTripId),
           sourceNamespace,
           authorize: () => new BusinessTripActorReadAdapter(c).prepare(),
-          capture: () => new CaptureBusinessTripRecordAdapter(c).prepare({ businessTripId, sourceNamespace }),
+          capture: () =>
+            new CaptureBusinessTripRecordAdapter(c).prepare({ businessTripId, sourceNamespace }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

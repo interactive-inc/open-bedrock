@@ -17,7 +17,10 @@ export class RevalidateFamilyCareLeaveRecordSourceAdapter {
       source.props.ownerContext !== "family-care-leave" ||
       source.props.recordKind !== "family-care-leave-record"
     )
-      return new FamilyCareLeaveError("forbidden", "record source does not belong to this family-care-leave registry")
+      return new FamilyCareLeaveError(
+        "forbidden",
+        "record source does not belong to this family-care-leave registry",
+      )
 
     const current = await new CaptureFamilyCareLeaveRecordAdapter(this.c).prepare({
       familyCareLeaveId: source.props.recordId,

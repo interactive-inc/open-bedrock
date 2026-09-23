@@ -2,8 +2,7 @@ import { CompanySessionValue } from "@/contexts/company/domain/values/company-se
 import type { HonoEnv } from "@/env"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { resolveLiveEmployeeAccess } from "@/api/http/employees/resolve-live-employee-access"
-import { AccountEmployeeLinkReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/account-employee-link-read.adapter"
-import { ResolveAccountEmployeeLink } from "@/contexts/company/lib/workforce/resolve-account-employee-link"
+import { resolveCompanyAccountEmployeeLink } from "@/contexts/company/interface/operations/resolve-company-account-employee-link"
 import type { SystemAccountId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { createMiddleware } from "hono/factory"
@@ -19,15 +18,16 @@ export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
   await authenticateSystemBearer(c)
   const accountId = zAccountId.parse(c.var.userId)
   const workforceAccountId = restoreWorkforceId("system_account", accountId)
-  const account = await new ResolveAccountEmployeeLink(new AccountEmployeeLinkReadAdapter(c), {
-    evaluate: async (candidate: SystemAccountId) => ({
-      ok: true as const,
-      eligible: candidate === workforceAccountId,
-    }),
-  }).execute({
-    kind: "by_account",
-    accountId: workforceAccountId,
-  })
+  const account = await resolveCompanyAccountEmployeeLink(
+    c,
+    {
+      evaluate: async (candidate: SystemAccountId) => ({
+        ok: true as const,
+        eligible: candidate === workforceAccountId,
+      }),
+    },
+    { kind: "by_account", accountId: workforceAccountId },
+  )
   if (account.kind === "unavailable" || account.kind === "invalid_link") {
     throw new UnauthorizedError("account authentication is unavailable")
   }

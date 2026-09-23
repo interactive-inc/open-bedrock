@@ -79,8 +79,11 @@ test("11件の人員計画記録を全件保全し、人の承認・取消・再
     )
   const freezeId = crypto.randomUUID()
   expect(
-    (await post("/headcount-plan/record-source-freezes", freezeId, { reason: "Preserve headcount-plan" }))
-      .status,
+    (
+      await post("/headcount-plan/record-source-freezes", freezeId, {
+        reason: "Preserve headcount-plan",
+      })
+    ).status,
   ).toBe(201)
   expect(
     (

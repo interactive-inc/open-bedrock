@@ -150,7 +150,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
     if (deleted instanceof Error) {
       if (isLifeEventRecordSourceFrozenError(deleted))
-        return new ConflictError("life event writes are frozen", "record_source_frozen", { cause: deleted })
+        return new ConflictError("life event writes are frozen", "record_source_frozen", {
+          cause: deleted,
+        })
       return new UnexpectedError("failed to delete life event", { cause: deleted })
     }
 

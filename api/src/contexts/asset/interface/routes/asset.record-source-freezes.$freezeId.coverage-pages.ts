@@ -22,7 +22,10 @@ export const POST = assetFactory.createHandlers(
   requireSystemStepUp,
   zValidator("param", z.strictObject({ freezeId: z.uuid() })),
   zValidator("header", z.object({ "idempotency-key": z.uuid() })),
-  zValidator("json", assetCoveragePageCommandSchema.pick({ purpose: true, recordKind: true, records: true })),
+  zValidator(
+    "json",
+    assetCoveragePageCommandSchema.pick({ purpose: true, recordKind: true, records: true }),
+  ),
   async (c) => {
     c.header("Cache-Control", "no-store")
     const stepUpToken = c.req.header("x-system-step-up")

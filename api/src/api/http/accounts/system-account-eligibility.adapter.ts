@@ -1,7 +1,7 @@
 import type {
-  AccountEligibilityPort,
-  AccountEligibilityPortResult,
-} from "@/contexts/company/lib/workforce/resolve-account-employee-link"
+  CompanyAccountEligibility as AccountEligibilityPort,
+  CompanyAccountEligibilityResult as AccountEligibilityPortResult,
+} from "@/contexts/company/interface/operations/resolve-company-account-employee-link"
 import type { SystemAccountId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"

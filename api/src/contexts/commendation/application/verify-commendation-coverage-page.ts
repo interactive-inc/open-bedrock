@@ -17,9 +17,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenCommendationRecordPageAdapter } from "@/contexts/commendation/infrastructure/adapters/capture-frozen-commendation-record-page.adapter"
 import { PrepareCommendationCoverageRecordsAdapter } from "@/contexts/commendation/infrastructure/adapters/prepare-commendation-coverage-records.adapter"
 
-type Context = CommendationContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = CommendationContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きから表彰記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyCommendationCoveragePage {

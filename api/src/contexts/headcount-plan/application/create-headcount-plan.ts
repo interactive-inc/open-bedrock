@@ -61,7 +61,9 @@ export class CreateHeadcountPlan {
 
     if (created instanceof Error) {
       if (isHeadcountPlanRecordSourceFrozenError(created)) {
-        return new ConflictError("headcount plan writes are frozen", "record_source_frozen", { cause: created })
+        return new ConflictError("headcount plan writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       }
       return new UnexpectedError("failed to create headcount plan", { cause: created })
     }

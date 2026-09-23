@@ -18,9 +18,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenAssetRecordPageAdapter } from "@/contexts/asset/infrastructure/adapters/capture-frozen-asset-record-page.adapter"
 import { PrepareAssetCoverageRecordsAdapter } from "@/contexts/asset/infrastructure/adapters/prepare-asset-coverage-records.adapter"
 
-type Context = AssetContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = AssetContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからasset記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyAssetCoveragePage {

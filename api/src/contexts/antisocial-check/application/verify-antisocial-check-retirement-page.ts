@@ -45,7 +45,8 @@ export class VerifyAntisocialCheckRetirementPage {
       plan.snapshot.sourceNamespace !== command.sourceNamespace ||
       plan.snapshot.ownerContext !== "antisocial-check" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(["antisocial-check-record"])
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(["antisocial-check-record"])
     )
       return new AntisocialCheckRetirementConflictError(
         "retirement plan unavailable or capability changed",
@@ -126,6 +127,8 @@ export class VerifyAntisocialCheckRetirementPage {
     if (raced instanceof Error) return raced
     return raced !== null && matches(raced)
       ? raced
-      : new AntisocialCheckRetirementConflictError("retirement verification position already written")
+      : new AntisocialCheckRetirementConflictError(
+          "retirement verification position already written",
+        )
   }
 }

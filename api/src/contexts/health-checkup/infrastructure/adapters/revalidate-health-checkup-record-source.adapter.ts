@@ -17,7 +17,10 @@ export class RevalidateHealthCheckupRecordSourceAdapter {
       source.props.ownerContext !== "health-checkup" ||
       source.props.recordKind !== "health-checkup-record"
     )
-      return new HealthCheckupError("forbidden", "record source does not belong to this health-checkup registry")
+      return new HealthCheckupError(
+        "forbidden",
+        "record source does not belong to this health-checkup registry",
+      )
 
     const current = await new CaptureHealthCheckupRecordAdapter(this.c).prepare({
       healthCheckupId: Number(source.props.recordId),

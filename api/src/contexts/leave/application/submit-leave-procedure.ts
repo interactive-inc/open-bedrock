@@ -1,9 +1,9 @@
+import { resolveCompanyProcedureTask } from "@/contexts/company/interface/operations/resolve-company-procedure-task"
 import { PrepareLeaveHumanEmployeeAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-human-employee.adapter"
 import { computeConsumedDays } from "@/contexts/leave/domain/policies/compute-consumed-days.policy"
 import { validateLeaveUnit } from "@/contexts/leave/domain/policies/validate-leave-unit.policy"
 import type { Context } from "@/env"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
-import { ResolveCompanyProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task.adapter"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
 import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
@@ -117,7 +117,7 @@ export class SubmitLeaveProcedure {
     const policy = parseCompanyProcedureDecisionPolicy(JSON.parse(definition.decisionPolicyJson))
     if (policy instanceof Error || policy.workflow === null)
       return new ValidationError("休暇の承認規程が不正です", "invalid_procedure")
-    const resolved = await new ResolveCompanyProcedureTaskAdapter({
+    const resolved = await resolveCompanyProcedureTask({
       c: this.c,
       policy,
       payload: request.toProposalBody(),
@@ -133,7 +133,7 @@ export class SubmitLeaveProcedure {
         positionTitle: applicant.primaryAssignment?.positionTitle ?? null,
       },
       excludedEmployeeIds: new Set([applicant.id]),
-    }).resolveCompanyProcedureTask()
+    })
     if (resolved instanceof Error || resolved === null)
       return new ValidationError("休暇の承認候補を解決できません", "workflow_unresolvable")
     const proposal = await ProposalEntity.create({

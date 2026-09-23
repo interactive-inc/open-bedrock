@@ -45,7 +45,10 @@ export class UpdateAsset {
     const updated = await assetRepository.updateDetails(asset.withDetails(command.details))
 
     if (updated instanceof Error) {
-      if (isAssetRecordSourceFrozenError(updated)) return new ConflictError("asset writes are frozen", "record_source_frozen", { cause: updated })
+      if (isAssetRecordSourceFrozenError(updated))
+        return new ConflictError("asset writes are frozen", "record_source_frozen", {
+          cause: updated,
+        })
       return new UnexpectedError("failed to update asset", { cause: updated })
     }
 

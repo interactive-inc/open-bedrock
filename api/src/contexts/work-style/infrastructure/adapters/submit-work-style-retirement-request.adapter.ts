@@ -13,7 +13,9 @@ import {
   EmployeeWorkStyleRetirementForbiddenError,
 } from "@/contexts/work-style/application/errors"
 
-type Context = ConstructorParameters<typeof PrepareEmployeeWorkStyleRetirementCurrentStateAdapter>[0]
+type Context = ConstructorParameters<
+  typeof PrepareEmployeeWorkStyleRetirementCurrentStateAdapter
+>[0]
 
 /** 全件検査の計画と終端を固定し、会社資格で解決した人の判断待ち案件を作成する。 */
 export class SubmitEmployeeWorkStyleRetirementRequestAdapter {
@@ -77,7 +79,9 @@ export class SubmitEmployeeWorkStyleRetirementRequestAdapter {
       )
       if (previous instanceof Error) return previous
       if (previous === null)
-        return new EmployeeWorkStyleRetirementConflictError("retirement previous version is missing")
+        return new EmployeeWorkStyleRetirementConflictError(
+          "retirement previous version is missing",
+        )
       if (previous.createdByAccountId !== authentication.accountId)
         return new EmployeeWorkStyleRetirementForbiddenError("retirement applicant differs")
       if (
@@ -119,7 +123,9 @@ export class SubmitEmployeeWorkStyleRetirementRequestAdapter {
         existing.bodyJson !== proposal.props.canonical.toString()
       )
         return new EmployeeWorkStyleRetirementConflictError("retirement submission replay differs")
-      const rechecked = await new PrepareEmployeeWorkStyleRetirementCurrentStateAdapter(this.c).prepare(
+      const rechecked = await new PrepareEmployeeWorkStyleRetirementCurrentStateAdapter(
+        this.c,
+      ).prepare(
         {
           planId: command.planId,
           planDigest: command.planDigest,
@@ -148,7 +154,9 @@ export class SubmitEmployeeWorkStyleRetirementRequestAdapter {
     })
     if (task instanceof Error) return task
     if (task.resolved.guards.length === 0)
-      return new EmployeeWorkStyleRetirementForbiddenError("retirement decision qualification required")
+      return new EmployeeWorkStyleRetirementForbiddenError(
+        "retirement decision qualification required",
+      )
     const started = await new StartSystemProcedure({
       writer: new SystemD1WorkflowAdapter({
         env: this.c.env,

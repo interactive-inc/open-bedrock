@@ -48,7 +48,10 @@ export class ReturnAsset {
     })
 
     if (returned instanceof Error) {
-      if (isAssetRecordSourceFrozenError(returned)) return new ConflictError("asset writes are frozen", "record_source_frozen", { cause: returned })
+      if (isAssetRecordSourceFrozenError(returned))
+        return new ConflictError("asset writes are frozen", "record_source_frozen", {
+          cause: returned,
+        })
       return new UnexpectedError("failed to return asset", { cause: returned })
     }
 

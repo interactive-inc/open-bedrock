@@ -61,7 +61,9 @@ export class CreateKnowledgeArticle {
 
     if (created instanceof Error) {
       if (isKnowledgeRecordSourceFrozenError(created))
-        return new ConflictError("knowledge writes are frozen", "record_source_frozen", { cause: created })
+        return new ConflictError("knowledge writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       return new UnexpectedError("failed to create knowledge article", { cause: created })
     }
 

@@ -31,12 +31,15 @@ export class ResignationActorReadAdapter {
       })
     if (authorization === "forbidden")
       return new ResignationError("forbidden", "human resignation manager is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
       return new ResignationError("resignation_unavailable", "Company snapshot is unavailable", {
         cause: guard,

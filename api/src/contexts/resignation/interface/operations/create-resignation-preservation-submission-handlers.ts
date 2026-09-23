@@ -33,7 +33,10 @@ export function createResignationPreservationSubmissionHandlers(mode: "create" |
   return resignationFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: resignationIdSchema, number: z.coerce.number().int().positive().safe().optional() }),
+      z.strictObject({
+        id: resignationIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +56,8 @@ export function createResignationPreservationSubmissionHandlers(mode: "create" |
           recordId: String(resignationId),
           sourceNamespace,
           authorize: () => new ResignationActorReadAdapter(c).prepare(),
-          capture: () => new CaptureResignationRecordAdapter(c).prepare({ resignationId, sourceNamespace }),
+          capture: () =>
+            new CaptureResignationRecordAdapter(c).prepare({ resignationId, sourceNamespace }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

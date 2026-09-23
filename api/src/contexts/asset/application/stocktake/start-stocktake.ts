@@ -38,7 +38,10 @@ export class StartStocktake {
     const created = await stocktakeRepository.createWithItems(stocktake)
 
     if (created instanceof Error) {
-      if (isAssetRecordSourceFrozenError(created)) return new ConflictError("asset writes are frozen", "record_source_frozen", { cause: created })
+      if (isAssetRecordSourceFrozenError(created))
+        return new ConflictError("asset writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       return new UnexpectedError("failed to create stocktake", { cause: created })
     }
 

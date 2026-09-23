@@ -46,7 +46,9 @@ export class RegisterDocument {
 
     if (created instanceof Error) {
       if (isDocumentRecordSourceFrozenError(created)) {
-        return new ConflictError("document writes are frozen", "record_source_frozen", { cause: created })
+        return new ConflictError("document writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       }
       return new UnexpectedError("failed to create document", { cause: created })
     }

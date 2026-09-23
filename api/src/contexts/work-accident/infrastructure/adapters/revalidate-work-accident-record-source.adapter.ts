@@ -17,7 +17,10 @@ export class RevalidateWorkAccidentRecordSourceAdapter {
       source.props.ownerContext !== "work-accident" ||
       source.props.recordKind !== "work-accident-record"
     )
-      return new WorkAccidentError("forbidden", "record source does not belong to this work-accident registry")
+      return new WorkAccidentError(
+        "forbidden",
+        "record source does not belong to this work-accident registry",
+      )
 
     const current = await new CaptureWorkAccidentRecordAdapter(this.c).prepare({
       workAccidentId: Number(source.props.recordId),

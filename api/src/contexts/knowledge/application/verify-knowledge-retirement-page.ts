@@ -45,7 +45,8 @@ export class VerifyKnowledgeRetirementPage {
       plan.snapshot.sourceNamespace !== command.sourceNamespace ||
       plan.snapshot.ownerContext !== "knowledge" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(["knowledge-article-record"])
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(["knowledge-article-record"])
     )
       return new KnowledgeRetirementConflictError(
         "retirement plan unavailable or capability changed",

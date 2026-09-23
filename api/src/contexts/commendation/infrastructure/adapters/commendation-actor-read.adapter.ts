@@ -31,12 +31,15 @@ export class CommendationActorReadAdapter {
       })
     if (authorization === "forbidden")
       return new CommendationError("forbidden", "human commendation manager is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
       return new CommendationError("commendation_unavailable", "Company snapshot is unavailable", {
         cause: guard,

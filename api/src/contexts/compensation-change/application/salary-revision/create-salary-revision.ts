@@ -33,9 +33,7 @@ export class CreateSalaryRevision {
       return new ForbiddenError("cannot manage salary revisions", "forbidden")
     }
 
-    const employee = await openCompanyEmployeeDirectory(this.c).findById(
-      command.employeeId,
-    )
+    const employee = await openCompanyEmployeeDirectory(this.c).findById(command.employeeId)
 
     if (employee instanceof Error) {
       return new UnexpectedError("failed to find employee", { cause: employee })

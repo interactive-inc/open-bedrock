@@ -40,8 +40,14 @@ export const POST = certificationFactory.createHandlers(
         code: "record_retirement_unavailable",
         detail: "Record source configuration unavailable",
       })
-    const receipt = await new VerifyCertificationRetirementPage(c).execute(command.data, stepUpToken)
-    if (receipt instanceof CertificationRetirementForbiddenError || receipt instanceof ForbiddenError)
+    const receipt = await new VerifyCertificationRetirementPage(c).execute(
+      command.data,
+      stepUpToken,
+    )
+    if (
+      receipt instanceof CertificationRetirementForbiddenError ||
+      receipt instanceof ForbiddenError
+    )
       throw new SystemForbiddenError()
     if (receipt instanceof CertificationRetirementConflictError)
       throw new SystemHTTPException({

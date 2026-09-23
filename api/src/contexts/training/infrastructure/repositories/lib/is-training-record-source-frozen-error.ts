@@ -4,8 +4,7 @@ export function isTrainingRecordSourceFrozenError(error: unknown): boolean {
   const inspect = (value: unknown): boolean => {
     if (!(value instanceof Error) || visited.has(value)) return false
     visited.add(value)
-    if (/^(?:D1_ERROR: )?training_record_source_frozen(?:[: ].*)?$/.test(value.message))
-      return true
+    if (/^(?:D1_ERROR: )?training_record_source_frozen(?:[: ].*)?$/.test(value.message)) return true
     return inspect(value.cause)
   }
   return inspect(error)

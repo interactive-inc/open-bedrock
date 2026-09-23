@@ -31,12 +31,15 @@ export class AnnouncementActorReadAdapter {
       })
     if (authorization === "forbidden")
       return new AnnouncementError("forbidden", "human announcement manager is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
       return new AnnouncementError("announcement_unavailable", "Company snapshot is unavailable", {
         cause: guard,

@@ -18,9 +18,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenCompensationChangeRecordPageAdapter } from "@/contexts/compensation-change/infrastructure/adapters/capture-frozen-compensation-change-record-page.adapter"
 import { PrepareCompensationChangeCoverageRecordsAdapter } from "@/contexts/compensation-change/infrastructure/adapters/prepare-compensation-change-coverage-records.adapter"
 
-type Context = CompensationChangeContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = CompensationChangeContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからcompensation-change記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyCompensationChangeCoveragePage {

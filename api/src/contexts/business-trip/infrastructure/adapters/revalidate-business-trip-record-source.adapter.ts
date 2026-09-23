@@ -17,7 +17,10 @@ export class RevalidateBusinessTripRecordSourceAdapter {
       source.props.ownerContext !== "business-trip" ||
       source.props.recordKind !== "business-trip-record"
     )
-      return new BusinessTripError("forbidden", "record source does not belong to this business-trip registry")
+      return new BusinessTripError(
+        "forbidden",
+        "record source does not belong to this business-trip registry",
+      )
 
     const current = await new CaptureBusinessTripRecordAdapter(this.c).prepare({
       businessTripId: source.props.recordId,

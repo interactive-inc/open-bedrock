@@ -13,13 +13,9 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { readCompanyEmployeeProfiles } from "@/contexts/company/interface/operations/read-company-employee-profiles"
 import { oneOnOnes } from "@/contexts/one-on-one/infrastructure/schema/one-on-one"
-import { aliasedTable, count, eq, inArray, or } from "drizzle-orm"
-
-const members = aliasedTable(employees, "members")
-
-const managers = aliasedTable(employees, "managers")
+import { count, eq, or } from "drizzle-orm"
 
 // @authorization owner - 本人のリソースに限定する
 /** GET /oneonone/me — 本人が参加した 1on1 の履歴（参加者名込み、開催日時の降順） */
@@ -76,31 +72,21 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       or(eq(oneOnOnes.memberId, viewer.employeeId), eq(oneOnOnes.managerId, viewer.employeeId)),
     )
 
-  const ids = oneOnOnesList.map((o) => o.id)
-
-  const nameRows =
-    ids.length === 0
-      ? []
-      : await c.var.database
-          .select({
-            id: oneOnOnes.id,
-            memberName: members.officialName,
-            managerName: managers.officialName,
-          })
-          .from(oneOnOnes)
-          .leftJoin(members, eq(members.id, oneOnOnes.memberId))
-          .leftJoin(managers, eq(managers.id, oneOnOnes.managerId))
-          .where(inArray(oneOnOnes.id, ids))
+  const profiles = await readCompanyEmployeeProfiles({
+    database: c.env.DB,
+    employeeIds: oneOnOnesList.flatMap((oneOnOne) => [oneOnOne.memberId, oneOnOne.managerId]),
+    now: c.env.NOW,
+    timeZone: c.env.COMPANY_TIME_ZONE,
+  })
+  if (profiles instanceof Error) throw profiles
 
   const responseBody = zAppOneOnOneList.parse({
     data: oneOnOnesList.map((oneOnOne) => {
-      const nameRow = nameRows.find((row) => row.id === oneOnOne.id)
-
       return {
         id: oneOnOne.id,
         held_at: oneOnOne.heldAt,
-        member_name: nameRow?.memberName ?? "",
-        manager_name: nameRow?.managerName ?? "",
+        member_name: profiles.get(oneOnOne.memberId)?.officialName ?? "",
+        manager_name: profiles.get(oneOnOne.managerId)?.officialName ?? "",
         topics: oneOnOne.topics,
         manager_note: viewer.employeeId === oneOnOne.managerId ? oneOnOne.managerNote : null,
         next_action: oneOnOne.nextAction,

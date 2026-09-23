@@ -13,9 +13,7 @@ import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastru
 import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
 import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
 
-type Context = FamilyCareLeaveContext &
-  SystemAttachmentStorageContext &
-  SystemDatabaseContext
+type Context = FamilyCareLeaveContext & SystemAttachmentStorageContext & SystemDatabaseContext
 const requestSchema = z.strictObject({
   freezeId: z.uuid(),
   sourceNamespace: z.string().regex(/^\S{1,255}$/),

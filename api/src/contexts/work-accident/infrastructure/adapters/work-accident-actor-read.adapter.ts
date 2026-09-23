@@ -31,12 +31,15 @@ export class WorkAccidentActorReadAdapter {
       })
     if (authorization === "forbidden")
       return new WorkAccidentError("forbidden", "human work-accident manager is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
       return new WorkAccidentError("work_accident_unavailable", "Company snapshot is unavailable", {
         cause: guard,

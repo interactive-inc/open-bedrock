@@ -43,7 +43,9 @@ export class CreateFamilyCareLeave {
 
     if (created instanceof Error) {
       if (isFamilyCareLeaveRecordSourceFrozenError(created))
-        return new ConflictError("family care leave writes are frozen", "record_source_frozen", { cause: created })
+        return new ConflictError("family care leave writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       return new UnexpectedError("failed to create family care leave", { cause: created })
     }
 

@@ -18,9 +18,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenDocumentRecordPageAdapter } from "@/contexts/document/infrastructure/adapters/capture-frozen-document-record-page.adapter"
 import { PrepareDocumentCoverageRecordsAdapter } from "@/contexts/document/infrastructure/adapters/prepare-document-coverage-records.adapter"
 
-type Context = DocumentContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = DocumentContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからdocument記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyDocumentCoveragePage {

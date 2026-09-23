@@ -40,8 +40,14 @@ export const POST = softwareLicenseFactory.createHandlers(
         code: "record_retirement_unavailable",
         detail: "Record source configuration unavailable",
       })
-    const receipt = await new VerifySoftwareLicenseRetirementPage(c).execute(command.data, stepUpToken)
-    if (receipt instanceof SoftwareLicenseRetirementForbiddenError || receipt instanceof ForbiddenError)
+    const receipt = await new VerifySoftwareLicenseRetirementPage(c).execute(
+      command.data,
+      stepUpToken,
+    )
+    if (
+      receipt instanceof SoftwareLicenseRetirementForbiddenError ||
+      receipt instanceof ForbiddenError
+    )
       throw new SystemForbiddenError()
     if (receipt instanceof SoftwareLicenseRetirementConflictError)
       throw new SystemHTTPException({

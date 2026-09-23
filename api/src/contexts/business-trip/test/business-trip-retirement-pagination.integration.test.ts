@@ -24,8 +24,9 @@ test("11件の出張申請記録を全件保全し、人の承認・取消・再
     request: apiRequest,
   } = await createBusinessTripPreservationFixture()
   const creator = zAccountId.parse(creatorPerson.accountId)
-  const tripIds = Array.from({ length: 11 }, (_, index) =>
-    `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+  const tripIds = Array.from(
+    { length: 11 },
+    (_, index) => `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
   )
   const conditions = {
     reason: "Preserve original",
@@ -84,8 +85,11 @@ test("11件の出張申請記録を全件保全し、人の承認・取消・再
     )
   const freezeId = crypto.randomUUID()
   expect(
-    (await post("/business-trip/record-source-freezes", freezeId, { reason: "Preserve business-trip" }))
-      .status,
+    (
+      await post("/business-trip/record-source-freezes", freezeId, {
+        reason: "Preserve business-trip",
+      })
+    ).status,
   ).toBe(201)
   expect(
     (

@@ -18,9 +18,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenAntisocialCheckRecordPageAdapter } from "@/contexts/antisocial-check/infrastructure/adapters/capture-frozen-antisocial-check-record-page.adapter"
 import { PrepareAntisocialCheckCoverageRecordsAdapter } from "@/contexts/antisocial-check/infrastructure/adapters/prepare-antisocial-check-coverage-records.adapter"
 
-type Context = AntisocialCheckContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = AntisocialCheckContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからantisocial check記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyAntisocialCheckCoveragePage {

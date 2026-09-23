@@ -153,7 +153,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
     if (deleted instanceof Error) {
       if (isFamilyCareLeaveRecordSourceFrozenError(deleted))
-        return new ConflictError("family care leave writes are frozen", "record_source_frozen", { cause: deleted })
+        return new ConflictError("family care leave writes are frozen", "record_source_frozen", {
+          cause: deleted,
+        })
       return new UnexpectedError("failed to delete family care leave", { cause: deleted })
     }
 

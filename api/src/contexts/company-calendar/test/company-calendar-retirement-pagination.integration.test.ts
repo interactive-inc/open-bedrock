@@ -77,8 +77,11 @@ test("11件の会社カレンダー記録を全件保全し、人の承認・取
     )
   const freezeId = crypto.randomUUID()
   expect(
-    (await post("/company-calendar/record-source-freezes", freezeId, { reason: "Preserve company-calendar" }))
-      .status,
+    (
+      await post("/company-calendar/record-source-freezes", freezeId, {
+        reason: "Preserve company-calendar",
+      })
+    ).status,
   ).toBe(201)
   expect(
     (

@@ -40,8 +40,14 @@ export const POST = companyCalendarDayFactory.createHandlers(
         code: "record_retirement_unavailable",
         detail: "Record source configuration unavailable",
       })
-    const receipt = await new VerifyCompanyCalendarDayRetirementPage(c).execute(command.data, stepUpToken)
-    if (receipt instanceof CompanyCalendarDayRetirementForbiddenError || receipt instanceof ForbiddenError)
+    const receipt = await new VerifyCompanyCalendarDayRetirementPage(c).execute(
+      command.data,
+      stepUpToken,
+    )
+    if (
+      receipt instanceof CompanyCalendarDayRetirementForbiddenError ||
+      receipt instanceof ForbiddenError
+    )
       throw new SystemForbiddenError()
     if (receipt instanceof CompanyCalendarDayRetirementConflictError)
       throw new SystemHTTPException({

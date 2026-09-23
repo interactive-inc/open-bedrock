@@ -57,8 +57,7 @@ export const POST = expenseFactory.createHandlers(
             sourceNamespace,
           }).prepare(source, { authentication, session: access.session }),
       },
-      prepareExecution: (input) =>
-        revalidateCompanyRecordPreservationExecution(c, input),
+      prepareExecution: (input) => revalidateCompanyRecordPreservationExecution(c, input),
     }).execute({
       authentication,
       number: c.req.valid("param").number,

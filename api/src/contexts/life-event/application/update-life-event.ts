@@ -54,7 +54,9 @@ export class UpdateLifeEvent {
 
     if (saved instanceof Error) {
       if (isLifeEventRecordSourceFrozenError(saved))
-        return new ConflictError("life event writes are frozen", "record_source_frozen", { cause: saved })
+        return new ConflictError("life event writes are frozen", "record_source_frozen", {
+          cause: saved,
+        })
       return new UnexpectedError("failed to update life event", { cause: saved })
     }
 

@@ -46,7 +46,9 @@ export class CreateEmployeeWorkStyle {
 
     if (created instanceof Error) {
       if (isEmployeeWorkStyleRecordSourceFrozenError(created)) {
-        return new ConflictError("work style writes are frozen", "record_source_frozen", { cause: created })
+        return new ConflictError("work style writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       }
       return new UnexpectedError("failed to create work style", { cause: created })
     }

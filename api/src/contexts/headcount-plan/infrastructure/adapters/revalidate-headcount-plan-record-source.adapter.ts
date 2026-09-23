@@ -17,7 +17,10 @@ export class RevalidateHeadcountPlanRecordSourceAdapter {
       source.props.ownerContext !== "headcount-plan" ||
       source.props.recordKind !== "headcount-plan-record"
     )
-      return new HeadcountPlanError("forbidden", "record source does not belong to this headcount-plan registry")
+      return new HeadcountPlanError(
+        "forbidden",
+        "record source does not belong to this headcount-plan registry",
+      )
 
     const current = await new CaptureHeadcountPlanRecordAdapter(this.c).prepare({
       headcountPlanId: Number(source.props.recordId),

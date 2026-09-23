@@ -24,8 +24,9 @@ test("11件のresignation記録を全件保全し、人の承認・取消・再�
     request: apiRequest,
   } = await createResignationPreservationFixture()
   const creator = zAccountId.parse(creatorPerson.accountId)
-  const resignationIds = Array.from({ length: 11 }, (_, index) =>
-    `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+  const resignationIds = Array.from(
+    { length: 11 },
+    (_, index) => `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
   )
   const conditions = {
     reason: "Preserve original",
@@ -56,7 +57,9 @@ test("11件のresignation記録を全件保全し、人の承認・取消・再�
       )
       .run()
   }
-  expect(await database.prepare("SELECT count(*) AS total FROM resignations").first<number>("total")).toBe(11)
+  expect(
+    await database.prepare("SELECT count(*) AS total FROM resignations").first<number>("total"),
+  ).toBe(11)
   const at = new Date()
   const token = await tokenFor(creator)
   const stepUpToken = "e".repeat(64)
@@ -93,7 +96,10 @@ test("11件のresignation記録を全件保全し、人の承認・取消・再�
       VALUES (?1,?2,'2030-01-01',NULL,NULL,'requested','2030-01-01T00:00:00Z')`)
     .bind(crypto.randomUUID(), reviewer.employeeId)
     .run()
-    .then(() => null, (error: unknown) => error)
+    .then(
+      () => null,
+      (error: unknown) => error,
+    )
   expect(frozenInsert).toBeInstanceOf(Error)
   const frozenResignationPath = `/resignation/resignations/${resignationIds[0]}`
   const frozenUpdate = await apiRequest(frozenResignationPath, {
@@ -105,7 +111,9 @@ test("11件のresignation記録を全件保全し、人の承認・取消・再�
     },
   })
   if (frozenUpdate.status !== 409)
-    throw new Error(`unexpected frozen update response: ${frozenUpdate.status} ${await frozenUpdate.text()}`)
+    throw new Error(
+      `unexpected frozen update response: ${frozenUpdate.status} ${await frozenUpdate.text()}`,
+    )
   expect((await apiRequest(frozenResignationPath, { method: "DELETE" })).status).toBe(409)
   const mappings = []
   for (const id of resignationIds) {
@@ -246,9 +254,9 @@ test("11件のresignation記録を全件保全し、人の承認・取消・再�
       .bind(planId)
       .first<number>("n"),
   ).toBe(2)
-  expect(
-    await database.prepare("SELECT count(*) AS n FROM resignations").first<number>("n"),
-  ).toBe(11)
+  expect(await database.prepare("SELECT count(*) AS n FROM resignations").first<number>("n")).toBe(
+    11,
+  )
   expect(
     await database
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
@@ -411,9 +419,9 @@ test("11件のresignation記録を全件保全し、人の承認・取消・再�
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
       .first<number>("n"),
   ).toBe(1)
-  expect(
-    await database.prepare("SELECT count(*) AS n FROM resignations").first<number>("n"),
-  ).toBe(11)
+  expect(await database.prepare("SELECT count(*) AS n FROM resignations").first<number>("n")).toBe(
+    11,
+  )
   expect(
     (
       await post(`${sourcePath}/release`, crypto.randomUUID(), {

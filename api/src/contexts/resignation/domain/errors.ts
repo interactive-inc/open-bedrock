@@ -1,9 +1,6 @@
 import { DomainError } from "@system/domain/errors"
 
-export type ResignationErrorCode =
-  | "forbidden"
-  | "resignation_conflict"
-  | "resignation_unavailable"
+export type ResignationErrorCode = "forbidden" | "resignation_conflict" | "resignation_unavailable"
 
 /** resignation原記録の保全操作が成立しない理由。 */
 export class ResignationError extends DomainError {

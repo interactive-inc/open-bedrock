@@ -1,6 +1,6 @@
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { readCompanyEmployeeProfiles } from "@/contexts/company/interface/operations/read-company-employee-profiles"
 import { thanksRedemptions, thanksRewards } from "@/contexts/thanks/infrastructure/schema/thanks"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, desc, eq, gte, lte } from "drizzle-orm"
@@ -111,7 +111,6 @@ export const GET = factory.createHandlers(
       .select({
         id: thanksRedemptions.id,
         employeeId: thanksRedemptions.employeeId,
-        employeeName: employees.officialName,
         rewardId: thanksRedemptions.rewardId,
         rewardName: thanksRewards.name,
         pointCost: thanksRedemptions.pointCost,
@@ -121,12 +120,20 @@ export const GET = factory.createHandlers(
         deciderId: thanksRedemptions.deciderId,
       })
       .from(thanksRedemptions)
-      .leftJoin(employees, eq(employees.id, thanksRedemptions.employeeId))
       .leftJoin(thanksRewards, eq(thanksRewards.id, thanksRedemptions.rewardId))
       .where(where)
       .orderBy(SORT_OPTIONS[sortKey])
       .limit(limit)
       .offset(offset)
+
+    // 従業員の表示名は、Company の従業員ごとの正本から読む。
+    const profiles = await readCompanyEmployeeProfiles({
+      database: c.env.DB,
+      employeeIds: rows.map((row) => row.employeeId),
+      now: c.env.NOW,
+      timeZone: c.env.COMPANY_TIME_ZONE,
+    })
+    if (profiles instanceof Error) throw profiles
 
     const totalRows = await c.var.database
       .select({ total: count() })
@@ -145,7 +152,7 @@ export const GET = factory.createHandlers(
       data: rows.map((row) => ({
         id: row.id,
         employee_id: row.employeeId,
-        employee_name: row.employeeName ?? "",
+        employee_name: profiles.get(row.employeeId)?.officialName ?? "",
         employee_dept_name: currentDepartments.get(row.employeeId) ?? null,
         reward_id: row.rewardId,
         reward_name: row.rewardName ?? "",

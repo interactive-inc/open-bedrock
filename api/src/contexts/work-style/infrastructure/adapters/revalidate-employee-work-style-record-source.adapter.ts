@@ -17,7 +17,10 @@ export class RevalidateEmployeeWorkStyleRecordSourceAdapter {
       source.props.ownerContext !== "work-style" ||
       source.props.recordKind !== "employee-work-style-record"
     )
-      return new EmployeeWorkStyleError("forbidden", "record source does not belong to this work-style registry")
+      return new EmployeeWorkStyleError(
+        "forbidden",
+        "record source does not belong to this work-style registry",
+      )
 
     const current = await new CaptureEmployeeWorkStyleRecordAdapter(this.c).prepare({
       employeeWorkStyleId: Number(source.props.recordId),

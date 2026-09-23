@@ -41,7 +41,10 @@ export const POST = businessTripFactory.createHandlers(
         detail: "Record source configuration unavailable",
       })
     const receipt = await new VerifyBusinessTripRetirementPage(c).execute(command.data, stepUpToken)
-    if (receipt instanceof BusinessTripRetirementForbiddenError || receipt instanceof ForbiddenError)
+    if (
+      receipt instanceof BusinessTripRetirementForbiddenError ||
+      receipt instanceof ForbiddenError
+    )
       throw new SystemForbiddenError()
     if (receipt instanceof BusinessTripRetirementConflictError)
       throw new SystemHTTPException({

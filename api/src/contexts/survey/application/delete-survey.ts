@@ -47,7 +47,9 @@ export class DeleteSurvey {
 
     if (deleted instanceof Error) {
       if (isSurveyRecordSourceFrozenError(deleted)) {
-        return new ConflictError("survey writes are frozen", "record_source_frozen", { cause: deleted })
+        return new ConflictError("survey writes are frozen", "record_source_frozen", {
+          cause: deleted,
+        })
       }
       return new UnexpectedError("failed to delete survey", { cause: deleted })
     }

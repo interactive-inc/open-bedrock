@@ -18,9 +18,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenFamilyCareLeaveRecordPageAdapter } from "@/contexts/family-care-leave/infrastructure/adapters/capture-frozen-family-care-leave-record-page.adapter"
 import { PrepareFamilyCareLeaveCoverageRecordsAdapter } from "@/contexts/family-care-leave/infrastructure/adapters/prepare-family-care-leave-coverage-records.adapter"
 
-type Context = FamilyCareLeaveContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = FamilyCareLeaveContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからfamily care leave記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyFamilyCareLeaveCoveragePage {

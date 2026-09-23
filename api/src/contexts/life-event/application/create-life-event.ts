@@ -38,7 +38,9 @@ export class CreateLifeEvent {
 
     if (created instanceof Error) {
       if (isLifeEventRecordSourceFrozenError(created))
-        return new ConflictError("life event writes are frozen", "record_source_frozen", { cause: created })
+        return new ConflictError("life event writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       return new UnexpectedError("failed to create life event", { cause: created })
     }
 

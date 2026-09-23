@@ -56,7 +56,8 @@ export class PrepareBusinessTripRetirementCurrentStateAdapter {
       plan.snapshot.sourceNamespace !== request.sourceNamespace ||
       plan.snapshot.ownerContext !== "business-trip" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(["business-trip-record"])
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(["business-trip-record"])
     )
       return new Error("retirement plan or source capability differs")
     const target = { planId: plan.snapshot.id, planDigest: plan.digest }

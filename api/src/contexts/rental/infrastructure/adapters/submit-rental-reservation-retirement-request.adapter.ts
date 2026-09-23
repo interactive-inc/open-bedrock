@@ -13,7 +13,9 @@ import {
   RentalReservationRetirementForbiddenError,
 } from "@/contexts/rental/application/errors"
 
-type Context = ConstructorParameters<typeof PrepareRentalReservationRetirementCurrentStateAdapter>[0]
+type Context = ConstructorParameters<
+  typeof PrepareRentalReservationRetirementCurrentStateAdapter
+>[0]
 
 /** 全件検査の計画と終端を固定し、会社資格で解決した人の判断待ち案件を作成する。 */
 export class SubmitRentalReservationRetirementRequestAdapter {
@@ -77,7 +79,9 @@ export class SubmitRentalReservationRetirementRequestAdapter {
       )
       if (previous instanceof Error) return previous
       if (previous === null)
-        return new RentalReservationRetirementConflictError("retirement previous version is missing")
+        return new RentalReservationRetirementConflictError(
+          "retirement previous version is missing",
+        )
       if (previous.createdByAccountId !== authentication.accountId)
         return new RentalReservationRetirementForbiddenError("retirement applicant differs")
       if (
@@ -119,7 +123,9 @@ export class SubmitRentalReservationRetirementRequestAdapter {
         existing.bodyJson !== proposal.props.canonical.toString()
       )
         return new RentalReservationRetirementConflictError("retirement submission replay differs")
-      const rechecked = await new PrepareRentalReservationRetirementCurrentStateAdapter(this.c).prepare(
+      const rechecked = await new PrepareRentalReservationRetirementCurrentStateAdapter(
+        this.c,
+      ).prepare(
         {
           planId: command.planId,
           planDigest: command.planDigest,
@@ -148,7 +154,9 @@ export class SubmitRentalReservationRetirementRequestAdapter {
     })
     if (task instanceof Error) return task
     if (task.resolved.guards.length === 0)
-      return new RentalReservationRetirementForbiddenError("retirement decision qualification required")
+      return new RentalReservationRetirementForbiddenError(
+        "retirement decision qualification required",
+      )
     const started = await new StartSystemProcedure({
       writer: new SystemD1WorkflowAdapter({
         env: this.c.env,

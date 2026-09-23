@@ -40,8 +40,14 @@ export const POST = rentalReservationFactory.createHandlers(
         code: "record_retirement_unavailable",
         detail: "Record source configuration unavailable",
       })
-    const receipt = await new VerifyRentalReservationRetirementPage(c).execute(command.data, stepUpToken)
-    if (receipt instanceof RentalReservationRetirementForbiddenError || receipt instanceof ForbiddenError)
+    const receipt = await new VerifyRentalReservationRetirementPage(c).execute(
+      command.data,
+      stepUpToken,
+    )
+    if (
+      receipt instanceof RentalReservationRetirementForbiddenError ||
+      receipt instanceof ForbiddenError
+    )
       throw new SystemForbiddenError()
     if (receipt instanceof RentalReservationRetirementConflictError)
       throw new SystemHTTPException({

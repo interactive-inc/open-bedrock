@@ -40,8 +40,14 @@ export const POST = antisocialCheckFactory.createHandlers(
         code: "record_retirement_unavailable",
         detail: "Record source configuration unavailable",
       })
-    const receipt = await new VerifyAntisocialCheckRetirementPage(c).execute(command.data, stepUpToken)
-    if (receipt instanceof AntisocialCheckRetirementForbiddenError || receipt instanceof ForbiddenError)
+    const receipt = await new VerifyAntisocialCheckRetirementPage(c).execute(
+      command.data,
+      stepUpToken,
+    )
+    if (
+      receipt instanceof AntisocialCheckRetirementForbiddenError ||
+      receipt instanceof ForbiddenError
+    )
       throw new SystemForbiddenError()
     if (receipt instanceof AntisocialCheckRetirementConflictError)
       throw new SystemHTTPException({

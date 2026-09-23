@@ -12,10 +12,7 @@ export class CreateAssetRetirementPlan {
   }
 
   async execute(input: unknown, stepUpToken: string) {
-    const prepared = await new PrepareAssetRetirementPlanAdapter(this.c).prepare(
-      input,
-      stepUpToken,
-    )
+    const prepared = await new PrepareAssetRetirementPlanAdapter(this.c).prepare(input, stepUpToken)
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
     const repository = new RecordRetirementVerificationPlanRepository({

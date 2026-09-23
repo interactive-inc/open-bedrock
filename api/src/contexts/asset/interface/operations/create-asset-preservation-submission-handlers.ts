@@ -31,10 +31,7 @@ export function createAssetPreservationSubmissionHandlers(mode: "create" | "resu
     }),
   }
   return assetFactory.createHandlers(
-    zValidator(
-      "param",
-      assetRecordRouteSchema,
-    ),
+    zValidator("param", assetRecordRouteSchema),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
     async (c) => {
@@ -53,7 +50,8 @@ export function createAssetPreservationSubmissionHandlers(mode: "create" | "resu
           recordId,
           sourceNamespace,
           authorize: () => new AssetActorReadAdapter(c).prepare(),
-          capture: () => new CaptureAssetRecordAdapter(c).prepare({ recordKind, recordId, sourceNamespace }),
+          capture: () =>
+            new CaptureAssetRecordAdapter(c).prepare({ recordKind, recordId, sourceNamespace }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

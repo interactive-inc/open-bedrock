@@ -33,7 +33,10 @@ export function createAntisocialCheckPreservationSubmissionHandlers(mode: "creat
   return antisocialCheckFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: antisocialCheckIdSchema, number: z.coerce.number().int().positive().safe().optional() }),
+      z.strictObject({
+        id: antisocialCheckIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +56,11 @@ export function createAntisocialCheckPreservationSubmissionHandlers(mode: "creat
           recordId: String(antisocialCheckId),
           sourceNamespace,
           authorize: () => new AntisocialCheckActorReadAdapter(c).prepare(),
-          capture: () => new CaptureAntisocialCheckRecordAdapter(c).prepare({ antisocialCheckId, sourceNamespace }),
+          capture: () =>
+            new CaptureAntisocialCheckRecordAdapter(c).prepare({
+              antisocialCheckId,
+              sourceNamespace,
+            }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

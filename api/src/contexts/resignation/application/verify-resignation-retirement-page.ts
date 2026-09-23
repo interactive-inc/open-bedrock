@@ -45,7 +45,8 @@ export class VerifyResignationRetirementPage {
       plan.snapshot.sourceNamespace !== command.sourceNamespace ||
       plan.snapshot.ownerContext !== "resignation" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(["resignation-record"])
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(["resignation-record"])
     )
       return new ResignationRetirementConflictError(
         "retirement plan unavailable or capability changed",

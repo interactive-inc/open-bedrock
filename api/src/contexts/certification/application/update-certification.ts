@@ -41,7 +41,9 @@ export class UpdateCertification {
 
     if (updated instanceof Error) {
       if (isCertificationRecordSourceFrozenError(updated))
-        return new ConflictError("certification writes are frozen", "record_source_frozen", { cause: updated })
+        return new ConflictError("certification writes are frozen", "record_source_frozen", {
+          cause: updated,
+        })
       return new UnexpectedError("failed to update certification", { cause: updated })
     }
 

@@ -77,7 +77,9 @@ export class ApproveRedemption {
 
     if (updated instanceof Error) {
       if (isThanksRecordSourceFrozenError(updated))
-        return new ConflictError("thanks writes are frozen", "record_source_frozen", { cause: updated })
+        return new ConflictError("thanks writes are frozen", "record_source_frozen", {
+          cause: updated,
+        })
       return new UnexpectedError("failed to approve redemption", { cause: updated })
     }
 

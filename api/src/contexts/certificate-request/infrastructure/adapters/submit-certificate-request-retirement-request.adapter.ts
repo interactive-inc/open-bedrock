@@ -13,7 +13,9 @@ import {
   CertificateRequestRetirementForbiddenError,
 } from "@/contexts/certificate-request/application/errors"
 
-type Context = ConstructorParameters<typeof PrepareCertificateRequestRetirementCurrentStateAdapter>[0]
+type Context = ConstructorParameters<
+  typeof PrepareCertificateRequestRetirementCurrentStateAdapter
+>[0]
 
 /** 全件検査の計画と終端を固定し、会社資格で解決した人の判断待ち案件を作成する。 */
 export class SubmitCertificateRequestRetirementRequestAdapter {
@@ -28,7 +30,9 @@ export class SubmitCertificateRequestRetirementRequestAdapter {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new CertificateRequestRetirementForbiddenError("retirement authentication required")
-    const current = await new PrepareCertificateRequestRetirementCurrentStateAdapter(this.c).prepare(
+    const current = await new PrepareCertificateRequestRetirementCurrentStateAdapter(
+      this.c,
+    ).prepare(
       {
         planId: command.planId,
         planDigest: command.planDigest,
@@ -77,7 +81,9 @@ export class SubmitCertificateRequestRetirementRequestAdapter {
       )
       if (previous instanceof Error) return previous
       if (previous === null)
-        return new CertificateRequestRetirementConflictError("retirement previous version is missing")
+        return new CertificateRequestRetirementConflictError(
+          "retirement previous version is missing",
+        )
       if (previous.createdByAccountId !== authentication.accountId)
         return new CertificateRequestRetirementForbiddenError("retirement applicant differs")
       if (
@@ -119,7 +125,9 @@ export class SubmitCertificateRequestRetirementRequestAdapter {
         existing.bodyJson !== proposal.props.canonical.toString()
       )
         return new CertificateRequestRetirementConflictError("retirement submission replay differs")
-      const rechecked = await new PrepareCertificateRequestRetirementCurrentStateAdapter(this.c).prepare(
+      const rechecked = await new PrepareCertificateRequestRetirementCurrentStateAdapter(
+        this.c,
+      ).prepare(
         {
           planId: command.planId,
           planDigest: command.planDigest,
@@ -148,7 +156,9 @@ export class SubmitCertificateRequestRetirementRequestAdapter {
     })
     if (task instanceof Error) return task
     if (task.resolved.guards.length === 0)
-      return new CertificateRequestRetirementForbiddenError("retirement decision qualification required")
+      return new CertificateRequestRetirementForbiddenError(
+        "retirement decision qualification required",
+      )
     const started = await new StartSystemProcedure({
       writer: new SystemD1WorkflowAdapter({
         env: this.c.env,

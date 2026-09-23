@@ -36,9 +36,12 @@ export class PrepareExpensePreservationReadAdapter {
       return new ForbiddenError("閲覧資格が失効しています", "read_authorization_changed")
     if (!authorization.permissionKeys.has(input.permission))
       return new ForbiddenError("保全対象を参照する権限がありません", "forbidden")
-    const company = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, { accountIds: [input.authentication.accountId], employeeCodes: [] })
+    const company = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      { accountIds: [input.authentication.accountId], employeeCodes: [] },
+    )
     if (company instanceof Error)
       return new UnexpectedError("会社資格を固定できません", { cause: company })
     const people = await openCompanyEmployeeDirectory({

@@ -18,9 +18,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenBusinessTripRecordPageAdapter } from "@/contexts/business-trip/infrastructure/adapters/capture-frozen-business-trip-record-page.adapter"
 import { PrepareBusinessTripCoverageRecordsAdapter } from "@/contexts/business-trip/infrastructure/adapters/prepare-business-trip-coverage-records.adapter"
 
-type Context = BusinessTripContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = BusinessTripContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きから出張申請記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyBusinessTripCoveragePage {

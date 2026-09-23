@@ -1,10 +1,10 @@
+import { openCompanyResourceRepository } from "@/contexts/company/interface/operations/open-company-resource-repository"
 import { loadCompanyCurrentOrganization } from "@/contexts/company/interface/operations/load-company-current-organization"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
 import { GovernanceAdapter } from "@/contexts/governance/infrastructure/adapters/governance.adapter"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
-import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { CompanyGovernanceRoleAssignmentReadAdapter } from "@/contexts/governance/infrastructure/adapters/company-governance-role-assignment-read.adapter"
 
 export type GovernanceOrgRoleAssignee = {
@@ -68,7 +68,7 @@ export class ResolveGovernanceOrgRoleAdapter {
     })
     if (businessDate instanceof Error) return businessDate
     const snapshot = await new CompanyGovernanceRoleAssignmentReadAdapter({
-      repository: new D1CompanyResourceRepository({ database: this.c.env.DB }),
+      repository: openCompanyResourceRepository({ database: this.c.env.DB }),
     }).read({
       organizationId: "organization:default",
       responsibilityCode: code,

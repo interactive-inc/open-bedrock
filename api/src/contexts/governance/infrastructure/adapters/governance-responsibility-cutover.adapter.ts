@@ -1,4 +1,4 @@
-import { ResponsibilitySourceLedgerAdapter } from "@/contexts/company/infrastructure/adapters/organization/responsibility-source-ledger.adapter"
+import { openCompanyResponsibilitySourceLedger } from "@/contexts/company/interface/operations/open-company-responsibility-source-ledger"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import {
   governanceResponsibilityCutoverReceiptSchema,
@@ -68,7 +68,7 @@ export class GovernanceResponsibilityCutoverAdapter {
     const sourceCount = await this.c.database
       .prepare("SELECT count(*) AS total FROM governance_org_role_assignments")
       .first<number>("total")
-    const ledger = new ResponsibilitySourceLedgerAdapter(this.c.database)
+    const ledger = openCompanyResponsibilitySourceLedger(this.c.database)
     const rows = await ledger.listAdoptedSources({
       ...governanceResponsibilitySource,
       sourceNamespace,

@@ -14,7 +14,8 @@ import { drizzle } from "drizzle-orm/d1"
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("11件のサービス台帳を全件保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
-  const { f, governance, reviewer, definition, conditions } = await createLicensePreservationFixture()
+  const { f, governance, reviewer, definition, conditions } =
+    await createLicensePreservationFixture()
   const creator = zAccountId.parse("account:manager")
   await f.database.exec(`INSERT INTO system_iam_role_permissions VALUES
     ('license-test-manager','system:admin'),
@@ -77,8 +78,11 @@ test("11件のサービス台帳を全件保全し、人の承認・取消・再
     )
   const freezeId = crypto.randomUUID()
   expect(
-    (await post("/software-license/record-source-freezes", freezeId, { reason: "Preserve software-license" }))
-      .status,
+    (
+      await post("/software-license/record-source-freezes", freezeId, {
+        reason: "Preserve software-license",
+      })
+    ).status,
   ).toBe(201)
   const mappings = []
   for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {

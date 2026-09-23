@@ -31,9 +31,12 @@ export class KnowledgeAuthorAuthorizationAdapter {
     if (system === null)
       return new ForbiddenError("authentication expired", "knowledge_author_forbidden")
     const accountId = zAccountId.parse(authentication.accountId)
-    const company = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, { accountIds: [accountId], employeeCodes: [] })
+    const company = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      { accountIds: [accountId], employeeCodes: [] },
+    )
     if (company instanceof Error)
       return new UnavailableError("Company is unavailable", "knowledge_unavailable", {
         cause: company,

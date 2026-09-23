@@ -45,7 +45,8 @@ export class VerifyCommendationRetirementPage {
       plan.snapshot.sourceNamespace !== command.sourceNamespace ||
       plan.snapshot.ownerContext !== "commendation" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(["commendation-record"])
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(["commendation-record"])
     )
       return new CommendationRetirementConflictError(
         "retirement plan unavailable or capability changed",

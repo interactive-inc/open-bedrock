@@ -85,9 +85,7 @@ export class SubmitSurveyRetirementRequestAdapter {
         !["cancelled", "rejected", "returned"].includes(previous.status) ||
         !Number.isSafeInteger(previous.version + 1)
       )
-        return new SurveyRetirementConflictError(
-          "retirement previous version is not resubmittable",
-        )
+        return new SurveyRetirementConflictError("retirement previous version is not resubmittable")
       const original = await RecordRetirementProposalValue.restore(JSON.parse(previous.bodyJson))
       if (original instanceof Error) return original
       if (
@@ -169,10 +167,9 @@ export class SubmitSurveyRetirementRequestAdapter {
       const raced = await replay()
       if (raced instanceof Error) return raced
       if (raced !== null) return { created: false, request: raced }
-      return new SurveyRetirementConflictError(
-        "retirement submission changed before persistence",
-        { cause: started },
-      )
+      return new SurveyRetirementConflictError("retirement submission changed before persistence", {
+        cause: started,
+      })
     }
     return {
       created: true,

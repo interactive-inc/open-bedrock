@@ -16,7 +16,13 @@ import {
 /** 保全の肯定・否定判断に同じ認証、会社資格、対象照合を適用する。 */
 export function createFamilyCareLeavePreservationDecisionHandlers(action: "approve" | "reject") {
   return familyCareLeaveFactory.createHandlers(
-    zValidator("param", z.strictObject({ id: familyCareLeaveIdSchema, number: z.coerce.number().int().positive().safe() })),
+    zValidator(
+      "param",
+      z.strictObject({
+        id: familyCareLeaveIdSchema,
+        number: z.coerce.number().int().positive().safe(),
+      }),
+    ),
     zValidator(
       "json",
       z.strictObject({

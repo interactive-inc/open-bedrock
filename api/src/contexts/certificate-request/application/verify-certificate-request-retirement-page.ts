@@ -45,7 +45,8 @@ export class VerifyCertificateRequestRetirementPage {
       plan.snapshot.sourceNamespace !== command.sourceNamespace ||
       plan.snapshot.ownerContext !== "certificate-request" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(["certificate-request-record"])
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(["certificate-request-record"])
     )
       return new CertificateRequestRetirementConflictError(
         "retirement plan unavailable or capability changed",
@@ -126,6 +127,8 @@ export class VerifyCertificateRequestRetirementPage {
     if (raced instanceof Error) return raced
     return raced !== null && matches(raced)
       ? raced
-      : new CertificateRequestRetirementConflictError("retirement verification position already written")
+      : new CertificateRequestRetirementConflictError(
+          "retirement verification position already written",
+        )
   }
 }

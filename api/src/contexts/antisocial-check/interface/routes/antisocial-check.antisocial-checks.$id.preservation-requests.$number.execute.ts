@@ -18,7 +18,13 @@ import { authenticateSystemAccessToken } from "@system/interface/middlewares/aut
 // @authorization service - 承認済み内容、現在の保全権限、原記録、Company承認資格を再検査して一回だけ確定する
 export const POST = antisocialCheckFactory.createHandlers(
   authenticateSystemAccessToken,
-  zValidator("param", z.strictObject({ id: antisocialCheckIdSchema, number: z.coerce.number().int().positive().safe() })),
+  zValidator(
+    "param",
+    z.strictObject({
+      id: antisocialCheckIdSchema,
+      number: z.coerce.number().int().positive().safe(),
+    }),
+  ),
   zValidator("json", z.strictObject({ proposal_digest: z.string().regex(/^[a-f0-9]{64}$/) })),
   async (c) => {
     c.header("Cache-Control", "no-store")
@@ -40,8 +46,7 @@ export const POST = antisocialCheckFactory.createHandlers(
             sourceNamespace,
           }).prepare(source),
       },
-      prepareExecution: (input) =>
-        revalidateCompanyRecordPreservationExecution(c, input),
+      prepareExecution: (input) => revalidateCompanyRecordPreservationExecution(c, input),
     }).execute({
       authentication,
       number: c.req.valid("param").number,

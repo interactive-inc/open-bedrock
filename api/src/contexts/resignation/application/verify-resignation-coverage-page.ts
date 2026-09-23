@@ -18,9 +18,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenResignationRecordPageAdapter } from "@/contexts/resignation/infrastructure/adapters/capture-frozen-resignation-record-page.adapter"
 import { PrepareResignationCoverageRecordsAdapter } from "@/contexts/resignation/infrastructure/adapters/prepare-resignation-coverage-records.adapter"
 
-type Context = ResignationContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = ResignationContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからresignation記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyResignationCoveragePage {

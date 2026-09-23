@@ -18,9 +18,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenCertificationRecordPageAdapter } from "@/contexts/certification/infrastructure/adapters/capture-frozen-certification-record-page.adapter"
 import { PrepareCertificationCoverageRecordsAdapter } from "@/contexts/certification/infrastructure/adapters/prepare-certification-coverage-records.adapter"
 
-type Context = CertificationContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = CertificationContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからcertification記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyCertificationCoveragePage {

@@ -22,7 +22,10 @@ export const POST = softwareLicenseFactory.createHandlers(
   requireSystemStepUp,
   zValidator("param", z.strictObject({ freezeId: z.uuid() })),
   zValidator("header", z.object({ "idempotency-key": z.uuid() })),
-  zValidator("json", softwareLicenseCoveragePageCommandSchema.pick({ purpose: true, records: true })),
+  zValidator(
+    "json",
+    softwareLicenseCoveragePageCommandSchema.pick({ purpose: true, records: true }),
+  ),
   async (c) => {
     c.header("Cache-Control", "no-store")
     const stepUpToken = c.req.header("x-system-step-up")
@@ -39,7 +42,10 @@ export const POST = softwareLicenseFactory.createHandlers(
         code: "record_coverage_unavailable",
         detail: "Record source configuration unavailable",
       })
-    const receipt = await new VerifySoftwareLicenseCoveragePage(c).execute(command.data, stepUpToken)
+    const receipt = await new VerifySoftwareLicenseCoveragePage(c).execute(
+      command.data,
+      stepUpToken,
+    )
     if (receipt instanceof SoftwareLicenseCoverageForbiddenError) throw new SystemForbiddenError()
     if (receipt instanceof SoftwareLicenseCoverageConflictError)
       throw new SystemHTTPException({

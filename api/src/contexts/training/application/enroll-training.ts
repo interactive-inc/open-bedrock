@@ -67,7 +67,9 @@ export class EnrollTraining {
 
     if (created instanceof Error) {
       if (isTrainingRecordSourceFrozenError(created))
-        return new ConflictError("training writes are frozen", "record_source_frozen", { cause: created })
+        return new ConflictError("training writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       return new UnexpectedError("failed to create training enrollment", { cause: created })
     }
 

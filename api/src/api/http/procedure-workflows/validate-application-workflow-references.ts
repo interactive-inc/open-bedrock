@@ -1,5 +1,5 @@
 import type { ApplicationWorkflow } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { UnprocessableEntityError } from "@/lib/http/errors"
 import type { Context } from "@/env"
 
@@ -8,10 +8,7 @@ export async function validateApplicationWorkflowReferences(
   context: Context,
   workflow: ApplicationWorkflow,
 ): Promise<void> {
-  const employeeRows = await context.var.database
-    .select({ code: employees.employeeCode })
-    .from(employees)
-  const employeeCodes = new Set(employeeRows.map((row) => row.code))
+  const directory = openCompanyEmployeeDirectory({ env: context.env })
 
   for (const step of workflow.steps) {
     for (const selector of [...step.approvers, ...step.escalation_approvers]) {
@@ -25,7 +22,11 @@ export async function validateApplicationWorkflowReferences(
           "Legacy responsibility selectors cannot be published; use governance_authority",
         )
       }
-      if (selector.type === "employee" && !employeeCodes.has(selector.employee_code)) {
+      // 承認者の従業員 code は、会社営業日の従業員名簿で解決できるものだけを許可する。
+      const employee =
+        selector.type === "employee" ? await directory.findByCode(selector.employee_code) : null
+      if (employee instanceof Error) throw employee
+      if (selector.type === "employee" && employee === null) {
         throw new UnprocessableEntityError(
           `unknown employee in workflow: ${selector.employee_code}`,
         )

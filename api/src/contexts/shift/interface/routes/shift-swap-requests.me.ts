@@ -13,9 +13,9 @@ import {
 } from "@/lib/http/to-bounded-int"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { readCompanyEmployeeProfiles } from "@/contexts/company/interface/operations/read-company-employee-profiles"
 import { shiftSwapRequests } from "@/contexts/shift/infrastructure/schema/shift"
-import { count, eq, inArray } from "drizzle-orm"
+import { count, eq } from "drizzle-orm"
 
 // @authorization owner - 本人のリソースに限定する
 /**
@@ -76,22 +76,21 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const targetEmployeeIds = swapRequests.map((swapRequest) => swapRequest.targetEmployeeId)
 
-  const employeeRows =
-    targetEmployeeIds.length === 0
-      ? []
-      : await c.var.database
-          .select({ id: employees.id, name: employees.officialName })
-          .from(employees)
-          .where(inArray(employees.id, targetEmployeeIds))
-
-  const nameById = new Map(employeeRows.map((employee) => [employee.id, employee.name]))
+  // 従業員の従業員 code と表示名は、Company の従業員ごとの正本から読む。
+  const profiles = await readCompanyEmployeeProfiles({
+    database: c.env.DB,
+    employeeIds: targetEmployeeIds,
+    now: c.env.NOW,
+    timeZone: c.env.COMPANY_TIME_ZONE,
+  })
+  if (profiles instanceof Error) throw profiles
 
   const responseBody = zAppMyShiftSwapRequestList.parse({
     data: swapRequests.map((swapRequest) => ({
       id: swapRequest.id,
       requester_employee_id: swapRequest.requesterEmployeeId,
       target_employee_id: swapRequest.targetEmployeeId,
-      target_employee_name: nameById.get(swapRequest.targetEmployeeId) ?? null,
+      target_employee_name: profiles.get(swapRequest.targetEmployeeId)?.officialName ?? null,
       date: swapRequest.date,
       note: swapRequest.note,
       status: swapRequest.status,

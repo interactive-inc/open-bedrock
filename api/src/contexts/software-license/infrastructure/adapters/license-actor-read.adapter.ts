@@ -31,12 +31,15 @@ export class LicenseActorReadAdapter {
       })
     if (authorization === "forbidden")
       return new LicenseError("forbidden", "human license manager is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
       return new LicenseError("license_unavailable", "Company snapshot is unavailable", {
         cause: guard,

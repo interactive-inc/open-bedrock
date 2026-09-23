@@ -17,7 +17,12 @@ import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company
 // @authorization service - 明示した提案閲覧権限と現在のCompany承認資格で判断対象を取得する
 export const GET = compensationChangeFactory.createHandlers(
   authenticateSystemAccessToken,
-  zValidator("param", compensationChangeRecordRouteSchema.extend({ number: z.coerce.number().int().positive().safe() })),
+  zValidator(
+    "param",
+    compensationChangeRecordRouteSchema.extend({
+      number: z.coerce.number().int().positive().safe(),
+    }),
+  ),
   zValidator(
     "query",
     z.strictObject({ include_original: z.enum(["true", "false"]).default("false") }),

@@ -1,6 +1,6 @@
+import { resolveCompanyGovernanceTask } from "@/contexts/company/interface/operations/resolve-company-governance-task"
 import { createTestContextForDatabase } from "@tests/api/support/create-test-context"
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
-import { ResolveCompanyGovernanceTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-governance-task.adapter"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
 import { LeaveProcedureRepository } from "@/contexts/leave/infrastructure/repositories/leave-procedure.repository"
@@ -72,7 +72,7 @@ export async function createLeaveProcedureTestContext() {
     .bind(requester.employeeId, c.at.toISOString())
     .first<number>("id")
   if (requestId === null) throw new Error("leave fixture missing")
-  const resolved = await new ResolveCompanyGovernanceTaskAdapter(c.context).resolve({
+  const resolved = await resolveCompanyGovernanceTask(c.context, {
     step,
     payload: leave.toProposalBody(),
     subjectEmployeeId: requester.employeeId,

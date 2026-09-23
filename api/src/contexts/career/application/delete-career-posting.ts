@@ -47,7 +47,9 @@ export class DeleteCareerPosting {
 
     if (result instanceof Error) {
       if (isCareerRecordSourceFrozenError(result)) {
-        return new ConflictError("career writes are frozen", "record_source_frozen", { cause: result })
+        return new ConflictError("career writes are frozen", "record_source_frozen", {
+          cause: result,
+        })
       }
       return new UnexpectedError("failed to delete career posting", { cause: result })
     }

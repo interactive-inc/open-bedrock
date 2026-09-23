@@ -17,7 +17,10 @@ export class RevalidateCertificateRequestRecordSourceAdapter {
       source.props.ownerContext !== "certificate-request" ||
       source.props.recordKind !== "certificate-request-record"
     )
-      return new CertificateRequestError("forbidden", "record source does not belong to this certificate-request registry")
+      return new CertificateRequestError(
+        "forbidden",
+        "record source does not belong to this certificate-request registry",
+      )
 
     const current = await new CaptureCertificateRequestRecordAdapter(this.c).prepare({
       certificateRequestId: source.props.recordId,

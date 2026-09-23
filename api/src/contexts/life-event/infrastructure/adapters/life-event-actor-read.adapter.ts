@@ -31,12 +31,15 @@ export class LifeEventActorReadAdapter {
       })
     if (authorization === "forbidden")
       return new LifeEventError("forbidden", "human life-event manager is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
       return new LifeEventError("life_event_unavailable", "Company snapshot is unavailable", {
         cause: guard,

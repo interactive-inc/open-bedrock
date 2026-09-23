@@ -1,4 +1,6 @@
 import {
+  inspectApiRootCompanyDependencies,
+  inspectCompanyInternalDependency,
   canContextDependOn,
   checkContextBoundaries,
   classifyContextModule,
@@ -349,4 +351,65 @@ describe("lib boundary", () => {
 
 test("現在のcontext・lib sourceに未管理の違反がない", async () => {
   expect(await checkContextBoundaries()).toEqual([])
+})
+
+describe("Company public surface", () => {
+  test("業務と API composition から Company の内部実装への依存を拒否する", () => {
+    const adapter = "@/contexts/company/infrastructure/adapters/audit/audit-event.adapter"
+    expect(
+      inspectCompanyInternalDependency("src/contexts/leave/application/submit.ts", adapter),
+    ).toHaveLength(1)
+    expect(
+      inspectCompanyInternalDependency(
+        "src/contexts/leave/application/submit.ts",
+        "@/contexts/company/application/organization/apply-organization-change",
+      ),
+    ).toHaveLength(1)
+    expect(
+      inspectCompanyInternalDependency(
+        "src/contexts/leave/application/submit.ts",
+        "@/contexts/company/lib/workforce/resolve-account-employee-link",
+      ),
+    ).toHaveLength(1)
+    expect(
+      inspectApiRootCompanyDependencies(
+        "src/api/http/audit/trail.ts",
+        `import type { AuditEventFilters } from "${adapter}"`,
+      ),
+    ).toHaveLength(1)
+  })
+
+  test("公開 operation、domain、業務 table の外部キーと test だけを許可する", () => {
+    const file = "src/contexts/leave/application/submit.ts"
+    expect(
+      inspectCompanyInternalDependency(
+        file,
+        "@/contexts/company/interface/operations/open-company-audit-events",
+      ),
+    ).toEqual([])
+    expect(
+      inspectCompanyInternalDependency(
+        file,
+        "@/contexts/company/domain/definitions/calendar-date.definition",
+      ),
+    ).toEqual([])
+    expect(
+      inspectCompanyInternalDependency(
+        "src/contexts/expense/infrastructure/schema/expense.ts",
+        "@/contexts/company/infrastructure/schema/employee",
+      ),
+    ).toEqual([])
+    expect(
+      inspectCompanyInternalDependency(
+        "src/contexts/expense/infrastructure/adapters/expense.adapter.ts",
+        "@/contexts/company/infrastructure/schema/employee",
+      ),
+    ).toHaveLength(1)
+    expect(
+      inspectCompanyInternalDependency(
+        "src/contexts/leave/test/leave-procedure.test-support.ts",
+        "@/contexts/company/infrastructure/adapters/organization/resolve-company-governance-task.adapter",
+      ),
+    ).toEqual([])
+  })
 })

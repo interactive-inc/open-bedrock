@@ -1,9 +1,9 @@
+import { openCompanyAuditEvents } from "@/contexts/company/interface/operations/open-company-audit-events"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { AuditEventInput } from "@/contexts/company/domain/definitions/company-audit-event.definition"
 import { createAuditEvent } from "@/contexts/company/domain/definitions/company-audit-event.definition"
 import type { Context } from "@/env"
-import type { AuditEventFilters } from "@/contexts/company/infrastructure/adapters/audit/audit-event.adapter"
-import { AuditEventAdapter } from "@/contexts/company/infrastructure/adapters/audit/audit-event.adapter"
+import type { CompanyAuditEventFilters as AuditEventFilters } from "@/contexts/company/interface/operations/open-company-audit-events"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { auditUnavailable } from "@/api/http/audit/audit-unavailable"
 import { hashAuditFilters } from "@/api/http/audit/hash-audit-filters"
@@ -138,7 +138,7 @@ export class AuditTrail {
         },
         this.c.var.auditContext,
       )
-      await new AuditEventAdapter(this.c).append(record)
+      await openCompanyAuditEvents(this.c).append(record)
     } catch (error) {
       throw auditUnavailable(error)
     }

@@ -17,9 +17,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenItIncidentRecordPageAdapter } from "@/contexts/it-incident/infrastructure/adapters/capture-frozen-it-incident-record-page.adapter"
 import { PrepareItIncidentCoverageRecordsAdapter } from "@/contexts/it-incident/infrastructure/adapters/prepare-it-incident-coverage-records.adapter"
 
-type Context = ItIncidentContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = ItIncidentContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからITインシデント記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyItIncidentCoveragePage {

@@ -34,32 +34,49 @@ export const zAppAntisocialCheckAdminList = z.object({
   total: z.number(),
 })
 
-export const antisocialCheckSourceFreezeResponseSchema = z.strictObject({ freeze: recordSourceFreezeSnapshotSchema })
+export const antisocialCheckSourceFreezeResponseSchema = z.strictObject({
+  freeze: recordSourceFreezeSnapshotSchema,
+})
 
 export const zAppAntisocialCheckCoveragePageReceipt = z.strictObject({
-  id: z.uuid(), freezeId: z.uuid(), sequence: z.number().int().positive().safe(),
-  digest: z.string().regex(/^[0-9a-f]{64}$/), afterCursor: z.string().nullable(),
-  nextCursor: z.string().nullable(), checkedAt: z.string().datetime(),
+  id: z.uuid(),
+  freezeId: z.uuid(),
+  sequence: z.number().int().positive().safe(),
+  digest: z.string().regex(/^[0-9a-f]{64}$/),
+  afterCursor: z.string().nullable(),
+  nextCursor: z.string().nullable(),
+  checkedAt: z.string().datetime(),
   recordCount: z.number().int().min(0).max(10),
 })
 
 export const zAppAntisocialCheckRetirementPlan = z.strictObject({
-  id: z.uuid(), freezeId: z.uuid(), digest: z.string().regex(/^[0-9a-f]{64}$/),
-  totalPages: z.number().int().positive().safe(), recordKinds: z.array(z.literal("antisocial-check-record")),
+  id: z.uuid(),
+  freezeId: z.uuid(),
+  digest: z.string().regex(/^[0-9a-f]{64}$/),
+  totalPages: z.number().int().positive().safe(),
+  recordKinds: z.array(z.literal("antisocial-check-record")),
   createdAt: z.iso.datetime(),
 })
 
 export const zAppAntisocialCheckRetirementVerificationReceipt = z.strictObject({
-  id: z.uuid(), planId: z.uuid(), planDigest: z.string().regex(/^[0-9a-f]{64}$/),
-  ordinal: z.number().int().positive().safe(), digest: z.string().regex(/^[0-9a-f]{64}$/),
-  coveragePageId: z.uuid(), checkedAt: z.iso.datetime(),
+  id: z.uuid(),
+  planId: z.uuid(),
+  planDigest: z.string().regex(/^[0-9a-f]{64}$/),
+  ordinal: z.number().int().positive().safe(),
+  digest: z.string().regex(/^[0-9a-f]{64}$/),
+  coveragePageId: z.uuid(),
+  checkedAt: z.iso.datetime(),
 })
 
 export const zAppAntisocialCheckRetirementRequest = z.strictObject({
-  number: z.number().int().positive().safe(), caseId: z.string().min(1), planId: z.uuid(),
-  proposalDigest: z.string().regex(/^[0-9a-f]{64}$/), status: z.string().min(1),
+  number: z.number().int().positive().safe(),
+  caseId: z.string().min(1),
+  planId: z.uuid(),
+  proposalDigest: z.string().regex(/^[0-9a-f]{64}$/),
+  status: z.string().min(1),
 })
 
 export const zAppAntisocialCheckRetirementExecution = z.strictObject({
-  retirement_id: z.uuid(), finalized_at: z.iso.datetime(),
+  retirement_id: z.uuid(),
+  finalized_at: z.iso.datetime(),
 })

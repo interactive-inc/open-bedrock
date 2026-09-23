@@ -126,6 +126,8 @@ export class VerifySoftwareLicenseRetirementPage {
     if (raced instanceof Error) return raced
     return raced !== null && matches(raced)
       ? raced
-      : new SoftwareLicenseRetirementConflictError("retirement verification position already written")
+      : new SoftwareLicenseRetirementConflictError(
+          "retirement verification position already written",
+        )
   }
 }

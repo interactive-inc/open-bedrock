@@ -38,7 +38,9 @@ export class CreateReward {
 
     if (created instanceof Error) {
       if (isThanksRecordSourceFrozenError(created))
-        return new ConflictError("thanks writes are frozen", "record_source_frozen", { cause: created })
+        return new ConflictError("thanks writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       return new UnexpectedError("failed to create reward", { cause: created })
     }
 

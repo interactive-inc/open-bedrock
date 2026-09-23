@@ -71,9 +71,12 @@ export class LeaveDecisionNotificationDeliveryAdapter {
       return new Error("notification identity changed")
     if (at.getTime() < notification.props.decidedAt)
       return new Error("notification delivery precedes decision")
-    const companyGuard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, { accountIds: [], employeeCodes: [] })
+    const companyGuard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      { accountIds: [], employeeCodes: [] },
+    )
     if (companyGuard instanceof Error) return companyGuard
     const asOf = resolveCompanyBusinessDate({
       now: at.toISOString(),

@@ -17,9 +17,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenAnnouncementRecordPageAdapter } from "@/contexts/announcement/infrastructure/adapters/capture-frozen-announcement-record-page.adapter"
 import { PrepareAnnouncementCoverageRecordsAdapter } from "@/contexts/announcement/infrastructure/adapters/prepare-announcement-coverage-records.adapter"
 
-type Context = AnnouncementContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = AnnouncementContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからアナウンスの原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyAnnouncementCoveragePage {

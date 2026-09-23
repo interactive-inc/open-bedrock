@@ -1,11 +1,10 @@
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { readCompanyEmployeeProfiles } from "@/contexts/company/interface/operations/read-company-employee-profiles"
 import { shiftSwapRequests } from "@/contexts/shift/infrastructure/schema/shift"
 import { zValidator } from "@hono/zod-validator"
 import { and, asc, count, desc, eq, gte, lte } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
-import { alias } from "drizzle-orm/sqlite-core"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { zAppShiftSwapRequestAdminList } from "@/contexts/shift/interface/http/response-schemas"
 import {
@@ -106,26 +105,17 @@ export const GET = factory.createHandlers(
       ? (sortQuery as SortKey)
       : "date_desc"
 
-    const requester = alias(employees, "requester")
-    const target = alias(employees, "target")
-
     const rows = await c.var.database
       .select({
         id: shiftSwapRequests.id,
         requesterEmployeeId: shiftSwapRequests.requesterEmployeeId,
-        requesterCode: requester.employeeCode,
-        requesterName: requester.officialName,
         targetEmployeeId: shiftSwapRequests.targetEmployeeId,
-        targetCode: target.employeeCode,
-        targetName: target.officialName,
         date: shiftSwapRequests.date,
         note: shiftSwapRequests.note,
         status: shiftSwapRequests.status,
         approvedAt: shiftSwapRequests.approvedAt,
       })
       .from(shiftSwapRequests)
-      .leftJoin(requester, eq(requester.id, shiftSwapRequests.requesterEmployeeId))
-      .leftJoin(target, eq(target.id, shiftSwapRequests.targetEmployeeId))
       .where(where)
       .orderBy(SORT_OPTIONS[sortKey])
       .limit(limit)
@@ -135,6 +125,15 @@ export const GET = factory.createHandlers(
       .select({ total: count() })
       .from(shiftSwapRequests)
       .where(where)
+
+    // 従業員の従業員 code と表示名は、Company の従業員ごとの正本から読む。
+    const profiles = await readCompanyEmployeeProfiles({
+      database: c.env.DB,
+      employeeIds: rows.flatMap((row) => [row.requesterEmployeeId, row.targetEmployeeId]),
+      now: c.env.NOW,
+      timeZone: c.env.COMPANY_TIME_ZONE,
+    })
+    if (profiles instanceof Error) throw profiles
 
     const currentDepartments = await loadCurrentEmployeeDepartmentNames(
       c,
@@ -148,12 +147,12 @@ export const GET = factory.createHandlers(
       data: rows.map((row) => ({
         id: row.id,
         requester_employee_id: row.requesterEmployeeId,
-        requester_employee_code: row.requesterCode ?? "",
-        requester_name: row.requesterName ?? "",
+        requester_employee_code: profiles.get(row.requesterEmployeeId)?.employeeCode ?? "",
+        requester_name: profiles.get(row.requesterEmployeeId)?.officialName ?? "",
         requester_dept_name: currentDepartments.get(row.requesterEmployeeId) ?? null,
         target_employee_id: row.targetEmployeeId,
-        target_employee_code: row.targetCode ?? "",
-        target_name: row.targetName ?? "",
+        target_employee_code: profiles.get(row.targetEmployeeId)?.employeeCode ?? "",
+        target_name: profiles.get(row.targetEmployeeId)?.officialName ?? "",
         date: row.date,
         note: row.note,
         status: row.status,

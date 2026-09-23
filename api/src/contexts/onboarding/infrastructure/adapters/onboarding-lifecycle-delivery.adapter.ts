@@ -1,5 +1,5 @@
+import { openCompanyPersonnelEvents } from "@/contexts/company/interface/operations/open-company-personnel-events"
 import { ListUndeliveredLifecycleActionsAdapter } from "@/contexts/onboarding/infrastructure/adapters/list-undelivered-lifecycle-actions.adapter"
-import { CompanyPersonnelEventRepository } from "@/contexts/company/infrastructure/repositories/employee-lifecycle/company-personnel-event.repository"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { OnboardingAssignment } from "@/contexts/onboarding/domain/entities/onboarding-assignment.entity"
@@ -172,7 +172,7 @@ export class OnboardingLifecycleDeliveryAdapter {
       timeZone: this.c.env.COMPANY_TIME_ZONE,
     })
     if (observedOn instanceof Error) return observedOn
-    const company = new CompanyPersonnelEventRepository(this.c)
+    const company = openCompanyPersonnelEvents(this.c)
     const source = await company.findEmploymentEffect(actionId, observedOn)
     if (source === null || source instanceof Error)
       return new Error("lifecycle source cannot be verified", { cause: source })

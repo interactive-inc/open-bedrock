@@ -12,12 +12,15 @@ export class PrepareLeaveHumanEmployeeAdapter {
   }
 
   async prepare(input: Readonly<{ accountId: AccountId; employeeId: EmployeeId; now: Date }>) {
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [input.accountId],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [input.accountId],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
       return new UnexpectedError("会社資格を固定できません", { cause: guard })
     const linked = await openCompanyEmployeeDirectory({

@@ -20,7 +20,7 @@ import { hashPassword } from "@system/lib/auth/hash-password"
 import { verifyPassword } from "@system/lib/auth/verify-password"
 import { SystemAccountProvisioningAdapter } from "@system/infrastructure/adapters/identity/system-account-provisioning.adapter"
 import { SystemRoleCatalogRepository } from "@system/infrastructure/repositories/iam/system-role-catalog.repository"
-import { isAbortedByGuard } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/is-aborted-by-guard"
+import { isCompanyWriteAbortedByGuard as isAbortedByGuard } from "@/contexts/company/interface/operations/is-company-write-aborted-by-guard"
 
 /**
  * 登録時に既定で割り当てるrole key。このroleは全従業員が持つ基準の権限集合なので、
@@ -181,9 +181,7 @@ export class RegisterEmployee {
         accountId: system.accountId,
       },
     }
-    const companyStatements = await prepareCompanyPersonnelActionPersistence(company, 
-      persistence,
-    )
+    const companyStatements = await prepareCompanyPersonnelActionPersistence(company, persistence)
     if (companyStatements instanceof CompanyOperationError) {
       return new UnexpectedError("入社発令を保存用に変換できません", {
         cause: companyStatements,
@@ -259,7 +257,8 @@ export class RegisterEmployee {
     | null
   > {
     try {
-      const registered = await findCompanyRegisteredEmployeeByOperation(this.c.env.DB, 
+      const registered = await findCompanyRegisteredEmployeeByOperation(
+        this.c.env.DB,
         input.idempotencyKey,
       )
       if (registered instanceof Error) throw registered

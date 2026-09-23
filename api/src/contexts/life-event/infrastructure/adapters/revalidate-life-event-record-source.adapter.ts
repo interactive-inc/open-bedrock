@@ -17,7 +17,10 @@ export class RevalidateLifeEventRecordSourceAdapter {
       source.props.ownerContext !== "life-event" ||
       source.props.recordKind !== "life-event-record"
     )
-      return new LifeEventError("forbidden", "record source does not belong to this life-event registry")
+      return new LifeEventError(
+        "forbidden",
+        "record source does not belong to this life-event registry",
+      )
 
     const current = await new CaptureLifeEventRecordAdapter(this.c).prepare({
       lifeEventId: source.props.recordId,

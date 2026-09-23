@@ -1,9 +1,8 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CompanyNotificationKind } from "@/api/http/notifications/notification-kind.definition"
 import type { Context } from "@/env"
-import { ResolveAccountEmployeeLink } from "@/contexts/company/lib/workforce/resolve-account-employee-link"
+import { resolveCompanyAccountEmployeeLink } from "@/contexts/company/interface/operations/resolve-company-account-employee-link"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
-import { AccountEmployeeLinkReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/account-employee-link-read.adapter"
 import { SystemAccountEligibilityAdapter } from "@/api/http/accounts/system-account-eligibility.adapter"
 import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"
 import { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
@@ -39,13 +38,11 @@ export class EmployeeNotificationAdapter {
   constructor(private readonly c: Context) {}
 
   async create(props: EmployeeNotification): Promise<PublishedEmployeeNotification | Error> {
-    const resolved = await new ResolveAccountEmployeeLink(
-      new AccountEmployeeLinkReadAdapter(this.c),
+    const resolved = await resolveCompanyAccountEmployeeLink(
+      this.c,
       new SystemAccountEligibilityAdapter(this.c.env.DB),
-    ).execute({
-      kind: "by_employee",
-      employeeId: toWorkforceEmployeeId(props.recipientEmployeeId),
-    })
+      { kind: "by_employee", employeeId: toWorkforceEmployeeId(props.recipientEmployeeId) },
+    )
     if (resolved.kind !== "found") {
       return new Error(`notification recipient account link is ${resolved.kind}`, {
         cause: resolved.kind === "unavailable" ? resolved.cause : undefined,

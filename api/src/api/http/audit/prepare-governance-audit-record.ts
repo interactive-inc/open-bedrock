@@ -1,3 +1,4 @@
+import { openCompanyAuditEvents } from "@/contexts/company/interface/operations/open-company-audit-events"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { AuditJsonValue } from "@/contexts/company/domain/definitions/company-audit-record.definition"
 import {
@@ -6,7 +7,6 @@ import {
   type AuditTargetType,
 } from "@/contexts/company/domain/definitions/company-audit-event.definition"
 import type { Context } from "@/env"
-import { AuditEventAdapter } from "@/contexts/company/infrastructure/adapters/audit/audit-event.adapter"
 
 /** Company監査の識別子と永続化断片を、呼出側の同一transactionへ渡す。 */
 export function prepareGovernanceAuditRecord(props: {
@@ -32,6 +32,6 @@ export function prepareGovernanceAuditRecord(props: {
   )
   return Object.freeze({
     eventId: record.eventId,
-    statements: new AuditEventAdapter(props.c).prepareAppend(record),
+    statements: openCompanyAuditEvents(props.c).prepareAppend(record),
   })
 }

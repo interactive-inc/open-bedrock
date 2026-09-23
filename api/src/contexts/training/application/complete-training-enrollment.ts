@@ -56,7 +56,9 @@ export class CompleteTrainingEnrollment {
 
     if (completed instanceof Error) {
       if (isTrainingRecordSourceFrozenError(completed))
-        return new ConflictError("training writes are frozen", "record_source_frozen", { cause: completed })
+        return new ConflictError("training writes are frozen", "record_source_frozen", {
+          cause: completed,
+        })
       return new UnexpectedError("failed to update training enrollment", { cause: completed })
     }
 

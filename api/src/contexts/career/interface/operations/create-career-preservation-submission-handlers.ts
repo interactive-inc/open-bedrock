@@ -31,10 +31,7 @@ export function createCareerPreservationSubmissionHandlers(mode: "create" | "res
     }),
   }
   return careerFactory.createHandlers(
-    zValidator(
-      "param",
-      careerRecordRouteSchema,
-    ),
+    zValidator("param", careerRecordRouteSchema),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
     async (c) => {
@@ -53,7 +50,8 @@ export function createCareerPreservationSubmissionHandlers(mode: "create" | "res
           recordId,
           sourceNamespace,
           authorize: () => new CareerActorReadAdapter(c).prepare(),
-          capture: () => new CaptureCareerRecordAdapter(c).prepare({ recordKind, recordId, sourceNamespace }),
+          capture: () =>
+            new CaptureCareerRecordAdapter(c).prepare({ recordKind, recordId, sourceNamespace }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

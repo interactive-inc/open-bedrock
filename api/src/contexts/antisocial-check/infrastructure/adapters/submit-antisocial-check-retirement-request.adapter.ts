@@ -119,7 +119,9 @@ export class SubmitAntisocialCheckRetirementRequestAdapter {
         existing.bodyJson !== proposal.props.canonical.toString()
       )
         return new AntisocialCheckRetirementConflictError("retirement submission replay differs")
-      const rechecked = await new PrepareAntisocialCheckRetirementCurrentStateAdapter(this.c).prepare(
+      const rechecked = await new PrepareAntisocialCheckRetirementCurrentStateAdapter(
+        this.c,
+      ).prepare(
         {
           planId: command.planId,
           planDigest: command.planDigest,
@@ -148,7 +150,9 @@ export class SubmitAntisocialCheckRetirementRequestAdapter {
     })
     if (task instanceof Error) return task
     if (task.resolved.guards.length === 0)
-      return new AntisocialCheckRetirementForbiddenError("retirement decision qualification required")
+      return new AntisocialCheckRetirementForbiddenError(
+        "retirement decision qualification required",
+      )
     const started = await new StartSystemProcedure({
       writer: new SystemD1WorkflowAdapter({
         env: this.c.env,

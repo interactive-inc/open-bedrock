@@ -37,7 +37,10 @@ export const POST = employeeWorkStyleFactory.createHandlers(
         code: "record_retirement_unavailable",
         detail: "Record source configuration unavailable",
       })
-    const receipt = await new CreateEmployeeWorkStyleRetirementPlan(c).execute(command.data, stepUpToken)
+    const receipt = await new CreateEmployeeWorkStyleRetirementPlan(c).execute(
+      command.data,
+      stepUpToken,
+    )
     if (receipt instanceof ForbiddenError) throw new SystemForbiddenError()
     if (receipt instanceof EmployeeWorkStyleRetirementConflictError)
       throw new SystemHTTPException({

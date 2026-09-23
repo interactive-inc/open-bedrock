@@ -243,9 +243,9 @@ test("11件のITインシデント記録を全件保全し、人の承認・取�
       .bind(planId)
       .first<number>("n"),
   ).toBe(2)
-  expect(
-    await database.prepare("SELECT count(*) AS n FROM it_incidents").first<number>("n"),
-  ).toBe(11)
+  expect(await database.prepare("SELECT count(*) AS n FROM it_incidents").first<number>("n")).toBe(
+    11,
+  )
   expect(
     await database
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
@@ -408,9 +408,9 @@ test("11件のITインシデント記録を全件保全し、人の承認・取�
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
       .first<number>("n"),
   ).toBe(1)
-  expect(
-    await database.prepare("SELECT count(*) AS n FROM it_incidents").first<number>("n"),
-  ).toBe(11)
+  expect(await database.prepare("SELECT count(*) AS n FROM it_incidents").first<number>("n")).toBe(
+    11,
+  )
   expect(
     (
       await post(`${sourcePath}/release`, crypto.randomUUID(), {

@@ -1,5 +1,5 @@
+import { resolveCompanyGovernanceTask } from "@/contexts/company/interface/operations/resolve-company-governance-task"
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
-import { ResolveCompanyGovernanceTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-governance-task.adapter"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
 import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/repositories/ringi-request.repository"
@@ -59,7 +59,7 @@ export async function createRingiProcedureTestContext() {
     reason: "Replace equipment",
     createdAt: c.at.toISOString(),
   })
-  const resolved = await new ResolveCompanyGovernanceTaskAdapter(c.context).resolve({
+  const resolved = await resolveCompanyGovernanceTask(c.context, {
     step: c.step,
     payload: ringi.toProposalBody(),
     subjectEmployeeId: requester.employeeId,

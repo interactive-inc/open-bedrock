@@ -31,12 +31,15 @@ export class OneOnOneActorReadAdapter {
       })
     if (authorization === "forbidden")
       return new OneOnOneError("forbidden", "human one-on-one manager is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
       return new OneOnOneError("one_on_one_unavailable", "Company snapshot is unavailable", {
         cause: guard,

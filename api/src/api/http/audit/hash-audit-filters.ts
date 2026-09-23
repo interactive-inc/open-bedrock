@@ -1,4 +1,4 @@
-import type { AuditEventFilters } from "@/contexts/company/infrastructure/adapters/audit/audit-event.adapter"
+import type { CompanyAuditEventFilters as AuditEventFilters } from "@/contexts/company/interface/operations/open-company-audit-events"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { auditUnavailable } from "@/api/http/audit/audit-unavailable"
 

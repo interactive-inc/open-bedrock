@@ -45,7 +45,8 @@ export class VerifyCompanyCalendarDayRetirementPage {
       plan.snapshot.sourceNamespace !== command.sourceNamespace ||
       plan.snapshot.ownerContext !== "company-calendar" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(["company-calendar-record"])
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(["company-calendar-record"])
     )
       return new CompanyCalendarDayRetirementConflictError(
         "retirement plan unavailable or capability changed",
@@ -126,6 +127,8 @@ export class VerifyCompanyCalendarDayRetirementPage {
     if (raced instanceof Error) return raced
     return raced !== null && matches(raced)
       ? raced
-      : new CompanyCalendarDayRetirementConflictError("retirement verification position already written")
+      : new CompanyCalendarDayRetirementConflictError(
+          "retirement verification position already written",
+        )
   }
 }

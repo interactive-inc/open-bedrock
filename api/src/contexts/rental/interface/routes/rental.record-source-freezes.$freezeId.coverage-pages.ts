@@ -22,7 +22,10 @@ export const POST = rentalReservationFactory.createHandlers(
   requireSystemStepUp,
   zValidator("param", z.strictObject({ freezeId: z.uuid() })),
   zValidator("header", z.object({ "idempotency-key": z.uuid() })),
-  zValidator("json", rentalReservationCoveragePageCommandSchema.pick({ purpose: true, records: true })),
+  zValidator(
+    "json",
+    rentalReservationCoveragePageCommandSchema.pick({ purpose: true, records: true }),
+  ),
   async (c) => {
     c.header("Cache-Control", "no-store")
     const stepUpToken = c.req.header("x-system-step-up")
@@ -39,7 +42,10 @@ export const POST = rentalReservationFactory.createHandlers(
         code: "record_coverage_unavailable",
         detail: "Record source configuration unavailable",
       })
-    const receipt = await new VerifyRentalReservationCoveragePage(c).execute(command.data, stepUpToken)
+    const receipt = await new VerifyRentalReservationCoveragePage(c).execute(
+      command.data,
+      stepUpToken,
+    )
     if (receipt instanceof RentalReservationCoverageForbiddenError) throw new SystemForbiddenError()
     if (receipt instanceof RentalReservationCoverageConflictError)
       throw new SystemHTTPException({

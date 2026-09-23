@@ -43,8 +43,7 @@ export const POST = shiftFactory.createHandlers(
             sourceNamespace,
           }).prepare(source),
       },
-      prepareExecution: (input) =>
-        revalidateCompanyRecordPreservationExecution(c, input),
+      prepareExecution: (input) => revalidateCompanyRecordPreservationExecution(c, input),
     }).execute({
       authentication,
       number: c.req.valid("param").number,
