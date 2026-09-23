@@ -1,9 +1,9 @@
+import { revalidateCompanyProcedureExecution } from "@/contexts/company/interface/operations/revalidate-company-procedure-execution"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { CompanyOperationError } from "@/contexts/company/domain/errors"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { PrepareCompanyProcedureDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-procedure-decision.adapter"
-import { RevalidateCompanyProcedureExecutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-execution.adapter"
 import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/repositories/expense-procedure.repository"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
@@ -133,7 +133,7 @@ export class ExpenseProcedureReadAdapter {
               )
           }
         } else if (proposal.status === "approved" && binding !== null) {
-          const authority = await new RevalidateCompanyProcedureExecutionAdapter(this.c).prepare({
+          const authority = await revalidateCompanyProcedureExecution(this.c, {
             applicationId: binding.applicationId,
             expectedCaseId: binding.caseId,
             expectedSeriesId: binding.seriesId,

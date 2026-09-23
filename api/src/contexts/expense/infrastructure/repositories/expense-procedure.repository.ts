@@ -1,3 +1,4 @@
+import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import { z } from "zod"
 import type { AttachmentEvidence } from "@system/domain/definitions/attachments/attachment-evidence.definition"
 import { PrepareAttachmentEvidenceAdapter } from "@system/infrastructure/adapters/attachments/prepare-attachment-evidence.adapter"
@@ -8,7 +9,6 @@ import { NotificationDeliveryBatchValue } from "@system/domain/values/notificati
 import { SystemNotificationRepository } from "@system/infrastructure/repositories/notifications/system-notification.repository"
 import { Expense } from "@/contexts/expense/domain/entities/expense.entity"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
-import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
 import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
 import {
   expenseProcedureBindingSchema,
@@ -166,7 +166,7 @@ export class ExpenseProcedureRepository {
   }
 
   async prepareSubmissionGuard(accountId: AccountId): Promise<D1PreparedStatement | Error> {
-    return new CompanyAuthoritySnapshotGuardAdapter({ database: this.c.env.DB }).prepare({
+    return prepareCompanyAuthoritySnapshotGuard({ database: this.c.env.DB }, {
       accountIds: [accountId],
       employeeCodes: [],
     })

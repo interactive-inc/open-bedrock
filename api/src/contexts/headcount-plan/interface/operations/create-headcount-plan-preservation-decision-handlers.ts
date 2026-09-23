@@ -1,8 +1,8 @@
+import { prepareCompanyRecordProcedureDecision } from "@/contexts/company/interface/operations/prepare-company-record-procedure-decision"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { headcountPlanFactory } from "@/contexts/headcount-plan/interface/request-environment/headcount-plan-factory"
 import { headcountPlanIdSchema } from "@/contexts/headcount-plan/interface/http/headcount-plan-input-schemas"
-import { PrepareCompanyRecordProcedureDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-decision.adapter"
 import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 import { DecideRecordPreservationAdapter } from "@system/infrastructure/adapters/records/decide-record-preservation.adapter"
 import { RecordPreservationDecisionError } from "@system/infrastructure/adapters/records/errors"
@@ -49,7 +49,7 @@ export function createHeadcountPlanPreservationDecisionHandlers(action: "approve
           sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
         },
         prepareDecision: async (input) => {
-          const decision = await new PrepareCompanyRecordProcedureDecisionAdapter(c).prepare(input)
+          const decision = await prepareCompanyRecordProcedureDecision(c, input)
           if (decision instanceof CompanyConflictError)
             return new RecordPreservationDecisionError("conflict")
           if (decision instanceof CompanyUnexpectedError)

@@ -1,8 +1,8 @@
+import { revalidateCompanyProcedureExecution } from "@/contexts/company/interface/operations/revalidate-company-procedure-execution"
 import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
 import { PrepareExpenseApprovalScopeAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-approval-scope.adapter"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
-import { RevalidateCompanyProcedureExecutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-execution.adapter"
 import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/repositories/expense-procedure.repository"
 import type { ExpenseProcedureBinding } from "@/contexts/expense/domain/definitions/expense-procedure.definition"
 import type { Expense } from "@/contexts/expense/domain/entities/expense.entity"
@@ -91,7 +91,7 @@ export class CompleteApprovedExpenseProcedure {
       return new ConflictError("負担組織を確認できません", "organization_scope_changed", {
         cause: scope,
       })
-    const guards = await new RevalidateCompanyProcedureExecutionAdapter(this.c).prepare({
+    const guards = await revalidateCompanyProcedureExecution(this.c, {
       applicationId: binding.applicationId,
       expectedCaseId: binding.caseId,
       expectedSeriesId: binding.seriesId,

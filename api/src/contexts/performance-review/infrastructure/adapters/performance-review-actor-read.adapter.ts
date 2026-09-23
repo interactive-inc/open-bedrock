@@ -1,7 +1,7 @@
+import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import type { PerformanceReviewContext } from "@/contexts/performance-review/configuration/performance-review-context"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
-import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { PerformanceReviewError } from "@/contexts/performance-review/domain/errors"
@@ -35,9 +35,9 @@ export class PerformanceReviewActorReadAdapter {
       )
     if (authorization === "forbidden")
       return new PerformanceReviewError("forbidden", "human record preserver is required")
-    const guard = await new CompanyAuthoritySnapshotGuardAdapter({
+    const guard = await prepareCompanyAuthoritySnapshotGuard({
       database: this.c.env.DB,
-    }).prepare({
+    }, {
       accountIds: [account.data],
       employeeCodes: [],
     })

@@ -1,3 +1,4 @@
+import { revalidateCompanyRecordPreservationExecution } from "@/contexts/company/interface/operations/revalidate-company-record-preservation-execution"
 import { ExecuteRecordPreservationAdapter } from "@system/infrastructure/adapters/records/execute-record-preservation.adapter"
 import { RecordPreservationExecutionError } from "@system/infrastructure/adapters/records/errors"
 import {
@@ -7,7 +8,6 @@ import {
   EmployeeWorkStyleConflictError,
   EmployeeWorkStyleUnavailableError,
 } from "@/contexts/work-style/interface/errors"
-import { RevalidateRecordPreservationExecutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/revalidate-record-preservation-execution.adapter"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { employeeWorkStyleFactory } from "@/contexts/work-style/interface/request-environment/work-style-factory"
@@ -47,7 +47,7 @@ export const POST = employeeWorkStyleFactory.createHandlers(
           }).prepare(source),
       },
       prepareExecution: (input) =>
-        new RevalidateRecordPreservationExecutionAdapter(c).prepare(input),
+        revalidateCompanyRecordPreservationExecution(c, input),
     }).execute({
       authentication,
       number: c.req.valid("param").number,

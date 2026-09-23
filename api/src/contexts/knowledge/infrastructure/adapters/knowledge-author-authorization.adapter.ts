@@ -1,8 +1,8 @@
+import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import type { KnowledgeContext as Context } from "@/contexts/knowledge/configuration/knowledge-context"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
-import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
 import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { ForbiddenError, UnavailableError } from "@/lib/errors"
@@ -31,9 +31,9 @@ export class KnowledgeAuthorAuthorizationAdapter {
     if (system === null)
       return new ForbiddenError("authentication expired", "knowledge_author_forbidden")
     const accountId = zAccountId.parse(authentication.accountId)
-    const company = await new CompanyAuthoritySnapshotGuardAdapter({
+    const company = await prepareCompanyAuthoritySnapshotGuard({
       database: this.c.env.DB,
-    }).prepare({ accountIds: [accountId], employeeCodes: [] })
+    }, { accountIds: [accountId], employeeCodes: [] })
     if (company instanceof Error)
       return new UnavailableError("Company is unavailable", "knowledge_unavailable", {
         cause: company,

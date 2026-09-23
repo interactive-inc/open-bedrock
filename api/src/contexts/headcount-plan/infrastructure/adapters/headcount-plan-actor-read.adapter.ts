@@ -1,7 +1,7 @@
+import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import type { HeadcountPlanContext } from "@/contexts/headcount-plan/configuration/headcount-plan-context"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
-import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { HeadcountPlanError } from "@/contexts/headcount-plan/domain/errors"
@@ -31,9 +31,9 @@ export class HeadcountPlanActorReadAdapter {
       })
     if (authorization === "forbidden")
       return new HeadcountPlanError("forbidden", "human headcount-plan manager is required")
-    const guard = await new CompanyAuthoritySnapshotGuardAdapter({
+    const guard = await prepareCompanyAuthoritySnapshotGuard({
       database: this.c.env.DB,
-    }).prepare({
+    }, {
       accountIds: [account.data],
       employeeCodes: [],
     })

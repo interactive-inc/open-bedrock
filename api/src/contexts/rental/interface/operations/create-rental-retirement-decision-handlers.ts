@@ -1,8 +1,8 @@
+import { prepareCompanyRecordDecisionReplay } from "@/contexts/company/interface/operations/prepare-company-record-decision-replay"
+import { prepareCompanyRecordProcedureDecision } from "@/contexts/company/interface/operations/prepare-company-record-procedure-decision"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { rentalReservationFactory } from "@/contexts/rental/interface/request-environment/rental-factory"
-import { PrepareCompanyRecordDecisionReplayAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-decision-replay.adapter"
-import { PrepareCompanyRecordProcedureDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-decision.adapter"
 import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 import { DecideRecordRetirementAdapter } from "@system/infrastructure/adapters/records/decide-record-retirement.adapter"
 import { RecordRetirementDecisionError } from "@system/infrastructure/adapters/records/errors"
@@ -41,9 +41,9 @@ export function createRentalReservationRetirementDecisionHandlers(action: "appro
           planId: c.req.valid("param").planId,
           sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
         },
-        prepareReplay: (input) => new PrepareCompanyRecordDecisionReplayAdapter(c).prepare(input),
+        prepareReplay: (input) => prepareCompanyRecordDecisionReplay(c, input),
         prepareDecision: async (input) => {
-          const decision = await new PrepareCompanyRecordProcedureDecisionAdapter(c).prepare(input)
+          const decision = await prepareCompanyRecordProcedureDecision(c, input)
           if (decision instanceof CompanyConflictError)
             return new RecordRetirementDecisionError("conflict")
           if (decision instanceof CompanyUnexpectedError)

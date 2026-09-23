@@ -1,6 +1,6 @@
+import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { OrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
 import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 
 type Context = CompanyContext
@@ -12,9 +12,9 @@ export class PrepareExpenseApprovalScopeAdapter {
   }
 
   async prepare(input: Readonly<{ organizationUnitId: OrganizationUnitId; at: Date }>) {
-    const guard = await new CompanyAuthoritySnapshotGuardAdapter({
+    const guard = await prepareCompanyAuthoritySnapshotGuard({
       database: this.c.env.DB,
-    }).prepare({ accountIds: [], employeeCodes: [] })
+    }, { accountIds: [], employeeCodes: [] })
     if (guard instanceof Error) return guard
     const snapshot = await new ReadCanonicalOrganizationStateAdapter({
       var: this.c.var,

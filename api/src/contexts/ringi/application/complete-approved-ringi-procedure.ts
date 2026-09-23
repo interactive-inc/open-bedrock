@@ -1,6 +1,6 @@
+import { revalidateCompanyProcedureExecution } from "@/contexts/company/interface/operations/revalidate-company-procedure-execution"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
-import { RevalidateCompanyProcedureExecutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-execution.adapter"
 import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/repositories/ringi-request.repository"
 import type { RingiProcedureBinding } from "@/contexts/ringi/domain/definitions/ringi-procedure.definition"
 import type { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
@@ -68,7 +68,7 @@ export class CompleteApprovedRingiProcedure {
       })
     if (request.status !== "pending")
       return new ConflictError("稟議は確定できません", "already_decided")
-    const guards = await new RevalidateCompanyProcedureExecutionAdapter(this.c).prepare({
+    const guards = await revalidateCompanyProcedureExecution(this.c, {
       applicationId: binding.applicationId,
       expectedCaseId: binding.caseId,
       expectedSeriesId: binding.seriesId,

@@ -1,3 +1,4 @@
+import { prepareCompanyRecordProcedureTask } from "@/contexts/company/interface/operations/prepare-company-record-procedure-task"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { trainingFactory } from "@/contexts/training/interface/request-environment/training-factory"
@@ -11,7 +12,6 @@ import {
   TrainingConflictError,
   TrainingUnavailableError,
 } from "@/contexts/training/interface/errors"
-import { PrepareCompanyRecordProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-task.adapter"
 import { recordPreservationRequestSchema } from "@system/domain/schemas/records/record-preservation-input.schema"
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
 import { SubmitRecordPreservationAdapter } from "@system/infrastructure/adapters/records/submit-record-preservation.adapter"
@@ -55,7 +55,7 @@ export function createTrainingPreservationSubmissionHandlers(mode: "create" | "r
           authorize: () => new TrainingActorReadAdapter(c).prepare(),
           capture: () => new CaptureTrainingRecordAdapter(c).prepare({ recordKind, recordId, sourceNamespace }),
         },
-        prepareTask: (input) => new PrepareCompanyRecordProcedureTaskAdapter(c).prepare(input),
+        prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })
       const common = {
         authentication,

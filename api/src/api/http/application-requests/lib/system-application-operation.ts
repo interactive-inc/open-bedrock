@@ -1,3 +1,4 @@
+import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
 import { PrepareSystemCaseReadGuardAdapter } from "@system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter"
 import { RecordPreservationProposalValue } from "@system/domain/values/records/record-preservation-proposal.value"
@@ -7,7 +8,6 @@ import { resolveActiveSystemAccountId } from "@/api/http/accounts/resolve-active
 import { resolveActiveCompanyAccountParticipant } from "@/api/http/accounts/resolve-active-company-account-participant"
 import { resolveCompanyAccountParticipants } from "@/api/http/accounts/resolve-company-account-participants"
 import { resolveSystemAccountIdsForEmployees } from "@/api/http/accounts/resolve-system-account-ids-for-employees"
-import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
 import { RevalidateCompanyProcedureAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-authority.adapter"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { ResolveCompanyProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task.adapter"
@@ -380,9 +380,9 @@ export async function decideSystemApplication(
       cause: candidateAccountIds,
     })
   }
-  const authorityGuard = await new CompanyAuthoritySnapshotGuardAdapter({
+  const authorityGuard = await prepareCompanyAuthoritySnapshotGuard({
     database: c.env.DB,
-  }).prepare({
+  }, {
     accountIds: [...candidateAccountIds, proposal.createdByAccountId, actorAccountId],
     employeeCodes: (policy.workflow?.steps ?? []).flatMap((workflowStep) =>
       [...workflowStep.approvers, ...workflowStep.escalation_approvers].flatMap((selector) =>

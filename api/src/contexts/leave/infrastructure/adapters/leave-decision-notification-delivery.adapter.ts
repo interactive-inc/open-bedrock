@@ -1,5 +1,5 @@
+import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import { LeaveDecisionNotificationValue } from "@/contexts/leave/domain/values/leave-decision-notification.value"
-import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
 import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { toSha256Hex } from "@/lib/crypto/to-sha256-hex"
@@ -71,9 +71,9 @@ export class LeaveDecisionNotificationDeliveryAdapter {
       return new Error("notification identity changed")
     if (at.getTime() < notification.props.decidedAt)
       return new Error("notification delivery precedes decision")
-    const companyGuard = await new CompanyAuthoritySnapshotGuardAdapter({
+    const companyGuard = await prepareCompanyAuthoritySnapshotGuard({
       database: this.c.env.DB,
-    }).prepare({ accountIds: [], employeeCodes: [] })
+    }, { accountIds: [], employeeCodes: [] })
     if (companyGuard instanceof Error) return companyGuard
     const asOf = resolveCompanyBusinessDate({
       now: at.toISOString(),

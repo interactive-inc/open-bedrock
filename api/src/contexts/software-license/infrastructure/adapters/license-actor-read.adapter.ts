@@ -1,7 +1,7 @@
+import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import type { SoftwareLicenseContext } from "@/contexts/software-license/configuration/software-license-context"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
-import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { LicenseError } from "@/contexts/software-license/domain/errors"
@@ -31,9 +31,9 @@ export class LicenseActorReadAdapter {
       })
     if (authorization === "forbidden")
       return new LicenseError("forbidden", "human license manager is required")
-    const guard = await new CompanyAuthoritySnapshotGuardAdapter({
+    const guard = await prepareCompanyAuthoritySnapshotGuard({
       database: this.c.env.DB,
-    }).prepare({
+    }, {
       accountIds: [account.data],
       employeeCodes: [],
     })

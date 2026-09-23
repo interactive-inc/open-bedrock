@@ -1,3 +1,4 @@
+import { prepareCompanyRecordProcedureTask } from "@/contexts/company/interface/operations/prepare-company-record-procedure-task"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { certificateRequestFactory } from "@/contexts/certificate-request/interface/request-environment/certificate-request-factory"
@@ -11,7 +12,6 @@ import {
   CertificateRequestConflictError,
   CertificateRequestUnavailableError,
 } from "@/contexts/certificate-request/interface/errors"
-import { PrepareCompanyRecordProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-task.adapter"
 import { recordPreservationRequestSchema } from "@system/domain/schemas/records/record-preservation-input.schema"
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
 import { SubmitRecordPreservationAdapter } from "@system/infrastructure/adapters/records/submit-record-preservation.adapter"
@@ -55,7 +55,7 @@ export function createCertificateRequestPreservationSubmissionHandlers(mode: "cr
           authorize: () => new CertificateRequestActorReadAdapter(c).prepare(),
           capture: () => new CaptureCertificateRequestRecordAdapter(c).prepare({ certificateRequestId, sourceNamespace }),
         },
-        prepareTask: (input) => new PrepareCompanyRecordProcedureTaskAdapter(c).prepare(input),
+        prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })
       const common = {
         authentication,

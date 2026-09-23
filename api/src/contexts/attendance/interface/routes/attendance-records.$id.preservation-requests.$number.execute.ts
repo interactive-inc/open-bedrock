@@ -1,7 +1,7 @@
+import { revalidateCompanyRecordPreservationExecution } from "@/contexts/company/interface/operations/revalidate-company-record-preservation-execution"
 import { ExecuteRecordPreservationAdapter } from "@system/infrastructure/adapters/records/execute-record-preservation.adapter"
 import { RecordPreservationExecutionError } from "@system/infrastructure/adapters/records/errors"
 import { SystemForbiddenError, SystemHTTPException } from "@system/interface/errors"
-import { RevalidateRecordPreservationExecutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/revalidate-record-preservation-execution.adapter"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { attendanceFactory } from "@/contexts/attendance/interface/request-environment/attendance-factory"
@@ -40,7 +40,7 @@ export const POST = attendanceFactory.createHandlers(
           }).prepare(source),
       },
       prepareExecution: (input) =>
-        new RevalidateRecordPreservationExecutionAdapter(c).prepare(input),
+        revalidateCompanyRecordPreservationExecution(c, input),
     }).execute({
       authentication,
       number: c.req.valid("param").number,
