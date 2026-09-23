@@ -28,9 +28,7 @@ export class CreateOneOnOne {
   async run(command: Command): Promise<OneOnOne | ApplicationError> {
     const oneOnOneRepository = new OneOnOneRepository(this.c)
 
-    const employee = await openCompanyEmployeeDirectory(this.c).findByCode(
-      command.memberCode,
-    )
+    const employee = await openCompanyEmployeeDirectory(this.c).findByCode(command.memberCode)
     const memberId = employee instanceof Error ? employee : (employee?.id ?? null)
 
     if (memberId instanceof Error) {
@@ -62,7 +60,9 @@ export class CreateOneOnOne {
 
     if (saved instanceof Error) {
       if (isOneOnOneRecordSourceFrozenError(saved)) {
-        return new ConflictError("one-on-one writes are frozen", "record_source_frozen", { cause: saved })
+        return new ConflictError("one-on-one writes are frozen", "record_source_frozen", {
+          cause: saved,
+        })
       }
       return new UnexpectedError("failed to save one-on-one", { cause: saved })
     }

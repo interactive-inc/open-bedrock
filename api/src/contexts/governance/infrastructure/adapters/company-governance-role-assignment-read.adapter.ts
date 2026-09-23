@@ -1,6 +1,6 @@
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import type { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
-import type { CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
+import type { CompanyResourceStore as CompanyResourceRepository } from "@/contexts/company/interface/operations/open-company-resource-repository"
 import { resolveCompanyGovernanceRoleAssignees } from "@/contexts/governance/domain/policies/resolve-company-governance-role-assignees.policy"
 
 type Context = Readonly<{

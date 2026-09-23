@@ -1,4 +1,4 @@
-import { ResponsibilitySourceLedgerAdapter } from "@/contexts/company/infrastructure/adapters/organization/responsibility-source-ledger.adapter"
+import { openCompanyResponsibilitySourceLedger } from "@/contexts/company/interface/operations/open-company-responsibility-source-ledger"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
@@ -110,7 +110,7 @@ export class GovernanceOrgRoleAssignmentAdoptionAdapter {
         snapshotDigest: snapshot.snapshotDigest,
       },
       prepareAdditionalStatements: (assignment) => [
-        new ResponsibilitySourceLedgerAdapter(this.c.database).prepareAdoption({
+        openCompanyResponsibilitySourceLedger(this.c.database).prepareAdoption({
           ...governanceResponsibilitySource,
           sourceNamespace,
           freezeId: props.freezeId,

@@ -1,5 +1,5 @@
 import { auditOutcomeSchema } from "@/contexts/company/domain/definitions/company-audit-record.definition"
-import type { AuditEventFilters } from "@/contexts/company/infrastructure/adapters/audit/audit-event.adapter"
+import type { CompanyAuditEventFilters as AuditEventFilters } from "@/contexts/company/interface/operations/open-company-audit-events"
 import { parseExactSecond } from "@/api/http/audit/parse-exact-second"
 import { AuditCursor } from "@/contexts/company/domain/definitions/audit-cursor.definition"
 import { ValidationError } from "@/lib/errors"

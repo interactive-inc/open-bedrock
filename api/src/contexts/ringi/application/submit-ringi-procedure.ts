@@ -1,8 +1,8 @@
+import { resolveCompanyProcedureTask } from "@/contexts/company/interface/operations/resolve-company-procedure-task"
 import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { ResolveCompanyProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task.adapter"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
 import { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
 import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/repositories/ringi-request.repository"
@@ -144,7 +144,7 @@ export class SubmitRingiProcedure {
     const policy = parseCompanyProcedureDecisionPolicy(JSON.parse(definition.decisionPolicyJson))
     if (policy instanceof Error || policy.workflow === null)
       return new ValidationError("稟議の承認規程が不正です", "invalid_procedure")
-    const resolved = await new ResolveCompanyProcedureTaskAdapter({
+    const resolved = await resolveCompanyProcedureTask({
       c: this.c,
       policy,
       payload: ringi.toProposalBody(),
@@ -160,7 +160,7 @@ export class SubmitRingiProcedure {
         positionTitle: applicant.primaryAssignment?.positionTitle ?? null,
       },
       excludedEmployeeIds: new Set([applicant.id]),
-    }).resolveCompanyProcedureTask()
+    })
     if (resolved instanceof Error || resolved === null)
       return new ValidationError("稟議の承認候補を解決できません", "workflow_unresolvable")
     const candidates = await employees.findForAccountIds(

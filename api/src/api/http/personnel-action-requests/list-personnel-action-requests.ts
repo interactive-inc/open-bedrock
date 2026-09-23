@@ -1,5 +1,5 @@
+import { listCompanyPersonnelActionRequests } from "@/contexts/company/interface/operations/list-company-personnel-action-requests"
 import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
-import { PersonnelActionRequestLedgerAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-request-ledger.adapter"
 import type {
   PersonnelActionRequestRecord,
   PersonnelActionRequestStatus,
@@ -28,7 +28,7 @@ export class ListPersonnelActionRequests {
     filters: Filters,
   ): Promise<ReadonlyArray<PersonnelActionRequestRecord> | UnexpectedError> {
     try {
-      const rows = await new PersonnelActionRequestLedgerAdapter(this.c.env.DB).list()
+      const rows = await listCompanyPersonnelActionRequests(this.c.env.DB)
       if (rows instanceof Error) {
         return new UnexpectedError("人事変更申請の一覧を取得できません", { cause: rows })
       }

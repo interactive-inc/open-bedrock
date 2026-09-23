@@ -1,6 +1,6 @@
+import { readCompanyAccountDisplayNames } from "@/contexts/company/interface/operations/read-company-account-display-names"
 import { readCompanyAccountEmployeeLinks } from "@/contexts/company/interface/operations/read-company-account-employee-links"
 import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
-import { ReadCompanyAccountDisplayNamesAdapter } from "@/contexts/company/infrastructure/adapters/account-profile/read-company-account-display-names.adapter"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
 import type { IdentityProvider } from "@system/domain/schemas/identity/identity-provider.schema"
@@ -59,13 +59,13 @@ export class IdentityAdapter {
       }).findForAccountIds([login.account.id])
       if (employees instanceof Error) return employees
       const employee = employees[0]?.employee
-      const displayNames = await new ReadCompanyAccountDisplayNamesAdapter({
+      const displayNames = await readCompanyAccountDisplayNames({
         database: this.c.env.DB,
         organizationIds: ["organization:default"],
         accountIds: [login.account.id],
         now,
         timeZone: this.c.env.COMPANY_TIME_ZONE,
-      }).readCompanyAccountDisplayNames()
+      })
 
       return {
         identityId: login.identity.id,

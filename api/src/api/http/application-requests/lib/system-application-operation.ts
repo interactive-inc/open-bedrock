@@ -1,3 +1,4 @@
+import { resolveCompanyProcedureTask } from "@/contexts/company/interface/operations/resolve-company-procedure-task"
 import { findCompanyPersonnelActionRequest } from "@/contexts/company/interface/operations/find-company-personnel-action-request"
 import { revalidateCompanyProcedureAuthority } from "@/contexts/company/interface/operations/revalidate-company-procedure-authority"
 import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
@@ -12,10 +13,9 @@ import { resolveActiveCompanyAccountParticipant } from "@/api/http/accounts/reso
 import { resolveCompanyAccountParticipants } from "@/api/http/accounts/resolve-company-account-participants"
 import { resolveSystemAccountIdsForEmployees } from "@/api/http/accounts/resolve-system-account-ids-for-employees"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
-import { ResolveCompanyProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task.adapter"
 import { type CompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
-import { CompleteApprovedPersonnelActionRequest } from "@/contexts/company/application/employee-lifecycle/procedure/complete-approved-personnel-action-request"
+import { completeCompanyApprovedPersonnelActionRequest } from "@/contexts/company/interface/operations/complete-company-approved-personnel-action-request"
 import {
   CompanyOperationError,
   CompanyForbiddenError,
@@ -380,16 +380,19 @@ export async function decideSystemApplication(
       cause: candidateAccountIds,
     })
   }
-  const authorityGuard = await prepareCompanyAuthoritySnapshotGuard({
-    database: c.env.DB,
-  }, {
-    accountIds: [...candidateAccountIds, proposal.createdByAccountId, actorAccountId],
-    employeeCodes: (policy.workflow?.steps ?? []).flatMap((workflowStep) =>
-      [...workflowStep.approvers, ...workflowStep.escalation_approvers].flatMap((selector) =>
-        selector.type === "employee" ? [selector.employee_code] : [],
+  const authorityGuard = await prepareCompanyAuthoritySnapshotGuard(
+    {
+      database: c.env.DB,
+    },
+    {
+      accountIds: [...candidateAccountIds, proposal.createdByAccountId, actorAccountId],
+      employeeCodes: (policy.workflow?.steps ?? []).flatMap((workflowStep) =>
+        [...workflowStep.approvers, ...workflowStep.escalation_approvers].flatMap((selector) =>
+          selector.type === "employee" ? [selector.employee_code] : [],
+        ),
       ),
-    ),
-  })
+    },
+  )
   if (authorityGuard instanceof Error) {
     return new UnexpectedError("failed to capture Company decision authority", {
       cause: authorityGuard,
@@ -441,9 +444,7 @@ export async function decideSystemApplication(
       cause: applicantParticipant instanceof Error ? applicantParticipant : undefined,
     })
   }
-  const applicant = await openCompanyEmployeeDirectory(c).findById(
-    applicantParticipant.employeeId,
-  )
+  const applicant = await openCompanyEmployeeDirectory(c).findById(applicantParticipant.employeeId)
   if (applicant instanceof Error || applicant === null) {
     return new UnexpectedError("failed to load workflow applicant", {
       cause: applicant instanceof Error ? applicant : undefined,
@@ -460,7 +461,9 @@ export async function decideSystemApplication(
     targetDepartmentCode = null
   }
   if (proposal.completionOperationKey === "company.personnel-action.apply") {
-    const personnelRequest = await findCompanyPersonnelActionRequest(c, session, { applicationId: proposal.number })
+    const personnelRequest = await findCompanyPersonnelActionRequest(c, session, {
+      applicationId: proposal.number,
+    })
     if (personnelRequest instanceof CompanyConflictError)
       return new ConflictError(personnelRequest.message, personnelRequest.code)
     if (personnelRequest instanceof Error)
@@ -506,7 +509,7 @@ export async function decideSystemApplication(
   let nextTaskGuards: ReadonlyArray<D1PreparedStatement> = []
   let nextTask = null
   if (systemAction === "approve") {
-    const next = await new ResolveCompanyProcedureTaskAdapter({
+    const next = await resolveCompanyProcedureTask({
       c,
       policy,
       payload: payload.value,
@@ -516,7 +519,7 @@ export async function decideSystemApplication(
       authoritySubjectEmployeeId,
       targetDepartmentCode,
       excludedEmployeeIds,
-    }).resolveCompanyProcedureTask()
+    })
     if (next instanceof Error) {
       return new UnprocessableError(
         "next workflow step cannot be resolved",
@@ -602,7 +605,7 @@ async function completeSystemApplicationIfRequired(
   }
   const session = c.var.session
   if (session === null) return new UnexpectedError("authenticated session is missing")
-  const completed = await new CompleteApprovedPersonnelActionRequest(c).run({
+  const completed = await completeCompanyApprovedPersonnelActionRequest(c, {
     applicationId: proposal.number,
     session,
     completedAt,
@@ -834,14 +837,14 @@ async function startSystemApplication(
   if (participant === null || participant.employeeId !== input.applicantId) {
     return new ForbiddenError("cannot submit as another employee", "forbidden")
   }
-  const resolvedTask = await new ResolveCompanyProcedureTaskAdapter({
+  const resolvedTask = await resolveCompanyProcedureTask({
     c,
     policy: input.policy,
     payload,
     applicant: toProcedureApplicant(applicant),
     activatedAt: input.createdAt,
     afterTaskKey: null,
-  }).resolveCompanyProcedureTask()
+  })
   if (resolvedTask instanceof Error || resolvedTask === null) {
     return new UnprocessableError(
       "application workflow has no eligible decision step",

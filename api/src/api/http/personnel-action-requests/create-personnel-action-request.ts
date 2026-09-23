@@ -1,8 +1,9 @@
+import { prepareCompanyPersonnelActionRequestInsert } from "@/contexts/company/interface/operations/prepare-company-personnel-action-request-insert"
+import { resolveCompanyProcedureTask } from "@/contexts/company/interface/operations/resolve-company-procedure-task"
 import { loadCompanyCurrentOrganization } from "@/contexts/company/interface/operations/load-company-current-organization"
 import { resolveCompanyOrganizationAuthority } from "@/contexts/company/interface/operations/resolve-company-organization-authority"
 import { findCompanyPersonnelActionRequest } from "@/contexts/company/interface/operations/find-company-personnel-action-request"
 import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
-import { PersonnelActionRequestLedgerAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-request-ledger.adapter"
 import { prepareCompanyOrganizationRevisionStatement } from "@/contexts/company/interface/operations/prepare-company-organization-revision-statement"
 import { readCompanyOrganizationLifecycleRevision } from "@/contexts/company/interface/operations/read-company-organization-lifecycle-revision"
 import { validatePersonnelPositionReference } from "@/contexts/company/domain/policies/validate-personnel-position-reference.policy"
@@ -23,9 +24,8 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { fingerprintPersonnelAction } from "@/contexts/company/domain/definitions/fingerprint-personnel-action.definition"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
 import { CompanyOperationError, CompanyConflictError } from "@/contexts/company/domain/errors"
-import { ResolveCompanyProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task.adapter"
 import { GetLifecycleState } from "@/contexts/company/interface/operations/employee-lifecycle/get-lifecycle-state"
-import { createCompanySystemAuditEvent } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/create-company-system-audit-event"
+import { createCompanySystemAuditEvent } from "@/contexts/company/interface/operations/create-company-system-audit-event"
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
@@ -176,7 +176,7 @@ export class CreatePersonnelActionRequest {
     if (policy instanceof Error) {
       return new UnexpectedError("人事変更申請手続が不正です", { cause: policy })
     }
-    const task = await new ResolveCompanyProcedureTaskAdapter({
+    const task = await resolveCompanyProcedureTask({
       c: company,
       policy,
       payload: command.input,
@@ -194,7 +194,7 @@ export class CreatePersonnelActionRequest {
       authoritySubjectEmployeeId: target?.id ?? null,
       targetDepartmentCode,
       excludedEmployeeIds: new Set(target === null ? [requester.id] : [requester.id, target.id]),
-    }).resolveCompanyProcedureTask()
+    })
     if (task instanceof Error || task === null) {
       return new UnprocessableError("適用可能な承認手順がありません", "workflow_unresolvable", {
         cause: task instanceof Error ? task : undefined,
@@ -258,7 +258,7 @@ export class CreatePersonnelActionRequest {
         const finalNumberRead = systemStatements.at(-1)
         if (finalNumberRead === undefined)
           return new Error("System proposal number read is missing")
-        const association = new PersonnelActionRequestLedgerAdapter(this.c.env.DB).prepareInsert({
+        const association = prepareCompanyPersonnelActionRequestInsert(this.c.env.DB, {
           id: requestId,
           systemProposalSeriesId: seriesId,
           targetEmployeeId: target?.id ?? null,
@@ -282,7 +282,8 @@ export class CreatePersonnelActionRequest {
                 expectedRevision: command.baseCompanyRevision,
               })
         if (companyRevisionStatement instanceof Error) return companyRevisionStatement
-        const companyRevisionGuard = companyRevisionStatement === null ? [] : [companyRevisionStatement]
+        const companyRevisionGuard =
+          companyRevisionStatement === null ? [] : [companyRevisionStatement]
         try {
           const results = await this.c.env.DB.batch<{ number: number }>([
             ...companyRevisionGuard,
@@ -364,14 +365,18 @@ export class CreatePersonnelActionRequest {
   }): Promise<CreatedPersonnelActionRequest | ApplicationError | null> {
     const session = this.c.var.session
     if (session === null) return new ForbiddenError("認証が必要です", "forbidden")
-    const existing = await findCompanyPersonnelActionRequest({
-      env: {
-        DB: this.c.env.DB,
-        COMPANY_TIME_ZONE: this.c.env.COMPANY_TIME_ZONE,
-        NOW: this.c.env.NOW,
+    const existing = await findCompanyPersonnelActionRequest(
+      {
+        env: {
+          DB: this.c.env.DB,
+          COMPANY_TIME_ZONE: this.c.env.COMPANY_TIME_ZONE,
+          NOW: this.c.env.NOW,
+        },
+        var: { database: this.c.var.database, auditContext: this.c.var.auditContext },
       },
-      var: { database: this.c.var.database, auditContext: this.c.var.auditContext },
-    }, session, { id: input.idempotencyKey })
+      session,
+      { id: input.idempotencyKey },
+    )
     if (existing instanceof CompanyConflictError)
       return new ConflictError(existing.message, existing.code)
     if (existing instanceof CompanyOperationError) {
@@ -431,7 +436,11 @@ export class CreatePersonnelActionRequest {
     if (input.targetId === null) {
       return new ForbiddenError("対象従業員の人事変更を申請できません", "forbidden")
     }
-    const authority = await resolveCompanyOrganizationAuthority(this.c, input.requesterId, input.targetId)
+    const authority = await resolveCompanyOrganizationAuthority(
+      this.c,
+      input.requesterId,
+      input.targetId,
+    )
     if (authority instanceof Error) {
       return new UnexpectedError("組織スコープを解決できません", { cause: authority })
     }
@@ -451,7 +460,8 @@ export class CreatePersonnelActionRequest {
     }
     if (input.prospective) {
       const revision = await readCompanyOrganizationLifecycleRevision({ database: this.c.env.DB })
-      if (revision instanceof Error) return new UnexpectedError("人事情報を確認できません", { cause: revision })
+      if (revision instanceof Error)
+        return new UnexpectedError("人事情報を確認できません", { cause: revision })
       return input.employeeRevision === 0 &&
         (input.organizationRevision === null || input.organizationRevision === revision)
         ? true

@@ -549,6 +549,36 @@ function getModuleSpecifier(node: ts.Node): string | null | Error {
     : new Error("動的依存先を静的に確認できません")
 }
 
+/** 業務と API composition は Company の公開面だけを使い、内部実装を直接呼ばない。 */
+export function inspectCompanyInternalDependency(
+  file: string,
+  moduleSpecifier: string,
+): ContextBoundaryViolation[] {
+  const normalized = file.replaceAll("\\", "/")
+  if (/(?:^|\/)src\/contexts\/company\//.test(normalized)) return []
+  if (/(?:^|\/)test\//.test(normalized) || /\.test-support\.tsx?$/.test(normalized)) return []
+
+  const internal = moduleSpecifier.match(
+    /^@\/contexts\/company\/(application|infrastructure|lib)(?:\/|$)/,
+  )
+  if (internal === null) return []
+
+  // 業務の table 定義は Company の table への外部キーだけを参照してよい。
+  if (
+    moduleSpecifier.startsWith("@/contexts/company/infrastructure/schema/") &&
+    /\/infrastructure\/schema\//.test(normalized)
+  ) {
+    return []
+  }
+
+  return [
+    {
+      file,
+      reason: `Company の内部実装へ依存しています。interface/operations の公開 operation を使ってください: ${moduleSpecifier}`,
+    },
+  ]
+}
+
 function inspectModuleDependency(
   file: string,
   source: ContextSource,
@@ -563,6 +593,9 @@ function inspectModuleDependency(
   ) {
     return [{ file, reason: `撤去済みの layer-first path へ依存しています: ${moduleSpecifier}` }]
   }
+
+  const companyInternal = inspectCompanyInternalDependency(file, moduleSpecifier)
+  if (companyInternal.length > 0) return companyInternal
 
   const target = classifyContextModule(moduleSpecifier)
 
@@ -596,6 +629,32 @@ function inspectModuleDependency(
   }
 
   return []
+}
+
+/** API composition root も Company の内部実装へ直接依存させない。 */
+export function inspectApiRootCompanyDependencies(
+  file: string,
+  sourceText: string,
+): ContextBoundaryViolation[] {
+  const violations: ContextBoundaryViolation[] = []
+  const sourceFile = ts.createSourceFile(
+    file,
+    sourceText,
+    ts.ScriptTarget.Latest,
+    true,
+    file.endsWith(".tsx") ? ts.ScriptKind.TSX : ts.ScriptKind.TS,
+  )
+
+  function visit(node: ts.Node): void {
+    const moduleSpecifier = getModuleSpecifier(node)
+    if (typeof moduleSpecifier === "string") {
+      violations.push(...inspectCompanyInternalDependency(file, moduleSpecifier))
+    }
+    ts.forEachChild(node, visit)
+  }
+
+  visit(sourceFile)
+  return violations
 }
 
 /** context sourceのimport/export/type import/動的依存を同じ規則で検査する。 */
@@ -687,7 +746,15 @@ export async function collectContextBoundaryViolations(): Promise<ContextBoundar
 
   if (existsSync(API_ROOT)) {
     for await (const file of new Glob("**/*.{ts,tsx}").scan(API_ROOT)) {
-      violations.push(...inspectApiRootPath(relative(PROJECT_ROOT, resolve(API_ROOT, file))))
+      const path = resolve(API_ROOT, file)
+      violations.push(...inspectApiRootPath(relative(PROJECT_ROOT, path)))
+      if (isTestFile(file)) continue
+      violations.push(
+        ...inspectApiRootCompanyDependencies(
+          relative(PROJECT_ROOT, path),
+          readFileSync(path, "utf8"),
+        ),
+      )
     }
   }
 

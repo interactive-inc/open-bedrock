@@ -104,7 +104,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       }
 
       if (command.session.hasPermission("org:manage") === false) {
-        const organizationAuthority = await resolveCompanyOrganizationAuthority(c, command.employeeId, leaveRequest.employeeId)
+        const organizationAuthority = await resolveCompanyOrganizationAuthority(
+          c,
+          command.employeeId,
+          leaveRequest.employeeId,
+        )
 
         if (organizationAuthority instanceof Error) {
           return new UnexpectedError("failed to resolve organization authority", {

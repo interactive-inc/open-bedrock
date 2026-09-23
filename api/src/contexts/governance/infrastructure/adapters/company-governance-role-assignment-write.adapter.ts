@@ -1,12 +1,12 @@
-import { ApplyOrganizationChange } from "@/contexts/company/application/organization/apply-organization-change"
+import {
+  openCompanyResourceRepository,
+  type CompanyResourceStoreWriteResult as CompanyResourceWriteResult,
+} from "@/contexts/company/interface/operations/open-company-resource-repository"
+import { applyCompanyOrganizationChange } from "@/contexts/company/interface/operations/apply-company-organization-change"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
 import type { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
-import {
-  D1CompanyResourceRepository,
-  type CompanyResourceWriteResult,
-} from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 
 type Context = Readonly<{
   actor: CompanyActorValue
@@ -64,7 +64,7 @@ export class CompanyGovernanceRoleAssignmentWriteAdapter {
       recordedAt: number
     }) => ReadonlyArray<D1PreparedStatement>
   }): Promise<AssignCompanyGovernanceRoleResult> {
-    const snapshotRepository = new D1CompanyResourceRepository({ database: this.c.database })
+    const snapshotRepository = openCompanyResourceRepository({ database: this.c.database })
     const snapshot = await snapshotRepository.findMany({
       organizationId: props.organizationId,
       organizationRevision: props.expectedRevision,
@@ -204,7 +204,7 @@ export class CompanyGovernanceRoleAssignmentWriteAdapter {
     if (additionalStatements.length > 0 && props.additionalPayload === undefined) {
       return { kind: "unavailable", cause: new Error("Additional statements require a payload") }
     }
-    const repository = new D1CompanyResourceRepository({
+    const repository = openCompanyResourceRepository({
       database: this.c.database,
       atomicStatements: [...this.c.auditStatements, ...additionalStatements],
       atomicPayload: {
@@ -238,7 +238,6 @@ export class CompanyGovernanceRoleAssignmentWriteAdapter {
     resources.push(assignment)
     if (props.voided === true) resources.push({ ...assignment, revision: 2, state: "void" })
 
-    const application = new ApplyOrganizationChange({ actor: this.c.actor, repository })
     const change = {
       commandId: props.commandId,
       expectedRevision: props.expectedRevision,
@@ -246,7 +245,10 @@ export class CompanyGovernanceRoleAssignmentWriteAdapter {
       recordedAt: props.recordedAt,
       resources,
     }
-    const written = await application.execute(change)
+    const written = await applyCompanyOrganizationChange(
+      { actor: this.c.actor, repository },
+      change,
+    )
     return written.kind === "applied"
       ? {
           kind: "assigned",
@@ -264,7 +266,7 @@ export class CompanyGovernanceRoleAssignmentWriteAdapter {
     assignmentId: string
     recordedAt: number
   }): Promise<RevokeCompanyGovernanceRoleResult> {
-    const repository = new D1CompanyResourceRepository({
+    const repository = openCompanyResourceRepository({
       database: this.c.database,
       atomicStatements: this.c.auditStatements,
       atomicPayload: { kind: "governance_role_revocation", assignmentId: props.assignmentId },
@@ -284,19 +286,22 @@ export class CompanyGovernanceRoleAssignmentWriteAdapter {
     ) {
       return { kind: "invalid", error: invalidResource() }
     }
-    const written = await new ApplyOrganizationChange({ actor: this.c.actor, repository }).execute({
-      commandId: props.commandId,
-      expectedRevision: props.expectedRevision,
-      reason: `Revoke governance responsibility assignment ${props.assignmentId}`,
-      recordedAt: props.recordedAt,
-      resources: [
-        {
-          ...assignment.toProps(),
-          revision: assignment.revision + 1,
-          state: "void",
-        },
-      ],
-    })
+    const written = await applyCompanyOrganizationChange(
+      { actor: this.c.actor, repository },
+      {
+        commandId: props.commandId,
+        expectedRevision: props.expectedRevision,
+        reason: `Revoke governance responsibility assignment ${props.assignmentId}`,
+        recordedAt: props.recordedAt,
+        resources: [
+          {
+            ...assignment.toProps(),
+            revision: assignment.revision + 1,
+            state: "void",
+          },
+        ],
+      },
+    )
     return written.kind === "applied"
       ? {
           kind: "revoked",

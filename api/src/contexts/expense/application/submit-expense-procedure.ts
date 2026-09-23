@@ -1,10 +1,10 @@
+import { resolveCompanyProcedureTask } from "@/contexts/company/interface/operations/resolve-company-procedure-task"
 import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
 import { PrepareExpenseApprovalScopeAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-approval-scope.adapter"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { zOrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
-import { ResolveCompanyProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task.adapter"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
 import { Expense } from "@/contexts/expense/domain/entities/expense.entity"
 import {
@@ -185,7 +185,7 @@ export class SubmitExpenseProcedure {
     if (policy instanceof Error || policy.workflow === null)
       return new ValidationError("承認規程が不正です", "invalid_procedure")
     const payload = expense.toProposalBody(evidence.evidence)
-    const resolved = await new ResolveCompanyProcedureTaskAdapter({
+    const resolved = await resolveCompanyProcedureTask({
       c: this.c,
       policy,
       payload,
@@ -202,7 +202,7 @@ export class SubmitExpenseProcedure {
         positionTitle: applicant.primaryAssignment?.positionTitle ?? null,
       },
       excludedEmployeeIds: new Set([applicant.id]),
-    }).resolveCompanyProcedureTask()
+    })
     if (resolved instanceof Error || resolved === null)
       return new ValidationError("経費の判断候補を解決できません", "workflow_unresolvable")
     const proposal = await ProposalEntity.create({
