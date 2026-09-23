@@ -494,7 +494,7 @@
     "src/contexts/company/interface/operations/prepare-company-record-decision-replay.ts": "faffca8afccceeda197b16bd4fcdaeb44f22406003b70e3f837b9995ec9f73e8",
     "src/contexts/company/interface/operations/prepare-company-record-procedure-decision.ts": "6bf60fbe3dd81ea259e78a93a4890d1f271d804fd1c11bfd621b2e212ea3c869",
     "src/contexts/company/interface/operations/prepare-company-record-procedure-task.ts": "74bc82e5374ff44e17f901800bb5f67038724f2aa0b27010e4f3e94b6b463da0",
-    "src/contexts/company/interface/operations/read-company-account-display-names.ts": "6fa21fe2d17b89bb924447cb43f0e18aa4dc20691f03889daa11873512d06456",
+    "src/contexts/company/interface/operations/read-company-account-display-names.ts": "a73c15a69e80cd229f06ad2784b23cdd4aeac2cd71cedce81ace743bc334ce80",
     "src/contexts/company/interface/operations/read-company-account-employee-links.ts": "1c68d7bb00a26e8fd82276a7aa6de5da0536a6064a0801c369502b22aaa1da2e",
     "src/contexts/company/interface/operations/read-company-active-headcount.ts": "4abb20cfbdb26afe38472a0ca57f6877cf1cf68420b007a65c307ab5fe77953c",
     "src/contexts/company/interface/operations/read-company-canonical-organization-state.ts": "f616f3355b9e72832158b76a946552cb3a048ff505cf1a42fe0ab4ac49c560c9",
