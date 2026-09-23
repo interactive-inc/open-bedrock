@@ -10,7 +10,10 @@ import { RecordRetirementVerificationPlanRepository } from "@system/infrastructu
 import { RecordRetirementVerificationReceiptRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
 import { RecordRetirementVerificationReceiptEntity } from "@system/domain/entities/record-retirement-verification-receipt.entity"
 import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
-import { onboardingRecordKinds } from "@/contexts/onboarding/domain/definitions/onboarding-record-kind.definition"
+import {
+  onboardingRecordCapabilityRevision,
+  onboardingRecordKinds,
+} from "@/contexts/onboarding/domain/definitions/onboarding-record-kind.definition"
 
 type Context = ConstructorParameters<typeof PrepareOnboardingRetirementPageAdapter>[0]
 
@@ -45,7 +48,7 @@ export class VerifyOnboardingRetirementPage {
       plan === null ||
       plan.snapshot.sourceNamespace !== command.sourceNamespace ||
       plan.snapshot.ownerContext !== "onboarding" ||
-      plan.snapshot.capability.revision !== 1 ||
+      plan.snapshot.capability.revision !== onboardingRecordCapabilityRevision ||
       JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(onboardingRecordKinds)
     )
       return new OnboardingRetirementConflictError(

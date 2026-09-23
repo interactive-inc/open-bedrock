@@ -24,7 +24,19 @@ const numericTables = {
   "onboarding-task-record": "onboarding_tasks",
 } as const
 
-/** 停止した5台帳を各主キーの順序で分割し、停止世代も同じ読取で確認する。 */
+const textTables = {
+  "onboarding-lifecycle-delivery-record":
+    "SELECT job_id AS record_id FROM onboarding_lifecycle_deliveries",
+  "onboarding-lifecycle-template-binding-record":
+    "SELECT effect_type AS record_id FROM onboarding_lifecycle_template_bindings",
+} as const
+
+const textKeys = {
+  "onboarding-lifecycle-delivery-record": "job_id",
+  "onboarding-lifecycle-template-binding-record": "effect_type",
+} as const
+
+/** 停止した6台帳を各主キーの順序で分割し、停止世代も同じ読取で確認する。 */
 export class ListFrozenOnboardingRecordPageAdapter {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -47,6 +59,8 @@ export class ListFrozenOnboardingRecordPageAdapter {
     if (generation instanceof Error) return generation
     const after = request.afterCursor
     const numericTable = numericTables[request.recordKind as keyof typeof numericTables]
+    const textTable = textTables[request.recordKind as keyof typeof textTables]
+    const textKey = textKeys[request.recordKind as keyof typeof textKeys]
     const numericCursor = numericTable && after !== null ? Number(after) : null
     const taskCursor =
       request.recordKind === "onboarding-template-task-record" && after !== null
@@ -86,15 +100,9 @@ export class ListFrozenOnboardingRecordPageAdapter {
                 )
                 .bind(taskCursor.templateCode, taskCursor.code, request.limit + 1)
           : after === null
-            ? db
-                .prepare(
-                  `SELECT job_id AS record_id FROM onboarding_lifecycle_deliveries ORDER BY job_id LIMIT ?1`,
-                )
-                .bind(request.limit + 1)
+            ? db.prepare(`${textTable} ORDER BY ${textKey} LIMIT ?1`).bind(request.limit + 1)
             : db
-                .prepare(
-                  `SELECT job_id AS record_id FROM onboarding_lifecycle_deliveries WHERE job_id>?1 ORDER BY job_id LIMIT ?2`,
-                )
+                .prepare(`${textTable} WHERE ${textKey}>?1 ORDER BY ${textKey} LIMIT ?2`)
                 .bind(after, request.limit + 1)
       const statements = [...generation.assertions, page, ...generation.assertions]
       const reads = await db.batch<{

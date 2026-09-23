@@ -14,7 +14,7 @@ import { GET as preservedDossier } from "@system/interface/routes/system.preserv
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
 
-test("入退社手続き5台帳を分割照合し撤去確定する", async () => {
+test("入退社手続き6台帳を分割照合し撤去確定する", async () => {
   const { database, governance, creator, reviewer, definition, bindings, tokenFor, request } =
     await createOnboardingPreservationFixture()
   for (let id = -9; id <= 1; id++) {
@@ -52,6 +52,12 @@ test("入退社手続き5台帳を分割照合し撤去確定する", async () =
     (job_id,action_id,created_at,outcome,assignment_id,processed_at)
     VALUES ('job:onboarding-test',?1,1,'assigned',0,2)`)
     .bind(actionId)
+    .run()
+  await database
+    .prepare(`INSERT INTO onboarding_lifecycle_template_bindings
+    (effect_type,template_code,updated_at,updated_by_account_id)
+    VALUES ('hire','template--9',3,?1)`)
+    .bind(creator.accountId)
     .run()
   const token = await tokenFor(creator.accountId)
   const stepUpToken = "f".repeat(64)
@@ -100,6 +106,7 @@ test("入退社手続き5台帳を分割照合し撤去確定する", async () =
   const assignmentMappings: typeof taskMappings = []
   const completionMappings: typeof taskMappings = []
   const deliveryMappings: typeof taskMappings = []
+  const bindingMappings: typeof taskMappings = []
   const sources = [
     ...Array.from({ length: 11 }, (_, index) => ({
       kind: "onboarding-template-record" as const,
@@ -112,6 +119,7 @@ test("入退社手続き5台帳を分割照合し撤去確定する", async () =
     { kind: "onboarding-assignment-record" as const, id: "0" },
     { kind: "onboarding-task-record" as const, id: "0" },
     { kind: "onboarding-lifecycle-delivery-record" as const, id: "job:onboarding-test" },
+    { kind: "onboarding-lifecycle-template-binding-record" as const, id: "hire" },
   ]
   for (const source of sources) {
     const path = `/onboarding/records/${source.kind}/${encodeURIComponent(source.id)}/preservation-requests`
@@ -171,6 +179,7 @@ test("入退社手続き5台帳を分割照合し撤去確定する", async () =
       "onboarding-assignment-record": assignmentMappings,
       "onboarding-task-record": completionMappings,
       "onboarding-lifecycle-delivery-record": deliveryMappings,
+      "onboarding-lifecycle-template-binding-record": bindingMappings,
     }[source.kind]
     mappings.push({ sourceRecordId: source.id, preservedRecordId: record.record_id })
   }
@@ -191,6 +200,7 @@ test("入退社手続き5台帳を分割照合し撤去確定する", async () =
     ["onboarding-assignment-record", assignmentMappings],
     ["onboarding-task-record", completionMappings],
     ["onboarding-lifecycle-delivery-record", deliveryMappings],
+    ["onboarding-lifecycle-template-binding-record", bindingMappings],
   ] as const) {
     const page = await cover(kind, records)
     if (page.status !== 200) throw new Error(await page.text())
@@ -211,7 +221,7 @@ test("入退社手続き5台帳を分割照合し撤去確定する", async () =
       recordKinds: z.array(z.string()),
     })
     .parse(await planResponse.json())
-  expect(plan.totalPages).toBe(6)
+  expect(plan.totalPages).toBe(7)
   expect(plan.recordKinds).toEqual([...onboardingRecordKinds])
   const retirementDefinition = ProcedureDefinitionEntity.create({
     key: "onboarding-retirement",

@@ -11,7 +11,7 @@ function numericId(recordId: string): number | null {
   return parsed.success && String(parsed.data) === recordId ? parsed.data : null
 }
 
-/** 手続き5台帳の全列を、業務ロジックに依存しない形式番号付きの原文にする。 */
+/** 手続き6台帳の全列を、業務ロジックに依存しない形式番号付きの原文にする。 */
 export function onboardingSnapshotQuery(
   recordKind: OnboardingRecordKind,
   recordId: string,
@@ -57,6 +57,17 @@ export function onboardingSnapshotQuery(
         'title',title,'sort_order',sort_order,'status',status,'completed_at',completed_at))
         AS snapshot_json FROM onboarding_tasks WHERE id=?1`,
       values: [id],
+    }
+  }
+  if (recordKind === "onboarding-lifecycle-template-binding-record") {
+    if (recordId !== "hire" && recordId !== "retired")
+      return new Error("invalid onboarding lifecycle template binding id")
+    return {
+      sql: `SELECT json_object('format','onboarding-lifecycle-template-binding-record','version',1,'binding',json_object(
+        'effect_type',effect_type,'template_code',template_code,'updated_at',updated_at,
+        'updated_by_account_id',updated_by_account_id)) AS snapshot_json
+        FROM onboarding_lifecycle_template_bindings WHERE effect_type=?1`,
+      values: [recordId],
     }
   }
   if (!z.string().min(1).max(1000).safeParse(recordId).success)

@@ -6,7 +6,11 @@ export const onboardingRecordKinds = [
   "onboarding-assignment-record",
   "onboarding-task-record",
   "onboarding-lifecycle-delivery-record",
+  "onboarding-lifecycle-template-binding-record",
 ] as const
+
+/** 保全対象の記録種別の組を変えたら上げ、古い組で作った撤去計画を拒否する。 */
+export const onboardingRecordCapabilityRevision = 2
 
 export const onboardingRecordKindSchema = z.enum(onboardingRecordKinds)
 export type OnboardingRecordKind = z.infer<typeof onboardingRecordKindSchema>
