@@ -1,5 +1,5 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { softwareLicenseFactory } from "@/contexts/software-license/interface/request-environment/software-license-factory"
 import { ensureLicenseEnabled } from "@/contexts/software-license/interface/middlewares/ensure-license-enabled"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
@@ -40,7 +40,7 @@ export const GET = softwareLicenseFactory.createHandlers(
     })
     if (assignments instanceof Error) throw new SoftwareLicenseUnavailableError()
     const page = assignments.slice(0, query.limit)
-    const employees = await new CompanyEmployeeDirectoryReadAdapter({
+    const employees = await openCompanyEmployeeDirectory({
       env: {
         DB: c.env.DB,
         COMPANY_TIME_ZONE: c.env.COMPANY_TIME_ZONE,

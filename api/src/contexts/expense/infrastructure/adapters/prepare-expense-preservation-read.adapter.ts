@@ -1,9 +1,9 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
 import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 
@@ -41,7 +41,7 @@ export class PrepareExpensePreservationReadAdapter {
     }, { accountIds: [input.authentication.accountId], employeeCodes: [] })
     if (company instanceof Error)
       return new UnexpectedError("会社資格を固定できません", { cause: company })
-    const people = await new CompanyEmployeeDirectoryReadAdapter({
+    const people = await openCompanyEmployeeDirectory({
       env: { ...this.c.env, NOW: input.at.toISOString() },
     }).findForAccountIds([input.authentication.accountId])
     if (people instanceof Error)

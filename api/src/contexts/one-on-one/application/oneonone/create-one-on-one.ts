@@ -1,7 +1,7 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"
 import type { Context } from "@/env"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
 import { isOneOnOneRecordSourceFrozenError } from "@/contexts/one-on-one/infrastructure/repositories/lib/is-one-on-one-record-source-frozen-error"
 import { UniqueConstraintError } from "@/lib/d1/errors"
@@ -28,7 +28,7 @@ export class CreateOneOnOne {
   async run(command: Command): Promise<OneOnOne | ApplicationError> {
     const oneOnOneRepository = new OneOnOneRepository(this.c)
 
-    const employee = await new CompanyEmployeeDirectoryReadAdapter(this.c).findByCode(
+    const employee = await openCompanyEmployeeDirectory(this.c).findByCode(
       command.memberCode,
     )
     const memberId = employee instanceof Error ? employee : (employee?.id ?? null)

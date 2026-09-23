@@ -1,6 +1,6 @@
+import { readCompanyAccountEmployeeLinks } from "@/contexts/company/interface/operations/read-company-account-employee-links"
 import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import { LeaveDecisionNotificationValue } from "@/contexts/leave/domain/values/leave-decision-notification.value"
-import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { toSha256Hex } from "@/lib/crypto/to-sha256-hex"
 import { SystemManagedJobRunnerAdapter } from "@system/infrastructure/adapters/events/system-managed-job-runner.adapter"
@@ -80,7 +80,7 @@ export class LeaveDecisionNotificationDeliveryAdapter {
       timeZone: this.c.env.COMPANY_TIME_ZONE,
     })
     if (asOf instanceof Error) return asOf
-    const links = await new CompanyAccountEmployeeLinksReadAdapter(this.c).findMany({
+    const links = await readCompanyAccountEmployeeLinks(this.c, {
       employeeIds: [notification.props.recipientEmployeeId],
       asOf,
     })

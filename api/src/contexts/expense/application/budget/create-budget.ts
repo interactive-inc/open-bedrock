@@ -1,3 +1,4 @@
+import { readCompanyCanonicalOrganizationState } from "@/contexts/company/interface/operations/read-company-canonical-organization-state"
 import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
 import { Budget } from "@/contexts/expense/domain/entities/budget.entity"
 import type { Context } from "@/env"
@@ -5,7 +6,6 @@ import { BudgetRepository } from "@/contexts/expense/infrastructure/repositories
 import { NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 
 export type Command = {
   organizationUnitId: OrganizationUnitId
@@ -31,9 +31,7 @@ export class CreateBudget {
       return new ValidationError("period_end must not precede period_start", "invalid_period")
     }
 
-    const snapshot = await new ReadCanonicalOrganizationStateAdapter(
-      this.c,
-    ).readCanonicalOrganizationState()
+    const snapshot = await readCompanyCanonicalOrganizationState(this.c)
     if (snapshot instanceof Error) {
       return new UnexpectedError("failed to resolve organization unit", { cause: snapshot })
     }

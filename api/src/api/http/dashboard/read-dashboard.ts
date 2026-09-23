@@ -1,5 +1,5 @@
+import { readCompanyCanonicalOrganizationState } from "@/contexts/company/interface/operations/read-company-canonical-organization-state"
 import { buildDashboardMonthLabels } from "@/api/http/dashboard/build-dashboard-month-labels"
-import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 import {
   EMPTY_DASHBOARD_BUSINESS_METRICS,
   type DashboardBusinessMetrics,
@@ -25,7 +25,7 @@ export async function readDashboard(context: Context, now: string) {
       new ListSystemCaseMonthlyCountsAdapter({
         env: { DB: context.env.DB },
       }).listSystemCaseMonthlyCounts(windowStartDate),
-      new ReadCanonicalOrganizationStateAdapter(context).readCanonicalOrganizationState(),
+      readCompanyCanonicalOrganizationState(context),
       Promise.all(DASHBOARD_METRIC_PROVIDERS.map((provider) => provider(context))),
     ])
   if (pendingApplicationCount instanceof Error) return pendingApplicationCount

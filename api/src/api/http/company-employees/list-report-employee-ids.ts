@@ -1,6 +1,6 @@
+import { readCompanyCanonicalOrganizationState } from "@/contexts/company/interface/operations/read-company-canonical-organization-state"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
-import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 import { listReportWorkforceEmployeeIds } from "@/contexts/company/domain/policies/list-report-workforce-employee-ids.policy"
 
 export type Props = {
@@ -15,9 +15,7 @@ export type Props = {
 export async function listReportEmployeeIds(
   props: Props,
 ): Promise<ReadonlyArray<EmployeeId> | Error> {
-  const snapshot = await new ReadCanonicalOrganizationStateAdapter(
-    props.c,
-  ).readCanonicalOrganizationState()
+  const snapshot = await readCompanyCanonicalOrganizationState(props.c)
   if (snapshot instanceof Error) return snapshot
 
   return listReportWorkforceEmployeeIds({

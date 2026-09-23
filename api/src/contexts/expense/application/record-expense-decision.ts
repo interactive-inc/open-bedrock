@@ -1,3 +1,4 @@
+import { prepareCompanyProcedureDecision } from "@/contexts/company/interface/operations/prepare-company-procedure-decision"
 import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
 import { PrepareExpenseApprovalScopeAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-approval-scope.adapter"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
@@ -7,7 +8,6 @@ import {
   CompanyConflictError,
   CompanyUnexpectedError,
 } from "@/contexts/company/domain/errors"
-import { PrepareCompanyProcedureDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-procedure-decision.adapter"
 import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/repositories/expense-procedure.repository"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
@@ -126,7 +126,7 @@ export class RecordExpenseDecision {
       return new ConflictError("負担組織を確認できません", "organization_scope_changed", {
         cause: scope,
       })
-    const prepared = await new PrepareCompanyProcedureDecisionAdapter(this.c).prepare({
+    const prepared = await prepareCompanyProcedureDecision(this.c, {
       proposal,
       decisionTarget: command.decisionTarget,
       actorAccountId: command.session.accountId,

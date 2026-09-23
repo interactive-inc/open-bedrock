@@ -1,7 +1,7 @@
+import { readCompanyCanonicalOrganizationState } from "@/contexts/company/interface/operations/read-company-canonical-organization-state"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { GovernanceMetadata } from "@/contexts/governance/domain/definitions/governance-document.definition"
 import type { Context as HonoContext } from "@/env"
-import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 import { ResolveGovernanceOrgRoleAdapter } from "@/contexts/governance/infrastructure/adapters/resolve-governance-org-role.adapter"
 
 type Context = {
@@ -47,9 +47,7 @@ export class GovernanceAccessAdapter {
     if (!metadata.audience.employment_statuses.includes(session.employmentStatus)) return false
     if (metadata.audience.all_employees) return true
 
-    const snapshot = await new ReadCanonicalOrganizationStateAdapter(
-      this.c.context,
-    ).readCanonicalOrganizationState()
+    const snapshot = await readCompanyCanonicalOrganizationState(this.c.context)
     if (snapshot instanceof Error) return snapshot
     const employee = snapshot.employees.find(
       (candidate) => candidate.employeeId === session.employeeId,

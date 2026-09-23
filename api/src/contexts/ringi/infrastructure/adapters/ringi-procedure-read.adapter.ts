@@ -1,9 +1,9 @@
+import { prepareCompanyProcedureDecision } from "@/contexts/company/interface/operations/prepare-company-procedure-decision"
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { revalidateCompanyProcedureExecution } from "@/contexts/company/interface/operations/revalidate-company-procedure-execution"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { CompanyOperationError } from "@/contexts/company/domain/errors"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
-import { PrepareCompanyProcedureDecisionAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-procedure-decision.adapter"
 import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/repositories/ringi-request.repository"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
@@ -85,7 +85,7 @@ export class RingiProcedureReadAdapter {
       if (human !== "forbidden") {
         let guards: ReadonlyArray<D1PreparedStatement> = []
         if (proposal.status === "pending") {
-          const authority = await new PrepareCompanyProcedureDecisionAdapter(this.c).prepare({
+          const authority = await prepareCompanyProcedureDecision(this.c, {
             proposal,
             decisionTarget: {
               proposalVersion: target.proposal_version,
@@ -151,7 +151,7 @@ export class RingiProcedureReadAdapter {
     const isOwner = request.applicantId === input.session.employeeId
     if (!isOwner && !input.session.hasPermission("ringi:read:all") && !canReview)
       return new ForbiddenError("この稟議を参照する権限がありません", "forbidden")
-    const directory = new CompanyEmployeeDirectoryReadAdapter(this.c)
+    const directory = openCompanyEmployeeDirectory(this.c)
     const people = await directory.findForEmployeeIds([request.applicantId, request.approverId])
     if (people instanceof Error)
       return new UnexpectedError("稟議の関係者を取得できません", { cause: people })

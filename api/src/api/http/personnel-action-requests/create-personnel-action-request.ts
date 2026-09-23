@@ -1,3 +1,7 @@
+import { loadCompanyCurrentOrganization } from "@/contexts/company/interface/operations/load-company-current-organization"
+import { resolveCompanyOrganizationAuthority } from "@/contexts/company/interface/operations/resolve-company-organization-authority"
+import { findCompanyPersonnelActionRequest } from "@/contexts/company/interface/operations/find-company-personnel-action-request"
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { PersonnelActionRequestLedgerAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-request-ledger.adapter"
 import { prepareCompanyOrganizationRevisionStatement } from "@/contexts/company/interface/operations/prepare-company-organization-revision-statement"
 import { readCompanyOrganizationLifecycleRevision } from "@/contexts/company/interface/operations/read-company-organization-lifecycle-revision"
@@ -19,11 +23,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { fingerprintPersonnelAction } from "@/contexts/company/domain/definitions/fingerprint-personnel-action.definition"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
 import { CompanyOperationError, CompanyConflictError } from "@/contexts/company/domain/errors"
-import { CurrentOrganizationReadModelAdapter } from "@/contexts/company/infrastructure/adapters/organization/current-organization-read-model.adapter"
-import { ResolveOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-organization-authority.adapter"
 import { ResolveCompanyProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task.adapter"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
-import { FindPersonnelActionRequestAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/find-personnel-action-request.adapter"
 import { GetLifecycleState } from "@/contexts/company/interface/operations/employee-lifecycle/get-lifecycle-state"
 import { createCompanySystemAuditEvent } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/lib/create-company-system-audit-event"
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
@@ -98,7 +98,7 @@ export class CreatePersonnelActionRequest {
       },
       var: { database: this.c.var.database, auditContext: this.c.var.auditContext },
     }
-    const directory = new CompanyEmployeeDirectoryReadAdapter(company)
+    const directory = openCompanyEmployeeDirectory(company)
     const employeeCode =
       command.input.kind === "corrected"
         ? command.input.replacementAction.employeeCode
@@ -364,14 +364,14 @@ export class CreatePersonnelActionRequest {
   }): Promise<CreatedPersonnelActionRequest | ApplicationError | null> {
     const session = this.c.var.session
     if (session === null) return new ForbiddenError("認証が必要です", "forbidden")
-    const existing = await new FindPersonnelActionRequestAdapter({
+    const existing = await findCompanyPersonnelActionRequest({
       env: {
         DB: this.c.env.DB,
         COMPANY_TIME_ZONE: this.c.env.COMPANY_TIME_ZONE,
         NOW: this.c.env.NOW,
       },
       var: { database: this.c.var.database, auditContext: this.c.var.auditContext },
-    }).findPersonnelActionRequest(session, { id: input.idempotencyKey })
+    }, session, { id: input.idempotencyKey })
     if (existing instanceof CompanyConflictError)
       return new ConflictError(existing.message, existing.code)
     if (existing instanceof CompanyOperationError) {
@@ -419,9 +419,7 @@ export class CreatePersonnelActionRequest {
     const session = this.c.var.session
     if (session?.hasPermission("employee:lifecycle:read:all")) return true
     if (input.prospective) {
-      const organization = await new CurrentOrganizationReadModelAdapter(
-        this.c,
-      ).loadCurrentOrganization()
+      const organization = await loadCompanyCurrentOrganization(this.c)
       if (organization instanceof Error) {
         return new UnexpectedError("組織スコープを解決できません", { cause: organization })
       }
@@ -433,9 +431,7 @@ export class CreatePersonnelActionRequest {
     if (input.targetId === null) {
       return new ForbiddenError("対象従業員の人事変更を申請できません", "forbidden")
     }
-    const authority = await new ResolveOrganizationAuthorityAdapter(
-      this.c,
-    ).resolveOrganizationAuthority(input.requesterId, input.targetId)
+    const authority = await resolveCompanyOrganizationAuthority(this.c, input.requesterId, input.targetId)
     if (authority instanceof Error) {
       return new UnexpectedError("組織スコープを解決できません", { cause: authority })
     }

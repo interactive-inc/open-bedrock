@@ -1,6 +1,6 @@
+import { readCompanyCanonicalOrganizationState } from "@/contexts/company/interface/operations/read-company-canonical-organization-state"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
-import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 
 export type Props = {
   c: Context
@@ -12,9 +12,7 @@ export type Props = {
  * 下位部署は含まない(部署スコープの既存規約)。部署が存在しない場合も空配列を返す。
  */
 export async function listDepartmentEmployeeIds(props: Props): Promise<Array<EmployeeId> | Error> {
-  const snapshot = await new ReadCanonicalOrganizationStateAdapter(
-    props.c,
-  ).readCanonicalOrganizationState()
+  const snapshot = await readCompanyCanonicalOrganizationState(props.c)
   if (snapshot instanceof Error) return snapshot
   const unitIds = new Set(
     snapshot.organization.units

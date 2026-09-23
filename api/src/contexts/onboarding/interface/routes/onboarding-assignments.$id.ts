@@ -1,5 +1,5 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
 import { CancelOnboardingAssignment } from "@/contexts/onboarding/application/cancel-onboarding-assignment"
 import { UpdateOnboardingAssignment } from "@/contexts/onboarding/application/update-onboarding-assignment"
@@ -72,7 +72,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       return new ForbiddenError("cannot view assignment", "forbidden")
     }
 
-    const employeeRepository = new CompanyEmployeeDirectoryReadAdapter(c)
+    const employeeRepository = openCompanyEmployeeDirectory(c)
 
     const employee = await employeeRepository.findById(assignment.employeeId)
 

@@ -1,7 +1,7 @@
+import { loadCompanyCurrentOrganization } from "@/contexts/company/interface/operations/load-company-current-organization"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
 import { GovernanceAdapter } from "@/contexts/governance/infrastructure/adapters/governance.adapter"
-import { CurrentOrganizationReadModelAdapter } from "@/contexts/company/infrastructure/adapters/organization/current-organization-read-model.adapter"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
@@ -31,7 +31,7 @@ export class ResolveGovernanceOrgRoleAdapter {
     const repository = new GovernanceAdapter(this.c)
     const [role, organization] = await Promise.all([
       repository.findOrgRole(code),
-      new CurrentOrganizationReadModelAdapter(this.c).loadCurrentOrganization(),
+      loadCompanyCurrentOrganization(this.c),
     ])
     if (role instanceof Error) return role
     if (organization instanceof Error) return organization

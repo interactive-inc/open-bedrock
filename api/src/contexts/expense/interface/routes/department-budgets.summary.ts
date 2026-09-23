@@ -1,5 +1,5 @@
+import { readCompanyCanonicalOrganizationState } from "@/contexts/company/interface/operations/read-company-canonical-organization-state"
 import { BudgetRepository } from "@/contexts/expense/infrastructure/repositories/budget/budget.repository"
-import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 import type { OrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { factory } from "@/api/http/factory"
 import { UnexpectedError } from "@/lib/errors"
@@ -46,9 +46,7 @@ export const GET = factory.createHandlers(
       throw toHttpException(new UnexpectedError("failed to list budgets", { cause: budgets }))
     }
 
-    const snapshot = await new ReadCanonicalOrganizationStateAdapter(
-      c,
-    ).readCanonicalOrganizationState()
+    const snapshot = await readCompanyCanonicalOrganizationState(c)
     if (snapshot instanceof Error) {
       throw toHttpException(
         new UnexpectedError("failed to load organization units", { cause: snapshot }),

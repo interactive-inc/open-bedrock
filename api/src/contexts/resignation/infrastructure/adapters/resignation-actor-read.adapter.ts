@@ -1,7 +1,7 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import type { ResignationContext } from "@/contexts/resignation/configuration/resignation-context"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { ResignationError } from "@/contexts/resignation/domain/errors"
@@ -41,7 +41,7 @@ export class ResignationActorReadAdapter {
       return new ResignationError("resignation_unavailable", "Company snapshot is unavailable", {
         cause: guard,
       })
-    const directory = new CompanyEmployeeDirectoryReadAdapter({
+    const directory = openCompanyEmployeeDirectory({
       env: {
         DB: this.c.env.DB,
         COMPANY_TIME_ZONE: this.c.env.COMPANY_TIME_ZONE,

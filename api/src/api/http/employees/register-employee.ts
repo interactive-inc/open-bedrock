@@ -1,5 +1,8 @@
-import { InitialAccountProfileStatementAdapter } from "@/contexts/company/infrastructure/adapters/account-profile/initial-account-profile-statement.adapter"
-import { FindRegisteredEmployeeByOperationAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/find-registered-employee-by-operation.adapter"
+import { prepareCompanyPersonnelActionPersistence } from "@/contexts/company/interface/operations/prepare-company-personnel-action-persistence"
+import { prepareCompanyPersonnelActionCompletion } from "@/contexts/company/interface/operations/prepare-company-personnel-action-completion"
+import { prepareCompanyInitialAccountProfileStatement } from "@/contexts/company/interface/operations/prepare-company-initial-account-profile-statement"
+import { findCompanyRegisteredEmployeeByOperation } from "@/contexts/company/interface/operations/find-company-registered-employee-by-operation"
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { readCompanyOrganizationLifecycleRevision } from "@/contexts/company/interface/operations/read-company-organization-lifecycle-revision"
 import type { Context } from "@/env"
 import {
@@ -12,9 +15,6 @@ import {
 import { fingerprintPersonnelAction } from "@/contexts/company/domain/definitions/fingerprint-personnel-action.definition"
 import type { PersonnelActionInput } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
 import { CompanyOperationError } from "@/contexts/company/domain/errors"
-import { PersonnelActionCompletionPreparationAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-completion-preparation.adapter"
-import { PersonnelActionPersistenceAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { SystemPasswordValue } from "@system/domain/values/auth/system-password.value"
 import { hashPassword } from "@system/lib/auth/hash-password"
 import { verifyPassword } from "@system/lib/auth/verify-password"
@@ -120,7 +120,7 @@ export class RegisterEmployee {
     if (replay instanceof ApplicationError) return replay
     if (replay !== null) return replay
     const [existingEmployee, existingIdentity] = await Promise.all([
-      new CompanyEmployeeDirectoryReadAdapter(company).findByCode(input.action.employeeCode),
+      openCompanyEmployeeDirectory(company).findByCode(input.action.employeeCode),
       this.c.env.DB.prepare(
         `SELECT 1 AS found FROM system_identity_profiles
          WHERE lower(email) = lower(?1) LIMIT 1`,
@@ -143,7 +143,7 @@ export class RegisterEmployee {
     if (lifecycleRevision instanceof Error)
       return new UnexpectedError("人事情報を確認できません", { cause: lifecycleRevision })
     const organizationRevision = lifecycleRevision ?? 0
-    const prepared = await new PersonnelActionCompletionPreparationAdapter(company).prepare({
+    const prepared = await prepareCompanyPersonnelActionCompletion(company, {
       session,
       employeeId: null,
       input: input.action,
@@ -181,7 +181,7 @@ export class RegisterEmployee {
         accountId: system.accountId,
       },
     }
-    const companyStatements = await new PersonnelActionPersistenceAdapter(company).prepare(
+    const companyStatements = await prepareCompanyPersonnelActionPersistence(company, 
       persistence,
     )
     if (companyStatements instanceof CompanyOperationError) {
@@ -193,7 +193,7 @@ export class RegisterEmployee {
       const executions = await this.c.env.DB.batch([
         system.accountStatement,
         ...companyStatements,
-        new InitialAccountProfileStatementAdapter(this.c.env.DB).prepare({
+        prepareCompanyInitialAccountProfileStatement(this.c.env.DB, {
           organizationId: "organization:default",
           accountId: system.accountId,
           displayName: input.action.employeeName,
@@ -259,7 +259,7 @@ export class RegisterEmployee {
     | null
   > {
     try {
-      const registered = await new FindRegisteredEmployeeByOperationAdapter(this.c.env.DB).find(
+      const registered = await findCompanyRegisteredEmployeeByOperation(this.c.env.DB, 
         input.idempotencyKey,
       )
       if (registered instanceof Error) throw registered

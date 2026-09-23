@@ -1,6 +1,6 @@
+import { readCompanyCanonicalOrganizationState } from "@/contexts/company/interface/operations/read-company-canonical-organization-state"
 import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
 import { BudgetRepository } from "@/contexts/expense/infrastructure/repositories/budget/budget.repository"
-import { ReadCanonicalOrganizationStateAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-canonical-organization-state.adapter"
 import { UpdateBudget } from "@/contexts/expense/application/budget/update-budget"
 import { factory } from "@/api/http/factory"
 import { ApplicationError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -50,9 +50,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     )
   }
 
-  const snapshot = await new ReadCanonicalOrganizationStateAdapter(
-    c,
-  ).readCanonicalOrganizationState()
+  const snapshot = await readCompanyCanonicalOrganizationState(c)
   if (snapshot instanceof Error) {
     throw toHttpException(
       new UnexpectedError("failed to resolve organization unit", { cause: snapshot }),

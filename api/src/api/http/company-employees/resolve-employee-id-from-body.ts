@@ -1,6 +1,6 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Context } from "@/env"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 
 export type Props = {
   c: Context
@@ -19,7 +19,7 @@ export async function resolveEmployeeIdFromBody(props: Props): Promise<EmployeeI
   }
 
   if (props.employeeCode !== undefined) {
-    const repository = new CompanyEmployeeDirectoryReadAdapter(props.c)
+    const repository = openCompanyEmployeeDirectory(props.c)
 
     const employee = await repository.findByCode(props.employeeCode)
 

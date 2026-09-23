@@ -1,3 +1,4 @@
+import { resolveCompanyEmployeeRelation } from "@/contexts/company/interface/operations/resolve-company-employee-relation"
 import { leaveProcedureStatusSql } from "@/contexts/leave/infrastructure/adapters/lib/leave-procedure-status-sql"
 import { leaveProcedureStatusSchema } from "@/contexts/leave/domain/definitions/leave-procedure.definition"
 import { CreateLeaveRequest } from "@/contexts/leave/application/create-leave-request"
@@ -16,7 +17,6 @@ import {
 import { canReadLeaveOf } from "@/contexts/leave/interface/http/leave-requests/can-read-leave-of"
 import { listDepartmentEmployeeIds } from "@/api/http/company-employees/list-department-employee-ids"
 import { listReportEmployeeIds } from "@/api/http/company-employees/list-report-employee-ids"
-import { ResolveEmployeeRelationAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-employee-relation.adapter"
 import { factory } from "@/api/http/factory"
 import { isoDate } from "@/lib/validation/iso-date.schema"
 import {
@@ -132,7 +132,7 @@ export const GET = factory.createHandlers(
       const targetEmployeeId =
         requestedEmployeeId === null ? session.employeeId : requestedEmployeeId
 
-      const relation = await new ResolveEmployeeRelationAdapter(c).resolveEmployeeRelation({
+      const relation = await resolveCompanyEmployeeRelation(c, {
         viewerEmployeeId: session.employeeId,
         targetEmployeeId,
       })

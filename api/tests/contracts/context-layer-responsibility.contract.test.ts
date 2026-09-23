@@ -338,7 +338,9 @@ describe("Context file responsibility contract", () => {
             specifier === "drizzle-orm" ||
             specifier.startsWith("drizzle-orm/") ||
             specifier.includes("/infrastructure/schema/") ||
-            specifier.includes("/interface/") ||
+            // 業務が Company を使う入口は Company の公開 operation だけなので、それは許可する。
+            (specifier.includes("/interface/") &&
+              !specifier.startsWith("@/contexts/company/interface/operations/")) ||
             specifier.startsWith("@/api"),
         )
         const constructor = exportedClasses[0]?.members.find(ts.isConstructorDeclaration)

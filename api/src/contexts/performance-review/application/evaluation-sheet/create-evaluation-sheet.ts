@@ -1,12 +1,12 @@
+import { validateCompanyEmployeeActive } from "@/contexts/company/interface/operations/validate-company-employee-active"
+import { resolveCompanyDirectManagerId } from "@/contexts/company/interface/operations/resolve-company-direct-manager-id"
+import { resolveCompanyDepartmentManagerId } from "@/contexts/company/interface/operations/resolve-company-department-manager-id"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { EvaluationSheet } from "@/contexts/performance-review/domain/entities/evaluation-sheet.entity"
 import type { Context } from "@/env"
 import { EvaluationSheetRepository } from "@/contexts/performance-review/infrastructure/repositories/evaluation-sheet/evaluation-sheet.repository"
 import type { ApplicationError } from "@/lib/errors"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
-import { ResolveDirectManagerIdAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-direct-manager-id.adapter"
-import { ResolveDepartmentManagerIdAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-department-manager-id.adapter"
-import { ValidateEmployeeActiveAdapter } from "@/contexts/company/infrastructure/adapters/organization/validate-employee-active.adapter"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { EvaluationParticipantAdapter } from "@/contexts/performance-review/infrastructure/adapters/evaluation-sheet/evaluation-participant.adapter"
 
@@ -172,7 +172,7 @@ export class CreateEvaluationSheet {
     role: "primary" | "secondary",
     businessDate: string,
   ): Promise<ApplicationError | null> {
-    const result = await new ValidateEmployeeActiveAdapter(this.c).validateEmployeeActive(
+    const result = await validateCompanyEmployeeActive(this.c, 
       evaluatorId,
       businessDate,
     )
@@ -232,7 +232,7 @@ export class CreateEvaluationSheet {
     }
 
     // 未指定 → 直属上長を自動解決（基準日 = 会社営業日）
-    const managerId = await new ResolveDirectManagerIdAdapter(this.c).resolveDirectManagerId(
+    const managerId = await resolveCompanyDirectManagerId(this.c, 
       command.employeeId,
       businessDate,
     )
@@ -305,9 +305,7 @@ export class CreateEvaluationSheet {
     }
 
     // 未指定 → 部門長を自動解決（ベストエフォート、失敗時は null）
-    const deptManagerId = await new ResolveDepartmentManagerIdAdapter(
-      this.c,
-    ).resolveDepartmentManagerId(command.employeeId, businessDate)
+    const deptManagerId = await resolveCompanyDepartmentManagerId(this.c, command.employeeId, businessDate)
 
     if (deptManagerId instanceof Error) {
       return new UnexpectedError("failed to resolve department manager", {

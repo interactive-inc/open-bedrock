@@ -1,8 +1,8 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import type { KnowledgeContext as Context } from "@/contexts/knowledge/configuration/knowledge-context"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { ForbiddenError, UnavailableError } from "@/lib/errors"
@@ -38,7 +38,7 @@ export class KnowledgeAuthorAuthorizationAdapter {
       return new UnavailableError("Company is unavailable", "knowledge_unavailable", {
         cause: company,
       })
-    const directory = new CompanyEmployeeDirectoryReadAdapter({
+    const directory = openCompanyEmployeeDirectory({
       env: {
         DB: this.c.env.DB,
         NOW: now.toISOString(),

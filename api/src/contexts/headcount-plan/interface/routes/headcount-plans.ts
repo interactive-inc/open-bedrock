@@ -1,5 +1,5 @@
+import { readCompanyActiveHeadcount } from "@/contexts/company/interface/operations/read-company-active-headcount"
 import { CreateHeadcountPlan } from "@/contexts/headcount-plan/application/create-headcount-plan"
-import { ReadActiveHeadcountAdapter } from "@/contexts/company/infrastructure/adapters/organization/read-active-headcount.adapter"
 import { factory } from "@/api/http/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -71,7 +71,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new InternalError("failed to count headcount plans")
   }
 
-  const activeHeadcount = await new ReadActiveHeadcountAdapter(c).readActiveHeadcount()
+  const activeHeadcount = await readCompanyActiveHeadcount(c)
   if (activeHeadcount instanceof ApplicationError) {
     throw toHttpException(activeHeadcount)
   }

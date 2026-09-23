@@ -1,7 +1,7 @@
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { ResolveCompanyProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task.adapter"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
 import { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
@@ -72,7 +72,7 @@ export class SubmitRingiProcedure {
     const guard = await repository.prepareSubmissionGuard(command.session.accountId)
     if (guard instanceof Error)
       return new UnexpectedError("会社資格を固定できません", { cause: guard })
-    const employees = new CompanyEmployeeDirectoryReadAdapter(this.c)
+    const employees = openCompanyEmployeeDirectory(this.c)
     const linked = await employees.findForAccountIds([command.session.accountId])
     if (linked instanceof Error)
       return new UnexpectedError("申請者を取得できません", { cause: linked })

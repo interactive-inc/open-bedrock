@@ -1,5 +1,5 @@
+import { resolveCompanyEmployeeRelation } from "@/contexts/company/interface/operations/resolve-company-employee-relation"
 import { resolveAttendanceSearchQuery } from "@/contexts/attendance/interface/http/attendance-records/resolve-attendance-search-query"
-import { ResolveEmployeeRelationAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-employee-relation.adapter"
 import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
 import { listDepartmentEmployeeIds } from "@/api/http/company-employees/list-department-employee-ids"
 import { listReportEmployeeIds } from "@/api/http/company-employees/list-report-employee-ids"
@@ -118,7 +118,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     let relation: EmployeeRelation | null = null
 
     if (isViewingOthers && requestedEmployeeId !== null) {
-      const resolved = await new ResolveEmployeeRelationAdapter(c).resolveEmployeeRelation({
+      const resolved = await resolveCompanyEmployeeRelation(c, {
         viewerEmployeeId: session.employeeId,
         targetEmployeeId: requestedEmployeeId,
       })
