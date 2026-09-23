@@ -503,13 +503,14 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
       .first<number>("n"),
   ).toBe(1)
   expect(await database.prepare("SELECT count(*) AS n FROM assets").first<number>("n")).toBe(11)
-  expect(
-    (
-      await post(`${sourcePath}/release`, crypto.randomUUID(), {
-        reason: "Cannot restart retired source",
-      })
-    ).status,
-  ).toBe(409)
+  // 拒否理由の code まで比べ、権限や再認証の拒否と取り違えたときに経路が分かるようにする。
+  const release = await post(`${sourcePath}/release`, crypto.randomUUID(), {
+    reason: "Cannot restart retired source",
+  })
+  expect({ status: release.status, body: await release.json() }).toMatchObject({
+    status: 409,
+    body: { code: "record_source_freeze_conflict" },
+  })
   await database.exec(
     "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('asset-test-manager','system:record:export'); DROP TABLE stocktake_items; DROP TABLE stocktakes; DROP TABLE asset_lendings; DROP TABLE assets;",
   )
