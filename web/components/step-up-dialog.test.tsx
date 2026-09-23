@@ -9,6 +9,8 @@ import { stepUpAction } from "@/lib/auth/step-up-action"
 afterEach(() => {
   cleanup()
 
+  vi.unstubAllEnvs()
+
   vi.mocked(stepUpAction).mockReset()
 })
 
@@ -45,5 +47,35 @@ describe("StepUpDialog", () => {
     await waitFor(() => {
       expect(onSucceeded.mock.calls.length).toBe(1)
     })
+  })
+
+  test("外部 identity provider を設定した環境では同じ画面へ戻る再認証の経路を出す", () => {
+    vi.stubEnv("NEXT_PUBLIC_IDENTITY_LOGIN_URL", "https://login.example.com")
+
+    render(<StepUpDialog open={true} onSucceeded={vi.fn()} onCancel={vi.fn()} />)
+
+    window.history.pushState({}, "", "/system/roles?page=2")
+    const link = screen.getByText("組織のアカウントで再認証する").closest("a")
+    link?.addEventListener("click", (event) => event.preventDefault())
+    if (link !== null) fireEvent.click(link)
+    expect(link?.getAttribute("href")).toBe(
+      "/auth/broker/login?purpose=step-up&return_to=%2Fsystem%2Froles%3Fpage%3D2",
+    )
+    expect(screen.getByLabelText("パスワード")).toBeDefined()
+  })
+
+  test("パスワードログインを隠した環境ではパスワード欄を出さない", () => {
+    vi.stubEnv("NEXT_PUBLIC_IDENTITY_LOGIN_URL", "https://login.example.com")
+    vi.stubEnv("NEXT_PUBLIC_PASSWORD_LOGIN_HIDDEN", "1")
+
+    render(<StepUpDialog open={true} onSucceeded={vi.fn()} onCancel={vi.fn()} />)
+
+    expect(screen.queryByLabelText("パスワード")).toBeNull()
+  })
+
+  test("外部 identity provider が無い環境では再認証の経路を出さない", () => {
+    render(<StepUpDialog open={true} onSucceeded={vi.fn()} onCancel={vi.fn()} />)
+
+    expect(screen.queryByText("組織のアカウントで再認証する")).toBeNull()
   })
 })

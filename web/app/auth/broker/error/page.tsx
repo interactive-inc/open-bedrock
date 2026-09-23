@@ -15,7 +15,9 @@ export default async function BrokerErrorPage(props: Props) {
   const message =
     searchParams.reason === "account_not_found"
       ? "アカウントがありません。管理者に連絡してください。"
-      : "ログインに失敗しました。もう一度お試しください。"
+      : searchParams.reason === "step_up_failed"
+        ? "再認証できませんでした。ログイン中のアカウントで認証し直してください。"
+        : "ログインに失敗しました。もう一度お試しください。"
 
   return (
     <main className="flex min-h-screen items-center justify-center p-8">

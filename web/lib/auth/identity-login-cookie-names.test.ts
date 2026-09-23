@@ -7,6 +7,7 @@ describe("identityLoginCookieNames", () => {
     expect(identityLoginCookieNames("https://app.example.com/auth/callback", "state-1")).toEqual({
       state: "__Host-identity_login_state_state-1",
       verifier: "__Host-identity_login_verifier_state-1",
+      stepUpReturn: "__Host-identity_step_up_return_state-1",
     })
   })
 
@@ -14,6 +15,7 @@ describe("identityLoginCookieNames", () => {
     expect(identityLoginCookieNames("http://localhost:3000/auth/callback", "state-1")).toEqual({
       state: "identity_login_state_state-1",
       verifier: "identity_login_verifier_state-1",
+      stepUpReturn: "identity_step_up_return_state-1",
     })
   })
 

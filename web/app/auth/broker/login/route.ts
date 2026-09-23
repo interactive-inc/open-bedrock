@@ -1,13 +1,16 @@
+import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
 
 import { createPkce } from "@/lib/auth/create-pkce"
 import { identityLoginCookieNames } from "@/lib/auth/identity-login-cookie-names"
 import { isSecureIdentityIssuer } from "@/lib/auth/is-secure-identity-issuer"
+import { resolveStepUpReturnPath } from "@/lib/auth/resolve-step-up-return-path"
 
 /**
  * 外部identityログインを開始し、stateとPKCE verifierをHTTP-only Cookieへ保存する。
+ * `purpose=step-up` のときは再認証として始め、戻り先の画面もCookieへ保存する。
  */
-export async function GET(): Promise<NextResponse> {
+export async function GET(request?: NextRequest): Promise<NextResponse> {
   const identityLoginUrl = process.env.IDENTITY_LOGIN_URL
   const redirectUri = process.env.IDENTITY_REDIRECT_URI
   if (!identityLoginUrl || !redirectUri) {
@@ -50,6 +53,16 @@ export async function GET(): Promise<NextResponse> {
     path: "/",
     maxAge: 10 * 60,
   })
+  if (request?.nextUrl.searchParams.get("purpose") === "step-up") {
+    const returnPath = resolveStepUpReturnPath(request.nextUrl.searchParams.get("return_to")) ?? "/"
+    response.cookies.set(names.stepUpReturn, returnPath, {
+      httpOnly: true,
+      secure: isSecure,
+      sameSite: "lax",
+      path: "/",
+      maxAge: 10 * 60,
+    })
+  }
   response.headers.set("Cache-Control", "no-store")
   response.headers.set("Referrer-Policy", "no-referrer")
 

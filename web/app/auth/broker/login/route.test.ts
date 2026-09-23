@@ -1,6 +1,8 @@
+import { NextRequest } from "next/server"
 import { afterEach, describe, expect, test } from "vite-plus/test"
 
 import { GET } from "@/app/auth/broker/login/route"
+import { identityLoginCookieNames } from "@/lib/auth/identity-login-cookie-names"
 
 const originalIdentityLoginUrl = process.env.IDENTITY_LOGIN_URL
 const originalIdentityRedirectUri = process.env.IDENTITY_REDIRECT_URI
@@ -67,5 +69,37 @@ describe("GET /auth/broker/login", () => {
     const response = await GET()
 
     expect(response.status).toBe(503)
+  })
+
+  test("再認証として始めると、同じ origin の戻り先だけを state 専用 Cookie に置く", async () => {
+    const redirectUri = "https://app.example.com/auth/broker/callback"
+    process.env.IDENTITY_LOGIN_URL = "https://login.example.com"
+    process.env.IDENTITY_REDIRECT_URI = redirectUri
+
+    for (const [returnTo, expected] of [
+      ["/system/roles", "/system/roles"],
+      ["https://evil.example.com", "/"],
+    ] as const) {
+      const response = await GET(
+        new NextRequest(
+          `https://app.example.com/auth/broker/login?purpose=step-up&return_to=${encodeURIComponent(returnTo)}`,
+        ),
+      )
+      const state = new URL(response.headers.get("Location") ?? "").searchParams.get("state") ?? ""
+      const names = identityLoginCookieNames(redirectUri, state)
+      expect(response.cookies.get(names.stepUpReturn)?.value).toBe(expected)
+    }
+  })
+
+  test("通常のログインでは再認証の戻り先を置かない", async () => {
+    const redirectUri = "https://app.example.com/auth/broker/callback"
+    process.env.IDENTITY_LOGIN_URL = "https://login.example.com"
+    process.env.IDENTITY_REDIRECT_URI = redirectUri
+
+    const response = await GET(new NextRequest("https://app.example.com/auth/broker/login"))
+    const state = new URL(response.headers.get("Location") ?? "").searchParams.get("state") ?? ""
+    expect(
+      response.cookies.get(identityLoginCookieNames(redirectUri, state).stepUpReturn),
+    ).toBeUndefined()
   })
 })

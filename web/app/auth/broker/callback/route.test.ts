@@ -5,6 +5,7 @@ const mocks = vi.hoisted(() => ({
   exchangeIdentityCode: vi.fn(),
   postIdentityLogin: vi.fn(),
   setSessionCookies: vi.fn(),
+  issueExternalIdentityStepUpGrant: vi.fn(),
 }))
 
 vi.mock("@/lib/auth/exchange-identity-code", () => ({
@@ -12,6 +13,9 @@ vi.mock("@/lib/auth/exchange-identity-code", () => ({
 }))
 vi.mock("@/lib/api/post-identity-login", () => ({
   postIdentityLogin: mocks.postIdentityLogin,
+}))
+vi.mock("@/lib/api/issue-external-identity-step-up-grant", () => ({
+  issueExternalIdentityStepUpGrant: mocks.issueExternalIdentityStepUpGrant,
 }))
 vi.mock("@/lib/auth/set-session-cookies", () => ({
   setSessionCookies: mocks.setSessionCookies,
@@ -108,5 +112,51 @@ describe("GET /auth/broker/callback", () => {
 
     expect(response.headers.get("Location")).toContain("/auth/broker/error?reason=invalid_state")
     expect(mocks.exchangeIdentityCode).not.toHaveBeenCalled()
+  })
+
+  test("再認証として始めたときはログインし直さず再認証 grant を置いて元の画面へ戻す", async () => {
+    process.env.IDENTITY_LOGIN_URL = issuer
+    process.env.IDENTITY_REDIRECT_URI = redirectUri
+    mocks.exchangeIdentityCode.mockResolvedValue("signed.identity.jwt")
+    mocks.issueExternalIdentityStepUpGrant.mockResolvedValue({
+      stepUpToken: "step-up-token",
+      expiresAt: new Date(Date.now() + 5 * 60_000).toISOString(),
+    })
+    const names = identityLoginCookieNames(redirectUri, state)
+    const request = new NextRequest(
+      `https://app.example.com/auth/broker/callback?code=one-time-code&state=${state}`,
+    )
+    request.cookies.set(names.state, state)
+    request.cookies.set(names.verifier, verifier)
+    request.cookies.set(names.stepUpReturn, "/system/roles")
+
+    const response = await GET(request)
+
+    expect(response.headers.get("Location")).toBe("https://app.example.com/system/roles")
+    expect(mocks.issueExternalIdentityStepUpGrant).toHaveBeenCalledWith("signed.identity.jwt")
+    expect(mocks.postIdentityLogin).not.toHaveBeenCalled()
+    expect(mocks.setSessionCookies).not.toHaveBeenCalled()
+    expect(response.cookies.get("step_up")?.value).toBe("step-up-token")
+    expect(response.headers.get("Set-Cookie")).toContain(`${names.stepUpReturn}=`)
+  })
+
+  test("再認証 grant を発行できなければ session を変えずに失敗を案内する", async () => {
+    process.env.IDENTITY_LOGIN_URL = issuer
+    process.env.IDENTITY_REDIRECT_URI = redirectUri
+    mocks.exchangeIdentityCode.mockResolvedValue("signed.identity.jwt")
+    mocks.issueExternalIdentityStepUpGrant.mockResolvedValue(new Error("invalid_credentials"))
+    const names = identityLoginCookieNames(redirectUri, state)
+    const request = new NextRequest(
+      `https://app.example.com/auth/broker/callback?code=one-time-code&state=${state}`,
+    )
+    request.cookies.set(names.state, state)
+    request.cookies.set(names.verifier, verifier)
+    request.cookies.set(names.stepUpReturn, "/system/roles")
+
+    const response = await GET(request)
+
+    expect(response.headers.get("Location")).toContain("/auth/broker/error?reason=step_up_failed")
+    expect(mocks.postIdentityLogin).not.toHaveBeenCalled()
+    expect(response.cookies.get("step_up")).toBeUndefined()
   })
 })
