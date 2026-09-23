@@ -123,7 +123,7 @@
     "src/contexts/system/domain/entities/integration-exchange.entity.test.ts": "e237155b4e02e0f7c5ea84af84d346f9b48d2bbcc6b7e821e85de5d825f0102d",
     "src/contexts/system/domain/entities/integration-exchange.entity.ts": "91bd12d699a691b36087f80d3f68576885837663edc4d33701de845a305bf4d5",
     "src/contexts/system/domain/entities/notification-delivery.entity.test.ts": "f1d1b5e50b9fd71eebde395458c92177262d35710640a7098f1233fd4d5b66cb",
-    "src/contexts/system/domain/entities/notification-delivery.entity.ts": "f22bb2ca57ad81c28b98f3c9f597f43179b080c6510d546f87d151ee1ca21b38",
+    "src/contexts/system/domain/entities/notification-delivery.entity.ts": "10de9a0763ccf22e91a17978900e0a14835bb55ebf81073cdc4441ee26c34c29",
     "src/contexts/system/domain/entities/notification-message.entity.test.ts": "f9808695537e23219bc56e33966ca8249de053bd481f83b801160858eec1063e",
     "src/contexts/system/domain/entities/notification-message.entity.ts": "568b18daffbf4247396c8cfae9fe9179c3ff32810941870f12c0b69bf160517c",
     "src/contexts/system/domain/entities/preserved-record-disclosure-policy.entity.test.ts": "c930b6fd5a2558b118557d7dac31be8a623ab9a1b9a933dcc860fd9e3f0847fd",
