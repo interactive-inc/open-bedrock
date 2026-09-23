@@ -83,21 +83,20 @@ test("停止確定後は台帳・割当・変更履歴の全書込みをDBで拒
       (name,status,created_at,revision) VALUES ('Late service','active','2026-09-08',1)`),
     f.database.prepare("UPDATE software_licenses SET note='late' WHERE id=?1").bind(f.license.id),
     f.database.prepare("DELETE FROM software_licenses WHERE id=?1").bind(f.license.id),
-    f.database.prepare(`INSERT INTO software_license_assignments
+    f.database
+      .prepare(`INSERT INTO software_license_assignments
       (id,license_id,employee_id,service_name,assigned_at,assigned_by,assigned_reason)
-      VALUES (?1,?2,'employee:manager','Example Service',2,'account:manager','Late')`).bind(
-      crypto.randomUUID(),
-      f.license.id,
-    ),
+      VALUES (?1,?2,'employee:manager','Example Service',2,'account:manager','Late')`)
+      .bind(crypto.randomUUID(), f.license.id),
     f.database
       .prepare("UPDATE software_license_assignments SET release_reason='late' WHERE id=?1")
       .bind(assignmentId),
+    f.database.prepare("DELETE FROM software_license_assignments WHERE id=?1").bind(assignmentId),
     f.database
-      .prepare("DELETE FROM software_license_assignments WHERE id=?1")
-      .bind(assignmentId),
-    f.database.prepare(`INSERT INTO software_license_changes
+      .prepare(`INSERT INTO software_license_changes
       (id,license_id,actor_account_id,recorded_at,before_json,after_json)
-      VALUES (?1,?2,'account:manager',2,NULL,'{}')`).bind(crypto.randomUUID(), f.license.id),
+      VALUES (?1,?2,'account:manager',2,NULL,'{}')`)
+      .bind(crypto.randomUUID(), f.license.id),
     f.database
       .prepare("UPDATE software_license_changes SET after_json='{}' WHERE license_id=?1")
       .bind(f.license.id),

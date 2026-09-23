@@ -31,12 +31,15 @@ export class CareerActorReadAdapter {
       })
     if (authorization === "forbidden")
       return new CareerError("forbidden", "human record preserver is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
       return new CareerError("career_unavailable", "Company snapshot is unavailable", {
         cause: guard,

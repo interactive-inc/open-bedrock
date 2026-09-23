@@ -31,10 +31,7 @@ export function createTrainingPreservationSubmissionHandlers(mode: "create" | "r
     }),
   }
   return trainingFactory.createHandlers(
-    zValidator(
-      "param",
-      trainingRecordRouteSchema,
-    ),
+    zValidator("param", trainingRecordRouteSchema),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
     async (c) => {
@@ -53,7 +50,8 @@ export function createTrainingPreservationSubmissionHandlers(mode: "create" | "r
           recordId,
           sourceNamespace,
           authorize: () => new TrainingActorReadAdapter(c).prepare(),
-          capture: () => new CaptureTrainingRecordAdapter(c).prepare({ recordKind, recordId, sourceNamespace }),
+          capture: () =>
+            new CaptureTrainingRecordAdapter(c).prepare({ recordKind, recordId, sourceNamespace }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

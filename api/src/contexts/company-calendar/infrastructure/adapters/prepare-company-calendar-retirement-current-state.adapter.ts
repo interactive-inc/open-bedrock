@@ -56,7 +56,8 @@ export class PrepareCompanyCalendarDayRetirementCurrentStateAdapter {
       plan.snapshot.sourceNamespace !== request.sourceNamespace ||
       plan.snapshot.ownerContext !== "company-calendar" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(["company-calendar-record"])
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(["company-calendar-record"])
     )
       return new Error("retirement plan or source capability differs")
     const target = { planId: plan.snapshot.id, planDigest: plan.digest }

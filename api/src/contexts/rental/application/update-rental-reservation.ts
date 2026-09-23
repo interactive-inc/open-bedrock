@@ -68,7 +68,9 @@ export class UpdateRentalReservation {
 
     if (result instanceof Error) {
       if (isRentalReservationRecordSourceFrozenError(result)) {
-        return new ConflictError("rental reservation writes are frozen", "record_source_frozen", { cause: result })
+        return new ConflictError("rental reservation writes are frozen", "record_source_frozen", {
+          cause: result,
+        })
       }
       return new UnexpectedError("failed to update reservation", { cause: result })
     }

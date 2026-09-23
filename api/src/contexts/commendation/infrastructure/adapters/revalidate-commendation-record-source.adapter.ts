@@ -17,7 +17,10 @@ export class RevalidateCommendationRecordSourceAdapter {
       source.props.ownerContext !== "commendation" ||
       source.props.recordKind !== "commendation-record"
     )
-      return new CommendationError("forbidden", "record source does not belong to this commendation registry")
+      return new CommendationError(
+        "forbidden",
+        "record source does not belong to this commendation registry",
+      )
 
     const current = await new CaptureCommendationRecordAdapter(this.c).prepare({
       commendationId: Number(source.props.recordId),

@@ -19,7 +19,9 @@ const commandSchema = z.strictObject({
   proposalVersion: z.number().int().positive().safe(),
   proposalDigest: z.string().regex(/^[0-9a-f]{64}$/),
 })
-type Context = ConstructorParameters<typeof PrepareDisciplinaryActionRetirementCurrentStateAdapter>[0]
+type Context = ConstructorParameters<
+  typeof PrepareDisciplinaryActionRetirementCurrentStateAdapter
+>[0]
 
 /** 現在の全件保全と人の承認資格を再検査し、原記録を消さずに停止世代の撤去を確定する。 */
 export class ExecuteDisciplinaryActionRetirementAdapter {
@@ -34,7 +36,9 @@ export class ExecuteDisciplinaryActionRetirementAdapter {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new DisciplinaryActionRetirementForbiddenError("retirement authentication required")
-    const current = await new PrepareDisciplinaryActionRetirementCurrentStateAdapter(this.c).prepare(
+    const current = await new PrepareDisciplinaryActionRetirementCurrentStateAdapter(
+      this.c,
+    ).prepare(
       {
         planId: command.planId,
         planDigest: command.planDigest,
@@ -141,9 +145,12 @@ export class ExecuteDisciplinaryActionRetirementAdapter {
     if (finalized instanceof Error) {
       const raced = await replay()
       if (raced !== null && !(raced instanceof Error)) return raced
-      return new DisciplinaryActionRetirementConflictError("retirement changed before finalization", {
-        cause: finalized,
-      })
+      return new DisciplinaryActionRetirementConflictError(
+        "retirement changed before finalization",
+        {
+          cause: finalized,
+        },
+      )
     }
     return { retirement_id: retirement.snapshot.id, finalized_at: retirement.snapshot.finalizedAt }
   }

@@ -46,7 +46,10 @@ export class DeleteAsset {
     const outcome = await assetRepository.deleteIfNotLent(asset)
 
     if (outcome instanceof Error) {
-      if (isAssetRecordSourceFrozenError(outcome)) return new ConflictError("asset writes are frozen", "record_source_frozen", { cause: outcome })
+      if (isAssetRecordSourceFrozenError(outcome))
+        return new ConflictError("asset writes are frozen", "record_source_frozen", {
+          cause: outcome,
+        })
       return new UnexpectedError("failed to delete asset", { cause: outcome })
     }
 

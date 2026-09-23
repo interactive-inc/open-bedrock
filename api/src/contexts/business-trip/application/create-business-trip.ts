@@ -61,7 +61,9 @@ export class CreateBusinessTrip {
 
     if (result instanceof Error) {
       if (isBusinessTripRecordSourceFrozenError(result)) {
-        return new ConflictError("business trip writes are frozen", "record_source_frozen", { cause: result })
+        return new ConflictError("business trip writes are frozen", "record_source_frozen", {
+          cause: result,
+        })
       }
       return new UnexpectedError("failed to create business trip", { cause: result })
     }

@@ -41,7 +41,10 @@ export const POST = workAccidentFactory.createHandlers(
         detail: "Record source configuration unavailable",
       })
     const receipt = await new VerifyWorkAccidentRetirementPage(c).execute(command.data, stepUpToken)
-    if (receipt instanceof WorkAccidentRetirementForbiddenError || receipt instanceof ForbiddenError)
+    if (
+      receipt instanceof WorkAccidentRetirementForbiddenError ||
+      receipt instanceof ForbiddenError
+    )
       throw new SystemForbiddenError()
     if (receipt instanceof WorkAccidentRetirementConflictError)
       throw new SystemHTTPException({

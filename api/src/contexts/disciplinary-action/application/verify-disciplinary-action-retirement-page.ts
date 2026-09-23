@@ -45,7 +45,8 @@ export class VerifyDisciplinaryActionRetirementPage {
       plan.snapshot.sourceNamespace !== command.sourceNamespace ||
       plan.snapshot.ownerContext !== "disciplinary-action" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(["disciplinary-action-record"])
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(["disciplinary-action-record"])
     )
       return new DisciplinaryActionRetirementConflictError(
         "retirement plan unavailable or capability changed",
@@ -126,6 +127,8 @@ export class VerifyDisciplinaryActionRetirementPage {
     if (raced instanceof Error) return raced
     return raced !== null && matches(raced)
       ? raced
-      : new DisciplinaryActionRetirementConflictError("retirement verification position already written")
+      : new DisciplinaryActionRetirementConflictError(
+          "retirement verification position already written",
+        )
   }
 }

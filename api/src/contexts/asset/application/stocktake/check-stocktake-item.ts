@@ -40,7 +40,10 @@ export class CheckStocktakeItem {
     })
 
     if (result instanceof Error) {
-      if (isAssetRecordSourceFrozenError(result)) return new ConflictError("asset writes are frozen", "record_source_frozen", { cause: result })
+      if (isAssetRecordSourceFrozenError(result))
+        return new ConflictError("asset writes are frozen", "record_source_frozen", {
+          cause: result,
+        })
       return new UnexpectedError("failed to check stocktake item", { cause: result })
     }
 

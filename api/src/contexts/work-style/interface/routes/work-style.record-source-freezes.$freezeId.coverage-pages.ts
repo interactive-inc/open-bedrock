@@ -22,7 +22,10 @@ export const POST = employeeWorkStyleFactory.createHandlers(
   requireSystemStepUp,
   zValidator("param", z.strictObject({ freezeId: z.uuid() })),
   zValidator("header", z.object({ "idempotency-key": z.uuid() })),
-  zValidator("json", employeeWorkStyleCoveragePageCommandSchema.pick({ purpose: true, records: true })),
+  zValidator(
+    "json",
+    employeeWorkStyleCoveragePageCommandSchema.pick({ purpose: true, records: true }),
+  ),
   async (c) => {
     c.header("Cache-Control", "no-store")
     const stepUpToken = c.req.header("x-system-step-up")
@@ -39,7 +42,10 @@ export const POST = employeeWorkStyleFactory.createHandlers(
         code: "record_coverage_unavailable",
         detail: "Record source configuration unavailable",
       })
-    const receipt = await new VerifyEmployeeWorkStyleCoveragePage(c).execute(command.data, stepUpToken)
+    const receipt = await new VerifyEmployeeWorkStyleCoveragePage(c).execute(
+      command.data,
+      stepUpToken,
+    )
     if (receipt instanceof EmployeeWorkStyleCoverageForbiddenError) throw new SystemForbiddenError()
     if (receipt instanceof EmployeeWorkStyleCoverageConflictError)
       throw new SystemHTTPException({

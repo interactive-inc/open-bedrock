@@ -57,7 +57,9 @@ export class UpdateTrainingCourse {
 
     if (updated instanceof Error) {
       if (isTrainingRecordSourceFrozenError(updated))
-        return new ConflictError("training writes are frozen", "record_source_frozen", { cause: updated })
+        return new ConflictError("training writes are frozen", "record_source_frozen", {
+          cause: updated,
+        })
       return new UnexpectedError("failed to update training course", { cause: updated })
     }
 

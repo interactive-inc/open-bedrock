@@ -17,7 +17,10 @@ export class RevalidateAnnouncementRecordSourceAdapter {
       source.props.ownerContext !== "announcement" ||
       source.props.recordKind !== "announcement-record"
     )
-      return new AnnouncementError("forbidden", "record source does not belong to this announcement registry")
+      return new AnnouncementError(
+        "forbidden",
+        "record source does not belong to this announcement registry",
+      )
 
     const current = await new CaptureAnnouncementRecordAdapter(this.c).prepare({
       announcementId: Number(source.props.recordId),

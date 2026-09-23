@@ -41,7 +41,10 @@ export const POST = announcementFactory.createHandlers(
         detail: "Record source configuration unavailable",
       })
     const receipt = await new VerifyAnnouncementRetirementPage(c).execute(command.data, stepUpToken)
-    if (receipt instanceof AnnouncementRetirementForbiddenError || receipt instanceof ForbiddenError)
+    if (
+      receipt instanceof AnnouncementRetirementForbiddenError ||
+      receipt instanceof ForbiddenError
+    )
       throw new SystemForbiddenError()
     if (receipt instanceof AnnouncementRetirementConflictError)
       throw new SystemHTTPException({

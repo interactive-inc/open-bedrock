@@ -18,9 +18,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenCareerRecordPageAdapter } from "@/contexts/career/infrastructure/adapters/capture-frozen-career-record-page.adapter"
 import { PrepareCareerCoverageRecordsAdapter } from "@/contexts/career/infrastructure/adapters/prepare-career-coverage-records.adapter"
 
-type Context = CareerContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = CareerContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからcareer記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyCareerCoveragePage {

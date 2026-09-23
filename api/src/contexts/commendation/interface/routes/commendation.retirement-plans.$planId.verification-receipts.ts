@@ -41,7 +41,10 @@ export const POST = commendationFactory.createHandlers(
         detail: "Record source configuration unavailable",
       })
     const receipt = await new VerifyCommendationRetirementPage(c).execute(command.data, stepUpToken)
-    if (receipt instanceof CommendationRetirementForbiddenError || receipt instanceof ForbiddenError)
+    if (
+      receipt instanceof CommendationRetirementForbiddenError ||
+      receipt instanceof ForbiddenError
+    )
       throw new SystemForbiddenError()
     if (receipt instanceof CommendationRetirementConflictError)
       throw new SystemHTTPException({

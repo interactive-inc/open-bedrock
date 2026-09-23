@@ -17,7 +17,10 @@ export class RevalidateItIncidentRecordSourceAdapter {
       source.props.ownerContext !== "it-incident" ||
       source.props.recordKind !== "it-incident-record"
     )
-      return new ItIncidentError("forbidden", "record source does not belong to this it-incident registry")
+      return new ItIncidentError(
+        "forbidden",
+        "record source does not belong to this it-incident registry",
+      )
 
     const current = await new CaptureItIncidentRecordAdapter(this.c).prepare({
       itIncidentId: Number(source.props.recordId),

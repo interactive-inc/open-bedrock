@@ -26,21 +26,32 @@ export class CompensationChangeActorReadAdapter {
       now,
     })
     if (authorization instanceof Error)
-      return new CompensationChangeError("compensation-change_unavailable", "authorization is unavailable", {
-        cause: authorization,
-      })
+      return new CompensationChangeError(
+        "compensation-change_unavailable",
+        "authorization is unavailable",
+        {
+          cause: authorization,
+        },
+      )
     if (authorization === "forbidden")
       return new CompensationChangeError("forbidden", "human record preserver is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
-      return new CompensationChangeError("compensation-change_unavailable", "Company snapshot is unavailable", {
-        cause: guard,
-      })
+      return new CompensationChangeError(
+        "compensation-change_unavailable",
+        "Company snapshot is unavailable",
+        {
+          cause: guard,
+        },
+      )
     const directory = openCompanyEmployeeDirectory({
       env: {
         DB: this.c.env.DB,
@@ -51,7 +62,10 @@ export class CompensationChangeActorReadAdapter {
     const actors = await directory.findForAccountIds([account.data])
     const employees = await directory.findForEmployeeIds(employeeIds)
     if (actors instanceof Error || employees instanceof Error)
-      return new CompensationChangeError("compensation-change_unavailable", "Company directory is unavailable")
+      return new CompensationChangeError(
+        "compensation-change_unavailable",
+        "Company directory is unavailable",
+      )
     if (actors[0]?.employee === undefined)
       return new CompensationChangeError("forbidden", "active employee is required")
     return {

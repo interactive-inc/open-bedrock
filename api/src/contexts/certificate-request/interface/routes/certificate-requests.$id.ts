@@ -153,7 +153,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
     if (deleted instanceof Error) {
       if (isCertificateRequestRecordSourceFrozenError(deleted)) {
-        return new ConflictError("certificate request writes are frozen", "record_source_frozen", { cause: deleted })
+        return new ConflictError("certificate request writes are frozen", "record_source_frozen", {
+          cause: deleted,
+        })
       }
       return new UnexpectedError("failed to delete certificate request", { cause: deleted })
     }

@@ -22,7 +22,10 @@ export const POST = familyCareLeaveFactory.createHandlers(
   requireSystemStepUp,
   zValidator("param", z.strictObject({ freezeId: z.uuid() })),
   zValidator("header", z.object({ "idempotency-key": z.uuid() })),
-  zValidator("json", familyCareLeaveCoveragePageCommandSchema.pick({ purpose: true, records: true })),
+  zValidator(
+    "json",
+    familyCareLeaveCoveragePageCommandSchema.pick({ purpose: true, records: true }),
+  ),
   async (c) => {
     c.header("Cache-Control", "no-store")
     const stepUpToken = c.req.header("x-system-step-up")
@@ -39,7 +42,10 @@ export const POST = familyCareLeaveFactory.createHandlers(
         code: "record_coverage_unavailable",
         detail: "Record source configuration unavailable",
       })
-    const receipt = await new VerifyFamilyCareLeaveCoveragePage(c).execute(command.data, stepUpToken)
+    const receipt = await new VerifyFamilyCareLeaveCoveragePage(c).execute(
+      command.data,
+      stepUpToken,
+    )
     if (receipt instanceof FamilyCareLeaveCoverageForbiddenError) throw new SystemForbiddenError()
     if (receipt instanceof FamilyCareLeaveCoverageConflictError)
       throw new SystemHTTPException({

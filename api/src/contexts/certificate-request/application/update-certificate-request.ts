@@ -55,7 +55,9 @@ export class UpdateCertificateRequest {
 
     if (result instanceof Error) {
       if (isCertificateRequestRecordSourceFrozenError(result)) {
-        return new ConflictError("certificate request writes are frozen", "record_source_frozen", { cause: result })
+        return new ConflictError("certificate request writes are frozen", "record_source_frozen", {
+          cause: result,
+        })
       }
       return new UnexpectedError("failed to update certificate request", { cause: result })
     }

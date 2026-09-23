@@ -119,7 +119,9 @@ export class SubmitFamilyCareLeaveRetirementRequestAdapter {
         existing.bodyJson !== proposal.props.canonical.toString()
       )
         return new FamilyCareLeaveRetirementConflictError("retirement submission replay differs")
-      const rechecked = await new PrepareFamilyCareLeaveRetirementCurrentStateAdapter(this.c).prepare(
+      const rechecked = await new PrepareFamilyCareLeaveRetirementCurrentStateAdapter(
+        this.c,
+      ).prepare(
         {
           planId: command.planId,
           planDigest: command.planDigest,
@@ -148,7 +150,9 @@ export class SubmitFamilyCareLeaveRetirementRequestAdapter {
     })
     if (task instanceof Error) return task
     if (task.resolved.guards.length === 0)
-      return new FamilyCareLeaveRetirementForbiddenError("retirement decision qualification required")
+      return new FamilyCareLeaveRetirementForbiddenError(
+        "retirement decision qualification required",
+      )
     const started = await new StartSystemProcedure({
       writer: new SystemD1WorkflowAdapter({
         env: this.c.env,

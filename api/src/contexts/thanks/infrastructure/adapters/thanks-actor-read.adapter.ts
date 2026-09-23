@@ -31,12 +31,15 @@ export class ThanksActorReadAdapter {
       })
     if (authorization === "forbidden")
       return new ThanksError("forbidden", "human record preserver is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
       return new ThanksError("thanks_unavailable", "Company snapshot is unavailable", {
         cause: guard,

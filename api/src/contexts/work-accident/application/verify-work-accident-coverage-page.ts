@@ -17,9 +17,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenWorkAccidentRecordPageAdapter } from "@/contexts/work-accident/infrastructure/adapters/capture-frozen-work-accident-record-page.adapter"
 import { PrepareWorkAccidentCoverageRecordsAdapter } from "@/contexts/work-accident/infrastructure/adapters/prepare-work-accident-coverage-records.adapter"
 
-type Context = WorkAccidentContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = WorkAccidentContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きから労災・事故記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyWorkAccidentCoveragePage {

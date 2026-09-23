@@ -44,7 +44,9 @@ export class CreateRentalReservation {
 
     if (created instanceof Error) {
       if (isRentalReservationRecordSourceFrozenError(created)) {
-        return new ConflictError("rental reservation writes are frozen", "record_source_frozen", { cause: created })
+        return new ConflictError("rental reservation writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       }
       return new UnexpectedError("failed to create reservation", { cause: created })
     }

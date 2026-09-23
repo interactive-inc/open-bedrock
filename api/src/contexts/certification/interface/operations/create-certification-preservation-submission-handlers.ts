@@ -31,10 +31,7 @@ export function createCertificationPreservationSubmissionHandlers(mode: "create"
     }),
   }
   return certificationFactory.createHandlers(
-    zValidator(
-      "param",
-      certificationRecordRouteSchema,
-    ),
+    zValidator("param", certificationRecordRouteSchema),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
     async (c) => {
@@ -53,7 +50,12 @@ export function createCertificationPreservationSubmissionHandlers(mode: "create"
           recordId,
           sourceNamespace,
           authorize: () => new CertificationActorReadAdapter(c).prepare(),
-          capture: () => new CaptureCertificationRecordAdapter(c).prepare({ recordKind, recordId, sourceNamespace }),
+          capture: () =>
+            new CaptureCertificationRecordAdapter(c).prepare({
+              recordKind,
+              recordId,
+              sourceNamespace,
+            }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

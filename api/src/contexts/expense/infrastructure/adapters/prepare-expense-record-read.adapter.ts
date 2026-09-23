@@ -41,9 +41,12 @@ export class PrepareExpenseRecordReadAdapter {
       return new UnexpectedError("閲覧資格を確認できません", { cause: authorization })
     if (authorization === null || input.authentication.accountId !== input.session.accountId)
       return new ForbiddenError("閲覧資格が失効しています", "read_authorization_changed")
-    const company = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, { accountIds: [input.session.accountId], employeeCodes: [] })
+    const company = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      { accountIds: [input.session.accountId], employeeCodes: [] },
+    )
     if (company instanceof Error)
       return new UnexpectedError("会社資格を固定できません", { cause: company })
     const people = await openCompanyEmployeeDirectory({

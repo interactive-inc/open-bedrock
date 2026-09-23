@@ -45,7 +45,8 @@ export class VerifyWorkAccidentRetirementPage {
       plan.snapshot.sourceNamespace !== command.sourceNamespace ||
       plan.snapshot.ownerContext !== "work-accident" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(["work-accident-record"])
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(["work-accident-record"])
     )
       return new WorkAccidentRetirementConflictError(
         "retirement plan unavailable or capability changed",

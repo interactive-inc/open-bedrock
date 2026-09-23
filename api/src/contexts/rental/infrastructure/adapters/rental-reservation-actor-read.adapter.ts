@@ -26,21 +26,32 @@ export class RentalReservationActorReadAdapter {
       now,
     })
     if (authorization instanceof Error)
-      return new RentalReservationError("rental_reservation_unavailable", "authorization is unavailable", {
-        cause: authorization,
-      })
+      return new RentalReservationError(
+        "rental_reservation_unavailable",
+        "authorization is unavailable",
+        {
+          cause: authorization,
+        },
+      )
     if (authorization === "forbidden")
       return new RentalReservationError("forbidden", "human rental manager is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
-      return new RentalReservationError("rental_reservation_unavailable", "Company snapshot is unavailable", {
-        cause: guard,
-      })
+      return new RentalReservationError(
+        "rental_reservation_unavailable",
+        "Company snapshot is unavailable",
+        {
+          cause: guard,
+        },
+      )
     const directory = openCompanyEmployeeDirectory({
       env: {
         DB: this.c.env.DB,
@@ -51,7 +62,10 @@ export class RentalReservationActorReadAdapter {
     const actors = await directory.findForAccountIds([account.data])
     const employees = await directory.findForEmployeeIds(employeeIds)
     if (actors instanceof Error || employees instanceof Error)
-      return new RentalReservationError("rental_reservation_unavailable", "Company directory is unavailable")
+      return new RentalReservationError(
+        "rental_reservation_unavailable",
+        "Company directory is unavailable",
+      )
     return {
       actor: actors[0]?.employee ?? null,
       employees,

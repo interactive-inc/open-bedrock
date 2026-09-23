@@ -39,7 +39,9 @@ export class CreateCertificateRequest {
 
     if (created instanceof Error) {
       if (isCertificateRequestRecordSourceFrozenError(created)) {
-        return new ConflictError("certificate request writes are frozen", "record_source_frozen", { cause: created })
+        return new ConflictError("certificate request writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       }
       return new UnexpectedError("failed to create certificate request", { cause: created })
     }

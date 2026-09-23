@@ -18,7 +18,9 @@ import { SubmitRecordPreservationAdapter } from "@system/infrastructure/adapters
 import { RecordPreservationSubmissionError } from "@system/infrastructure/adapters/records/errors"
 
 /** certificate request記録の取得と会社資格をSystemの共通提出処理へ接続する。 */
-export function createCertificateRequestPreservationSubmissionHandlers(mode: "create" | "resubmit") {
+export function createCertificateRequestPreservationSubmissionHandlers(
+  mode: "create" | "resubmit",
+) {
   const requestSchema = z.strictObject({
     procedure_key: procedureKeySchema,
     conditions: recordPreservationRequestSchema,
@@ -33,7 +35,10 @@ export function createCertificateRequestPreservationSubmissionHandlers(mode: "cr
   return certificateRequestFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: certificateRequestIdSchema, number: z.coerce.number().int().positive().safe().optional() }),
+      z.strictObject({
+        id: certificateRequestIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +58,11 @@ export function createCertificateRequestPreservationSubmissionHandlers(mode: "cr
           recordId: String(certificateRequestId),
           sourceNamespace,
           authorize: () => new CertificateRequestActorReadAdapter(c).prepare(),
-          capture: () => new CaptureCertificateRequestRecordAdapter(c).prepare({ certificateRequestId, sourceNamespace }),
+          capture: () =>
+            new CaptureCertificateRequestRecordAdapter(c).prepare({
+              certificateRequestId,
+              sourceNamespace,
+            }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

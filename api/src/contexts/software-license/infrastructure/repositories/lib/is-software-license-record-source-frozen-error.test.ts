@@ -9,12 +9,14 @@ test("D1が包んだ台帳停止だけを識別する", () => {
       }),
     ),
   ).toBe(true)
-  expect(isSoftwareLicenseRecordSourceFrozenError(new Error("software_license_record_source_frozen"))).toBe(
-    true,
-  )
+  expect(
+    isSoftwareLicenseRecordSourceFrozenError(new Error("software_license_record_source_frozen")),
+  ).toBe(true)
   expect(
     isSoftwareLicenseRecordSourceFrozenError(
-      new Error("Failed query: INSERT INTO software_licenses VALUES ('software_license_record_source_frozen')"),
+      new Error(
+        "Failed query: INSERT INTO software_licenses VALUES ('software_license_record_source_frozen')",
+      ),
     ),
   ).toBe(false)
 })

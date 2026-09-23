@@ -17,9 +17,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenDisciplinaryActionRecordPageAdapter } from "@/contexts/disciplinary-action/infrastructure/adapters/capture-frozen-disciplinary-action-record-page.adapter"
 import { PrepareDisciplinaryActionCoverageRecordsAdapter } from "@/contexts/disciplinary-action/infrastructure/adapters/prepare-disciplinary-action-coverage-records.adapter"
 
-type Context = DisciplinaryActionContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = DisciplinaryActionContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きから懲戒記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyDisciplinaryActionCoveragePage {

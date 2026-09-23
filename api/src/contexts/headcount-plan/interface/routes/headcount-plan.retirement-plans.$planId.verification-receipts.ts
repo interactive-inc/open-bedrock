@@ -40,8 +40,14 @@ export const POST = headcountPlanFactory.createHandlers(
         code: "record_retirement_unavailable",
         detail: "Record source configuration unavailable",
       })
-    const receipt = await new VerifyHeadcountPlanRetirementPage(c).execute(command.data, stepUpToken)
-    if (receipt instanceof HeadcountPlanRetirementForbiddenError || receipt instanceof ForbiddenError)
+    const receipt = await new VerifyHeadcountPlanRetirementPage(c).execute(
+      command.data,
+      stepUpToken,
+    )
+    if (
+      receipt instanceof HeadcountPlanRetirementForbiddenError ||
+      receipt instanceof ForbiddenError
+    )
       throw new SystemForbiddenError()
     if (receipt instanceof HeadcountPlanRetirementConflictError)
       throw new SystemHTTPException({

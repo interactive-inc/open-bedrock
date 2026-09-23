@@ -33,7 +33,10 @@ export function createDocumentPreservationSubmissionHandlers(mode: "create" | "r
   return documentFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: documentIdSchema, number: z.coerce.number().int().positive().safe().optional() }),
+      z.strictObject({
+        id: documentIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +56,8 @@ export function createDocumentPreservationSubmissionHandlers(mode: "create" | "r
           recordId: String(documentId),
           sourceNamespace,
           authorize: () => new DocumentActorReadAdapter(c).prepare(),
-          capture: () => new CaptureDocumentRecordAdapter(c).prepare({ documentId, sourceNamespace }),
+          capture: () =>
+            new CaptureDocumentRecordAdapter(c).prepare({ documentId, sourceNamespace }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

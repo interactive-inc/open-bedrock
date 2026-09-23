@@ -24,8 +24,9 @@ test("11件のrental reservation記録を全件保全し、人の承認・取消
     request: apiRequest,
   } = await createRentalReservationPreservationFixture()
   const creator = zAccountId.parse(creatorPerson.accountId)
-  const rentalReservationIds = Array.from({ length: 11 }, (_, index) =>
-    `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+  const rentalReservationIds = Array.from(
+    { length: 11 },
+    (_, index) => `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
   )
   const conditions = {
     reason: "Preserve original",
@@ -58,7 +59,11 @@ test("11件のrental reservation記録を全件保全し、人の承認・取消
       )
       .run()
   }
-  expect(await database.prepare("SELECT count(*) AS total FROM rental_reservations").first<number>("total")).toBe(11)
+  expect(
+    await database
+      .prepare("SELECT count(*) AS total FROM rental_reservations")
+      .first<number>("total"),
+  ).toBe(11)
   const at = new Date()
   const token = await tokenFor(creator)
   const stepUpToken = "e".repeat(64)
@@ -86,8 +91,7 @@ test("11件のrental reservation記録を全件保全し、人の承認・取消
     )
   const freezeId = crypto.randomUUID()
   expect(
-    (await post("/rental/record-source-freezes", freezeId, { reason: "Preserve rental" }))
-      .status,
+    (await post("/rental/record-source-freezes", freezeId, { reason: "Preserve rental" })).status,
   ).toBe(201)
   const frozenInsert = await database
     .prepare(`INSERT INTO rental_reservations
@@ -95,7 +99,10 @@ test("11件のrental reservation記録を全件保全し、人の承認・取消
       VALUES (?1,?2,'Rental item','2030-01-01','2030-01-02',NULL,'requested','2030-01-01T00:00:00Z')`)
     .bind(crypto.randomUUID(), creatorPerson.employeeId)
     .run()
-    .then(() => null, (error: unknown) => error)
+    .then(
+      () => null,
+      (error: unknown) => error,
+    )
   expect(frozenInsert).toBeInstanceOf(Error)
   const frozenRentalReservationPath = `/rental/rental-reservations/${rentalReservationIds[0]}`
   const frozenUpdate = await apiRequest(frozenRentalReservationPath, {
@@ -108,22 +115,22 @@ test("11件のrental reservation記録を全件保全し、人の承認・取消
     },
   })
   if (frozenUpdate.status !== 409)
-    throw new Error(`unexpected frozen update response: ${frozenUpdate.status} ${await frozenUpdate.text()}`)
+    throw new Error(
+      `unexpected frozen update response: ${frozenUpdate.status} ${await frozenUpdate.text()}`,
+    )
   expect((await apiRequest(frozenRentalReservationPath, { method: "DELETE" })).status).toBe(409)
   expect(
     (
-      await apiRequest(
-        `/rental/rental-reservations/${rentalReservationIds[1]}/lend`,
-        { method: "POST" },
-      )
+      await apiRequest(`/rental/rental-reservations/${rentalReservationIds[1]}/lend`, {
+        method: "POST",
+      })
     ).status,
   ).toBe(409)
   expect(
     (
-      await apiRequest(
-        `/rental/rental-reservations/${rentalReservationIds[2]}/return`,
-        { method: "POST" },
-      )
+      await apiRequest(`/rental/rental-reservations/${rentalReservationIds[2]}/return`, {
+        method: "POST",
+      })
     ).status,
   ).toBe(409)
   const mappings = []

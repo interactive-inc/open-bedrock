@@ -48,7 +48,9 @@ export class AcceptResignation {
 
     if (updated instanceof Error) {
       if (isResignationRecordSourceFrozenError(updated))
-        return new ConflictError("resignation writes are frozen", "record_source_frozen", { cause: updated })
+        return new ConflictError("resignation writes are frozen", "record_source_frozen", {
+          cause: updated,
+        })
       return new UnexpectedError("failed to update resignation status", { cause: updated })
     }
 

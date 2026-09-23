@@ -17,7 +17,10 @@ export class RevalidateResignationRecordSourceAdapter {
       source.props.ownerContext !== "resignation" ||
       source.props.recordKind !== "resignation-record"
     )
-      return new ResignationError("forbidden", "record source does not belong to this resignation registry")
+      return new ResignationError(
+        "forbidden",
+        "record source does not belong to this resignation registry",
+      )
 
     const current = await new CaptureResignationRecordAdapter(this.c).prepare({
       resignationId: source.props.recordId,

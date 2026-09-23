@@ -31,12 +31,15 @@ export class LeaveActorReadAdapter {
       })
     if (authorization === "forbidden")
       return new LeaveError("forbidden", "human record preserver is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
       return new LeaveError("leave_unavailable", "Company snapshot is unavailable", {
         cause: guard,

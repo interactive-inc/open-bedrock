@@ -31,12 +31,15 @@ export class PartnerActorReadAdapter {
       })
     if (authorization === "forbidden")
       return new PartnerError("forbidden", "human record preserver is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
       return new PartnerError("partner_unavailable", "Company snapshot is unavailable", {
         cause: guard,

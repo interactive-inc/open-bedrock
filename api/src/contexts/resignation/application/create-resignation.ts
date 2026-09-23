@@ -48,7 +48,9 @@ export class CreateResignation {
 
     if (created instanceof Error) {
       if (isResignationRecordSourceFrozenError(created))
-        return new ConflictError("resignation writes are frozen", "record_source_frozen", { cause: created })
+        return new ConflictError("resignation writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       return new UnexpectedError("failed to create resignation", { cause: created })
     }
 

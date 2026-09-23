@@ -31,12 +31,15 @@ export class MeetingActorReadAdapter {
       })
     if (authorization === "forbidden")
       return new MeetingError("forbidden", "human record preserver is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
       return new MeetingError("meeting_unavailable", "Company snapshot is unavailable", {
         cause: guard,

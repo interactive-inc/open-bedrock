@@ -119,7 +119,9 @@ export class SendThanks {
 
       if (ensured instanceof Error) {
         if (isThanksRecordSourceFrozenError(ensured))
-          return new ConflictError("thanks writes are frozen", "record_source_frozen", { cause: ensured })
+          return new ConflictError("thanks writes are frozen", "record_source_frozen", {
+            cause: ensured,
+          })
         return ensured
       }
     }
@@ -133,7 +135,9 @@ export class SendThanks {
 
     if (created instanceof Error) {
       if (isThanksRecordSourceFrozenError(created))
-        return new ConflictError("thanks writes are frozen", "record_source_frozen", { cause: created })
+        return new ConflictError("thanks writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       return new UnexpectedError("failed to send thanks", { cause: created })
     }
 

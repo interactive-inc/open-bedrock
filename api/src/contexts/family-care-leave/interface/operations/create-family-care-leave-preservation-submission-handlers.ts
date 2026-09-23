@@ -33,7 +33,10 @@ export function createFamilyCareLeavePreservationSubmissionHandlers(mode: "creat
   return familyCareLeaveFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: familyCareLeaveIdSchema, number: z.coerce.number().int().positive().safe().optional() }),
+      z.strictObject({
+        id: familyCareLeaveIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +56,11 @@ export function createFamilyCareLeavePreservationSubmissionHandlers(mode: "creat
           recordId: String(familyCareLeaveId),
           sourceNamespace,
           authorize: () => new FamilyCareLeaveActorReadAdapter(c).prepare(),
-          capture: () => new CaptureFamilyCareLeaveRecordAdapter(c).prepare({ familyCareLeaveId, sourceNamespace }),
+          capture: () =>
+            new CaptureFamilyCareLeaveRecordAdapter(c).prepare({
+              familyCareLeaveId,
+              sourceNamespace,
+            }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

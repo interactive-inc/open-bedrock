@@ -17,7 +17,10 @@ export class RevalidateOneOnOneRecordSourceAdapter {
       source.props.ownerContext !== "one-on-one" ||
       source.props.recordKind !== "one-on-one-record"
     )
-      return new OneOnOneError("forbidden", "record source does not belong to this one-on-one registry")
+      return new OneOnOneError(
+        "forbidden",
+        "record source does not belong to this one-on-one registry",
+      )
 
     const current = await new CaptureOneOnOneRecordAdapter(this.c).prepare({
       oneOnOneId: source.props.recordId,

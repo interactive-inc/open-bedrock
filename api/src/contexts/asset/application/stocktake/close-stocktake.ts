@@ -45,7 +45,10 @@ export class CloseStocktake {
     const closed = await stocktakeRepository.closeIfOpen({ id: command.id, closedAt: command.now })
 
     if (closed instanceof Error) {
-      if (isAssetRecordSourceFrozenError(closed)) return new ConflictError("asset writes are frozen", "record_source_frozen", { cause: closed })
+      if (isAssetRecordSourceFrozenError(closed))
+        return new ConflictError("asset writes are frozen", "record_source_frozen", {
+          cause: closed,
+        })
       return new UnexpectedError("failed to close stocktake", { cause: closed })
     }
 

@@ -45,7 +45,8 @@ export class VerifyEmployeeWorkStyleRetirementPage {
       plan.snapshot.sourceNamespace !== command.sourceNamespace ||
       plan.snapshot.ownerContext !== "work-style" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(["employee-work-style-record"])
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(["employee-work-style-record"])
     )
       return new EmployeeWorkStyleRetirementConflictError(
         "retirement plan unavailable or capability changed",
@@ -126,6 +127,8 @@ export class VerifyEmployeeWorkStyleRetirementPage {
     if (raced instanceof Error) return raced
     return raced !== null && matches(raced)
       ? raced
-      : new EmployeeWorkStyleRetirementConflictError("retirement verification position already written")
+      : new EmployeeWorkStyleRetirementConflictError(
+          "retirement verification position already written",
+        )
   }
 }

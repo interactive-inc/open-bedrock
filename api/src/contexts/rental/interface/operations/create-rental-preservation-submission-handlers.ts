@@ -33,7 +33,10 @@ export function createRentalReservationPreservationSubmissionHandlers(mode: "cre
   return rentalReservationFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: rentalReservationIdSchema, number: z.coerce.number().int().positive().safe().optional() }),
+      z.strictObject({
+        id: rentalReservationIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +56,11 @@ export function createRentalReservationPreservationSubmissionHandlers(mode: "cre
           recordId: String(rentalReservationId),
           sourceNamespace,
           authorize: () => new RentalReservationActorReadAdapter(c).prepare(),
-          capture: () => new CaptureRentalReservationRecordAdapter(c).prepare({ rentalReservationId, sourceNamespace }),
+          capture: () =>
+            new CaptureRentalReservationRecordAdapter(c).prepare({
+              rentalReservationId,
+              sourceNamespace,
+            }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

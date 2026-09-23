@@ -37,7 +37,10 @@ export const POST = disciplinaryActionFactory.createHandlers(
         code: "record_retirement_unavailable",
         detail: "Record source configuration unavailable",
       })
-    const receipt = await new CreateDisciplinaryActionRetirementPlan(c).execute(command.data, stepUpToken)
+    const receipt = await new CreateDisciplinaryActionRetirementPlan(c).execute(
+      command.data,
+      stepUpToken,
+    )
     if (receipt instanceof ForbiddenError) throw new SystemForbiddenError()
     if (receipt instanceof DisciplinaryActionRetirementConflictError)
       throw new SystemHTTPException({

@@ -18,9 +18,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenTrainingRecordPageAdapter } from "@/contexts/training/infrastructure/adapters/capture-frozen-training-record-page.adapter"
 import { PrepareTrainingCoverageRecordsAdapter } from "@/contexts/training/infrastructure/adapters/prepare-training-coverage-records.adapter"
 
-type Context = TrainingContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = TrainingContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからtraining記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyTrainingCoveragePage {

@@ -33,7 +33,10 @@ export function createOneOnOnePreservationSubmissionHandlers(mode: "create" | "r
   return oneOnOneFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: oneOnOneIdSchema, number: z.coerce.number().int().positive().safe().optional() }),
+      z.strictObject({
+        id: oneOnOneIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +56,8 @@ export function createOneOnOnePreservationSubmissionHandlers(mode: "create" | "r
           recordId: String(oneOnOneId),
           sourceNamespace,
           authorize: () => new OneOnOneActorReadAdapter(c).prepare(),
-          capture: () => new CaptureOneOnOneRecordAdapter(c).prepare({ oneOnOneId, sourceNamespace }),
+          capture: () =>
+            new CaptureOneOnOneRecordAdapter(c).prepare({ oneOnOneId, sourceNamespace }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

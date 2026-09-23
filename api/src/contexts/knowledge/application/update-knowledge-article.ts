@@ -93,7 +93,9 @@ export class UpdateKnowledgeArticle {
 
     if (result instanceof Error) {
       if (isKnowledgeRecordSourceFrozenError(result))
-        return new ConflictError("knowledge writes are frozen", "record_source_frozen", { cause: result })
+        return new ConflictError("knowledge writes are frozen", "record_source_frozen", {
+          cause: result,
+        })
       return new UnexpectedError("failed to update knowledge article", { cause: result })
     }
 

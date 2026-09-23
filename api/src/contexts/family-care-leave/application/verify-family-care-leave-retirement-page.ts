@@ -45,7 +45,8 @@ export class VerifyFamilyCareLeaveRetirementPage {
       plan.snapshot.sourceNamespace !== command.sourceNamespace ||
       plan.snapshot.ownerContext !== "family-care-leave" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(["family-care-leave-record"])
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(["family-care-leave-record"])
     )
       return new FamilyCareLeaveRetirementConflictError(
         "retirement plan unavailable or capability changed",
@@ -126,6 +127,8 @@ export class VerifyFamilyCareLeaveRetirementPage {
     if (raced instanceof Error) return raced
     return raced !== null && matches(raced)
       ? raced
-      : new FamilyCareLeaveRetirementConflictError("retirement verification position already written")
+      : new FamilyCareLeaveRetirementConflictError(
+          "retirement verification position already written",
+        )
   }
 }

@@ -45,7 +45,8 @@ export class VerifyBusinessTripRetirementPage {
       plan.snapshot.sourceNamespace !== command.sourceNamespace ||
       plan.snapshot.ownerContext !== "business-trip" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(["business-trip-record"])
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(["business-trip-record"])
     )
       return new BusinessTripRetirementConflictError(
         "retirement plan unavailable or capability changed",

@@ -17,9 +17,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenCompanyCalendarDayRecordPageAdapter } from "@/contexts/company-calendar/infrastructure/adapters/capture-frozen-company-calendar-record-page.adapter"
 import { PrepareCompanyCalendarDayCoverageRecordsAdapter } from "@/contexts/company-calendar/infrastructure/adapters/prepare-company-calendar-coverage-records.adapter"
 
-type Context = CompanyCalendarDayContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = CompanyCalendarDayContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きから会社カレンダー記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyCompanyCalendarDayCoveragePage {

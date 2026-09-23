@@ -17,9 +17,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenEmployeeWorkStyleRecordPageAdapter } from "@/contexts/work-style/infrastructure/adapters/capture-frozen-employee-work-style-record-page.adapter"
 import { PrepareEmployeeWorkStyleCoverageRecordsAdapter } from "@/contexts/work-style/infrastructure/adapters/prepare-work-style-coverage-records.adapter"
 
-type Context = EmployeeWorkStyleContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = EmployeeWorkStyleContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きから勤務形態記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyEmployeeWorkStyleCoveragePage {

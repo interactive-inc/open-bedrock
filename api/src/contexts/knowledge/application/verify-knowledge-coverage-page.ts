@@ -18,9 +18,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenKnowledgeRecordPageAdapter } from "@/contexts/knowledge/infrastructure/adapters/capture-frozen-knowledge-article-record-page.adapter"
 import { PrepareKnowledgeCoverageRecordsAdapter } from "@/contexts/knowledge/infrastructure/adapters/prepare-knowledge-coverage-records.adapter"
 
-type Context = KnowledgeContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = KnowledgeContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからknowledge記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyKnowledgeCoveragePage {

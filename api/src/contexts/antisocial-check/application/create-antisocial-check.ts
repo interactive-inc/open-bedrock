@@ -37,7 +37,9 @@ export class CreateAntisocialCheck {
 
     if (created instanceof Error) {
       if (isAntisocialCheckRecordSourceFrozenError(created)) {
-        return new ConflictError("antisocial check writes are frozen", "record_source_frozen", { cause: created })
+        return new ConflictError("antisocial check writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       }
       return new UnexpectedError("failed to create antisocial check", { cause: created })
     }

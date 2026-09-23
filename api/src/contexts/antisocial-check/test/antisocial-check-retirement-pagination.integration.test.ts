@@ -24,8 +24,9 @@ test("11件のantisocial check記録を全件保全し、人の承認・取消�
     request: apiRequest,
   } = await createAntisocialCheckPreservationFixture()
   const creator = zAccountId.parse(creatorPerson.accountId)
-  const antisocialCheckIds = Array.from({ length: 11 }, (_, index) =>
-    `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+  const antisocialCheckIds = Array.from(
+    { length: 11 },
+    (_, index) => `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
   )
   const conditions = {
     reason: "Preserve original",
@@ -58,7 +59,11 @@ test("11件のantisocial check記録を全件保全し、人の承認・取消�
       )
       .run()
   }
-  expect(await database.prepare("SELECT count(*) AS total FROM antisocial_checks").first<number>("total")).toBe(11)
+  expect(
+    await database
+      .prepare("SELECT count(*) AS total FROM antisocial_checks")
+      .first<number>("total"),
+  ).toBe(11)
   const at = new Date()
   const token = await tokenFor(creator)
   const stepUpToken = "e".repeat(64)
@@ -86,8 +91,11 @@ test("11件のantisocial check記録を全件保全し、人の承認・取消�
     )
   const freezeId = crypto.randomUUID()
   expect(
-    (await post("/antisocial-check/record-source-freezes", freezeId, { reason: "Preserve antisocial-check" }))
-      .status,
+    (
+      await post("/antisocial-check/record-source-freezes", freezeId, {
+        reason: "Preserve antisocial-check",
+      })
+    ).status,
   ).toBe(201)
   const frozenInsert = await database
     .prepare(`INSERT INTO antisocial_checks
@@ -95,7 +103,10 @@ test("11件のantisocial check記録を全件保全し、人の承認・取消�
       VALUES (?1,?2,'Partner',NULL,NULL,NULL,'requested','2030-01-01T00:00:00Z')`)
     .bind(crypto.randomUUID(), creatorPerson.employeeId)
     .run()
-    .then(() => null, (error: unknown) => error)
+    .then(
+      () => null,
+      (error: unknown) => error,
+    )
   expect(frozenInsert).toBeInstanceOf(Error)
   const frozenAntisocialCheckPath = `/antisocial-check/antisocial-checks/${antisocialCheckIds[0]}`
   const frozenUpdate = await apiRequest(frozenAntisocialCheckPath, {
@@ -108,7 +119,9 @@ test("11件のantisocial check記録を全件保全し、人の承認・取消�
     },
   })
   if (frozenUpdate.status !== 409)
-    throw new Error(`unexpected frozen update response: ${frozenUpdate.status} ${await frozenUpdate.text()}`)
+    throw new Error(
+      `unexpected frozen update response: ${frozenUpdate.status} ${await frozenUpdate.text()}`,
+    )
   expect((await apiRequest(frozenAntisocialCheckPath, { method: "DELETE" })).status).toBe(409)
   const mappings = []
   for (const id of antisocialCheckIds) {

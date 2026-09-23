@@ -18,9 +18,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenRentalReservationRecordPageAdapter } from "@/contexts/rental/infrastructure/adapters/capture-frozen-rental-reservation-record-page.adapter"
 import { PrepareRentalReservationCoverageRecordsAdapter } from "@/contexts/rental/infrastructure/adapters/prepare-rental-reservation-coverage-records.adapter"
 
-type Context = RentalReservationContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = RentalReservationContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからrental reservation記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyRentalReservationCoveragePage {

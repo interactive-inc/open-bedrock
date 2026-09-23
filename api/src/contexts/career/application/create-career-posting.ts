@@ -42,7 +42,9 @@ export class CreateCareerPosting {
 
     if (created instanceof Error) {
       if (isCareerRecordSourceFrozenError(created)) {
-        return new ConflictError("career writes are frozen", "record_source_frozen", { cause: created })
+        return new ConflictError("career writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       }
       return new UnexpectedError("failed to create career posting", { cause: created })
     }

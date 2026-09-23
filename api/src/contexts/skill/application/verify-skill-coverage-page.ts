@@ -18,9 +18,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenSkillRecordPageAdapter } from "@/contexts/skill/infrastructure/adapters/capture-frozen-skill-record-page.adapter"
 import { PrepareSkillCoverageRecordsAdapter } from "@/contexts/skill/infrastructure/adapters/prepare-skill-coverage-records.adapter"
 
-type Context = SkillContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = SkillContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからskill記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifySkillCoveragePage {

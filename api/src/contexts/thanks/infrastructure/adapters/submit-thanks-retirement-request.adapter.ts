@@ -85,9 +85,7 @@ export class SubmitThanksRetirementRequestAdapter {
         !["cancelled", "rejected", "returned"].includes(previous.status) ||
         !Number.isSafeInteger(previous.version + 1)
       )
-        return new ThanksRetirementConflictError(
-          "retirement previous version is not resubmittable",
-        )
+        return new ThanksRetirementConflictError("retirement previous version is not resubmittable")
       const original = await RecordRetirementProposalValue.restore(JSON.parse(previous.bodyJson))
       if (original instanceof Error) return original
       if (
@@ -169,10 +167,9 @@ export class SubmitThanksRetirementRequestAdapter {
       const raced = await replay()
       if (raced instanceof Error) return raced
       if (raced !== null) return { created: false, request: raced }
-      return new ThanksRetirementConflictError(
-        "retirement submission changed before persistence",
-        { cause: started },
-      )
+      return new ThanksRetirementConflictError("retirement submission changed before persistence", {
+        cause: started,
+      })
     }
     return {
       created: true,

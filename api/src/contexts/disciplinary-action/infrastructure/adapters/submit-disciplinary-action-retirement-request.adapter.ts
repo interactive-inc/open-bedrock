@@ -13,7 +13,9 @@ import {
   DisciplinaryActionRetirementForbiddenError,
 } from "@/contexts/disciplinary-action/application/errors"
 
-type Context = ConstructorParameters<typeof PrepareDisciplinaryActionRetirementCurrentStateAdapter>[0]
+type Context = ConstructorParameters<
+  typeof PrepareDisciplinaryActionRetirementCurrentStateAdapter
+>[0]
 
 /** 全件検査の計画と終端を固定し、会社資格で解決した人の判断待ち案件を作成する。 */
 export class SubmitDisciplinaryActionRetirementRequestAdapter {
@@ -28,7 +30,9 @@ export class SubmitDisciplinaryActionRetirementRequestAdapter {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new DisciplinaryActionRetirementForbiddenError("retirement authentication required")
-    const current = await new PrepareDisciplinaryActionRetirementCurrentStateAdapter(this.c).prepare(
+    const current = await new PrepareDisciplinaryActionRetirementCurrentStateAdapter(
+      this.c,
+    ).prepare(
       {
         planId: command.planId,
         planDigest: command.planDigest,
@@ -77,7 +81,9 @@ export class SubmitDisciplinaryActionRetirementRequestAdapter {
       )
       if (previous instanceof Error) return previous
       if (previous === null)
-        return new DisciplinaryActionRetirementConflictError("retirement previous version is missing")
+        return new DisciplinaryActionRetirementConflictError(
+          "retirement previous version is missing",
+        )
       if (previous.createdByAccountId !== authentication.accountId)
         return new DisciplinaryActionRetirementForbiddenError("retirement applicant differs")
       if (
@@ -119,7 +125,9 @@ export class SubmitDisciplinaryActionRetirementRequestAdapter {
         existing.bodyJson !== proposal.props.canonical.toString()
       )
         return new DisciplinaryActionRetirementConflictError("retirement submission replay differs")
-      const rechecked = await new PrepareDisciplinaryActionRetirementCurrentStateAdapter(this.c).prepare(
+      const rechecked = await new PrepareDisciplinaryActionRetirementCurrentStateAdapter(
+        this.c,
+      ).prepare(
         {
           planId: command.planId,
           planDigest: command.planDigest,
@@ -148,7 +156,9 @@ export class SubmitDisciplinaryActionRetirementRequestAdapter {
     })
     if (task instanceof Error) return task
     if (task.resolved.guards.length === 0)
-      return new DisciplinaryActionRetirementForbiddenError("retirement decision qualification required")
+      return new DisciplinaryActionRetirementForbiddenError(
+        "retirement decision qualification required",
+      )
     const started = await new StartSystemProcedure({
       writer: new SystemD1WorkflowAdapter({
         env: this.c.env,

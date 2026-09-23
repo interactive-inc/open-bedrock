@@ -31,12 +31,15 @@ export class KnowledgeActorReadAdapter {
       })
     if (authorization === "forbidden")
       return new KnowledgeError("forbidden", "human record preserver is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
       return new KnowledgeError("knowledge_unavailable", "Company snapshot is unavailable", {
         cause: guard,

@@ -31,10 +31,7 @@ export function createSkillPreservationSubmissionHandlers(mode: "create" | "resu
     }),
   }
   return skillFactory.createHandlers(
-    zValidator(
-      "param",
-      skillRecordRouteSchema,
-    ),
+    zValidator("param", skillRecordRouteSchema),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
     async (c) => {
@@ -53,7 +50,8 @@ export function createSkillPreservationSubmissionHandlers(mode: "create" | "resu
           recordId,
           sourceNamespace,
           authorize: () => new SkillActorReadAdapter(c).prepare(),
-          capture: () => new CaptureSkillRecordAdapter(c).prepare({ recordKind, recordId, sourceNamespace }),
+          capture: () =>
+            new CaptureSkillRecordAdapter(c).prepare({ recordKind, recordId, sourceNamespace }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

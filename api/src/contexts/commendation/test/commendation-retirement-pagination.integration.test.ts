@@ -79,8 +79,11 @@ test("11件の表彰記録を全件保全し、人の承認・取消・再提出
     )
   const freezeId = crypto.randomUUID()
   expect(
-    (await post("/commendation/record-source-freezes", freezeId, { reason: "Preserve commendation" }))
-      .status,
+    (
+      await post("/commendation/record-source-freezes", freezeId, {
+        reason: "Preserve commendation",
+      })
+    ).status,
   ).toBe(201)
   expect(
     (
@@ -244,9 +247,9 @@ test("11件の表彰記録を全件保全し、人の承認・取消・再提出
       .bind(planId)
       .first<number>("n"),
   ).toBe(2)
-  expect(
-    await database.prepare("SELECT count(*) AS n FROM commendations").first<number>("n"),
-  ).toBe(11)
+  expect(await database.prepare("SELECT count(*) AS n FROM commendations").first<number>("n")).toBe(
+    11,
+  )
   expect(
     await database
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
@@ -409,9 +412,9 @@ test("11件の表彰記録を全件保全し、人の承認・取消・再提出
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
       .first<number>("n"),
   ).toBe(1)
-  expect(
-    await database.prepare("SELECT count(*) AS n FROM commendations").first<number>("n"),
-  ).toBe(11)
+  expect(await database.prepare("SELECT count(*) AS n FROM commendations").first<number>("n")).toBe(
+    11,
+  )
   expect(
     (
       await post(`${sourcePath}/release`, crypto.randomUUID(), {

@@ -1,9 +1,6 @@
 import { DomainError } from "@system/domain/errors"
 
-export type CareerErrorCode =
-  | "forbidden"
-  | "career_conflict"
-  | "career_unavailable"
+export type CareerErrorCode = "forbidden" | "career_conflict" | "career_unavailable"
 
 /** career原記録の保全操作が成立しない理由。 */
 export class CareerError extends DomainError {

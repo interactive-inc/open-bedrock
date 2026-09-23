@@ -22,7 +22,14 @@ export const POST = compensationChangeFactory.createHandlers(
   requireSystemStepUp,
   zValidator("param", z.strictObject({ freezeId: z.uuid() })),
   zValidator("header", z.object({ "idempotency-key": z.uuid() })),
-  zValidator("json", compensationChangeCoveragePageCommandSchema.pick({ purpose: true, recordKind: true, records: true })),
+  zValidator(
+    "json",
+    compensationChangeCoveragePageCommandSchema.pick({
+      purpose: true,
+      recordKind: true,
+      records: true,
+    }),
+  ),
   async (c) => {
     c.header("Cache-Control", "no-store")
     const stepUpToken = c.req.header("x-system-step-up")
@@ -39,8 +46,12 @@ export const POST = compensationChangeFactory.createHandlers(
         code: "record_coverage_unavailable",
         detail: "Record source configuration unavailable",
       })
-    const receipt = await new VerifyCompensationChangeCoveragePage(c).execute(command.data, stepUpToken)
-    if (receipt instanceof CompensationChangeCoverageForbiddenError) throw new SystemForbiddenError()
+    const receipt = await new VerifyCompensationChangeCoveragePage(c).execute(
+      command.data,
+      stepUpToken,
+    )
+    if (receipt instanceof CompensationChangeCoverageForbiddenError)
+      throw new SystemForbiddenError()
     if (receipt instanceof CompensationChangeCoverageConflictError)
       throw new SystemHTTPException({
         status: 409,

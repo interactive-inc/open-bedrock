@@ -45,7 +45,9 @@ export class UpdateMyCareerApplication {
 
     if (updated instanceof Error) {
       if (isCareerRecordSourceFrozenError(updated)) {
-        return new ConflictError("career writes are frozen", "record_source_frozen", { cause: updated })
+        return new ConflictError("career writes are frozen", "record_source_frozen", {
+          cause: updated,
+        })
       }
       return new UnexpectedError("failed to update career application", { cause: updated })
     }

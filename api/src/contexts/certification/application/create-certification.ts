@@ -36,7 +36,9 @@ export class CreateCertification {
 
     if (created instanceof Error) {
       if (isCertificationRecordSourceFrozenError(created))
-        return new ConflictError("certification writes are frozen", "record_source_frozen", { cause: created })
+        return new ConflictError("certification writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       return new UnexpectedError("failed to save certification", { cause: created })
     }
 

@@ -79,8 +79,11 @@ test("11件の労災・事故記録を全件保全し、人の承認・取消・
     )
   const freezeId = crypto.randomUUID()
   expect(
-    (await post("/work-accident/record-source-freezes", freezeId, { reason: "Preserve work-accident" }))
-      .status,
+    (
+      await post("/work-accident/record-source-freezes", freezeId, {
+        reason: "Preserve work-accident",
+      })
+    ).status,
   ).toBe(201)
   expect(
     (

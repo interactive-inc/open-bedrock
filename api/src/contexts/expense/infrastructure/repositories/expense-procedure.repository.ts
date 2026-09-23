@@ -166,10 +166,13 @@ export class ExpenseProcedureRepository {
   }
 
   async prepareSubmissionGuard(accountId: AccountId): Promise<D1PreparedStatement | Error> {
-    return prepareCompanyAuthoritySnapshotGuard({ database: this.c.env.DB }, {
-      accountIds: [accountId],
-      employeeCodes: [],
-    })
+    return prepareCompanyAuthoritySnapshotGuard(
+      { database: this.c.env.DB },
+      {
+        accountIds: [accountId],
+        employeeCodes: [],
+      },
+    )
   }
 
   async readSubmissionReceipt(

@@ -33,7 +33,10 @@ export function createKnowledgePreservationSubmissionHandlers(mode: "create" | "
   return knowledgeFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: knowledgeIdSchema, number: z.coerce.number().int().positive().safe().optional() }),
+      z.strictObject({
+        id: knowledgeIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +56,11 @@ export function createKnowledgePreservationSubmissionHandlers(mode: "create" | "
           recordId: String(knowledgeId),
           sourceNamespace,
           authorize: () => new KnowledgeActorReadAdapter(c).prepare(),
-          capture: () => new CaptureKnowledgeRecordAdapter(c).prepare({ articleId: knowledgeId, sourceNamespace }),
+          capture: () =>
+            new CaptureKnowledgeRecordAdapter(c).prepare({
+              articleId: knowledgeId,
+              sourceNamespace,
+            }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

@@ -18,9 +18,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenSurveyRecordPageAdapter } from "@/contexts/survey/infrastructure/adapters/capture-frozen-survey-record-page.adapter"
 import { PrepareSurveyCoverageRecordsAdapter } from "@/contexts/survey/infrastructure/adapters/prepare-survey-coverage-records.adapter"
 
-type Context = SurveyContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = SurveyContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからsurvey記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifySurveyCoveragePage {

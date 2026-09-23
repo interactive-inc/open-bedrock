@@ -17,7 +17,10 @@ export class RevalidateDisciplinaryActionRecordSourceAdapter {
       source.props.ownerContext !== "disciplinary-action" ||
       source.props.recordKind !== "disciplinary-action-record"
     )
-      return new DisciplinaryActionError("forbidden", "record source does not belong to this disciplinary-action registry")
+      return new DisciplinaryActionError(
+        "forbidden",
+        "record source does not belong to this disciplinary-action registry",
+      )
 
     const current = await new CaptureDisciplinaryActionRecordAdapter(this.c).prepare({
       disciplinaryActionId: Number(source.props.recordId),

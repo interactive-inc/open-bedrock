@@ -31,10 +31,7 @@ export function createSurveyPreservationSubmissionHandlers(mode: "create" | "res
     }),
   }
   return surveyFactory.createHandlers(
-    zValidator(
-      "param",
-      surveyRecordRouteSchema,
-    ),
+    zValidator("param", surveyRecordRouteSchema),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
     async (c) => {
@@ -53,7 +50,8 @@ export function createSurveyPreservationSubmissionHandlers(mode: "create" | "res
           recordId,
           sourceNamespace,
           authorize: () => new SurveyActorReadAdapter(c).prepare(),
-          capture: () => new CaptureSurveyRecordAdapter(c).prepare({ recordKind, recordId, sourceNamespace }),
+          capture: () =>
+            new CaptureSurveyRecordAdapter(c).prepare({ recordKind, recordId, sourceNamespace }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

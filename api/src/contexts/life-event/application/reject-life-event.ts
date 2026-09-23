@@ -48,7 +48,9 @@ export class RejectLifeEvent {
 
     if (updated instanceof Error) {
       if (isLifeEventRecordSourceFrozenError(updated))
-        return new ConflictError("life event writes are frozen", "record_source_frozen", { cause: updated })
+        return new ConflictError("life event writes are frozen", "record_source_frozen", {
+          cause: updated,
+        })
       return new UnexpectedError("failed to update life event status", { cause: updated })
     }
 

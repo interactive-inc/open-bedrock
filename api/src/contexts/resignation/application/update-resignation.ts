@@ -53,7 +53,9 @@ export class UpdateResignation {
 
     if (saved instanceof Error) {
       if (isResignationRecordSourceFrozenError(saved))
-        return new ConflictError("resignation writes are frozen", "record_source_frozen", { cause: saved })
+        return new ConflictError("resignation writes are frozen", "record_source_frozen", {
+          cause: saved,
+        })
       return new UnexpectedError("failed to update resignation", { cause: saved })
     }
 

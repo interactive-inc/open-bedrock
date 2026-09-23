@@ -17,7 +17,10 @@ export class RevalidateCompanyCalendarDayRecordSourceAdapter {
       source.props.ownerContext !== "company-calendar" ||
       source.props.recordKind !== "company-calendar-record"
     )
-      return new CompanyCalendarDayError("forbidden", "record source does not belong to this company-calendar registry")
+      return new CompanyCalendarDayError(
+        "forbidden",
+        "record source does not belong to this company-calendar registry",
+      )
 
     const current = await new CaptureCompanyCalendarDayRecordAdapter(this.c).prepare({
       companyCalendarDayId: Number(source.props.recordId),

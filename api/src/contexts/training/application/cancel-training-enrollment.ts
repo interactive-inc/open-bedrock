@@ -49,7 +49,9 @@ export class CancelTrainingEnrollment {
 
     if (deleted instanceof Error) {
       if (isTrainingRecordSourceFrozenError(deleted))
-        return new ConflictError("training writes are frozen", "record_source_frozen", { cause: deleted })
+        return new ConflictError("training writes are frozen", "record_source_frozen", {
+          cause: deleted,
+        })
       return new UnexpectedError("failed to delete training enrollment", { cause: deleted })
     }
 

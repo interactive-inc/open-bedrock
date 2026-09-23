@@ -31,10 +31,7 @@ export function createThanksPreservationSubmissionHandlers(mode: "create" | "res
     }),
   }
   return thanksFactory.createHandlers(
-    zValidator(
-      "param",
-      thanksRecordRouteSchema,
-    ),
+    zValidator("param", thanksRecordRouteSchema),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
     async (c) => {
@@ -53,7 +50,8 @@ export function createThanksPreservationSubmissionHandlers(mode: "create" | "res
           recordId,
           sourceNamespace,
           authorize: () => new ThanksActorReadAdapter(c).prepare(),
-          capture: () => new CaptureThanksRecordAdapter(c).prepare({ recordKind, recordId, sourceNamespace }),
+          capture: () =>
+            new CaptureThanksRecordAdapter(c).prepare({ recordKind, recordId, sourceNamespace }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

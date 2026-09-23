@@ -56,7 +56,8 @@ export class PrepareEmployeeWorkStyleRetirementCurrentStateAdapter {
       plan.snapshot.sourceNamespace !== request.sourceNamespace ||
       plan.snapshot.ownerContext !== "work-style" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(["employee-work-style-record"])
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(["employee-work-style-record"])
     )
       return new Error("retirement plan or source capability differs")
     const target = { planId: plan.snapshot.id, planDigest: plan.digest }

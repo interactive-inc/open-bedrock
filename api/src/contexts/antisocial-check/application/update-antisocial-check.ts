@@ -75,7 +75,9 @@ export class UpdateAntisocialCheck {
 
     if (result instanceof Error) {
       if (isAntisocialCheckRecordSourceFrozenError(result)) {
-        return new ConflictError("antisocial check writes are frozen", "record_source_frozen", { cause: result })
+        return new ConflictError("antisocial check writes are frozen", "record_source_frozen", {
+          cause: result,
+        })
       }
       return new UnexpectedError("failed to update antisocial check", { cause: result })
     }

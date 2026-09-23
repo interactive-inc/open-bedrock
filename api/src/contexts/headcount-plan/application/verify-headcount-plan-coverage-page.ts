@@ -17,9 +17,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenHeadcountPlanRecordPageAdapter } from "@/contexts/headcount-plan/infrastructure/adapters/capture-frozen-headcount-plan-record-page.adapter"
 import { PrepareHeadcountPlanCoverageRecordsAdapter } from "@/contexts/headcount-plan/infrastructure/adapters/prepare-headcount-plan-coverage-records.adapter"
 
-type Context = HeadcountPlanContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = HeadcountPlanContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きから人員計画記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyHeadcountPlanCoveragePage {

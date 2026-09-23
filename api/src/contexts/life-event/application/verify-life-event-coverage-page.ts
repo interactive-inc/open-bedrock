@@ -18,9 +18,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenLifeEventRecordPageAdapter } from "@/contexts/life-event/infrastructure/adapters/capture-frozen-life-event-record-page.adapter"
 import { PrepareLifeEventCoverageRecordsAdapter } from "@/contexts/life-event/infrastructure/adapters/prepare-life-event-coverage-records.adapter"
 
-type Context = LifeEventContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = LifeEventContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからlife event記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyLifeEventCoveragePage {

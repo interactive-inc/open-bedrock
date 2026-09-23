@@ -26,21 +26,32 @@ export class FamilyCareLeaveActorReadAdapter {
       now,
     })
     if (authorization instanceof Error)
-      return new FamilyCareLeaveError("family_care_leave_unavailable", "authorization is unavailable", {
-        cause: authorization,
-      })
+      return new FamilyCareLeaveError(
+        "family_care_leave_unavailable",
+        "authorization is unavailable",
+        {
+          cause: authorization,
+        },
+      )
     if (authorization === "forbidden")
       return new FamilyCareLeaveError("forbidden", "human family-care-leave manager is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
-      return new FamilyCareLeaveError("family_care_leave_unavailable", "Company snapshot is unavailable", {
-        cause: guard,
-      })
+      return new FamilyCareLeaveError(
+        "family_care_leave_unavailable",
+        "Company snapshot is unavailable",
+        {
+          cause: guard,
+        },
+      )
     const directory = openCompanyEmployeeDirectory({
       env: {
         DB: this.c.env.DB,
@@ -51,7 +62,10 @@ export class FamilyCareLeaveActorReadAdapter {
     const actors = await directory.findForAccountIds([account.data])
     const employees = await directory.findForEmployeeIds(employeeIds)
     if (actors instanceof Error || employees instanceof Error)
-      return new FamilyCareLeaveError("family_care_leave_unavailable", "Company directory is unavailable")
+      return new FamilyCareLeaveError(
+        "family_care_leave_unavailable",
+        "Company directory is unavailable",
+      )
     return {
       actor: actors[0]?.employee ?? null,
       employees,

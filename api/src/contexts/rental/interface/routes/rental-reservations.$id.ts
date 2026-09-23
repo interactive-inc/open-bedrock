@@ -153,7 +153,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
     if (deleted instanceof Error) {
       if (isRentalReservationRecordSourceFrozenError(deleted)) {
-        return new ConflictError("rental reservation writes are frozen", "record_source_frozen", { cause: deleted })
+        return new ConflictError("rental reservation writes are frozen", "record_source_frozen", {
+          cause: deleted,
+        })
       }
       return new UnexpectedError("failed to delete reservation", { cause: deleted })
     }

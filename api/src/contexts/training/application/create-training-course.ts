@@ -59,7 +59,9 @@ export class CreateTrainingCourse {
 
     if (result instanceof Error) {
       if (isTrainingRecordSourceFrozenError(result))
-        return new ConflictError("training writes are frozen", "record_source_frozen", { cause: result })
+        return new ConflictError("training writes are frozen", "record_source_frozen", {
+          cause: result,
+        })
       return new UnexpectedError("failed to create training course", { cause: result })
     }
 

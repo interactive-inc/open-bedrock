@@ -56,7 +56,9 @@ export class SetMySkill {
 
     if (saved instanceof Error) {
       if (isSkillRecordSourceFrozenError(saved))
-        return new ConflictError("skill writes are frozen", "record_source_frozen", { cause: saved })
+        return new ConflictError("skill writes are frozen", "record_source_frozen", {
+          cause: saved,
+        })
       return new UnexpectedError("failed to save skill", { cause: saved })
     }
 

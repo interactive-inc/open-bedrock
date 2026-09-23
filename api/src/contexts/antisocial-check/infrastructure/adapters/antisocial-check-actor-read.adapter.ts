@@ -26,21 +26,32 @@ export class AntisocialCheckActorReadAdapter {
       now,
     })
     if (authorization instanceof Error)
-      return new AntisocialCheckError("antisocial_check_unavailable", "authorization is unavailable", {
-        cause: authorization,
-      })
+      return new AntisocialCheckError(
+        "antisocial_check_unavailable",
+        "authorization is unavailable",
+        {
+          cause: authorization,
+        },
+      )
     if (authorization === "forbidden")
       return new AntisocialCheckError("forbidden", "human antisocial-check manager is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
-      return new AntisocialCheckError("antisocial_check_unavailable", "Company snapshot is unavailable", {
-        cause: guard,
-      })
+      return new AntisocialCheckError(
+        "antisocial_check_unavailable",
+        "Company snapshot is unavailable",
+        {
+          cause: guard,
+        },
+      )
     const directory = openCompanyEmployeeDirectory({
       env: {
         DB: this.c.env.DB,
@@ -51,7 +62,10 @@ export class AntisocialCheckActorReadAdapter {
     const actors = await directory.findForAccountIds([account.data])
     const employees = await directory.findForEmployeeIds(employeeIds)
     if (actors instanceof Error || employees instanceof Error)
-      return new AntisocialCheckError("antisocial_check_unavailable", "Company directory is unavailable")
+      return new AntisocialCheckError(
+        "antisocial_check_unavailable",
+        "Company directory is unavailable",
+      )
     return {
       actor: actors[0]?.employee ?? null,
       employees,

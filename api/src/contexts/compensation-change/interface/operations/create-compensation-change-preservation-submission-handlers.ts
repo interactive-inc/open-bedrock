@@ -18,7 +18,9 @@ import { SubmitRecordPreservationAdapter } from "@system/infrastructure/adapters
 import { RecordPreservationSubmissionError } from "@system/infrastructure/adapters/records/errors"
 
 /** compensation-change記録の取得と会社資格をSystemの共通提出処理へ接続する。 */
-export function createCompensationChangePreservationSubmissionHandlers(mode: "create" | "resubmit") {
+export function createCompensationChangePreservationSubmissionHandlers(
+  mode: "create" | "resubmit",
+) {
   const requestSchema = z.strictObject({
     procedure_key: procedureKeySchema,
     conditions: recordPreservationRequestSchema,
@@ -31,10 +33,7 @@ export function createCompensationChangePreservationSubmissionHandlers(mode: "cr
     }),
   }
   return compensationChangeFactory.createHandlers(
-    zValidator(
-      "param",
-      compensationChangeRecordRouteSchema,
-    ),
+    zValidator("param", compensationChangeRecordRouteSchema),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
     async (c) => {
@@ -53,7 +52,12 @@ export function createCompensationChangePreservationSubmissionHandlers(mode: "cr
           recordId,
           sourceNamespace,
           authorize: () => new CompensationChangeActorReadAdapter(c).prepare(),
-          capture: () => new CaptureCompensationChangeRecordAdapter(c).prepare({ recordKind, recordId, sourceNamespace }),
+          capture: () =>
+            new CaptureCompensationChangeRecordAdapter(c).prepare({
+              recordKind,
+              recordId,
+              sourceNamespace,
+            }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

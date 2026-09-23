@@ -22,7 +22,10 @@ export const POST = disciplinaryActionFactory.createHandlers(
   requireSystemStepUp,
   zValidator("param", z.strictObject({ freezeId: z.uuid() })),
   zValidator("header", z.object({ "idempotency-key": z.uuid() })),
-  zValidator("json", disciplinaryActionCoveragePageCommandSchema.pick({ purpose: true, records: true })),
+  zValidator(
+    "json",
+    disciplinaryActionCoveragePageCommandSchema.pick({ purpose: true, records: true }),
+  ),
   async (c) => {
     c.header("Cache-Control", "no-store")
     const stepUpToken = c.req.header("x-system-step-up")
@@ -39,8 +42,12 @@ export const POST = disciplinaryActionFactory.createHandlers(
         code: "record_coverage_unavailable",
         detail: "Record source configuration unavailable",
       })
-    const receipt = await new VerifyDisciplinaryActionCoveragePage(c).execute(command.data, stepUpToken)
-    if (receipt instanceof DisciplinaryActionCoverageForbiddenError) throw new SystemForbiddenError()
+    const receipt = await new VerifyDisciplinaryActionCoveragePage(c).execute(
+      command.data,
+      stepUpToken,
+    )
+    if (receipt instanceof DisciplinaryActionCoverageForbiddenError)
+      throw new SystemForbiddenError()
     if (receipt instanceof DisciplinaryActionCoverageConflictError)
       throw new SystemHTTPException({
         status: 409,

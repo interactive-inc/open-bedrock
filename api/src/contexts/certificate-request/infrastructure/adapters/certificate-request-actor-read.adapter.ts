@@ -26,21 +26,35 @@ export class CertificateRequestActorReadAdapter {
       now,
     })
     if (authorization instanceof Error)
-      return new CertificateRequestError("certificate_request_unavailable", "authorization is unavailable", {
-        cause: authorization,
-      })
+      return new CertificateRequestError(
+        "certificate_request_unavailable",
+        "authorization is unavailable",
+        {
+          cause: authorization,
+        },
+      )
     if (authorization === "forbidden")
-      return new CertificateRequestError("forbidden", "human certificate-request manager is required")
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, {
-      accountIds: [account.data],
-      employeeCodes: [],
-    })
+      return new CertificateRequestError(
+        "forbidden",
+        "human certificate-request manager is required",
+      )
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      {
+        accountIds: [account.data],
+        employeeCodes: [],
+      },
+    )
     if (guard instanceof Error)
-      return new CertificateRequestError("certificate_request_unavailable", "Company snapshot is unavailable", {
-        cause: guard,
-      })
+      return new CertificateRequestError(
+        "certificate_request_unavailable",
+        "Company snapshot is unavailable",
+        {
+          cause: guard,
+        },
+      )
     const directory = openCompanyEmployeeDirectory({
       env: {
         DB: this.c.env.DB,
@@ -51,7 +65,10 @@ export class CertificateRequestActorReadAdapter {
     const actors = await directory.findForAccountIds([account.data])
     const employees = await directory.findForEmployeeIds(employeeIds)
     if (actors instanceof Error || employees instanceof Error)
-      return new CertificateRequestError("certificate_request_unavailable", "Company directory is unavailable")
+      return new CertificateRequestError(
+        "certificate_request_unavailable",
+        "Company directory is unavailable",
+      )
     return {
       actor: actors[0]?.employee ?? null,
       employees,

@@ -17,7 +17,10 @@ export class RevalidateAntisocialCheckRecordSourceAdapter {
       source.props.ownerContext !== "antisocial-check" ||
       source.props.recordKind !== "antisocial-check-record"
     )
-      return new AntisocialCheckError("forbidden", "record source does not belong to this antisocial-check registry")
+      return new AntisocialCheckError(
+        "forbidden",
+        "record source does not belong to this antisocial-check registry",
+      )
 
     const current = await new CaptureAntisocialCheckRecordAdapter(this.c).prepare({
       antisocialCheckId: source.props.recordId,

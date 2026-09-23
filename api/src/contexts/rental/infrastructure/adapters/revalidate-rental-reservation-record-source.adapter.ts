@@ -17,7 +17,10 @@ export class RevalidateRentalReservationRecordSourceAdapter {
       source.props.ownerContext !== "rental" ||
       source.props.recordKind !== "rental-reservation-record"
     )
-      return new RentalReservationError("forbidden", "record source does not belong to this rental registry")
+      return new RentalReservationError(
+        "forbidden",
+        "record source does not belong to this rental registry",
+      )
 
     const current = await new CaptureRentalReservationRecordAdapter(this.c).prepare({
       rentalReservationId: source.props.recordId,

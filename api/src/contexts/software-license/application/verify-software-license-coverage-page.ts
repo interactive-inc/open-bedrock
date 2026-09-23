@@ -17,9 +17,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenLicenseRecordPageAdapter } from "@/contexts/software-license/infrastructure/adapters/capture-frozen-license-record-page.adapter"
 import { PrepareLicenseCoverageRecordsAdapter } from "@/contexts/software-license/infrastructure/adapters/prepare-license-coverage-records.adapter"
 
-type Context = SoftwareLicenseContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = SoftwareLicenseContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからサービス利用台帳の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifySoftwareLicenseCoveragePage {

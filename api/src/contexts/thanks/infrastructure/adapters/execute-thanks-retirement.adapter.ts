@@ -87,9 +87,7 @@ export class ExecuteThanksRetirementAdapter {
         snapshot.planDigest !== command.planDigest ||
         snapshot.terminalReceiptDigest !== current.terminalReceiptDigest
       )
-        return new ThanksRetirementConflictError(
-          "retirement was finalized under another proposal",
-        )
+        return new ThanksRetirementConflictError("retirement was finalized under another proposal")
       return { retirement_id: snapshot.id, finalized_at: snapshot.finalizedAt }
     }
     const existing = await replay()

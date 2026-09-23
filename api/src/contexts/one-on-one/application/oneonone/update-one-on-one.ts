@@ -49,7 +49,9 @@ export class UpdateOneOnOne {
 
     if (result instanceof Error) {
       if (isOneOnOneRecordSourceFrozenError(result)) {
-        return new ConflictError("one-on-one writes are frozen", "record_source_frozen", { cause: result })
+        return new ConflictError("one-on-one writes are frozen", "record_source_frozen", {
+          cause: result,
+        })
       }
       return new UnexpectedError("failed to update one-on-one", { cause: result })
     }

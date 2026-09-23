@@ -24,8 +24,9 @@ test("11件の1on1記録を全件保全し、人の承認・取消・再提出�
     request: apiRequest,
   } = await createOneOnOnePreservationFixture()
   const creator = zAccountId.parse(creatorPerson.accountId)
-  const oneOnOneIds = Array.from({ length: 11 }, (_, index) =>
-    `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
+  const oneOnOneIds = Array.from(
+    { length: 11 },
+    (_, index) => `00000000-0000-4000-8000-${String(index + 1).padStart(12, "0")}`,
   )
   const conditions = {
     reason: "Preserve original",
@@ -57,7 +58,9 @@ test("11件の1on1記録を全件保全し、人の承認・取消・再提出�
       )
       .run()
   }
-  expect(await database.prepare("SELECT count(*) AS total FROM one_on_ones").first<number>("total")).toBe(11)
+  expect(
+    await database.prepare("SELECT count(*) AS total FROM one_on_ones").first<number>("total"),
+  ).toBe(11)
   const at = new Date()
   const token = await tokenFor(creator)
   const stepUpToken = "e".repeat(64)
@@ -92,9 +95,17 @@ test("11件の1on1記録を全件保全し、人の承認・取消・再提出�
     .prepare(`INSERT INTO one_on_ones
       (id,member_id,manager_id,held_at,topics,manager_note,next_action,evaluation_sheet_id)
       VALUES (?1,?2,?3,?4,NULL,NULL,NULL,NULL)`)
-    .bind(crypto.randomUUID(), reviewer.employeeId, creatorPerson.employeeId, "2030-01-01T00:00:00Z")
+    .bind(
+      crypto.randomUUID(),
+      reviewer.employeeId,
+      creatorPerson.employeeId,
+      "2030-01-01T00:00:00Z",
+    )
     .run()
-    .then(() => null, (error: unknown) => error)
+    .then(
+      () => null,
+      (error: unknown) => error,
+    )
   expect(frozenInsert).toBeInstanceOf(Error)
   const frozenOneOnOnePath = `/one-on-one/one-on-ones/${oneOnOneIds[0]}`
   const frozenUpdate = await apiRequest(frozenOneOnOnePath, {
@@ -106,7 +117,9 @@ test("11件の1on1記録を全件保全し、人の承認・取消・再提出�
     },
   })
   if (frozenUpdate.status !== 409)
-    throw new Error(`unexpected frozen update response: ${frozenUpdate.status} ${await frozenUpdate.text()}`)
+    throw new Error(
+      `unexpected frozen update response: ${frozenUpdate.status} ${await frozenUpdate.text()}`,
+    )
   expect((await apiRequest(frozenOneOnOnePath, { method: "DELETE" })).status).toBe(409)
   const mappings = []
   for (const id of oneOnOneIds) {
@@ -247,9 +260,9 @@ test("11件の1on1記録を全件保全し、人の承認・取消・再提出�
       .bind(planId)
       .first<number>("n"),
   ).toBe(2)
-  expect(
-    await database.prepare("SELECT count(*) AS n FROM one_on_ones").first<number>("n"),
-  ).toBe(11)
+  expect(await database.prepare("SELECT count(*) AS n FROM one_on_ones").first<number>("n")).toBe(
+    11,
+  )
   expect(
     await database
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
@@ -412,9 +425,9 @@ test("11件の1on1記録を全件保全し、人の承認・取消・再提出�
       .prepare("SELECT count(*) AS n FROM system_record_source_retirements")
       .first<number>("n"),
   ).toBe(1)
-  expect(
-    await database.prepare("SELECT count(*) AS n FROM one_on_ones").first<number>("n"),
-  ).toBe(11)
+  expect(await database.prepare("SELECT count(*) AS n FROM one_on_ones").first<number>("n")).toBe(
+    11,
+  )
   expect(
     (
       await post(`${sourcePath}/release`, crypto.randomUUID(), {

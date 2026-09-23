@@ -38,7 +38,9 @@ export class CreateSurvey {
 
     if (created instanceof Error) {
       if (isSurveyRecordSourceFrozenError(created)) {
-        return new ConflictError("survey writes are frozen", "record_source_frozen", { cause: created })
+        return new ConflictError("survey writes are frozen", "record_source_frozen", {
+          cause: created,
+        })
       }
       return new UnexpectedError("failed to create survey", { cause: created })
     }

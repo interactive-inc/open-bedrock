@@ -63,7 +63,8 @@ export class LendAsset {
     })
 
     if (lent instanceof Error) {
-      if (isAssetRecordSourceFrozenError(lent)) return new ConflictError("asset writes are frozen", "record_source_frozen", { cause: lent })
+      if (isAssetRecordSourceFrozenError(lent))
+        return new ConflictError("asset writes are frozen", "record_source_frozen", { cause: lent })
       return new UnexpectedError("failed to lend asset", { cause: lent })
     }
 

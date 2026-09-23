@@ -12,9 +12,12 @@ export class PrepareExpenseApprovalScopeAdapter {
   }
 
   async prepare(input: Readonly<{ organizationUnitId: OrganizationUnitId; at: Date }>) {
-    const guard = await prepareCompanyAuthoritySnapshotGuard({
-      database: this.c.env.DB,
-    }, { accountIds: [], employeeCodes: [] })
+    const guard = await prepareCompanyAuthoritySnapshotGuard(
+      {
+        database: this.c.env.DB,
+      },
+      { accountIds: [], employeeCodes: [] },
+    )
     if (guard instanceof Error) return guard
     const snapshot = await readCompanyCanonicalOrganizationState({
       var: this.c.var,

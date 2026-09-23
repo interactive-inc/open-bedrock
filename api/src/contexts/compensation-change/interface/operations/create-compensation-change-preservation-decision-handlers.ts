@@ -16,7 +16,12 @@ import {
 /** 保全の肯定・否定判断に同じ認証、会社資格、対象照合を適用する。 */
 export function createCompensationChangePreservationDecisionHandlers(action: "approve" | "reject") {
   return compensationChangeFactory.createHandlers(
-    zValidator("param", compensationChangeRecordRouteSchema.extend({ number: z.coerce.number().int().positive().safe() })),
+    zValidator(
+      "param",
+      compensationChangeRecordRouteSchema.extend({
+        number: z.coerce.number().int().positive().safe(),
+      }),
+    ),
     zValidator(
       "json",
       z.strictObject({

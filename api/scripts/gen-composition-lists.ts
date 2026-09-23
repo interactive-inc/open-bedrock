@@ -114,7 +114,11 @@ export function collectParts(
   for (const file of readdirSync(directory).filter(
     (name) => target.filePattern.test(name) && !name.endsWith(".test.ts"),
   )) {
-    const part = exportedPart(file, readFileSync(resolve(directory, file), "utf8"), target.exportPrefix)
+    const part = exportedPart(
+      file,
+      readFileSync(resolve(directory, file), "utf8"),
+      target.exportPrefix,
+    )
     if (part instanceof Error) return part
     parts.push(part)
   }

@@ -35,7 +35,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
     if (deleted instanceof Error) {
       if (isCertificationRecordSourceFrozenError(deleted))
-        return new ConflictError("certification writes are frozen", "record_source_frozen", { cause: deleted })
+        return new ConflictError("certification writes are frozen", "record_source_frozen", {
+          cause: deleted,
+        })
       return new UnexpectedError("failed to delete employee_certification", { cause: deleted })
     }
 

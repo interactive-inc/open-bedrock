@@ -17,9 +17,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenHealthCheckupRecordPageAdapter } from "@/contexts/health-checkup/infrastructure/adapters/capture-frozen-health-checkup-record-page.adapter"
 import { PrepareHealthCheckupCoverageRecordsAdapter } from "@/contexts/health-checkup/infrastructure/adapters/prepare-health-checkup-coverage-records.adapter"
 
-type Context = HealthCheckupContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = HealthCheckupContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きから健康診断実施記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyHealthCheckupCoveragePage {

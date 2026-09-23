@@ -77,8 +77,11 @@ test("11件の健康診断実施記録を全件保全し、人の承認・取消
     )
   const freezeId = crypto.randomUUID()
   expect(
-    (await post("/health-checkup/record-source-freezes", freezeId, { reason: "Preserve health-checkup" }))
-      .status,
+    (
+      await post("/health-checkup/record-source-freezes", freezeId, {
+        reason: "Preserve health-checkup",
+      })
+    ).status,
   ).toBe(201)
   expect(
     (

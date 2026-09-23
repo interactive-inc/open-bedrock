@@ -54,7 +54,10 @@ export class DisposeAsset {
     })
 
     if (disposed instanceof Error) {
-      if (isAssetRecordSourceFrozenError(disposed)) return new ConflictError("asset writes are frozen", "record_source_frozen", { cause: disposed })
+      if (isAssetRecordSourceFrozenError(disposed))
+        return new ConflictError("asset writes are frozen", "record_source_frozen", {
+          cause: disposed,
+        })
       return new UnexpectedError("failed to dispose asset", { cause: disposed })
     }
 

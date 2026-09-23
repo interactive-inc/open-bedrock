@@ -18,9 +18,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenThanksRecordPageAdapter } from "@/contexts/thanks/infrastructure/adapters/capture-frozen-thanks-record-page.adapter"
 import { PrepareThanksCoverageRecordsAdapter } from "@/contexts/thanks/infrastructure/adapters/prepare-thanks-coverage-records.adapter"
 
-type Context = ThanksContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = ThanksContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きからthanks記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyThanksCoveragePage {

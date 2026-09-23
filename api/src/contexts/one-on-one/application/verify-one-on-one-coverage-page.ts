@@ -18,9 +18,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { CaptureFrozenOneOnOneRecordPageAdapter } from "@/contexts/one-on-one/infrastructure/adapters/capture-frozen-one-on-one-record-page.adapter"
 import { PrepareOneOnOneCoverageRecordsAdapter } from "@/contexts/one-on-one/infrastructure/adapters/prepare-one-on-one-coverage-records.adapter"
 
-type Context = OneOnOneContext &
-  SystemDatabaseContext &
-  SystemAttachmentStorageContext
+type Context = OneOnOneContext & SystemDatabaseContext & SystemAttachmentStorageContext
 
 /** 保存済みの続きから1on1記録の原文を照合し、同じ停止世代のページと監査を保存する。 */
 export class VerifyOneOnOneCoveragePage {

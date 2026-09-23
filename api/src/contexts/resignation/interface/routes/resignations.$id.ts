@@ -161,7 +161,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
     if (deleted instanceof Error) {
       if (isResignationRecordSourceFrozenError(deleted))
-        return new ConflictError("resignation writes are frozen", "record_source_frozen", { cause: deleted })
+        return new ConflictError("resignation writes are frozen", "record_source_frozen", {
+          cause: deleted,
+        })
       return new UnexpectedError("failed to delete resignation", { cause: deleted })
     }
 

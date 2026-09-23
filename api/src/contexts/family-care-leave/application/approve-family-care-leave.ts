@@ -48,7 +48,9 @@ export class ApproveFamilyCareLeave {
 
     if (updated instanceof Error) {
       if (isFamilyCareLeaveRecordSourceFrozenError(updated))
-        return new ConflictError("family care leave writes are frozen", "record_source_frozen", { cause: updated })
+        return new ConflictError("family care leave writes are frozen", "record_source_frozen", {
+          cause: updated,
+        })
       return new UnexpectedError("failed to update family care leave status", { cause: updated })
     }
 

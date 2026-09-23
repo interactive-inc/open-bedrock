@@ -33,7 +33,10 @@ export function createLifeEventPreservationSubmissionHandlers(mode: "create" | "
   return lifeEventFactory.createHandlers(
     zValidator(
       "param",
-      z.strictObject({ id: lifeEventIdSchema, number: z.coerce.number().int().positive().safe().optional() }),
+      z.strictObject({
+        id: lifeEventIdSchema,
+        number: z.coerce.number().int().positive().safe().optional(),
+      }),
     ),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
@@ -53,7 +56,8 @@ export function createLifeEventPreservationSubmissionHandlers(mode: "create" | "
           recordId: String(lifeEventId),
           sourceNamespace,
           authorize: () => new LifeEventActorReadAdapter(c).prepare(),
-          capture: () => new CaptureLifeEventRecordAdapter(c).prepare({ lifeEventId, sourceNamespace }),
+          capture: () =>
+            new CaptureLifeEventRecordAdapter(c).prepare({ lifeEventId, sourceNamespace }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
       })

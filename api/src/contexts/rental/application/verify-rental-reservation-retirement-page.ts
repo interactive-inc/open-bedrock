@@ -45,7 +45,8 @@ export class VerifyRentalReservationRetirementPage {
       plan.snapshot.sourceNamespace !== command.sourceNamespace ||
       plan.snapshot.ownerContext !== "rental" ||
       plan.snapshot.capability.revision !== 1 ||
-      JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(["rental-reservation-record"])
+      JSON.stringify(plan.snapshot.capability.recordKinds) !==
+        JSON.stringify(["rental-reservation-record"])
     )
       return new RentalReservationRetirementConflictError(
         "retirement plan unavailable or capability changed",
@@ -126,6 +127,8 @@ export class VerifyRentalReservationRetirementPage {
     if (raced instanceof Error) return raced
     return raced !== null && matches(raced)
       ? raced
-      : new RentalReservationRetirementConflictError("retirement verification position already written")
+      : new RentalReservationRetirementConflictError(
+          "retirement verification position already written",
+        )
   }
 }

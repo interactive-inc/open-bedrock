@@ -124,5 +124,15 @@ export async function createDocumentPreservationFixture() {
       bindings,
     )
   }
-  return { database, governance, creator, reviewer, definition, settings, bindings, tokenFor, request }
+  return {
+    database,
+    governance,
+    creator,
+    reviewer,
+    definition,
+    settings,
+    bindings,
+    tokenFor,
+    request,
+  }
 }
