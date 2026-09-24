@@ -1,4 +1,4 @@
-import { MIGRATED_SLOT_COUNT, startLocalD1 } from "@tests/d1/support/start-local-d1"
+import { startLocalD1 } from "@tests/d1/support/start-local-d1"
 
 export type LocalD1Pool = Readonly<{
   /** まだ誰も使っていないmigration済みDBを返す。同じDBを二度返さない。 */
@@ -7,13 +7,12 @@ export type LocalD1Pool = Readonly<{
 }>
 
 /**
- * 1ファイルで宣言できる上限までmigration済みDBを用意し、呼ばれた順に1つずつ渡す。
- * templateの複製は最初に使う時に行うため、使わなかった枠は費用にならない。
+ * migration済みDBを指定した数だけ用意し、呼ばれた順に1つずつ渡す。
  * 共通fixtureがtestごとにDBを作る場合に、DB名をfixtureの引数へ通さずに済ませる。
- * 上限を超えて求めたら失敗させ、DBを共有しない。
+ * 用意した数を超えて求めたら失敗させ、DBを共有しない。
  */
-export async function startLocalD1Pool(): Promise<LocalD1Pool> {
-  const names = Array.from({ length: MIGRATED_SLOT_COUNT }, (_, index) => `pooled-${index}`)
+export async function startLocalD1Pool(size: number): Promise<LocalD1Pool> {
+  const names = Array.from({ length: size }, (_, index) => `pooled-${index}`)
   const local = await startLocalD1({ migrated: names })
   let used = 0
 
@@ -21,7 +20,7 @@ export async function startLocalD1Pool(): Promise<LocalD1Pool> {
     next: async () => {
       const name = names[used]
       if (name === undefined) {
-        throw new Error(`local D1 pool is exhausted after ${MIGRATED_SLOT_COUNT} databases`)
+        throw new Error(`local D1 pool of ${size} databases is exhausted; declare a larger pool`)
       }
       used += 1
       return local.database(name)

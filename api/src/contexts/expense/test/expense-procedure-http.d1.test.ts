@@ -16,7 +16,7 @@ let pool: LocalD1Pool
 setDefaultTimeout(30_000)
 
 beforeAll(async () => {
-  pool = await startLocalD1Pool()
+  pool = await startLocalD1Pool(12)
 })
 
 afterAll(async () => {
