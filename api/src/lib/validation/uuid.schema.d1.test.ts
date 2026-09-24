@@ -1,5 +1,4 @@
 import { afterAll, beforeAll, describe, expect, test } from "bun:test"
-import { createUuidV7 } from "@/lib/crypto/create-uuid-v7"
 import { uuidCheckPredicate, uuidSchema } from "@/lib/validation/uuid.schema"
 import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
 
@@ -14,8 +13,7 @@ import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
  */
 
 const probes: ReadonlyArray<string> = [
-  createUuidV7(),
-  crypto.randomUUID(),
+  ...Array.from({ length: 20 }, () => crypto.randomUUID()),
   "01900001-0000-7000-8000-000000000001",
   ...Array.from(
     { length: 16 },
