@@ -6,7 +6,7 @@ export type DocumentListItem = {
   title: string
   category: string | null
   location: string
-  partner_code: string | null
+  counterparty_reference: string | null
   expires_on: string | null
   note: string | null
   created_at: string
@@ -17,7 +17,7 @@ export type DocumentRegisterRequest = {
   title: string
   location: string
   category?: string
-  partner_code?: string
+  counterparty_reference?: string
   expires_on?: string
   note?: string
 }

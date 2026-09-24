@@ -11,7 +11,7 @@
     },
     "declaredForeignKeys": 272,
     "softReferences": {
-      "cross-context": 19,
+      "cross-context": 17,
       "external": 32,
       "historical": 10,
       "not-reference": 33,
@@ -20,7 +20,7 @@
     },
     "triggers": 614,
     "views": 25,
-    "indexes": 291
+    "indexes": 290
   },
   "tables": {
     "announcements": {
@@ -3580,13 +3580,7 @@
         "outgoing": [],
         "incoming": []
       },
-      "softReferences": [
-        {
-          "column": "partner_code",
-          "classification": "cross-context",
-          "target": "partners"
-        }
-      ],
+      "softReferences": [],
       "triggers": [
         "document_ledger_entries_source_freeze_delete",
         "document_ledger_entries_source_freeze_insert",
@@ -5285,24 +5279,14 @@
         ],
         "incoming": []
       },
-      "softReferences": [
-        {
-          "column": "evaluation_sheet_id",
-          "classification": "cross-context",
-          "target": "evaluation_sheets"
-        }
-      ],
+      "softReferences": [],
       "triggers": [
         "one_on_ones_source_freeze_delete",
         "one_on_ones_source_freeze_insert",
         "one_on_ones_source_freeze_update"
       ],
       "views": [],
-      "indexes": [
-        "idx_one_on_ones_evaluation_sheet",
-        "idx_one_on_ones_manager",
-        "idx_one_on_ones_member"
-      ]
+      "indexes": ["idx_one_on_ones_manager", "idx_one_on_ones_member"]
     },
     "partner_contracts": {
       "owner": "partner",

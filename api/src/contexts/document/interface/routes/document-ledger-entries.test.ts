@@ -19,7 +19,7 @@ const listItemSchema = z.object({
   title: z.string(),
   category: z.string().nullable(),
   location: z.string(),
-  partner_code: z.string().nullable(),
+  counterparty_reference: z.string().nullable(),
   expires_on: z.string().nullable(),
   note: z.string().nullable(),
   created_at: z.string(),
@@ -58,7 +58,7 @@ async function createTestDb(): Promise<D1Database> {
       title: document.title,
       category: document.category,
       location: document.location,
-      partner_code: document.partnerCode,
+      counterparty_reference: document.counterpartyReference,
       expires_on: document.expiresOn,
       note: document.note,
       created_at: document.createdAt,
@@ -172,7 +172,7 @@ describe("PUT /document-ledger-entries/:id", () => {
       {
         title: "Office Lease Agreement (renewed)",
         location: "cabinet-A/lease",
-        partner_code: "P0001",
+        counterparty_reference: "P0001",
         expires_on: "2030-03-31",
       },
     )

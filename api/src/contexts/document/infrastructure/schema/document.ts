@@ -9,7 +9,7 @@ export const documents = sqliteTable(
     title: text("title").notNull(),
     category: text("category"),
     location: text("location").notNull(),
-    partnerCode: text("partner_code"),
+    counterpartyReference: text("counterparty_reference"),
     expiresOn: text("expires_on"),
     note: text("note"),
     createdAt: text("created_at").notNull(),

@@ -41,7 +41,7 @@ test("ID 0 を含む11件の文書台帳記録を全件保全し、人の承認�
   for (const id of Array.from({ length: 11 }, (_, index) => index)) {
     await database
       .prepare(`INSERT INTO document_ledger_entries
-      (id,title,category,location,partner_code,expires_on,note,created_at)
+      (id,title,category,location,counterparty_reference,expires_on,note,created_at)
       VALUES (?1,?2,'contract',?3,NULL,NULL,?4,?5)`)
       .bind(
         id,
@@ -103,7 +103,7 @@ test("ID 0 を含む11件の文書台帳記録を全件保全し、人の承認�
           title: "Must not change",
           category: "contract",
           location: "cabinet/1",
-          partner_code: null,
+          counterparty_reference: null,
           expires_on: null,
           note: "Blocked update",
         },

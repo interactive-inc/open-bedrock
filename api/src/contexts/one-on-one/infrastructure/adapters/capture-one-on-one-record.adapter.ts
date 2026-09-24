@@ -7,7 +7,7 @@ import { z } from "zod"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
 const snapshotSql = `SELECT json_object(
-  'format', 'one-on-one-record', 'version', 1,
+  'format', 'one-on-one-record', 'version', 2,
   'one-on-one', json_object(
     'id', id,
     'member_id', member_id,
@@ -16,7 +16,7 @@ const snapshotSql = `SELECT json_object(
     'topics', topics,
     'manager_note', manager_note,
     'next_action', next_action,
-    'evaluation_sheet_id', evaluation_sheet_id
+    'external_reference', external_reference
   )
 ) AS snapshot_json FROM one_on_ones WHERE id = ?1`
 
@@ -52,7 +52,7 @@ export class CaptureOneOnOneRecordAdapter {
         recordKind: "one-on-one-record",
         recordId: String(input.oneOnOneId),
         formatId: "one-on-one-record",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

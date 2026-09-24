@@ -6,7 +6,7 @@ const zProps = z.object({
   title: z.string(),
   category: z.string().nullable(),
   location: z.string(),
-  partnerCode: z.string().nullable(),
+  counterpartyReference: z.string().nullable(),
   expiresOn: z.string().nullable(),
   note: z.string().nullable(),
   createdAt: z.string(),
@@ -24,7 +24,7 @@ export class Document implements Props {
 
   readonly location!: Props["location"]
 
-  readonly partnerCode!: Props["partnerCode"]
+  readonly counterpartyReference!: Props["counterpartyReference"]
 
   readonly expiresOn!: Props["expiresOn"]
 
@@ -45,7 +45,7 @@ export class Document implements Props {
     title: string
     category: string | null
     location: string
-    partnerCode: string | null
+    counterpartyReference: string | null
     expiresOn: string | null
     note: string | null
     createdAt: string
@@ -55,7 +55,7 @@ export class Document implements Props {
       title: props.title,
       category: props.category,
       location: props.location,
-      partnerCode: props.partnerCode,
+      counterpartyReference: props.counterpartyReference,
       expiresOn: props.expiresOn,
       note: props.note,
       createdAt: props.createdAt,
@@ -68,19 +68,19 @@ export class Document implements Props {
       title: row.title,
       category: row.category,
       location: row.location,
-      partnerCode: row.partnerCode,
+      counterpartyReference: row.counterpartyReference,
       expiresOn: row.expiresOn,
       note: row.note,
       createdAt: row.createdAt,
     })
   }
 
-  /** 表題・分類・所在・取引先・期限・備考を差し替えた新しい文書を返す。 */
+  /** 表題・分類・所在・相手先・期限・備考を差し替えた新しい文書を返す。 */
   withDetails(details: {
     title: string
     category: string | null
     location: string
-    partnerCode: string | null
+    counterpartyReference: string | null
     expiresOn: string | null
     note: string | null
   }): Document {
@@ -89,7 +89,7 @@ export class Document implements Props {
       title: details.title,
       category: details.category,
       location: details.location,
-      partnerCode: details.partnerCode,
+      counterpartyReference: details.counterpartyReference,
       expiresOn: details.expiresOn,
       note: details.note,
     })

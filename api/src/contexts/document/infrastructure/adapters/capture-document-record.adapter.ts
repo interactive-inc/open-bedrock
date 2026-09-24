@@ -7,13 +7,13 @@ import { z } from "zod"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
 const snapshotSql = `SELECT json_object(
-  'format', 'document-record', 'version', 1,
+  'format', 'document-record', 'version', 2,
   'document', json_object(
     'id', id,
     'title', title,
     'category', category,
     'location', location,
-    'partner_code', partner_code,
+    'counterparty_reference', counterparty_reference,
     'expires_on', expires_on,
     'note', note,
     'created_at', created_at
@@ -52,7 +52,7 @@ export class CaptureDocumentRecordAdapter {
         recordKind: "document-record",
         recordId: String(input.documentId),
         formatId: "document-record",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

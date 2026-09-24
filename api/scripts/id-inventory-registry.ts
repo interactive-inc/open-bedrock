@@ -287,10 +287,6 @@ export const SOFT_REFERENCES: Readonly<Record<string, SoftReference>> = {
   "company_workforce_connection_completions.actor_account_id": SYSTEM_ACCOUNT,
   "company_workforce_resource_bindings.last_action_id": sameContext("company_personnel_actions"),
   "decision_records.superseded_by_id": sameContext("decision_records"),
-  "document_ledger_entries.partner_code": crossContext(
-    "partners",
-    "業務 context 同士の参照。取引先コードを転記した自由入力で、存在を検証しない",
-  ),
   "employee_certifications.certification_id": sameContext("certification_definitions"),
   "employee_skills.skill_code": sameContext("skill_definitions"),
   "evaluation_sheet_audit_logs.sheet_id": sameContext("evaluation_sheets"),
@@ -330,10 +326,6 @@ export const SOFT_REFERENCES: Readonly<Record<string, SoftReference>> = {
   "onboarding_tasks.assignment_id": sameContext("onboarding_assignments"),
   "onboarding_tasks.template_task_code": sameContext("onboarding_template_tasks"),
   "onboarding_template_tasks.template_code": sameContext("onboarding_templates"),
-  "one_on_ones.evaluation_sheet_id": crossContext(
-    "evaluation_sheets",
-    "業務 context 同士の参照。performance-review の評価シートを指す",
-  ),
   "partner_contracts.partner_id": sameContext("partners"),
   "performance_goals.parent_goal_id": sameContext("performance_goals"),
   "performance_goals.department_code": DEPARTMENT_CODE,

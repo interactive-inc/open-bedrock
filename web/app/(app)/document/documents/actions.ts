@@ -35,7 +35,7 @@ export async function registerDocumentAction(
     title: title,
     location: location,
     category: toOptional(formData.get("category")),
-    partner_code: toOptional(formData.get("partner_code")),
+    counterparty_reference: toOptional(formData.get("counterparty_reference")),
     expires_on: toOptional(formData.get("expires_on")),
     note: toOptional(formData.get("note")),
   })
@@ -78,7 +78,7 @@ export async function updateDocumentAction(
     title: title,
     location: location,
     category: toOptional(formData.get("category")),
-    partner_code: toOptional(formData.get("partner_code")),
+    counterparty_reference: toOptional(formData.get("counterparty_reference")),
     expires_on: toOptional(formData.get("expires_on")),
     note: toOptional(formData.get("note")),
   })

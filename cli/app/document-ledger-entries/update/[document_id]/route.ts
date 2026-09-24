@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `bedrock document-ledger-entries update <id> --title <t> --location <l> [--category <c>] [--partner-code <p>] [--expires-on <d>] [--note <n>]`
+export const help = `bedrock document-ledger-entries update <id> --title <t> --location <l> [--category <c>] [--counterparty-reference <p>] [--expires-on <d>] [--note <n>]`
 
 export default factory.createHandlers(
   zValidator(
@@ -14,7 +14,7 @@ export default factory.createHandlers(
       title: z.string().optional(),
       location: z.string().optional(),
       category: z.string().optional(),
-      "partner-code": z.string().optional(),
+      "counterparty-reference": z.string().optional(),
       "expires-on": z.string().optional(),
       note: z.string().optional(),
     }),
@@ -39,7 +39,7 @@ export default factory.createHandlers(
         title: query.title,
         location: query.location,
         category: query.category,
-        partner_code: query["partner-code"],
+        counterparty_reference: query["counterparty-reference"],
         expires_on: query["expires-on"],
         note: query.note,
       },
