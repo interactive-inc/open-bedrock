@@ -17,7 +17,7 @@ import { expect, test } from "bun:test"
 import { z } from "zod"
 import { drizzle } from "drizzle-orm/d1"
 import { createAttendancePreservationFixture } from "@/contexts/attendance/test/create-attendance-preservation-fixture.test-support"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { CaptureFrozenAttendanceRecordPageAdapter } from "@/contexts/attendance/infrastructure/adapters/capture-frozen-attendance-record-page.adapter"
 import { CreateRecordSourceFreeze } from "@system/application/records/create-record-source-freeze"
 import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
@@ -86,7 +86,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
   const receipt = z
     .object({ number: z.number(), record_id: z.string() })
     .parse(await submitted.json())
-  const proposal = await new SystemD1ProposalAdapter({ env }).findByNumber(receipt.number)
+  const proposal = await openSystemProposals({ env }).findByNumber(receipt.number)
   if (proposal === null || proposal instanceof Error) throw new Error("missing proposal")
   const path = `${f.path}/${receipt.number}`
   expect(

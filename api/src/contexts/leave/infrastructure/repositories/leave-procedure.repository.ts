@@ -12,10 +12,8 @@ import {
 } from "@/contexts/leave/domain/definitions/leave-procedure.definition"
 import type { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { prepareSystemAuditEventAppend } from "@system/interface/operations/prepare-system-audit-event-append"
-import {
-  SystemD1WorkflowAdapter,
-  type SystemWorkflowWriter,
-} from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
+import { openSystemWorkflow } from "@system/interface/operations/open-system-workflow"
+import type { SystemWorkflowWriter } from "@system/domain/definitions/workflow/system-workflow-writer.definition"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 
 /** 休暇の提出とSystem案件を同じtransactionへ保存する。 */
@@ -35,7 +33,7 @@ export class LeaveProcedureRepository {
       audit: SystemAuditEventEntity
     }>,
   ) {
-    return new SystemD1WorkflowAdapter({
+    return openSystemWorkflow({
       ...this.c,
       cancelGuards: [
         ...input.guards,
@@ -127,7 +125,7 @@ export class LeaveProcedureRepository {
     }>,
   ): Promise<LeaveProcedureBinding | Error> {
     const database = this.c.env.DB
-    const system = new SystemD1WorkflowAdapter({ ...this.c, startGuards: input.guards })
+    const system = openSystemWorkflow({ ...this.c, startGuards: input.guards })
     try {
       const saved = await database.batch([
         ...system.prepareStartStatements(input.workflow),
@@ -211,7 +209,7 @@ export class LeaveProcedureRepository {
     }>,
   ) {
     const database = this.c.env.DB
-    return new SystemD1WorkflowAdapter({
+    return openSystemWorkflow({
       ...this.c,
       decisionGuards: [
         ...input.guards,

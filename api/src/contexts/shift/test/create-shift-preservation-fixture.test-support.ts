@@ -2,7 +2,7 @@ import { app } from "@/api/app"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAttachmentTestBucket } from "@system/test/system-attachment-test-bucket.test-support"
@@ -64,7 +64,7 @@ export async function createShiftPreservationFixture() {
     createdAt: governance.at,
   })
   if (definition instanceof Error) throw definition
-  if ((await new SystemD1ProcedureRepository(governance.context).publish(definition, 0)) !== true)
+  if ((await openSystemProcedures(governance.context).publish(definition, 0)) !== true)
     throw new Error("failed to publish preservation procedure")
   await database.exec(`INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
     VALUES ('shift-test-manager','shift:test-manager','custom','Shift manager',0,0);

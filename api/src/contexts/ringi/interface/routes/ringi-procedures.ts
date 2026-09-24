@@ -5,7 +5,7 @@ import { z } from "zod"
 import { zApplicationWorkflow } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
 import { PublishRingiProcedure } from "@/contexts/ringi/application/publish-ringi-procedure"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
@@ -21,9 +21,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     )
   )
     throw new ForbiddenError()
-  const definition = await new SystemD1ProcedureRepository(c).find(
-    procedureKeySchema.parse("ringi_request"),
-  )
+  const definition = await openSystemProcedures(c).find(procedureKeySchema.parse("ringi_request"))
   if (definition instanceof Error) throw new InternalError("承認規程を取得できません")
   if (definition === null) return c.json({ revision: 0, workflow: null }, 200)
   const policy = parseCompanyProcedureDecisionPolicy(JSON.parse(definition.decisionPolicyJson))

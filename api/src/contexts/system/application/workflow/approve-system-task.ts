@@ -2,7 +2,7 @@ import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type {
   SystemWorkflowDecisionResult,
   SystemWorkflowWriter,
-} from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
+} from "@system/domain/definitions/workflow/system-workflow-writer.definition"
 import type { SystemDecisionTaskBundle } from "@system/domain/definitions/workflow/system-decision-task-bundle.definition"
 import { HumanAttestationEntity } from "@system/domain/entities/human-attestation.entity"
 import { InvalidSystemWorkflowError } from "@system/domain/errors"

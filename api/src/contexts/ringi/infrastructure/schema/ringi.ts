@@ -2,11 +2,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import type { RingiStatus } from "@/contexts/ringi/domain/definitions/ringi-status.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
-import { systemCases } from "@system/infrastructure/schema/system-workflow"
-import {
-  systemProposalNumbers,
-  systemProposalSeries,
-} from "@system/infrastructure/schema/system-procedure"
+import { systemWorkflowTableReferences } from "@system/interface/operations/system-workflow-table-references"
 
 /** 起案時の提出先と業務上の決裁結果を保持する稟議。 */
 export const ringiRequests = sqliteTable("ringi_requests", {
@@ -37,15 +33,15 @@ export const ringiProcedureBindings = sqliteTable("ringi_procedure_bindings", {
   applicationId: integer("application_id")
     .notNull()
     .unique()
-    .references(() => systemProposalNumbers.number, { onDelete: "restrict" }),
+    .references(systemWorkflowTableReferences.proposalNumber, { onDelete: "restrict" }),
   seriesId: text("series_id")
     .notNull()
     .unique()
-    .references(() => systemProposalSeries.id, { onDelete: "restrict" }),
+    .references(systemWorkflowTableReferences.proposalSeriesId, { onDelete: "restrict" }),
   caseId: text("case_id")
     .notNull()
     .unique()
-    .references(() => systemCases.id, { onDelete: "restrict" }),
+    .references(systemWorkflowTableReferences.caseId, { onDelete: "restrict" }),
   proposalDigest: text("proposal_digest").notNull(),
   createdAt: integer("created_at").notNull(),
 })

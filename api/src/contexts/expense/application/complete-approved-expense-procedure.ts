@@ -1,3 +1,4 @@
+import { ExpenseSystemWorkflowAdapter } from "@/contexts/expense/infrastructure/adapters/expense-system-workflow.adapter"
 import { revalidateCompanyProcedureExecution } from "@/contexts/company/interface/operations/revalidate-company-procedure-execution"
 import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
 import { PrepareExpenseApprovalScopeAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-approval-scope.adapter"
@@ -7,7 +8,6 @@ import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/re
 import type { ExpenseProcedureBinding } from "@/contexts/expense/domain/definitions/expense-procedure.definition"
 import type { Expense } from "@/contexts/expense/domain/entities/expense.entity"
 import { ExpenseHumanOperationAuthorizationAdapter } from "@/contexts/expense/infrastructure/adapters/expense-human-operation-authorization.adapter"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
@@ -178,7 +178,9 @@ export class CompleteApprovedExpenseProcedure {
   ): Promise<Readonly<{ status: "approved"; replayed: true }> | ApplicationError> {
     const request = input.request
     const binding = input.binding
-    const proposal = await new SystemD1ProposalAdapter(this.c).findByNumber(binding.applicationId)
+    const proposal = await new ExpenseSystemWorkflowAdapter(this.c)
+      .proposals()
+      .findByNumber(binding.applicationId)
     const payload = CanonicalSystemJsonValue.create(request.toProposalBody(binding.attachments))
     if (
       proposal instanceof Error ||

@@ -1,12 +1,12 @@
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { expect, test } from "bun:test"
 import { z } from "zod"
 import { app } from "@/api/app"
 import { createAttendancePreservationFixture } from "@/contexts/attendance/test/create-attendance-preservation-fixture.test-support"
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
 import { SystemPrincipalSecretService } from "@system/lib/auth/system-principal-secret-service"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { createMonotonicTestClock } from "@tests/api/support/create-monotonic-test-clock"
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
@@ -115,7 +115,7 @@ test("11件の打刻を全件保全し、人の承認・取消・再提出を経
     const record = z
       .object({ number: z.number(), record_id: z.string() })
       .parse(await submitted.json())
-    const proposal = await new SystemD1ProposalAdapter({ env: { DB: f.database } }).findByNumber(
+    const proposal = await openSystemProposals({ env: { DB: f.database } }).findByNumber(
       record.number,
     )
     if (proposal === null || proposal instanceof Error)
@@ -186,9 +186,9 @@ test("11件の打刻を全件保全し、人の承認・取消・再提出を経
     createdAt: at,
   })
   if (retirementDefinition instanceof Error) throw retirementDefinition
-  expect(
-    await new SystemD1ProcedureRepository(f.governance.context).publish(retirementDefinition, 0),
-  ).toBe(true)
+  expect(await openSystemProcedures(f.governance.context).publish(retirementDefinition, 0)).toBe(
+    true,
+  )
   const requestBody = {
     plan_digest: publicPlan.digest,
     procedure_key: retirementDefinition.key,
@@ -244,7 +244,7 @@ test("11件の打刻を全件保全し、人の承認・取消・再提出を経
   expect(
     (await post(retirementPath, requestId, { ...requestBody, reason: "Changed intent" })).status,
   ).toBe(409)
-  const proposalReader = new SystemD1ProposalAdapter({
+  const proposalReader = openSystemProposals({
     env: { DB: f.database },
     visibleCompletionOperationKeys: ["system.record.retire"],
   })

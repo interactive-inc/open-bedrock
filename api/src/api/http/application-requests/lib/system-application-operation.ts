@@ -4,7 +4,7 @@ import { revalidateCompanyProcedureAuthority } from "@/contexts/company/interfac
 import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import { prepareSystemReadAuthorization } from "@system/interface/operations/prepare-system-read-authorization"
-import { PrepareSystemCaseReadGuardAdapter } from "@system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter"
+import { prepareSystemCaseReadGuard } from "@system/interface/operations/prepare-system-case-read-guard"
 import { RecordPreservationProposalValue } from "@system/domain/values/records/record-preservation-proposal.value"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
@@ -49,12 +49,12 @@ import { ApproveSystemTask } from "@system/application/workflow/approve-system-t
 import { RejectSystemTask } from "@system/application/workflow/reject-system-task"
 import { ReturnSystemTask } from "@system/application/workflow/return-system-task"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
-import type { SystemProposalView } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import type { SystemProposalView } from "@system/domain/definitions/workflow/system-proposal-view.definition"
 import { systemCaseIdSchema } from "@system/domain/schemas/workflow/system-case.schema"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
+import { openSystemWorkflow } from "@system/interface/operations/open-system-workflow"
 import { SystemDecisionTargetValue } from "@system/domain/values/workflow/system-decision-target.value"
 
 export type SystemApplicationResult = Readonly<{
@@ -63,8 +63,8 @@ export type SystemApplicationResult = Readonly<{
   approverRoles: ReadonlyArray<string>
 }>
 
-export function systemProposalQuery(c: Context): SystemD1ProposalAdapter {
-  return new SystemD1ProposalAdapter({
+export function systemProposalQuery(c: Context) {
+  return openSystemProposals({
     env: { DB: c.env.DB },
     visibleCompletionOperationKeys: [
       null,
@@ -197,13 +197,13 @@ export async function withdrawSystemApplication(
       "system_template_requires_dedicated_route",
     )
   }
-  const result = await new CancelSystemProcedure(
-    new SystemD1WorkflowAdapter({ env: { DB: c.env.DB } }),
-  ).run({
-    number: input.number,
-    createdByAccountId: current.createdByAccountId,
-    cancelledAt: input.withdrawnAt,
-  })
+  const result = await new CancelSystemProcedure(openSystemWorkflow({ env: { DB: c.env.DB } })).run(
+    {
+      number: input.number,
+      createdByAccountId: current.createdByAccountId,
+      cancelledAt: input.withdrawnAt,
+    },
+  )
   if (result === "not_found") {
     return new NotFoundError("application not found", "application_not_found")
   }
@@ -290,7 +290,7 @@ export async function decideSystemApplication(
       if (proof instanceof Error)
         return new UnexpectedError("failed to verify replay authorization", { cause: proof })
       if (proof === null) return new ForbiddenError("replay authorization changed", "forbidden")
-      const guard = await new PrepareSystemCaseReadGuardAdapter(c).prepare({
+      const guard = await prepareSystemCaseReadGuard(c, {
         caseId: proposal.caseId,
         accountId: session.accountId,
         at: input.decidedAt,
@@ -546,7 +546,7 @@ export async function decideSystemApplication(
   }
   const caseId = systemCaseIdSchema.safeParse(proposal.caseId)
   if (!caseId.success) return new UnexpectedError("invalid System Case ID")
-  const workflow = new SystemD1WorkflowAdapter({
+  const workflow = openSystemWorkflow({
     env: { DB: c.env.DB },
     decisionGuards: [authorityGuard, ...nextTaskGuards],
   })
@@ -782,7 +782,7 @@ export async function reassignSystemApplicationTask(
       cause: replacement,
     })
   }
-  const result = await new SystemD1WorkflowAdapter({ env: { DB: c.env.DB } }).reassign({
+  const result = await openSystemWorkflow({ env: { DB: c.env.DB } }).reassign({
     caseId: proposal.caseId,
     taskKey: proposal.currentTaskKey,
     round: proposal.currentTaskRound,
@@ -854,7 +854,7 @@ async function startSystemApplication(
     )
   }
   const started = await new StartSystemProcedure({
-    writer: new SystemD1WorkflowAdapter({
+    writer: openSystemWorkflow({
       env: { DB: c.env.DB },
       startGuards: resolvedTask.guards,
     }),

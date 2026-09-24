@@ -1,3 +1,4 @@
+import { ExpenseSystemWorkflowAdapter } from "@/contexts/expense/infrastructure/adapters/expense-system-workflow.adapter"
 import { prepareCompanyProcedureDecision } from "@/contexts/company/interface/operations/prepare-company-procedure-decision"
 import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
 import { PrepareExpenseApprovalScopeAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-approval-scope.adapter"
@@ -9,7 +10,6 @@ import {
   CompanyUnexpectedError,
 } from "@/contexts/company/domain/errors"
 import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/repositories/expense-procedure.repository"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { ExpenseHumanOperationAuthorizationAdapter } from "@/contexts/expense/infrastructure/adapters/expense-human-operation-authorization.adapter"
 import { HumanAttestationEntity } from "@system/domain/entities/human-attestation.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
@@ -76,7 +76,9 @@ export class RecordExpenseDecision {
       return new UnexpectedError("承認案件を取得できません", { cause: binding })
     if (binding === null)
       return new ConflictError("会社の承認規程へ提出してください", "procedure_required")
-    const proposal = await new SystemD1ProposalAdapter(this.c).findByNumber(binding.applicationId)
+    const proposal = await new ExpenseSystemWorkflowAdapter(this.c)
+      .proposals()
+      .findByNumber(binding.applicationId)
     const payload = CanonicalSystemJsonValue.create(request.toProposalBody(binding.attachments))
     if (proposal instanceof Error || payload instanceof Error)
       return new UnexpectedError("経費内容を確認できません")
@@ -190,9 +192,9 @@ export class RecordExpenseDecision {
     if (saved instanceof Error) {
       const concurrent = await repository.findDecisionReceipt(receiptInput)
       if (concurrent === "matching") {
-        const current = await new SystemD1ProposalAdapter(this.c).findByNumber(
-          binding.applicationId,
-        )
+        const current = await new ExpenseSystemWorkflowAdapter(this.c)
+          .proposals()
+          .findByNumber(binding.applicationId)
         if (current !== null && !(current instanceof Error) && current.status !== "cancelled")
           return {
             status: current.status === "executed" ? "approved" : current.status,

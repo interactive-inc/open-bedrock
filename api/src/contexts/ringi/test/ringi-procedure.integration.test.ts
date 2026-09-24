@@ -3,7 +3,7 @@ import { createRingiProcedureTestContext } from "@/contexts/ringi/test/ringi-pro
 import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/repositories/ringi-request.repository"
 import { SubmitRingiProcedure } from "@/contexts/ringi/application/submit-ringi-procedure"
 import { ApproveSystemTask } from "@system/application/workflow/approve-system-task"
-import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
+import { openSystemWorkflow } from "@system/interface/operations/open-system-workflow"
 import { systemCaseIdSchema } from "@system/domain/schemas/workflow/system-case.schema"
 import { proposalDigestSchema } from "@system/domain/schemas/workflow/system-case-reference.schema"
 import { ForbiddenError, ConflictError, ValidationError } from "@/lib/errors"
@@ -64,7 +64,7 @@ describe("稟議と共通の承認・実行基盤", () => {
     if (binding instanceof Error || binding === null) throw binding
     for (const person of [c.first, c.second]) {
       expect(
-        await new ApproveSystemTask(new SystemD1WorkflowAdapter(c.context)).execute({
+        await new ApproveSystemTask(openSystemWorkflow(c.context)).execute({
           caseId: systemCaseIdSchema.parse(binding.caseId),
           taskKey: c.step.key,
           round: 1,

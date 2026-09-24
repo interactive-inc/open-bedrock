@@ -1,3 +1,4 @@
+import { LeaveSystemWorkflowAdapter } from "@/contexts/leave/infrastructure/adapters/leave-system-workflow.adapter"
 import { prepareCompanyProcedureDecision } from "@/contexts/company/interface/operations/prepare-company-procedure-decision"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
 import type { Context } from "@/env"
@@ -8,7 +9,6 @@ import {
   CompanyUnexpectedError,
 } from "@/contexts/company/domain/errors"
 import { LeaveProcedureRepository } from "@/contexts/leave/infrastructure/repositories/leave-procedure.repository"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { LeaveHumanOperationAuthorizationAdapter } from "@/contexts/leave/infrastructure/adapters/leave-human-operation-authorization.adapter"
 import { HumanAttestationEntity } from "@system/domain/entities/human-attestation.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
@@ -68,7 +68,9 @@ export class RecordLeaveDecision {
       return new UnexpectedError("承認案件を取得できません", { cause: binding })
     if (binding === null)
       return new ConflictError("会社の承認規程へ提出してください", "procedure_required")
-    const proposal = await new SystemD1ProposalAdapter(this.c).findByNumber(binding.applicationId)
+    const proposal = await new LeaveSystemWorkflowAdapter(this.c)
+      .proposals()
+      .findByNumber(binding.applicationId)
     const payload = CanonicalSystemJsonValue.create(request.toProposalBody())
     if (proposal instanceof Error || payload instanceof Error)
       return new UnexpectedError("休暇内容を確認できません")
@@ -171,9 +173,9 @@ export class RecordLeaveDecision {
     if (saved instanceof Error) {
       const concurrent = await repository.findDecisionReceipt(receiptInput)
       if (concurrent === "matching") {
-        const current = await new SystemD1ProposalAdapter(this.c).findByNumber(
-          binding.applicationId,
-        )
+        const current = await new LeaveSystemWorkflowAdapter(this.c)
+          .proposals()
+          .findByNumber(binding.applicationId)
         if (current !== null && !(current instanceof Error) && current.status !== "cancelled")
           return {
             status: current.status === "executed" ? "approved" : current.status,

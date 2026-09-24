@@ -17,7 +17,7 @@ import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { CaptureExpenseSourceAdapter } from "@/contexts/expense/infrastructure/adapters/capture-expense-source.adapter"
 import { RevalidateExpenseRecordSourceAdapter } from "@/contexts/expense/infrastructure/adapters/revalidate-expense-record-source.adapter"
 import { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
@@ -1023,7 +1023,7 @@ test("経費の全6種別を実認証で保全し、業務全テーブル撤去�
     createdAt: c.at,
   })
   if (definition instanceof Error) throw definition
-  expect(await new SystemD1ProcedureRepository(c.context).publish(definition, 0)).toBe(true)
+  expect(await openSystemProcedures(c.context).publish(definition, 0)).toBe(true)
   await c.database.exec(`INSERT INTO system_iam_role_permissions VALUES
     ('expense-test-role','expense:read:all'),('expense-test-role','budget:manage'),
     ('expense-test-role','system:record:preserve'),('expense-test-role','system:procedure:read'),

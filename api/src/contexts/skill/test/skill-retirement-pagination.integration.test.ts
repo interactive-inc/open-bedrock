@@ -1,11 +1,11 @@
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { expect, test } from "bun:test"
 import { z } from "zod"
 import { app } from "@/api/app"
 import { createSkillPreservationFixture } from "@/contexts/skill/test/create-skill-preservation-fixture.test-support"
 import { SystemPrincipalSecretService } from "@system/lib/auth/system-principal-secret-service"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { GET as preservedDossier } from "@system/interface/routes/system.preserved-records.$recordId.dossier"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
@@ -164,7 +164,7 @@ test("スキル定義・従業員スキルを全件保全し、人の承認を�
     const record = z
       .object({ number: z.number(), record_id: z.string() })
       .parse(await submitted.json())
-    const proposal = await new SystemD1ProposalAdapter({ env: { DB: database } }).findByNumber(
+    const proposal = await openSystemProposals({ env: { DB: database } }).findByNumber(
       record.number,
     )
     if (proposal === null || proposal instanceof Error)
@@ -256,9 +256,7 @@ test("スキル定義・従業員スキルを全件保全し、人の承認を�
     createdAt: at,
   })
   if (retirementDefinition instanceof Error) throw retirementDefinition
-  expect(
-    await new SystemD1ProcedureRepository(governance.context).publish(retirementDefinition, 0),
-  ).toBe(true)
+  expect(await openSystemProcedures(governance.context).publish(retirementDefinition, 0)).toBe(true)
   const requestBody = {
     plan_digest: publicPlan.digest,
     procedure_key: retirementDefinition.key,
@@ -319,7 +317,7 @@ test("スキル定義・従業員スキルを全件保全し、人の承認を�
   expect(
     (await post(retirementPath, requestId, { ...requestBody, reason: "Changed intent" })).status,
   ).toBe(409)
-  const proposalReader = new SystemD1ProposalAdapter({
+  const proposalReader = openSystemProposals({
     env: { DB: database },
     visibleCompletionOperationKeys: ["system.record.retire"],
   })

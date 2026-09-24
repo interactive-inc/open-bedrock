@@ -2,7 +2,7 @@ import { createLicenseFixture } from "@/contexts/software-license/test/create-li
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { SystemAttachmentTestBucket } from "@system/test/system-attachment-test-bucket.test-support"
 import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-system-attachment-test-kek-environment.test-support"
 
@@ -59,7 +59,7 @@ export async function createLicensePreservationFixture(
     createdAt: governance.at,
   })
   if (definition instanceof Error) throw definition
-  const published = await new SystemD1ProcedureRepository(governance.context).publish(definition, 0)
+  const published = await openSystemProcedures(governance.context).publish(definition, 0)
   if (published !== true) throw published
   const bucket = new SystemAttachmentTestBucket()
   f.settings.liveClock = true

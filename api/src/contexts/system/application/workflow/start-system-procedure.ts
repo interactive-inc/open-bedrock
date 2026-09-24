@@ -16,7 +16,7 @@ import {
   createSystemCaseId,
   type SystemCaseId,
 } from "@system/domain/schemas/workflow/system-case.schema"
-import type { SystemWorkflowWriter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
+import type { SystemWorkflowWriter } from "@system/domain/definitions/workflow/system-workflow-writer.definition"
 
 type Deps = Readonly<{
   createProposalId?: () => ProposalId

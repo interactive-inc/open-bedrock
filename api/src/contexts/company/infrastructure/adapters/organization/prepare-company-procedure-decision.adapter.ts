@@ -11,10 +11,8 @@ import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastr
 import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
 import { RevalidateCompanyProcedureAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/organization/revalidate-company-procedure-authority.adapter"
 import { ResolveCompanyProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-procedure-task.adapter"
-import {
-  SystemD1ProposalAdapter,
-  type SystemProposalView,
-} from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import type { SystemProposalView } from "@system/domain/definitions/workflow/system-proposal-view.definition"
 import { SystemDecisionTargetValue } from "@system/domain/values/workflow/system-decision-target.value"
 import { createSystemDecisionTask } from "@system/domain/policies/decision-task.policy"
 import type { SystemDecisionTaskBundle } from "@system/domain/definitions/workflow/system-decision-task-bundle.definition"

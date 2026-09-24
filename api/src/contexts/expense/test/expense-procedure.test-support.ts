@@ -5,7 +5,7 @@ import { RecordExpenseDecision } from "@/contexts/expense/application/record-exp
 import { CompleteApprovedExpenseProcedure } from "@/contexts/expense/application/complete-approved-expense-procedure"
 import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/repositories/expense-procedure.repository"
 import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 
@@ -134,8 +134,7 @@ export async function createExpenseProcedureTestContext(
         tokenVersion: 0,
         completedAt: c.at,
       })
-    const proposal = () =>
-      new SystemD1ProposalAdapter(c.context).findByNumber(binding.applicationId)
+    const proposal = () => openSystemProposals(c.context).findByNumber(binding.applicationId)
     return { id, binding, decisionTarget, decide, complete, proposal, submitted }
   }
   const revokeFirstVoting = async () => {

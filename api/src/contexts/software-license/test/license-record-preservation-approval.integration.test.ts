@@ -1,4 +1,4 @@
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { expect, test } from "bun:test"
 import { z } from "zod"
 import { createLicensePreservationFixture } from "@/contexts/software-license/test/create-license-preservation-fixture.test-support"
@@ -95,7 +95,7 @@ test("保全申請は会社の資格で承認でき、承認だけでは保全�
       )
       .first<number>("count"),
   ).toBe(0)
-  const proposal = await new SystemD1ProposalAdapter({
+  const proposal = await openSystemProposals({
     env: { DB: fixture.f.database },
   }).findByNumber(receipt.number)
   if (proposal === null || proposal instanceof Error) throw new Error("missing proposal")
@@ -187,7 +187,7 @@ test.each(["pending", "digest", "permission", "source", "company"])(
     const receipt = z
       .object({ number: z.number(), case_id: z.string() })
       .parse(await submitted.json())
-    const proposal = await new SystemD1ProposalAdapter({
+    const proposal = await openSystemProposals({
       env: { DB: fixture.f.database },
     }).findByNumber(receipt.number)
     if (proposal === null || proposal instanceof Error) throw new Error("missing proposal")

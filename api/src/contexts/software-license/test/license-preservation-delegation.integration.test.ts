@@ -1,5 +1,5 @@
 import { PrepareCompanyRecordDecisionReplayAdapter } from "@/contexts/company/infrastructure/adapters/organization/prepare-company-record-decision-replay.adapter"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { expect, test } from "bun:test"
 import { z } from "zod"
 import { createLicensePreservationFixture } from "@/contexts/software-license/test/create-license-preservation-fixture.test-support"
@@ -126,7 +126,7 @@ test("代理承認で保存した記録は業務撤去後も委任条件を返�
   await database.batch([history.delegationsGuard])
   const decision = history.attestations[0]
   if (decision === undefined) throw new Error("attestation missing")
-  const replayProposal = await new SystemD1ProposalAdapter({
+  const replayProposal = await openSystemProposals({
     env: { DB: database },
     visibleCompletionOperationKeys: ["system.record.preserve"],
   }).findByNumber(receipt.number)

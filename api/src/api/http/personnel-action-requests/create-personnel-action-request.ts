@@ -29,9 +29,9 @@ import { createCompanySystemAuditEvent } from "@/contexts/company/interface/oper
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
-import type { SystemWorkflowWriter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import type { SystemWorkflowWriter } from "@system/domain/definitions/workflow/system-workflow-writer.definition"
+import { openSystemWorkflow } from "@system/interface/operations/open-system-workflow"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { prepareSystemAuditEventAppend } from "@system/interface/operations/prepare-system-audit-event-append"
 
 export type CreatedPersonnelActionRequest = Readonly<{
@@ -154,7 +154,7 @@ export class CreatePersonnelActionRequest {
     })
     if (revision instanceof ApplicationError) return revision
 
-    const procedure = await new SystemD1ProcedureRepository({
+    const procedure = await openSystemProcedures({
       env: { DB: this.c.env.DB },
     }).find(CreatePersonnelActionRequest.procedureKey)
     if (procedure instanceof Error) {
@@ -248,7 +248,7 @@ export class CreatePersonnelActionRequest {
           })
         : null
 
-    const systemWriter = new SystemD1WorkflowAdapter({
+    const systemWriter = openSystemWorkflow({
       env: { DB: this.c.env.DB },
       startGuards: task.guards,
     })

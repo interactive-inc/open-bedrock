@@ -4,7 +4,7 @@ import { z } from "zod"
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { requestWithContext } from "@tests/api/support/request-with-context"
@@ -40,10 +40,7 @@ async function createFixture() {
     createdAt: c.at,
   })
   if (definition instanceof Error) throw definition
-  const published = await new SystemD1ProcedureRepository({ env: { DB: c.database } }).publish(
-    definition,
-    0,
-  )
+  const published = await openSystemProcedures({ env: { DB: c.database } }).publish(definition, 0)
   if (published !== true) throw published
   const request = async (index: number, path: string, body: unknown) => {
     const person = c.people[index]
