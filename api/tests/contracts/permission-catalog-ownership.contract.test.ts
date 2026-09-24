@@ -7,7 +7,7 @@ import { PERMISSION_CATALOG } from "@/api/http/permissions/permission.catalog"
 import {
   defaultAppRoutePrefixes,
   optInAppRoutePrefixes,
-} from "@/lib/feature/feature-route-registry"
+} from "@/api/http/features/feature-route-registry"
 
 const repositoryRoot = resolve(import.meta.dir, "../../..")
 

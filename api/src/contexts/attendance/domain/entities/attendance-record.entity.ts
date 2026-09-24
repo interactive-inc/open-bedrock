@@ -1,6 +1,6 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { toBusinessDate } from "@/lib/to-business-date"
+import { toBusinessDate } from "@/contexts/attendance/domain/policies/to-business-date.policy"
 import type { AttendanceRecordRow } from "@/contexts/attendance/infrastructure/schema/attendance"
 import { z } from "zod"
 

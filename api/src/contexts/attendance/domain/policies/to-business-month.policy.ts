@@ -1,4 +1,4 @@
-import { toBusinessDate } from "@/lib/to-business-date"
+import { toBusinessDate } from "@/contexts/attendance/domain/policies/to-business-date.policy"
 
 /**
  * UTC ISO 文字列を業務タイムゾーン（Asia/Tokyo）の YYYY-MM に変換する。

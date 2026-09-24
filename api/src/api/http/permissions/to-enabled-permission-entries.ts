@@ -1,5 +1,5 @@
 import { PERMISSION_CATALOG } from "@/api/http/permissions/permission.catalog"
-import { resolveDisabledFeatureKeys } from "@/lib/feature/resolve-disabled-feature-keys"
+import { resolveDisabledFeatureKeys } from "@/api/http/features/resolve-disabled-feature-keys"
 
 export type Props = {
   enabledOptInApps: string | undefined

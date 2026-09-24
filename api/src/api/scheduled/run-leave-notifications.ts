@@ -1,5 +1,5 @@
 import { LeaveDecisionNotificationDeliveryAdapter } from "@/contexts/leave/infrastructure/adapters/leave-decision-notification-delivery.adapter"
-import { resolveDisabledFeatureKeys } from "@/lib/feature/resolve-disabled-feature-keys"
+import { resolveDisabledFeatureKeys } from "@/api/http/features/resolve-disabled-feature-keys"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { Bindings } from "@/env"
 

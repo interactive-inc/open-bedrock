@@ -1,7 +1,7 @@
 import {
   optInAppRoutePrefixes,
   defaultAppRoutePrefixes,
-} from "@/lib/feature/feature-route-registry"
+} from "@/api/http/features/feature-route-registry"
 
 export type Props = {
   enabledOptInApps: string | undefined

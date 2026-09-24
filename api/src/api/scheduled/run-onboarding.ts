@@ -1,5 +1,5 @@
 import { OnboardingLifecycleDeliveryAdapter } from "@/contexts/onboarding/infrastructure/adapters/onboarding-lifecycle-delivery.adapter"
-import { resolveDisabledFeatureKeys } from "@/lib/feature/resolve-disabled-feature-keys"
+import { resolveDisabledFeatureKeys } from "@/api/http/features/resolve-disabled-feature-keys"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { Bindings } from "@/env"
 import { z } from "zod"

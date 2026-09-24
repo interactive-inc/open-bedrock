@@ -2,7 +2,7 @@ import type { InboxBusinessCounts, InboxCountInput } from "@/api/http/inbox/inbo
 import { ExpenseProcedureInboxAdapter } from "@/contexts/expense/infrastructure/adapters/expense-procedure-inbox.adapter"
 import type { Context } from "@/env"
 import { ApplicationError } from "@/lib/errors"
-import { resolveDisabledFeatureKeys } from "@/lib/feature/resolve-disabled-feature-keys"
+import { resolveDisabledFeatureKeys } from "@/api/http/features/resolve-disabled-feature-keys"
 
 /** 経費の承認待ち件数。App が無効、または承認権限が無ければ数えない。 */
 export async function readInboxCountsExpense(
