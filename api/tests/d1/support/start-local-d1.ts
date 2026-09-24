@@ -44,11 +44,17 @@ const D1_OBJECT_DIRECTORY = join("d1", "miniflare-D1DatabaseObject")
 
 const TEMPLATE_BINDING = "TEMPLATE"
 
-/**
- * 1ファイルで宣言できるmigration済みDBの上限。複製先の database id を固定の枠にし、
- * そのSQLiteファイル名をtemplate作成時に一度だけ調べる。
- */
+/** 1ファイルで宣言できるmigration済みDBの上限。 */
 const MIGRATED_SLOT_COUNT = 64
+
+/**
+ * 1つのworkerdに載せるmigration済みDBの枠数。複製先の database id を固定の枠にし、
+ * そのSQLiteファイル名をtemplate作成時に一度だけ調べる。使い切ったらworkerdを作り直す。
+ */
+const RUNTIME_MIGRATED_SLOT_COUNT = 512
+
+/** 1つのworkerdに載せる空DBの枠数。 */
+const RUNTIME_EMPTY_SLOT_COUNT = 128
 
 let migrationStatements: ReadonlyArray<ReadonlyArray<string>> | null = null
 
@@ -56,13 +62,27 @@ let template: Promise<Template> | null = null
 
 let scratchRoot: string | null = null
 
+/** プロセスで共有するworkerdと、まだ割り当てていない枠の位置。 */
+type SharedRuntime = {
+  runtime: Miniflare
+  persist: string
+  nextMigrated: number
+  nextEmpty: number
+}
+
+let shared: Promise<SharedRuntime> | null = null
+
 /**
- * Cloudflare提供のローカルD1エミュレーター（Miniflare）を起動する。本番D1そのものではない。
- * 宣言した名前ごとに独立したDBを1つのMiniflareに載せ、testの間でDBを共有しない。
+ * Cloudflare提供のローカルD1エミュレーター（Miniflare）を使う。本番D1そのものではない。
+ * 宣言した名前ごとに、プロセスで共有するworkerd上の未使用の枠を割り当て、testの間でDBを共有しない。
+ *
+ * workerdはファイルごとに起動せず、枠を使い切るまでプロセスで1つを使い回す。
+ * Bunは1プロセスで子プロセスの起動と停止を繰り返すと、pipeで EBADF や ENOENT を返して
+ * workerdの起動が失敗または停止することがあるため。停止は全ファイルの後に`stopLocalD1`が行う。
  *
  * migration済みDBは、プロセスで一度だけ全migrationを適用したtemplateのSQLiteファイルを、
- * 起動前に各DBのファイル位置へ複製して用意する。数百のmigrationをDBごとに再生せず、
- * workerdの起動もファイルごとに1回にする。
+ * 各DBを最初に使う時にそのファイル位置へ複製して用意する。workerdはDBへ最初に触れた時に
+ * ファイルを開くため、複製はその前に終わる。数百のmigrationをDBごとに再生しない。
  * 複製後はtemplateと同じschema object数かを検査し、Miniflareの保存形式が変わったら失敗させる。
  * DBへはMiniflareの同期proxyを使わず、SQLを実行するだけのWorkerへfetchで送る（local-d1-fetch-client.ts）。
  * Worker scriptは外向き通信を持たず、outboundも拒否する。
@@ -80,49 +100,121 @@ export async function startLocalD1(databases: LocalD1Databases): Promise<LocalD1
     throw new Error(`declare at most ${MIGRATED_SLOT_COUNT} migrated local D1 databases per file`)
   }
 
-  const ids: Record<string, string> = {
-    ...Object.fromEntries(empty.map((name) => [name, `local-d1-test-${name}`])),
-    ...Object.fromEntries(migrated.map((name, index) => [name, slotIdFor(index)])),
-  }
-
   const source = migrated.length > 0 ? await buildTemplate() : null
+  const current = await reserve(migrated.length, empty.length)
+  const firstMigrated = current.nextMigrated - migrated.length
+  const firstEmpty = current.nextEmpty - empty.length
+  const bindings = new Map<string, string>([
+    ...empty.map((name, index): [string, string] => [name, emptyBindingFor(firstEmpty + index)]),
+    ...migrated.map((name, index): [string, string] => [
+      name,
+      migratedBindingFor(firstMigrated + index),
+    ]),
+  ])
+  const slotOf = new Map(migrated.map((name, index) => [name, firstMigrated + index]))
+  const copied = new Set<string>()
 
-  /** 起動のたびに新しいディレクトリへtemplateを複製し、失敗した起動とファイルを共有しない。 */
-  const preparePersist = (): string => {
-    const persist = join(scratchDirectory(), `run-${crypto.randomUUID()}`)
-    if (source === null) return persist
-    mkdirSync(join(persist, D1_OBJECT_DIRECTORY), { recursive: true })
-    migrated.forEach((_, index) => {
-      const slotFile = source.slotFiles[index]
-      if (slotFile === undefined) throw new Error(`local D1 slot ${index} has no discovered file`)
-      copyDatabaseFile(
-        join(source.directory, D1_OBJECT_DIRECTORY, source.file),
-        join(persist, D1_OBJECT_DIRECTORY, slotFile),
-      )
-    })
-    return persist
+  const slotPath = (slot: number): string => {
+    const slotFile = source?.slotFiles[slot]
+    if (slotFile === undefined) throw new Error(`local D1 slot ${slot} has no discovered file`)
+    return join(current.persist, D1_OBJECT_DIRECTORY, slotFile)
   }
-
-  const { runtime, persist } = await startRuntime(preparePersist, ids)
-
-  const migratedNames = new Set(migrated)
-  const verified = new Set<string>()
 
   return {
     database: async (name) => {
-      if (!(name in ids)) throw new Error(`local D1 "${name}" was not declared in startLocalD1`)
-      const database = createLocalD1FetchClient(runtime, name)
-      if (migratedNames.has(name) && !verified.has(name)) {
-        await verifyCopy(name, database)
-        verified.add(name)
+      const binding = bindings.get(name)
+      if (binding === undefined) {
+        throw new Error(`local D1 "${name}" was not declared in startLocalD1`)
       }
+      const slot = slotOf.get(name)
+      const first = source !== null && slot !== undefined && !copied.has(name)
+      if (first) {
+        copyDatabaseFile(join(source.directory, D1_OBJECT_DIRECTORY, source.file), slotPath(slot))
+        copied.add(name)
+      }
+      const database = createLocalD1FetchClient(current.runtime, binding)
+      if (first) await verifyCopy(name, database)
       return database
     },
+    // 枠は再利用しないため共有のworkerdは止めず、このファイルが複製したDBファイルだけを消す。
     dispose: async () => {
-      await runtime.dispose()
-      rmSync(persist, { recursive: true, force: true })
+      for (const name of copied) {
+        const slot = slotOf.get(name)
+        if (slot === undefined) continue
+        for (const suffix of ["", "-wal", "-shm"]) {
+          rmSync(`${slotPath(slot)}${suffix}`, { force: true })
+        }
+      }
     },
   }
+}
+
+/**
+ * 共有workerdを止め、作業ディレクトリを消す。全testファイルの後に一度だけ呼ぶ。
+ * bun test はプロセス終了時の exit イベントを待たないため、終了処理に頼らない。
+ */
+export async function stopLocalD1(): Promise<void> {
+  const current = shared === null ? null : await shared.catch(() => null)
+  shared = null
+  if (current !== null) await current.runtime.dispose()
+  if (scratchRoot !== null) {
+    rmSync(scratchRoot, { recursive: true, force: true })
+    scratchRoot = null
+    template = null
+  }
+}
+
+/** 共有workerdから枠を確保する。足りなければworkerdを作り直す。 */
+async function reserve(migrated: number, empty: number): Promise<SharedRuntime> {
+  let current = shared === null ? null : await shared.catch(() => null)
+  if (
+    current === null ||
+    current.nextMigrated + migrated > RUNTIME_MIGRATED_SLOT_COUNT ||
+    current.nextEmpty + empty > RUNTIME_EMPTY_SLOT_COUNT
+  ) {
+    const retired = current
+    const next = (async () => {
+      if (retired !== null) {
+        await retired.runtime.dispose()
+        rmSync(retired.persist, { recursive: true, force: true })
+      }
+      return createSharedRuntime()
+    })()
+    shared = next
+    // 失敗した起動を再利用せず、次の呼び出しで作り直す。
+    next.catch(() => {
+      if (shared === next) shared = null
+    })
+    current = await next
+  }
+  current.nextMigrated += migrated
+  current.nextEmpty += empty
+  return current
+}
+
+async function createSharedRuntime(): Promise<SharedRuntime> {
+  const bindings: Record<string, string> = {}
+  for (let index = 0; index < RUNTIME_MIGRATED_SLOT_COUNT; index++) {
+    bindings[migratedBindingFor(index)] = slotIdFor(index)
+  }
+  for (let index = 0; index < RUNTIME_EMPTY_SLOT_COUNT; index++) {
+    bindings[emptyBindingFor(index)] = `local-d1-test-empty-slot-${index}`
+  }
+  const preparePersist = (): string => {
+    const persist = join(scratchDirectory(), `run-${crypto.randomUUID()}`)
+    mkdirSync(join(persist, D1_OBJECT_DIRECTORY), { recursive: true })
+    return persist
+  }
+  const { runtime, persist } = await startRuntime(preparePersist, bindings)
+  return { runtime, persist, nextMigrated: 0, nextEmpty: 0 }
+}
+
+function migratedBindingFor(index: number): string {
+  return `MIGRATED_${index}`
+}
+
+function emptyBindingFor(index: number): string {
+  return `EMPTY_${index}`
 }
 
 function slotIdFor(index: number): string {
@@ -202,7 +294,9 @@ function buildTemplate(): Promise<Template> {
   template = (async () => {
     const directory = join(scratchDirectory(), "template")
     const objectDirectory = join(directory, D1_OBJECT_DIRECTORY)
-    const slots = Array.from({ length: MIGRATED_SLOT_COUNT }, (_, index) => slotIdFor(index))
+    const slots = Array.from({ length: RUNTIME_MIGRATED_SLOT_COUNT }, (_, index) =>
+      slotIdFor(index),
+    )
     const runtime = createRuntime(directory, {
       [TEMPLATE_BINDING]: "local-d1-test-template",
       ...Object.fromEntries(slots.map((id, index) => [`SLOT_${index}`, id])),

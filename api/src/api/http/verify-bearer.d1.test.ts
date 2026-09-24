@@ -1,0 +1,310 @@
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { createSystemIdentityTestKey } from "@system/test/create-system-identity-test-key.test-support"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { SignJWT } from "jose"
+import { SystemPrincipalSecretService } from "@system/lib/auth/system-principal-secret-service"
+import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
+
+let pool: LocalD1Pool
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  pool = await startLocalD1Pool(16)
+})
+
+afterAll(async () => {
+  await pool.dispose()
+})
+
+const jwtSecret = "verify-bearer-test-secret"
+const identityIssuer = "https://identity-broker.example"
+const accessTokenIssuer = "https://identity-provider.example"
+const audience = "https://api.example.com"
+const now = "2026-01-01T00:00:00.000Z"
+const identityKey = await createSystemIdentityTestKey("external-access-key")
+const untrustedIdentityKey = await createSystemIdentityTestKey("untrusted-access-key")
+
+async function createTestDb(): Promise<D1Database> {
+  const db = await pool.next()
+
+  await initializeStandardCompanyTestState(db)
+  await db
+    .prepare(
+      `INSERT INTO system_identity_bindings
+         (id, account_id, provider, subject, created_at, activated_at, revoked_at)
+       VALUES ('oidc:employee-5', '5', 'oidc', 'external-subject-5', 0, 0, NULL)`,
+    )
+    .run()
+
+  return db
+}
+
+function externalToken(
+  overrides: {
+    audience?: string
+    subject?: string
+    type?: string
+    emailVerified?: boolean
+    untrustedKey?: boolean
+  } = {},
+): Promise<string> {
+  const issuedAt = Math.floor(new Date(now).getTime() / 1_000)
+  const key = overrides.untrustedKey === true ? untrustedIdentityKey : identityKey
+
+  return new SignJWT({
+    email: "you+e005@example.com",
+    email_verified: overrides.emailVerified ?? true,
+    name: "Emery Lane",
+    client_id: "native-client",
+    scope: "openid profile email offline_access",
+  })
+    .setProtectedHeader({
+      alg: "EdDSA",
+      kid: key.keyId,
+      typ: overrides.type ?? "at+jwt",
+    })
+    .setIssuer(accessTokenIssuer)
+    .setAudience(overrides.audience ?? audience)
+    .setSubject(overrides.subject ?? "external-subject-5")
+    .setJti(crypto.randomUUID())
+    .setIssuedAt(issuedAt)
+    .setExpirationTime(issuedAt + 300)
+    .sign(key.signingKey)
+}
+
+function externalRequest(props: {
+  db: D1Database
+  token: string
+  path?: string
+}): Promise<Response> {
+  return requestWithContext({
+    db: props.db,
+    jwtSecret,
+    path: props.path ?? "/company/current-profile",
+    token: props.token,
+    now,
+    identityIssuer,
+    identityAccessTokenIssuer: accessTokenIssuer,
+    identityAccessTokenAudience: audience,
+    identityJwks: identityKey.jwks,
+  })
+}
+
+describe("verifyBearer", () => {
+  test("System機械tokenを通常API入口でも検査し、credential失効後は拒否する", async () => {
+    const db = await createTestDb()
+    const issuedAt = new Date()
+    const rawSecretHash = await new SystemPrincipalSecretService().hashRawSecret("1".repeat(64))
+    if (rawSecretHash instanceof Error) throw rawSecretHash
+    await db.prepare("DELETE FROM system_principals WHERE account_id = '5'").run()
+    await db
+      .prepare(`INSERT INTO system_principals
+      (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
+      VALUES ('service-5', '5', 'service', 'Automation', NULL, 1, 0, 0)`)
+      .run()
+    await db
+      .prepare(`INSERT INTO system_machine_credentials
+      (id, principal_id, name, secret_hash, status, created_at, updated_at, last_used_at)
+      VALUES ('credential-5', 'service-5', 'Primary', ?1, 'active', 0, ?2, ?2)`)
+      .bind(rawSecretHash, issuedAt.getTime())
+      .run()
+    const token = await new SystemAccessTokenIssuer(jwtSecret).issue({
+      accountId: zAccountId.parse("5"),
+      tokenVersion: 0,
+      machineCredentialId: "credential-5",
+      now: issuedAt,
+    })
+    if (token instanceof Error) throw token
+    const call = () =>
+      requestWithContext({ db, jwtSecret, path: "/company/current-profile", token, now })
+    expect((await call()).status).toBe(200)
+    await db
+      .prepare(
+        "UPDATE system_machine_credentials SET status = 'revoked', revoked_at = updated_at WHERE id = 'credential-5'",
+      )
+      .run()
+    expect((await call()).status).toBe(401)
+    expect((await externalRequest({ db, token: await externalToken() })).status).toBe(401)
+  })
+
+  test("外部IdPのresource-bound access tokenを既存Identity bindingへ接続する", async () => {
+    const response = await externalRequest({
+      db: await createTestDb(),
+      token: await externalToken(),
+    })
+
+    expect(response.status).toBe(200)
+  })
+
+  test("access token専用issuer未設定なら従来のidentity issuerを使う", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/company/current-profile",
+      token: await externalToken(),
+      now,
+      identityIssuer: accessTokenIssuer,
+      identityAccessTokenAudience: audience,
+      identityJwks: identityKey.jwks,
+    })
+
+    expect(response.status).toBe(200)
+  })
+
+  test("別resource向けの外部access tokenを拒否する", async () => {
+    const response = await externalRequest({
+      db: await createTestDb(),
+      token: await externalToken({ audience: "https://other-api.example.com" }),
+    })
+
+    expect(response.status).toBe(401)
+  })
+
+  test("ID tokenをAPI access tokenとして受理しない", async () => {
+    const response = await externalRequest({
+      db: await createTestDb(),
+      token: await externalToken({ type: "JWT" }),
+    })
+
+    expect(response.status).toBe(401)
+  })
+
+  test("未検証emailを持つaccess tokenを拒否する", async () => {
+    const response = await externalRequest({
+      db: await createTestDb(),
+      token: await externalToken({ emailVerified: false }),
+    })
+
+    expect(response.status).toBe(401)
+  })
+
+  test("信頼していない鍵で署名されたaccess tokenを拒否する", async () => {
+    const response = await externalRequest({
+      db: await createTestDb(),
+      token: await externalToken({ untrustedKey: true }),
+    })
+
+    expect(response.status).toBe(401)
+  })
+
+  test("activeなIdentity bindingが無いsubjectを拒否する", async () => {
+    const response = await externalRequest({
+      db: await createTestDb(),
+      token: await externalToken({ subject: "unknown-subject" }),
+    })
+
+    expect(response.status).toBe(401)
+  })
+
+  test("Account不在、非active、失効を同じ401本文で拒否し、Account状態を推測させない", async () => {
+    const db = await createTestDb()
+    const call = async (token: string) => {
+      const response = await requestWithContext({
+        db,
+        jwtSecret,
+        path: "/company/current-profile",
+        token,
+        now,
+      })
+      return { status: response.status, body: await response.json() }
+    }
+    const rejected = { status: 401, body: { error: "invalid token" } }
+
+    expect(
+      await call(
+        await createTestToken(jwtSecret, {
+          employeeId: toWorkforceEmployeeId(5),
+          accountId: "account-not-registered",
+        }),
+      ),
+    ).toEqual(rejected)
+
+    const token = await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(5) })
+    await db.prepare("UPDATE system_accounts SET token_version = 1 WHERE id = '5'").run()
+    const revoked = await call(token)
+
+    await db
+      .prepare("UPDATE system_accounts SET status = 'suspended', token_version = 2 WHERE id = '5'")
+      .run()
+    const inactive = await call(
+      await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(5), tokenVersion: 2 }),
+    )
+
+    expect(revoked).toEqual(rejected)
+    expect(inactive).toEqual(rejected)
+  })
+
+  test("外部IdP未設定でも従来のSystem sessionを受理する", async () => {
+    const db = await createTestDb()
+    const token = await createTestToken(jwtSecret, {
+      employeeId: toWorkforceEmployeeId(5),
+    })
+    const response = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/company/current-profile",
+      token,
+      // 従来sessionの有効期限判定はリクエスト文脈の業務時刻ではなく実時刻を使う。
+      now,
+    })
+
+    expect(response.status).toBe(200)
+  })
+
+  test("access token audience未設定なら直接受理経路だけを無効にする", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/company/current-profile",
+      token: await externalToken(),
+      now,
+      identityIssuer: accessTokenIssuer,
+      identityJwks: identityKey.jwks,
+    })
+
+    expect(response.status).toBe(401)
+  })
+})
+
+test("同じ外部access tokenで会社とSystemのAPIへ認証できる", async () => {
+  const db = await createTestDb()
+  const token = await externalToken()
+  expect((await externalRequest({ db, token })).status).toBe(200)
+  expect(
+    (await externalRequest({ db, token, path: "/system/notifications/unread-count" })).status,
+  ).toBe(200)
+})
+
+for (const path of ["/company/current-profile", "/system/notifications/unread-count"]) {
+  test(`${path}は外部署名・宛先・本人確認を同じ規則で拒否する`, async () => {
+    const db = await createTestDb()
+    for (const overrides of [
+      { audience: "https://other-api.example.com" },
+      { type: "JWT" },
+      { untrustedKey: true },
+      { emailVerified: false },
+      { subject: "unknown-subject" },
+    ]) {
+      expect(
+        (await externalRequest({ db, token: await externalToken(overrides), path })).status,
+      ).toBe(401)
+    }
+  })
+  test(`${path}はIdentity失効後の外部tokenを拒否する`, async () => {
+    const db = await createTestDb()
+    const token = await externalToken()
+    expect((await externalRequest({ db, token, path })).status).toBe(200)
+    await db
+      .prepare("UPDATE system_identity_bindings SET revoked_at = ?1 WHERE id = 'oidc:employee-5'")
+      .bind(new Date(now).getTime())
+      .run()
+    expect((await externalRequest({ db, token, path })).status).toBe(401)
+  })
+}

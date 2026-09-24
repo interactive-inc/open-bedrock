@@ -66,6 +66,33 @@ test("未宣言route・nested route・basenameが一致しないtestを拒否す
   )
 })
 
+test("ローカルD1のtestは *.d1.test.ts のまま同じproduction routeへ対応させる", async () => {
+  const projectRoot = createTemporaryProject(
+    [
+      {
+        routePrefix: "auth",
+        participants: ["company", "system"],
+        routes: ["auth"],
+        reason: "認証を合成する",
+      },
+    ],
+    {
+      "src/api/routes/auth.ts": 'import "@/contexts/company/domain/account"',
+      "src/api/routes/auth.d1.test.ts": "",
+      "src/api/routes/auth.profile.d1.test.ts": "",
+    },
+  )
+
+  const violations = await checkApiCompositionRoutes(projectRoot)
+
+  expect(violations).toContain(
+    "production routeとbasenameが一致しないtestです: src/api/routes/auth.profile.d1.test.ts",
+  )
+  expect(violations).not.toContain(
+    "production routeとbasenameが一致しないtestです: src/api/routes/auth.d1.test.ts",
+  )
+})
+
 test("宣言外context importを拒否する", async () => {
   const projectRoot = createTemporaryProject(
     [

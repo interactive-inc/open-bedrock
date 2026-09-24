@@ -8,6 +8,10 @@ import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastr
 import * as adoptions from "@/contexts/company/interface/routes/company.organization-resource-adoptions"
 import * as changes from "@/contexts/company/interface/routes/company.organization-changes"
 import * as employees from "@/contexts/company/interface/routes/company.employees"
+import { DirectPersonnelActionAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/direct-personnel-action.adapter"
+import { EmployeeLifecycleAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/employee-lifecycle.adapter"
+import type { PersonnelActionInput } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { createLocalD1Governance } from "@tests/d1/support/create-local-d1-governance"
 
 /**
@@ -154,9 +158,28 @@ export async function createLocalD1CompanyAssignment(database: D1Database) {
     if (Number(response.status) !== 201)
       throw new Error(`employee code assignment failed: ${response.status}`)
   }
+  /** 公開Companyの直接人事発令を、2030-06-01時点の人事権限で適用する。 */
+  const personnel = async (input: PersonnelActionInput, key: string, targetId = employeeId) => {
+    const context = { ...base.context, env: { ...base.context.env, NOW: "2030-06-01T00:00:00Z" } }
+    const revisions = await new EmployeeLifecycleAdapter(context).loadRevisions(targetId)
+    if (revisions instanceof Error) throw revisions
+    return new DirectPersonnelActionAdapter(context).apply({
+      session: {
+        accountId: zAccountId.parse(base.creator.accountId),
+        employeeId,
+        hasPermission: (permission) => permission === "employee:lifecycle:apply",
+      },
+      employeeId: targetId,
+      idempotencyKey: key,
+      expectedEmployeeRevision: revisions.employeeRevision,
+      expectedOrganizationRevision: revisions.organizationRevision,
+      input,
+    })
+  }
   return {
     ...base,
     client,
+    personnel,
     assignment,
     write,
     read,
