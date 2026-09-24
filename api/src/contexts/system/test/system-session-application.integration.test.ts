@@ -20,6 +20,7 @@ const accountId = zAccountId.parse("account-1")
 const now = new Date("2026-01-01T00:00:00.000Z")
 const rotateAt = new Date("2026-01-02T00:00:00.000Z")
 const sessionTtlMilliseconds = 7 * 24 * 60 * 60 * 1_000
+const sessionMaxLifetimeMilliseconds = 30 * 24 * 60 * 60 * 1_000
 const firstRawToken = "raw-token-1"
 const secondRawToken = "raw-token-2"
 const thirdRawToken = "raw-token-3"
@@ -77,6 +78,7 @@ function createIssueSystemSession(
   fixture: SystemSessionTestContext,
   materialService: SystemSessionMaterial,
   ttlMilliseconds = sessionTtlMilliseconds,
+  maxLifetimeMilliseconds = sessionMaxLifetimeMilliseconds,
 ): IssueSystemSession {
   return new IssueSystemSession({
     accountRepository: new SystemAccountRepository({ database: fixture.context.env.DB }),
@@ -84,6 +86,7 @@ function createIssueSystemSession(
     materialService,
     accessTokenIssuer,
     sessionTtlMilliseconds: ttlMilliseconds,
+    sessionMaxLifetimeMilliseconds: maxLifetimeMilliseconds,
   })
 }
 
@@ -91,6 +94,7 @@ function createRotateSystemSession(
   fixture: SystemSessionTestContext,
   materialService: SystemSessionMaterial,
   ttlMilliseconds = sessionTtlMilliseconds,
+  maxLifetimeMilliseconds = sessionMaxLifetimeMilliseconds,
 ): RotateSystemSession {
   return new RotateSystemSession({
     accountRepository: new SystemAccountRepository({ database: fixture.context.env.DB }),
@@ -99,6 +103,7 @@ function createRotateSystemSession(
     materialService,
     accessTokenIssuer,
     sessionTtlMilliseconds: ttlMilliseconds,
+    sessionMaxLifetimeMilliseconds: maxLifetimeMilliseconds,
   })
 }
 
@@ -136,7 +141,7 @@ async function issueInitialSession(
   })
 
   if (result instanceof Error || result.kind !== "issued") {
-    throw new Error("initial System Session was not issued")
+    throw new Error("initial System Session was not issued", { cause: result })
   }
 }
 

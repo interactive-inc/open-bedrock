@@ -78,7 +78,10 @@ export type SystemJwtSecretContext = Readonly<{
 }>
 
 export type SystemSessionConfigurationContext = Readonly<{
-  env: Readonly<{ SYSTEM_SESSION_TTL_SECONDS?: string }>
+  env: Readonly<{
+    SYSTEM_SESSION_TTL_SECONDS?: string
+    SYSTEM_SESSION_MAX_LIFETIME_SECONDS?: string
+  }>
 }>
 
 export type SystemExternalIdentityContext = Readonly<{

@@ -26,6 +26,7 @@ export const invalidAccountReasons = Object.freeze([
 export type InvalidAccountReason = (typeof invalidAccountReasons)[number]
 
 export const invalidSessionReasons = Object.freeze([
+  "authentication_after_creation",
   "expiration_not_after_creation",
   "expired",
   "invalid_clock",

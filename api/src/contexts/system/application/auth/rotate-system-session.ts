@@ -26,6 +26,7 @@ type Props = Readonly<{
   materialService: SystemSessionMaterial
   accessTokenIssuer: SystemAccessTokenIssuer
   sessionTtlMilliseconds: number
+  sessionMaxLifetimeMilliseconds: number
 }>
 
 export type RotateSystemSessionCommand = Readonly<{
@@ -48,7 +49,10 @@ export type RotateSystemSessionResult =
 type RotateSystemSessionContext = Props
 type Context = RotateSystemSessionContext
 
-/** システムセッションをローテーションする。 */
+/**
+ * システムセッションをローテーションする。後継はfamilyの認証時刻を引き継ぎ、
+ * 絶対寿命を過ぎたfamilyはrefreshを拒否して失効させ、再ログインを求める。
+ */
 export class RotateSystemSession {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -62,6 +66,8 @@ export class RotateSystemSession {
       !Number.isSafeInteger(nowEpochMilliseconds) ||
       !Number.isSafeInteger(this.c.sessionTtlMilliseconds) ||
       this.c.sessionTtlMilliseconds <= 0 ||
+      !Number.isSafeInteger(this.c.sessionMaxLifetimeMilliseconds) ||
+      this.c.sessionMaxLifetimeMilliseconds <= 0 ||
       !Number.isSafeInteger(expiresAtEpochMilliseconds)
     ) {
       return new Error("System SessionEntity rotation time is invalid")
@@ -76,6 +82,13 @@ export class RotateSystemSession {
     const useRejection = current.getUseRejection(command.now)
     if (useRejection === "rotated" || useRejection === "revoked") {
       return this.rejectKnown(current, "reused", command)
+    }
+    const lifetimeEnd = current.getLifetimeEnd(this.c.sessionMaxLifetimeMilliseconds)
+    if (
+      lifetimeEnd === null ||
+      current.exceedsLifetime(command.now, this.c.sessionMaxLifetimeMilliseconds)
+    ) {
+      return this.rejectKnown(current, "invalid", command, "session_lifetime_exceeded")
     }
     if (useRejection !== null) return this.rejectKnown(current, "invalid", command)
 
@@ -96,13 +109,14 @@ export class RotateSystemSession {
     const successorTokenHash = await this.c.materialService.hashRawToken(rawToken)
     if (successorTokenHash instanceof Error) return successorTokenHash
 
-    const expiresAt = new Date(expiresAtEpochMilliseconds)
+    const expiresAt = new Date(Math.min(expiresAtEpochMilliseconds, lifetimeEnd.getTime()))
     const successor = SessionEntity.create({
       id: sessionId,
       accountId: current.accountId,
       familyId: current.familyId,
       tokenHash: successorTokenHash,
       tokenVersion: accountSession.account.tokenVersion,
+      authenticatedAt: current.authenticatedAt,
       createdAt: command.now,
       expiresAt,
       rotatedAt: null,
@@ -121,6 +135,7 @@ export class RotateSystemSession {
     const accessToken = await this.c.accessTokenIssuer.issue({
       accountId: successor.accountId,
       tokenVersion: successor.tokenVersion,
+      sessionFamilyId: successor.familyId,
       now: command.now,
     })
     if (accessToken instanceof Error) return accessToken
@@ -166,13 +181,19 @@ export class RotateSystemSession {
     current: SessionEntity,
     reason: "reused" | "invalid",
     command: RotateSystemSessionCommand,
+    reasonCode:
+      | "refresh_token_reused"
+      | "session_invalid"
+      | "session_lifetime_exceeded" = reason === "reused"
+      ? "refresh_token_reused"
+      : "session_invalid",
   ): Promise<RotateSystemSessionResult | Error> {
     const audit = SystemAuditEventEntity.createSession({
       actorAccountId: current.accountId,
       action: SYSTEM_AUDIT_ACTIONS.authSessionRotate,
       targetId: current.id,
       outcome: "denied",
-      reasonCode: reason === "reused" ? "refresh_token_reused" : "session_invalid",
+      reasonCode,
       occurredAt: command.now,
       context: command.auditContext,
     })

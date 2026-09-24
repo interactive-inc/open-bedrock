@@ -72,13 +72,22 @@ export class SystemSessionRepository {
     }
   }
 
+  /**
+   * 絶対寿命の起点を持たない行（列の追加前に作られ、backfill後に旧workerが書いた行）は、
+   * 同じfamilyで最も早く作られた行の時刻を起点にし、refreshによる延長を許さない。
+   */
   async find(tokenHash: SessionTokenHash): Promise<SessionEntity | null | Error> {
     try {
       const storageRow = await this.c.context.env.DB.prepare(
-        `SELECT id, account_id, family_id, token_hash, token_version,
-                created_at, expires_at, rotated_at, revoked_at
-         FROM system_sessions
-         WHERE token_hash = ?1
+        `SELECT session.id, session.account_id, session.family_id, session.token_hash,
+                session.token_version,
+                coalesce(session.authenticated_at, (
+                  SELECT min(family.created_at) FROM system_sessions AS family
+                  WHERE family.family_id = session.family_id
+                )) AS authenticated_at,
+                session.created_at, session.expires_at, session.rotated_at, session.revoked_at
+         FROM system_sessions AS session
+         WHERE session.token_hash = ?1
          LIMIT 1`,
       )
         .bind(tokenHash)
@@ -208,8 +217,8 @@ export class SystemSessionRepository {
     return this.c.context.env.DB.prepare(
       `INSERT INTO system_sessions
          (id, account_id, family_id, token_hash, token_version,
-          created_at, expires_at, rotated_at, revoked_at)
-       SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, NULL
+          created_at, expires_at, rotated_at, revoked_at, authenticated_at)
+       SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, NULL, ?8
        WHERE EXISTS (
          SELECT 1 FROM system_accounts
          WHERE id = ?2 AND status = 'active' AND token_version = ?5
@@ -223,6 +232,7 @@ export class SystemSessionRepository {
       session.tokenVersion,
       session.createdAt.getTime(),
       session.expiresAt.getTime(),
+      session.authenticatedAt.getTime(),
     )
   }
 
@@ -262,8 +272,8 @@ export class SystemSessionRepository {
     return this.c.context.env.DB.prepare(
       `INSERT INTO system_sessions
          (id, account_id, family_id, token_hash, token_version,
-          created_at, expires_at, rotated_at, revoked_at)
-       SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, NULL
+          created_at, expires_at, rotated_at, revoked_at, authenticated_at)
+       SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, NULL, NULL, ?11
        WHERE EXISTS (SELECT 1 FROM system_audit_events WHERE event_id = ?8)
          AND EXISTS (
            SELECT 1 FROM system_sessions
@@ -280,6 +290,7 @@ export class SystemSessionRepository {
       audits.rotated.eventId,
       previous.id,
       previous.tokenHash,
+      successor.authenticatedAt.getTime(),
     )
   }
 

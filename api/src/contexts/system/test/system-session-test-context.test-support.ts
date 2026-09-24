@@ -124,7 +124,8 @@ const schema = `
       revoked_at IS NULL OR (
         revoked_at >= created_at AND (rotated_at IS NULL OR revoked_at >= rotated_at)
       )
-    )
+    ),
+    authenticated_at INTEGER CHECK (authenticated_at IS NULL OR authenticated_at <= created_at)
   );
 
   CREATE UNIQUE INDEX system_sessions_token_hash_uniq ON system_sessions (token_hash);
@@ -202,6 +203,7 @@ const schema = `
     OR NEW.token_version IS NOT OLD.token_version
     OR NEW.created_at IS NOT OLD.created_at
     OR NEW.expires_at IS NOT OLD.expires_at
+    OR (OLD.authenticated_at IS NOT NULL AND NEW.authenticated_at IS NOT OLD.authenticated_at)
     OR (OLD.rotated_at IS NOT NULL AND NEW.rotated_at IS NOT OLD.rotated_at)
     OR (OLD.revoked_at IS NOT NULL AND NEW.revoked_at IS NOT OLD.revoked_at)
   BEGIN
