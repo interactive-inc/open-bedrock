@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vite-plus/test"
-
 import { createPkce } from "@/lib/auth/create-pkce"
 
 describe("createPkce", () => {

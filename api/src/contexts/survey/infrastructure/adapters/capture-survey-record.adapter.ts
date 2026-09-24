@@ -9,6 +9,7 @@ import { PreservedRecordSourceValue } from "@system/domain/values/records/preser
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 import { z } from "zod"
+
 type Context = SurveyContext
 type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string | number> }>
 function snapshotQuery(recordKind: SurveyRecordKind, recordId: string): SnapshotQuery | Error {

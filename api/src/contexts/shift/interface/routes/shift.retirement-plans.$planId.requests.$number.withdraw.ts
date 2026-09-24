@@ -5,6 +5,7 @@ import { shiftFactory } from "@/contexts/shift/interface/request-environment/shi
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { WithdrawRecordRetirementAdapter } from "@system/infrastructure/adapters/records/withdraw-record-retirement.adapter"
 import { RecordRetirementWithdrawalError } from "@system/infrastructure/adapters/records/errors"
+
 // @authorization owner - 認証された申請者だけが指定した未完了提案を理由とともに取り下げる
 export const POST = shiftFactory.createHandlers(
   authenticateSystemAccessToken,

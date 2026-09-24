@@ -7,7 +7,6 @@ import type { RingiDecisionFormState } from "@/app/(app)/my/ringis/actions"
 import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
-
 import type { RingiDecisionTarget } from "@/lib/api/types/ringi-types"
 
 type Props = {

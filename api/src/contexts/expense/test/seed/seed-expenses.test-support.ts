@@ -4,6 +4,7 @@ import type {
   EmployeeId,
   OrganizationUnitId,
 } from "@/contexts/company/domain/definitions/workforce-id.definition"
+
 type SeedExpense = {
   id: number
   employeeId: EmployeeId

@@ -1,9 +1,8 @@
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
+import { GET } from "@/app/(app)/system/audit-events/export/route"
 
 const mocks = vi.hoisted(() => ({ exportAuditEvents: vi.fn() }))
 vi.mock("@/lib/api/export-audit-events", () => ({ exportAuditEvents: mocks.exportAuditEvents }))
-
-import { GET } from "@/app/(app)/system/audit-events/export/route"
 
 afterEach(() => vi.clearAllMocks())
 

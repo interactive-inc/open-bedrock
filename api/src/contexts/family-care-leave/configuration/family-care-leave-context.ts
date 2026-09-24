@@ -3,6 +3,7 @@ import type {
   SystemClockContext,
   SystemD1Context,
 } from "@system/configuration/system-context"
+
 /** family care leave記録の保全が利用する認証主体、会社時刻、保存先。 */
 export type FamilyCareLeaveContext = SystemD1Context &
   SystemClockContext &

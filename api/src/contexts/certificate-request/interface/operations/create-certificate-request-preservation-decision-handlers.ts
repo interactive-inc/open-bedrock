@@ -13,6 +13,7 @@ import {
   CertificateRequestConflictError,
   CertificateRequestUnavailableError,
 } from "@/contexts/certificate-request/interface/errors"
+
 /** 保全の肯定・否定判断に同じ認証、会社資格、対象照合を適用する。 */
 export function createCertificateRequestPreservationDecisionHandlers(action: "approve" | "reject") {
   return certificateRequestFactory.createHandlers(

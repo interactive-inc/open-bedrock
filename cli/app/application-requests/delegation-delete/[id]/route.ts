@@ -1,6 +1,7 @@
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
+
 export const help = `bedrock application-requests delegation-delete <id>`
 export default factory.createHandlers(async (c) => {
   const id = c.req.param("id")

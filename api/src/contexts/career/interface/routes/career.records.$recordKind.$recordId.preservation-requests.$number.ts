@@ -14,6 +14,7 @@ import {
   CareerUnavailableError,
 } from "@/contexts/career/interface/errors"
 import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
+
 // @authorization service - 明示した提案閲覧権限と現在のCompany承認資格で判断対象を取得する
 export const GET = careerFactory.createHandlers(
   authenticateSystemAccessToken,

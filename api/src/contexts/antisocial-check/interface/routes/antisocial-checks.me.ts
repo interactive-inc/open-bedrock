@@ -1,6 +1,5 @@
 import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/repositories/antisocial-check.repository"
 import { UnexpectedError } from "@/lib/errors"
-
 import { factory } from "@/api/http/factory"
 import {
   DEFAULT_LIST_LIMIT,

@@ -1,6 +1,7 @@
 import { ExpenseCreateForm } from "@/app/(app)/my/expenses/_components/expense-create-form"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import type { ExpenseDetailResponse } from "@/lib/api/types/expense-types"
+
 type Props = {
   expense: ExpenseDetailResponse & { can_submit_legacy: boolean; can_resubmit: boolean }
   requestKey: string

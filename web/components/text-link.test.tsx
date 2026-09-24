@@ -1,6 +1,5 @@
 import { render, screen } from "@testing-library/react"
 import { describe, expect, test } from "vite-plus/test"
-
 import { TextLink } from "@/components/text-link"
 
 describe("TextLink", () => {

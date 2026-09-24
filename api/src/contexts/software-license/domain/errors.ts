@@ -1,4 +1,5 @@
 import { DomainError } from "@system/domain/errors"
+
 export type LicenseErrorCode =
   | "forbidden"
   | "license_not_found"

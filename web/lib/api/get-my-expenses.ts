@@ -1,5 +1,4 @@
 import { createClient } from "@/lib/api/hc-client"
-
 import type { ExpenseStatus } from "@/lib/api/types/expense-types"
 
 /** GET /expenses/me。自分が申請した経費の一覧。status で絞り込み可能。 */

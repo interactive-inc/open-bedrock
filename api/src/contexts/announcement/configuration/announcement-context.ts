@@ -3,6 +3,7 @@ import type {
   SystemClockContext,
   SystemD1Context,
 } from "@system/configuration/system-context"
+
 /** アナウンスの保全が利用する認証主体、会社時刻、保存先。 */
 export type AnnouncementContext = SystemD1Context &
   SystemClockContext &

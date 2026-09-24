@@ -13,6 +13,7 @@ import {
   LifeEventConflictError,
   LifeEventUnavailableError,
 } from "@/contexts/life-event/interface/errors"
+
 /** 保全の肯定・否定判断に同じ認証、会社資格、対象照合を適用する。 */
 export function createLifeEventPreservationDecisionHandlers(action: "approve" | "reject") {
   return lifeEventFactory.createHandlers(

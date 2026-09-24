@@ -13,6 +13,7 @@ import {
   FamilyCareLeaveConflictError,
   FamilyCareLeaveUnavailableError,
 } from "@/contexts/family-care-leave/interface/errors"
+
 /** 保全の肯定・否定判断に同じ認証、会社資格、対象照合を適用する。 */
 export function createFamilyCareLeavePreservationDecisionHandlers(action: "approve" | "reject") {
   return familyCareLeaveFactory.createHandlers(

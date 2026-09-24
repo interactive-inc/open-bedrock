@@ -1,4 +1,5 @@
 import type { EmployeeProfileVersion } from "@/lib/api/types/employee-profile-version"
+
 /**
  * api/src/employee/employee-response-schema.ts と同形の手書き type。
  * 共有 types/employee-types.ts とは別に employees ドメイン専用で持ち、API と疎結合にする。

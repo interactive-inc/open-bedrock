@@ -8,6 +8,7 @@ import { Switch } from "@/components/ui/switch"
 import type { ApplicationWorkflowStep } from "@/lib/api/types/application-workflow-types"
 import { GovernanceAuthorityEditor } from "@/app/(app)/system/application-templates/[template]/workflow/_components/governance-authority-editor"
 import { ApproverRow } from "@/app/(app)/system/application-templates/[template]/workflow/_components/approver-row"
+
 type Props = {
   step: ApplicationWorkflowStep
   index: number

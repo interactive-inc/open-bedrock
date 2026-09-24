@@ -1,6 +1,7 @@
 import { cleanup, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 import type { CompanyResource } from "@/lib/api/types/company-resource-types"
+import { CompanyPeopleSection } from "@/app/(app)/company/people/_components/company-people-section"
 
 const mocks = vi.hoisted(() => ({ getCompanyPeopleResources: vi.fn() }))
 
@@ -8,8 +9,6 @@ vi.mock("@/lib/api/get-company-people-resources", () => ({
   getCompanyPeopleResources: mocks.getCompanyPeopleResources,
 }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
-
-import { CompanyPeopleSection } from "@/app/(app)/company/people/_components/company-people-section"
 
 afterEach(() => {
   cleanup()

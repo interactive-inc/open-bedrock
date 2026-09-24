@@ -1,6 +1,5 @@
 import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
 import { UnexpectedError } from "@/lib/errors"
-
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppOneOnOneList } from "@/contexts/one-on-one/interface/http/response-schemas"

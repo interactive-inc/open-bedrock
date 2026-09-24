@@ -1,7 +1,6 @@
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import { CareerSheetRepository } from "@/contexts/career/infrastructure/repositories/career-sheet.repository"
 import { isCareerRecordSourceFrozenError } from "@/contexts/career/infrastructure/repositories/lib/is-career-record-source-frozen-error"
-
 import { UpdateMyCareerSheet } from "@/contexts/career/application/update-my-career-sheet"
 import { careerSheets } from "@/contexts/career/infrastructure/schema/career"
 import { UnauthorizedError } from "@/lib/http/errors"

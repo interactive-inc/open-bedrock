@@ -3,6 +3,7 @@ import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import type { WorkflowApproverSelector } from "@/lib/api/types/application-workflow-types"
+
 /** 従業員や上長による承認者指定を編集する。 */
 export function ApproverRow(props: {
   selector: WorkflowApproverSelector

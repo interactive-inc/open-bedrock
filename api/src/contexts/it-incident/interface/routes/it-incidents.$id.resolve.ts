@@ -1,6 +1,5 @@
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { ItIncidentRepository } from "@/contexts/it-incident/infrastructure/repositories/it-incident.repository"
-
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppItIncident } from "@/contexts/it-incident/interface/http/response-schemas"

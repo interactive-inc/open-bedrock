@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vite-plus/test"
-
 import { resolveLoginDefaults } from "@/lib/auth/resolve-login-defaults"
 
 describe("resolveLoginDefaults", () => {

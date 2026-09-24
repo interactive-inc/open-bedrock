@@ -1,5 +1,7 @@
 import { NextRequest } from "next/server"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
+import { GET } from "@/app/auth/broker/callback/route"
+import { identityLoginCookieNames } from "@/lib/auth/identity-login-cookie-names"
 
 const mocks = vi.hoisted(() => ({
   exchangeIdentityCode: vi.fn(),
@@ -20,9 +22,6 @@ vi.mock("@/lib/api/issue-external-identity-step-up-grant", () => ({
 vi.mock("@/lib/auth/set-session-cookies", () => ({
   setSessionCookies: mocks.setSessionCookies,
 }))
-
-import { GET } from "@/app/auth/broker/callback/route"
-import { identityLoginCookieNames } from "@/lib/auth/identity-login-cookie-names"
 
 const redirectUri = "https://app.example.com/auth/broker/callback"
 const issuer = "https://login.example.com"

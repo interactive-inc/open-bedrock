@@ -12,6 +12,7 @@ import {
   HealthCheckupConflictError,
   HealthCheckupUnavailableError,
 } from "@/contexts/health-checkup/interface/errors"
+
 // @authorization owner - 認証された申請者だけが指定した未完了提案を理由とともに取り下げる
 export const POST = healthCheckupFactory.createHandlers(
   authenticateSystemAccessToken,

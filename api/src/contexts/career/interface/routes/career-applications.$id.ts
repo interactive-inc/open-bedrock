@@ -2,7 +2,6 @@ import { ConflictError } from "@/lib/errors"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { CareerApplicationRepository } from "@/contexts/career/infrastructure/repositories/career-application.repository"
 import { isCareerRecordSourceFrozenError } from "@/contexts/career/infrastructure/repositories/lib/is-career-record-source-frozen-error"
-
 import { UpdateMyCareerApplication } from "@/contexts/career/application/update-my-career-application"
 import type { CareerApplication } from "@/contexts/career/domain/entities/career-application.entity"
 import { factory } from "@/api/http/factory"

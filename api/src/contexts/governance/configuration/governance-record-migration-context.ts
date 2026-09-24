@@ -3,6 +3,7 @@ import type {
   SystemClockContext,
   SystemD1Context,
 } from "@system/configuration/system-context"
+
 /** governance責務割当記録の保全が利用する認証主体、会社時刻、保存先。 */
 export type GovernanceRecordMigrationContext = SystemD1Context &
   SystemClockContext &

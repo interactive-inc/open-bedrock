@@ -5,6 +5,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export type Command = {
   enrollmentId: number
@@ -65,4 +66,3 @@ export class CancelTrainingEnrollment {
     return { reason: "cancelled" }
   }
 }
-import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"

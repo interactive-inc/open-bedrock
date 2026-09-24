@@ -3,6 +3,7 @@ import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 import { ApiResponseError } from "@/lib/api/api-response-error"
 import { AuthError } from "@/lib/api/auth-error"
 import type { AuditEventDetail } from "@/lib/api/types/audit-types"
+import AuditEventDetailPage from "@/app/(app)/system/audit-events/[event]/page"
 
 const mocks = vi.hoisted(() => ({
   requirePermission: vi.fn(),
@@ -30,8 +31,6 @@ vi.mock("@/components/back-button", () => ({
     </a>
   ),
 }))
-
-import AuditEventDetailPage from "@/app/(app)/system/audit-events/[event]/page"
 
 afterEach(() => {
   cleanup()

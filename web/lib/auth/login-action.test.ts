@@ -1,4 +1,5 @@
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
+import { loginAction } from "@/lib/auth/login-action"
 
 const mocks = vi.hoisted(() => ({
   cookies: vi.fn(),
@@ -14,8 +15,6 @@ vi.mock("@/lib/auth/set-session-cookies", () => ({
 vi.mock("@/lib/i18n/get-translator", () => ({
   getTranslator: async () => (message: string) => message,
 }))
-
-import { loginAction } from "@/lib/auth/login-action"
 
 afterEach(() => vi.clearAllMocks())
 

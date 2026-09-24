@@ -1,4 +1,5 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+
 export type WorkMinutesRow = {
   employeeId: EmployeeId
   workMinutes: number | null

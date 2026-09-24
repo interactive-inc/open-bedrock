@@ -25,7 +25,6 @@ import {
   ValidationError,
   type ApplicationError,
 } from "@/lib/errors"
-
 import { LeaveProcedureRepository } from "@/contexts/leave/infrastructure/repositories/leave-procedure.repository"
 import type { LeaveProcedureBinding } from "@/contexts/leave/domain/definitions/leave-procedure.definition"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"

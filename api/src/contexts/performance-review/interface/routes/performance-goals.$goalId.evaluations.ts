@@ -2,7 +2,6 @@ import { resolveCompanyEmployeeRelation } from "@/contexts/company/interface/ope
 import { canReadGoalOf } from "@/contexts/performance-review/domain/policies/goal-read-access.policy"
 import { ForbiddenError, NotFoundError } from "@/lib/errors"
 import { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
-
 import { UnexpectedError } from "@/lib/errors"
 import { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal-evaluation.repository"
 import { CreateGoalEvaluation } from "@/contexts/performance-review/application/goal/create-goal-evaluation"

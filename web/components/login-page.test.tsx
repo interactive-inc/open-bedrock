@@ -1,11 +1,10 @@
 import { render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
+import { LoginPage } from "@/components/login-page"
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
 vi.mock("@/lib/i18n/use-translator", () => ({ useTranslator: () => (value: string) => value }))
 vi.mock("@/components/login-form", () => ({ LoginForm: () => <form /> }))
-
-import { LoginPage } from "@/components/login-page"
 
 const originalAppName = process.env.NEXT_PUBLIC_APP_NAME
 

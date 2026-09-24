@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 import type { SystemIntegrationExchange } from "@/lib/api/types/system-operation-types"
+import { SystemIntegrationExchangeDetailSection } from "@/app/(app)/system/integration-exchanges/[exchangeId]/_components/system-integration-exchange-detail-section"
 
 const mocks = vi.hoisted(() => ({ getSystemIntegrationExchange: vi.fn() }))
 
@@ -8,8 +9,6 @@ vi.mock("@/lib/api/get-system-integration-exchange", () => ({
   getSystemIntegrationExchange: mocks.getSystemIntegrationExchange,
 }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
-
-import { SystemIntegrationExchangeDetailSection } from "@/app/(app)/system/integration-exchanges/[exchangeId]/_components/system-integration-exchange-detail-section"
 
 afterEach(() => {
   cleanup()

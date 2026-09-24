@@ -1,4 +1,5 @@
 import { beforeEach, expect, test, vi } from "vite-plus/test"
+import { actOnLeaveProcedure } from "@/app/(app)/my/leaves/[id]/actions"
 
 const mocks = vi.hoisted(() => ({
   submit: vi.fn(),
@@ -26,7 +27,6 @@ vi.mock("@/lib/api/hc-client", () => ({
 vi.mock("@/lib/api/to-response-error", () => ({
   toResponseError: async () => new Error("保存時の権限が変わりました"),
 }))
-import { actOnLeaveProcedure } from "@/app/(app)/my/leaves/[id]/actions"
 
 beforeEach(() => {
   for (const mock of Object.values(mocks)) mock.mockReset().mockResolvedValue({ status: 200 })

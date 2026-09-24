@@ -1,6 +1,5 @@
 import { UnexpectedError } from "@/lib/errors"
 import { ThanksRepository } from "@/contexts/thanks/infrastructure/repositories/thanks.repository"
-
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"

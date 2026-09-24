@@ -1,4 +1,5 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 /**
  * 対象従業員の勤務形態を閲覧できるか判定する。本人か work_style:read:all を持つ場合に許可する。
@@ -13,4 +14,3 @@ export function canReadWorkStylesOf(
 
   return session.hasPermission("work_style:read:all")
 }
-import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"

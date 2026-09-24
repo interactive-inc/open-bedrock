@@ -1,12 +1,11 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
-
-vi.mock("@/app/(app)/system/accounts/actions", () => ({ revokeAccountRoleAction: vi.fn() }))
-vi.mock("@/lib/auth/step-up-action", () => ({ stepUpAction: vi.fn() }))
-
 import { RevokeRoleButton } from "@/app/(app)/system/accounts/_components/revoke-role-button"
 import { revokeAccountRoleAction } from "@/app/(app)/system/accounts/actions"
 import { stepUpAction } from "@/lib/auth/step-up-action"
+
+vi.mock("@/app/(app)/system/accounts/actions", () => ({ revokeAccountRoleAction: vi.fn() }))
+vi.mock("@/lib/auth/step-up-action", () => ({ stepUpAction: vi.fn() }))
 
 afterEach(() => {
   cleanup()

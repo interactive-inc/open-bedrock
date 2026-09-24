@@ -6,6 +6,7 @@ import type { ApplicationError } from "@/lib/errors"
 import type { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
 import type { Context } from "@/env"
 import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export type Command = {
   enrollmentId: number
@@ -69,4 +70,3 @@ export class CompleteTrainingEnrollment {
     return completed
   }
 }
-import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"

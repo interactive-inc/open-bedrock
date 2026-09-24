@@ -3,6 +3,7 @@ import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { EmployeeCreateForm } from "@/app/(app)/company/employees/_components/employee-create-form"
 import { PersonnelActionForm } from "@/app/(app)/company/employees/[employee]/_components/personnel-action-form"
+
 vi.mock("@/app/(app)/company/employees/load-personnel-position-snapshot", () => ({
   loadPersonnelPositionSnapshot: vi.fn(),
 }))

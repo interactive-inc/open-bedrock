@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 import type { SystemPermissionDefinition } from "@/lib/api/types/system-operation-types"
+import { SystemPermissionDefinitionSection } from "@/app/(app)/system/permission-definitions/_components/system-permission-definition-section"
 
 const mocks = vi.hoisted(() => ({ getSystemPermissionDefinitions: vi.fn() }))
 
@@ -8,8 +9,6 @@ vi.mock("@/lib/api/get-system-permission-definitions", () => ({
   getSystemPermissionDefinitions: mocks.getSystemPermissionDefinitions,
 }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
-
-import { SystemPermissionDefinitionSection } from "@/app/(app)/system/permission-definitions/_components/system-permission-definition-section"
 
 afterEach(() => {
   cleanup()

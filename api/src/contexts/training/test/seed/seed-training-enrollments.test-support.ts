@@ -1,5 +1,6 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+
 /** courseId は seed-training-courses、employeeId は seed-employees の id を指す。 */
 type SeedTrainingEnrollment = {
   id: number

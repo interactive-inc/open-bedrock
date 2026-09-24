@@ -1,5 +1,4 @@
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
-
 import { exchangeIdentityCode } from "@/lib/auth/exchange-identity-code"
 
 describe("exchangeIdentityCode", () => {

@@ -1,5 +1,6 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+
 type SeedLeaveRequest = {
   id: number
   employeeId: EmployeeId
