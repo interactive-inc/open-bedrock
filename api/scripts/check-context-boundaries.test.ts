@@ -14,6 +14,7 @@ import {
   inspectContextLibraryContract,
   inspectContextRootLibrarySource,
   inspectDisallowedRuntimeRootPath,
+  inspectLibPath,
   inspectLibSource,
   inspectRetiredContextPath,
   inspectRetiredLayerFirstRootPath,
@@ -315,6 +316,32 @@ describe("lib boundary", () => {
     ]) {
       expect(inspectLibSource("src/lib/example.ts", source)).not.toEqual([])
     }
+  })
+
+  test("技術責務のディレクトリだけを許可し、所有者のあるディレクトリを拒否する", () => {
+    for (const file of [
+      "src/lib/errors.ts",
+      "src/lib/http/to-bounded-int.ts",
+      "src/lib/database/like-keyword.ts",
+      "src/lib/validation/code.schema.ts",
+      "src/lib/crypto/to-sha256-hex.test.ts",
+    ]) {
+      expect(inspectLibPath(file)).toEqual([])
+    }
+
+    for (const file of [
+      "src/lib/to-business-date.ts",
+      "src/lib/feature/feature-route-registry.ts",
+      "src/lib/audit/assert-audit-hmac-secret.ts",
+      "src/lib/auth/test/create-identity-token.ts",
+      "src/lib/goal/can-read-goal-of.ts",
+      "src/lib/application/submit.ts",
+      "src/lib/org/to-tree.ts",
+    ]) {
+      expect(inspectLibPath(file)).toHaveLength(1)
+    }
+
+    expect(inspectLibPath("src/contexts/leave/domain/entities/leave.entity.ts")).toEqual([])
   })
 
   test("context直下のlibraryへ責務文書と直接テストを要求する", () => {

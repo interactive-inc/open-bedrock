@@ -1,5 +1,5 @@
-import { toBusinessDate } from "@/lib/to-business-date"
-import { toBusinessMonth } from "@/lib/to-business-month"
+import { toBusinessDate } from "@/contexts/attendance/domain/policies/to-business-date.policy"
+import { toBusinessMonth } from "@/contexts/attendance/domain/policies/to-business-month.policy"
 import { describe, expect, test } from "bun:test"
 
 describe("toBusinessDate", () => {

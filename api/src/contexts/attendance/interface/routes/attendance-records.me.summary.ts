@@ -1,6 +1,6 @@
 import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendance-record.entity"
 import { summarizeAttendance } from "@/contexts/attendance/interface/http/attendance-records/me/summary/summarize-attendance"
-import { toBusinessMonth } from "@/lib/to-business-month"
+import { toBusinessMonth } from "@/contexts/attendance/domain/policies/to-business-month.policy"
 import { toMonthRange } from "@/contexts/attendance/interface/http/attendance-records/to-month-range"
 import { attendanceSummaryQuerySchema } from "@/contexts/attendance/interface/http/attendance-records/me/summary/attendance-summary-query"
 import { verifyBearer } from "@/api/http/verify-bearer"

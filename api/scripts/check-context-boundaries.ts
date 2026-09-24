@@ -22,6 +22,20 @@ const API_ROOT_FILES = new Set([
   "database-middleware.ts",
   "route-module.registry.ts",
 ])
+/**
+ * src/lib直下で許可する技術責務。業務・System・Company・API compositionの語彙を持つ
+ * ディレクトリは依存を持たない純粋関数でも所有者があるため、所有contextかAPI rootへ置く。
+ */
+const LIB_ROOT_DIRECTORIES = new Set([
+  "config",
+  "crypto",
+  "d1",
+  "database",
+  "http",
+  "text",
+  "validation",
+])
+const LIB_ROOT_FILES = new Set(["errors.ts"])
 const ownershipManifest = z
   .strictObject({
     companyAreasByLayer: z.strictObject({
@@ -725,6 +739,40 @@ export function inspectLibSource(file: string, sourceText: string): ContextBound
   return violations
 }
 
+/** src/libの配置を技術責務のallowlistへ限定し、所有者のあるディレクトリの再導入を拒否する。 */
+export function inspectLibPath(file: string): ContextBoundaryViolation[] {
+  const normalized = file.replaceAll("\\", "/")
+  const match = normalized.match(/(?:^|\/)src\/lib\/(.+)$/)
+
+  if (match === null) return []
+
+  const relativePath = match[1]
+  if (relativePath === undefined) return []
+
+  const segments = relativePath.split("/")
+  const rootEntry = segments[0]
+
+  if (segments.length === 1) {
+    return rootEntry !== undefined && LIB_ROOT_FILES.has(rootEntry)
+      ? []
+      : [
+          {
+            file,
+            reason: `lib直下に配置できないファイルです。所有contextかAPI rootへ置いてください: ${relativePath}`,
+          },
+        ]
+  }
+
+  return rootEntry !== undefined && LIB_ROOT_DIRECTORIES.has(rootEntry)
+    ? []
+    : [
+        {
+          file,
+          reason: `lib の技術責務外ディレクトリです。所有contextかAPI rootへ置いてください: ${rootEntry ?? relativePath}`,
+        },
+      ]
+}
+
 /** 移行済みのcontext-first sourceと中立libを自動検査する。 */
 export async function collectContextBoundaryViolations(): Promise<ContextBoundaryViolation[]> {
   const violations: ContextBoundaryViolation[] = [...inspectOwnershipManifest()]
@@ -796,6 +844,7 @@ export async function collectContextBoundaryViolations(): Promise<ContextBoundar
       const path = resolve(LIB_ROOT, file)
       const projectRelativePath = relative(PROJECT_ROOT, path)
 
+      violations.push(...inspectLibPath(projectRelativePath))
       violations.push(...inspectLibSource(projectRelativePath, readFileSync(path, "utf8")))
     }
   }

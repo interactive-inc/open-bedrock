@@ -1,9 +1,9 @@
 import {
   optInAppRoutePrefixes,
   defaultAppRoutePrefixes,
-} from "@/lib/feature/feature-route-registry"
-import { resolveDisabledFeatureKeys } from "@/lib/feature/resolve-disabled-feature-keys"
-import type { Props } from "@/lib/feature/resolve-disabled-feature-keys"
+} from "@/api/http/features/feature-route-registry"
+import { resolveDisabledFeatureKeys } from "@/api/http/features/resolve-disabled-feature-keys"
+import type { Props } from "@/api/http/features/resolve-disabled-feature-keys"
 
 /**
  * 環境変数から、無効な機能の API ルート接頭辞一覧を解決する。

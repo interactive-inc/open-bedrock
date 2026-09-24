@@ -2,7 +2,7 @@ import type { InboxBusinessCounts, InboxCountInput } from "@/api/http/inbox/inbo
 import { LeaveProcedureInboxAdapter } from "@/contexts/leave/infrastructure/adapters/leave-procedure-inbox.adapter"
 import type { Context } from "@/env"
 import { ApplicationError } from "@/lib/errors"
-import { resolveDisabledFeatureKeys } from "@/lib/feature/resolve-disabled-feature-keys"
+import { resolveDisabledFeatureKeys } from "@/api/http/features/resolve-disabled-feature-keys"
 
 /** 休暇の承認待ち件数。App が無効、または承認資格が無ければ数えない。 */
 export async function readInboxCountsLeave(
