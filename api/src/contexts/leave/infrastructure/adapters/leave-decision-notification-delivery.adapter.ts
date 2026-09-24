@@ -3,7 +3,7 @@ import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interfa
 import { LeaveDecisionNotificationValue } from "@/contexts/leave/domain/values/leave-decision-notification.value"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { toSha256Hex } from "@/lib/crypto/to-sha256-hex"
-import { SystemManagedJobRunnerAdapter } from "@system/infrastructure/adapters/events/system-managed-job-runner.adapter"
+import { runSystemManagedJob } from "@system/interface/operations/run-system-managed-job"
 import { prepareSystemServiceOperationAuthorization } from "@system/interface/operations/prepare-system-service-operation-authorization"
 import { prepareSystemNotificationPublicationBatch } from "@system/interface/operations/prepare-system-notification-publication-batch"
 import type { SystemDeliveryEntity } from "@system/domain/entities/system-delivery.entity"
@@ -22,13 +22,16 @@ export class LeaveDecisionNotificationDeliveryAdapter {
   }
 
   run(limit: number) {
-    return new SystemManagedJobRunnerAdapter({
-      env: this.c.env,
-      workerAccountId: this.c.accountId,
-      handlerKey: "leave.decision-notification",
-      clock: this.c.clock,
-      prepare: (job, at) => this.prepare(job, at),
-    }).run(limit)
+    return runSystemManagedJob(
+      {
+        env: this.c.env,
+        workerAccountId: this.c.accountId,
+        handlerKey: "leave.decision-notification",
+        clock: this.c.clock,
+        prepare: (job, at) => this.prepare(job, at),
+      },
+      limit,
+    )
   }
 
   async prepare(

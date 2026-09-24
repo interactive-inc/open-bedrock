@@ -1,9 +1,8 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
-import { drizzle } from "drizzle-orm/d1"
 import { runScheduledAttachmentPurge } from "@/api/scheduled/run-attachment-purge"
 import { StoreAttachment } from "@system/application/attachments/store-attachment"
-import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
-import { systemAttachmentSchema } from "@system/infrastructure/schema/system-attachment"
+import { openSystemAttachments } from "@system/interface/operations/open-system-attachments"
+import { openSystemAttachmentDatabase } from "@system/interface/operations/open-system-attachment-database"
 import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-system-attachment-test-kek-environment.test-support"
 import { SystemAttachmentTestBucket } from "@system/test/system-attachment-test-bucket.test-support"
 import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
@@ -27,7 +26,7 @@ afterAll(async () => {
 async function createFixture(name: string) {
   const db = await local.database(name)
   const bucket = new SystemAttachmentTestBucket()
-  const database = drizzle(db, { schema: systemAttachmentSchema })
+  const database = openSystemAttachmentDatabase(db)
   const store = async (now: Date) => {
     const stored = await new StoreAttachment({
       var: { database },
@@ -48,7 +47,7 @@ async function createFixture(name: string) {
   return {
     bucket,
     store,
-    attachments: new AttachmentAdapter({ var: { database } }),
+    attachments: openSystemAttachments({ var: { database } }),
     run: (enabled: string | undefined) =>
       runScheduledAttachmentPurge({
         env: {

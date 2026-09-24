@@ -18,8 +18,8 @@ import { CompanyOperationError } from "@/contexts/company/domain/errors"
 import { SystemPasswordValue } from "@system/domain/values/auth/system-password.value"
 import { hashPassword } from "@system/lib/auth/hash-password"
 import { verifyPassword } from "@system/lib/auth/verify-password"
-import { SystemAccountProvisioningAdapter } from "@system/infrastructure/adapters/identity/system-account-provisioning.adapter"
-import { SystemRoleCatalogRepository } from "@system/infrastructure/repositories/iam/system-role-catalog.repository"
+import { openSystemAccountProvisioning } from "@system/interface/operations/open-system-account-provisioning"
+import { openSystemRoleCatalog } from "@system/interface/operations/open-system-role-catalog"
 import { isCompanyWriteAbortedByGuard as isAbortedByGuard } from "@/contexts/company/interface/operations/is-company-write-aborted-by-guard"
 
 /**
@@ -81,7 +81,7 @@ export class RegisterEmployee {
       },
       var: { database: this.c.var.database, auditContext: this.c.var.auditContext },
     }
-    const roles = await new SystemRoleCatalogRepository({ env: { DB: this.c.env.DB } }).findMany()
+    const roles = await openSystemRoleCatalog({ env: { DB: this.c.env.DB } }).findMany()
     if (roles instanceof Error) {
       return new UnexpectedError("System Roleを取得できません", { cause: roles })
     }
@@ -161,7 +161,7 @@ export class RegisterEmployee {
       return new UnexpectedError("入社発令を準備できません", { cause: prepared })
     }
     const passwordHash = await hashPassword(password.toString(), pepper)
-    const system = new SystemAccountProvisioningAdapter({ env: { DB: this.c.env.DB } }).prepare({
+    const system = openSystemAccountProvisioning({ env: { DB: this.c.env.DB } }).prepare({
       actorAccountId: session.accountId,
       provider: "password",
       subject: input.email,

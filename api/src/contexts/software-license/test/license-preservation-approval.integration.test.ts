@@ -1,17 +1,17 @@
 import { GET as proposalHistory } from "@system/interface/routes/system.proposals.$number.versions.$version"
 import { GET as preservedContent } from "@system/interface/routes/system.preserved-records.$recordId.content"
 import { GET as preservedRecords } from "@system/interface/routes/system.preserved-records"
-import { FindPreservedRecordExecutionProofAdapter } from "@system/infrastructure/adapters/records/find-preserved-record-execution-proof.adapter"
-import { PreparePreservedRecordApprovalHistoryAdapter } from "@system/infrastructure/adapters/records/prepare-preserved-record-approval-history.adapter"
-import { PreparePreservedRecordRetentionHistoryAdapter } from "@system/infrastructure/adapters/records/prepare-preserved-record-retention-history.adapter"
-import { PreservedRecordRepository } from "@system/infrastructure/repositories/records/preserved-record.repository"
-import { AttachmentPreservationRepository } from "@system/infrastructure/repositories/attachments/attachment-preservation.repository"
+import { findSystemPreservedRecordExecutionProof } from "@system/interface/operations/find-system-preserved-record-execution-proof"
+import { prepareSystemPreservedRecordApprovalHistory } from "@system/interface/operations/prepare-system-preserved-record-approval-history"
+import { prepareSystemPreservedRecordRetentionHistory } from "@system/interface/operations/prepare-system-preserved-record-retention-history"
+import { openSystemPreservedRecords } from "@system/interface/operations/open-system-preserved-records"
+import { openSystemAttachmentPreservations } from "@system/interface/operations/open-system-attachment-preservations"
 import { AttachmentPreservationEntity } from "@system/domain/entities/attachment-preservation.entity"
-import { PreparePreservedRecordAuditReceiptsAdapter } from "@system/infrastructure/adapters/records/prepare-preserved-record-audit-receipts.adapter"
+import { prepareSystemPreservedRecordAuditReceipts } from "@system/interface/operations/prepare-system-preserved-record-audit-receipts"
 import { SystemAuditDisclosureValue } from "@system/domain/values/audit/system-audit-disclosure.value"
 import { SystemAuditDisclosurePolicyEntity } from "@system/domain/entities/system-audit-disclosure-policy.entity"
 import { auditDisclosureFieldSchema } from "@system/domain/schemas/audit/system-audit-disclosure-policy.schema"
-import { PreparePreservedRecordDossierAdapter } from "@system/infrastructure/adapters/records/prepare-preserved-record-dossier.adapter"
+import { prepareSystemPreservedRecordDossier } from "@system/interface/operations/prepare-system-preserved-record-dossier"
 import { GET as preservedDossier } from "@system/interface/routes/system.preserved-records.$recordId.dossier"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
@@ -263,10 +263,13 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
       )
       .first<number>("count"),
   ).toBe(1)
-  const proof = await new FindPreservedRecordExecutionProofAdapter({
-    env: environment,
-    assertions: [fixture.f.database.prepare("SELECT 1")],
-  }).find(receipt.record_id)
+  const proof = await findSystemPreservedRecordExecutionProof(
+    {
+      env: environment,
+      assertions: [fixture.f.database.prepare("SELECT 1")],
+    },
+    receipt.record_id,
+  )
   if (proof === null || proof instanceof Error)
     throw new Error("execution proof missing", { cause: proof })
   expect(proof.props).toMatchObject({
@@ -275,14 +278,17 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     proposalDigest: proposal.decision_target.proposal_digest,
     executedByAccountId: "account:manager",
   })
-  const approvalReader = new PreparePreservedRecordApprovalHistoryAdapter({ env: environment })
+  const approvalReaderContext = { env: environment }
   const approvalInput = {
     proof,
     accountId: "account:manager",
     permissionKeys: new Set(["system:procedure:read"]),
     at: new Date(),
   }
-  const approvalHistory = await approvalReader.prepare(approvalInput)
+  const approvalHistory = await prepareSystemPreservedRecordApprovalHistory(
+    approvalReaderContext,
+    approvalInput,
+  )
   if (approvalHistory instanceof Error) throw approvalHistory
   expect(approvalHistory.proposal.proposalId).toBe(proof.props.proposalId)
   expect(approvalHistory.attestations).toMatchObject([
@@ -293,19 +299,25 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     },
   ])
   expect(
-    await approvalReader.prepare({
+    await prepareSystemPreservedRecordApprovalHistory(approvalReaderContext, {
       ...approvalInput,
       permissionKeys: new Set(["system:record:export"]),
     }),
   ).toBeInstanceOf(Error)
   expect(
-    await approvalReader.prepare({ ...approvalInput, accountId: "unrelated-reader" }),
+    await prepareSystemPreservedRecordApprovalHistory(approvalReaderContext, {
+      ...approvalInput,
+      accountId: "unrelated-reader",
+    }),
   ).toBeInstanceOf(Error)
   expect(
-    await approvalReader.prepare({ ...approvalInput, accountId: fixture.reviewer.accountId }),
+    await prepareSystemPreservedRecordApprovalHistory(approvalReaderContext, {
+      ...approvalInput,
+      accountId: fixture.reviewer.accountId,
+    }),
   ).not.toBeInstanceOf(Error)
   expect(
-    await approvalReader.prepare({
+    await prepareSystemPreservedRecordApprovalHistory(approvalReaderContext, {
       ...approvalInput,
       accountId: "unrelated-reader",
       permissionKeys: new Set(["system:procedure:read", "system:procedure:read:all"]),
@@ -316,21 +328,27 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     env: environment,
     assertions: [fixture.f.database.prepare("SELECT 1")],
   }
-  const storedRecord = await new PreservedRecordRepository(retentionContext).find(receipt.record_id)
+  const storedRecord = await openSystemPreservedRecords(retentionContext).find(receipt.record_id)
   if (storedRecord === null || storedRecord instanceof Error) throw new Error("record missing")
-  const retentionReader = new PreparePreservedRecordRetentionHistoryAdapter(retentionContext)
-  const retentionHistory = await retentionReader.prepare(storedRecord)
+  const retentionReaderContext = retentionContext
+  const retentionHistory = await prepareSystemPreservedRecordRetentionHistory(
+    retentionReaderContext,
+    storedRecord,
+  )
   if (retentionHistory instanceof Error) throw retentionHistory
   expect(retentionHistory.preservations).toHaveLength(1)
   expect(retentionHistory.preservations[0]?.release).toBeNull()
   await fixture.f.database.batch([retentionHistory.guard])
   expect(
-    await new PreparePreservedRecordRetentionHistoryAdapter({
-      env: environment,
-      assertions: [],
-    }).prepare(storedRecord),
+    await prepareSystemPreservedRecordRetentionHistory(
+      {
+        env: environment,
+        assertions: [],
+      },
+      storedRecord,
+    ),
   ).toBeInstanceOf(Error)
-  const holdRepository = new AttachmentPreservationRepository(retentionContext)
+  const holdRepository = openSystemAttachmentPreservations(retentionContext)
   const originalHold = await holdRepository.find(storedRecord.snapshot.preservationId)
   if (originalHold === null || originalHold instanceof Error) throw new Error("hold missing")
   const releasedHold = originalHold.release({
@@ -349,7 +367,10 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     (cause: unknown) => cause,
   )
   expect(changedRetention).toBeInstanceOf(Error)
-  const releasedHistory = await retentionReader.prepare(storedRecord)
+  const releasedHistory = await prepareSystemPreservedRecordRetentionHistory(
+    retentionReaderContext,
+    storedRecord,
+  )
   if (releasedHistory instanceof Error) throw releasedHistory
   expect(releasedHistory.preservations[0]).toEqual(releasedHold.snapshot)
   await fixture.f.database.batch([releasedHistory.guard])
@@ -372,7 +393,10 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     (cause: unknown) => cause,
   )
   expect(addedRetention).toBeInstanceOf(Error)
-  const completeRetention = await retentionReader.prepare(storedRecord)
+  const completeRetention = await prepareSystemPreservedRecordRetentionHistory(
+    retentionReaderContext,
+    storedRecord,
+  )
   if (completeRetention instanceof Error) throw completeRetention
   expect(completeRetention.preservations).toHaveLength(101)
   expect(new Set(completeRetention.preservations.map((preservation) => preservation.id)).size).toBe(
@@ -387,7 +411,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   })
   if (auditValue instanceof Error) throw auditValue
   const auditDisclosure = { value: auditValue, assertions: retentionContext.assertions }
-  const auditReader = new PreparePreservedRecordAuditReceiptsAdapter({ env: environment })
+  const auditReaderContext = { env: environment }
   const auditIds = [
     storedRecord.snapshot.auditEventId,
     ...completeRetention.preservations.flatMap((preservation) =>
@@ -396,7 +420,8 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
         : [preservation.auditEventId, preservation.release.auditEventId],
     ),
   ]
-  const auditReceipts = await auditReader.prepare(
+  const auditReceipts = await prepareSystemPreservedRecordAuditReceipts(
+    auditReaderContext,
     [...auditIds, storedRecord.snapshot.auditEventId],
     auditDisclosure,
   )
@@ -404,7 +429,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   expect(auditReceipts.events).toHaveLength(103)
   expect(new Set(auditReceipts.events.map((event) => event.eventId))).toEqual(new Set(auditIds))
   await fixture.f.database.batch([...auditReceipts.guards])
-  const dossierReader = new PreparePreservedRecordDossierAdapter(retentionContext)
+  const dossierReaderContext = retentionContext
   const dossierInput = {
     record: storedRecord,
     accountId: "account:manager",
@@ -412,7 +437,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     at: new Date(),
     auditDisclosure,
   }
-  const dossier = await dossierReader.prepare(dossierInput)
+  const dossier = await prepareSystemPreservedRecordDossier(dossierReaderContext, dossierInput)
   if (dossier instanceof Error) throw dossier
   expect(dossier.history.execution.caseId).toBe(receipt.case_id)
   expect(dossier.history.preservations).toHaveLength(101)
@@ -420,16 +445,23 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   expect(dossier.history.auditReceipts).toHaveLength(104)
   await fixture.f.database.batch(dossier.guards(new Date()))
   expect(
-    await dossierReader.prepare({
+    await prepareSystemPreservedRecordDossier(dossierReaderContext, {
       ...dossierInput,
       permissionKeys: new Set(["system:record:export"]),
     }),
   ).toBeInstanceOf(Error)
   expect(
-    await auditReader.prepare([...auditIds, crypto.randomUUID()], auditDisclosure),
+    await prepareSystemPreservedRecordAuditReceipts(
+      auditReaderContext,
+      [...auditIds, crypto.randomUUID()],
+      auditDisclosure,
+    ),
   ).toBeInstanceOf(Error)
   expect(
-    await auditReader.prepare(auditIds, { ...auditDisclosure, assertions: [] }),
+    await prepareSystemPreservedRecordAuditReceipts(auditReaderContext, auditIds, {
+      ...auditDisclosure,
+      assertions: [],
+    }),
   ).toBeInstanceOf(Error)
   for (const restrictions of [
     {
@@ -465,29 +497,41 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     })
     if (restrictedValue instanceof Error) throw restrictedValue
     expect(
-      await auditReader.prepare(auditIds, { ...auditDisclosure, value: restrictedValue }),
+      await prepareSystemPreservedRecordAuditReceipts(auditReaderContext, auditIds, {
+        ...auditDisclosure,
+        value: restrictedValue,
+      }),
     ).toBeInstanceOf(Error)
   }
   expect(
-    await new FindPreservedRecordExecutionProofAdapter(retentionContext).find(receipt.record_id),
+    await findSystemPreservedRecordExecutionProof(retentionContext, receipt.record_id),
   ).not.toBeInstanceOf(Error)
   expect(
-    await new FindPreservedRecordExecutionProofAdapter({
-      env: environment,
-      assertions: [],
-    }).find(receipt.record_id),
+    await findSystemPreservedRecordExecutionProof(
+      {
+        env: environment,
+        assertions: [],
+      },
+      receipt.record_id,
+    ),
   ).toBeInstanceOf(Error)
   expect(
-    await new FindPreservedRecordExecutionProofAdapter({
-      env: environment,
-      assertions: [fixture.f.database.prepare("SELECT json_extract('', '$')")],
-    }).find(receipt.record_id),
+    await findSystemPreservedRecordExecutionProof(
+      {
+        env: environment,
+        assertions: [fixture.f.database.prepare("SELECT json_extract('', '$')")],
+      },
+      receipt.record_id,
+    ),
   ).toBeInstanceOf(Error)
   expect(
-    await new FindPreservedRecordExecutionProofAdapter({
-      env: environment,
-      assertions: [fixture.f.database.prepare("SELECT 1")],
-    }).find(crypto.randomUUID()),
+    await findSystemPreservedRecordExecutionProof(
+      {
+        env: environment,
+        assertions: [fixture.f.database.prepare("SELECT 1")],
+      },
+      crypto.randomUUID(),
+    ),
   ).toBeNull()
   expect((await core.request(fixture.path, { headers }, environment)).status).toBe(404)
   const searchPath =
@@ -628,7 +672,9 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   expect(
     await fixture.f.database.batch([approvalHistory.tasksGuard]).catch((cause: unknown) => cause),
   ).toBeInstanceOf(Error)
-  expect(await approvalReader.prepare(approvalInput)).toBeInstanceOf(Error)
+  expect(
+    await prepareSystemPreservedRecordApprovalHistory(approvalReaderContext, approvalInput),
+  ).toBeInstanceOf(Error)
   await fixture.f.database
     .prepare("UPDATE system_decision_tasks SET required_approvals=1 WHERE case_id=?1")
     .bind(receipt.case_id)
@@ -641,7 +687,9 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     .prepare("DELETE FROM system_human_attestations WHERE case_id=?1")
     .bind(receipt.case_id)
     .run()
-  expect(await approvalReader.prepare(approvalInput)).toBeInstanceOf(Error)
+  expect(
+    await prepareSystemPreservedRecordApprovalHistory(approvalReaderContext, approvalInput),
+  ).toBeInstanceOf(Error)
   await fixture.f.database
     .prepare(
       "INSERT INTO system_human_attestations SELECT * FROM preserved_test_attestations WHERE case_id=?1",
@@ -682,7 +730,9 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     )
     .bind(receipt.case_id, fixture.reviewer.accountId)
     .run()
-  expect(await approvalReader.prepare(approvalInput)).toBeInstanceOf(Error)
+  expect(
+    await prepareSystemPreservedRecordApprovalHistory(approvalReaderContext, approvalInput),
+  ).toBeInstanceOf(Error)
   await fixture.f.database
     .prepare(
       "INSERT INTO system_decision_task_candidates SELECT * FROM preserved_test_candidates WHERE case_id = ?1 AND candidate_account_id = ?2",
@@ -690,7 +740,10 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     .bind(receipt.case_id, fixture.reviewer.accountId)
     .run()
   await fixture.f.database.batch([approvalHistory.candidatesGuard])
-  const excludedHistory = await approvalReader.prepare(approvalInput)
+  const excludedHistory = await prepareSystemPreservedRecordApprovalHistory(
+    approvalReaderContext,
+    approvalInput,
+  )
   if (excludedHistory instanceof Error) throw excludedHistory
   expect(excludedHistory.exclusions).toContainEqual({
     taskKey: candidateEvidence.taskKey,
@@ -716,7 +769,9 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     .prepare("UPDATE system_human_attestations SET proposal_digest = ?1 WHERE case_id = ?2")
     .bind("f".repeat(64), receipt.case_id)
     .run()
-  expect(await approvalReader.prepare(approvalInput)).toBeInstanceOf(Error)
+  expect(
+    await prepareSystemPreservedRecordApprovalHistory(approvalReaderContext, approvalInput),
+  ).toBeInstanceOf(Error)
   expect(
     await fixture.f.database
       .batch([approvalHistory.attestationsGuard])
@@ -738,21 +793,28 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     .prepare("DELETE FROM system_proposal_cases WHERE case_id = ?1")
     .bind(receipt.case_id)
     .run()
-  const missingLink = await new FindPreservedRecordExecutionProofAdapter({
-    env: environment,
-    assertions: [fixture.f.database.prepare("SELECT 1")],
-  }).find(receipt.record_id)
+  const missingLink = await findSystemPreservedRecordExecutionProof(
+    {
+      env: environment,
+      assertions: [fixture.f.database.prepare("SELECT 1")],
+    },
+    receipt.record_id,
+  )
   expect(missingLink).toBeInstanceOf(Error)
   expect(
     await fixture.f.database.batch(dossier.guards(new Date())).catch((cause: unknown) => cause),
   ).toBeInstanceOf(Error)
-  expect(await dossierReader.prepare(dossierInput)).toBeInstanceOf(Error)
+  expect(
+    await prepareSystemPreservedRecordDossier(dossierReaderContext, dossierInput),
+  ).toBeInstanceOf(Error)
   const changedApproval = await fixture.f.database.batch([approvalHistory.guard(new Date())]).then(
     () => null,
     (cause: unknown) => cause,
   )
   expect(changedApproval).toBeInstanceOf(Error)
-  expect(await approvalReader.prepare(approvalInput)).toBeInstanceOf(Error)
+  expect(
+    await prepareSystemPreservedRecordApprovalHistory(approvalReaderContext, approvalInput),
+  ).toBeInstanceOf(Error)
   await fixture.f.database
     .prepare(`INSERT INTO system_cases
     (id, subject_context, subject_kind, subject_id, subject_version, proposal_digest,
@@ -762,10 +824,13 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     FROM system_cases WHERE id = ?1`)
     .bind(receipt.case_id)
     .run()
-  const ambiguous = await new FindPreservedRecordExecutionProofAdapter({
-    env: environment,
-    assertions: [fixture.f.database.prepare("SELECT 1")],
-  }).find(receipt.record_id)
+  const ambiguous = await findSystemPreservedRecordExecutionProof(
+    {
+      env: environment,
+      assertions: [fixture.f.database.prepare("SELECT 1")],
+    },
+    receipt.record_id,
+  )
   expect(ambiguous).toBeInstanceOf(Error)
   if (ambiguous instanceof Error)
     expect(ambiguous.message).toBe("record execution proof is ambiguous")

@@ -48,6 +48,75 @@ function isScanned(file: string): boolean {
   return !SHARED_CONTEXT_PREFIXES.some((prefix) => file.startsWith(prefix))
 }
 
+function isTestFile(file: string): boolean {
+  return /\.test\.tsx?$/.test(file)
+}
+
+function isSpyOnPrototypeTarget(node: ts.Node, name: string): boolean {
+  const parent = node.parent
+  return (
+    ts.isCallExpression(parent) &&
+    parent.arguments[0] === node &&
+    ts.isIdentifier(parent.expression) &&
+    parent.expression.text === "spyOn" &&
+    ts.isPropertyAccessExpression(node) &&
+    ts.isIdentifier(node.expression) &&
+    node.expression.text === name
+  )
+}
+
+/**
+ * test fileで、Systemの実装classをspyへ差し替える目的だけのimportを返す。
+ * 許可するのは名前付きimportだけで、各名前は `spyOn(Name.prototype, ...)` を一度以上持ち、
+ * それ以外の参照も `Name.prototype` か型位置に限る。生成や値としての受け渡しは許可しない。
+ */
+export function collectSpyOnlyTestImports(file: string, text: string): Set<string> {
+  const allowed = new Set<string>()
+  if (!isTestFile(file)) return allowed
+  const sourceFile = ts.createSourceFile(file, text, ts.ScriptTarget.Latest, true)
+
+  for (const statement of sourceFile.statements) {
+    if (!ts.isImportDeclaration(statement) || !ts.isStringLiteral(statement.moduleSpecifier))
+      continue
+    const target = normalizeImport(file, statement.moduleSpecifier.text)
+    const clause = statement.importClause
+    if (
+      target === null ||
+      !target.startsWith(SYSTEM_INFRASTRUCTURE_PREFIX) ||
+      clause === undefined ||
+      clause.isTypeOnly ||
+      clause.name !== undefined ||
+      clause.namedBindings === undefined ||
+      !ts.isNamedImports(clause.namedBindings) ||
+      clause.namedBindings.elements.length === 0
+    )
+      continue
+
+    const names = clause.namedBindings.elements.map((element) => element.name.text)
+    const spied = new Set<string>()
+    let onlySpyUsage = true
+    const visit = (node: ts.Node): void => {
+      if (ts.isImportDeclaration(node)) return
+      if (ts.isIdentifier(node) && names.includes(node.text)) {
+        const parent = node.parent
+        const prototypeAccess =
+          ts.isPropertyAccessExpression(parent) &&
+          parent.expression === node &&
+          parent.name.text === "prototype"
+        const typePosition = ts.isTypeReferenceNode(parent) || ts.isTypeQueryNode(parent)
+        if (prototypeAccess && isSpyOnPrototypeTarget(parent, node.text)) spied.add(node.text)
+        else if (!prototypeAccess && !typePosition) onlySpyUsage = false
+      }
+      ts.forEachChild(node, visit)
+    }
+    visit(sourceFile)
+
+    if (onlySpyUsage && names.every((name) => spied.has(name))) allowed.add(target)
+  }
+
+  return allowed
+}
+
 /** 製品側fileごとに、import先のSystem infrastructure moduleを重複なく昇順で返す。 */
 export function collectSystemInfrastructureImports(
   sources: ReadonlyMap<string, string>,
@@ -57,9 +126,11 @@ export function collectSystemInfrastructureImports(
   for (const [file, text] of sources) {
     if (!isScanned(file)) continue
     const targets = new Set<string>()
+    const spyOnly = collectSpyOnlyTestImports(file, text)
     for (const imported of ts.preProcessFile(text, true, true).importedFiles) {
       const target = normalizeImport(file, imported.fileName)
-      if (target?.startsWith(SYSTEM_INFRASTRUCTURE_PREFIX)) targets.add(target)
+      if (target?.startsWith(SYSTEM_INFRASTRUCTURE_PREFIX) && !spyOnly.has(target))
+        targets.add(target)
     }
     if (targets.size > 0) imports.set(file, [...targets].sort())
   }

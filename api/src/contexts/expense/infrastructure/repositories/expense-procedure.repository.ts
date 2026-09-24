@@ -2,7 +2,7 @@ import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interfa
 import { z } from "zod"
 import { withAllocatedIntegerId } from "@/lib/database/with-allocated-integer-id"
 import type { AttachmentEvidence } from "@system/domain/definitions/attachments/attachment-evidence.definition"
-import { PrepareAttachmentEvidenceAdapter } from "@system/infrastructure/adapters/attachments/prepare-attachment-evidence.adapter"
+import { prepareSystemAttachmentEvidence } from "@system/interface/operations/prepare-system-attachment-evidence"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { prepareSystemNotificationPublicationBatch } from "@system/interface/operations/prepare-system-notification-publication-batch"
 import { Expense } from "@/contexts/expense/domain/entities/expense.entity"
@@ -494,7 +494,7 @@ export class ExpenseProcedureRepository {
         .first<string>("created_by_account_id")
       if (owner === null) return new Error("expense evidence owner missing")
       const ids = binding.attachments.map((attachment) => attachment.id)
-      const prepared = await new PrepareAttachmentEvidenceAdapter(this.c).prepare({
+      const prepared = await prepareSystemAttachmentEvidence(this.c, {
         attachmentIds: ids,
         ownerAccountId: owner,
         linkedAttachmentIds: new Set(ids),
