@@ -50,6 +50,7 @@ async function resolveSystemSession(props: {
     tokenVersion: claims.ver,
     issuedAtMs: claims.issuedAtMs,
     machineCredentialId: claims.machineCredentialId,
+    sessionFamilyId: claims.sid ?? null,
     at: props.now,
   })
   if (authentication instanceof Error) return { kind: "unavailable" }
@@ -99,6 +100,7 @@ export class ResolveBearerAccountAdapter {
         accountId: accountId.data,
         tokenVersion: external.tokenVersion,
         issuedAtMs: 0,
+        sessionFamilyId: null,
         at: props.now,
       })
       if (authentication instanceof Error) return { kind: "unavailable" }

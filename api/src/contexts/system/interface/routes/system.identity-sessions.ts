@@ -1,3 +1,4 @@
+import { readSystemSessionMaxLifetimeMilliseconds } from "@system/lib/auth/read-system-session-max-lifetime"
 import {
   SystemIdentityLoginDeniedError,
   SystemIdentityLoginUnavailableError,
@@ -24,7 +25,11 @@ export const POST = systemFactory.createHandlers(
   async (context) => {
     const issuer = context.env.IDENTITY_ISSUER
     const audience = context.env.IDENTITY_AUDIENCE
+    const sessionMaxLifetimeMilliseconds = readSystemSessionMaxLifetimeMilliseconds(
+      context.env.SYSTEM_SESSION_MAX_LIFETIME_SECONDS,
+    )
     if (
+      sessionMaxLifetimeMilliseconds instanceof Error ||
       issuer === undefined ||
       issuer.length === 0 ||
       audience === undefined ||
@@ -55,6 +60,7 @@ export const POST = systemFactory.createHandlers(
         materialService: new SystemSessionMaterialService(),
         accessTokenIssuer: new SystemAccessTokenIssuer(context.env.JWT_SECRET ?? ""),
         sessionTtlMilliseconds: Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000,
+        sessionMaxLifetimeMilliseconds,
       }),
       loginAuditRepository: new SystemIdentityLoginAuditAdapter({
         env: { DB: context.env.DB },

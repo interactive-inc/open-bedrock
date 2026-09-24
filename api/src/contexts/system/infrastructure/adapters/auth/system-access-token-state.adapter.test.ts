@@ -9,6 +9,7 @@ const input = {
   accountId: zAccountId.parse("account-1"),
   tokenVersion: 0,
   issuedAtMs: 1_000,
+  sessionFamilyId: null,
   at: new Date(1_000),
 }
 

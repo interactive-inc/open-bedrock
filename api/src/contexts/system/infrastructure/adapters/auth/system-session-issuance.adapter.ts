@@ -16,6 +16,7 @@ export type SystemSessionIssuanceAdapterContext = Readonly<{
   materialService: SystemSessionMaterial
   accessTokenIssuer: SystemAccessTokenIssuer
   sessionTtlMilliseconds: number
+  sessionMaxLifetimeMilliseconds: number
 }>
 type Context = SystemSessionIssuanceAdapterContext
 
@@ -27,12 +28,17 @@ export class SystemSessionIssuanceAdapter {
 
   async issue(command: IssueSystemSessionCommand): Promise<IssueSystemSessionResult | Error> {
     const nowEpochMilliseconds = command.now.getTime()
-    const expiresAtEpochMilliseconds = nowEpochMilliseconds + this.c.sessionTtlMilliseconds
+    // 初回のexpiresAtも絶対寿命を超えないようにし、寿命の設定がTTLより短い配備でも延長しない。
+    const expiresAtEpochMilliseconds =
+      nowEpochMilliseconds +
+      Math.min(this.c.sessionTtlMilliseconds, this.c.sessionMaxLifetimeMilliseconds)
 
     if (
       !Number.isSafeInteger(nowEpochMilliseconds) ||
       !Number.isSafeInteger(this.c.sessionTtlMilliseconds) ||
       this.c.sessionTtlMilliseconds <= 0 ||
+      !Number.isSafeInteger(this.c.sessionMaxLifetimeMilliseconds) ||
+      this.c.sessionMaxLifetimeMilliseconds <= 0 ||
       !Number.isSafeInteger(expiresAtEpochMilliseconds)
     ) {
       return new Error("System SessionEntity issuance time is invalid")
@@ -65,6 +71,7 @@ export class SystemSessionIssuanceAdapter {
       familyId,
       tokenHash,
       tokenVersion: accountSession.account.tokenVersion,
+      authenticatedAt: command.now,
       createdAt: command.now,
       expiresAt,
       rotatedAt: null,
@@ -86,6 +93,7 @@ export class SystemSessionIssuanceAdapter {
     const accessToken = await this.c.accessTokenIssuer.issue({
       accountId: session.accountId,
       tokenVersion: session.tokenVersion,
+      sessionFamilyId: session.familyId,
       now: command.now,
     })
     if (accessToken instanceof Error) return accessToken

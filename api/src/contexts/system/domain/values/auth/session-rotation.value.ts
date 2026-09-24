@@ -34,6 +34,7 @@ export class SessionRotationValue {
       successor.accountId === current.accountId &&
       successor.familyId === current.familyId &&
       successor.tokenVersion === current.tokenVersion &&
+      successor.authenticatedAt.getTime() === current.authenticatedAt.getTime() &&
       successor.id !== current.id &&
       successor.tokenHash !== current.tokenHash &&
       successor.createdAt.getTime() === rotatedAt.getTime() &&

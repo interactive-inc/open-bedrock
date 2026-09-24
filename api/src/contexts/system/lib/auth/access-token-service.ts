@@ -24,7 +24,12 @@ export class AccessTokenService {
   }
 
   async create(
-    input: Readonly<{ accountId: string; tokenVersion: number; machineCredentialId?: string }>,
+    input: Readonly<{
+      accountId: string
+      tokenVersion: number
+      sessionFamilyId?: string
+      machineCredentialId?: string
+    }>,
     secret: string,
     now: Date,
   ): Promise<string | Error> {
@@ -42,6 +47,7 @@ export class AccessTokenService {
       jti: crypto.randomUUID(),
       iat: issuedAtSeconds,
       issuedAtMs: issuedAtMilliseconds,
+      ...(input.sessionFamilyId === undefined ? {} : { sid: input.sessionFamilyId }),
       ...(input.machineCredentialId === undefined
         ? {}
         : { machineCredentialId: input.machineCredentialId }),
