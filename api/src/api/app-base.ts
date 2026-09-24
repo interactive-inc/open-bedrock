@@ -98,7 +98,7 @@ const systemAuthorizationMiddleware = factory.createMiddleware(async (c, next) =
   const session = c.var.session
   if (!session) throw new HTTPException(401, { message: "authentication required" })
 
-  c.set("userId", String(session.accountId))
+  c.set("userId", session.accountId)
   c.set("permissions", session.permissions)
   c.set("role", session.roleKeys[0] ?? "authenticated")
   await next()

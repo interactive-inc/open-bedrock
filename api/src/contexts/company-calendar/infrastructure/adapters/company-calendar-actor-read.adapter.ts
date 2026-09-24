@@ -3,7 +3,6 @@ import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interfa
 import type { CompanyCalendarDayContext } from "@/contexts/company-calendar/configuration/company-calendar-context"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { CompanyCalendarDayError } from "@/contexts/company-calendar/domain/errors"
 
 type Context = CompanyCalendarDayContext
@@ -16,11 +15,11 @@ export class CompanyCalendarDayActorReadAdapter {
 
   async prepare(employeeIds: ReadonlyArray<EmployeeId> = []) {
     const now = this.c.var.now()
-    const account = zAccountId.safeParse(this.c.var.userId)
-    if (!account.success || !Number.isSafeInteger(now.getTime()) || now.getTime() < 0)
+    const accountId = this.c.var.userId
+    if (!Number.isSafeInteger(now.getTime()) || now.getTime() < 0)
       return new CompanyCalendarDayError("forbidden", "invalid company-calendar actor")
     const authorization = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
-      accountId: account.data,
+      accountId,
       tokenVersion: this.c.var.accountTokenVersion,
       permissions: ["calendar:manage"],
       now,
@@ -40,7 +39,7 @@ export class CompanyCalendarDayActorReadAdapter {
         database: this.c.env.DB,
       },
       {
-        accountIds: [account.data],
+        accountIds: [accountId],
         employeeCodes: [],
       },
     )
@@ -59,7 +58,7 @@ export class CompanyCalendarDayActorReadAdapter {
         NOW: now.toISOString(),
       },
     })
-    const actors = await directory.findForAccountIds([account.data])
+    const actors = await directory.findForAccountIds([accountId])
     const employees = await directory.findForEmployeeIds(employeeIds)
     if (actors instanceof Error || employees instanceof Error)
       return new CompanyCalendarDayError(
@@ -69,7 +68,7 @@ export class CompanyCalendarDayActorReadAdapter {
     return {
       actor: actors[0]?.employee ?? null,
       employees,
-      accountId: account.data,
+      accountId,
       principalId: authorization.principalId,
       now,
       assertions: [...authorization.assertions, guard],

@@ -3,7 +3,6 @@ import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interfa
 import type { PerformanceReviewContext } from "@/contexts/performance-review/configuration/performance-review-context"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { PerformanceReviewError } from "@/contexts/performance-review/domain/errors"
 
 type Context = PerformanceReviewContext
@@ -16,11 +15,11 @@ export class PerformanceReviewActorReadAdapter {
 
   async prepare(employeeIds: ReadonlyArray<EmployeeId> = []) {
     const now = this.c.var.now()
-    const account = zAccountId.safeParse(this.c.var.userId)
-    if (!account.success || !Number.isSafeInteger(now.getTime()) || now.getTime() < 0)
+    const accountId = this.c.var.userId
+    if (!Number.isSafeInteger(now.getTime()) || now.getTime() < 0)
       return new PerformanceReviewError("forbidden", "invalid performance review actor")
     const authorization = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
-      accountId: account.data,
+      accountId,
       tokenVersion: this.c.var.accountTokenVersion,
       permissions: ["system:record:preserve"],
       now,
@@ -40,7 +39,7 @@ export class PerformanceReviewActorReadAdapter {
         database: this.c.env.DB,
       },
       {
-        accountIds: [account.data],
+        accountIds: [accountId],
         employeeCodes: [],
       },
     )
@@ -59,7 +58,7 @@ export class PerformanceReviewActorReadAdapter {
         NOW: now.toISOString(),
       },
     })
-    const actors = await directory.findForAccountIds([account.data])
+    const actors = await directory.findForAccountIds([accountId])
     const employees = await directory.findForEmployeeIds(employeeIds)
     if (actors instanceof Error || employees instanceof Error)
       return new PerformanceReviewError(
@@ -71,7 +70,7 @@ export class PerformanceReviewActorReadAdapter {
     return {
       actor: actors[0]?.employee ?? null,
       employees,
-      accountId: account.data,
+      accountId,
       principalId: authorization.principalId,
       now,
       assertions: [...authorization.assertions, guard],

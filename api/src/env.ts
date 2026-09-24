@@ -13,6 +13,7 @@ import type { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/o
 import type { DrizzleD1Database } from "drizzle-orm/d1"
 import type { AccessTokenClaims } from "@system/domain/schemas/auth/access-token-claims.schema"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 /** Workers のバインディング（wrangler の vars / secrets / D1）。 */
 export type Bindings = {
@@ -94,7 +95,8 @@ export type Variables = {
   session: CompanySessionValue | null
   auditContext: RequestAuditContext
   now: () => Date
-  userId: string
+  // 認証middlewareが検証済みAccountIdだけを設定する。利用側で再検証しない。
+  userId: AccountId
   accountTokenVersion: number
   permissions: ReadonlySet<string>
   scopedPermissions?: ReadonlyMap<string, ReadonlySet<string>>
@@ -103,6 +105,11 @@ export type Variables = {
   oidcClientRegistry: OidcClientRegistryValue
   oidcIssuerConfiguration: OidcIssuerConfigurationValue
 }
+
+/** 認証済み主体を読む処理が要求する Context。userId は認証境界で検証済みの AccountId。 */
+export type AuthenticatedAccountContext = Readonly<{
+  var: Readonly<{ userId: AccountId }>
+}>
 
 /** Hono の Env。new Hono<HonoEnv>() / createFactory<HonoEnv>() で使う。 */
 export type HonoEnv = {

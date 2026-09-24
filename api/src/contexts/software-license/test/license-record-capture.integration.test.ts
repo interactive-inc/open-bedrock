@@ -1,5 +1,6 @@
 import { ListLicenseRecordInventoryAdapter } from "@/contexts/software-license/infrastructure/adapters/list-license-record-inventory.adapter"
 import { expect, test } from "bun:test"
+import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { CaptureLicenseRecordAdapter } from "@/contexts/software-license/infrastructure/adapters/capture-license-record.adapter"
 import { createLicenseFixture } from "@/contexts/software-license/test/create-license-fixture.test-support"
 import { PreservedRecordContentValue } from "@system/domain/values/records/preserved-record-content.value"
@@ -11,7 +12,7 @@ test("source capture retains license and usage history and rejects changed sourc
   const adapter = new CaptureLicenseRecordAdapter({
     env: { DB: f.database, COMPANY_TIME_ZONE: "Asia/Tokyo" },
     var: {
-      userId: "account:manager",
+      userId: zAccountId.parse("account:manager"),
       accountTokenVersion: 0,
       permissions: new Set(),
       role: "",
@@ -101,7 +102,7 @@ test("license inventory includes all statuses and rejects additions before prese
   const context = {
     env: { DB: f.database, COMPANY_TIME_ZONE: "Asia/Tokyo" },
     var: {
-      userId: "account:manager",
+      userId: zAccountId.parse("account:manager"),
       accountTokenVersion: 0,
       permissions: new Set<string>(),
       role: "",
@@ -154,7 +155,7 @@ test("source revalidation preserves the approved capture time and rejects mismat
   const context = {
     env: { DB: f.database, COMPANY_TIME_ZONE: "Asia/Tokyo" },
     var: {
-      userId: "account:manager",
+      userId: zAccountId.parse("account:manager"),
       accountTokenVersion: 0,
       permissions: new Set<string>(),
       role: "",
