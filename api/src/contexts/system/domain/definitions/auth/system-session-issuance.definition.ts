@@ -14,7 +14,12 @@ export type SystemSessionMaterial = Readonly<{
 
 export type SystemAccessTokenIssuer = Readonly<{
   issue: (
-    input: Readonly<{ accountId: AccountId; tokenVersion: number; now: Date }>,
+    input: Readonly<{
+      accountId: AccountId
+      tokenVersion: number
+      sessionFamilyId?: SessionFamilyId
+      now: Date
+    }>,
   ) => Promise<string | Error>
 }>
 

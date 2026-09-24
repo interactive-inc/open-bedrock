@@ -12,6 +12,7 @@ type Props = Readonly<{
   context: SystemD1Context
   jwtSecret: string
   sessionTtlMilliseconds: number
+  sessionMaxLifetimeMilliseconds?: number
 }>
 
 export type SystemSessionApplications = Readonly<{
@@ -44,6 +45,7 @@ export function createSystemSessionApplications(props: Props): SystemSessionAppl
       materialService,
       accessTokenIssuer,
       sessionTtlMilliseconds: props.sessionTtlMilliseconds,
+      sessionMaxLifetimeMilliseconds: props.sessionMaxLifetimeMilliseconds ?? 2_592_000_000,
     }),
     authenticate: Object.freeze({
       execute: (command: Parameters<SystemSessionRepository["authenticate"]>[0]) =>
@@ -56,6 +58,7 @@ export function createSystemSessionApplications(props: Props): SystemSessionAppl
       materialService,
       accessTokenIssuer,
       sessionTtlMilliseconds: props.sessionTtlMilliseconds,
+      sessionMaxLifetimeMilliseconds: props.sessionMaxLifetimeMilliseconds ?? 2_592_000_000,
     }),
     revoke: new RevokeSystemSession({ sessionRepository, materialService }),
   })

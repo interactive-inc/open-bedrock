@@ -1,3 +1,4 @@
+import { readSystemSessionMaxLifetimeMilliseconds } from "@system/lib/auth/read-system-session-max-lifetime"
 import { SystemCLICodeInvalidError, SystemCLILoginUnavailableError } from "@system/interface/errors"
 /** /system/cli-sessions */
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
@@ -19,11 +20,15 @@ export const POST = systemFactory.createHandlers(
   async (context) => {
     const now = context.var.now()
     const sessionTtlMilliseconds = Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000
+    const sessionMaxLifetimeMilliseconds = readSystemSessionMaxLifetimeMilliseconds(
+      context.env.SYSTEM_SESSION_MAX_LIFETIME_SECONDS,
+    )
     const metadataJson = StableSystemAuditJsonValue.create({ transport: "system.cli-sessions" })
     if (
       metadataJson instanceof Error ||
       !Number.isSafeInteger(sessionTtlMilliseconds) ||
       sessionTtlMilliseconds <= 0 ||
+      sessionMaxLifetimeMilliseconds instanceof Error ||
       !(
         SystemAccessTokenSecretValue.create(context.env.JWT_SECRET ?? "") instanceof
         SystemAccessTokenSecretValue
@@ -63,6 +68,7 @@ export const POST = systemFactory.createHandlers(
       materialService: new SystemSessionMaterialService(),
       accessTokenIssuer: new SystemAccessTokenIssuer(context.env.JWT_SECRET ?? ""),
       sessionTtlMilliseconds,
+      sessionMaxLifetimeMilliseconds,
     }).execute({
       accountId: account.id,
       tokenVersion: account.tokenVersion,

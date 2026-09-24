@@ -19,6 +19,7 @@ function sessionProps(overrides: Readonly<Record<string, unknown>> = {}) {
     familyId: "family-1",
     tokenHash: TOKEN_HASH,
     tokenVersion: 3,
+    authenticatedAt: CREATED_AT,
     createdAt: CREATED_AT,
     expiresAt: EXPIRES_AT,
     rotatedAt: null,
@@ -177,6 +178,49 @@ describe("SessionRotationValue", () => {
       }),
     )
 
+    expect(SessionRotationValue.create(current, successor, ROTATED_AT)).toEqual(
+      expect.objectContaining({ reason: "invalid_rotation_successor" }),
+    )
+  })
+})
+
+describe("SessionEntity absolute lifetime", () => {
+  const hour = 60 * 60 * 1_000
+
+  test("認証時刻から絶対寿命を数え、終わりの時刻以降を超過とする", () => {
+    const session = requireSession(sessionProps())
+    expect(session.getLifetimeEnd(2 * hour)).toEqual(new Date(CREATED_AT.getTime() + 2 * hour))
+    expect(session.exceedsLifetime(new Date(CREATED_AT.getTime() + 2 * hour - 1), 2 * hour)).toBe(
+      false,
+    )
+    expect(session.exceedsLifetime(new Date(CREATED_AT.getTime() + 2 * hour), 2 * hour)).toBe(true)
+  })
+
+  test("評価できない寿命と時刻は超過として扱う", () => {
+    const session = requireSession(sessionProps())
+    for (const lifetime of [0, -1, 1.5, Number.NaN, Number.MAX_SAFE_INTEGER]) {
+      expect(session.getLifetimeEnd(lifetime)).toBeNull()
+      expect(session.exceedsLifetime(CREATED_AT, lifetime)).toBe(true)
+    }
+    expect(session.exceedsLifetime(new Date(Number.NaN), hour)).toBe(true)
+  })
+
+  test("作成時刻より後の認証時刻を拒否する", () => {
+    expect(
+      SessionEntity.create(sessionProps({ authenticatedAt: new Date(CREATED_AT.getTime() + 1) })),
+    ).toEqual(expect.objectContaining({ reason: "authentication_after_creation" }))
+  })
+
+  test("後継は旧Sessionと同じ認証時刻を持たなければならない", () => {
+    const current = requireSession(sessionProps())
+    const successor = requireSession(
+      sessionProps({
+        id: "session-2",
+        tokenHash: SUCCESSOR_TOKEN_HASH,
+        authenticatedAt: ROTATED_AT,
+        createdAt: ROTATED_AT,
+      }),
+    )
     expect(SessionRotationValue.create(current, successor, ROTATED_AT)).toEqual(
       expect.objectContaining({ reason: "invalid_rotation_successor" }),
     )

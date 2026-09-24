@@ -1,3 +1,4 @@
+import { readSystemSessionMaxLifetimeMilliseconds } from "@system/lib/auth/read-system-session-max-lifetime"
 import {
   SystemBrowserLoginCodeUnavailableError,
   SystemLoginCodeInvalidError,
@@ -49,12 +50,16 @@ export const POST = systemFactory.createHandlers(
     }
 
     const sessionTtlMilliseconds = Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000
+    const sessionMaxLifetimeMilliseconds = readSystemSessionMaxLifetimeMilliseconds(
+      context.env.SYSTEM_SESSION_MAX_LIFETIME_SECONDS,
+    )
     const metadataJson = StableSystemAuditJsonValue.create({
       transport: "system.browser-sessions",
     })
     if (
       !Number.isSafeInteger(sessionTtlMilliseconds) ||
       sessionTtlMilliseconds <= 0 ||
+      sessionMaxLifetimeMilliseconds instanceof Error ||
       metadataJson instanceof Error
     ) {
       throw new SystemBrowserLoginCodeUnavailableError()
@@ -67,6 +72,7 @@ export const POST = systemFactory.createHandlers(
       materialService: new SystemSessionMaterialService(),
       accessTokenIssuer: new SystemAccessTokenIssuer(context.env.JWT_SECRET ?? ""),
       sessionTtlMilliseconds,
+      sessionMaxLifetimeMilliseconds,
     }).execute({
       accountId: account.id,
       tokenVersion: account.tokenVersion,

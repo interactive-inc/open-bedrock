@@ -6,6 +6,7 @@ import {
 } from "@system/interface/errors"
 /** /system/sessions */
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
+import { readSystemSessionMaxLifetimeMilliseconds } from "@system/lib/auth/read-system-session-max-lifetime"
 import { IssueSystemSession } from "@system/application/auth/issue-system-session"
 import { RevokeSystemSession } from "@system/application/auth/revoke-system-session"
 import { RotateSystemSession } from "@system/application/auth/rotate-system-session"
@@ -33,6 +34,7 @@ export type SystemSessionHttpEnvironment = {
     PEPPER_SECRET?: string
     JWT_SECRET?: string
     SYSTEM_SESSION_TTL_SECONDS?: string
+    SYSTEM_SESSION_MAX_LIFETIME_SECONDS?: string
   }
 }
 
@@ -64,7 +66,14 @@ export const POST = factory.createHandlers(
 
     const now = new Date(context.env.NOW ?? Date.now())
     const sessionTtlMilliseconds = Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000
-    if (!Number.isSafeInteger(now.getTime()) || !Number.isSafeInteger(sessionTtlMilliseconds)) {
+    const sessionMaxLifetimeMilliseconds = readSystemSessionMaxLifetimeMilliseconds(
+      context.env.SYSTEM_SESSION_MAX_LIFETIME_SECONDS,
+    )
+    if (
+      !Number.isSafeInteger(now.getTime()) ||
+      !Number.isSafeInteger(sessionTtlMilliseconds) ||
+      sessionMaxLifetimeMilliseconds instanceof Error
+    ) {
       throw new SystemSessionUnavailableError()
     }
 
@@ -121,6 +130,7 @@ export const POST = factory.createHandlers(
       materialService: new SystemSessionMaterialService(),
       accessTokenIssuer: new SystemAccessTokenIssuer(context.env.JWT_SECRET ?? ""),
       sessionTtlMilliseconds,
+      sessionMaxLifetimeMilliseconds,
     }).execute({
       accountId: authentication.accountId,
       tokenVersion: authentication.tokenVersion,
@@ -173,7 +183,14 @@ export const PATCH = factory.createHandlers(
 
     const now = new Date(context.env.NOW ?? Date.now())
     const sessionTtlMilliseconds = Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000
-    if (!Number.isSafeInteger(now.getTime()) || !Number.isSafeInteger(sessionTtlMilliseconds)) {
+    const sessionMaxLifetimeMilliseconds = readSystemSessionMaxLifetimeMilliseconds(
+      context.env.SYSTEM_SESSION_MAX_LIFETIME_SECONDS,
+    )
+    if (
+      !Number.isSafeInteger(now.getTime()) ||
+      !Number.isSafeInteger(sessionTtlMilliseconds) ||
+      sessionMaxLifetimeMilliseconds instanceof Error
+    ) {
       throw new SystemSessionUnavailableError()
     }
 
@@ -185,6 +202,7 @@ export const PATCH = factory.createHandlers(
       materialService: new SystemSessionMaterialService(),
       accessTokenIssuer: new SystemAccessTokenIssuer(context.env.JWT_SECRET ?? ""),
       sessionTtlMilliseconds,
+      sessionMaxLifetimeMilliseconds,
     }).execute({
       rawToken: context.req.valid("json").refresh_token,
       now,

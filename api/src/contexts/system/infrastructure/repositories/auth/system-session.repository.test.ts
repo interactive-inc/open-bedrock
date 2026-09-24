@@ -27,6 +27,7 @@ function createSession(props: {
     familyId,
     tokenHash: props.tokenHash,
     tokenVersion: 0,
+    authenticatedAt: createdAt,
     createdAt: props.createdAt,
     expiresAt: props.expiresAt,
     rotatedAt: null,

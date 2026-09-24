@@ -19,6 +19,7 @@ const propsSchema = z
     familyId: zSessionFamilyId,
     tokenHash: zSessionTokenHash,
     tokenVersion: z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER),
+    authenticatedAt: z.date(),
     createdAt: z.date(),
     expiresAt: z.date(),
     rotatedAt: z.date().nullable(),
@@ -30,6 +31,7 @@ type ParsedProps = z.output<typeof propsSchema>
 
 /**
  * Accountに属する長期SessionEntity。raw tokenやtransport、業務主体・権限を所有しない。
+ * authenticatedAtはfamilyを始めた認証の時刻で、rotationしても引き継ぎ、絶対寿命の起点にする。
  */
 export class SessionEntity {
   readonly id: SessionId
@@ -37,6 +39,7 @@ export class SessionEntity {
   readonly familyId: SessionFamilyId
   readonly tokenHash: SessionTokenHash
   readonly tokenVersion: number
+  readonly #authenticatedAtEpochMilliseconds: number
   readonly #createdAtEpochMilliseconds: number
   readonly #expiresAtEpochMilliseconds: number
   readonly #rotatedAtEpochMilliseconds: number | null
@@ -48,6 +51,7 @@ export class SessionEntity {
     this.familyId = props.familyId
     this.tokenHash = props.tokenHash
     this.tokenVersion = props.tokenVersion
+    this.#authenticatedAtEpochMilliseconds = props.authenticatedAt.getTime()
     this.#createdAtEpochMilliseconds = props.createdAt.getTime()
     this.#expiresAtEpochMilliseconds = props.expiresAt.getTime()
     this.#rotatedAtEpochMilliseconds = props.rotatedAt?.getTime() ?? null
@@ -63,6 +67,28 @@ export class SessionEntity {
     const chronologyError = SessionEntity.getChronologyError(parsed.data)
 
     return chronologyError ?? new SessionEntity(parsed.data)
+  }
+
+  get authenticatedAt(): Date {
+    return new Date(this.#authenticatedAtEpochMilliseconds)
+  }
+
+  /** familyの認証から絶対寿命が尽きる時刻。寿命が不正なら計算できないためnullを返す。 */
+  getLifetimeEnd(maxLifetimeMilliseconds: number): Date | null {
+    const end = this.#authenticatedAtEpochMilliseconds + maxLifetimeMilliseconds
+
+    return Number.isSafeInteger(maxLifetimeMilliseconds) &&
+      maxLifetimeMilliseconds > 0 &&
+      Number.isSafeInteger(end)
+      ? new Date(end)
+      : null
+  }
+
+  /** 絶対寿命を過ぎたか、寿命を評価できない場合にtrueを返す。refreshで延長しない。 */
+  exceedsLifetime(at: Date, maxLifetimeMilliseconds: number): boolean {
+    const end = this.getLifetimeEnd(maxLifetimeMilliseconds)
+
+    return end === null || !Number.isFinite(at.getTime()) || at.getTime() >= end.getTime()
   }
 
   get createdAt(): Date {
@@ -126,11 +152,15 @@ export class SessionEntity {
   }
 
   private static getChronologyError(props: ParsedProps): InvalidSessionError | null {
+    const authenticatedAt = props.authenticatedAt.getTime()
     const createdAt = props.createdAt.getTime()
     const expiresAt = props.expiresAt.getTime()
     const rotatedAt = props.rotatedAt?.getTime() ?? null
     const revokedAt = props.revokedAt?.getTime() ?? null
 
+    if (!Number.isSafeInteger(authenticatedAt) || authenticatedAt > createdAt) {
+      return new InvalidSessionError("authentication_after_creation")
+    }
     if (expiresAt <= createdAt) return new InvalidSessionError("expiration_not_after_creation")
     if (rotatedAt !== null && rotatedAt < createdAt) {
       return new InvalidSessionError("rotation_before_creation")
@@ -164,6 +194,7 @@ export class SessionEntity {
       familyId: this.familyId,
       tokenHash: this.tokenHash,
       tokenVersion: this.tokenVersion,
+      authenticatedAt: this.authenticatedAt,
       createdAt: this.createdAt,
       expiresAt: this.expiresAt,
       rotatedAt: this.rotatedAt,
