@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `bedrock department-budgets update <id> --amount <n> --name <s> [--note <m>]`
+export const help = `bedrock expense-budgets update <id> --amount <n> --name <s> [--note <m>]`
 
 export default factory.createHandlers(
   zValidator(
@@ -35,7 +35,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["expense"]["department-budgets"][":id"].$patch({
+    const response = await client["expense"]["expense-budgets"][":id"].$patch({
       param: { id: budgetId },
       json: {
         amount: toFiniteNumber(amount, "--amount"),

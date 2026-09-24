@@ -16,7 +16,7 @@ import { zOrganizationUnitId } from "@/contexts/company/domain/definitions/workf
 import { InternalError } from "@/lib/http/errors"
 
 // @authorization permission - 権限キーで判定する
-/** GET /department-budgets — 部署予算の一覧。部署・会計期間で絞り込む。budget:manage を持つロールのみ。 */
+/** GET /expense-budgets — 部署予算の一覧。部署・会計期間で絞り込む。budget:manage を持つロールのみ。 */
 export const GET = factory.createHandlers(
   verifyBearer,
   zValidator(
@@ -94,7 +94,7 @@ export const GET = factory.createHandlers(
 )
 
 // @authorization permission - 権限キーで判定する
-/** POST /department-budgets — 部署予算を登録する。budget:manage を持つロールのみ。 */
+/** POST /expense-budgets — 部署予算を登録する。budget:manage を持つロールのみ。 */
 export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(

@@ -110,7 +110,7 @@ export const zAppBudget = z.object({
   created_at: z.string(),
 })
 
-/** 部署予算一覧（GET /department-budgets）の 1 件。部署名を含む。 */
+/** 部署予算一覧（GET /expense-budgets）の 1 件。部署名を含む。 */
 export const zAppBudgetListItem = z.object({
   id: z.number(),
   organization_unit_id: zOrganizationUnitId,
@@ -124,13 +124,13 @@ export const zAppBudgetListItem = z.object({
   created_at: z.string(),
 })
 
-/** 部署予算一覧（GET /department-budgets）のレスポンス。 */
+/** 部署予算一覧（GET /expense-budgets）のレスポンス。 */
 export const zAppBudgetList = z.object({
   data: z.array(zAppBudgetListItem),
   total: z.number(),
 })
 
-/** 部署予算の詳細（GET /department-budgets/:id）。承認済み経費の消化額・残額を含む。 */
+/** 部署予算の詳細（GET /expense-budgets/:id）。承認済み経費の消化額・残額を含む。 */
 export const zAppBudgetDetail = z.object({
   id: z.number(),
   organization_unit_id: zOrganizationUnitId,
@@ -146,7 +146,7 @@ export const zAppBudgetDetail = z.object({
   created_at: z.string(),
 })
 
-/** 消化状況の横断ビュー（GET /department-budgets/summary）の 1 件。 */
+/** 消化状況の横断ビュー（GET /expense-budgets/summary）の 1 件。 */
 export const zAppBudgetSummaryItem = z.object({
   organization_unit_id: zOrganizationUnitId,
   organization_unit_name: z.string().nullable(),
@@ -156,7 +156,7 @@ export const zAppBudgetSummaryItem = z.object({
   remaining_amount: z.number(),
 })
 
-/** 消化状況の横断ビュー（GET /department-budgets/summary）のレスポンス。 */
+/** 消化状況の横断ビュー（GET /expense-budgets/summary）のレスポンス。 */
 export const zAppBudgetSummary = z.object({
   fiscal_period: z.string(),
   data: z.array(zAppBudgetSummaryItem),

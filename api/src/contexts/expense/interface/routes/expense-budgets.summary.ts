@@ -12,7 +12,7 @@ import { z } from "zod"
 
 // @authorization permission - 権限キーで判定する
 /**
- * GET /department-budgets/summary — 会計期間を指定し、部署ごとの予算・消化額・残額を横断で返す。
+ * GET /expense-budgets/summary — 会計期間を指定し、部署ごとの予算・消化額・残額を横断で返す。
  * /budgets/:id と衝突しないよう app.ts では :id より先に登録する。budget:manage を持つロールのみ。
  */
 export const GET = factory.createHandlers(

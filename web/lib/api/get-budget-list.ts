@@ -5,11 +5,11 @@ export type BudgetListFilter = {
   fiscalPeriod: string | null
 }
 
-/** GET /department-budgets。部署予算の一覧。budget:manage が無いと 403。 */
+/** GET /expense-budgets。部署予算の一覧。budget:manage が無いと 403。 */
 export async function getBudgetList(filter: BudgetListFilter) {
   const client = await createClient()
 
-  const response = await client["expense"]["department-budgets"].$get({
+  const response = await client["expense"]["expense-budgets"].$get({
     query: {
       organization_unit_id: filter.organizationUnitId ?? undefined,
       fiscal_period: filter.fiscalPeriod ?? undefined,

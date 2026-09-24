@@ -5,7 +5,7 @@ import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `bedrock department-budgets create --department-id <n> --fiscal-period <p> --period-start <d> --period-end <d> --amount <n> --name <s> [--note <m>]`
+export const help = `bedrock expense-budgets create --department-id <n> --fiscal-period <p> --period-start <d> --period-end <d> --amount <n> --name <s> [--note <m>]`
 
 export default factory.createHandlers(
   zValidator(
@@ -45,7 +45,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["expense"]["department-budgets"].$post({
+    const response = await client["expense"]["expense-budgets"].$post({
       json: {
         organization_unit_id: departmentId,
         fiscal_period: fiscalPeriod,

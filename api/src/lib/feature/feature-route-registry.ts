@@ -58,7 +58,7 @@ export const defaultAppRoutePrefixes: Readonly<Record<string, ReadonlyArray<stri
   rentals: ["/rental/rental-reservations"],
   meetings: ["/meeting/meetings", "/meeting/meeting-minutes-records"],
   partners: ["/partner/partners", "/partner/partner-contracts"],
-  budgets: ["/expense/department-budgets"],
+  budgets: ["/expense/expense-budgets"],
   "software-licenses": ["/software-license/software-licenses"],
   "it-incidents": ["/it-incident/it-incidents"],
 }

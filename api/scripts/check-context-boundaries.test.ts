@@ -282,24 +282,18 @@ describe("ownership manifest", () => {
 
   test("業務routeを宣言済みcontextへ固定する", () => {
     expect(
-      inspectRouteOwnershipPath(
-        "src/contexts/expense/interface/routes/department-budgets/route.ts",
-      ),
+      inspectRouteOwnershipPath("src/contexts/expense/interface/routes/expense-budgets/route.ts"),
     ).toEqual([])
     expect(
-      inspectRouteOwnershipPath(
-        "src/contexts/company/interface/routes/department-budgets/route.ts",
-      ),
+      inspectRouteOwnershipPath("src/contexts/company/interface/routes/expense-budgets/route.ts"),
     ).not.toEqual([])
     expect(
       inspectRouteOwnershipPath(
-        "src/contexts/expense/interface/routes/department-budgets.summary.test.ts",
+        "src/contexts/expense/interface/routes/expense-budgets.summary.test.ts",
       ),
     ).toEqual([])
     expect(
-      inspectRouteOwnershipPath(
-        "src/contexts/company/interface/routes/department-budgets.summary.ts",
-      ),
+      inspectRouteOwnershipPath("src/contexts/company/interface/routes/expense-budgets.summary.ts"),
     ).not.toEqual([])
   })
 })

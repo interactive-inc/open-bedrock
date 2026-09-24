@@ -1,11 +1,11 @@
 import { createClient } from "@/lib/api/hc-client"
 import { ApiResponseError } from "@/lib/api/api-response-error"
 
-/** GET /department-budgets/:id。1 件の予算詳細（消化額・残額を含む）を取得する。budget:manage が無いと 403。 */
+/** GET /expense-budgets/:id。1 件の予算詳細（消化額・残額を含む）を取得する。budget:manage が無いと 403。 */
 export async function getBudgetDetail(id: number) {
   const client = await createClient()
 
-  const response = await client["expense"]["department-budgets"][":id"].$get({
+  const response = await client["expense"]["expense-budgets"][":id"].$get({
     param: { id: String(id) },
   })
 

@@ -82,13 +82,13 @@ import ringiInboxHandler from "@/app/ringi-requests/inbox/route"
 import ringiMeHandler from "@/app/ringi-requests/me/route"
 import ringiRejectHandler from "@/app/ringi-requests/reject/[ringi_id]/route"
 import ringiSubmitHandler from "@/app/ringi-requests/submit/route"
-import budgetHandler from "@/app/department-budgets/route"
-import budgetListHandler from "@/app/department-budgets/list/route"
-import budgetShowHandler from "@/app/department-budgets/show/[budget_id]/route"
-import budgetSummaryHandler from "@/app/department-budgets/summary/route"
-import budgetCreateHandler from "@/app/department-budgets/create/route"
-import budgetUpdateHandler from "@/app/department-budgets/update/[budget_id]/route"
-import budgetDeleteHandler from "@/app/department-budgets/delete/[budget_id]/route"
+import budgetHandler from "@/app/expense-budgets/route"
+import budgetListHandler from "@/app/expense-budgets/list/route"
+import budgetShowHandler from "@/app/expense-budgets/show/[budget_id]/route"
+import budgetSummaryHandler from "@/app/expense-budgets/summary/route"
+import budgetCreateHandler from "@/app/expense-budgets/create/route"
+import budgetUpdateHandler from "@/app/expense-budgets/update/[budget_id]/route"
+import budgetDeleteHandler from "@/app/expense-budgets/delete/[budget_id]/route"
 import goalCreateHandler from "@/app/performance-goals/create/route"
 import goalEvaluateHandler from "@/app/performance-goals/evaluate/[goal_id]/route"
 import goalHandler from "@/app/performance-goals/route"
@@ -578,13 +578,13 @@ routes.post("/expenses/inbox", ...expenseInboxHandler)
 routes.post("/expenses/show/:expense_id?", ...expenseShowHandler)
 routes.post("/expenses/approve/:expense_id?", ...expenseApproveHandler)
 routes.post("/expenses/reject/:expense_id?", ...expenseRejectHandler)
-routes.post("/department-budgets", ...budgetHandler)
-routes.post("/department-budgets/list", ...budgetListHandler)
-routes.post("/department-budgets/summary", ...budgetSummaryHandler)
-routes.post("/department-budgets/create", ...budgetCreateHandler)
-routes.post("/department-budgets/show/:budget_id?", ...budgetShowHandler)
-routes.post("/department-budgets/update/:budget_id?", ...budgetUpdateHandler)
-routes.post("/department-budgets/delete/:budget_id?", ...budgetDeleteHandler)
+routes.post("/expense-budgets", ...budgetHandler)
+routes.post("/expense-budgets/list", ...budgetListHandler)
+routes.post("/expense-budgets/summary", ...budgetSummaryHandler)
+routes.post("/expense-budgets/create", ...budgetCreateHandler)
+routes.post("/expense-budgets/show/:budget_id?", ...budgetShowHandler)
+routes.post("/expense-budgets/update/:budget_id?", ...budgetUpdateHandler)
+routes.post("/expense-budgets/delete/:budget_id?", ...budgetDeleteHandler)
 
 routes.post("/work-items/:operation?/:id?", ...workItemHandler)
 routes.post("/leave-requests/procedure", ...leaveRequestProcedureHandler)
