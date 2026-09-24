@@ -31,6 +31,8 @@ import * as companyEmployeeRegistrationsRoute from "@/api/routes/company.employe
 import * as companyFeaturesRoute from "@/api/routes/company.features"
 import * as companyInboxCountsRoute from "@/api/routes/company.inbox.counts"
 import * as companyNotificationsRoute from "@/api/routes/company.notifications"
+import * as companyPersonalDataErasureRequestsRoute from "@/api/routes/company.personal-data-erasure-requests"
+import * as companyPersonalDataErasureRequestsIdExecuteRoute from "@/api/routes/company.personal-data-erasure-requests.$id.execute"
 import * as companyPersonnelActionRequestsRoute from "@/api/routes/company.personnel-action-requests"
 import * as governanceGovernanceDocumentsImpactRoute from "@/api/routes/governance.governance-documents.impact"
 import * as governanceGovernanceDocumentsSyncRoute from "@/api/routes/governance.governance-documents.sync"
@@ -2186,6 +2188,11 @@ const routePart30 = createRouteApp()
   .get("/company/organization-units/:code/members", ...companyOrganizationUnitsCodeMembersRoute.GET)
   .get("/company/people", ...companyPeopleRoute.GET)
   .post("/company/people", ...companyPeopleRoute.POST)
+  .post("/company/personal-data-erasure-requests", ...companyPersonalDataErasureRequestsRoute.POST)
+  .post(
+    "/company/personal-data-erasure-requests/:id/execute",
+    ...companyPersonalDataErasureRequestsIdExecuteRoute.POST,
+  )
   .get("/company/personnel-action-events", ...companyPersonnelActionEventsRoute.GET)
   .post("/company/personnel-action-executions", ...companyPersonnelActionExecutionsRoute.POST)
 

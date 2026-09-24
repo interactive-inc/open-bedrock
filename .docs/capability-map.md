@@ -62,9 +62,9 @@ System には版付き ProcedureDefinition と Proposal、Case、DecisionTask、
 - revision、supersession、correction、retention、legal hold、開示制御
 - 外部 Assertion と社内での acceptance、dispute
 
-現行実装には追記監査、安定 JSON、request correlation、actor、対象、変更前後を保持する監査 event がある。Principal、machine credential、connector、外部交換、照合、dead letter 再投入の重要変更は状態更新と同じ D1 batch で監査される。System添付には[期限付き保持と削除停止](system-attachment-preservation.md)があり、設定・解除を監査し、掃除処理とDBの直接変更でも保全を強制する。System監査の[開示設定](system-audit-disclosure.md)は全体と閲覧者ごとの項目・対象種別・目的・期限を版付きで保存し、一覧・詳細・件数と最終監査へ適用する。監査台帳自体の保持設定、一般添付内容の共通開示制御は未実装である。
+現行実装には追記監査、安定 JSON、request correlation、actor、対象、変更前後を保持する監査 event がある。Principal、machine credential、connector、外部交換、照合、dead letter 再投入の重要変更は状態更新と同じ D1 batch で監査される。System添付には[期限付き保持と削除停止](system-attachment-preservation.md)と、承認を経た[鍵の破棄による消去](system-attachment-erasure.md)があり、設定・解除を監査し、掃除処理とDBの直接変更でも保全を強制する。System監査の[開示設定](system-audit-disclosure.md)は全体と閲覧者ごとの項目・対象種別・目的・期限を版付きで保存し、一覧・詳細・件数と最終監査へ適用する。監査台帳自体の保持設定、一般添付内容の共通開示制御は未実装である。
 
-添付本体は暗号文だけをobject storageへ書き、ファイル名を保存先のkeyに含めない。API外の運用scriptとして、`att/`の暗号文をS3互換の別storageへ差分で複製する処理と、DBの添付行をid順に辿って本体の実在を確認する照合がある。どちらもSystemのDBとbatch基盤へ状態を持たず、実行した環境の状態fileへcursorを保存する。紐付け済み添付の鍵破棄（消去申請と承認を経た破棄、Account単位の一括破棄、破棄の監査）、消去用の技術的権限、KEKの包み直しバッチ、照合結果のSystem通知は未実装である。現在の鍵破棄は未紐付け添付の掃除だけであり、破棄前のDB行を含むバックアップやexportは、KEKが残る限り本体を復号できる。製品は電子帳簿保存法その他の法令が求める保存要件への適合を判定せず、保証しない。
+添付本体は暗号文だけをobject storageへ書き、ファイル名を保存先のkeyに含めない。API外の運用scriptとして、`att/`の暗号文をS3互換の別storageへ差分で複製する処理と、DBの添付行をid順に辿って本体の実在を確認する照合がある。どちらもSystemのDBとbatch基盤へ状態を持たず、実行した環境の状態fileへcursorを保存する。紐付け済み添付の鍵破棄は、消去申請テンプレートの承認手続を経てだけ行う。技術的権限 `personal_data:erase` はどのRoleにも既定で付与せず、`system:admin` も同じ操作を行える。申請時に添付単位またはAccount単位（Companyが従業員からAccountを解決する）で対象を固定し、保全中の添付を除く。申請・判断・破棄はSystem監査に記録し、破棄は一回限りの実行許可の消費と同じtransactionで確定する。破棄監査はD1の外のledgerへ写し、D1の復元後に同じ破棄を再適用する。KEKの包み直しバッチと照合結果のSystem通知は未実装である。破棄前のDB行を含むバックアップやexportは、KEKが残る限り本体を復号できるため、復元後の再適用を運用手順で必須にする。製品は電子帳簿保存法その他の法令が求める保存要件への適合を判定せず、保証しない。
 
 Systemの添付証拠の準備処理は、所有Account、状態、作成時刻、内容digest、名前、型、容量を検査し、業務保存と同じtransactionで再照合する。証拠として渡すのは公開metadataだけであり、暗号鍵や保存先を含めない。添付の紐付けと業務保存は一緒に確定し、後続の失敗では両方を巻き戻す。保全中でも業務への紐付けを許可するが、内容の差し替えは許可しない。
 
