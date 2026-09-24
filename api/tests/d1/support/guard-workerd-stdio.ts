@@ -6,12 +6,16 @@ let installed = false
 const failures: unknown[] = []
 
 /**
- * Miniflareが起動するworkerdの子プロセスについて、stdioの失敗を受け止める。
+ * Miniflareが起動するworkerdの子プロセスについて、起動とstdioの失敗を受け止める。
  *
- * Bunは子プロセスのpipeを作る時に接続へ失敗すると（ENOENTなど）、そのstreamへ`error`を送る。
- * Miniflareはこのstreamへ`error`の受け手を付けないため、失敗はtestの外で未処理のerrorになる。
- * ここではworkerdのspawn直後に全stdioへ受け手を付け、失敗を記録してworkerdを止める。
- * 止まったworkerdはMiniflareの起動を失敗させ、呼び出し側の起動の作り直しで扱われる。
+ * Bunは子プロセスの起動やpipeの作成に失敗すると（EBADF、ENOENTなど）、子プロセスや
+ * そのstreamへ`error`を送る。Miniflareはこれらへ`error`の受け手を付けないため、
+ * 失敗はtestの外で未処理のerrorになる。ここではworkerdのspawn直後に子プロセスと全stdioへ
+ * 受け手を付けて失敗を記録する。
+ *
+ * stdioの失敗ではworkerdとの制御pipeが使えないため、workerdを止めてMiniflareの起動を失敗させ、
+ * 呼び出し側の起動の作り直しで扱う。子プロセス自体への失敗は起動を止めないことがあるため
+ * 記録だけを行い、起動の成否はMiniflareの結果に従う。記録した失敗は起動の失敗の原因として出す。
  */
 export function installWorkerdStdioGuard(): void {
   if (installed) return
@@ -25,7 +29,7 @@ export function installWorkerdStdioGuard(): void {
   childProcess.spawn = guarded as typeof spawn
 }
 
-/** これまでに記録したworkerdのstdioの失敗を取り出し、記録を空にする。 */
+/** これまでに記録したworkerdの失敗を取り出し、記録を空にする。 */
 export function takeWorkerdStdioFailures(): unknown[] {
   return failures.splice(0)
 }
@@ -35,6 +39,9 @@ function isWorkerd(command: unknown): boolean {
 }
 
 function guard(child: ChildProcess): void {
+  child.on("error", (error: unknown) => {
+    failures.push(error)
+  })
   for (const stream of child.stdio) {
     stream?.on("error", (error: unknown) => {
       failures.push(error)

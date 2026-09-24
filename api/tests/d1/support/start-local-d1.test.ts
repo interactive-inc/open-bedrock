@@ -79,7 +79,10 @@ describe("startRuntime", () => {
     failed.reject(new Error("EBADF: bad file descriptor, send"))
     started.resolve()
 
-    const result = await startRuntime(runtimes.preparePersist, { create: runtimes.create })
+    const result = await startRuntime(runtimes.preparePersist, {
+      create: runtimes.create,
+      restartDelaysMs: [0],
+    })
 
     expect(result.runtime.name).toBe("started")
     expect(result.persist).toBe(runtimes.persistAt(1))
@@ -97,6 +100,7 @@ describe("startRuntime", () => {
     const result = await startRuntime(runtimes.preparePersist, {
       create: runtimes.create,
       stallMs: 1,
+      restartDelaysMs: [0],
     })
 
     expect(result.runtime.name).toBe("started")
@@ -115,12 +119,21 @@ describe("startRuntime", () => {
   test("全ての起動が失敗したら最後の失敗を投げ、どの実行環境も停止する", async () => {
     const runtimes = [fakeRuntime("first"), fakeRuntime("second"), fakeRuntime("third")]
     const last = new Error("ENOENT: Failed to connect")
-    runtimes[0]?.reject(new Error("EBADF"))
-    runtimes[1]?.reject(new Error("EBADF"))
-    runtimes[2]?.reject(last)
+    const failures = [new Error("EBADF"), new Error("EBADF"), last]
     const created = factory(runtimes)
+    let index = 0
 
-    const failure = await startRuntime(created.preparePersist, { create: created.create }).then(
+    const failure = await startRuntime(created.preparePersist, {
+      // 起動した時点で失敗させ、観測前のrejectionを作らない。
+      create: () => {
+        const runtime = created.create()
+        runtime.reject(failures[index])
+        index += 1
+        return runtime
+      },
+      attempts: 3,
+      restartDelaysMs: [0],
+    }).then(
       () => null,
       (error: unknown) => error,
     )
@@ -134,7 +147,10 @@ describe("startRuntime", () => {
     started.resolve()
     const runtimes = factory([started])
 
-    const result = await startRuntime(runtimes.preparePersist, { create: runtimes.create })
+    const result = await startRuntime(runtimes.preparePersist, {
+      create: runtimes.create,
+      restartDelaysMs: [0],
+    })
 
     expect(result.runtime).toBe(started)
     expect(started.disposed()).toBe(0)
