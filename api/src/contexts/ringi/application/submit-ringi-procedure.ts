@@ -1,3 +1,4 @@
+import { RingiSystemWorkflowAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-system-workflow.adapter"
 import { resolveCompanyProcedureTask } from "@/contexts/company/interface/operations/resolve-company-procedure-task"
 import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
@@ -7,7 +8,6 @@ import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/p
 import { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
 import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/repositories/ringi-request.repository"
 import { RingiHumanOperationAuthorizationAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-human-operation-authorization.adapter"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { ProposalEntity } from "@system/domain/entities/proposal.entity"
 import { SystemCaseEntity } from "@system/domain/entities/system-case.entity"
@@ -134,9 +134,9 @@ export class SubmitRingiProcedure {
     }
     if (original !== null && original.status !== "pending")
       return new ConflictError("決裁済みの稟議は提出できません", "already_decided")
-    const definition = await new SystemD1ProcedureRepository(this.c).find(
-      procedureKeySchema.parse("ringi_request"),
-    )
+    const definition = await new RingiSystemWorkflowAdapter(this.c)
+      .procedures()
+      .find(procedureKeySchema.parse("ringi_request"))
     if (definition instanceof Error)
       return new UnexpectedError("稟議の承認規程を取得できません", { cause: definition })
     if (definition === null || definition.completionOperationKey !== "ringi.request.authorize")

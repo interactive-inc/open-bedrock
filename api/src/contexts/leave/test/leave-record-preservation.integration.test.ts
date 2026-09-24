@@ -3,7 +3,7 @@ import { z } from "zod"
 import { app } from "@/api/app"
 import { createLeavePreservationFixture } from "@/contexts/leave/test/create-leave-preservation-fixture.test-support"
 import { SystemPrincipalSecretService } from "@system/lib/auth/system-principal-secret-service"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { encodeLeaveBalanceRecordId } from "@/contexts/leave/domain/definitions/leave-record-kind.definition"
 import { GET as preservedDossier } from "@system/interface/routes/system.preserved-records.$recordId.dossier"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
@@ -95,7 +95,7 @@ test("休暇の停止中に申請と残数の原文を人の承認後にSystem�
     const record = z
       .object({ number: z.number(), record_id: z.string() })
       .parse(await submitted.json())
-    const proposal = await new SystemD1ProposalAdapter({ env: { DB: database } }).findByNumber(
+    const proposal = await openSystemProposals({ env: { DB: database } }).findByNumber(
       record.number,
     )
     if (proposal === null || proposal instanceof Error) throw new Error("missing proposal")

@@ -12,7 +12,7 @@ import { requestWithContext } from "@tests/api/support/request-with-context"
 import { createTestContextForDatabase } from "@tests/api/support/create-context-for-database"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { describe, expect, test } from "bun:test"
 
 const now = "2026-01-01T00:00:00.000Z"
@@ -106,10 +106,7 @@ async function createTestState(): Promise<TestState> {
   })
   if (definition instanceof Error) throw definition
 
-  const published = await new SystemD1ProcedureRepository({ env: { DB: db } }).publish(
-    definition,
-    0,
-  )
+  const published = await openSystemProcedures({ env: { DB: db } }).publish(definition, 0)
   if (published !== true) throw published
 
   return {

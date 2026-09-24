@@ -1,5 +1,5 @@
 import type { SystemClockContext, SystemD1Context } from "@system/configuration/system-context"
-import type { SystemProposalView } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import type { SystemProposalView } from "@system/domain/definitions/workflow/system-proposal-view.definition"
 import type { ApproveSystemTaskCommand } from "@system/application/workflow/approve-system-task"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 

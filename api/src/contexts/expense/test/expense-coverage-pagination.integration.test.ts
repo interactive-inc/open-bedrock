@@ -2,8 +2,8 @@ import { SystemD1AuthorizedExecutionAdapter } from "@system/infrastructure/adapt
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
 import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { RecordRetirementProposalValue } from "@system/domain/values/records/record-retirement-proposal.value"
 import { PrepareRecordRetirementDisclosureAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-disclosure.adapter"
 import { PreservedRecordDisclosurePolicyRepository } from "@system/infrastructure/repositories/records/preserved-record-disclosure-policy.repository"
@@ -480,7 +480,7 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
     },
   }
   expect((await f.request(retirementPath, retirementCommand)).status).toBe(403)
-  const publishedRetirement = await new SystemD1ProcedureRepository(f.governance.context).publish(
+  const publishedRetirement = await openSystemProcedures(f.governance.context).publish(
     retirementDefinition,
     0,
   )
@@ -555,7 +555,7 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
       })
     ).status,
   ).toBe(409)
-  const savedRetirement = await new SystemD1ProposalAdapter({
+  const savedRetirement = await openSystemProposals({
     env: f.governance.context.env,
     visibleCompletionOperationKeys: ["system.record.retire"],
   }).findByNumber(retirementRequest.number, 1)

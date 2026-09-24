@@ -1,9 +1,9 @@
+import { RingiSystemWorkflowAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-system-workflow.adapter"
 import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/repositories/ringi-request.repository"
 import { RingiHumanOperationAuthorizationAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-human-operation-authorization.adapter"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemDecisionTargetValue } from "@system/domain/values/workflow/system-decision-target.value"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { ConflictError, ForbiddenError, UnexpectedError, type ApplicationError } from "@/lib/errors"
@@ -60,7 +60,9 @@ export class CancelRingiProcedure {
       return new UnexpectedError("稟議の案件を取得できません", { cause: binding })
     if (binding === null)
       return new ConflictError("稟議を承認規程へ提出してください", "procedure_required")
-    const proposal = await new SystemD1ProposalAdapter(this.c).findByNumber(binding.applicationId)
+    const proposal = await new RingiSystemWorkflowAdapter(this.c)
+      .proposals()
+      .findByNumber(binding.applicationId)
     if (proposal instanceof Error || proposal === null)
       return new UnexpectedError("稟議の提案を取得できません")
     const owned = await repository.readSubmissionReceipt({
@@ -107,7 +109,9 @@ export class CancelRingiProcedure {
       audit,
     })
     if (cancelled !== true) {
-      const current = await new SystemD1ProposalAdapter(this.c).findByNumber(binding.applicationId)
+      const current = await new RingiSystemWorkflowAdapter(this.c)
+        .proposals()
+        .findByNumber(binding.applicationId)
       const receipt = await repository.readSubmissionReceipt({
         ringiId: binding.ringiId,
         actorAccountId: command.session.accountId,

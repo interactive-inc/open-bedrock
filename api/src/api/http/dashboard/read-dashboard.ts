@@ -6,8 +6,8 @@ import {
 } from "@/api/http/dashboard/dashboard-business-metrics"
 import { DASHBOARD_METRIC_PROVIDERS } from "@/api/http/dashboard/dashboard-metric-providers"
 import type { Context } from "@/env"
-import { CountPendingSystemCasesAdapter } from "@system/infrastructure/adapters/workflow/count-pending-system-cases.adapter"
-import { ListSystemCaseMonthlyCountsAdapter } from "@system/infrastructure/adapters/workflow/list-system-case-monthly-counts.adapter"
+import { countPendingSystemCases } from "@system/interface/operations/count-pending-system-cases"
+import { listSystemCaseMonthlyCounts } from "@system/interface/operations/list-system-case-monthly-counts"
 
 /**
  * System・Companyの集計と、業務contextごとのproviderの値を製品dashboard responseへ合成する。
@@ -21,10 +21,13 @@ export async function readDashboard(context: Context, now: string) {
 
   const [pendingApplicationCount, applicationTrendRows, companySnapshot, providerMetrics] =
     await Promise.all([
-      new CountPendingSystemCasesAdapter({ env: { DB: context.env.DB } }).countPendingSystemCases(),
-      new ListSystemCaseMonthlyCountsAdapter({
-        env: { DB: context.env.DB },
-      }).listSystemCaseMonthlyCounts(windowStartDate),
+      countPendingSystemCases({ env: { DB: context.env.DB } }),
+      listSystemCaseMonthlyCounts(
+        {
+          env: { DB: context.env.DB },
+        },
+        windowStartDate,
+      ),
       readCompanyCanonicalOrganizationState(context),
       Promise.all(DASHBOARD_METRIC_PROVIDERS.map((provider) => provider(context))),
     ])

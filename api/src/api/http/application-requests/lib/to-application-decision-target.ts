@@ -1,4 +1,4 @@
-import type { SystemProposalView } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import type { SystemProposalView } from "@system/domain/definitions/workflow/system-proposal-view.definition"
 
 /** 本文と同じProposal snapshotから、判断時に送り返す参照を作る。 */
 export function toApplicationDecisionTarget(proposal: SystemProposalView) {

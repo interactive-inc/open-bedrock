@@ -1,10 +1,10 @@
+import { ExpenseSystemWorkflowAdapter } from "@/contexts/expense/infrastructure/adapters/expense-system-workflow.adapter"
 import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/repositories/expense-procedure.repository"
 import { ExpenseHumanOperationAuthorizationAdapter } from "@/contexts/expense/infrastructure/adapters/expense-human-operation-authorization.adapter"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemDecisionTargetValue } from "@system/domain/values/workflow/system-decision-target.value"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { ConflictError, ForbiddenError, UnexpectedError, type ApplicationError } from "@/lib/errors"
@@ -69,7 +69,9 @@ export class CancelExpenseProcedure {
       return new UnexpectedError("経費の案件を取得できません", { cause: binding })
     if (binding === null)
       return new ConflictError("経費を承認規程へ提出してください", "procedure_required")
-    const proposal = await new SystemD1ProposalAdapter(this.c).findByNumber(binding.applicationId)
+    const proposal = await new ExpenseSystemWorkflowAdapter(this.c)
+      .proposals()
+      .findByNumber(binding.applicationId)
     if (proposal instanceof Error || proposal === null)
       return new UnexpectedError("経費の提案を取得できません")
     const owned = await repository.readSubmissionReceipt({
@@ -117,7 +119,9 @@ export class CancelExpenseProcedure {
       audit,
     })
     if (cancelled !== true) {
-      const current = await new SystemD1ProposalAdapter(this.c).findByNumber(binding.applicationId)
+      const current = await new ExpenseSystemWorkflowAdapter(this.c)
+        .proposals()
+        .findByNumber(binding.applicationId)
       const receipt = await repository.readSubmissionReceipt({
         expenseId: binding.expenseId,
         actorAccountId: command.session.accountId,

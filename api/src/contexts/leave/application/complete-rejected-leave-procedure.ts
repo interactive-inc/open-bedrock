@@ -1,3 +1,4 @@
+import { LeaveSystemWorkflowAdapter } from "@/contexts/leave/infrastructure/adapters/leave-system-workflow.adapter"
 import { PrepareLeaveHumanEmployeeAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-human-employee.adapter"
 import type { Context } from "@/env"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
@@ -6,7 +7,6 @@ import { LeaveProcedureRepository } from "@/contexts/leave/infrastructure/reposi
 import { LeaveDecisionNotificationValue } from "@/contexts/leave/domain/values/leave-decision-notification.value"
 import { PrepareLeaveDecisionNotificationAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-decision-notification.adapter"
 import { LeaveHumanOperationAuthorizationAdapter } from "@/contexts/leave/infrastructure/adapters/leave-human-operation-authorization.adapter"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ConflictError, ForbiddenError, UnexpectedError, type ApplicationError } from "@/lib/errors"
@@ -54,7 +54,9 @@ export class CompleteRejectedLeaveProcedure {
       return new ConflictError("休暇の承認案件がありません", "procedure_required")
     if (request.employeeId === actor.id)
       return new ForbiddenError("本人の休暇は確定できません", "forbidden")
-    const proposal = await new SystemD1ProposalAdapter(this.c).findByNumber(binding.applicationId)
+    const proposal = await new LeaveSystemWorkflowAdapter(this.c)
+      .proposals()
+      .findByNumber(binding.applicationId)
     const payload = CanonicalSystemJsonValue.create(request.toProposalBody())
     if (proposal instanceof Error || payload instanceof Error)
       return new UnexpectedError("却下内容を確認できません")

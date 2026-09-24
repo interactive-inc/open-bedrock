@@ -1,3 +1,4 @@
+import { LeaveSystemWorkflowAdapter } from "@/contexts/leave/infrastructure/adapters/leave-system-workflow.adapter"
 import { revalidateCompanyProcedureExecution } from "@/contexts/company/interface/operations/revalidate-company-procedure-execution"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
 import { toFiscalYear } from "@/contexts/leave/domain/definitions/fiscal-year.definition"
@@ -10,7 +11,6 @@ import { LeaveProcedureRepository } from "@/contexts/leave/infrastructure/reposi
 import type { LeaveProcedureBinding } from "@/contexts/leave/domain/definitions/leave-procedure.definition"
 import type { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
 import { LeaveHumanOperationAuthorizationAdapter } from "@/contexts/leave/infrastructure/adapters/leave-human-operation-authorization.adapter"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
@@ -179,7 +179,9 @@ export class CompleteApprovedLeaveProcedure {
   ): Promise<Readonly<{ status: "approved"; replayed: true }> | ApplicationError> {
     const request = input.request
     const binding = input.binding
-    const proposal = await new SystemD1ProposalAdapter(this.c).findByNumber(binding.applicationId)
+    const proposal = await new LeaveSystemWorkflowAdapter(this.c)
+      .proposals()
+      .findByNumber(binding.applicationId)
     const payload = CanonicalSystemJsonValue.create(request.toProposalBody())
     if (
       proposal instanceof Error ||

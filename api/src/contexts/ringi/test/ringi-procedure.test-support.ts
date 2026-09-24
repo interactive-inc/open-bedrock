@@ -4,8 +4,8 @@ import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/
 import { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
 import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/repositories/ringi-request.repository"
 import { CompleteApprovedRingiProcedure } from "@/contexts/ringi/application/complete-approved-ringi-procedure"
-import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { openSystemWorkflow } from "@system/interface/operations/open-system-workflow"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { ProposalEntity } from "@system/domain/entities/proposal.entity"
@@ -49,7 +49,7 @@ export async function createRingiProcedureTestContext() {
     createdAt: c.at,
   })
   if (definition instanceof Error) throw definition
-  const published = await new SystemD1ProcedureRepository(c.context).publish(definition, 0)
+  const published = await openSystemProcedures(c.context).publish(definition, 0)
   if (published !== true) throw published
   const ringi = RingiRequest.create({
     applicantId: requester.employeeId,
@@ -122,7 +122,7 @@ export async function createRingiProcedureTestContext() {
     audit,
   }
   const approve = async (person: typeof first) => {
-    const approved = await new ApproveSystemTask(new SystemD1WorkflowAdapter(c.context)).execute({
+    const approved = await new ApproveSystemTask(openSystemWorkflow(c.context)).execute({
       caseId: workflowCase.id,
       taskKey: c.step.key,
       round: 1,

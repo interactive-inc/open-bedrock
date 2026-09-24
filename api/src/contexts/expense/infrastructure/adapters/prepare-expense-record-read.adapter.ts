@@ -4,7 +4,7 @@ import type { CompanyContext } from "@/contexts/company/configuration/company-co
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
 import { prepareSystemReadAuthorization } from "@system/interface/operations/prepare-system-read-authorization"
-import { PrepareSystemCaseReadGuardAdapter } from "@system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter"
+import { prepareSystemCaseReadGuard } from "@system/interface/operations/prepare-system-case-read-guard"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { ExpenseProcedureReadAdapter } from "@/contexts/expense/infrastructure/adapters/expense-procedure-read.adapter"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -69,7 +69,7 @@ export class PrepareExpenseRecordReadAdapter {
       const workflow =
         target.case_id === null
           ? null
-          : await new PrepareSystemCaseReadGuardAdapter(this.c).prepare({
+          : await prepareSystemCaseReadGuard(this.c, {
               caseId: target.case_id,
               accountId: input.session.accountId,
               at: input.at,

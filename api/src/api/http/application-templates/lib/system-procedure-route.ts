@@ -6,10 +6,10 @@ import { parseJsonValue } from "@/api/http/application-requests/lib/parse-json-v
 import { PublishSystemProcedure } from "@system/application/workflow/publish-system-procedure"
 import type { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 
-export function systemProcedureRepository(c: Context): SystemD1ProcedureRepository {
-  return new SystemD1ProcedureRepository({ env: { DB: c.env.DB } })
+export function systemProcedureRepository(c: Context) {
+  return openSystemProcedures({ env: { DB: c.env.DB } })
 }
 
 export async function loadSystemProcedure(

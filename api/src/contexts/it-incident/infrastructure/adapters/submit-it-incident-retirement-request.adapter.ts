@@ -5,8 +5,8 @@ import { openSystemRecordRetirementVerificationReceipts } from "@system/interfac
 import { RecordRetirementProposalValue } from "@system/domain/values/records/record-retirement-proposal.value"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
+import { openSystemWorkflow } from "@system/interface/operations/open-system-workflow"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
 import {
   ItIncidentRetirementConflictError,
@@ -51,7 +51,7 @@ export class SubmitItIncidentRetirementRequestAdapter {
       reason: command.reason,
     })
     if (proposal instanceof Error) return proposal
-    const query = new SystemD1ProposalAdapter({
+    const query = openSystemProposals({
       env: this.c.env,
       visibleCompletionOperationKeys: ["system.record.retire"],
     })
@@ -150,7 +150,7 @@ export class SubmitItIncidentRetirementRequestAdapter {
     if (task.resolved.guards.length === 0)
       return new ItIncidentRetirementForbiddenError("retirement decision qualification required")
     const started = await new StartSystemProcedure({
-      writer: new SystemD1WorkflowAdapter({
+      writer: openSystemWorkflow({
         env: this.c.env,
         startGuards: [...current.assertions, ...task.resolved.guards],
       }),

@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { z } from "zod"
 import { createAttendancePreservationFixture } from "@/contexts/attendance/test/create-attendance-preservation-fixture.test-support"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { PreservedRecordRepository } from "@system/infrastructure/repositories/records/preserved-record.repository"
 import { PreparePreservedRecordRetentionGuardAdapter } from "@system/infrastructure/adapters/records/prepare-preserved-record-retention-guard.adapter"
 
@@ -30,7 +30,7 @@ test("保持期限ちょうどから拒否し、準備済みの検査も実時�
     .object({ number: z.number(), record_id: z.string() })
     .parse(await submitted.json())
   const env = { DB: f.database }
-  const proposal = await new SystemD1ProposalAdapter({ env }).findByNumber(receipt.number)
+  const proposal = await openSystemProposals({ env }).findByNumber(receipt.number)
   if (proposal === null || proposal instanceof Error) throw new Error("missing proposal")
   expect(
     (

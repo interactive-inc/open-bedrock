@@ -1,7 +1,7 @@
 import { prepareCompanyApprovedEvidenceRevalidation } from "@/contexts/company/interface/operations/prepare-company-approved-evidence-revalidation"
 import { z } from "zod"
 import { PrepareCertificationRetirementCurrentStateAdapter } from "@/contexts/certification/infrastructure/adapters/prepare-certification-retirement-current-state.adapter"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { RecordRetirementProposalValue } from "@system/domain/values/records/record-retirement-proposal.value"
 import { RecordSourceRetirementEntity } from "@system/domain/entities/record-source-retirement.entity"
 import { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
@@ -43,7 +43,7 @@ export class ExecuteCertificationRetirementAdapter {
       stepUpToken,
     )
     if (current instanceof Error) return current
-    const proposal = await new SystemD1ProposalAdapter({
+    const proposal = await openSystemProposals({
       env: this.c.env,
       visibleCompletionOperationKeys: ["system.record.retire"],
     }).findByNumber(command.number)

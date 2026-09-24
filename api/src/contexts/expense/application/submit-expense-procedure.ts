@@ -1,3 +1,4 @@
+import { ExpenseSystemWorkflowAdapter } from "@/contexts/expense/infrastructure/adapters/expense-system-workflow.adapter"
 import { resolveCompanyProcedureTask } from "@/contexts/company/interface/operations/resolve-company-procedure-task"
 import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-write-guard.adapter"
@@ -14,7 +15,6 @@ import {
 import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/repositories/expense-procedure.repository"
 import { PrepareAttachmentEvidenceAdapter } from "@system/infrastructure/adapters/attachments/prepare-attachment-evidence.adapter"
 import { ExpenseHumanOperationAuthorizationAdapter } from "@/contexts/expense/infrastructure/adapters/expense-human-operation-authorization.adapter"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { ProposalEntity } from "@system/domain/entities/proposal.entity"
 import { SystemCaseEntity } from "@system/domain/entities/system-case.entity"
@@ -174,9 +174,9 @@ export class SubmitExpenseProcedure {
     })
     if (evidence instanceof Error)
       return new ValidationError(evidence.message, "attachment_unavailable")
-    const definition = await new SystemD1ProcedureRepository(this.c).find(
-      procedureKeySchema.parse("expense_request"),
-    )
+    const definition = await new ExpenseSystemWorkflowAdapter(this.c)
+      .procedures()
+      .find(procedureKeySchema.parse("expense_request"))
     if (definition instanceof Error)
       return new UnexpectedError("経費規程を取得できません", { cause: definition })
     if (definition === null || definition.completionOperationKey !== "expense.request.authorize")
