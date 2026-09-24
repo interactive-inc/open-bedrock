@@ -41,7 +41,9 @@
     "db:check:remote": "bun scripts/check-remote-migration-journal.ts --config wrangler.jsonc",
     "verify:core-route-isolation": "bash scripts/verify-core-route-isolation.sh",
     "verify:core-worker-isolation": "bash scripts/verify-core-worker-isolation.sh",
-    "verify:business-context-removal": "bun run scripts/verify-business-context-removal.ts"
+    "verify:business-context-removal": "bun run scripts/verify-business-context-removal.ts",
+    "ops:attachments:replicate": "bun run scripts/replicate-attachments.ts",
+    "ops:attachments:reconcile": "bun run scripts/reconcile-attachments.ts"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.6",
