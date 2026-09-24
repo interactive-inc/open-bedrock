@@ -4,11 +4,11 @@ import { CaptureFrozenAttendanceRecordPageAdapter } from "@/contexts/attendance/
 import { PreservedRecordContentValue } from "@system/domain/values/records/preserved-record-content.value"
 import { CreateRecordSourceFreeze } from "@system/application/records/create-record-source-freeze"
 import { ReleaseRecordSourceFreeze } from "@system/application/records/release-record-source-freeze"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 test("停止世代から原文・来歴・digestを取得し、解除後にページ確定を拒否する", async () => {
   const f = await createAttendanceRecordSourceFixture()
-  const repository = new RecordSourceFreezeRepository({ env: f.context.env, assertions: [] })
+  const repository = openSystemRecordSourceFreezes({ env: f.context.env, assertions: [] })
   const command = {
     id: crypto.randomUUID(),
     sourceNamespace: "example-source",

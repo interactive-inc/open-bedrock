@@ -8,7 +8,7 @@ import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/re
 import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { prepareSystemHumanOperationAuthorization } from "@system/interface/operations/prepare-system-human-operation-authorization"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
-import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
+import { openSystemAttachments } from "@system/interface/operations/open-system-attachments"
 import { PrepareExpenseApprovalScopeAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-approval-scope.adapter"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 
@@ -201,7 +201,7 @@ export class ExpenseProcedureReadAdapter {
     if (attachmentIds instanceof Error)
       return new UnexpectedError("添付を取得できません", { cause: attachmentIds })
     const storedAttachments =
-      binding === null ? await new AttachmentAdapter(this.c).findManyByIds(attachmentIds) : null
+      binding === null ? await openSystemAttachments(this.c).findManyByIds(attachmentIds) : null
     if (storedAttachments instanceof Error)
       return new UnexpectedError("添付を取得できません", { cause: storedAttachments })
     const attachments =

@@ -8,9 +8,9 @@ import { identitySubjectSchema } from "@system/domain/schemas/identity/identity-
 import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { IdentityId } from "@system/domain/schemas/identity/identity-id.schema"
 import { readSystemAccountSnapshot } from "@system/interface/iam/read-system-account-snapshot"
-import { SystemIdentityLoginAdapter } from "@system/infrastructure/adapters/auth/system-identity-login.adapter"
-import { SystemIdentityByEmailAdapter } from "@system/infrastructure/adapters/identity/system-identity-by-email.adapter"
-import { SystemIdentityCatalogRepository } from "@system/infrastructure/repositories/identity/system-identity-catalog.repository"
+import { findSystemIdentityLogin } from "@system/interface/operations/find-system-identity-login"
+import { findSystemIdentityByEmail } from "@system/interface/operations/find-system-identity-by-email"
+import { openSystemIdentityCatalog } from "@system/interface/operations/open-system-identity-catalog"
 
 export type ProviderIdentity = {
   identityId: IdentityId
@@ -42,12 +42,13 @@ export class IdentityAdapter {
   ): Promise<ProviderIdentity | null | Error> {
     const subject = identitySubjectSchema.safeParse(subjectInput)
     if (!subject.success) return null
-    const login = await new SystemIdentityLoginAdapter({ env: { DB: this.c.env.DB } }).find(
+    const login = await findSystemIdentityLogin(
+      { env: { DB: this.c.env.DB } },
       provider,
       subject.data,
     )
     if (login === null || login instanceof Error) return login
-    const identity = await new SystemIdentityCatalogRepository({
+    const identity = await openSystemIdentityCatalog({
       env: { DB: this.c.env.DB },
     }).find(login.identity.id)
     if (identity === null || identity instanceof Error) return identity
@@ -83,9 +84,12 @@ export class IdentityAdapter {
   }
 
   async findAccountIdByEmail(email: string): Promise<AccountId | null | Error> {
-    const identity = await new SystemIdentityByEmailAdapter({
-      env: { DB: this.c.env.DB },
-    }).execute(email)
+    const identity = await findSystemIdentityByEmail(
+      {
+        env: { DB: this.c.env.DB },
+      },
+      email,
+    )
     return identity instanceof Error ? identity : (identity?.accountId ?? null)
   }
 
@@ -112,9 +116,12 @@ export class IdentityAdapter {
   }
 
   async findEmployeeIdByEmail(email: string): Promise<EmployeeId | null | Error> {
-    const identity = await new SystemIdentityByEmailAdapter({
-      env: { DB: this.c.env.DB },
-    }).execute(email)
+    const identity = await findSystemIdentityByEmail(
+      {
+        env: { DB: this.c.env.DB },
+      },
+      email,
+    )
     if (identity === null || identity instanceof Error) return identity
 
     try {
@@ -140,7 +147,7 @@ export class IdentityAdapter {
       if (links instanceof Error) return links
       const identities = await Promise.all(
         links.map((link) =>
-          new SystemIdentityCatalogRepository({ env: { DB: this.c.env.DB } }).findMany(
+          openSystemIdentityCatalog({ env: { DB: this.c.env.DB } }).findMany(
             zAccountId.parse(link.accountId),
           ),
         ),

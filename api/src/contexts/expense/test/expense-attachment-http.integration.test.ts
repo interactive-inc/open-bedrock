@@ -1,6 +1,6 @@
 import { PrepareRecordRetirementPageKeysAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-page-keys.adapter"
-import { PrepareRecordRetirementStorageKeysAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-storage-keys.adapter"
-import { PrepareRecordRetirementSourceAttachmentsAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-source-attachments.adapter"
+import { prepareSystemRecordRetirementStorageKeys } from "@system/interface/operations/prepare-system-record-retirement-storage-keys"
+import { prepareSystemRecordRetirementSourceAttachments } from "@system/interface/operations/prepare-system-record-retirement-source-attachments"
 import { PrepareExpenseRetirementPageAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-retirement-page.adapter"
 import {
   zAppExpenseRetirementPlan,
@@ -27,7 +27,7 @@ import { ListFrozenExpenseRecordPageAdapter } from "@/contexts/expense/infrastru
 import { expenseRecordKindSchema } from "@/contexts/expense/domain/schemas/expense-record-kind.schema"
 import { CreateRecordSourceFreeze } from "@system/application/records/create-record-source-freeze"
 import { ReleaseRecordSourceFreeze } from "@system/application/records/release-record-source-freeze"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 import { ExpenseAttachmentRecordSourceAdapter } from "@/contexts/expense/infrastructure/adapters/expense-attachment-record-source.adapter"
 import { CaptureExpenseAttachmentLinkAdapter } from "@/contexts/expense/infrastructure/adapters/capture-expense-attachment-link.adapter"
 import { CaptureExpenseProcedureBindingAdapter } from "@/contexts/expense/infrastructure/adapters/capture-expense-procedure-binding.adapter"
@@ -164,8 +164,7 @@ test.each(["download", "audit"])("%s 中のAccount失効は内容と成功監査
       .bind(c.requester.accountId)
       .run()
   const get = c.bucket.get.bind(c.bucket)
-  const repository = new SystemAuditEventRepository(c.context)
-  const append = repository.append.bind(repository)
+  const append = SystemAuditEventRepository.prototype.append
   const interception =
     stage === "download"
       ? spyOn(c.bucket, "get").mockImplementation(async (key) => {
@@ -173,12 +172,13 @@ test.each(["download", "audit"])("%s 中のAccount失効は内容と成功監査
           await revoke()
           return object
         })
-      : spyOn(SystemAuditEventRepository.prototype, "append").mockImplementation(
-          async (...args) => {
-            if (args[0].action === "expense.attachment.read") await revoke()
-            return append(...args)
-          },
-        )
+      : spyOn(SystemAuditEventRepository.prototype, "append").mockImplementation(async function (
+          this: SystemAuditEventRepository,
+          ...args
+        ) {
+          if (args[0].action === "expense.attachment.read") await revoke()
+          return append.apply(this, args)
+        })
   try {
     const response = await c.request(c.requester, c.path)
     expect(response.status).toBe(403)
@@ -210,16 +210,14 @@ test.each(["before-prepare", "download", "audit"])(
         .prepare("DELETE FROM system_iam_role_permissions WHERE role_id='receipt-reader'")
         .run()
     const get = c.bucket.get.bind(c.bucket)
-    const repository = new SystemAuditEventRepository(c.context)
-    const append = repository.append.bind(repository)
-    const authorization = new PrepareSystemReadAuthorizationAdapter(c.context)
-    const prepare = authorization.prepare.bind(authorization)
+    const append = SystemAuditEventRepository.prototype.append
+    const prepare = PrepareSystemReadAuthorizationAdapter.prototype.prepare
     const interception =
       stage === "before-prepare"
         ? spyOn(PrepareSystemReadAuthorizationAdapter.prototype, "prepare").mockImplementation(
-            async (...args) => {
+            async function (this: PrepareSystemReadAuthorizationAdapter, ...args) {
               await revoke()
-              return prepare(...args)
+              return prepare.apply(this, args)
             },
           )
         : stage === "download"
@@ -229,9 +227,9 @@ test.each(["before-prepare", "download", "audit"])(
               return object
             })
           : spyOn(SystemAuditEventRepository.prototype, "append").mockImplementation(
-              async (...args) => {
+              async function (this: SystemAuditEventRepository, ...args) {
                 if (args[0].action === "expense.attachment.read") await revoke()
-                return append(...args)
+                return append.apply(this, args)
               },
             )
     try {
@@ -249,10 +247,9 @@ test.each(["file_name", "content_type", "object_key", "wrapped_dek", "kek_versio
   "監査保存直前の %s の変更で確認した添付を開示しない",
   async (field) => {
     const c = await fixture()
-    const repository = new SystemAuditEventRepository(c.context)
-    const append = repository.append.bind(repository)
+    const append = SystemAuditEventRepository.prototype.append
     const interception = spyOn(SystemAuditEventRepository.prototype, "append").mockImplementation(
-      async (...args) => {
+      async function (this: SystemAuditEventRepository, ...args) {
         if (args[0].action === "expense.attachment.read")
           await c.database
             .prepare(`UPDATE system_attachments SET ${field}=?1 WHERE id=?2`)
@@ -261,7 +258,7 @@ test.each(["file_name", "content_type", "object_key", "wrapped_dek", "kek_versio
               c.attachmentId,
             )
             .run()
-        return append(...args)
+        return append.apply(this, args)
       },
     )
     try {
@@ -302,10 +299,9 @@ test("案件の取消と領収書の閲覧が競合した場合、以前の判�
   const binding = await c.repository.findProcedure(expenseId)
   if (binding === null || binding instanceof Error)
     throw new Error("binding missing", { cause: binding })
-  const repository = new SystemAuditEventRepository(c.context)
-  const append = repository.append.bind(repository)
+  const append = SystemAuditEventRepository.prototype.append
   const interception = spyOn(SystemAuditEventRepository.prototype, "append").mockImplementation(
-    async (...args) => {
+    async function (this: SystemAuditEventRepository, ...args) {
       if (args[0].action === "expense.attachment.read")
         expect(
           await new CancelExpenseProcedure(c.context).run({
@@ -321,7 +317,7 @@ test("案件の取消と領収書の閲覧が競合した場合、以前の判�
             cancelledAt: c.at,
           }),
         ).toMatchObject({ status: "cancelled" })
-      return append(...args)
+      return append.apply(this, args)
     },
   )
   try {
@@ -375,16 +371,15 @@ test("外部IdPのBearerも確認したidentityを最終監査まで要求する
       },
     )
   expect((await request()).status).toBe(200)
-  const repository = new SystemAuditEventRepository(c.context)
-  const append = repository.append.bind(repository)
+  const append = SystemAuditEventRepository.prototype.append
   const interception = spyOn(SystemAuditEventRepository.prototype, "append").mockImplementation(
-    async (...args) => {
+    async function (this: SystemAuditEventRepository, ...args) {
       if (args[0].action === "expense.attachment.read")
         await c.database
           .prepare("UPDATE system_identity_bindings SET revoked_at=?1 WHERE id=?2")
           .bind(c.at.getTime(), identity.id)
           .run()
-      return append(...args)
+      return append.apply(this, args)
     },
   )
   try {
@@ -399,12 +394,11 @@ test("外部IdPのBearerも確認したidentityを最終監査まで要求する
 
 test("閲覧監査の直前に失った会社資格では領収書を返さず、成功監査を残さない", async () => {
   const c = await fixture()
-  const repository = new SystemAuditEventRepository(c.context)
-  const append = repository.append.bind(repository)
+  const append = SystemAuditEventRepository.prototype.append
   const interception = spyOn(SystemAuditEventRepository.prototype, "append").mockImplementation(
-    async (...args) => {
+    async function (this: SystemAuditEventRepository, ...args) {
       if (args[0].action === "expense.attachment.read") await c.revokeFirstVoting()
-      return append(...args)
+      return append.apply(this, args)
     },
   )
   try {
@@ -637,7 +631,7 @@ test("再申請で同じ原添付を使っても、元申請と修正版の対�
     .run()
   const freezeId = crypto.randomUUID()
   const frozen = await new CreateRecordSourceFreeze({
-    repository: new RecordSourceFreezeRepository({ env: c.context.env, assertions: [] }),
+    repository: openSystemRecordSourceFreezes({ env: c.context.env, assertions: [] }),
   }).execute(
     {
       id: freezeId,
@@ -727,7 +721,7 @@ test("停止世代の経費全種別をページ分割し、権限取消・停�
       machineCredentialId: null,
     },
   }
-  const repository = new RecordSourceFreezeRepository({ env: c.context.env, assertions: [] })
+  const repository = openSystemRecordSourceFreezes({ env: c.context.env, assertions: [] })
   const command = {
     id: crypto.randomUUID(),
     sourceNamespace: "example-source",
@@ -889,7 +883,7 @@ test.each(["release", "permission", "erasure"])(
     SELECT role_id,'expense:read:all' FROM system_role_bindings WHERE account_id=?1`)
       .bind(c.requester.accountId)
       .run()
-    const repository = new RecordSourceFreezeRepository({ env: c.context.env, assertions: [] })
+    const repository = openSystemRecordSourceFreezes({ env: c.context.env, assertions: [] })
     const command = {
       id: crypto.randomUUID(),
       sourceNamespace: "example-source",
@@ -1148,7 +1142,7 @@ test("経費の全6種別を実認証で保全し、業務全テーブル撤去�
     .run()
   const freezeId = crypto.randomUUID()
   const frozen = await new CreateRecordSourceFreeze({
-    repository: new RecordSourceFreezeRepository({
+    repository: openSystemRecordSourceFreezes({
       env: c.context.env,
       assertions: [c.database.prepare("SELECT 1")],
     }),
@@ -1422,18 +1416,23 @@ test("経費の全6種別を実認証で保全し、業務全テーブル撤去�
       if (verifiedRetirement instanceof Error) throw verifiedRetirement
       expect(verifiedRetirement.kinds).toHaveLength(6)
       expect(verifiedRetirement.kinds.every((kind) => kind.recordCount === 1)).toBe(true)
-      const originals = new PrepareRecordRetirementSourceAttachmentsAdapter({
+      const originalsContext = {
         env: c.context.env,
         assertions: [c.database.prepare("SELECT 1")],
-      })
+      }
       const originalInput = { planId: plan.id, planDigest: plan.digest }
-      const protectedOriginals = await originals.prepare(originalInput)
+      const protectedOriginals = await prepareSystemRecordRetirementSourceAttachments(
+        originalsContext,
+        originalInput,
+      )
       if (protectedOriginals instanceof Error) throw protectedOriginals
-      const storageKeys = new PrepareRecordRetirementStorageKeysAdapter({
+      const storageKeysContext = {
         env: { ...c.context.env, ATTACHMENT_KEKS: JSON.stringify(verificationKeys) },
         assertions: [c.database.prepare("SELECT 1")],
-      })
-      expect(await storageKeys.prepare(originalInput)).not.toBeInstanceOf(Error)
+      }
+      expect(
+        await prepareSystemRecordRetirementStorageKeys(storageKeysContext, originalInput),
+      ).not.toBeInstanceOf(Error)
       const persistedKeys = z.array(z.object({ version: z.number() })).parse(
         JSON.parse(
           z.string().parse(
@@ -1454,20 +1453,26 @@ test("経費の全6種別を実認証で保全し、業務全テーブル撤去�
         { ...verificationKeys, "2": keyMap(3)["3"] },
       ]) {
         expect(
-          await new PrepareRecordRetirementStorageKeysAdapter({
-            env: { ...c.context.env, ATTACHMENT_KEKS: JSON.stringify(configuredKeys) },
-            assertions: [c.database.prepare("SELECT 1")],
-          }).prepare(originalInput),
+          await prepareSystemRecordRetirementStorageKeys(
+            {
+              env: { ...c.context.env, ATTACHMENT_KEKS: JSON.stringify(configuredKeys) },
+              assertions: [c.database.prepare("SELECT 1")],
+            },
+            originalInput,
+          ),
         ).toBeInstanceOf(Error)
       }
       expect(
-        await new PrepareRecordRetirementStorageKeysAdapter({
-          env: {
-            ...c.context.env,
-            ATTACHMENT_KEKS: JSON.stringify({ ...verificationKeys, ...keyMap(3) }),
+        await prepareSystemRecordRetirementStorageKeys(
+          {
+            env: {
+              ...c.context.env,
+              ATTACHMENT_KEKS: JSON.stringify({ ...verificationKeys, ...keyMap(3) }),
+            },
+            assertions: [c.database.prepare("SELECT 1")],
           },
-          assertions: [c.database.prepare("SELECT 1")],
-        }).prepare(originalInput),
+          originalInput,
+        ),
       ).not.toBeInstanceOf(Error)
       for (const sql of [
         "UPDATE system_attachments SET file_name='changed' WHERE id=?1",
@@ -1521,10 +1526,12 @@ test("経費の全6種別を実認証で保全し、業務全テーブル撤去�
             .run()
             .catch((cause: unknown) => cause),
         ).toBeInstanceOf(Error)
-      expect(await originals.prepare(originalInput)).not.toBeInstanceOf(Error)
+      expect(
+        await prepareSystemRecordRetirementSourceAttachments(originalsContext, originalInput),
+      ).not.toBeInstanceOf(Error)
       expect(
         await new ReleaseRecordSourceFreeze({
-          repository: new RecordSourceFreezeRepository({
+          repository: openSystemRecordSourceFreezes({
             env: c.context.env,
             assertions: [c.database.prepare("SELECT 1")],
           }),
@@ -1539,7 +1546,9 @@ test("経費の全6種別を実認証で保全し、業務全テーブル撤去�
           new Date(),
         ),
       ).toMatchObject({ kind: "released" })
-      expect(await originals.prepare(originalInput)).toBeInstanceOf(Error)
+      expect(
+        await prepareSystemRecordRetirementSourceAttachments(originalsContext, originalInput),
+      ).toBeInstanceOf(Error)
       expect(
         await c.database.batch([...protectedOriginals.assertions]).catch((cause: unknown) => cause),
       ).toBeInstanceOf(Error)

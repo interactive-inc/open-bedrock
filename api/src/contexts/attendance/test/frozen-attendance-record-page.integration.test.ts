@@ -3,12 +3,12 @@ import { createAttendanceRecordSourceFixture } from "@/contexts/attendance/test/
 import { ListFrozenAttendanceRecordPageAdapter } from "@/contexts/attendance/infrastructure/adapters/list-frozen-attendance-record-page.adapter"
 import { CreateRecordSourceFreeze } from "@system/application/records/create-record-source-freeze"
 import { ReleaseRecordSourceFreeze } from "@system/application/records/release-record-source-freeze"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 test("欠番・複数ページを停止世代へ束縛し、解除して再停止しても旧ページを確定できない", async () => {
   const f = await createAttendanceRecordSourceFixture()
   await f.database.prepare("UPDATE attendance_records SET id=900 WHERE id=2").run()
-  const repository = new RecordSourceFreezeRepository({ env: f.context.env, assertions: [] })
+  const repository = openSystemRecordSourceFreezes({ env: f.context.env, assertions: [] })
   const command = {
     id: crypto.randomUUID(),
     sourceNamespace: "example-source",
@@ -68,7 +68,7 @@ test("欠番・複数ページを停止世代へ束縛し、解除して再停�
 test("空の停止対象は空ページを返すが、取得後の権限取消では確定できない", async () => {
   const f = await createAttendanceRecordSourceFixture()
   await f.database.exec("DELETE FROM attendance_records")
-  const repository = new RecordSourceFreezeRepository({ env: f.context.env, assertions: [] })
+  const repository = openSystemRecordSourceFreezes({ env: f.context.env, assertions: [] })
   const id = crypto.randomUUID()
   await new CreateRecordSourceFreeze({ repository }).execute(
     {
@@ -100,7 +100,7 @@ test("100件の上限を超える原記録を重複なく全ページ取得す�
     INSERT INTO attendance_records (id,employee_id,work_date,status)
     SELECT n,'employee:worker','2026-09-01','closed' FROM ids`)
   const id = crypto.randomUUID()
-  const repository = new RecordSourceFreezeRepository({ env: f.context.env, assertions: [] })
+  const repository = openSystemRecordSourceFreezes({ env: f.context.env, assertions: [] })
   await new CreateRecordSourceFreeze({ repository }).execute(
     {
       id,

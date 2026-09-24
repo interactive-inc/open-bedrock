@@ -3,8 +3,8 @@ import {
   resolveCompanyAccountParticipants,
 } from "@/api/http/accounts/resolve-company-account-participants"
 import type { Context } from "@/env"
-import { SystemAccountCatalogRepository } from "@system/infrastructure/repositories/iam/system-account-catalog.repository"
-import { SystemIdentityCatalogRepository } from "@system/infrastructure/repositories/identity/system-identity-catalog.repository"
+import { openSystemAccountCatalog } from "@system/interface/operations/open-system-account-catalog"
+import { openSystemIdentityCatalog } from "@system/interface/operations/open-system-identity-catalog"
 
 const QUERY_CHUNK_SIZE = 50
 
@@ -35,7 +35,7 @@ export class AccountDirectoryReadAdapter {
   }
 
   async list(props: Props): Promise<AccountDirectoryPage | Error> {
-    const systemAccounts = await new SystemAccountCatalogRepository({
+    const systemAccounts = await openSystemAccountCatalog({
       env: { DB: this.context.env.DB },
     }).findMany()
     if (systemAccounts instanceof Error) return systemAccounts
@@ -54,7 +54,7 @@ export class AccountDirectoryReadAdapter {
     const currentParticipants = participants.filter(
       (participant) => participant.status === "ACTIVE" || participant.status === "ON_LEAVE",
     )
-    const emails = await new SystemIdentityCatalogRepository({
+    const emails = await openSystemIdentityCatalog({
       env: { DB: this.context.env.DB },
     }).primaryEmailsForAccounts(currentParticipants.map((participant) => participant.accountId))
     if (emails instanceof Error) return emails

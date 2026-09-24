@@ -10,9 +10,9 @@ import { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboar
 import { OnboardingTemplateTask } from "@/contexts/onboarding/domain/entities/onboarding-template-task.entity"
 import { SystemDeliveryEntity } from "@system/domain/entities/system-delivery.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { SystemDeliveryRepository } from "@system/infrastructure/repositories/events/system-delivery.repository"
+import { openSystemDeliveries } from "@system/interface/operations/open-system-deliveries"
 import { prepareSystemAuditEventAppend } from "@system/interface/operations/prepare-system-audit-event-append"
-import { SystemManagedJobRunnerAdapter } from "@system/infrastructure/adapters/events/system-managed-job-runner.adapter"
+import { runSystemManagedJob } from "@system/interface/operations/run-system-managed-job"
 import { prepareSystemServiceOperationAuthorization } from "@system/interface/operations/prepare-system-service-operation-authorization"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { z } from "zod"
@@ -94,13 +94,16 @@ export class OnboardingLifecycleDeliveryAdapter {
         )
         if (queued instanceof Error) return queued
       }
-      return new SystemManagedJobRunnerAdapter({
-        env: this.c.env,
-        handlerKey,
-        workerAccountId: this.c.accountId,
-        clock: this.c.clock,
-        prepare: (job, at) => this.prepare(job, at),
-      }).run(limit)
+      return runSystemManagedJob(
+        {
+          env: this.c.env,
+          handlerKey,
+          workerAccountId: this.c.accountId,
+          clock: this.c.clock,
+          prepare: (job, at) => this.prepare(job, at),
+        },
+        limit,
+      )
     } catch (cause) {
       return new Error("lifecycle delivery is unavailable", { cause })
     }
@@ -151,7 +154,7 @@ export class OnboardingLifecycleDeliveryAdapter {
     if (job instanceof Error) return job
     const audit = this.audit(job.id, "queued", { actionId }, now)
     if (audit instanceof Error) return audit
-    const saved = await new SystemDeliveryRepository(this.c).create(job, this.c.accountId, null, [
+    const saved = await openSystemDeliveries(this.c).create(job, this.c.accountId, null, [
       ...assertions,
       this.c.env.DB.prepare(
         "INSERT INTO onboarding_lifecycle_deliveries (job_id, action_id, created_at) VALUES (?1, ?2, ?3)",

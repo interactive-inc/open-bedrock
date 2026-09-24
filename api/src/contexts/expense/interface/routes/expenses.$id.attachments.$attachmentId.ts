@@ -1,7 +1,7 @@
 import { decryptAttachment } from "@system/application/attachments/lib/decrypt-attachment"
 import { toSha256Hex } from "@system/application/attachments/lib/to-sha256-hex"
 import { AttachmentKekRegistry } from "@system/application/attachments/lib/attachment-kek-registry"
-import { AttachmentObjectAdapter } from "@system/infrastructure/adapters/attachments/attachment-object.adapter"
+import { openSystemAttachmentObjects } from "@system/interface/operations/open-system-attachment-objects"
 import { UnprocessableError } from "@/lib/errors"
 import { PrepareExpenseAttachmentReadAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-attachment-read.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
@@ -64,7 +64,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
     if (kek instanceof Error) return kek
 
-    const ciphertext = await new AttachmentObjectAdapter(c).get(row.objectKey)
+    const ciphertext = await openSystemAttachmentObjects(c).get(row.objectKey)
 
     if (ciphertext instanceof Error) return ciphertext
 

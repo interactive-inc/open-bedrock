@@ -3,7 +3,7 @@ import { createLeaveProcedureDecisionTestContext } from "@/contexts/leave/test/l
 import { LeaveDecisionNotificationValue } from "@/contexts/leave/domain/values/leave-decision-notification.value"
 import { PrepareLeaveDecisionNotificationAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-decision-notification.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
+import { prepareSystemAuditEventAppend } from "@system/interface/operations/prepare-system-audit-event-append"
 
 test("通知内容を監査と一緒に保存し、重複・変更・削除を拒否する", async () => {
   const fixture = await createLeaveProcedureDecisionTestContext()
@@ -51,7 +51,7 @@ test("通知内容を監査と一緒に保存し、重複・変更・削除を�
       .first<number>("count"),
   ).toBe(0)
   await context.env.DB.batch([
-    ...new SystemAuditEventRepository(context).prepareAppend(audit),
+    ...prepareSystemAuditEventAppend({ database: context.env.DB, event: audit }),
     ...statements,
   ])
   expect(

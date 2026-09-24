@@ -1,6 +1,6 @@
 import { SystemDeliveryEntity } from "@system/domain/entities/system-delivery.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { SystemDeliveryRepository } from "@system/infrastructure/repositories/events/system-delivery.repository"
+import { openSystemDeliveries } from "@system/interface/operations/open-system-deliveries"
 import { prepareSystemAuditEventAppend } from "@system/interface/operations/prepare-system-audit-event-append"
 import { prepareSystemHumanOperationAuthorization } from "@system/interface/operations/prepare-system-human-operation-authorization"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
@@ -48,7 +48,7 @@ export class OnboardingLifecycleDeliveryRepository {
         .bind(jobId)
         .first<{ action_id: string; dead_letter_id: string }>()
     if (source === null) return null
-    const job = await new SystemDeliveryRepository(this.c).find("job", jobId)
+    const job = await openSystemDeliveries(this.c).find("job", jobId)
     if (job === null || job instanceof Error) return job
     if (job.handlerKey !== "onboarding.lifecycle" || job.status !== "dead_letter") return null
     return { job, actionId: source.action_id, deadLetterId: source.dead_letter_id }
@@ -91,7 +91,7 @@ export class OnboardingLifecycleDeliveryRepository {
       occurredAt: input.now,
     })
     if (event instanceof Error) return event
-    return new SystemDeliveryRepository(this.c).requeueDeadLetter(
+    return openSystemDeliveries(this.c).requeueDeadLetter(
       input.deadLetterId,
       input.job,
       input.accountId,

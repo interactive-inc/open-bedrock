@@ -1,15 +1,15 @@
 import { POST as verifyRetirement } from "@/contexts/attendance/interface/routes/attendance.retirement-plans.$planId.verification-receipts"
-import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
-import { PreparePreservedRecordRetentionGuardAdapter } from "@system/infrastructure/adapters/records/prepare-preserved-record-retention-guard.adapter"
-import { PreservedRecordRepository } from "@system/infrastructure/repositories/records/preserved-record.repository"
-import { AttachmentPreservationRepository } from "@system/infrastructure/repositories/attachments/attachment-preservation.repository"
+import { prepareSystemRecordKindCoverage } from "@system/interface/operations/prepare-system-record-kind-coverage"
+import { prepareSystemPreservedRecordRetentionGuard } from "@system/interface/operations/prepare-system-preserved-record-retention-guard"
+import { openSystemPreservedRecords } from "@system/interface/operations/open-system-preserved-records"
+import { openSystemAttachmentPreservations } from "@system/interface/operations/open-system-attachment-preservations"
 import { POST as createRetirementPlan } from "@/contexts/attendance/interface/routes/attendance.record-source-freezes.$freezeId.retirement-plans"
 import { POST as verifyCoverage } from "@/contexts/attendance/interface/routes/attendance.record-source-freezes.$freezeId.coverage-pages"
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
 import { HTTPException } from "hono/http-exception"
 import { ReleaseRecordSourceFreeze } from "@system/application/records/release-record-source-freeze"
 import { SystemPrincipalSecretService } from "@system/lib/auth/system-principal-secret-service"
-import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
+import { openSystemRecordCoveragePages } from "@system/interface/operations/open-system-record-coverage-pages"
 import { RecordCoveragePageEntity } from "@system/domain/entities/record-coverage-page.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { attendanceFactory } from "@/contexts/attendance/interface/request-environment/attendance-factory"
@@ -20,8 +20,8 @@ import { createAttendancePreservationFixture } from "@/contexts/attendance/test/
 import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { CaptureFrozenAttendanceRecordPageAdapter } from "@/contexts/attendance/infrastructure/adapters/capture-frozen-attendance-record-page.adapter"
 import { CreateRecordSourceFreeze } from "@system/application/records/create-record-source-freeze"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
-import { VerifyPreservedRecordSourceAdapter } from "@system/infrastructure/adapters/records/verify-preserved-record-source.adapter"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
+import { verifySystemPreservedRecordSource } from "@system/interface/operations/verify-system-preserved-record-source"
 import { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
 
 test("人が承認した保全本文を復号・開示監査して停止中の原記録と照合する", async () => {
@@ -50,7 +50,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
   }
   const freezeId = crypto.randomUUID()
   await new CreateRecordSourceFreeze({
-    repository: new RecordSourceFreezeRepository({ env, assertions: [] }),
+    repository: openSystemRecordSourceFreezes({ env, assertions: [] }),
   }).execute(
     {
       id: freezeId,
@@ -118,15 +118,18 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
   const original = page.records[0]
   if (original === undefined) throw new Error("missing original")
   const verifier = {
-    execute: async (request: Parameters<VerifyPreservedRecordSourceAdapter["execute"]>[0]) => {
+    execute: async (request: Parameters<typeof verifySystemPreservedRecordSource>[1]) => {
       const app = attendanceFactory.createApp().get("/verify", async (c) => {
         c.set("database", context.var.database)
-        const verified = await new VerifyPreservedRecordSourceAdapter({
-          env: c.env,
-          var: c.var,
-          now: context.var.now,
-          assertions: page.assertions,
-        }).execute(request)
+        const verified = await verifySystemPreservedRecordSource(
+          {
+            env: c.env,
+            var: c.var,
+            now: context.var.now,
+            assertions: page.assertions,
+          },
+          request,
+        )
         if (verified instanceof Error) return c.json({ error: "verification_failed" }, 403)
         return c.json(verified)
       })
@@ -194,10 +197,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
       occurredAt: new Date(entry.snapshot.checkedAt),
     })
     if (audit instanceof Error) throw audit
-    return new RecordCoveragePageRepository({ env, assertions: page.assertions }).append(
-      entry,
-      audit,
-    )
+    return openSystemRecordCoveragePages({ env, assertions: page.assertions }).append(entry, audit)
   }
   expect(await save(coverage, null)).toBe("written")
   expect(
@@ -236,7 +236,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
       .exec("DELETE FROM system_record_coverage_entries")
       .catch((error: unknown) => error),
   ).toBeInstanceOf(Error)
-  const chainVerifier = new PrepareRecordKindCoverageAdapter({ env, assertions: page.assertions })
+  const chainVerifierContext = { env, assertions: page.assertions }
   const chainScope = {
     freezeId,
     sourceNamespace: f.settings.sourceNamespace,
@@ -244,7 +244,9 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
     recordKind: "attendance-record",
     purpose: "archive",
   }
-  expect(await chainVerifier.prepare(chainScope)).toBeInstanceOf(Error)
+  expect(await prepareSystemRecordKindCoverage(chainVerifierContext, chainScope)).toBeInstanceOf(
+    Error,
+  )
   const terminal = await RecordCoveragePageEntity.create(
     {
       ...pageInput,
@@ -259,7 +261,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
   )
   if (terminal instanceof Error) throw terminal
   expect(await save(terminal, coverage)).toBe("written")
-  const chain = await chainVerifier.prepare(chainScope)
+  const chain = await prepareSystemRecordKindCoverage(chainVerifierContext, chainScope)
   if (chain instanceof Error) throw chain
   expect(chain.summary).toMatchObject({
     pageCount: 2,
@@ -267,25 +269,36 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
     terminalPageId: terminal.snapshot.id,
     terminalDigest: terminal.digest,
   })
-  expect(await chainVerifier.prepare({ ...chainScope, recordKind: "missing-kind" })).toBeInstanceOf(
+  expect(
+    await prepareSystemRecordKindCoverage(chainVerifierContext, {
+      ...chainScope,
+      recordKind: "missing-kind",
+    }),
+  ).toBeInstanceOf(Error)
+  expect(
+    await prepareSystemRecordKindCoverage(chainVerifierContext, {
+      ...chainScope,
+      purpose: "different",
+    }),
+  ).toBeInstanceOf(Error)
+  expect(
+    await prepareSystemRecordKindCoverage(chainVerifierContext, {
+      ...chainScope,
+      sourceNamespace: "other-source",
+    }),
+  ).toBeInstanceOf(Error)
+  expect(await prepareSystemRecordKindCoverage({ env, assertions: [] }, chainScope)).toBeInstanceOf(
     Error,
   )
-  expect(await chainVerifier.prepare({ ...chainScope, purpose: "different" })).toBeInstanceOf(Error)
-  expect(
-    await chainVerifier.prepare({ ...chainScope, sourceNamespace: "other-source" }),
-  ).toBeInstanceOf(Error)
-  expect(
-    await new PrepareRecordKindCoverageAdapter({ env, assertions: [] }).prepare(chainScope),
-  ).toBeInstanceOf(Error)
   expect((await f.database.batch([...chain.assertions])).every((result) => result.success)).toBe(
     true,
   )
-  const repository = new RecordCoveragePageRepository({ env, assertions: page.assertions })
+  const repository = openSystemRecordCoveragePages({ env, assertions: page.assertions })
   expect(await repository.findLatest({ freezeId, recordKind: "attendance-record" })).toMatchObject({
     digest: terminal.digest,
   })
   expect(await repository.find(coverage.snapshot.id)).toMatchObject({ digest: coverage.digest })
-  const denied = new RecordCoveragePageRepository({
+  const denied = openSystemRecordCoveragePages({
     env,
     assertions: [f.database.prepare("SELECT json_extract('{}','denied')")],
   })
@@ -308,7 +321,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
   )
   expect(await verifier.execute(input)).toBeInstanceOf(Error)
   await new ReleaseRecordSourceFreeze({
-    repository: new RecordSourceFreezeRepository({ env, assertions: [] }),
+    repository: openSystemRecordSourceFreezes({ env, assertions: [] }),
   }).execute(
     {
       id: freezeId,
@@ -333,10 +346,12 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
       .prepare("SELECT count(*) AS n FROM coverage_chain_test_receipts")
       .first<number>("n"),
   ).toBe(0)
-  expect(await chainVerifier.prepare(chainScope)).toBeInstanceOf(Error)
+  expect(await prepareSystemRecordKindCoverage(chainVerifierContext, chainScope)).toBeInstanceOf(
+    Error,
+  )
   const freshFreeze = crypto.randomUUID()
   await new CreateRecordSourceFreeze({
-    repository: new RecordSourceFreezeRepository({ env, assertions: [] }),
+    repository: openSystemRecordSourceFreezes({ env, assertions: [] }),
   }).execute(
     {
       id: freshFreeze,
@@ -628,7 +643,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
       .first<number>("n"),
   ).toBe(0)
   await new ReleaseRecordSourceFreeze({
-    repository: new RecordSourceFreezeRepository({ env, assertions: [] }),
+    repository: openSystemRecordSourceFreezes({ env, assertions: [] }),
   }).execute(
     {
       id: freshFreeze,
@@ -643,7 +658,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
   expect((await requestVerification(verificationCommand)).status).toBe(503)
   const raceFreeze = crypto.randomUUID()
   await new CreateRecordSourceFreeze({
-    repository: new RecordSourceFreezeRepository({ env, assertions: [] }),
+    repository: openSystemRecordSourceFreezes({ env, assertions: [] }),
   }).execute(
     {
       id: raceFreeze,
@@ -711,18 +726,22 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
     freezeId: activePlanId,
   }
   expect((await requestVerification(heldVerification)).status).toBe(200)
-  const originalReceipt = await new PreservedRecordRepository({ env, assertions: [] }).find(
+  const originalReceipt = await openSystemPreservedRecords({ env, assertions: [] }).find(
     receipt.record_id,
   )
   if (originalReceipt === null || originalReceipt instanceof Error)
     throw new Error("missing preserved receipt")
-  const retentionAdapter = new PreparePreservedRecordRetentionGuardAdapter({
+  const retentionAdapterContext = {
     env,
     assertions: [f.database.prepare("SELECT 1")],
-  })
-  const retention = await retentionAdapter.prepare(originalReceipt, new Date())
+  }
+  const retention = await prepareSystemPreservedRecordRetentionGuard(
+    retentionAdapterContext,
+    originalReceipt,
+    new Date(),
+  )
   if (retention instanceof Error) throw retention
-  const holds = new AttachmentPreservationRepository({ env, assertions: [] })
+  const holds = openSystemAttachmentPreservations({ env, assertions: [] })
   const held = await holds.find(originalReceipt.snapshot.preservationId)
   if (held === null || held instanceof Error) throw new Error("missing approved hold")
   const released = held.release({
@@ -742,7 +761,13 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
       .prepare("SELECT count(*) AS n FROM system_record_retirement_receipts")
       .first<number>("n"),
   ).toBe(2)
-  expect(await retentionAdapter.prepare(originalReceipt, new Date())).toBeInstanceOf(Error)
+  expect(
+    await prepareSystemPreservedRecordRetentionGuard(
+      retentionAdapterContext,
+      originalReceipt,
+      new Date(),
+    ),
+  ).toBeInstanceOf(Error)
   await f.database.exec("CREATE TABLE retention_test_receipts(id TEXT PRIMARY KEY)")
   expect(
     await f.database

@@ -5,13 +5,13 @@ import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-def
 import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { RecordRetirementProposalValue } from "@system/domain/values/records/record-retirement-proposal.value"
-import { PrepareRecordRetirementDisclosureAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-disclosure.adapter"
-import { PreservedRecordDisclosurePolicyRepository } from "@system/infrastructure/repositories/records/preserved-record-disclosure-policy.repository"
+import { prepareSystemRecordRetirementDisclosure } from "@system/interface/operations/prepare-system-record-retirement-disclosure"
+import { openSystemPreservedRecordDisclosurePolicies } from "@system/interface/operations/open-system-preserved-record-disclosure-policies"
 import { PreservedRecordDisclosurePolicyEntity } from "@system/domain/entities/preserved-record-disclosure-policy.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { PrepareRecordRetirementRetentionAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-retention.adapter"
+import { prepareSystemRecordRetirementRetention } from "@system/interface/operations/prepare-system-record-retirement-retention"
 import { RecordRetirementVerificationReceiptRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { openSystemRecordRetirementVerificationPlans } from "@system/interface/operations/open-system-record-retirement-verification-plans"
 import { PrepareExpenseRetirementPlanAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-retirement-plan.adapter"
 import { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { PrepareExpenseRetirementPageAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-retirement-page.adapter"
@@ -332,23 +332,31 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
           .first("n"),
       ),
   ).toBe(7)
-  const retained = new PrepareRecordRetirementRetentionAdapter({
+  const retainedContext = {
     env: { DB: f.database },
     assertions: [f.database.prepare("SELECT 1")],
-  })
+  }
   const retentionInput = { planId: publicPlan.id, planDigest: publicPlan.digest }
-  const retention = await retained.prepare(retentionInput, new Date())
+  const retention = await prepareSystemRecordRetirementRetention(
+    retainedContext,
+    retentionInput,
+    new Date(),
+  )
   if (retention instanceof Error) throw retention
   expect(retention.assertions).toHaveLength(4)
-  expect(await retained.prepare(retentionInput, new Date(Date.now() + 172800000))).toBeInstanceOf(
-    Error,
-  )
+  expect(
+    await prepareSystemRecordRetirementRetention(
+      retainedContext,
+      retentionInput,
+      new Date(Date.now() + 172800000),
+    ),
+  ).toBeInstanceOf(Error)
   const disclosureClock = { offsetMs: 0 }
-  const disclosure = new PrepareRecordRetirementDisclosureAdapter({
+  const disclosureContext = {
     env: { DB: f.database },
     assertions: [f.database.prepare("SELECT 1")],
     now: () => new Date(Date.now() + disclosureClock.offsetMs),
-  })
+  }
   const readAuthentication = {
     accountId: f.governance.creator.accountId,
     tokenVersion: 0,
@@ -357,11 +365,15 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
     identityBindingId: null,
     machineCredentialId: null,
   }
-  const disclosed = await disclosure.prepare(retentionInput, readAuthentication)
+  const disclosed = await prepareSystemRecordRetirementDisclosure(
+    disclosureContext,
+    retentionInput,
+    readAuthentication,
+  )
   if (disclosed instanceof Error) throw disclosed
   expect(disclosed.actorAccountId).toBe(f.governance.creator.accountId)
   expect(
-    await disclosure.prepare(retentionInput, {
+    await prepareSystemRecordRetirementDisclosure(disclosureContext, retentionInput, {
       ...readAuthentication,
       accountId: f.reviewer.accountId,
     }),
@@ -371,14 +383,26 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
       "DELETE FROM system_iam_role_permissions WHERE role_id='role:expense-archive' AND permission_key='system:record:read'",
     )
     .run()
-  expect(await disclosure.prepare(retentionInput, readAuthentication)).toBeInstanceOf(Error)
+  expect(
+    await prepareSystemRecordRetirementDisclosure(
+      disclosureContext,
+      retentionInput,
+      readAuthentication,
+    ),
+  ).toBeInstanceOf(Error)
   expect(
     await f.database.batch([...disclosed.assertions]).catch((cause: unknown) => cause),
   ).toBeInstanceOf(Error)
   await f.database.exec(
     "INSERT INTO system_iam_role_permissions VALUES ('role:expense-archive','system:record:read')",
   )
-  expect(await disclosure.prepare(retentionInput, readAuthentication)).not.toBeInstanceOf(Error)
+  expect(
+    await prepareSystemRecordRetirementDisclosure(
+      disclosureContext,
+      retentionInput,
+      readAuthentication,
+    ),
+  ).not.toBeInstanceOf(Error)
   const retirementInput = { freezeId, sourceNamespace: "example-source", purpose: "archive" }
   const checks: Array<Awaited<ReturnType<PrepareExpenseRetirementCurrentStateAdapter["prepare"]>>> =
     []
@@ -407,7 +431,7 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
       )
       plans.push(planned)
       if (planned instanceof Error) return context.json({ prepared: false })
-      const repository = new RecordRetirementVerificationPlanRepository({
+      const repository = openSystemRecordRetirementVerificationPlans({
         env: context.env,
         assertions: planned.assertions,
       })
@@ -1190,7 +1214,7 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
         .bind(firstMapping.preservedRecordId)
         .first("disclosure_policy_id"),
     )
-  const policies = new PreservedRecordDisclosurePolicyRepository({
+  const policies = openSystemPreservedRecordDisclosurePolicies({
     env: { DB: f.database },
     assertions: [f.database.prepare("SELECT 1")],
   })
@@ -1256,7 +1280,13 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
     },
   ]) {
     await publishPolicy(changes)
-    expect(await disclosure.prepare(retentionInput, readAuthentication)).toBeInstanceOf(Error)
+    expect(
+      await prepareSystemRecordRetirementDisclosure(
+        disclosureContext,
+        retentionInput,
+        readAuthentication,
+      ),
+    ).toBeInstanceOf(Error)
     expect(await verifyRetirement()).toBeInstanceOf(Error)
     expect(
       await f.database.batch([...verified.assertions]).catch((cause: unknown) => cause),
@@ -1265,7 +1295,13 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
       await f.database.batch([...disclosed.assertions]).catch((cause: unknown) => cause),
     ).toBeInstanceOf(Error)
     await publishPolicy({})
-    expect(await disclosure.prepare(retentionInput, readAuthentication)).not.toBeInstanceOf(Error)
+    expect(
+      await prepareSystemRecordRetirementDisclosure(
+        disclosureContext,
+        retentionInput,
+        readAuthentication,
+      ),
+    ).not.toBeInstanceOf(Error)
     expect(await verifyRetirement()).not.toBeInstanceOf(Error)
   }
   const holdPath = `/system/attachments/${preserved.attachment_id}/preservations`
@@ -1312,7 +1348,9 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
     expect((await f.request(verificationPath, { key: receipt.id, stepUp, body: {} })).status).toBe(
       receipt.sequence === 1 ? 503 : 200,
     )
-  expect(await retained.prepare(retentionInput, new Date())).toBeInstanceOf(Error)
+  expect(
+    await prepareSystemRecordRetirementRetention(retainedContext, retentionInput, new Date()),
+  ).toBeInstanceOf(Error)
   expect((await f.request(`${reviewPath}/approve`, approvalOptions)).status).toBe(409)
   const negativeOptions = {
     ...reviewOptions,
@@ -1335,9 +1373,21 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
     await f.database.batch([...verified.assertions]).catch((cause: unknown) => cause),
   ).toBeInstanceOf(Error)
   await publishPolicy({ publishedAt: new Date(Date.now() + 30000).toISOString() })
-  expect(await disclosure.prepare(retentionInput, readAuthentication)).toBeInstanceOf(Error)
+  expect(
+    await prepareSystemRecordRetirementDisclosure(
+      disclosureContext,
+      retentionInput,
+      readAuthentication,
+    ),
+  ).toBeInstanceOf(Error)
   disclosureClock.offsetMs = 31000
-  expect(await disclosure.prepare(retentionInput, readAuthentication)).not.toBeInstanceOf(Error)
+  expect(
+    await prepareSystemRecordRetirementDisclosure(
+      disclosureContext,
+      retentionInput,
+      readAuthentication,
+    ),
+  ).not.toBeInstanceOf(Error)
   disclosureClock.offsetMs = 0
   await f.database
     .prepare("UPDATE system_step_up_grants SET revoked_at=?1 WHERE id='coverage-pagination-grant'")

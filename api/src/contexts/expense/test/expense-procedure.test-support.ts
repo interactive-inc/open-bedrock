@@ -4,7 +4,7 @@ import { SubmitExpenseProcedure } from "@/contexts/expense/application/submit-ex
 import { RecordExpenseDecision } from "@/contexts/expense/application/record-expense-decision"
 import { CompleteApprovedExpenseProcedure } from "@/contexts/expense/application/complete-approved-expense-procedure"
 import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/repositories/expense-procedure.repository"
-import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
+import { openSystemAttachments } from "@system/interface/operations/open-system-attachments"
 import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
@@ -74,7 +74,7 @@ export async function createExpenseProcedureTestContext(
   })
   if (published instanceof Error) throw published
   const attachmentId = crypto.randomUUID()
-  const attachments = new AttachmentAdapter(c.context)
+  const attachments = openSystemAttachments(c.context)
   const reserved = await attachments.reserve({
     id: attachmentId,
     ownerAccountId: requester.accountId,

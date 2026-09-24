@@ -3,7 +3,7 @@ import type { CompanyPersonnelSession } from "@/contexts/company/domain/definiti
 import type { SystemAttachmentStorageContext } from "@system/configuration/system-context"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
 import { PrepareExpenseAttachmentReadAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-attachment-read.adapter"
-import { CaptureLinkedAttachmentRecordAdapter } from "@system/infrastructure/adapters/records/capture-linked-attachment-record.adapter"
+import { captureSystemLinkedAttachmentRecord } from "@system/interface/operations/capture-system-linked-attachment-record"
 
 type Context = CompanyContext & SystemAttachmentStorageContext & Readonly<{ now: () => Date }>
 type Input = Readonly<{
@@ -38,17 +38,20 @@ export class ExpenseAttachmentRecordSourceAdapter {
   async capture(input: Input) {
     const authorized = await this.authorize(input)
     if (authorized instanceof Error) return authorized
-    const captured = await new CaptureLinkedAttachmentRecordAdapter({
-      env: this.c.env,
-      var: this.c.var,
-      now: this.c.now,
-      assertions: authorized.assertions,
-    }).prepare({
-      attachmentId: input.attachmentId,
-      sourceNamespace: input.sourceNamespace,
-      ownerContext: "expense",
-      recordKind: "expense-attachment",
-    })
+    const captured = await captureSystemLinkedAttachmentRecord(
+      {
+        env: this.c.env,
+        var: this.c.var,
+        now: this.c.now,
+        assertions: authorized.assertions,
+      },
+      {
+        attachmentId: input.attachmentId,
+        sourceNamespace: input.sourceNamespace,
+        ownerContext: "expense",
+        recordKind: "expense-attachment",
+      },
+    )
     if (captured instanceof Error) return captured
     return Object.freeze({
       source: captured.source,

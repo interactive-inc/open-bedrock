@@ -1,12 +1,12 @@
 import { expect, test } from "bun:test"
 import { createAttendanceRecordSourceFixture } from "@/contexts/attendance/test/create-attendance-record-source-fixture.test-support"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 import { CreateRecordSourceFreeze } from "@system/application/records/create-record-source-freeze"
 import { ReleaseRecordSourceFreeze } from "@system/application/records/release-record-source-freeze"
 
 test("停止と解除の同時再送は履歴を増やさず、再停止は新しいIDを要求する", async () => {
   const f = await createAttendanceRecordSourceFixture()
-  const repository = new RecordSourceFreezeRepository({ env: f.context.env, assertions: [] })
+  const repository = openSystemRecordSourceFreezes({ env: f.context.env, assertions: [] })
   const create = new CreateRecordSourceFreeze({ repository })
   const release = new ReleaseRecordSourceFreeze({ repository })
   const command = {
@@ -67,7 +67,7 @@ test("再送にも現在のDB権限条件を要求し、監査保存失敗では
   await f.database.exec(
     `CREATE TABLE freeze_test_permission (allowed INTEGER NOT NULL); INSERT INTO freeze_test_permission VALUES (1)`,
   )
-  const repository = new RecordSourceFreezeRepository({
+  const repository = openSystemRecordSourceFreezes({
     env: f.context.env,
     assertions: [
       f.database.prepare(

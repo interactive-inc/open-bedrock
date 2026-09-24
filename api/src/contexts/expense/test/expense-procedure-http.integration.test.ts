@@ -1,6 +1,6 @@
 import { ReleaseRecordSourceFreeze } from "@system/application/records/release-record-source-freeze"
 import { CreateRecordSourceFreeze } from "@system/application/records/create-record-source-freeze"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 import { expect, test } from "bun:test"
 import { createExpenseProcedureTestContext } from "@/contexts/expense/test/expense-procedure.test-support"
 import { requestWithContext } from "@tests/api/support/request-with-context"
@@ -453,7 +453,7 @@ test("実認証APIは書込み停止を409で返し、参照と認証失効を�
   const c = await fixture()
   const view = zExpenseProcedureView.parse(await (await c.request(c.first, c.path)).json())
   const frozen = await new CreateRecordSourceFreeze({
-    repository: new RecordSourceFreezeRepository({ env: c.context.env, assertions: [] }),
+    repository: openSystemRecordSourceFreezes({ env: c.context.env, assertions: [] }),
   }).execute(
     {
       id: crypto.randomUUID(),
@@ -518,7 +518,7 @@ test("部署予算の実認証APIは停止中の全書込みを409で拒否し�
     .bind(id)
     .first()
   if (original === null) throw new Error("created budget is missing")
-  const repository = new RecordSourceFreezeRepository({ env: c.context.env, assertions: [] })
+  const repository = openSystemRecordSourceFreezes({ env: c.context.env, assertions: [] })
   const command = {
     id: crypto.randomUUID(),
     sourceNamespace: "example-source",
