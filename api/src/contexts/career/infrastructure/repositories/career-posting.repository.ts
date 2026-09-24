@@ -31,8 +31,7 @@ export class CareerPostingRepository {
         .insert(careerPostings)
         .values({
           title: careerPosting.title,
-          deptId: careerPosting.deptId,
-          deptName: careerPosting.deptName,
+          organizationUnitId: careerPosting.organizationUnitId,
           requiredSkills: careerPosting.requiredSkills,
           status: careerPosting.status,
         })
@@ -59,8 +58,7 @@ export class CareerPostingRepository {
         .update(careerPostings)
         .set({
           title: careerPosting.title,
-          deptId: careerPosting.deptId,
-          deptName: careerPosting.deptName,
+          organizationUnitId: careerPosting.organizationUnitId,
           requiredSkills: careerPosting.requiredSkills,
           status: careerPosting.status,
         })

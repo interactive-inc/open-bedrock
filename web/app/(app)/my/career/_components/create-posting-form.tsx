@@ -8,15 +8,23 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import {
+  PostingDepartmentSelect,
+  type PostingDepartmentOption,
+} from "@/app/(app)/my/career/_components/posting-department-select"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 const initialState: CareerPostingFormState = { ok: false, error: null }
 
 /**
- * 社内公募の作成フォーム（管理ロール向け）。title 必須、部署・必要スキル・状態は任意。
+ * 社内公募の作成フォーム（管理ロール向け）。title 必須、募集部署・必要スキル・状態は任意。
  * 成功・失敗は action の結果を見て toast() で出す（useEffect は使わない）。
  */
-export function CreatePostingForm() {
+type Props = {
+  organizationUnits: ReadonlyArray<PostingDepartmentOption>
+}
+
+export function CreatePostingForm(props: Props) {
   const action = useActionState(
     async (previousState: CareerPostingFormState, formData: FormData) => {
       const next = await createCareerPostingAction(previousState, formData)
@@ -53,22 +61,13 @@ export function CreatePostingForm() {
           />
         </Field>
 
-        <Field>
-          <FieldLabel htmlFor="posting-dept-id">部署ID</FieldLabel>
-
-          <Input id="posting-dept-id" name="dept_id" type="number" placeholder="3" />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="posting-dept-name">部署名</FieldLabel>
-
-          <Input
-            id="posting-dept-name"
-            name="dept_name"
-            placeholder="Engineering"
-            maxLength={FORM_CONSTRAINTS.career.deptNameMax}
-          />
-        </Field>
+        <PostingDepartmentSelect
+          id="posting-organization-unit"
+          options={props.organizationUnits}
+          defaultValue={null}
+          currentUnit={null}
+          legacyDeptName={null}
+        />
 
         <Field>
           <FieldLabel htmlFor="posting-skills">必要スキル</FieldLabel>

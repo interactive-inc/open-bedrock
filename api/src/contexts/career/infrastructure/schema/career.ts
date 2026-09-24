@@ -1,13 +1,25 @@
-import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import type {
+  EmployeeId,
+  OrganizationUnitId,
+} from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { organizationUnits } from "@/contexts/company/infrastructure/schema/organization"
 import type { InferSelectModel } from "drizzle-orm"
 import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
-/** 社内公募（部署・必要スキル・公開状態）。 */
+/**
+ * 社内公募（募集部署・必要スキル・公開状態）。
+ * 募集部署は organization_unit_id で Company の組織単位を参照する。書込み時に Company の
+ * 公開 operation で会社営業日に有効な単位かを検査する。
+ * dept_id と dept_name は組織単位を参照できなかった頃の旧記録で、保持するが書き込まない。
+ */
 export const careerPostings = sqliteTable("career_postings", {
   id: integer("id").primaryKey(),
   title: text("title").notNull(),
   deptId: integer("dept_id"),
   deptName: text("dept_name"),
+  organizationUnitId: text("organization_unit_id")
+    .$type<OrganizationUnitId>()
+    .references(() => organizationUnits.id, { onDelete: "restrict" }),
   requiredSkills: text("required_skills"),
   status: text("status").notNull(),
 })

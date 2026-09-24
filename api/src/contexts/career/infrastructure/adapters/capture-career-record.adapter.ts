@@ -28,8 +28,9 @@ function snapshotQuery(recordKind: CareerRecordKind, recordId: string): Snapshot
     return new Error("invalid career record id")
   return recordKind === "career-posting-record"
     ? {
-        sql: `SELECT json_object('format','career-posting-record','version',1,'posting',json_object(
+        sql: `SELECT json_object('format','career-posting-record','version',2,'posting',json_object(
           'id',id,'title',title,'dept_id',dept_id,'dept_name',dept_name,
+          'organization_unit_id',organization_unit_id,
           'required_skills',required_skills,'status',status)) AS snapshot_json
           FROM career_postings WHERE id=?1`,
         values: [id],
@@ -78,7 +79,7 @@ export class CaptureCareerRecordAdapter {
         recordKind: kind.data,
         recordId: input.recordId,
         formatId: kind.data,
-        formatVersion: 1,
+        formatVersion: kind.data === "career-posting-record" ? 2 : 1,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

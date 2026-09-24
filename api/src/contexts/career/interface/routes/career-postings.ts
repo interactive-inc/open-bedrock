@@ -1,12 +1,14 @@
 import { CreateCareerPosting } from "@/contexts/career/application/create-career-posting"
-import type { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
+import { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
+import {
+  toCareerPostingResponse,
+  toCareerPostingResponses,
+} from "@/contexts/career/interface/http/career-posting-response"
+import { zOrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import {
-  zAppCareerPosting,
-  zAppCareerPostingList,
-} from "@/contexts/career/interface/http/response-schemas"
+import { zAppCareerPostingList } from "@/contexts/career/interface/http/response-schemas"
 import {
   DEFAULT_LIST_LIMIT,
   MAX_LIST_LIMIT,
@@ -19,18 +21,6 @@ import { careerPostings } from "@/contexts/career/infrastructure/schema/career"
 import { zValidator } from "@hono/zod-validator"
 import { count, desc, eq } from "drizzle-orm"
 import { z } from "zod"
-
-/** 公募をレスポンス用の snake_case に整形する。 */
-function toResponseBody(posting: CareerPosting) {
-  return zAppCareerPosting.parse({
-    id: posting.id,
-    title: posting.title,
-    dept_id: posting.deptId,
-    dept_name: posting.deptName,
-    required_skills: posting.requiredSkills,
-    status: posting.status,
-  })
-}
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /career-postings — 公開中の公募一覧 */
@@ -69,14 +59,10 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .where(eq(careerPostings.status, "open"))
 
   const responseBody = zAppCareerPostingList.parse({
-    data: rows.map((row) => ({
-      id: row.id,
-      title: row.title,
-      dept_id: row.deptId,
-      dept_name: row.deptName,
-      required_skills: row.requiredSkills,
-      status: row.status,
-    })),
+    data: await toCareerPostingResponses(
+      c,
+      rows.map((row) => CareerPosting.fromRow(row)),
+    ),
     total: totalRows.at(0)?.total ?? 0,
   })
 
@@ -89,10 +75,9 @@ export const POST = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
-    z.object({
+    z.strictObject({
       title: z.string().min(1).max(500),
-      dept_id: z.number().int().positive().nullable().optional(),
-      dept_name: z.string().max(200).nullable().optional(),
+      organization_unit_id: zOrganizationUnitId.nullable().optional(),
       required_skills: z.string().max(3_000).nullable().optional(),
       status: z.enum(["open", "closed"]).optional(),
     }),
@@ -109,8 +94,7 @@ export const POST = factory.createHandlers(
     const created = await new CreateCareerPosting(c).run({
       session: session,
       title: body.title,
-      deptId: body.dept_id ?? null,
-      deptName: body.dept_name ?? null,
+      organizationUnitId: body.organization_unit_id ?? null,
       requiredSkills: body.required_skills ?? null,
       status: body.status ?? "open",
     })
@@ -119,6 +103,8 @@ export const POST = factory.createHandlers(
       throw toHttpException(created)
     }
 
-    return c.json(toResponseBody(created), 201)
+    const responseBody = await toCareerPostingResponse(c, created)
+
+    return c.json(responseBody, 201)
   },
 )

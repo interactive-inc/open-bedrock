@@ -13,8 +13,7 @@ export async function createCareerPosting(
   const response = await client["career"]["career-postings"].$post({
     json: {
       title: request.title,
-      dept_id: request.dept_id ?? undefined,
-      dept_name: request.dept_name ?? undefined,
+      organization_unit_id: request.organization_unit_id,
       required_skills: request.required_skills ?? undefined,
       status: request.status,
     },

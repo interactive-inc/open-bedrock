@@ -9,11 +9,16 @@ import { Button } from "@/components/ui/button"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 import { Input } from "@/components/ui/input"
 import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
+import {
+  PostingDepartmentSelect,
+  type PostingDepartmentOption,
+} from "@/app/(app)/my/career/_components/posting-department-select"
 import type { CareerPosting } from "@/lib/api/types/career-types"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   posting: CareerPosting
+  organizationUnits: ReadonlyArray<PostingDepartmentOption>
 }
 
 const initialState: CareerPostingFormState = { ok: false, error: null }
@@ -66,27 +71,20 @@ export function EditPostingForm(props: Props) {
           />
         </Field>
 
-        <Field>
-          <FieldLabel htmlFor="edit-posting-dept-id">部署ID</FieldLabel>
-
-          <Input
-            id="edit-posting-dept-id"
-            name="dept_id"
-            type="number"
-            defaultValue={props.posting.dept_id ?? ""}
-          />
-        </Field>
-
-        <Field>
-          <FieldLabel htmlFor="edit-posting-dept-name">部署名</FieldLabel>
-
-          <Input
-            id="edit-posting-dept-name"
-            name="dept_name"
-            defaultValue={props.posting.dept_name ?? ""}
-            maxLength={FORM_CONSTRAINTS.career.deptNameMax}
-          />
-        </Field>
+        <PostingDepartmentSelect
+          id="edit-posting-organization-unit"
+          options={props.organizationUnits}
+          defaultValue={props.posting.organization_unit_id}
+          currentUnit={
+            props.posting.organization_unit_id === null
+              ? null
+              : {
+                  id: props.posting.organization_unit_id,
+                  name: props.posting.organization_unit_name ?? props.posting.organization_unit_id,
+                }
+          }
+          legacyDeptName={props.posting.legacy_dept_name}
+        />
 
         <Field>
           <FieldLabel htmlFor="edit-posting-skills">必要スキル</FieldLabel>

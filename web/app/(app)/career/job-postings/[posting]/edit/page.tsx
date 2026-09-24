@@ -6,6 +6,7 @@ import { PageHeader } from "@/components/page-header"
 import { Card } from "@/components/ui/card"
 import { getCareerPosting } from "@/lib/api/get-career-posting"
 import { getMe } from "@/lib/api/get-me"
+import { listOrgDepartments } from "@/lib/api/list-org-departments"
 import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings"
 
 export const metadata = { title: "公募の編集" }
@@ -32,7 +33,10 @@ export default async function EditCareerPostingPage(props: Props) {
     notFound()
   }
 
-  const posting = await getCareerPosting(postingId)
+  const [posting, departments] = await Promise.all([
+    getCareerPosting(postingId),
+    listOrgDepartments(),
+  ])
 
   return (
     <div className="flex flex-col gap-8">
@@ -42,10 +46,18 @@ export default async function EditCareerPostingPage(props: Props) {
 
       {posting instanceof Error ? (
         <FetchError message="公募の取得に失敗しました" />
+      ) : departments instanceof Error ? (
+        <FetchError message="部署一覧の取得に失敗しました" />
       ) : (
         <Card className="gap-0">
           <div className="p-8">
-            <EditPostingForm posting={posting} />
+            <EditPostingForm
+              posting={posting}
+              organizationUnits={departments.map((department) => ({
+                id: department.id,
+                name: department.name,
+              }))}
+            />
           </div>
         </Card>
       )}
