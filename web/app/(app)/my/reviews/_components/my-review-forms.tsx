@@ -7,7 +7,7 @@ import type { ReviewFormState } from "@/app/(app)/my/reviews/actions"
 import { submitReviewFormAction } from "@/app/(app)/my/reviews/actions"
 import { toReviewerTypeLabel } from "@/app/(app)/my/reviews/_lib/to-reviewer-type-label"
 import { EmptyState } from "@/components/empty-state"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import { Field, FieldLabel } from "@/components/ui/field"
@@ -59,13 +59,13 @@ export function MyReviewForms(props: Props) {
               <div className="flex items-center gap-2">
                 <span className="font-medium">評価対象: 社員 #{form.subject_employee_id}</span>
 
-                <Badge variant="outline">{toReviewerTypeLabel(form.reviewer_type)}</Badge>
+                <StatusLabel>{toReviewerTypeLabel(form.reviewer_type)}</StatusLabel>
               </div>
 
               {form.status === "submitted" ? (
-                <Badge variant="secondary">提出済み</Badge>
+                <StatusLabel>提出済み</StatusLabel>
               ) : (
-                <Badge>未提出</Badge>
+                <StatusLabel>未提出</StatusLabel>
               )}
             </div>
           </CardHeader>

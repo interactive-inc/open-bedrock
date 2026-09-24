@@ -5,7 +5,7 @@ import { personnelActionHistoryHref } from "@/app/(app)/company/personnel-action
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
 import { TextLink } from "@/components/text-link"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import {
   Table,
   TableBody,
@@ -86,7 +86,7 @@ export async function CompanyPersonnelActionSection(
                 <TableCell>
                   <div className="flex flex-col gap-2">
                     <time dateTime={action.recorded_at}>{action.recorded_at}</time>
-                    <Badge variant="outline">{sourceLabels[action.source_type]}</Badge>
+                    <StatusLabel>{sourceLabels[action.source_type]}</StatusLabel>
                     <details>
                       <summary>記録の詳細</summary>
                       <dl className="flex flex-col gap-2">

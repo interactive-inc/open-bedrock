@@ -141,12 +141,13 @@ shadcn/ui + Tailwind CSS ベースのデザイン規約。コンポーネント�
 - 並列する操作は `secondary`
 - 削除は必ず `destructive` + 確認ダイアログ
 - テーブル行内は `ghost` + `icon-xs` または `icon-sm`
+- Button の中にアイコンを置くときは lucide のアイコンを子要素にし、`data-icon="inline-start"` / `"inline-end"` で位置を示す
 
 ### Badge
 
 6 バリアント。ステータス表示に使う。
 
-Badge は行の中で Button や Input と並べない。Badge は高さが小さく、同じ行に Button があると高さが揃わない。テーブルの操作列や form の隣に置くラベル（アカウントの状態、付与済みロールなど）は `Button` の `secondary` / `sm` で表し、押せるもの（剥奪など）はそのまま submit にする。Button の中にアイコンを置くときは lucide のアイコンを子要素にし、`data-icon="inline-start"` / `"inline-end"` で位置を示す。
+Badge は行の中で Button や Input と並べない。Badge は高さが小さく、同じ行に Button があると高さが揃わない。テーブル行や、Button・Input と同じ行に置く押せないラベル（アカウントの状態、付与済みロールなど）は `StatusLabel` で表し、押せるもの（剥奪など）は `Button` の submit にする。Badge を残すのは、カウンタ、タグの並び、カードの見出しのように Button と高さを揃える必要がない箇所に限る。
 
 | バリアント    | 用途                 | 例                   |
 | ------------- | -------------------- | -------------------- |
@@ -159,7 +160,7 @@ Badge は行の中で Button や Input と並べない。Badge は高さが小�
 
 #### ステータスバッジの色マッピング
 
-業務上のステータスと Badge バリアントの対応。
+業務上のステータスと Badge バリアントの対応。この表は Badge のまま残す箇所にだけ当てる。
 
 | ステータス                 | バリアント    | 例                     |
 | -------------------------- | ------------- | ---------------------- |
@@ -167,6 +168,32 @@ Badge は行の中で Button や Input と並べない。Badge は高さが小�
 | 申請中・レビュー中・処理中 | `secondary`   | 休暇申請中、経費申請中 |
 | 却下・失効・エラー         | `destructive` | 申請却下、期限切れ     |
 | 下書き・未提出             | `outline`     | 下書き保存             |
+
+### StatusLabel
+
+押せない状態表示のコンポーネント（`components/status-label.tsx`）。テーブル行や、Button・Input と同じ行に置くラベルに使う。
+
+- 見た目と高さは `buttonVariants` から作るため、同じ size の Button と揃う。既定の size は `sm`（32px）で、`default`（36px）の Button と並ぶときだけ `size="default"` を渡す
+- 要素は `span` で、フォーカスを受けず、支援技術へボタンとして伝わらない。hover や押下の見た目の変化も出さない
+- 押せない状態表示を `Button` で描かない。`<button>` はスクリーンリーダーに「ボタン」と読み上げられ、押せると誤解させる
+- `className` は受け取らない。見た目は `variant` と `size` だけで変える
+
+```tsx
+<TableCell>
+  <StatusLabel>承認待ち</StatusLabel>
+</TableCell>
+```
+
+#### StatusLabel の色マッピング
+
+`StatusLabel` のステータスは、上の Badge の表を当てず次の 2 値に畳む。
+
+- 却下・失効・エラー（申請却下、期限切れ、不足）は `destructive`
+- それ以外のすべて（承認済み、申請中、下書き）は `secondary`（既定）
+
+`default` は 1 画面に 1 つのメイン CTA と同じ塗りになるため、ステータス表示には使わない。`outline` も使わない（Button の `outline` は `secondary` に統一する規則がある）。
+
+状態の区別は色ではなくラベルの文言で示す。色数を増やしたくなったら、その情報がラベルに書かれているかを先に確かめる。
 
 ### アイコン体系
 

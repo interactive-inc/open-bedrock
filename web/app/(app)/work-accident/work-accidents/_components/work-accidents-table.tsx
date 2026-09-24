@@ -1,5 +1,5 @@
 import { EmptyState } from "@/components/empty-state"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import {
   Table,
   TableBody,
@@ -62,9 +62,7 @@ export function WorkAccidentsTable(props: Props) {
               </TableCell>
 
               <TableCell>
-                <Badge variant={row.status === "closed" ? "secondary" : "outline"}>
-                  {STATUS_LABELS[row.status] ?? row.status}
-                </Badge>
+                <StatusLabel>{STATUS_LABELS[row.status] ?? row.status}</StatusLabel>
               </TableCell>
             </TableRow>
           ))}

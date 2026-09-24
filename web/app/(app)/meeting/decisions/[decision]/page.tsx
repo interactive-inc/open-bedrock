@@ -1,7 +1,7 @@
 import { notFound } from "next/navigation"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { Card } from "@/components/ui/card"
 import { getDecisionDetail } from "@/lib/api/get-decision-detail"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
@@ -47,9 +47,9 @@ export default async function DecisionDetailPage(props: Props) {
 
       <div className="flex flex-wrap items-center gap-2">
         {decision.status === "superseded" ? (
-          <Badge variant="outline">置き換え済み</Badge>
+          <StatusLabel>置き換え済み</StatusLabel>
         ) : (
-          <Badge variant="secondary">有効</Badge>
+          <StatusLabel>有効</StatusLabel>
         )}
 
         {decision.superseded_by_id === null ? null : (

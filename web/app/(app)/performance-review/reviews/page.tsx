@@ -6,7 +6,7 @@ import { BackButton } from "@/components/back-button"
 import { EmptyState } from "@/components/empty-state"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -128,9 +128,9 @@ function ResultsTable(props: ResultsTableProps) {
 
               <TableCell>
                 {form.status === "submitted" ? (
-                  <Badge variant="secondary">提出済み</Badge>
+                  <StatusLabel>提出済み</StatusLabel>
                 ) : (
-                  <Badge>未提出</Badge>
+                  <StatusLabel>未提出</StatusLabel>
                 )}
               </TableCell>
 

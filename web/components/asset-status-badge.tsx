@@ -1,22 +1,22 @@
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   status: string
 }
 
-/** 物品の在庫状態を日本語ラベルと配色付きの Badge で表示する。 */
+/** 物品の在庫状態を日本語ラベルの StatusLabel で表示する。却下・失効だけ destructive にし、他は secondary に揃える。 */
 export function AssetStatusBadge(props: Props) {
   if (props.status === "lent") {
-    return <Badge>貸与中</Badge>
+    return <StatusLabel>貸与中</StatusLabel>
   }
 
   if (props.status === "in_stock") {
-    return <Badge>在庫</Badge>
+    return <StatusLabel>在庫</StatusLabel>
   }
 
   if (props.status === "disposed") {
-    return <Badge variant="secondary">廃棄済み</Badge>
+    return <StatusLabel>廃棄済み</StatusLabel>
   }
 
-  return <Badge variant="secondary">{props.status}</Badge>
+  return <StatusLabel>{props.status}</StatusLabel>
 }

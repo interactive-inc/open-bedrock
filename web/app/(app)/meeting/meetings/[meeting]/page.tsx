@@ -4,7 +4,7 @@ import { MeetingMinutesForm } from "@/app/(app)/meeting/meetings/[meeting]/_comp
 import { BackButton } from "@/components/back-button"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { Card, CardContent } from "@/components/ui/card"
 import { getMeetingDetail } from "@/lib/api/get-meeting-detail"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
@@ -35,9 +35,9 @@ export default async function MeetingDetailPage(props: Props) {
 
       <div className="flex flex-wrap items-center gap-2">
         {meeting.status === "archived" ? (
-          <Badge variant="outline">アーカイブ</Badge>
+          <StatusLabel>アーカイブ</StatusLabel>
         ) : (
-          <Badge variant="secondary">{meeting.cadence ?? "随時"}</Badge>
+          <StatusLabel>{meeting.cadence ?? "随時"}</StatusLabel>
         )}
       </div>
 

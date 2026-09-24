@@ -1,6 +1,6 @@
 import { formatLifecycleKind } from "@/app/(app)/company/_lib/format-lifecycle-kind"
 import { TextLink } from "@/components/text-link"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { PersonnelActionRequests } from "@/lib/api/list-personnel-action-requests"
 
@@ -27,7 +27,7 @@ export function PersonnelActionRequestList(props: { data: PersonnelActionRequest
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Badge variant="outline">承認待ち</Badge>
+                <StatusLabel>承認待ち</StatusLabel>
                 <TextLink
                   href={`/system/applications/${request.application_id}`}
                   prefetch={false}

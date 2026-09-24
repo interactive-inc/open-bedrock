@@ -1,6 +1,6 @@
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { Card } from "@/components/ui/card"
 import { getRecruitmentCandidateList } from "@/lib/api/get-recruitment-candidate-list"
 import { CandidateStageControls } from "@/app/(app)/recruitment/recruitments/_components/candidate-stage-controls"
@@ -33,7 +33,7 @@ export async function CandidatePipeline(props: Props) {
         <Card key={candidate.id} className="gap-0">
           <div className="flex flex-col gap-4 p-4">
             <div className="flex items-center gap-4">
-              <Badge variant="secondary">{toCandidateStageLabel(candidate.stage)}</Badge>
+              <StatusLabel>{toCandidateStageLabel(candidate.stage)}</StatusLabel>
 
               <span className="text-base font-medium">{candidate.name}</span>
 

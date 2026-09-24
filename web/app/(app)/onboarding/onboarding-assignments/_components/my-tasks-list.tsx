@@ -2,7 +2,7 @@ import { CompleteTaskButton } from "@/app/(app)/onboarding/onboarding-assignment
 import { UncompleteTaskButton } from "@/app/(app)/onboarding/onboarding-assignments/_components/uncomplete-task-button"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { getOnboardingMe } from "@/lib/api/get-onboarding-me"
 import {
   Table,
@@ -48,9 +48,7 @@ export async function MyTasksList() {
               <TableCell>{task.title}</TableCell>
 
               <TableCell>
-                <Badge variant={task.status === "done" ? "secondary" : "outline"}>
-                  {task.status === "done" ? "完了" : "未完了"}
-                </Badge>
+                <StatusLabel>{task.status === "done" ? "完了" : "未完了"}</StatusLabel>
               </TableCell>
 
               <TableCell className="text-right">

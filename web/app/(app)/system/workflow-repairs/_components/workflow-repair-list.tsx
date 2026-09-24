@@ -19,7 +19,7 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -103,7 +103,7 @@ function WorkflowRepairCard(props: { repair: WorkflowRepair }) {
           {formatDateTime(repair.started_at)}
         </CardDescription>
         <CardAction>
-          <Badge variant="secondary">{reasonLabels[repair.reason]}</Badge>
+          <StatusLabel>{reasonLabels[repair.reason]}</StatusLabel>
         </CardAction>
       </CardHeader>
 

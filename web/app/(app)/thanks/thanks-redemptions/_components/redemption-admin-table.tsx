@@ -1,6 +1,6 @@
 import { formatDateTime } from "@/lib/format-date-time"
 import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { EmptyState } from "@/components/empty-state"
 import { SortableTableHead } from "@/components/sortable-table-head"
 import {
@@ -38,14 +38,14 @@ type Props = {
 
 function StatusBadge(props: { status: RedemptionStatus }) {
   if (props.status === "fulfilled") {
-    return <Badge>交換済み</Badge>
+    return <StatusLabel>交換済み</StatusLabel>
   }
 
   if (props.status === "rejected") {
-    return <Badge variant="destructive">却下</Badge>
+    return <StatusLabel variant="destructive">却下</StatusLabel>
   }
 
-  return <Badge variant="secondary">承認待ち</Badge>
+  return <StatusLabel>承認待ち</StatusLabel>
 }
 
 export function RedemptionAdminTable(props: Props) {

@@ -1,6 +1,6 @@
 import { CompleteEnrollmentButton } from "@/app/(app)/training/trainings/_components/complete-enrollment-button"
 import { EmptyState } from "@/components/empty-state"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import {
   Table,
   TableBody,
@@ -52,9 +52,9 @@ export function MyEnrollmentList(props: Props) {
                 <TableCell>{courseLabel}</TableCell>
 
                 <TableCell>
-                  <Badge variant={enrollment.status === "completed" ? "secondary" : "outline"}>
+                  <StatusLabel>
                     {enrollment.status === "completed" ? "受講済み" : "受講中"}
-                  </Badge>
+                  </StatusLabel>
                 </TableCell>
 
                 <TableCell>{enrollment.due_date ?? "-"}</TableCell>

@@ -1,19 +1,13 @@
 import type { BatchJobStatus } from "@/lib/api/types/batch-types"
 
 /**
- * バッチジョブの状態に対応する Badge の variant を返す純粋関数。
- * completed=secondary（落ち着いた表示）, failed=destructive, running=outline。
+ * バッチジョブの状態に対応する StatusLabel の variant を返す純粋関数。
+ * failed=destructive、それ以外は secondary。
  */
-export function toBatchStatusVariant(
-  status: BatchJobStatus,
-): "secondary" | "destructive" | "outline" {
-  if (status === "completed") {
-    return "secondary"
-  }
-
+export function toBatchStatusVariant(status: BatchJobStatus): "secondary" | "destructive" {
   if (status === "failed") {
     return "destructive"
   }
 
-  return "outline"
+  return "secondary"
 }

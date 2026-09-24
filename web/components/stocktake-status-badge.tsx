@@ -1,18 +1,18 @@
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   status: string
 }
 
-/** 棚卸しセッションの状態を日本語ラベルと配色付きの Badge で表示する。 */
+/** 棚卸しセッションの状態を日本語ラベルの StatusLabel で表示する。却下・失効だけ destructive にし、他は secondary に揃える。 */
 export function StocktakeStatusBadge(props: Props) {
   if (props.status === "open") {
-    return <Badge>実施中</Badge>
+    return <StatusLabel>実施中</StatusLabel>
   }
 
   if (props.status === "closed") {
-    return <Badge variant="secondary">締め済み</Badge>
+    return <StatusLabel>締め済み</StatusLabel>
   }
 
-  return <Badge variant="secondary">{props.status}</Badge>
+  return <StatusLabel>{props.status}</StatusLabel>
 }

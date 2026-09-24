@@ -1,7 +1,7 @@
 import { FetchError } from "@/components/fetch-error"
 import { getSkillList } from "@/lib/api/get-skill-list"
 import { EmptyState } from "@/components/empty-state"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import {
   Table,
   TableBody,
@@ -45,7 +45,7 @@ export async function SkillTable(props: Props) {
               <TableCell>{skill.code}</TableCell>
               <TableCell>{skill.name}</TableCell>
               <TableCell>
-                <Badge variant="secondary">{skill.category}</Badge>
+                <StatusLabel>{skill.category}</StatusLabel>
               </TableCell>
             </TableRow>
           ))}

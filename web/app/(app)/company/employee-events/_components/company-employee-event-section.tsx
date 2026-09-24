@@ -1,6 +1,6 @@
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import {
   Table,
   TableBody,
@@ -61,7 +61,7 @@ export async function CompanyEmployeeEventSection(props: Props) {
               <TableCell className="whitespace-nowrap">{event.effective_date}</TableCell>
 
               <TableCell>
-                <Badge variant="outline">{toEmployeeEventKindLabel(event.kind)}</Badge>
+                <StatusLabel>{toEmployeeEventKindLabel(event.kind)}</StatusLabel>
               </TableCell>
 
               <TableCell>{event.from_department_code ?? "-"}</TableCell>

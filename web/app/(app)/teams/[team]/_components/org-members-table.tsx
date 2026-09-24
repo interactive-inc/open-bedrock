@@ -1,7 +1,7 @@
 import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { getOrgDepartmentMembers } from "@/lib/api/get-org-department-members"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import {
   Table,
   TableBody,
@@ -57,9 +57,9 @@ export async function OrgMembersTable(props: Props) {
 
               <TableCell>
                 {member.is_manager ? (
-                  <Badge>マネージャー</Badge>
+                  <StatusLabel>マネージャー</StatusLabel>
                 ) : (
-                  <Badge variant="secondary">メンバー</Badge>
+                  <StatusLabel>メンバー</StatusLabel>
                 )}
               </TableCell>
             </TableRow>

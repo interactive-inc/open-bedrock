@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import {
   Table,
   TableBody,
@@ -36,9 +36,9 @@ export function RoomAvailabilityTable(props: Props) {
 
               <TableCell>
                 {availability.available ? (
-                  <Badge variant="secondary">空き</Badge>
+                  <StatusLabel>空き</StatusLabel>
                 ) : (
-                  <Badge variant="destructive">予約あり</Badge>
+                  <StatusLabel variant="destructive">予約あり</StatusLabel>
                 )}
               </TableCell>
 

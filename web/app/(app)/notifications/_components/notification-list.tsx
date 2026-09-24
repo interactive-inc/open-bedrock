@@ -10,6 +10,7 @@ import {
   markNotificationReadAction,
 } from "@/app/(app)/notifications/actions"
 import { EmptyState } from "@/components/empty-state"
+import { StatusLabel } from "@/components/status-label"
 import { Badge } from "@/components/ui/badge"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
@@ -87,9 +88,9 @@ export function NotificationList(props: Props) {
                   ) : null}
 
                   {notification.is_read ? (
-                    <Badge variant="outline">既読</Badge>
+                    <StatusLabel>既読</StatusLabel>
                   ) : (
-                    <Badge>未読</Badge>
+                    <StatusLabel>未読</StatusLabel>
                   )}
                 </div>
 

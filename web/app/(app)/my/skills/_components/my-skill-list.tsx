@@ -1,7 +1,7 @@
 import { FetchError } from "@/components/fetch-error"
 import { getMySkillList } from "@/lib/api/get-my-skill-list"
 import { EmptyState } from "@/components/empty-state"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import {
   Table,
   TableBody,
@@ -52,7 +52,7 @@ export async function MySkillList() {
                 </span>
               </TableCell>
               <TableCell>
-                <Badge variant="secondary">{mySkill.skill_category}</Badge>
+                <StatusLabel>{mySkill.skill_category}</StatusLabel>
               </TableCell>
               <TableCell>{mySkill.level}</TableCell>
               <TableCell>{mySkill.years === null ? "-" : `${mySkill.years}年`}</TableCell>

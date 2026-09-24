@@ -1,16 +1,16 @@
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   status: string
 }
 
-/** 従業員ステータスを日本語ラベル + 配色付き Badge で表示する。 */
+/** 従業員ステータスを日本語ラベル + 配色付き StatusLabel で表示する。 */
 export function EmployeeStatusBadge(props: Props) {
   const label = toStatusLabel(props.status)
 
   const variant = toStatusVariant(props.status)
 
-  return <Badge variant={variant}>{label}</Badge>
+  return <StatusLabel variant={variant}>{label}</StatusLabel>
 }
 
 /** status コードを日本語ラベルに変換する。未知の値はそのまま返す。 */
@@ -32,21 +32,11 @@ function toStatusLabel(status: string): string {
   return status
 }
 
-/** status コードを Badge のバリアントに対応づける。 */
-function toStatusVariant(status: string): "default" | "secondary" | "destructive" | "outline" {
-  if (status === "active") {
-    return "default"
-  }
-
-  if (status === "leave") {
-    return "secondary"
-  }
-
+/** status コードを StatusLabel のバリアントに対応づける。退職だけ destructive にする。 */
+function toStatusVariant(status: string): "secondary" | "destructive" {
   if (status === "retired") {
     return "destructive"
   }
 
-  if (status === "prehire") return "outline"
-
-  return "outline"
+  return "secondary"
 }
