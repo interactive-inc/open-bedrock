@@ -1,4 +1,4 @@
-import type { Context } from "@/env"
+import type { Context, AuthenticatedAccountContext } from "@/env"
 import type {
   SystemAuthorizationContext,
   SystemClockContext,
@@ -6,7 +6,8 @@ import type {
 } from "@system/configuration/system-context"
 
 /** キャリア公募・応募・シートの保全が利用する認証主体、会社時刻、保存先。 */
-export type CareerContext = Context &
+export type CareerContext = AuthenticatedAccountContext &
+  Context &
   SystemD1Context &
   SystemClockContext &
   SystemAuthorizationContext &

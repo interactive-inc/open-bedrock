@@ -161,7 +161,7 @@ async function authorFixture(accountId = "1", now = new Date()) {
       ...fixture.context,
       var: {
         ...fixture.context.var,
-        userId: accountId,
+        userId: zAccountId.parse(accountId),
         accountTokenVersion: 0,
         permissions: new Set<string>(),
         role: "authenticated",
