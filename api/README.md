@@ -119,16 +119,31 @@ D1 の Time Travel（標準で30日のポイントインタイム復元）を一
 
 欠損があれば添付 id だけを出力して終了コード2で終わる。照合は読み取りだけなので、失敗時は再実行だけで回復する。
 
+### 個人情報の消去（鍵の破棄）
+
+添付の消去は DEK の破棄で行う。破棄すると、原本・複製・全バックアップ世代の暗号文が同時に復号できなくなる。承認を経ない破棄の経路は無い。
+
+1. 導入時に、個人情報の管理責任者にあたる人の Role へ `personal_data:erase` を明示的に付与する。この権限はどの Role にも既定で付与しない。`system:admin` も同じ操作を行える
+2. `personal_data:erase` を持つ人が `POST /company/application-templates` に `completion_operation_key: "system.attachment.erase"` を付けて消去申請テンプレートを作り、`/company/application-templates/{code}/workflow` で承認経路を設定する。最終段は `personal_data:erase` を持つ人にする
+3. `personal_data:erase` を持つ人が `POST /company/personal-data-erasure-requests` で申請する。`target` は添付（`attachment_id`）または従業員（`employee_code`、Company が Account を解決し、その Account が所有する添付を対象にする）。対象は申請時点で固定し、保全中の添付は対象から外して本文に記録する。同じ添付に未完了の申請があれば拒否する
+4. 承認は `/company/application-requests/{id}/approve` で行う。最終承認の確定で破棄を実行する。最終承認者が `personal_data:erase` を持たない場合は承認済みのまま残り、権限を持つ人が `POST /company/personal-data-erasure-requests/{id}/execute` で確定する
+5. 申請・各判断・破棄は System 監査（`system.attachment.erasure.requested`、`system.attachment.erasure.decided`、`system.attachment.key.destroyed`）に残る
+
+### 消去 ledger の保管
+
+`bun run ops:attachments:erasure-ledger export` は、D1 の `system.attachment.key.destroyed` 監査を `ATTACHMENT_ERASURE_LEDGER_FILE` の JSON Lines へ追記する。既に写した監査は追記しない。D1 のバックアップと同じ周期で実行し、ledger を D1 とは別の場所に保管する。照会先は `ATTACHMENT_ERASURE_D1_BINDING`（既定 `bedrock`）と `ATTACHMENT_ERASURE_WRANGLER_CONFIG`（既定 `wrangler.jsonc`）で決める。
+
 ### 復元後の消去の再適用
 
-D1 を過去の時点へ復元すると、その後に破棄した DEK が行とともに戻る。復元の直後、利用者へ公開する前に次を行う。
+D1 を過去の時点へ復元すると、その後に破棄した DEK が行とともに戻り、D1 の監査からも破棄の記録が消える。破棄の正本は監査の破棄記録で、D1 の外の ledger がその写しである。復元の直後、利用者へ公開する前に次を行う。
 
-- 未紐付け添付の掃除を実行し、復元で戻った期限切れの未紐付け行の鍵を再び破棄する
-- 復元時点より後の監査 CSV を確認し、鍵破棄の記録があれば同じ対象の破棄をやり直す
-- 照合を先頭から実行し、復元した行と本体の対応を確認する
+1. 復元前に取った最新の ledger を用意する。復元前に D1 へ到達できる場合は、先に `export` を実行して ledger を最新にする
+2. `ATTACHMENT_ERASURE_LEDGER_FILE=<ledger> bun run ops:attachments:erasure-ledger reapply` を実行する。ledger の全破棄について、包んだ DEK が残る添付だけの鍵を消し直し、消し直した添付 id を出力する。既に消去済みの行は変えない。ledger の一行でも形式が崩れていれば何もせずに終了コード1で終わる
+3. 未紐付け添付の掃除を実行し、復元で戻った期限切れの未紐付け行の鍵を再び破棄する
+4. 照合を先頭から実行し、復元した行と本体の対応を確認する
 
-紐付け済み添付の鍵破棄（承認を経た消去）は未実装である。現時点で消去を再現できるのは未紐付け添付の掃除だけである。
+再適用は記録済みの破棄をやり直すだけで、新しい破棄の判断を作らない。保全中の添付は DB の trigger が破棄を拒否し、再適用全体を失敗させる。その場合は保全と消去の関係を確認してから再実行する。
 
-### 法令上の保存要件
+### 法令上の保存要件と責任の境界
 
-この製品は変更不能な保存と閲覧記録を持つが、電子帳簿保存法その他の法令が求める保存要件への適合を判定せず、保証しない。適合の判断と、消去請求に応じるかの判断は運用する会社が行う。
+この製品は変更不能な保存と閲覧記録を持つが、電子帳簿保存法その他の法令が求める保存要件への適合を判定せず、保証しない。適合の判断、消去請求に応じるかの判断、個人情報の管理責任者の任命は運用する会社が行う。製品が保証するのは、承認なしに鍵を破棄できないこと、破棄が必ず監査に残ること、ledger を保管していれば復元後も破棄の状態を再現できることまでである。

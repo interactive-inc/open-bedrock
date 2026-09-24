@@ -38,6 +38,7 @@ export const POST = factory.createHandlers(
       description: z.string().max(3_000).nullable().optional(),
       schema_json: jsonPayloadSchema(10_000),
       approver_roles: z.array(z.string().max(100)).max(20).optional(),
+      completion_operation_key: z.literal("system.attachment.erase").optional(),
     }),
   ),
   async (c) => {
@@ -51,6 +52,13 @@ export const POST = factory.createHandlers(
     }
 
     const body = c.req.valid("json")
+    // 消去申請テンプレートは承認後に鍵を破棄するため、消去権限を持つ人だけが作れる。
+    if (
+      body.completion_operation_key !== undefined &&
+      !c.var.permissions.has("personal_data:erase") &&
+      !c.var.permissions.has("system:admin")
+    )
+      throw new ForbiddenError("個人情報の消去権限が必要です")
     if (["ringi_request", "expense_request"].includes(body.code))
       throw new ForbiddenError("稟議専用の規程設定を使用してください")
     const approverRoles = body.approver_roles ?? []
@@ -73,7 +81,7 @@ export const POST = factory.createHandlers(
       description: body.description ?? null,
       schemaJson: body.schema_json ?? {},
       policy,
-      completionOperationKey: null,
+      completionOperationKey: body.completion_operation_key ?? null,
     })
     if (created === "revision_conflict") {
       throw toHttpException(

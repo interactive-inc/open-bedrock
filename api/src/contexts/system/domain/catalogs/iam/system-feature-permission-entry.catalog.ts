@@ -97,4 +97,11 @@ export const SYSTEM_FEATURE_PERMISSION_ENTRIES = [
     featureKey: null,
     description: "責任を引き継ぎ作業を中止する",
   },
+  {
+    key: "personal_data:erase",
+    category: "personal_data",
+    featureKey: null,
+    description:
+      "承認済みの消去申請に基づき、個人情報を含む添付の暗号鍵を破棄する。既定ではどのRoleにも付与しない",
+  },
 ] satisfies ReadonlyArray<PermissionEntry>

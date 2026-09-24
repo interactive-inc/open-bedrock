@@ -46,7 +46,8 @@
     "verify:core-worker-isolation": "bash scripts/verify-core-worker-isolation.sh",
     "verify:business-context-removal": "bun run scripts/verify-business-context-removal.ts",
     "ops:attachments:replicate": "bun run scripts/replicate-attachments.ts",
-    "ops:attachments:reconcile": "bun run scripts/reconcile-attachments.ts"
+    "ops:attachments:reconcile": "bun run scripts/reconcile-attachments.ts",
+    "ops:attachments:erasure-ledger": "bun run scripts/attachment-erasure-ledger.ts"
   },
   "dependencies": {
     "@hono/zod-validator": "^0.7.6",

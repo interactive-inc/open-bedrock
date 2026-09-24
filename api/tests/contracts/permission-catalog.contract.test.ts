@@ -3,7 +3,7 @@ import { PERMISSION_KEYS } from "@/api/http/permissions/permission-key.catalog"
 import { loadSchema } from "@tests/api/support/load-schema"
 import { createMigratedSqliteDatabase } from "@tests/api/support/migrated-sqlite-database"
 import { describe, expect, test } from "bun:test"
-import { readFileSync } from "node:fs"
+import { readFileSync, readdirSync } from "node:fs"
 import { resolve } from "node:path"
 import ts from "typescript"
 
@@ -88,6 +88,16 @@ describe("permission catalog contract", () => {
       .sort()
 
     expect(unknownKeys).toEqual([])
+  })
+
+  test("personal_data:eraseはmigrationとseedのどのRoleにも付与しない", () => {
+    const seedDirectory = resolve(repositoryRoot, "api/seeds")
+    const seeds = readdirSync(seedDirectory)
+      .filter((file) => file.endsWith(".sql"))
+      .map((file) => readFileSync(resolve(seedDirectory, file), "utf8"))
+    expect([loadSchema(), ...seeds].filter((sql) => sql.includes("personal_data:erase"))).toEqual(
+      [],
+    )
   })
 
   test("webの手書きPermissionKeyとPERMISSION_KEYSが一致する", () => {
