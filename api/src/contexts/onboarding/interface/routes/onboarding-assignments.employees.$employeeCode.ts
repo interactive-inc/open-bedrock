@@ -85,7 +85,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     template_code: row.assignment.templateCode,
     template_name: row.templateName ?? "",
     kind: row.assignment.kind,
-    status: row.assignment.status,
+    // 割当entityと同じく、完了・置換済み以外の保存値は進行中として返す。
+    status:
+      row.assignment.status === "completed" || row.assignment.status === "superseded"
+        ? row.assignment.status
+        : "in_progress",
     assigned_at: row.assignment.assignedAt,
     tasks: taskRows
       .filter((taskRow) => taskRow.task.assignmentId === row.assignment.id)

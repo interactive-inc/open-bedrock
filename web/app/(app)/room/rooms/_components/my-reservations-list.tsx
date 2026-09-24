@@ -34,7 +34,7 @@ import type { RoomReservationResponse } from "@/lib/api/types/room-types"
 
 type Props = {
   reservations: ReadonlyArray<RoomReservationResponse>
-  roomNameMap: Record<number, string>
+  roomNameMap: Record<string, string>
 }
 
 /** 自分の会議室予約一覧。各行に変更（Dialog フォーム）とキャンセルボタンを置く表示コンポーネント。 */
@@ -60,7 +60,7 @@ export function MyReservationsList(props: Props) {
           {props.reservations.map((reservation) => (
             <TableRow key={reservation.id}>
               <TableCell>
-                {props.roomNameMap[reservation.room_id] ?? `#${reservation.room_id}`}
+                {props.roomNameMap[String(reservation.room_id)] ?? `#${reservation.room_id}`}
               </TableCell>
 
               <TableCell>{formatDateTime(reservation.start_at)}</TableCell>

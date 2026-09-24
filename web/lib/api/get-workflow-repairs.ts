@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toApiResponseError } from "@/lib/api/to-api-response-error"
 
 export type WorkflowRepair = {
-  id: number
+  id: EntityId
   template_code: string
   template_name: string
   applicant_name: string | null

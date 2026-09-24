@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
@@ -19,7 +20,7 @@ const initialState: RingiSubmitFormState = { ok: false, error: null }
  */
 export function RingiCreateForm(props: {
   requestKey: string
-  initial?: { id: number; approver_id: string; title: string; amount: number; reason: string }
+  initial?: { id: EntityId; approver_id: string; title: string; amount: number; reason: string }
   mode?: "adopt" | "resubmit"
 }) {
   const router = useRouter()

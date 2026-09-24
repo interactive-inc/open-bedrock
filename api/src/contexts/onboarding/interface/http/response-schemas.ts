@@ -97,7 +97,7 @@ export const zAppOnboardingAssignment = z.object({
   template_code: z.string(),
   template_name: z.string().optional(),
   kind: z.string(),
-  status: z.string(),
+  status: z.enum(["in_progress", "completed", "superseded"]),
   assigned_at: z.string(),
   tasks: z.array(zAppOnboardingTask),
 })

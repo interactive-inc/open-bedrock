@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 import { deleteGoalAction, updateGoalAction } from "@/app/(app)/performance-review/goals/actions"
@@ -66,7 +67,7 @@ export function GoalRowActions(props: Props) {
 /** 目標変更フォームを Dialog で開く。期間・タイトル・KPI・ウェイトを編集して送信する。 */
 function UpdateGoalDialog(props: {
   goal: GoalResponse
-  goalId: number
+  goalId: EntityId
   periodOptions: GoalPeriodOption[]
 }) {
   const [open, setOpen] = useState(false)
@@ -178,7 +179,7 @@ function UpdateGoalDialog(props: {
  * 目標削除ボタン。確認ダイアログを表示し、承認後に Server Action を呼ぶ。
  * 成功・失敗の通知は action の結果を見て toast() で出す。
  */
-function DeleteGoalButton(props: { goalId: number }) {
+function DeleteGoalButton(props: { goalId: EntityId }) {
   async function reduce(
     previousState: GoalActionState,
     formData: FormData,

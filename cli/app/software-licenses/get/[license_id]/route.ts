@@ -1,5 +1,6 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { isEntityIdSegment } from "@/lib/is-entity-id-segment"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
@@ -11,11 +12,7 @@ export default factory.createHandlers(
   zValidator(
     "param",
     z.object({
-      license_id: z
-        .string()
-        .regex(/^[1-9]\d*$/)
-        .refine((value) => Number.isSafeInteger(Number(value)))
-        .optional(),
+      license_id: z.string().refine(isEntityIdSegment).optional(),
     }),
   ),
   async (c) => {

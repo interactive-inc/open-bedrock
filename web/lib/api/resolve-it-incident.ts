@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** POST /it-incidents/:id/resolve。インシデントを解消済みに倒す。失敗時は Error。 */
-export async function resolveItIncident(id: number) {
+export async function resolveItIncident(id: EntityId) {
   const client = await createClient()
 
   const response = await client["it-incident"]["it-incidents"][":id"].resolve.$post({

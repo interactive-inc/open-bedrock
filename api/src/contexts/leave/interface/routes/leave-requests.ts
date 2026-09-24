@@ -184,7 +184,7 @@ export const GET = factory.createHandlers(
       })
       .from(leaveRequests)
       .where(where)
-      .orderBy(desc(leaveRequests.id))
+      .orderBy(desc(leaveRequests.createdAt), desc(leaveRequests.id))
       .limit(limit)
       .offset(offset)
 

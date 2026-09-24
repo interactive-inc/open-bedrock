@@ -1,3 +1,4 @@
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { notFound } from "next/navigation"
 import { getLeaveProcedureRequest } from "@/lib/api/get-leave-procedure-request"
 import { LeaveRequestCreateForm } from "@/app/(app)/my/leaves/_components/leave-request-create-form"
@@ -8,7 +9,9 @@ export const metadata = { title: "未提出の休暇を編集" }
 
 export default async function EditLeavePage(props: { params: Promise<{ id: string }> }) {
   const { id } = await props.params
-  const leave = await getLeaveProcedureRequest(Number(id))
+  const leaveId = toEntityId(id)
+  if (leaveId === null) notFound()
+  const leave = await getLeaveProcedureRequest(leaveId)
   if (leave instanceof Error || !leave.can_submit) notFound()
   const previousId = leave.previous_leave_request_id ?? undefined
   return (

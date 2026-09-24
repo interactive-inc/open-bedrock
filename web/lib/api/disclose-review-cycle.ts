@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** POST /review-cycles/:cycleId/disclose。特権ロールがサイクル内の全フォームを一括開示する。 */
-export async function discloseReviewCycle(cycleId: number) {
+export async function discloseReviewCycle(cycleId: EntityId) {
   const client = await createClient()
 
   const response = await client["performance-review"]["review-cycles"][":cycleId"].disclose.$post({

@@ -3,7 +3,6 @@ import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interfa
 import type { DisciplinaryActionContext } from "@/contexts/disciplinary-action/configuration/disciplinary-action-context"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { DisciplinaryActionError } from "@/contexts/disciplinary-action/domain/errors"
 
 type Context = DisciplinaryActionContext
@@ -16,11 +15,11 @@ export class DisciplinaryActionActorReadAdapter {
 
   async prepare(employeeIds: ReadonlyArray<EmployeeId> = []) {
     const now = this.c.var.now()
-    const account = zAccountId.safeParse(this.c.var.userId)
-    if (!account.success || !Number.isSafeInteger(now.getTime()) || now.getTime() < 0)
+    const accountId = this.c.var.userId
+    if (!Number.isSafeInteger(now.getTime()) || now.getTime() < 0)
       return new DisciplinaryActionError("forbidden", "invalid disciplinary-action actor")
     const authorization = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
-      accountId: account.data,
+      accountId,
       tokenVersion: this.c.var.accountTokenVersion,
       permissions: ["disciplinary_action:manage"],
       now,
@@ -43,7 +42,7 @@ export class DisciplinaryActionActorReadAdapter {
         database: this.c.env.DB,
       },
       {
-        accountIds: [account.data],
+        accountIds: [accountId],
         employeeCodes: [],
       },
     )
@@ -62,7 +61,7 @@ export class DisciplinaryActionActorReadAdapter {
         NOW: now.toISOString(),
       },
     })
-    const actors = await directory.findForAccountIds([account.data])
+    const actors = await directory.findForAccountIds([accountId])
     const employees = await directory.findForEmployeeIds(employeeIds)
     if (actors instanceof Error || employees instanceof Error)
       return new DisciplinaryActionError(
@@ -72,7 +71,7 @@ export class DisciplinaryActionActorReadAdapter {
     return {
       actor: actors[0]?.employee ?? null,
       employees,
-      accountId: account.data,
+      accountId,
       principalId: authorization.principalId,
       now,
       assertions: [...authorization.assertions, guard],

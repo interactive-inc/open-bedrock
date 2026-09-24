@@ -1,3 +1,5 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /** status / reviewer_type は API 上 DB の text 列をそのまま返すため string。 */
 export type ReviewCycleStatus = string
 
@@ -7,7 +9,7 @@ export type ReviewFormStatus = string
 
 /** GET /review-cycles の各要素。POST /review-cycles, open/close のレスポンスも同形。 */
 export type ReviewCycleResponse = {
-  id: number
+  id: EntityId
   title: string
   period: string
   status: ReviewCycleStatus
@@ -39,8 +41,8 @@ export type ReviewCycleUpdateRequest = {
 
 /** GET /review-forms/me の各要素。POST /review-forms/:form_id/submit のレスポンスも同形。 */
 export type ReviewFormResponse = {
-  id: number
-  cycle_id: number
+  id: EntityId
+  cycle_id: EntityId
   subject_employee_id: string
   reviewer_employee_id: string | null
   reviewer_type: string
@@ -67,7 +69,7 @@ export type ReviewFormSubmitRequest = {
 
 /** GET /review-cycles/:cycle_id/results/:employee_code のレスポンス（集計済みの評価結果）。 */
 export type ReviewResultResponse = {
-  cycle_id: number
+  cycle_id: EntityId
   subject_employee_id: string
   form_count: number
   submitted_count: number

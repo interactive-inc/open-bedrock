@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { useRouter } from "next/navigation"
 import { createCandidateAction } from "@/app/(app)/recruitment/recruitments/actions"
@@ -13,7 +14,7 @@ import { Textarea } from "@/components/ui/textarea"
 const initialState: RecruitmentActionState = { ok: false, error: null }
 
 type Props = {
-  positionId: number
+  positionId: EntityId
 }
 
 /**

@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import type { CareerPosting, CareerPostingUpdateRequest } from "@/lib/api/types/career-types"
 
@@ -6,7 +7,7 @@ import type { CareerPosting, CareerPostingUpdateRequest } from "@/lib/api/types/
  * 権限不足は 403、不存在は 404 を api が返すため、戻りは Error になる。
  */
 export async function updateCareerPosting(
-  postingId: number,
+  postingId: EntityId,
   request: CareerPostingUpdateRequest,
 ): Promise<CareerPosting | Error> {
   const client = await createClient()

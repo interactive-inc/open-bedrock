@@ -9,7 +9,9 @@ import type { RoomReservationCreateRequest } from "@/lib/api/types/room-types"
 export async function createRoomReservation(request: RoomReservationCreateRequest) {
   const client = await createClient()
 
-  const response = await client["room"]["rooms"].reservations.$post({ json: request })
+  const response = await client["room"]["rooms"].reservations.$post({
+    json: { ...request, room_id: Number(request.room_id) },
+  })
 
   if (response.status >= 400) {
     return toResponseError(response, {

@@ -8,7 +8,7 @@ import { createTrainingCourse } from "@/lib/api/create-training-course"
 import { createTrainingEnrollment } from "@/lib/api/create-training-enrollment"
 import { getMe } from "@/lib/api/get-me"
 import { updateTrainingCourse } from "@/lib/api/update-training-course"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { canManageTraining } from "@/lib/training/can-manage-training"
 
 /** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
@@ -55,7 +55,7 @@ export async function completeTrainingEnrollmentAction(
     return { ok: false, error: "受講が不明です" }
   }
 
-  const enrollmentId = toPositiveIntId(enrollmentIdText)
+  const enrollmentId = toEntityId(enrollmentIdText)
 
   if (enrollmentId === null) {
     return { ok: false, error: "受講IDが不正です" }
@@ -158,7 +158,7 @@ export async function cancelTrainingEnrollmentAction(
     return { ok: false, error: "受講が不明です" }
   }
 
-  const enrollmentId = toPositiveIntId(enrollmentIdText)
+  const enrollmentId = toEntityId(enrollmentIdText)
 
   if (enrollmentId === null) {
     return { ok: false, error: "受講IDが不正です" }

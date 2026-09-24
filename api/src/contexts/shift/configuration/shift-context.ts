@@ -1,4 +1,4 @@
-import type { Context } from "@/env"
+import type { Context, AuthenticatedAccountContext } from "@/env"
 import type {
   SystemAuthorizationContext,
   SystemClockContext,
@@ -6,7 +6,8 @@ import type {
 } from "@system/configuration/system-context"
 
 /** シフト3台帳の保全が利用する認証主体、会社時刻、保存先。 */
-export type ShiftContext = Context &
+export type ShiftContext = AuthenticatedAccountContext &
+  Context &
   SystemD1Context &
   SystemClockContext &
   SystemAuthorizationContext &

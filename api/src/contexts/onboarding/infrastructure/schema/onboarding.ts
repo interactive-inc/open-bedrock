@@ -65,12 +65,12 @@ export const onboardingAssignments = sqliteTable(
       onDelete: "restrict",
     }),
   },
-  // 同一社員・同一テンプレートで未完了の割当は 1 件まで（重複割当を防ぐ）。
+  // 同一社員・同一テンプレートで進行中の割当は 1 件まで（完了済みと置換済みは除く）。
   (table) => [
     uniqueIndex("onboarding_assignments_lifecycle_action_uniq").on(table.lifecycleActionId),
     uniqueIndex("uq_onboarding_assignments_employee_template")
       .on(table.employeeId, table.templateCode)
-      .where(sql`status != 'completed'`),
+      .where(sql`status NOT IN ('completed', 'superseded')`),
   ],
 )
 

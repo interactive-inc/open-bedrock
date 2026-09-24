@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
@@ -10,7 +11,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Input } from "@/components/ui/input"
 
 type Props = {
-  partnerId: number
+  partnerId: EntityId
   partnerCode: string
 }
 

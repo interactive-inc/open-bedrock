@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import type { ShiftFormState } from "@/app/(app)/my/shifts/actions"
 import { cancelShiftSwapRequestAction } from "@/app/(app)/my/shifts/actions"
 import { useFormAction } from "@/hooks/use-form-action"
@@ -76,7 +77,7 @@ export function MyShiftSwapRequests(props: Props) {
 }
 
 /** 交代申請取り下げボタン。保留中のみ表示。承認済みはサーバーが拒否する。 */
-function CancelSwapRequestButton(props: { swapRequestId: number | null }) {
+function CancelSwapRequestButton(props: { swapRequestId: EntityId | null }) {
   const [, formAction, pending] = useFormAction(
     cancelShiftSwapRequestAction,
     initialState,

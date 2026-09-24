@@ -1,3 +1,4 @@
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { notFound } from "next/navigation"
 import { EditPostingForm } from "@/app/(app)/my/career/_components/edit-posting-form"
 import { BackButton } from "@/components/back-button"
@@ -21,9 +22,9 @@ type Props = {
 export default async function EditCareerPostingPage(props: Props) {
   const params = await props.params
 
-  const postingId = Number(params.posting)
+  const postingId = toEntityId(params.posting)
 
-  if (Number.isInteger(postingId) === false || postingId <= 0) {
+  if (postingId === null) {
     notFound()
   }
 

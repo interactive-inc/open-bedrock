@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import type { ReviewResultResponse } from "@/lib/api/types/review-types"
 
 type Props = {
-  cycleId: number
+  cycleId: EntityId
   employeeCode: string
 }
 

@@ -13,8 +13,8 @@ export async function MyReservationsSection() {
 
   const rooms = await getRoomList()
 
-  const roomNameMap: Record<number, string> =
-    rooms instanceof Error ? {} : Object.fromEntries(rooms.map((r) => [r.id, r.name]))
+  const roomNameMap: Record<string, string> =
+    rooms instanceof Error ? {} : Object.fromEntries(rooms.map((r) => [String(r.id), r.name]))
 
   return <MyReservationsList reservations={reservations} roomNameMap={roomNameMap} />
 }

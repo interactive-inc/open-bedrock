@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { ThanksRedemptionResponse } from "@/lib/api/types/thanks-points-types"
@@ -7,12 +8,12 @@ import type { ThanksRedemptionResponse } from "@/lib/api/types/thanks-points-typ
  * 戻りは作成された交換申請 or Error。呼び出し元は instanceof Error で判別する。
  */
 export async function requestRedemption(
-  rewardId: number,
+  rewardId: EntityId,
 ): Promise<ThanksRedemptionResponse | Error> {
   const client = await createClient()
 
   const response = await client["thanks"]["thanks-redemptions"].$post({
-    json: { reward_id: rewardId },
+    json: { reward_id: Number(rewardId) },
   })
 
   if (response.status >= 400) {

@@ -1,3 +1,5 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /** GET /thanks-point-budgets/me — 当月の贈与原資（今月あと何点送れるか）。毎月リセットされる。 */
 export type ThanksBudgetResponse = {
   period: string
@@ -13,7 +15,7 @@ export type ThanksBalanceResponse = {
 
 /** GET /thanks-rewards の各要素 / POST /thanks-rewards のレスポンス（交換カタログ）。 */
 export type ThanksRewardResponse = {
-  id: number | null
+  id: EntityId | null
   name: string
   point_cost: number
   is_active: boolean
@@ -23,9 +25,9 @@ export type ThanksRewardResponse = {
 
 /** GET /thanks-redemptions/me の各要素（自分の交換申請）。 */
 export type ThanksRedemptionResponse = {
-  id: number | null
+  id: EntityId | null
   employee_id: string
-  reward_id: number
+  reward_id: EntityId
   point_cost: number
   status: "pending" | "rejected" | "fulfilled"
   created_at: string
@@ -34,7 +36,7 @@ export type ThanksRedemptionResponse = {
 }
 
 export type ThanksRedemptionInboxResponse = ThanksRedemptionResponse & {
-  id: number
+  id: EntityId
   employee_name: string
   employee_dept_name: string | null
   reward_name: string

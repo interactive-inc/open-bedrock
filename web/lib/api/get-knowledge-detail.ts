@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { ApiResponseError } from "@/lib/api/api-response-error"
 
 /** GET /knowledge-articles/:id を session トークン付きで呼び、記事詳細を取得する。 */
-export async function getKnowledgeDetail(id: number) {
+export async function getKnowledgeDetail(id: EntityId) {
   const client = await createClient()
 
   const response = await client["knowledge"]["knowledge-articles"][":id"].$get({

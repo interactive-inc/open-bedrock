@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useRouter } from "next/navigation"
 import { useActionState } from "react"
 import { toast } from "sonner"
@@ -9,7 +10,7 @@ import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 
 type Props = {
   // 削除対象のアンケート id。hidden フィールドへ埋め込む。
-  id: number
+  id: EntityId
 }
 
 const initialState: SurveyFormState = { ok: false, error: null }

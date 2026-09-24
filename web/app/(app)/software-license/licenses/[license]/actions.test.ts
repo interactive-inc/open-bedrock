@@ -26,7 +26,7 @@ test("応答不明時の再送で利用記録IDと内容を変えない", async 
   expect(await assignLicenseAction(initial, form)).toEqual({ ok: true, error: null })
   expect(mocks.assign.mock.calls).toEqual([
     [
-      12,
+      "12",
       {
         id: assignmentId,
         employee_id: "employee-1",
@@ -35,7 +35,7 @@ test("応答不明時の再送で利用記録IDと内容を変えない", async 
       },
     ],
     [
-      12,
+      "12",
       {
         id: assignmentId,
         employee_id: "employee-1",

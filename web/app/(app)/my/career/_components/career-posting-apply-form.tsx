@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { applyCareerPostingAction } from "@/app/(app)/my/career/actions"
@@ -10,7 +11,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
-  postingId: number
+  postingId: EntityId
   postingTitle: string
 }
 

@@ -1,9 +1,10 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** POST /job-openings/:jobOpeningId/candidates。応募者を applied で登録する（recruitment:manage）。 */
 export async function createRecruitmentCandidate(request: {
-  positionId: number
+  positionId: EntityId
   name: string
   email: string | null
   source: string | null

@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** POST /review-cycles/:cycleId/open。特権ロールがサイクルを open にする。 */
-export async function openReviewCycle(cycleId: number) {
+export async function openReviewCycle(cycleId: EntityId) {
   const client = await createClient()
 
   const response = await client["performance-review"]["review-cycles"][":cycleId"].open.$post({

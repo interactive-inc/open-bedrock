@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import {
@@ -16,7 +17,7 @@ import { Textarea } from "@/components/ui/textarea"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
-  surveyId: number
+  surveyId: EntityId
   questions: ReadonlyArray<SurveyQuestion>
 }
 

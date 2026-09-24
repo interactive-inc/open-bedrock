@@ -1,10 +1,12 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /** GET /partner-contracts の並び順。renewal_near=更新期限が近い順。 */
 export type ContractOrder = "renewal_near" | "contract_date_desc" | "contract_date_asc"
 
 /** GET /partner-contracts・POST /partner-contracts の各要素（契約記録。API は snake_case で返す）。 */
 export type ContractResponse = {
-  id: number
-  partner_id: number
+  id: EntityId
+  partner_id: EntityId
   title: string
   contract_date: string
   starts_on: string | null
@@ -16,13 +18,13 @@ export type ContractResponse = {
 
 /** GET /partner-contracts のクエリ。partner_id で絞り込み、order で並べ替える。値なしは null。 */
 export type ContractSearchQuery = {
-  partnerId: number | null
+  partnerId: EntityId | null
   order: ContractOrder | null
 }
 
 /** POST /partner-contracts のリクエスト body。starts_on / ends_on / renewal_deadline / note は任意。 */
 export type ContractCreateRequest = {
-  partner_id: number
+  partner_id: EntityId
   title: string
   contract_date: string
   starts_on?: string

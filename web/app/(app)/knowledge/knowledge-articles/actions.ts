@@ -4,6 +4,7 @@ import { revalidatePath } from "next/cache"
 import { createKnowledge } from "@/lib/api/create-knowledge"
 import { withdrawKnowledge } from "@/lib/api/withdraw-knowledge"
 import { updateKnowledge } from "@/lib/api/update-knowledge"
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 import { requireAuth } from "@/lib/auth/require-auth"
 
@@ -68,7 +69,7 @@ export async function updateKnowledgeAction(
   if (commandId === null || reason === null)
     return { ok: false, error: "記録理由を入力し、内容を確認して送信してください" }
 
-  const articleId = toPositiveIntId(formData.get("article_id"))
+  const articleId = toEntityId(formData.get("article_id"))
 
   if (articleId === null) {
     return { ok: false, error: "記事を特定できませんでした" }
@@ -121,7 +122,7 @@ export async function withdrawKnowledgeAction(
   if (commandId === null || reason === null)
     return { ok: false, error: "記録理由を入力し、内容を確認して送信してください" }
 
-  const articleId = toPositiveIntId(formData.get("article_id"))
+  const articleId = toEntityId(formData.get("article_id"))
 
   if (articleId === null) {
     return { ok: false, error: "記事を特定できませんでした" }

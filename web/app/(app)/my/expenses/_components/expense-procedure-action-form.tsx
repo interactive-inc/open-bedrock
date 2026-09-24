@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { advanceExpenseAction } from "@/app/(app)/my/expenses/actions"
 import { Button } from "@/components/ui/button"
@@ -7,7 +8,7 @@ import { FieldError } from "@/components/ui/field"
 import type { ExpenseDecisionTarget } from "@/lib/api/types/expense-types"
 
 type Props = {
-  expenseId: number
+  expenseId: EntityId
   decisionTarget: ExpenseDecisionTarget
   operation: "cancel" | "execute"
 }

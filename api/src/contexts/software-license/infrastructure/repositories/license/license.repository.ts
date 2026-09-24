@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { withAllocatedIntegerId } from "@/lib/database/with-allocated-integer-id"
 import { LicenseEntity } from "@/contexts/software-license/domain/entities/license.entity"
 import type { LicenseState as LicenseRow } from "@/contexts/software-license/domain/entities/license.entity"
 import type { SoftwareLicenseContext } from "@/contexts/software-license/configuration/software-license-context"
@@ -83,69 +84,79 @@ export class LicenseRepository {
       license.status,
       license.planName,
     ]
-    const statements = [...options.assertions]
-    if (license.id === null) {
-      statements.push(
-        database
-          .prepare(`INSERT INTO software_licenses
-        (name,vendor,category,seats,renewal_deadline,owner_employee_id,note,status,plan_name,created_at,revision)
-        VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,1)`)
-          .bind(...values, license.createdAt),
-      )
-      statements.push(
-        database
-          .prepare(`INSERT INTO software_license_changes
+    // 新規ライセンスの ID は事前に明示し、変更履歴はその ID を束縛値として受け取る。
+    const prepareStatements = (newLicenseId: number | null) => {
+      const statements = [...options.assertions]
+      if (license.id === null) {
+        statements.push(
+          database
+            .prepare(`INSERT INTO software_licenses
+        (id,name,vendor,category,seats,renewal_deadline,owner_employee_id,note,status,plan_name,created_at,revision)
+        VALUES (?11,?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,1)`)
+            .bind(...values, license.createdAt, newLicenseId),
+        )
+        statements.push(
+          database
+            .prepare(`INSERT INTO software_license_changes
         (id,license_id,actor_account_id,recorded_at,command_id,request_json,before_json,after_json)
-        SELECT ?1,id,?2,?3,?4,?5,NULL,${snapshot} FROM software_licenses WHERE id = last_insert_rowid()`)
-          .bind(
-            changeId,
-            options.accountId,
-            options.recordedAt,
-            options.commandId ?? null,
-            options.requestJson ?? null,
-          ),
-      )
-    } else {
-      statements.push(
-        database
-          .prepare(`UPDATE software_licenses SET name=?1,vendor=?2,category=?3,seats=?4,
+        SELECT ?1,id,?2,?3,?4,?5,NULL,${snapshot} FROM software_licenses WHERE id = ?6`)
+            .bind(
+              changeId,
+              options.accountId,
+              options.recordedAt,
+              options.commandId ?? null,
+              options.requestJson ?? null,
+              newLicenseId,
+            ),
+        )
+      } else {
+        statements.push(
+          database
+            .prepare(`UPDATE software_licenses SET name=?1,vendor=?2,category=?3,seats=?4,
         renewal_deadline=?5,owner_employee_id=?6,note=?7,status=?8,plan_name=?9,revision=revision+1
         WHERE id=?10 AND revision=?11`)
-          .bind(...values, license.id, license.revision),
-      )
-      statements.push(
-        database.prepare(
-          `SELECT CASE WHEN changes()=1 THEN 1 ELSE json_extract('{}','license_revision_changed') END AS ok`,
-        ),
-      )
-      statements.push(
-        database
-          .prepare(`INSERT INTO software_license_changes
+            .bind(...values, license.id, license.revision),
+        )
+        statements.push(
+          database.prepare(
+            `SELECT CASE WHEN changes()=1 THEN 1 ELSE json_extract('{}','license_revision_changed') END AS ok`,
+          ),
+        )
+        statements.push(
+          database
+            .prepare(`INSERT INTO software_license_changes
         (id,license_id,actor_account_id,recorded_at,before_json,after_json)
         SELECT ?1,id,?2,?3,?4,${snapshot} FROM software_licenses WHERE id=?5`)
-          .bind(
-            changeId,
-            options.accountId,
-            options.recordedAt,
-            JSON.stringify(options.previous),
-            license.id,
-          ),
-      )
-    }
-    statements.push(
-      database
-        .prepare(`SELECT ${columns} FROM software_licenses
+            .bind(
+              changeId,
+              options.accountId,
+              options.recordedAt,
+              JSON.stringify(options.previous),
+              license.id,
+            ),
+        )
+      }
+      statements.push(
+        database
+          .prepare(`SELECT ${columns} FROM software_licenses
       WHERE id=(SELECT license_id FROM software_license_changes WHERE id=?1)`)
-        .bind(changeId),
-    )
-    try {
-      const writes = await database.batch(statements)
-      const row = writes.at(-1)?.results[0] as LicenseRow | undefined
-      if (
-        writes.length !== statements.length ||
-        writes.some((write) => !write.success) ||
-        row === undefined
+          .bind(changeId),
       )
+      return statements
+    }
+    try {
+      const writeStatements = (newLicenseId: number | null) => {
+        const statements = prepareStatements(newLicenseId)
+        return database
+          .batch(statements)
+          .then((writes) => ({ writes, expected: statements.length }))
+      }
+      const { writes, expected } =
+        license.id === null
+          ? await withAllocatedIntegerId(database, "software_licenses", writeStatements)
+          : await writeStatements(null)
+      const row = writes.at(-1)?.results[0] as LicenseRow | undefined
+      if (writes.length !== expected || writes.some((write) => !write.success) || row === undefined)
         return new LicenseError("license_unavailable", "license write is unavailable")
       return LicenseEntity.fromRow(row)
     } catch (cause) {

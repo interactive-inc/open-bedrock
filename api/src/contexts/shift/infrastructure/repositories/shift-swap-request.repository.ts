@@ -81,7 +81,7 @@ export class ShiftSwapRequestRepository {
    */
   async create(swapRequest: ShiftSwapRequest): Promise<ShiftSwapRequest | null | Error> {
     try {
-      const result = await this.c.var.database.run(
+      const inserted = await this.c.var.database.all<{ id: number }>(
         sql`INSERT INTO shift_swap_requests (requester_employee_id, target_employee_id, date, note, status, approved_at)
             SELECT ${swapRequest.requesterEmployeeId}, ${swapRequest.targetEmployeeId},
                    ${swapRequest.date}, ${swapRequest.note}, ${swapRequest.status}, ${swapRequest.approvedAt}
@@ -91,18 +91,21 @@ export class ShiftSwapRequestRepository {
                 AND target_employee_id = ${swapRequest.targetEmployeeId}
                 AND date = ${swapRequest.date}
                 AND status = 'pending'
-            )`,
+            )
+            RETURNING id`,
       )
 
-      if (result.meta.changes === 0) {
+      const insertedId = inserted.at(0)?.id
+
+      if (insertedId === undefined) {
         return null
       }
 
-      // last_insert_rowid で採番された行を取得する
+      // RETURNING で受け取った採番済みの行を取得する
       const rows = await this.c.var.database
         .select()
         .from(shiftSwapRequests)
-        .where(eq(shiftSwapRequests.id, Number(result.meta.last_row_id)))
+        .where(eq(shiftSwapRequests.id, insertedId))
         .limit(1)
 
       const row = rows.at(0)

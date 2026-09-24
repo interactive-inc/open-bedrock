@@ -1,9 +1,10 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { ExpenseDecisionTarget } from "@/lib/api/types/expense-types"
 
 /** 確認した経費を取り消す。 */
-export async function cancelExpense(id: number, target: ExpenseDecisionTarget) {
+export async function cancelExpense(id: EntityId, target: ExpenseDecisionTarget) {
   const client = await createClient()
   const response = await client.expense["expenses"][":id"].cancel.$post({
     param: { id: String(id) },
