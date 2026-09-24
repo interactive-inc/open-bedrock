@@ -1,10 +1,9 @@
 import { NextRequest } from "next/server"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
+import { middleware } from "@/middleware"
 
 const mocks = vi.hoisted(() => ({ postRefreshToken: vi.fn() }))
 vi.mock("@/lib/api/post-refresh-token", () => ({ postRefreshToken: mocks.postRefreshToken }))
-
-import { middleware } from "@/middleware"
 
 afterEach(() => vi.clearAllMocks())
 

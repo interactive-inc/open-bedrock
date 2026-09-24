@@ -1,5 +1,4 @@
 import { SignJWT } from "jose"
-
 import type { KeyLike } from "jose"
 
 /**

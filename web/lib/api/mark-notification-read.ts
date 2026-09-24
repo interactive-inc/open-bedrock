@@ -1,4 +1,5 @@
 import { createClient } from "@/lib/api/hc-client"
+
 /** PATCH /system/notifications/:id。指定した通知を既読にする。 */
 export async function markNotificationRead(notificationId: string): Promise<void | Error> {
   const client = await createClient()

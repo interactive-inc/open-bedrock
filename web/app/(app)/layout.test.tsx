@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 import { AuthError } from "@/lib/api/auth-error"
+import AppLayout from "@/app/(app)/layout"
 
 const mocks = vi.hoisted(() => ({ getMe: vi.fn(), availability: vi.fn() }))
 
@@ -29,8 +30,6 @@ vi.mock("next/navigation", () => ({
 vi.mock("@/components/login-page", () => ({
   LoginPage: () => <div>LoginPage</div>,
 }))
-
-import AppLayout from "@/app/(app)/layout"
 
 afterEach(() => {
   cleanup()

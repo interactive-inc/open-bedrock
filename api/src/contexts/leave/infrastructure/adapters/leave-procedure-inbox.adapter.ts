@@ -3,6 +3,7 @@ import type { CompanyPersonnelSession } from "@/contexts/company/domain/definiti
 import { LeaveProcedureReadAdapter } from "@/contexts/leave/infrastructure/adapters/leave-procedure-read.adapter"
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
 import { ApplicationError, ForbiddenError, UnexpectedError } from "@/lib/errors"
+
 /** 現在の判断・実行資格を持つ休暇を上限付きで読む。 */
 export class LeaveProcedureInboxAdapter {
   constructor(private readonly c: Context) {

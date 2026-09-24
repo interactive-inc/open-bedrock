@@ -1,12 +1,11 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
-
-vi.mock("@/app/(app)/system/accounts/actions", () => ({ resetPasswordAction: vi.fn() }))
-vi.mock("@/lib/auth/step-up-action", () => ({ stepUpAction: vi.fn() }))
-
 import { ResetPasswordButton } from "@/app/(app)/system/accounts/_components/reset-password-button"
 import { resetPasswordAction } from "@/app/(app)/system/accounts/actions"
 import { stepUpAction } from "@/lib/auth/step-up-action"
+
+vi.mock("@/app/(app)/system/accounts/actions", () => ({ resetPasswordAction: vi.fn() }))
+vi.mock("@/lib/auth/step-up-action", () => ({ stepUpAction: vi.fn() }))
 
 async function submitNewPassword() {
   render(<ResetPasswordButton accountId="acc-1" />)

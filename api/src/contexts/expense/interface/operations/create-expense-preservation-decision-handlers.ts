@@ -7,6 +7,7 @@ import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company
 import { DecideRecordPreservationAdapter } from "@system/infrastructure/adapters/records/decide-record-preservation.adapter"
 import { RecordPreservationDecisionError } from "@system/infrastructure/adapters/records/errors"
 import { SystemForbiddenError, SystemHTTPException } from "@system/interface/errors"
+
 /** 保全の肯定・否定判断に同じ認証、会社資格、対象照合を適用する。 */
 export function createExpensePreservationDecisionHandlers(action: "approve" | "reject") {
   return expenseFactory.createHandlers(

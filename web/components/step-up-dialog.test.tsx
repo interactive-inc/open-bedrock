@@ -1,10 +1,9 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
-
-vi.mock("@/lib/auth/step-up-action", () => ({ stepUpAction: vi.fn() }))
-
 import { StepUpDialog } from "@/components/step-up-dialog"
 import { stepUpAction } from "@/lib/auth/step-up-action"
+
+vi.mock("@/lib/auth/step-up-action", () => ({ stepUpAction: vi.fn() }))
 
 afterEach(() => {
   cleanup()

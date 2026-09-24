@@ -1,4 +1,5 @@
 import { factory } from "@/factory"
+
 export const help = `bedrock expenses — 経費の申請と社内承認
 
   upload-attachment <path>                                  添付を預けてIDを取得

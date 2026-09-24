@@ -1,5 +1,7 @@
 import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { Context } from "@/env"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 
 export type Props = {
   c: Context
@@ -33,5 +35,3 @@ export async function resolveTargetEmployeeId(props: Props): Promise<EmployeeId 
 
   return props.sessionEmployeeId
 }
-import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"

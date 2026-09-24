@@ -1,4 +1,5 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export type Props = {
   enrollmentEmployeeId: EmployeeId
@@ -14,4 +15,3 @@ export function canCompleteEnrollment(props: Props): boolean {
 
   return props.session.hasPermission("training:manage")
 }
-import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"

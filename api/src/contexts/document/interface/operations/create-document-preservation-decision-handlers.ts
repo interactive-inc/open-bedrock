@@ -13,6 +13,7 @@ import {
   DocumentConflictError,
   DocumentUnavailableError,
 } from "@/contexts/document/interface/errors"
+
 /** 保全の肯定・否定判断に同じ認証、会社資格、対象照合を適用する。 */
 export function createDocumentPreservationDecisionHandlers(action: "approve" | "reject") {
   return documentFactory.createHandlers(

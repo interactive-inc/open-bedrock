@@ -13,6 +13,7 @@ import {
   RegulationConflictError,
   RegulationUnavailableError,
 } from "@/contexts/regulation/interface/errors"
+
 /** 保全の肯定・否定判断に同じ認証、会社資格、対象照合を適用する。 */
 export function createRegulationPreservationDecisionHandlers(action: "approve" | "reject") {
   return regulationFactory.createHandlers(

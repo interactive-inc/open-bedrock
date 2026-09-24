@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 import type { SystemMachineCredential } from "@/lib/api/types/system-operation-types"
+import { SystemMachineCredentialSection } from "@/app/(app)/system/principals/[principalId]/_components/system-machine-credential-section"
 
 const mocks = vi.hoisted(() => ({ getSystemMachineCredentials: vi.fn() }))
 
@@ -8,8 +9,6 @@ vi.mock("@/lib/api/get-system-machine-credentials", () => ({
   getSystemMachineCredentials: mocks.getSystemMachineCredentials,
 }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
-
-import { SystemMachineCredentialSection } from "@/app/(app)/system/principals/[principalId]/_components/system-machine-credential-section"
 
 afterEach(() => {
   cleanup()

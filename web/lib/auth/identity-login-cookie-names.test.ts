@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vite-plus/test"
-
 import { identityLoginCookieNames } from "@/lib/auth/identity-login-cookie-names"
 
 describe("identityLoginCookieNames", () => {

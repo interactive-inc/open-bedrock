@@ -1,8 +1,9 @@
 import { beforeEach, expect, test, vi } from "vite-plus/test"
+import { saveLeaveProcedureAction } from "@/app/(app)/leave/procedure/actions"
+
 const mocks = vi.hoisted(() => ({ publish: vi.fn(), revalidate: vi.fn() }))
 vi.mock("@/lib/api/publish-leave-procedure", () => ({ publishLeaveProcedure: mocks.publish }))
 vi.mock("next/cache", () => ({ revalidatePath: mocks.revalidate }))
-import { saveLeaveProcedureAction } from "@/app/(app)/leave/procedure/actions"
 
 beforeEach(() => {
   vi.clearAllMocks()

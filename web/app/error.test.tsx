@@ -1,5 +1,6 @@
 import { render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
+import RootError from "@/app/error"
 
 const mocks = vi.hoisted(() => ({ captureException: vi.fn() }))
 
@@ -12,8 +13,6 @@ vi.mock("@/components/login-page", () => ({
     </button>
   ),
 }))
-
-import RootError from "@/app/error"
 
 afterEach(() => vi.clearAllMocks())
 

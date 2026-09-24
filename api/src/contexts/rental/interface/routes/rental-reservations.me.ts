@@ -1,6 +1,5 @@
 import { UnexpectedError } from "@/lib/errors"
 import { RentalReservationRepository } from "@/contexts/rental/infrastructure/repositories/rental-reservation.repository"
-
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/api/http/factory"
 import { zAppRentalReservationList } from "@/contexts/rental/interface/http/response-schemas"

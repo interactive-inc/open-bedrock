@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 import type { SystemReconciliationRun } from "@/lib/api/types/system-operation-types"
+import { SystemReconciliationSection } from "@/app/(app)/system/integration-exchanges/[exchangeId]/_components/system-reconciliation-section"
 
 const mocks = vi.hoisted(() => ({ getSystemReconciliationRuns: vi.fn() }))
 
@@ -8,8 +9,6 @@ vi.mock("@/lib/api/get-system-reconciliation-runs", () => ({
   getSystemReconciliationRuns: mocks.getSystemReconciliationRuns,
 }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
-
-import { SystemReconciliationSection } from "@/app/(app)/system/integration-exchanges/[exchangeId]/_components/system-reconciliation-section"
 
 afterEach(() => {
   cleanup()

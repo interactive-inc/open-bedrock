@@ -1,6 +1,5 @@
 import { UnexpectedError } from "@/lib/errors"
 import { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
-
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppGoalList } from "@/contexts/performance-review/interface/http/response-schemas"

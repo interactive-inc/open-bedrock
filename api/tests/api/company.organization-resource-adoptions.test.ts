@@ -5,6 +5,7 @@ import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { requestWithContext } from "@tests/api/support/request-with-context"
+
 const jwtSecret = "organization-adoption-route-test-secret"
 
 test("実APIの認証とCompany管理資格を通して組織の履歴を接続・再送する", async () => {

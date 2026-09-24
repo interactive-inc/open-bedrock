@@ -1,4 +1,5 @@
 import { describe, expect, test, vi } from "vite-plus/test"
+import { requireAnyPermission } from "@/lib/auth/require-any-permission"
 
 const mocks = vi.hoisted(() => ({
   getMe: vi.fn(),
@@ -9,8 +10,6 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/api/get-me", () => ({ getMe: mocks.getMe }))
 vi.mock("next/navigation", () => ({ notFound: mocks.notFound }))
-
-import { requireAnyPermission } from "@/lib/auth/require-any-permission"
 
 const companyRead = ["employee:read", "org:manage", "system:admin"] as const
 

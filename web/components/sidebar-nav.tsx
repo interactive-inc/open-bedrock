@@ -1,7 +1,6 @@
 "use client"
 
 import { toVisibleInboxSummary } from "@/lib/inbox/to-visible-inbox-summary"
-
 import { Blocks, Building2, CircleUser, type LucideIcon, Wrench } from "lucide-react"
 import Link from "next/link"
 import { usePathname, useRouter } from "next/navigation"

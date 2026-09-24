@@ -1,5 +1,4 @@
 import { z } from "zod"
-
 import { isSecureIdentityIssuer } from "@/lib/auth/is-secure-identity-issuer"
 
 type Props = {

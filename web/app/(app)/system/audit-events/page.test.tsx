@@ -1,5 +1,6 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
+import AuditEventsPage from "@/app/(app)/system/audit-events/page"
 
 const mocks = vi.hoisted(() => ({
   requirePermission: vi.fn(),
@@ -22,8 +23,6 @@ vi.mock("@/components/page-header", () => ({
     </header>
   ),
 }))
-
-import AuditEventsPage from "@/app/(app)/system/audit-events/page"
 
 afterEach(() => {
   cleanup()

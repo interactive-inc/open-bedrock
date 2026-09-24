@@ -1,6 +1,5 @@
 import type { NextRequest } from "next/server"
 import { NextResponse } from "next/server"
-
 import { createPkce } from "@/lib/auth/create-pkce"
 import { identityLoginCookieNames } from "@/lib/auth/identity-login-cookie-names"
 import { isSecureIdentityIssuer } from "@/lib/auth/is-secure-identity-issuer"

@@ -1,5 +1,6 @@
 import { cleanup, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
+import { CompanyEmployeeEventSection } from "@/app/(app)/company/employee-events/_components/company-employee-event-section"
 
 const mocks = vi.hoisted(() => ({ getEmployeeEventList: vi.fn() }))
 
@@ -7,8 +8,6 @@ vi.mock("@/lib/api/get-employee-event-list", () => ({
   getEmployeeEventList: mocks.getEmployeeEventList,
 }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
-
-import { CompanyEmployeeEventSection } from "@/app/(app)/company/employee-events/_components/company-employee-event-section"
 
 afterEach(() => {
   cleanup()

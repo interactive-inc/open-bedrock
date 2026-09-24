@@ -7,6 +7,7 @@ import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company
 import { DecideRecordRetirementAdapter } from "@system/infrastructure/adapters/records/decide-record-retirement.adapter"
 import { RecordRetirementDecisionError } from "@system/infrastructure/adapters/records/errors"
 import { SystemForbiddenError, SystemHTTPException } from "@system/interface/errors"
+
 /** 撤去の肯定・否定判断に同じ認証、会社資格、対象照合を適用する。 */
 export function createAntisocialCheckRetirementDecisionHandlers(action: "approve" | "reject") {
   return antisocialCheckFactory.createHandlers(

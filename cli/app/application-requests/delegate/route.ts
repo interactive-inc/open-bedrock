@@ -3,6 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
+
 export const help = `bedrock application-requests delegate --employee <code> --start <iso> --end <iso> [--template <code>]`
 export default factory.createHandlers(
   zValidator(

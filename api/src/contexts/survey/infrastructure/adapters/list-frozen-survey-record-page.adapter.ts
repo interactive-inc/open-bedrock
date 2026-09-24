@@ -3,6 +3,7 @@ import type { SurveyContext } from "@/contexts/survey/configuration/survey-conte
 import { SurveyActorReadAdapter } from "@/contexts/survey/infrastructure/adapters/survey-actor-read.adapter"
 import { surveyRecordKindSchema } from "@/contexts/survey/domain/definitions/survey-record-kind.definition"
 import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+
 type Context = SurveyContext
 const inputSchema = z.strictObject({
   freezeId: z.uuid(),

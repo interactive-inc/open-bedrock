@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 import { ApiResponseError } from "@/lib/api/api-response-error"
+import { AuditEventListSection } from "@/app/(app)/system/audit-events/_components/audit-event-list-section"
 
 const mocks = vi.hoisted(() => ({
   getAuditEvents: vi.fn(),
@@ -11,8 +12,6 @@ const mocks = vi.hoisted(() => ({
 
 vi.mock("@/lib/api/get-audit-events", () => ({ getAuditEvents: mocks.getAuditEvents }))
 vi.mock("next/navigation", () => ({ notFound: mocks.notFound }))
-
-import { AuditEventListSection } from "@/app/(app)/system/audit-events/_components/audit-event-list-section"
 
 afterEach(() => {
   cleanup()

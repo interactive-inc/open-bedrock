@@ -1,6 +1,5 @@
 import { render, screen } from "@testing-library/react"
 import { describe, expect, test } from "vite-plus/test"
-
 import { CardLink } from "@/components/card-link"
 
 describe("CardLink", () => {

@@ -1,7 +1,6 @@
 import { EmployeeCertificationRepository } from "@/contexts/certification/infrastructure/repositories/employee-certification.repository"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { isCertificationRecordSourceFrozenError } from "@/contexts/certification/infrastructure/repositories/lib/is-certification-record-source-frozen-error"
-
 import { factory } from "@/api/http/factory"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"

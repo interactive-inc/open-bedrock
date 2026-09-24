@@ -1,12 +1,12 @@
 import { cleanup, render, screen, within } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
+import { CompanyPersonnelActionSection } from "@/app/(app)/company/personnel-actions/_components/company-personnel-action-section"
 
 const mocks = vi.hoisted(() => ({ getCompanyPersonnelActions: vi.fn() }))
 vi.mock("@/lib/api/get-company-personnel-actions", () => ({
   getCompanyPersonnelActions: mocks.getCompanyPersonnelActions,
 }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
-import { CompanyPersonnelActionSection } from "@/app/(app)/company/personnel-actions/_components/company-personnel-action-section"
 
 afterEach(() => {
   cleanup()

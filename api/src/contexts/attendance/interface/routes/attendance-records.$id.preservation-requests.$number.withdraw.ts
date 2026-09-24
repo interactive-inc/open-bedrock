@@ -5,6 +5,7 @@ import { attendanceFactory } from "@/contexts/attendance/interface/request-envir
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { WithdrawRecordPreservationAdapter } from "@system/infrastructure/adapters/records/withdraw-record-preservation.adapter"
 import { RecordPreservationWithdrawalError } from "@system/infrastructure/adapters/records/errors"
+
 // @authorization owner - 認証された申請者だけが指定した未完了提案を理由とともに取り下げる
 export const POST = attendanceFactory.createHandlers(
   authenticateSystemAccessToken,

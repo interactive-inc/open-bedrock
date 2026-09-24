@@ -3,6 +3,7 @@ import { mkdtempSync, rmSync, writeFileSync } from "node:fs"
 import { tmpdir } from "node:os"
 import { join } from "node:path"
 import { app } from "@/app/index"
+
 const originalConfig = process.env.BEDROCK_CONFIG_DIR
 const directory = mkdtempSync(join(tmpdir(), "personnel-employment-cli-"))
 beforeAll(() => {

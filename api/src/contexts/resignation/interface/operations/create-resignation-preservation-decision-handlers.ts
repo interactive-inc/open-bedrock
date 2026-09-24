@@ -13,6 +13,7 @@ import {
   ResignationConflictError,
   ResignationUnavailableError,
 } from "@/contexts/resignation/interface/errors"
+
 /** 保全の肯定・否定判断に同じ認証、会社資格、対象照合を適用する。 */
 export function createResignationPreservationDecisionHandlers(action: "approve" | "reject") {
   return resignationFactory.createHandlers(

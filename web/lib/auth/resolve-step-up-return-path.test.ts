@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vite-plus/test"
-
 import { resolveStepUpReturnPath } from "@/lib/auth/resolve-step-up-return-path"
 
 describe("resolveStepUpReturnPath", () => {

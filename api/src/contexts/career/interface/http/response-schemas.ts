@@ -1,5 +1,7 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { z } from "zod"
+import { careerRecordKindSchema } from "@/contexts/career/domain/definitions/career-record-kind.definition"
+import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records/record-source-freeze.schema"
 
 /** ===== career ===== */
 export const zAppCareerPosting = z.object({
@@ -35,9 +37,6 @@ export const zAppCareerSheet = z.object({
   strengths_text: z.string().nullable(),
   updated_at: z.string().nullable(),
 })
-
-import { careerRecordKindSchema } from "@/contexts/career/domain/definitions/career-record-kind.definition"
-import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records/record-source-freeze.schema"
 
 export const careerSourceFreezeResponseSchema = z.strictObject({
   freeze: recordSourceFreezeSnapshotSchema,

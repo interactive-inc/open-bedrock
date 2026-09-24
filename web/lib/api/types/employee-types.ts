@@ -1,4 +1,5 @@
 import type { EmployeeProfileVersion } from "@/lib/api/types/employee-profile-version"
+
 /** api/src/employee/employee-response-schema.ts と同形の手書き type。 */
 export type EmployeeResponse = {
   code: string

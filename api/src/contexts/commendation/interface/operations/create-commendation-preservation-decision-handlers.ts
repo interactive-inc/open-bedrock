@@ -13,6 +13,7 @@ import {
   CommendationConflictError,
   CommendationUnavailableError,
 } from "@/contexts/commendation/interface/errors"
+
 /** 保全の肯定・否定判断に同じ認証、会社資格、対象照合を適用する。 */
 export function createCommendationPreservationDecisionHandlers(action: "approve" | "reject") {
   return commendationFactory.createHandlers(

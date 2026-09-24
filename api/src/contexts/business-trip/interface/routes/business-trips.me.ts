@@ -1,6 +1,5 @@
 import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/repositories/business-trip.repository"
 import { UnexpectedError } from "@/lib/errors"
-
 import { ApplicationError } from "@/lib/errors"
 import { zAppBusinessTripList } from "@/contexts/business-trip/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"

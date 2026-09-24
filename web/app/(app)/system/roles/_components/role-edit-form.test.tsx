@@ -1,13 +1,12 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
+import { RoleEditForm } from "@/app/(app)/system/roles/_components/role-edit-form"
+import { updateRoleAction } from "@/app/(app)/system/roles/actions"
+import { stepUpAction } from "@/lib/auth/step-up-action"
 
 vi.mock("next/navigation", () => ({ useRouter: () => ({ push: vi.fn() }) }))
 vi.mock("@/app/(app)/system/roles/actions", () => ({ updateRoleAction: vi.fn() }))
 vi.mock("@/lib/auth/step-up-action", () => ({ stepUpAction: vi.fn() }))
-
-import { RoleEditForm } from "@/app/(app)/system/roles/_components/role-edit-form"
-import { updateRoleAction } from "@/app/(app)/system/roles/actions"
-import { stepUpAction } from "@/lib/auth/step-up-action"
 
 const permissions = [
   { key: "employee:read", description: "従業員を閲覧する", category: "employee" },

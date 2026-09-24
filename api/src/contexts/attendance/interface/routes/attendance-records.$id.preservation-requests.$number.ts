@@ -7,6 +7,7 @@ import { authenticateSystemAccessToken } from "@system/interface/middlewares/aut
 import { ReviewRecordPreservationAdapter } from "@system/infrastructure/adapters/records/review-record-preservation.adapter"
 import { RecordPreservationReviewError } from "@system/infrastructure/adapters/records/errors"
 import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
+
 // @authorization service - 明示した提案閲覧権限と現在のCompany承認資格で判断対象を取得する
 export const GET = attendanceFactory.createHandlers(
   authenticateSystemAccessToken,

@@ -1,12 +1,11 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
-
-vi.mock("@/app/(app)/system/accounts/actions", () => ({ setAccountStatusAction: vi.fn() }))
-vi.mock("@/lib/auth/step-up-action", () => ({ stepUpAction: vi.fn() }))
-
 import { AccountStatusButton } from "@/app/(app)/system/accounts/_components/account-status-button"
 import { setAccountStatusAction } from "@/app/(app)/system/accounts/actions"
 import { stepUpAction } from "@/lib/auth/step-up-action"
+
+vi.mock("@/app/(app)/system/accounts/actions", () => ({ setAccountStatusAction: vi.fn() }))
+vi.mock("@/lib/auth/step-up-action", () => ({ stepUpAction: vi.fn() }))
 
 async function submitSuspend() {
   render(<AccountStatusButton accountId="acc-1" status="active" />)

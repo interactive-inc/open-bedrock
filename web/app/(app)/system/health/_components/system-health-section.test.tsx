@@ -1,12 +1,11 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
+import { SystemHealthSection } from "@/app/(app)/system/health/_components/system-health-section"
 
 const mocks = vi.hoisted(() => ({ getSystemHealth: vi.fn() }))
 
 vi.mock("@/lib/api/get-system-health", () => ({ getSystemHealth: mocks.getSystemHealth }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
-
-import { SystemHealthSection } from "@/app/(app)/system/health/_components/system-health-section"
 
 afterEach(() => {
   cleanup()

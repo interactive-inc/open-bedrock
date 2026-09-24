@@ -14,6 +14,7 @@ import {
   CertificateRequestUnavailableError,
 } from "@/contexts/certificate-request/interface/errors"
 import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
+
 // @authorization service - 明示した提案閲覧権限と現在のCompany承認資格で判断対象を取得する
 export const GET = certificateRequestFactory.createHandlers(
   authenticateSystemAccessToken,

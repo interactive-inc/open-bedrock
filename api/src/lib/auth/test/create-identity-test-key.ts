@@ -1,5 +1,4 @@
 import { createLocalJWKSet, exportJWK, generateKeyPair } from "jose"
-
 import type { JSONWebKeySet, JWTVerifyGetKey, KeyLike } from "jose"
 
 export type IdentityTestKey = {

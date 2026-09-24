@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 import type { SystemDelivery } from "@/lib/api/types/system-operation-types"
+import { SystemDeliverySection } from "@/app/(app)/system/deliveries/_components/system-delivery-section"
 
 const mocks = vi.hoisted(() => ({ getSystemDeliveries: vi.fn() }))
 
@@ -8,8 +9,6 @@ vi.mock("@/lib/api/get-system-deliveries", () => ({
   getSystemDeliveries: mocks.getSystemDeliveries,
 }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
-
-import { SystemDeliverySection } from "@/app/(app)/system/deliveries/_components/system-delivery-section"
 
 afterEach(() => {
   cleanup()

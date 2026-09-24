@@ -1,5 +1,4 @@
 import { describe, expect, test } from "vite-plus/test"
-
 import { featureRegistry } from "@/lib/feature/feature-registry"
 
 /**

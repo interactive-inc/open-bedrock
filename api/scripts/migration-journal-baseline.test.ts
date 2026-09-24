@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { MigrationJournalBaseline } from "./migration-journal-baseline"
 import { MigrationJournal } from "./migration-journal"
+
 const original = ["0001_archived.sql", "0002_archived.sql", "0001_current.sql"]
 const props = {
   databaseId: "example-database",

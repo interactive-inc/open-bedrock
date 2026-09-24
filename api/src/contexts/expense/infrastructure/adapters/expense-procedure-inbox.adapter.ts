@@ -3,6 +3,7 @@ import type { CompanyPersonnelSession } from "@/contexts/company/domain/definiti
 import { ExpenseProcedureReadAdapter } from "@/contexts/expense/infrastructure/adapters/expense-procedure-read.adapter"
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
 import { ApplicationError, ForbiddenError, UnexpectedError } from "@/lib/errors"
+
 type Context = CompanyContext
 /** 現在の判断・実行資格を持つ経費を上限付きで読む。 */
 export class ExpenseProcedureInboxAdapter {

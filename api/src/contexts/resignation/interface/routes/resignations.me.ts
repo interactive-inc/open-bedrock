@@ -1,6 +1,5 @@
 import { ResignationRepository } from "@/contexts/resignation/infrastructure/repositories/resignation.repository"
 import { UnexpectedError } from "@/lib/errors"
-
 import { factory } from "@/api/http/factory"
 import {
   DEFAULT_LIST_LIMIT,

@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 import type { SystemConnector } from "@/lib/api/types/system-operation-types"
+import { SystemConnectorSection } from "@/app/(app)/system/connectors/_components/system-connector-section"
 
 const mocks = vi.hoisted(() => ({ getSystemConnectors: vi.fn() }))
 
@@ -8,8 +9,6 @@ vi.mock("@/lib/api/get-system-connectors", () => ({
   getSystemConnectors: mocks.getSystemConnectors,
 }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
-
-import { SystemConnectorSection } from "@/app/(app)/system/connectors/_components/system-connector-section"
 
 afterEach(() => {
   cleanup()

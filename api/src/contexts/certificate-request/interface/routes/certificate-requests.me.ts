@@ -1,6 +1,5 @@
 import { UnexpectedError } from "@/lib/errors"
 import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/repositories/certificate-request.repository"
-
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/api/http/factory"
 import { zAppCertificateRequestList } from "@/contexts/certificate-request/interface/http/response-schemas"

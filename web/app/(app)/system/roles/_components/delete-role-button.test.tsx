@@ -1,12 +1,11 @@
 import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
-
-vi.mock("@/app/(app)/system/roles/actions", () => ({ deleteRoleAction: vi.fn() }))
-vi.mock("@/lib/auth/step-up-action", () => ({ stepUpAction: vi.fn() }))
-
 import { DeleteRoleButton } from "@/app/(app)/system/roles/_components/delete-role-button"
 import { deleteRoleAction } from "@/app/(app)/system/roles/actions"
 import { stepUpAction } from "@/lib/auth/step-up-action"
+
+vi.mock("@/app/(app)/system/roles/actions", () => ({ deleteRoleAction: vi.fn() }))
+vi.mock("@/lib/auth/step-up-action", () => ({ stepUpAction: vi.fn() }))
 
 function openConfirmDialog() {
   render(<DeleteRoleButton roleId="1" roleName="経理" />)

@@ -2,6 +2,7 @@ import { ExpenseProcedureActionForm } from "@/app/(app)/my/expenses/_components/
 import { ExpenseDecisionForm } from "@/app/(app)/my/expenses/_components/expense-decision-form"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
 import type { ExpenseDecisionTarget } from "@/lib/api/types/expense-types"
+
 type Props = {
   expense: {
     id: number

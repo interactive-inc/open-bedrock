@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 import type { SystemDeadLetter } from "@/lib/api/types/system-operation-types"
+import { SystemDeadLetterSection } from "@/app/(app)/system/dead-letters/_components/system-dead-letter-section"
 
 const mocks = vi.hoisted(() => ({ getSystemDeadLetters: vi.fn() }))
 
@@ -8,8 +9,6 @@ vi.mock("@/lib/api/get-system-dead-letters", () => ({
   getSystemDeadLetters: mocks.getSystemDeadLetters,
 }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
-
-import { SystemDeadLetterSection } from "@/app/(app)/system/dead-letters/_components/system-dead-letter-section"
 
 afterEach(() => {
   cleanup()

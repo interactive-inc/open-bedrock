@@ -1,5 +1,7 @@
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { z } from "zod"
+import { compensationChangeRecordKindSchema } from "@/contexts/compensation-change/domain/definitions/compensation-change-record-kind.definition"
+import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records/record-source-freeze.schema"
 
 /** 給与改定記録 1 件のレスポンス。基本給・前回基本給・適用日の事実のみ。 */
 export const zAppSalaryRevision = z.object({
@@ -17,9 +19,6 @@ export const zAppSalaryRevisionList = z.object({
   data: z.array(zAppSalaryRevision),
   total: z.number(),
 })
-
-import { compensationChangeRecordKindSchema } from "@/contexts/compensation-change/domain/definitions/compensation-change-record-kind.definition"
-import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records/record-source-freeze.schema"
 
 export const compensationChangeSourceFreezeResponseSchema = z.strictObject({
   freeze: recordSourceFreezeSnapshotSchema,

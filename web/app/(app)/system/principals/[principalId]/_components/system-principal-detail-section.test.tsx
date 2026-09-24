@@ -1,6 +1,7 @@
 import { cleanup, render, screen } from "@testing-library/react"
 import { afterEach, describe, expect, test, vi } from "vite-plus/test"
 import type { SystemPrincipal } from "@/lib/api/types/system-operation-types"
+import { SystemPrincipalDetailSection } from "@/app/(app)/system/principals/[principalId]/_components/system-principal-detail-section"
 
 const mocks = vi.hoisted(() => ({ getSystemPrincipal: vi.fn() }))
 
@@ -8,8 +9,6 @@ vi.mock("@/lib/api/get-system-principal", () => ({
   getSystemPrincipal: mocks.getSystemPrincipal,
 }))
 vi.mock("next/navigation", () => ({ useRouter: () => ({ refresh: vi.fn() }) }))
-
-import { SystemPrincipalDetailSection } from "@/app/(app)/system/principals/[principalId]/_components/system-principal-detail-section"
 
 afterEach(() => {
   cleanup()

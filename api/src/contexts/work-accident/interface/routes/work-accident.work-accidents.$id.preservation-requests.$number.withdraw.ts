@@ -12,6 +12,7 @@ import {
   WorkAccidentConflictError,
   WorkAccidentUnavailableError,
 } from "@/contexts/work-accident/interface/errors"
+
 // @authorization owner - 認証された申請者だけが指定した未完了提案を理由とともに取り下げる
 export const POST = workAccidentFactory.createHandlers(
   authenticateSystemAccessToken,
