@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { decideApplicationAction } from "@/app/(app)/system/applications/[application]/actions"
 import type { ApplicationDecisionTarget } from "@/lib/api/types/application-types"
 import type { DecisionState } from "@/app/(app)/system/applications/[application]/actions"
@@ -10,7 +11,7 @@ import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field
 import { Textarea } from "@/components/ui/textarea"
 
 type Props = {
-  applicationId: number
+  applicationId: EntityId
   decisionTarget: ApplicationDecisionTarget
   negativeAction: "reject" | "return"
 }

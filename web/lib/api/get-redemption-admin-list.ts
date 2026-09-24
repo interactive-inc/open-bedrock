@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 
 export type RedemptionAdminSort = "created_at_desc" | "created_at_asc"
@@ -7,7 +8,7 @@ export type RedemptionStatus = "pending" | "rejected" | "fulfilled"
 export type RedemptionAdminFilter = {
   status: RedemptionStatus | null
   employeeId: string | null
-  rewardId: number | null
+  rewardId: EntityId | null
   from: string | null
   to: string | null
 }

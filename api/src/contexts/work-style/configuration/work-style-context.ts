@@ -3,9 +3,11 @@ import type {
   SystemClockContext,
   SystemD1Context,
 } from "@system/configuration/system-context"
+import type { AuthenticatedAccountContext } from "@/env"
 
 /** 勤務形態記録の保全が利用する認証主体、会社時刻、保存先。 */
-export type EmployeeWorkStyleContext = SystemD1Context &
+export type EmployeeWorkStyleContext = AuthenticatedAccountContext &
+  SystemD1Context &
   SystemClockContext &
   SystemAuthorizationContext &
   Readonly<{

@@ -1,9 +1,11 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /**
  * POST /templates のレスポンス、PUT /templates/:code のレスポンスも同形（申請テンプレート）。
  * id は作成/更新ルートでは insert 直後の autoincrement id（number | null）を返す。
  */
 export type ApplicationTemplateResponse = {
-  id: number | null
+  id: EntityId | null
   code: string
   name: string
   category: string

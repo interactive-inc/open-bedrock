@@ -6,7 +6,7 @@ import { deleteBudget } from "@/lib/api/delete-budget"
 import { getMe } from "@/lib/api/get-me"
 import { updateBudget } from "@/lib/api/update-budget"
 import { canManageBudgets } from "@/lib/budget/can-manage-budgets"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 
 export type BudgetCreateFormState = {
   ok: boolean
@@ -120,7 +120,7 @@ export async function updateBudgetAction(
     return { ok: false, error: "予算を管理する権限がありません" }
   }
 
-  const budgetId = toPositiveIntId(formData.get("budget_id"))
+  const budgetId = toEntityId(formData.get("budget_id"))
 
   if (budgetId === null) {
     return { ok: false, error: "予算が不正です" }
@@ -173,7 +173,7 @@ export async function deleteBudgetAction(
     return { ok: false, error: "予算を管理する権限がありません" }
   }
 
-  const budgetId = toPositiveIntId(formData.get("budget_id"))
+  const budgetId = toEntityId(formData.get("budget_id"))
 
   if (budgetId === null) {
     return { ok: false, error: "予算が不正です" }

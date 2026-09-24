@@ -1,5 +1,6 @@
 "use server"
 
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { revalidatePath } from "next/cache"
 import { advanceRecruitmentCandidate } from "@/lib/api/advance-recruitment-candidate"
 import type { CandidateNextStage } from "@/lib/api/advance-recruitment-candidate"
@@ -51,7 +52,7 @@ export async function createCandidateAction(
   previousState: RecruitmentActionState,
   formData: FormData,
 ): Promise<RecruitmentActionState> {
-  const positionId = toPositiveInt(formData.get("position_id"))
+  const positionId = toEntityId(formData.get("position_id"))
 
   const name = toText(formData.get("name"))
 
@@ -81,9 +82,9 @@ export async function advanceCandidateAction(
   previousState: RecruitmentActionState,
   formData: FormData,
 ): Promise<RecruitmentActionState> {
-  const candidateId = toPositiveInt(formData.get("candidate_id"))
+  const candidateId = toEntityId(formData.get("candidate_id"))
 
-  const positionId = toPositiveInt(formData.get("position_id"))
+  const positionId = toEntityId(formData.get("position_id"))
 
   const stage = toStage(formData.get("stage"))
 
@@ -111,21 +112,6 @@ function toText(value: FormDataEntryValue | null): string | null {
   }
 
   return value.trim()
-}
-
-/** FormData 値を正の整数へ。不正値は null。 */
-function toPositiveInt(value: FormDataEntryValue | null): number | null {
-  if (typeof value !== "string") {
-    return null
-  }
-
-  const parsed = Number.parseInt(value, 10)
-
-  if (Number.isInteger(parsed) === false || parsed <= 0) {
-    return null
-  }
-
-  return parsed
 }
 
 /** FormData 値を許容ステージへ。未知値は null。 */

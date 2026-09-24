@@ -276,6 +276,14 @@ CLIの `employees adoption --employee-id <id>` で照合対象を参照し、`em
 
 成功時は `employeeIds`、確定した `organizationRevision`、再送を表す `replayed` を返す。同じ対象集合なら順序を変えた翌日以降の再送も元の結果を返す。対象、確認値、訂正内容、理由、主体を変えた同じキーは409になり、再送にも現在の会社管理資格を要求する。CLIの `employees adoption-batch --data <confirmed-employees.json> --idempotency-key <uuid>` も同じAPIを使用する。
 
+### 接続完了の記録
+
+`GET /company/workforce-connection-completions` は完了記録と、公開履歴へ未接続の従業員数・雇用数を返す。`POST /company/workforce-connection-completions` は `idempotency-key` headerと1〜2,000文字の `reason` を受け取り、既定organizationに一度だけ完了を記録する。どちらも既定organizationへのアクセスと `company:admin` を要求する。
+
+未接続の従業員または雇用が一件でも残る場合は `409 workforce_connection_incomplete` を返し、記録時にもDBで全件の接続を再検査する。同じキーの再送は保存済みの結果を200で返し、別のキーは `409 workforce_connection_already_completed` になる。記録は変更・削除できない。
+
+完了を記録した会社では、公開履歴へ未接続の従業員への人事発令を拒否する。記録前に準備した発令も、確定時に完了記録があれば保存しない。完了記録は未接続の台帳を接続する処理ではなく、履歴の不足を補完しない。
+
 ## 既存組織の公開履歴への接続
 
 `GET /company/organization-resource-adoptions?organization_unit_id=<id>` は組織の同一性、保存済みの全期間revision、元の操作主体・理由・証拠・digest、接続状態、照合用digest、会社版、会社営業日を返す。既定organizationへのアクセスと `company:admin` が必要になる。

@@ -1,10 +1,11 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { KnowledgeUpdateRequest } from "@/lib/api/types/knowledge-types"
 
 /** PUT /knowledge-articles/:id。記事を更新する。作成者以外は 403、不存在は 404 を api が返すため戻りは Error。 */
 export async function updateKnowledge(
-  id: number,
+  id: EntityId,
   request: KnowledgeUpdateRequest,
   confirmation: { revision: number; commandId: string },
 ) {

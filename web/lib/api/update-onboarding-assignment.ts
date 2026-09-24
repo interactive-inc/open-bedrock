@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** PUT /onboarding-assignments/:id。割当日を変更する。特権ロールのみ。 */
-export async function updateOnboardingAssignment(id: number, assignedAt: string) {
+export async function updateOnboardingAssignment(id: EntityId, assignedAt: string) {
   const client = await createClient()
 
   const response = await client["onboarding"]["onboarding-assignments"][":id"].$put({

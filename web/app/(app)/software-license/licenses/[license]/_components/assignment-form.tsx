@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { startTransition, useActionState, useRef, useState } from "react"
 import { useRouter } from "next/navigation"
 import { toast } from "sonner"
@@ -12,7 +13,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { Textarea } from "@/components/ui/textarea"
 
 type Props = {
-  licenseId: number
+  licenseId: EntityId
   employees: ReadonlyArray<{ id: string; code: string | null; name: string }>
 }
 const initial: LicenseActionState = { ok: false, error: null }

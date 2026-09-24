@@ -6,7 +6,7 @@ import { createSurvey } from "@/lib/api/create-survey"
 import { deleteSurvey } from "@/lib/api/delete-survey"
 import { getMe } from "@/lib/api/get-me"
 import { updateSurvey } from "@/lib/api/update-survey"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 import type { SurveyQuestion } from "@/lib/api/types/survey-types"
 import { canManageSurveys } from "@/lib/survey/can-manage-surveys"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
@@ -114,7 +114,7 @@ export async function updateSurveyAction(
     return { ok: false, error: "権限がありません" }
   }
 
-  const surveyId = toPositiveIntId(formData.get("id"))
+  const surveyId = toEntityId(formData.get("id"))
 
   if (surveyId === null) {
     return { ok: false, error: "アンケートが不正です" }
@@ -174,7 +174,7 @@ export async function deleteSurveyAction(
     return { ok: false, error: "権限がありません" }
   }
 
-  const surveyId = toPositiveIntId(formData.get("id"))
+  const surveyId = toEntityId(formData.get("id"))
 
   if (surveyId === null) {
     return { ok: false, error: "アンケートが不正です" }

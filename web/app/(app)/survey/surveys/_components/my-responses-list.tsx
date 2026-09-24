@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { formatDateTime } from "@/lib/format-date-time"
 import { useState } from "react"
 import {
@@ -35,7 +36,7 @@ import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   responses: ReadonlyArray<SurveyResponseItem>
-  surveyTitleMap: Record<number, string>
+  surveyTitleMap: Record<string, string>
 }
 
 /** 回答内容を「設問 id: 値」のペア配列に正規化する。answers_json は unknown のため安全に絞り込む。 */
@@ -73,7 +74,7 @@ export function MyResponsesList(props: Props) {
             return (
               <TableRow key={responseId}>
                 <TableCell>
-                  {props.surveyTitleMap[response.survey_id] ?? `#${response.survey_id}`}
+                  {props.surveyTitleMap[String(response.survey_id)] ?? `#${response.survey_id}`}
                 </TableCell>
 
                 <TableCell>{formatDateTime(response.submitted_at)}</TableCell>
@@ -95,7 +96,7 @@ export function MyResponsesList(props: Props) {
 }
 
 /** 回答変更フォームを Dialog で開く。既存回答を設問ごとの入力に展開して送信する。 */
-function UpdateResponseDialog(props: { responseId: number; response: SurveyResponseItem }) {
+function UpdateResponseDialog(props: { responseId: EntityId; response: SurveyResponseItem }) {
   const [open, setOpen] = useState(false)
 
   const [state, formAction, pending] = useFormAction(
@@ -148,7 +149,7 @@ function UpdateResponseDialog(props: { responseId: number; response: SurveyRespo
 }
 
 /** 回答取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。 */
-function WithdrawResponseButton(props: { responseId: number }) {
+function WithdrawResponseButton(props: { responseId: EntityId }) {
   const [_state, formAction, pending] = useFormAction(
     withdrawSurveyResponseAction,
     {

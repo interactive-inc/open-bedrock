@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import {
   archiveAnnouncementAction,
@@ -12,7 +13,7 @@ import { FieldError } from "@/components/ui/field"
 const initialState: AnnouncementActionState = { ok: false, error: null }
 
 type Props = {
-  announcementId: number
+  announcementId: EntityId
   status: string
 }
 

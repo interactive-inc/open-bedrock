@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import {
   cancelOnboardingAssignmentAction,
   rescheduleOnboardingAssignmentAction,
@@ -22,7 +23,7 @@ import { Input } from "@/components/ui/input"
 import { Field, FieldError, FieldGroup, FieldLabel } from "@/components/ui/field"
 
 type Props = {
-  assignmentId: number
+  assignmentId: EntityId
   employeeCode: string
   assignedAt: string
 }

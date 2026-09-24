@@ -52,8 +52,8 @@ async function createTestDb(): Promise<D1Database> {
     (await db
       .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
       .first<number>("revision")) ?? 0
-  const resources: CompanyResourceProps[] = [
-    ...governanceOrgRoles.map<CompanyResourceProps>((role) => ({
+  const resources: CompanyResourceProps[] = governanceOrgRoles.map<CompanyResourceProps>(
+    (role) => ({
       organizationId: "organization:default",
       type: "responsibility" as const,
       id: `governance:responsibility:${role.code}`,
@@ -62,8 +62,8 @@ async function createTestDb(): Promise<D1Database> {
       effectiveFrom: restoreCalendarDate("2025-01-01"),
       effectiveTo: null,
       attributes: { code: role.code, officialName: role.name },
-    })),
-  ]
+    }),
+  )
   const change = CompanyResourceChangeEntity.create({
     commandId: "governance-test-company-identities",
     expectedRevision,

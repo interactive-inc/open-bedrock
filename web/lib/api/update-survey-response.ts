@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { SurveyResponseItem, UpdateSurveyResponseRequest } from "@/lib/api/types/survey-types"
@@ -7,7 +8,7 @@ import type { SurveyResponseItem, UpdateSurveyResponseRequest } from "@/lib/api/
  * 本人以外は 403、公開を終えたアンケートは 409 を api が返すため、戻りは Error になる。
  */
 export async function updateSurveyResponse(
-  id: number,
+  id: EntityId,
   request: UpdateSurveyResponseRequest,
 ): Promise<SurveyResponseItem | Error> {
   const client = await createClient()

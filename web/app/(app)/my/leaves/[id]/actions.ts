@@ -2,6 +2,7 @@
 
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
+import { ENTITY_ID_PATTERN } from "@/lib/form/to-entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
@@ -17,14 +18,14 @@ const targetSchema = z
 
 /** 表示時に確認した内容と判断対象をそのまま送る。 */
 export async function actOnLeaveProcedure(_previous: State, form: FormData): Promise<State> {
-  const id = z.coerce.number().int().positive().safe().safeParse(form.get("id"))
+  const id = z.string().trim().regex(ENTITY_ID_PATTERN).safeParse(form.get("id"))
   const operation = z
     .enum(["submit", "approve", "reject", "complete", "cancel"])
     .safeParse(form.get("operation"))
   if (!id.success || !operation.success) return { ok: false, error: "操作対象が不正です" }
   const client = await createClient()
   const endpoint = client.leave["leave-requests"][":id"]
-  const param = { id: String(id.data) }
+  const param = { id: id.data }
   const send = async () => {
     if (operation.data === "submit") {
       const previousValue = form.get("previous_leave_request_id")

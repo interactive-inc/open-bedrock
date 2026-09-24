@@ -3,7 +3,6 @@ import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interfa
 import type { ItIncidentContext } from "@/contexts/it-incident/configuration/it-incident-context"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { ItIncidentError } from "@/contexts/it-incident/domain/errors"
 
 type Context = ItIncidentContext
@@ -16,11 +15,11 @@ export class ItIncidentActorReadAdapter {
 
   async prepare(employeeIds: ReadonlyArray<EmployeeId> = []) {
     const now = this.c.var.now()
-    const account = zAccountId.safeParse(this.c.var.userId)
-    if (!account.success || !Number.isSafeInteger(now.getTime()) || now.getTime() < 0)
+    const accountId = this.c.var.userId
+    if (!Number.isSafeInteger(now.getTime()) || now.getTime() < 0)
       return new ItIncidentError("forbidden", "invalid it-incident actor")
     const authorization = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
-      accountId: account.data,
+      accountId,
       tokenVersion: this.c.var.accountTokenVersion,
       permissions: ["it_incident:manage"],
       now,
@@ -36,7 +35,7 @@ export class ItIncidentActorReadAdapter {
         database: this.c.env.DB,
       },
       {
-        accountIds: [account.data],
+        accountIds: [accountId],
         employeeCodes: [],
       },
     )
@@ -51,14 +50,14 @@ export class ItIncidentActorReadAdapter {
         NOW: now.toISOString(),
       },
     })
-    const actors = await directory.findForAccountIds([account.data])
+    const actors = await directory.findForAccountIds([accountId])
     const employees = await directory.findForEmployeeIds(employeeIds)
     if (actors instanceof Error || employees instanceof Error)
       return new ItIncidentError("it_incident_unavailable", "Company directory is unavailable")
     return {
       actor: actors[0]?.employee ?? null,
       employees,
-      accountId: account.data,
+      accountId,
       principalId: authorization.principalId,
       now,
       assertions: [...authorization.assertions, guard],

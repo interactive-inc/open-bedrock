@@ -1,3 +1,4 @@
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { notFound } from "next/navigation"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
@@ -14,22 +15,11 @@ type Props = {
   params: Promise<{ announcement: string }>
 }
 
-/** id 文字列を正の整数へ変換する。無効なら null。 */
-function toAnnouncementId(rawId: string): number | null {
-  const parsed = Number(rawId)
-
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    return null
-  }
-
-  return parsed
-}
-
 /** /announcements/:id 詳細画面。本文を表示し、管理者には公開・アーカイブ操作を出す。 */
 export default async function AnnouncementDetailPage(props: Props) {
   const params = await props.params
 
-  const announcementId = toAnnouncementId(params.announcement)
+  const announcementId = toEntityId(params.announcement)
 
   if (announcementId === null) {
     notFound()

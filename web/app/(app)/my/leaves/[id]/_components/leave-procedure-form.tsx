@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { actOnLeaveProcedure } from "@/app/(app)/my/leaves/[id]/actions"
 import { Button } from "@/components/ui/button"
@@ -7,8 +8,8 @@ import { Textarea } from "@/components/ui/textarea"
 import { Field, FieldGroup, FieldLabel, FieldError } from "@/components/ui/field"
 
 type Props = {
-  id: number
-  previousId: number | null
+  id: EntityId
+  previousId: EntityId | null
   operation: "submit" | "decision" | "complete" | "cancel"
   requestKey: string
   contentDigest: string

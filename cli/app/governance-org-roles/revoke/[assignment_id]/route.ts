@@ -3,6 +3,7 @@ import { z } from "zod"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 import { api } from "@/lib/http/client"
+import { isEntityIdSegment } from "@/lib/is-entity-id-segment"
 
 export const help = `bedrock governance-org-roles revoke <assignment-id>`
 
@@ -16,10 +17,10 @@ export default factory.createHandlers(
     const input = c.req.valid("json")
     if (input.help) return c.text(help)
     const assignmentId = c.req.valid("param").assignment_id ?? input.assignment_id
-    if (!assignmentId || !/^[1-9]\d*$/.test(assignmentId)) {
-      throw new UsageError("assignment-id は正の整数で指定してください")
+    if (!assignmentId || !isEntityIdSegment(assignmentId)) {
+      throw new UsageError("assignment-id を指定してください")
     }
     await api(`/governance-org-roles/assignments/${assignmentId}`, { method: "DELETE" })
-    return c.json({ revoked: true, assignment_id: Number(assignmentId) })
+    return c.json({ revoked: true, assignment_id: assignmentId })
   },
 )

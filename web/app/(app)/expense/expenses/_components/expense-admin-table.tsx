@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { formatDate } from "@/lib/format-date"
 import { formatDateTime } from "@/lib/format-date-time"
 import Link from "next/link"
@@ -19,7 +20,7 @@ import type { ExpenseCategory, ExpenseStatus } from "@/lib/api/types/expense-typ
 const amountFormatter = new Intl.NumberFormat("ja-JP")
 
 export type ExpenseAdminRow = {
-  id: number
+  id: EntityId
   applicant_id: string
   applicant_name: string
   applicant_dept_name: string | null

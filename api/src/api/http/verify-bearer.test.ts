@@ -191,6 +191,44 @@ describe("verifyBearer", () => {
     expect(response.status).toBe(401)
   })
 
+  test("Account不在、非active、失効を同じ401本文で拒否し、Account状態を推測させない", async () => {
+    const db = await createTestDb()
+    const call = async (token: string) => {
+      const response = await requestWithContext({
+        db,
+        jwtSecret,
+        path: "/company/current-profile",
+        token,
+        now,
+      })
+      return { status: response.status, body: await response.json() }
+    }
+    const rejected = { status: 401, body: { error: "invalid token" } }
+
+    expect(
+      await call(
+        await createTestToken(jwtSecret, {
+          employeeId: toWorkforceEmployeeId(5),
+          accountId: "account-not-registered",
+        }),
+      ),
+    ).toEqual(rejected)
+
+    const token = await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(5) })
+    await db.prepare("UPDATE system_accounts SET token_version = 1 WHERE id = '5'").run()
+    const revoked = await call(token)
+
+    await db
+      .prepare("UPDATE system_accounts SET status = 'suspended', token_version = 2 WHERE id = '5'")
+      .run()
+    const inactive = await call(
+      await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(5), tokenVersion: 2 }),
+    )
+
+    expect(revoked).toEqual(rejected)
+    expect(inactive).toEqual(rejected)
+  })
+
   test("外部IdP未設定でも従来のSystem sessionを受理する", async () => {
     const db = await createTestDb()
     const token = await createTestToken(jwtSecret, {

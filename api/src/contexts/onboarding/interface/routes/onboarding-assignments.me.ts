@@ -12,7 +12,7 @@ import {
   onboardingAssignments,
   onboardingTasks,
 } from "@/contexts/onboarding/infrastructure/schema/onboarding"
-import { count, eq } from "drizzle-orm"
+import { and, count, eq, ne } from "drizzle-orm"
 
 // @authorization owner - 本人のリソースに限定する
 /** GET /onboarding-assignments/me — 本人に割り当てられたタスク一覧 */
@@ -37,11 +37,17 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     max: MAX_LIST_OFFSET,
   })
 
+  // 人事訂正で置き換えた割当のタスクは履歴として残し、本人の作業一覧には出さない。
+  const activeForEmployee = and(
+    eq(onboardingAssignments.employeeId, session.employeeId),
+    ne(onboardingAssignments.status, "superseded"),
+  )
+
   const rows = await c.var.database
     .select({ task: onboardingTasks })
     .from(onboardingTasks)
     .innerJoin(onboardingAssignments, eq(onboardingAssignments.id, onboardingTasks.assignmentId))
-    .where(eq(onboardingAssignments.employeeId, session.employeeId))
+    .where(activeForEmployee)
     .limit(limit)
     .offset(offset)
 
@@ -49,7 +55,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select({ total: count() })
     .from(onboardingTasks)
     .innerJoin(onboardingAssignments, eq(onboardingAssignments.id, onboardingTasks.assignmentId))
-    .where(eq(onboardingAssignments.employeeId, session.employeeId))
+    .where(activeForEmployee)
 
   const body = rows.map((row) => ({
     id: row.task.id,

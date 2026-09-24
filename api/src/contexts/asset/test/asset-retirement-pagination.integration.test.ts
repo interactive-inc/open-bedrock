@@ -19,6 +19,7 @@ import {
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の承認を経て4台帳を撤去確定する", async () => {
   const {
+    clock,
     database,
     governance,
     creator: creatorPerson,
@@ -68,7 +69,7 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
     VALUES (?1,'A0001','2026-04-01T01:00:00Z',?2,'Office')`)
     .bind(stocktakeId, creatorPerson.employeeId)
     .run()
-  const at = new Date()
+  const at = clock()
   const token = await tokenFor(creator)
   const stepUpToken = "e".repeat(64)
   const hash = await new SystemPrincipalSecretService().hashRawSecret(stepUpToken)
@@ -503,10 +504,20 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
       .first<number>("n"),
   ).toBe(1)
   expect(await database.prepare("SELECT count(*) AS n FROM assets").first<number>("n")).toBe(11)
+  // 端末の実時計は数 ms 巻き戻ることがある。巻き戻った実時計の下でも、解除は再認証ではなく停止世代の競合で拒否する。
   // 拒否理由の code まで比べ、権限や再認証の拒否と取り違えたときに経路が分かるようにする。
-  const release = await post(`${sourcePath}/release`, crypto.randomUUID(), {
-    reason: "Cannot restart retired source",
-  })
+  const wallClock = Date.now
+  const rewound = wallClock() - 5
+  Date.now = () => rewound
+  const release = await (async () => {
+    try {
+      return await post(`${sourcePath}/release`, crypto.randomUUID(), {
+        reason: "Cannot restart retired source",
+      })
+    } finally {
+      Date.now = wallClock
+    }
+  })()
   expect({ status: release.status, body: await release.json() }).toMatchObject({
     status: 409,
     body: { code: "record_source_freeze_conflict" },

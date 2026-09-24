@@ -1,3 +1,5 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /** 質問の種類。scale=スケール, choice=選択肢, text=自由記述。 */
 export type SurveyQuestionType = "scale" | "choice" | "text"
 
@@ -13,7 +15,7 @@ export type SurveyQuestion = {
  * questions_json は unknown 配列で返るため、画面側で SurveyQuestion に絞り込む。
  */
 export type SurveyListItem = {
-  id: number
+  id: EntityId
   title: string
   status: "open" | "closed"
   questions_json: ReadonlyArray<unknown>
@@ -29,8 +31,8 @@ export type SubmitSurveyResponseRequest = {
 
 /** POST /surveys/:id/responses の成功レスポンス。 */
 export type SurveySubmission = {
-  id: number
-  survey_id: number
+  id: EntityId
+  survey_id: EntityId
   respondent_id: string
   answers_json: unknown
   submitted_at: string
@@ -41,8 +43,8 @@ export type SurveySubmission = {
  * api は snake_case で返す。id は永続化前 null になりうる SurveyResponse をそのまま整形するため number | null。
  */
 export type SurveyResponseItem = {
-  id: number | null
-  survey_id: number
+  id: EntityId | null
+  survey_id: EntityId
   respondent_id: string
   answers_json?: unknown
   submitted_at: string
@@ -70,7 +72,7 @@ export type SurveyQuestionSummary = {
 
 /** GET /surveys/:id/summary のレスポンス全体。 */
 export type SurveySummary = {
-  survey_id: number
+  survey_id: EntityId
   title: string
   response_count: number
   questions: ReadonlyArray<SurveyQuestionSummary>

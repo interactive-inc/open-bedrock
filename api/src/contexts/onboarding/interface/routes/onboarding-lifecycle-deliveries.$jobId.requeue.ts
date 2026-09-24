@@ -4,7 +4,6 @@ import { RequeueOnboardingLifecycleDelivery } from "@/contexts/onboarding/applic
 import { OnboardingLifecycleDeliveryRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-lifecycle-delivery.repository"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
 import { requireSystemStepUp } from "@system/interface/middlewares/require-system-step-up"
-import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { factory } from "@/api/http/factory"
@@ -25,7 +24,7 @@ export const POST = factory.createHandlers(
       throw new SystemForbiddenError()
     const saved = await new RequeueOnboardingLifecycleDelivery({
       repository: new OnboardingLifecycleDeliveryRepository(context),
-      accountId: zAccountId.parse(context.var.userId),
+      accountId: context.var.userId,
       tokenVersion: context.var.accountTokenVersion,
       now: context.var.now(),
     }).execute(context.req.valid("param").jobId)

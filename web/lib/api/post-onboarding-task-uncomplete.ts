@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** POST /onboarding-tasks/:id/uncomplete。タスクの完了を取り消して更新後のタスクを返す。 */
-export async function postOnboardingTaskUncomplete(taskId: number) {
+export async function postOnboardingTaskUncomplete(taskId: EntityId) {
   const client = await createClient()
 
   const response = await client["onboarding"]["onboarding-tasks"][":id"].uncomplete.$post({

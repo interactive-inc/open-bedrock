@@ -10,6 +10,7 @@ import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflo
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { GET as preservedDossier } from "@system/interface/routes/system.preserved-records.$recordId.dossier"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
+import { createMonotonicTestClock } from "@tests/api/support/create-monotonic-test-clock"
 import { drizzle } from "drizzle-orm/d1"
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
@@ -37,7 +38,8 @@ test("11件のサービス台帳を全件保全し、人の承認・取消・再
       .bind(id, `Example Service ${id}`, `2026-08-${String(id).padStart(2, "0")}`, `Original ${id}`)
       .run()
   }
-  const at = new Date()
+  const clock = createMonotonicTestClock()
+  const at = clock()
   const secret = "software-license-integration-test-secret"
   const token = await new SystemAccessTokenIssuer(secret).issue({
     accountId: creator,
@@ -54,6 +56,9 @@ test("11件のサービス台帳を全件保全し、人の承認・取消・再
     .bind(creator, hash, at.getTime(), at.getTime() + 60_000)
     .run()
   const bindings = {
+    get NOW() {
+      return clock().toISOString()
+    },
     DB: f.database,
     JWT_SECRET: secret,
     PEPPER_SECRET: "software-license-pagination-test-pepper",
@@ -273,7 +278,7 @@ test("11件のサービス台帳を全件保全し、人の承認・取消・再
   const reviewerToken = await new SystemAccessTokenIssuer(secret).issue({
     accountId: reviewer.accountId,
     tokenVersion: 0,
-    now: new Date(),
+    now: clock(),
   })
   if (reviewerToken instanceof Error) throw reviewerToken
   const decide = (action: string, body: unknown) =>

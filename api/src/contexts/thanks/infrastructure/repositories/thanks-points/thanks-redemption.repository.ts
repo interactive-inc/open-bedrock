@@ -95,7 +95,7 @@ export class ThanksRedemptionRepository {
    * 残高チェック・重複 pending チェック・在庫チェックを INSERT の SELECT ... WHERE に畳み込んだ
    * 1 ステートメントでアトミックに申請を作成する。D1 は個々のステートメントを直列化するため、
    * 同時に複数の申請が試みられても残高がマイナスに割れず、在庫ゼロの報酬への申請も通らない。
-   * 0 行挿入（changes === 0）は残高不足・既に pending が存在・在庫切れのいずれかを意味する。
+   * 0 行挿入（RETURNING が空）は残高不足・既に pending が存在・在庫切れのいずれかを意味する。
    * 原因は hasPendingByEmployee と在庫の再 SELECT で判定する（INSERT が弾いた後なので競合の心配は不要）。
    */
   async createIfSufficientBalance(
@@ -109,7 +109,7 @@ export class ThanksRedemptionRepository {
     | Error
   > {
     try {
-      const result = await this.c.var.database.run(
+      const inserted = await this.c.var.database.all<{ id: number }>(
         sql`INSERT INTO thanks_redemptions (employee_id, reward_id, point_cost, status, created_at, decided_at, decider_id)
             SELECT ${redemption.employeeId}, ${redemption.rewardId}, ${redemption.pointCost},
                    'pending', ${redemption.createdAt}, NULL, NULL
@@ -132,10 +132,13 @@ export class ThanksRedemptionRepository {
                 WHERE ${thanksRewards.id} = ${redemption.rewardId}) > 0
             )
             AND (SELECT ${thanksRewards.isActive} FROM ${thanksRewards}
-              WHERE ${thanksRewards.id} = ${redemption.rewardId}) = 1`,
+              WHERE ${thanksRewards.id} = ${redemption.rewardId}) = 1
+            RETURNING id`,
       )
 
-      if (result.meta.changes === 0) {
+      const insertedId = inserted.at(0)?.id
+
+      if (insertedId === undefined) {
         const hasPending = await this.hasPendingByEmployee(redemption.employeeId)
 
         if (hasPending instanceof Error) {
@@ -169,12 +172,10 @@ export class ThanksRedemptionRepository {
         return { reason: "insufficient_balance" }
       }
 
-      const lastId = result.meta.last_row_id
-
       const rows = await this.c.var.database
         .select()
         .from(thanksRedemptions)
-        .where(eq(thanksRedemptions.id, lastId))
+        .where(eq(thanksRedemptions.id, insertedId))
         .limit(1)
 
       const row = rows.at(0)
@@ -350,7 +351,7 @@ export class ThanksRedemptionRepository {
         .select()
         .from(thanksRedemptions)
         .where(eq(thanksRedemptions.employeeId, props.employeeId))
-        .orderBy(desc(thanksRedemptions.id))
+        .orderBy(desc(thanksRedemptions.createdAt), desc(thanksRedemptions.id))
         .limit(props.limit)
         .offset(props.offset)
 
@@ -369,7 +370,7 @@ export class ThanksRedemptionRepository {
         .select()
         .from(thanksRedemptions)
         .where(eq(thanksRedemptions.status, "pending"))
-        .orderBy(desc(thanksRedemptions.id))
+        .orderBy(desc(thanksRedemptions.createdAt), desc(thanksRedemptions.id))
         .limit(props.limit)
         .offset(props.offset)
 

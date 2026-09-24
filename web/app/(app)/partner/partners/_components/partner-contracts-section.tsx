@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { ContractCreateForm } from "@/app/(app)/partner/partners/_components/contract-create-form"
 import { Card } from "@/components/ui/card"
 import {
@@ -11,7 +12,7 @@ import {
 import { getContractList } from "@/lib/api/get-contract-list"
 
 type Props = {
-  partnerId: number
+  partnerId: EntityId
   partnerCode: string
   canManageContracts: boolean
 }

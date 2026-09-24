@@ -1,3 +1,5 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /**
  * api/src/attendance/attendance-record-schema.ts と同形。
  * API は snake_case で返す（GET /attendance-records・/attendance/me の各要素、
@@ -6,7 +8,7 @@
  * status は open（打刻中）/ closed（退勤済）など api 側の文字列。
  */
 export type AttendanceRecord = {
-  id: number
+  id: EntityId
   employee_id: string
   work_date: string
   clock_in_at: string | null

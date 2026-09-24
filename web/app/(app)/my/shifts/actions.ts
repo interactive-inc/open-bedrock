@@ -11,7 +11,7 @@ import { getMe } from "@/lib/api/get-me"
 import { publishShiftAssignment } from "@/lib/api/publish-shift-assignment"
 import { updateShiftAssignment } from "@/lib/api/update-shift-assignment"
 import { updateShiftPattern } from "@/lib/api/update-shift-pattern"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { canManageShift } from "@/lib/shift/can-manage-shift"
 import { approveShiftSwapRequest } from "@/lib/api/approve-shift-swap-request"
 
@@ -137,7 +137,7 @@ export async function publishShiftAssignmentAction(
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
-  const assignmentId = toPositiveIntId(formData.get("assignment_id"))
+  const assignmentId = toEntityId(formData.get("assignment_id"))
 
   if (assignmentId === null) {
     return { ok: false, error: "割当 ID が不正です" }
@@ -244,7 +244,7 @@ export async function updateShiftAssignmentAction(
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
-  const assignmentId = toPositiveIntId(formData.get("assignment_id"))
+  const assignmentId = toEntityId(formData.get("assignment_id"))
 
   if (assignmentId === null) {
     return { ok: false, error: "割当 ID が不正です" }
@@ -284,7 +284,7 @@ export async function deleteShiftAssignmentAction(
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
-  const assignmentId = toPositiveIntId(formData.get("assignment_id"))
+  const assignmentId = toEntityId(formData.get("assignment_id"))
 
   if (assignmentId === null) {
     return { ok: false, error: "割当 ID が不正です" }
@@ -314,7 +314,7 @@ export async function updateShiftPatternAction(
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
-  const patternId = toPositiveIntId(formData.get("pattern_id"))
+  const patternId = toEntityId(formData.get("pattern_id"))
 
   if (patternId === null) {
     return { ok: false, error: "パターン ID が不正です" }
@@ -350,7 +350,7 @@ export async function deleteShiftPatternAction(
     return { ok: false, error: "シフトを管理する権限がありません" }
   }
 
-  const patternId = toPositiveIntId(formData.get("pattern_id"))
+  const patternId = toEntityId(formData.get("pattern_id"))
 
   if (patternId === null) {
     return { ok: false, error: "パターン ID が不正です" }
@@ -374,7 +374,7 @@ export async function cancelShiftSwapRequestAction(
   _previousState: ShiftFormState,
   formData: FormData,
 ): Promise<ShiftFormState> {
-  const swapRequestId = toPositiveIntId(formData.get("swap_request_id"))
+  const swapRequestId = toEntityId(formData.get("swap_request_id"))
 
   if (swapRequestId === null) {
     return { ok: false, error: "申請 ID が不正です" }
@@ -407,7 +407,7 @@ export async function approveShiftSwapRequestAction(
     return { ok: false, error: "シフト交代を承認する権限がありません" }
   }
 
-  const swapRequestId = toPositiveIntId(formData.get("swap_request_id"))
+  const swapRequestId = toEntityId(formData.get("swap_request_id"))
 
   if (swapRequestId === null) {
     return { ok: false, error: "申請 ID が不正です" }

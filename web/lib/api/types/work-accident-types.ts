@@ -1,6 +1,8 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /** GET /work-accidents の要素。api は snake_case で返す。 */
 export type WorkAccidentResponse = {
-  id: number
+  id: EntityId
   occurred_on: string
   employee_id: string | null
   location: string | null

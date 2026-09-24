@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { approveExpenseAction, rejectExpenseAction } from "@/app/(app)/my/expenses/actions"
@@ -11,7 +12,7 @@ import type { ExpenseDecisionTarget } from "@/lib/api/types/expense-types"
 
 type Props = {
   decisionTarget: ExpenseDecisionTarget
-  expenseId: number
+  expenseId: EntityId
 }
 
 const initialApproveState: ExpenseDecisionFormState = {

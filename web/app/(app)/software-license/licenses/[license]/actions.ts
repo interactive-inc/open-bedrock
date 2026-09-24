@@ -2,12 +2,13 @@
 
 import { revalidatePath } from "next/cache"
 import { z } from "zod"
+import { ENTITY_ID_PATTERN } from "@/lib/form/to-entity-id"
 import { assignLicense } from "@/lib/api/assign-license"
 import { releaseLicenseAssignment } from "@/lib/api/release-license-assignment"
 import type { LicenseActionState } from "@/app/(app)/software-license/licenses/actions"
 
 const assignmentInput = z.object({
-  license_id: z.coerce.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+  license_id: z.string().regex(ENTITY_ID_PATTERN),
   id: z.string().uuid(),
   employee_id: z.string().trim().min(1),
   account_reference: z.string().trim().max(300),

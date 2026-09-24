@@ -1,5 +1,6 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { isEntityIdSegment } from "@/lib/is-entity-id-segment"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
@@ -10,10 +11,7 @@ export default factory.createHandlers(
     "json",
     z.object({
       help: z.string().optional(),
-      id: z
-        .string()
-        .regex(/^[1-9]\d*$/)
-        .optional(),
+      id: z.string().refine(isEntityIdSegment).optional(),
       limit: z
         .string()
         .regex(/^\d+$/)

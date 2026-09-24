@@ -38,7 +38,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   })
 
   const [rows, totalRows] = await Promise.all([
-    c.var.database.select().from(meetings).orderBy(desc(meetings.id)).limit(limit).offset(offset),
+    c.var.database
+      .select()
+      .from(meetings)
+      .orderBy(desc(meetings.createdAt), desc(meetings.id))
+      .limit(limit)
+      .offset(offset),
     c.var.database.select({ total: count() }).from(meetings),
   ])
 

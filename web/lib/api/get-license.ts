@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** 契約の現在のプランと確認版を取得する。 */
-export async function getLicense(id: number) {
+export async function getLicense(id: EntityId) {
   const client = await createClient()
   const response = await client["software-license"]["software-licenses"][":id"].$get({
     param: { id: String(id) },

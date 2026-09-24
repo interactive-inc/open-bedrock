@@ -13,6 +13,7 @@ import type { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/o
 import type { DrizzleD1Database } from "drizzle-orm/d1"
 import type { AccessTokenClaims } from "@system/domain/schemas/auth/access-token-claims.schema"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
+import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 /** Workers のバインディング（wrangler の vars / secrets / D1）。 */
 export type Bindings = {
@@ -32,6 +33,9 @@ export type Bindings = {
   // 添付の DEK を包む KEK。`{"1": "<base64 32 bytes>"}` 形式で、最大 version が現行鍵。
   // ローテーション中は旧 version も残す。`wrangler secret put ATTACHMENT_KEKS` で登録する。
   ATTACHMENT_KEKS?: string
+  // "true" なら Worker の定期起動で、保持期限を過ぎた未紐付け添付を掃除する。
+  // 未設定・空・"false" なら定期起動では掃除しない。それ以外の値は定期起動を失敗させる。
+  ATTACHMENT_PURGE_SCHEDULE_ENABLED?: string
   // 監査イベントの識別子 HMAC 用。`wrangler secret put AUDIT_HMAC_SECRET` で登録する。
   AUDIT_HMAC_SECRET: string
   // 人事上の会社営業日を求める IANA タイムゾーン。未設定・不正値は認証と人事変更を拒否する。
@@ -94,7 +98,8 @@ export type Variables = {
   session: CompanySessionValue | null
   auditContext: RequestAuditContext
   now: () => Date
-  userId: string
+  // 認証middlewareが検証済みAccountIdだけを設定する。利用側で再検証しない。
+  userId: AccountId
   accountTokenVersion: number
   permissions: ReadonlySet<string>
   scopedPermissions?: ReadonlyMap<string, ReadonlySet<string>>
@@ -103,6 +108,11 @@ export type Variables = {
   oidcClientRegistry: OidcClientRegistryValue
   oidcIssuerConfiguration: OidcIssuerConfigurationValue
 }
+
+/** 認証済み主体を読む処理が要求する Context。userId は認証境界で検証済みの AccountId。 */
+export type AuthenticatedAccountContext = Readonly<{
+  var: Readonly<{ userId: AccountId }>
+}>
 
 /** Hono の Env。new Hono<HonoEnv>() / createFactory<HonoEnv>() で使う。 */
 export type HonoEnv = {

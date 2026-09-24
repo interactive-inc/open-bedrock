@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import {
@@ -14,7 +15,7 @@ import { Input } from "@/components/ui/input"
 import { formatDateTime } from "@/lib/format-date-time"
 
 type Delegation = {
-  id: number
+  id: EntityId
   delegator: { id: string; code: string | null; name: string } | null
   delegate: { id: string; code: string | null; name: string } | null
   template_code: string | null

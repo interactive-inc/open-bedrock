@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { formatDateTime } from "@/lib/format-date-time"
 import Link from "next/link"
 import { useRef, useState } from "react"
@@ -125,7 +126,7 @@ function ApplicationRowActions(props: { application: ApplicationListItem }) {
  */
 function UpdateApplicationDialog(props: {
   application: ApplicationListItem
-  applicationId: number
+  applicationId: EntityId
   resubmit?: boolean
 }) {
   const [open, setOpen] = useState(false)
@@ -208,7 +209,7 @@ function UpdateApplicationDialog(props: {
 }
 
 /** 申請取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。 */
-function WithdrawApplicationButton(props: { applicationId: number }) {
+function WithdrawApplicationButton(props: { applicationId: EntityId }) {
   const [_state, formAction, pending] = useFormAction(
     withdrawApplicationAction,
     {

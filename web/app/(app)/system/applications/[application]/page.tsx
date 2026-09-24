@@ -1,3 +1,4 @@
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { CheckCircle2, Circle, Clock3, RotateCcw, XCircle } from "lucide-react"
 import { notFound } from "next/navigation"
 import { formatDateTime } from "@/lib/format-date-time"
@@ -18,22 +19,11 @@ type Props = {
   params: Promise<{ application: string }>
 }
 
-/** id 文字列を正の整数へ変換する。無効なら null。 */
-function toApplicationId(rawId: string): number | null {
-  const parsed = Number(rawId)
-
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    return null
-  }
-
-  return parsed
-}
-
 /** 申請詳細画面。RSC で 1 件取得し、ステータスと payload を表示する。 */
 export default async function ApplicationDetailPage(props: Props) {
   const params = await props.params
 
-  const applicationId = toApplicationId(params.application)
+  const applicationId = toEntityId(params.application)
 
   if (applicationId === null) {
     notFound()

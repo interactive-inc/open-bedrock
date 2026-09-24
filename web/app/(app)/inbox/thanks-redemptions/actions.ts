@@ -3,7 +3,7 @@
 import { revalidatePath } from "next/cache"
 import { decideThanksRedemption } from "@/lib/api/decide-thanks-redemption"
 import { getMe } from "@/lib/api/get-me"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 
 export type RedemptionDecisionState = { ok: boolean; error: string | null }
 
@@ -20,7 +20,7 @@ export async function decideRedemptionAction(
     return { ok: false, error: "交換申請を承認・却下する権限がありません" }
   }
 
-  const redemptionId = toPositiveIntId(formData.get("redemption_id"))
+  const redemptionId = toEntityId(formData.get("redemption_id"))
 
   if (redemptionId === null) {
     return { ok: false, error: "交換申請を特定できませんでした" }

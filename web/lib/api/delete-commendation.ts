@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** DELETE /commendations/:id。表彰の記録を削除する（commendation:manage）。 */
-export async function deleteCommendation(id: number) {
+export async function deleteCommendation(id: EntityId) {
   const client = await createClient()
 
   const response = await client["commendation"]["commendations"][":id"].$delete({

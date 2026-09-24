@@ -3,9 +3,11 @@ import type {
   SystemClockContext,
   SystemD1Context,
 } from "@system/configuration/system-context"
+import type { AuthenticatedAccountContext } from "@/env"
 
 /** 懲戒記録の保全が利用する認証主体、会社時刻、保存先。 */
-export type DisciplinaryActionContext = SystemD1Context &
+export type DisciplinaryActionContext = AuthenticatedAccountContext &
+  SystemD1Context &
   SystemClockContext &
   SystemAuthorizationContext &
   Readonly<{

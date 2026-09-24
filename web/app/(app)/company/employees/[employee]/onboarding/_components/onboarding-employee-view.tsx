@@ -5,6 +5,7 @@ import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
 import { StatusLabel } from "@/components/status-label"
 import { getOnboardingEmployee } from "@/lib/api/get-onboarding-employee"
+import type { OnboardingAssignmentStatus } from "@/lib/api/types/onboarding-types"
 import {
   Card,
   CardContent,
@@ -24,6 +25,13 @@ import {
 
 type Props = {
   code: string
+}
+
+/** 人事発令の訂正で置き換えた割当は履歴として表示し、操作を出さない。 */
+const ASSIGNMENT_STATUS_LABELS: Record<OnboardingAssignmentStatus, string> = {
+  in_progress: "進行中",
+  completed: "完了",
+  superseded: "訂正により置換",
 }
 
 /**
@@ -51,7 +59,7 @@ export async function OnboardingEmployeeView(props: Props) {
 
               <StatusLabel>{assignment.kind === "join" ? "入社" : "退社"}</StatusLabel>
 
-              <StatusLabel>{assignment.status === "completed" ? "完了" : "進行中"}</StatusLabel>
+              <StatusLabel>{ASSIGNMENT_STATUS_LABELS[assignment.status]}</StatusLabel>
             </CardTitle>
 
             <CardDescription>
@@ -93,13 +101,15 @@ export async function OnboardingEmployeeView(props: Props) {
             </div>
           </CardContent>
 
-          <CardFooter>
-            <AssignmentActions
-              assignmentId={assignment.id}
-              employeeCode={assignment.employee_code}
-              assignedAt={assignment.assigned_at}
-            />
-          </CardFooter>
+          {assignment.status === "superseded" ? null : (
+            <CardFooter>
+              <AssignmentActions
+                assignmentId={assignment.id}
+                employeeCode={assignment.employee_code}
+                assignedAt={assignment.assigned_at}
+              />
+            </CardFooter>
+          )}
         </Card>
       ))}
     </div>

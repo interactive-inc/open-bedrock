@@ -1,6 +1,8 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /** GET /expense-budgets の各要素（組織単位別の予算一覧。組織名を含む）。 */
 export type BudgetListItemResponse = {
-  id: number
+  id: EntityId
   organization_unit_id: string
   organization_unit_name: string | null
   fiscal_period: string
@@ -14,7 +16,7 @@ export type BudgetListItemResponse = {
 
 /** GET /expense-budgets/:id のレスポンス（消化額・残額を含む予算詳細）。 */
 export type BudgetDetailResponse = {
-  id: number
+  id: EntityId
   organization_unit_id: string
   organization_unit_name: string | null
   fiscal_period: string
@@ -58,7 +60,7 @@ export type BudgetUpdateRequest = {
 
 /** POST /expense-budgets・PATCH /expense-budgets/:id のレスポンス（作成・更新後の予算。api は snake_case で返す）。 */
 export type BudgetMutatedResponse = {
-  id: number | null
+  id: EntityId | null
   organization_unit_id: string
   fiscal_period: string
   period_start: string
