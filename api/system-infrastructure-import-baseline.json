@@ -4,57 +4,17 @@
       "src/contexts/system/infrastructure/repositories/iam/system-account-catalog.repository",
       "src/contexts/system/infrastructure/repositories/identity/system-identity-catalog.repository"
     ],
-    "src/api/http/application-requests/lib/system-application-operation.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/api/http/application-requests/lib/system-application-view.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/api/http/application-requests/lib/to-application-decision-target.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
     "src/api/http/application-templates/find-unknown-company-approver-roles.ts": [
       "src/contexts/system/infrastructure/repositories/iam/system-role-catalog.repository"
-    ],
-    "src/api/http/application-templates/lib/system-procedure-route.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/api/http/approval-delegations/create-system-procedure-delegation-repository.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-procedure-delegation.adapter"
-    ],
-    "src/api/http/dashboard/management/get-management-dashboard.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/count-pending-system-cases.adapter"
-    ],
-    "src/api/http/dashboard/read-dashboard.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/count-pending-system-cases.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/list-system-case-monthly-counts.adapter"
     ],
     "src/api/http/employees/register-employee.ts": [
       "src/contexts/system/infrastructure/adapters/identity/system-account-provisioning.adapter",
       "src/contexts/system/infrastructure/repositories/iam/system-role-catalog.repository"
     ],
-    "src/api/http/personnel-action-requests/create-personnel-action-request.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/api/http/personnel-action-requests/list-personnel-action-requests.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/read-system-workflow-references.adapter"
-    ],
     "src/api/http/provisioning/identity.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/auth/system-identity-login.adapter",
       "src/contexts/system/infrastructure/adapters/identity/system-identity-by-email.adapter",
       "src/contexts/system/infrastructure/repositories/identity/system-identity-catalog.repository"
-    ],
-    "src/api/routes/company.application-requests.workflow-repairs.test.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/api/routes/company.application-templates.$code.workflow.test.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/api/routes/company.personnel-action-requests.test.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
     ],
     "src/api/scheduled/run-attachment-purge.d1.test.ts": [
       "src/contexts/system/infrastructure/adapters/attachments/attachment.adapter",
@@ -64,61 +24,6 @@
       "src/contexts/system/infrastructure/adapters/attachments/attachment-object.adapter",
       "src/contexts/system/infrastructure/adapters/attachments/attachment.adapter",
       "src/contexts/system/infrastructure/schema/system-attachment"
-    ],
-    "src/contexts/announcement/infrastructure/adapters/execute-announcement-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/announcement/infrastructure/adapters/submit-announcement-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/announcement/test/announcement-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/announcement/test/create-announcement-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/antisocial-check/infrastructure/adapters/execute-antisocial-check-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/antisocial-check/infrastructure/adapters/submit-antisocial-check-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/antisocial-check/test/antisocial-check-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/antisocial-check/test/create-antisocial-check-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/asset/infrastructure/adapters/execute-asset-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/asset/infrastructure/adapters/submit-asset-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/asset/test/asset-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/asset/test/create-asset-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/attendance/infrastructure/adapters/execute-attendance-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/attendance/infrastructure/adapters/submit-attendance-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/attendance/test/attendance-preservation-execution.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/attendance/test/attendance-preservation-submission.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
     ],
     "src/contexts/attendance/test/attendance-record-source-freeze-authorization.integration.test.ts": [
       "src/contexts/system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter",
@@ -130,18 +35,10 @@
     "src/contexts/attendance/test/attendance-record-source-freeze-workflow.integration.test.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
     ],
-    "src/contexts/attendance/test/attendance-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/attendance/test/create-attendance-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
     "src/contexts/attendance/test/frozen-attendance-preserved-source.integration.test.ts": [
       "src/contexts/system/infrastructure/adapters/records/prepare-preserved-record-retention-guard.adapter",
       "src/contexts/system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter",
       "src/contexts/system/infrastructure/adapters/records/verify-preserved-record-source.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/attachments/attachment-preservation.repository",
       "src/contexts/system/infrastructure/repositories/records/preserved-record.repository",
       "src/contexts/system/infrastructure/repositories/records/record-coverage-page.repository",
@@ -155,188 +52,26 @@
     ],
     "src/contexts/attendance/test/record-retention-expiry.integration.test.ts": [
       "src/contexts/system/infrastructure/adapters/records/prepare-preserved-record-retention-guard.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/records/preserved-record.repository"
     ],
-    "src/contexts/business-trip/infrastructure/adapters/execute-business-trip-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/business-trip/infrastructure/adapters/submit-business-trip-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/business-trip/test/business-trip-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/business-trip/test/create-business-trip-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/career/infrastructure/adapters/execute-career-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/career/infrastructure/adapters/submit-career-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/career/test/career-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/career/test/create-career-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/certificate-request/infrastructure/adapters/execute-certificate-request-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/certificate-request/infrastructure/adapters/submit-certificate-request-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/certificate-request/test/certificate-request-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/certificate-request/test/create-certificate-request-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/certification/infrastructure/adapters/execute-certification-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/certification/infrastructure/adapters/submit-certification-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/certification/test/certification-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/certification/test/create-certification-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/commendation/infrastructure/adapters/execute-commendation-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/commendation/infrastructure/adapters/submit-commendation-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/commendation/test/commendation-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/commendation/test/create-commendation-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/company-calendar/infrastructure/adapters/execute-company-calendar-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/company-calendar/infrastructure/adapters/submit-company-calendar-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/company-calendar/test/company-calendar-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/company-calendar/test/create-company-calendar-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/compensation-change/infrastructure/adapters/execute-compensation-change-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/compensation-change/infrastructure/adapters/submit-compensation-change-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/compensation-change/test/compensation-change-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/compensation-change/test/create-compensation-change-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/disciplinary-action/infrastructure/adapters/execute-disciplinary-action-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/disciplinary-action/infrastructure/adapters/submit-disciplinary-action-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/disciplinary-action/test/create-disciplinary-action-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/disciplinary-action/test/disciplinary-action-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/document/infrastructure/adapters/execute-document-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/document/infrastructure/adapters/submit-document-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/document/test/create-document-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/document/test/document-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/expense/application/cancel-expense-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/expense/application/complete-approved-expense-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/expense/application/publish-expense-procedure.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/expense/application/record-expense-decision.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
     "src/contexts/expense/application/submit-expense-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/attachments/prepare-attachment-evidence.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/expense/infrastructure/adapters/execute-expense-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+      "src/contexts/system/infrastructure/adapters/attachments/prepare-attachment-evidence.adapter"
     ],
     "src/contexts/expense/infrastructure/adapters/expense-attachment-record-source.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/records/capture-linked-attachment-record.adapter"
     ],
     "src/contexts/expense/infrastructure/adapters/expense-procedure-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/attachments/attachment.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+      "src/contexts/system/infrastructure/adapters/attachments/attachment.adapter"
     ],
     "src/contexts/expense/infrastructure/adapters/prepare-expense-attachment-read.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/attachments/attachment.adapter",
       "src/contexts/system/infrastructure/adapters/attachments/prepare-attachment-content-read-guard.adapter"
     ],
-    "src/contexts/expense/infrastructure/adapters/prepare-expense-record-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter"
-    ],
-    "src/contexts/expense/infrastructure/adapters/submit-expense-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
     "src/contexts/expense/infrastructure/repositories/expense-procedure.repository.ts": [
-      "src/contexts/system/infrastructure/adapters/attachments/prepare-attachment-evidence.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/expense/infrastructure/schema/expense.ts": [
-      "src/contexts/system/infrastructure/schema/system-procedure",
-      "src/contexts/system/infrastructure/schema/system-workflow"
-    ],
-    "src/contexts/expense/interface/routes/expense-procedures.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+      "src/contexts/system/infrastructure/adapters/attachments/prepare-attachment-evidence.adapter"
     ],
     "src/contexts/expense/interface/routes/expenses.$id.attachments.$attachmentId.ts": [
       "src/contexts/system/infrastructure/adapters/attachments/attachment-object.adapter"
-    ],
-    "src/contexts/expense/test/create-expense-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
     ],
     "src/contexts/expense/test/expense-attachment-http.integration.test.ts": [
       "src/contexts/system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter",
@@ -345,41 +80,23 @@
       "src/contexts/system/infrastructure/adapters/records/prepare-record-retirement-storage-keys.adapter",
       "src/contexts/system/infrastructure/repositories/audit/system-audit-event.repository",
       "src/contexts/system/infrastructure/repositories/records/record-coverage-page.repository",
-      "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+      "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
     ],
     "src/contexts/expense/test/expense-coverage-pagination.integration.test.ts": [
       "src/contexts/system/infrastructure/adapters/records/prepare-record-retirement-disclosure.adapter",
       "src/contexts/system/infrastructure/adapters/records/prepare-record-retirement-retention.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-authorized-execution.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
       "src/contexts/system/infrastructure/repositories/audit/system-audit-event.repository",
       "src/contexts/system/infrastructure/repositories/records/preserved-record-disclosure-policy.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository",
-      "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+      "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
     ],
     "src/contexts/expense/test/expense-procedure-http.integration.test.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
     ],
     "src/contexts/expense/test/expense-procedure.test-support.ts": [
-      "src/contexts/system/infrastructure/adapters/attachments/attachment.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/family-care-leave/infrastructure/adapters/execute-family-care-leave-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/family-care-leave/infrastructure/adapters/submit-family-care-leave-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/family-care-leave/test/create-family-care-leave-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/family-care-leave/test/family-care-leave-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+      "src/contexts/system/infrastructure/adapters/attachments/attachment.adapter"
     ],
     "src/contexts/governance/application/adopt-governance-org-role-assignment.test.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
@@ -387,105 +104,8 @@
     "src/contexts/governance/infrastructure/adapters/company-governance-role-assignment-write.adapter.test.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
     ],
-    "src/contexts/governance/infrastructure/adapters/execute-governance-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/governance/infrastructure/adapters/submit-governance-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/governance/test/create-governance-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/governance/test/governance-coverage-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/governance/test/governance-record-preservation.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/headcount-plan/infrastructure/adapters/execute-headcount-plan-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/headcount-plan/infrastructure/adapters/submit-headcount-plan-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/headcount-plan/test/create-headcount-plan-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/headcount-plan/test/headcount-plan-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/health-checkup/infrastructure/adapters/execute-health-checkup-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/health-checkup/infrastructure/adapters/submit-health-checkup-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/health-checkup/test/create-health-checkup-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/health-checkup/test/health-checkup-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/it-incident/infrastructure/adapters/execute-it-incident-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/it-incident/infrastructure/adapters/submit-it-incident-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/it-incident/test/create-it-incident-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/it-incident/test/it-incident-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/knowledge/infrastructure/adapters/execute-knowledge-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/knowledge/infrastructure/adapters/submit-knowledge-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/knowledge/test/create-knowledge-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/knowledge/test/knowledge-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/leave/application/cancel-leave-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/leave/application/complete-approved-leave-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/leave/application/complete-rejected-leave-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/leave/application/publish-leave-procedure.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/leave/application/record-leave-decision.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/leave/application/submit-leave-procedure.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/leave/infrastructure/adapters/execute-leave-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
     "src/contexts/leave/infrastructure/adapters/leave-decision-notification-delivery.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/events/system-managed-job-runner.adapter"
-    ],
-    "src/contexts/leave/infrastructure/adapters/leave-procedure-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
     ],
     "src/contexts/leave/infrastructure/adapters/prepare-leave-decision-notification.adapter.test.ts": [
       "src/contexts/system/infrastructure/repositories/audit/system-audit-event.repository"
@@ -493,309 +113,15 @@
     "src/contexts/leave/infrastructure/adapters/prepare-leave-decision-notification.adapter.ts": [
       "src/contexts/system/infrastructure/repositories/events/system-delivery.repository"
     ],
-    "src/contexts/leave/infrastructure/adapters/submit-leave-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/leave/infrastructure/repositories/leave-procedure.repository.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/leave/interface/routes/leave-procedures.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/leave/test/create-leave-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/leave/test/leave-coverage-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/leave/test/leave-procedure-http.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-procedure-delegation.adapter"
-    ],
-    "src/contexts/leave/test/leave-procedure-local-d1.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/leave/test/leave-record-preservation.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/life-event/infrastructure/adapters/execute-life-event-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/life-event/infrastructure/adapters/submit-life-event-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/life-event/test/create-life-event-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/life-event/test/life-event-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/meeting/infrastructure/adapters/execute-meeting-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/meeting/infrastructure/adapters/submit-meeting-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/meeting/test/create-meeting-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/meeting/test/meeting-coverage-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/meeting/test/meeting-record-preservation.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/onboarding/infrastructure/adapters/execute-onboarding-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
     "src/contexts/onboarding/infrastructure/adapters/onboarding-lifecycle-delivery.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/events/system-managed-job-runner.adapter",
       "src/contexts/system/infrastructure/repositories/events/system-delivery.repository"
-    ],
-    "src/contexts/onboarding/infrastructure/adapters/submit-onboarding-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
     ],
     "src/contexts/onboarding/infrastructure/repositories/onboarding-lifecycle-delivery.repository.ts": [
       "src/contexts/system/infrastructure/repositories/events/system-delivery.repository"
     ],
     "src/contexts/onboarding/infrastructure/schema/onboarding.ts": [
       "src/contexts/system/infrastructure/schema/system-delivery"
-    ],
-    "src/contexts/onboarding/test/create-onboarding-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/onboarding/test/onboarding-coverage-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/onboarding/test/onboarding-record-preservation.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/one-on-one/infrastructure/adapters/execute-one-on-one-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/one-on-one/infrastructure/adapters/submit-one-on-one-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/one-on-one/test/create-one-on-one-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/one-on-one/test/one-on-one-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/partner/infrastructure/adapters/execute-partner-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/partner/infrastructure/adapters/submit-partner-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/partner/test/create-partner-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/partner/test/partner-coverage-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/partner/test/partner-record-preservation.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/performance-review/infrastructure/adapters/execute-performance-review-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/performance-review/infrastructure/adapters/submit-performance-review-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/performance-review/test/create-performance-review-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/performance-review/test/performance-review-coverage-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/performance-review/test/performance-review-record-preservation.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/recruitment/infrastructure/adapters/execute-recruitment-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/recruitment/infrastructure/adapters/submit-recruitment-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/recruitment/test/create-recruitment-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/recruitment/test/recruitment-coverage-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/recruitment/test/recruitment-record-preservation.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/regulation/infrastructure/adapters/execute-regulation-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/regulation/infrastructure/adapters/submit-regulation-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/regulation/test/create-regulation-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/regulation/test/regulation-coverage-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/regulation/test/regulation-record-preservation.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/rental/infrastructure/adapters/execute-rental-reservation-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/rental/infrastructure/adapters/submit-rental-reservation-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/rental/test/create-rental-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/rental/test/rental-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/resignation/infrastructure/adapters/execute-resignation-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/resignation/infrastructure/adapters/submit-resignation-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/resignation/test/create-resignation-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/resignation/test/resignation-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/ringi/application/cancel-ringi-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/ringi/application/complete-approved-ringi-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/ringi/application/publish-ringi-procedure.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/ringi/application/record-ringi-decision.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/ringi/application/submit-ringi-procedure.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/ringi/infrastructure/adapters/execute-ringi-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/ringi/infrastructure/adapters/ringi-procedure-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/ringi/infrastructure/adapters/submit-ringi-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/ringi/infrastructure/repositories/ringi-request.repository.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/ringi/infrastructure/schema/ringi.ts": [
-      "src/contexts/system/infrastructure/schema/system-procedure",
-      "src/contexts/system/infrastructure/schema/system-workflow"
-    ],
-    "src/contexts/ringi/interface/routes/ringi-procedures.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/ringi/test/create-ringi-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/ringi/test/ringi-coverage-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/ringi/test/ringi-procedure.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/ringi/test/ringi-procedure.test-support.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/ringi/test/ringi-record-preservation.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/room/infrastructure/adapters/execute-room-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/room/infrastructure/adapters/submit-room-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/room/test/create-room-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/room/test/room-coverage-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/room/test/room-record-preservation.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/shift/infrastructure/adapters/execute-shift-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/shift/infrastructure/adapters/submit-shift-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/shift/test/create-shift-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/shift/test/shift-coverage-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/shift/test/shift-record-preservation.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/skill/infrastructure/adapters/execute-skill-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/skill/infrastructure/adapters/submit-skill-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/skill/test/create-skill-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/skill/test/skill-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/software-license/infrastructure/adapters/execute-software-license-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/software-license/infrastructure/adapters/submit-software-license-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/software-license/test/create-license-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
     ],
     "src/contexts/software-license/test/license-preservation-approval.integration.test.ts": [
       "src/contexts/system/infrastructure/adapters/records/find-preserved-record-execution-proof.adapter",
@@ -808,102 +134,20 @@
       "src/contexts/system/infrastructure/repositories/records/preserved-record.repository"
     ],
     "src/contexts/software-license/test/license-preservation-decision-replay.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+      "src/contexts/system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter"
     ],
     "src/contexts/software-license/test/license-preservation-delegation.integration.test.ts": [
       "src/contexts/system/infrastructure/adapters/records/find-preserved-record-execution-proof.adapter",
-      "src/contexts/system/infrastructure/adapters/records/prepare-preserved-record-approval-history.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+      "src/contexts/system/infrastructure/adapters/records/prepare-preserved-record-approval-history.adapter"
     ],
     "src/contexts/software-license/test/license-preservation-rejection.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/records/verify-preserved-record-content.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+      "src/contexts/system/infrastructure/adapters/records/verify-preserved-record-content.adapter"
     ],
     "src/contexts/software-license/test/license-preservation-withdrawal.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/software-license/test/license-record-preservation-approval.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
     ],
     "src/contexts/software-license/test/license-record-preservation-generic-replay.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/software-license/test/software-license-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/survey/infrastructure/adapters/execute-survey-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/survey/infrastructure/adapters/submit-survey-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/survey/test/create-survey-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/survey/test/survey-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/thanks/infrastructure/adapters/execute-thanks-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/thanks/infrastructure/adapters/submit-thanks-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/thanks/test/create-thanks-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/thanks/test/thanks-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/training/infrastructure/adapters/execute-training-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/training/infrastructure/adapters/submit-training-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/training/test/create-training-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/training/test/training-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/work-accident/infrastructure/adapters/execute-work-accident-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/work-accident/infrastructure/adapters/submit-work-accident-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/work-accident/test/create-work-accident-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/work-accident/test/work-accident-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/work-style/infrastructure/adapters/execute-work-style-retirement.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-    ],
-    "src/contexts/work-style/infrastructure/adapters/submit-work-style-retirement-request.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-    ],
-    "src/contexts/work-style/test/create-work-style-preservation-fixture.test-support.ts": [
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/work-style/test/work-style-retirement-pagination.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
-      "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+      "src/contexts/system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter"
     ]
   }
 }

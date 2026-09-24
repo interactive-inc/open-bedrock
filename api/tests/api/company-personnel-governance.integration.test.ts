@@ -1,6 +1,6 @@
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
-import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
+import { openSystemWorkflow } from "@system/interface/operations/open-system-workflow"
 import { ResolveCompanyGovernanceTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/resolve-company-governance-task.adapter"
 import { lifecycleSha256 } from "@/contexts/company/domain/definitions/lifecycle-sha256.definition"
 import { stableLifecycleJson } from "@/contexts/company/domain/definitions/stable-lifecycle-json.definition"
@@ -11,7 +11,7 @@ import { createGovernanceTaskTestContext } from "@/contexts/company/test/governa
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { CompleteApprovedPersonnelActionRequest } from "@/contexts/company/application/employee-lifecycle/procedure/complete-approved-personnel-action-request"
 import { PersonnelActionPersistenceAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter"
 import { CompanyConflictError } from "@/contexts/company/domain/errors"
@@ -94,10 +94,7 @@ async function createFixture() {
     createdAt: c.at,
   })
   if (procedure instanceof Error) throw procedure
-  const published = await new SystemD1ProcedureRepository({ env: { DB: c.database } }).publish(
-    procedure,
-    0,
-  )
+  const published = await openSystemProcedures({ env: { DB: c.database } }).publish(procedure, 0)
   if (published !== true) throw published
   const request = async (index: number, path: string, body: unknown, key?: string) => {
     const person = c.people[index]
@@ -353,7 +350,7 @@ describe("Company公開責務による人事発令", () => {
     if (resolved instanceof Error) throw resolved
     const id = crypto.randomUUID()
     const started = await new StartSystemProcedure({
-      writer: new SystemD1WorkflowAdapter(c.context),
+      writer: openSystemWorkflow(c.context),
     }).run({
       seriesId: crypto.randomUUID(),
       version: 1,

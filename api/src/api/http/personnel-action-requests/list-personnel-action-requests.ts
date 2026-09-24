@@ -9,7 +9,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import type { Context } from "@/env"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { UnexpectedError } from "@/lib/errors"
-import { ReadSystemWorkflowReferencesAdapter } from "@system/infrastructure/adapters/workflow/read-system-workflow-references.adapter"
+import { readSystemWorkflowReferences } from "@system/interface/operations/read-system-workflow-references"
 
 type Filters = Readonly<{
   targetEmployeeCode?: string
@@ -32,14 +32,17 @@ export class ListPersonnelActionRequests {
       if (rows instanceof Error) {
         return new UnexpectedError("人事変更申請の一覧を取得できません", { cause: rows })
       }
-      const workflows = await new ReadSystemWorkflowReferencesAdapter({
-        env: { DB: this.c.env.DB },
-      }).readSystemWorkflowReferences({
-        numbers: rows.map((row) => row.application_id),
-        actorAccountId: session.accountId,
-        includeAll: session.hasPermission("employee:lifecycle:read:all"),
-        at: new Date(this.c.env.NOW ?? Date.now()),
-      })
+      const workflows = await readSystemWorkflowReferences(
+        {
+          env: { DB: this.c.env.DB },
+        },
+        {
+          numbers: rows.map((row) => row.application_id),
+          actorAccountId: session.accountId,
+          includeAll: session.hasPermission("employee:lifecycle:read:all"),
+          at: new Date(this.c.env.NOW ?? Date.now()),
+        },
+      )
       if (workflows instanceof Error) {
         return new UnexpectedError("人事変更申請の一覧を取得できません", { cause: workflows })
       }

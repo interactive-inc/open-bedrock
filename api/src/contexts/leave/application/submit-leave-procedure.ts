@@ -1,3 +1,4 @@
+import { LeaveSystemWorkflowAdapter } from "@/contexts/leave/infrastructure/adapters/leave-system-workflow.adapter"
 import { resolveCompanyProcedureTask } from "@/contexts/company/interface/operations/resolve-company-procedure-task"
 import { PrepareLeaveHumanEmployeeAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-human-employee.adapter"
 import { computeConsumedDays } from "@/contexts/leave/domain/policies/compute-consumed-days.policy"
@@ -8,7 +9,6 @@ import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/p
 import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
 import { LeaveHumanOperationAuthorizationAdapter } from "@/contexts/leave/infrastructure/adapters/leave-human-operation-authorization.adapter"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { ProposalEntity } from "@system/domain/entities/proposal.entity"
 import { SystemCaseEntity } from "@system/domain/entities/system-case.entity"
@@ -106,9 +106,9 @@ export class SubmitLeaveProcedure {
       request.consumedDays !== computeConsumedDays(request)
     )
       return new ConflictError("休暇は提出できない状態です", "submission_changed")
-    const definition = await new SystemD1ProcedureRepository(this.c).find(
-      procedureKeySchema.parse("leave_request"),
-    )
+    const definition = await new LeaveSystemWorkflowAdapter(this.c)
+      .procedures()
+      .find(procedureKeySchema.parse("leave_request"))
     if (definition instanceof Error)
       return new UnexpectedError("休暇の承認規程を取得できません", { cause: definition })
     if (definition === null || definition.completionOperationKey !== "leave.request.authorize")

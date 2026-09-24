@@ -1,9 +1,9 @@
+import { LeaveSystemWorkflowAdapter } from "@/contexts/leave/infrastructure/adapters/leave-system-workflow.adapter"
 import { PrepareLeaveHumanEmployeeAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-human-employee.adapter"
 import type { Context } from "@/env"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { LeaveProcedureRepository } from "@/contexts/leave/infrastructure/repositories/leave-procedure.repository"
 import { LeaveHumanOperationAuthorizationAdapter } from "@/contexts/leave/infrastructure/adapters/leave-human-operation-authorization.adapter"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemDecisionTargetValue } from "@system/domain/values/workflow/system-decision-target.value"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { ConflictError, ForbiddenError, UnexpectedError, type ApplicationError } from "@/lib/errors"
@@ -52,7 +52,9 @@ export class CancelLeaveProcedure {
       return new UnexpectedError("休暇の案件を取得できません", { cause: binding })
     if (binding === null)
       return new ConflictError("休暇を承認規程へ提出してください", "procedure_required")
-    const proposal = await new SystemD1ProposalAdapter(this.c).findByNumber(binding.applicationId)
+    const proposal = await new LeaveSystemWorkflowAdapter(this.c)
+      .proposals()
+      .findByNumber(binding.applicationId)
     if (proposal instanceof Error || proposal === null)
       return new UnexpectedError("休暇の提案を取得できません")
     const owned = await repository.readSubmissionReceipt({
@@ -98,7 +100,9 @@ export class CancelLeaveProcedure {
       audit,
     })
     if (cancelled !== true) {
-      const current = await new SystemD1ProposalAdapter(this.c).findByNumber(binding.applicationId)
+      const current = await new LeaveSystemWorkflowAdapter(this.c)
+        .proposals()
+        .findByNumber(binding.applicationId)
       const receipt = await repository.readSubmissionReceipt({
         binding,
         actorAccountId: command.session.accountId,

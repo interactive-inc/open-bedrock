@@ -8,11 +8,7 @@ import type {
   ExpenseStatus,
 } from "@/contexts/expense/domain/definitions/expense.definition"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { systemCases } from "@system/infrastructure/schema/system-workflow"
-import {
-  systemProposalNumbers,
-  systemProposalSeries,
-} from "@system/infrastructure/schema/system-procedure"
+import { systemWorkflowTableReferences } from "@system/interface/operations/system-workflow-table-references"
 import { organizationUnits } from "@/contexts/company/infrastructure/schema/organization"
 import type { InferSelectModel } from "drizzle-orm"
 import { index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
@@ -85,15 +81,15 @@ export const expenseProcedureBindings = sqliteTable("expense_procedure_bindings"
   applicationId: integer("application_id")
     .notNull()
     .unique()
-    .references(() => systemProposalNumbers.number, { onDelete: "restrict" }),
+    .references(systemWorkflowTableReferences.proposalNumber, { onDelete: "restrict" }),
   seriesId: text("series_id")
     .notNull()
     .unique()
-    .references(() => systemProposalSeries.id, { onDelete: "restrict" }),
+    .references(systemWorkflowTableReferences.proposalSeriesId, { onDelete: "restrict" }),
   caseId: text("case_id")
     .notNull()
     .unique()
-    .references(() => systemCases.id, { onDelete: "restrict" }),
+    .references(systemWorkflowTableReferences.caseId, { onDelete: "restrict" }),
   proposalDigest: text("proposal_digest").notNull(),
   attachmentEvidenceJson: text("attachment_evidence_json").notNull(),
   createdAt: integer("created_at").notNull(),

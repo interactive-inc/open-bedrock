@@ -5,7 +5,7 @@ import { createLicensePreservationFixture } from "@/contexts/software-license/te
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { withCurrentDecisionTarget } from "@tests/api/support/with-current-decision-target"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 
 test("共通承認APIでも前段階の同一承認を再送でき、次段階に投票しない", async () => {
   const fixture = await createLicensePreservationFixture("reject", true)
@@ -41,7 +41,7 @@ test("共通承認APIでも前段階の同一承認を再送でき、次段階�
   const replay = await request(body)
   expect(replay.status).toBe(200)
   expect(await replay.json()).toEqual({ status: "pending" })
-  const query = new SystemD1ProposalAdapter({ env: { DB: fixture.f.database } })
+  const query = openSystemProposals({ env: { DB: fixture.f.database } })
   const attestations = await query.listAttestations(receipt.case_id)
   if (attestations instanceof Error) throw attestations
   expect(attestations).toHaveLength(1)
@@ -124,7 +124,7 @@ test("共通承認の再送確認中に認証が失効した場合は受付結�
     interception.mockRestore()
   }
   expect((await request()).status).toBe(401)
-  const query = new SystemD1ProposalAdapter({ env: { DB: fixture.f.database } })
+  const query = openSystemProposals({ env: { DB: fixture.f.database } })
   const attestations = await query.listAttestations(receipt.case_id)
   if (attestations instanceof Error) throw attestations
   expect(attestations).toHaveLength(1)

@@ -386,7 +386,7 @@
     "src/contexts/company/infrastructure/adapters/organization/list-managed-employee-ids.adapter.ts": "ffb2de4dcf0f96c8ad066b914570a93c875fe6a831e4d70df5858e6b13905495",
     "src/contexts/company/infrastructure/adapters/organization/organization-resource-adoption-snapshot.adapter.ts": "fb5838227ef9767a77b86f5ce3bedc5ff687500f77f2b75b65de3f538b338881",
     "src/contexts/company/infrastructure/adapters/organization/organization-unit-change-statement.adapter.ts": "e4344f89174a32fddf6d640a545fe2a97a1ef0ea016bc685611afcb062b7ac01",
-    "src/contexts/company/infrastructure/adapters/organization/prepare-company-procedure-decision.adapter.ts": "2a4b6ce55a59612791c2dbd89f0c15011d4294ee23745d0697760b33a05c90b5",
+    "src/contexts/company/infrastructure/adapters/organization/prepare-company-procedure-decision.adapter.ts": "a23f2d9ca659f99bc252ff212a30f853f498fa6712a6fa52e11710f5f464abbd",
     "src/contexts/company/infrastructure/adapters/organization/prepare-company-record-decision-replay.adapter.ts": "6bd6a2ea2edbc21e49d318534867f1756baf4a697e0032ebfb6de4d8181cfea0",
     "src/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-decision.adapter.ts": "aedc81fc2e965bc75d7df136d03b4a14bbf05c947ced0d217961d496ff71870b",
     "src/contexts/company/infrastructure/adapters/organization/prepare-company-record-procedure-task.adapter.ts": "4ffd718601e2d1da3f8e076de469dde6447236fb94baf879314c79688a8dade6",

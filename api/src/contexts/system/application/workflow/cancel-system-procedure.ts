@@ -1,5 +1,5 @@
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
-import type { SystemWorkflowWriter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
+import type { SystemWorkflowWriter } from "@system/domain/definitions/workflow/system-workflow-writer.definition"
 import { InvalidSystemWorkflowError } from "@system/domain/errors"
 type CancelSystemProcedureContext = SystemWorkflowWriter
 type Context = CancelSystemProcedureContext

@@ -8,7 +8,7 @@ import type { Context } from "@/env"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { CompanyOperationError } from "@/contexts/company/domain/errors"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { prepareSystemHumanOperationAuthorization } from "@system/interface/operations/prepare-system-human-operation-authorization"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -45,7 +45,7 @@ export class LeaveProcedureReadAdapter {
           )
             .bind(input.leaveRequestId)
             .first<number>("leave_request_id")
-    const query = new SystemD1ProposalAdapter(this.c)
+    const query = openSystemProposals(this.c)
     const proposal = binding === null ? null : await query.findByNumber(binding.applicationId)
     if (proposal instanceof Error)
       return new UnexpectedError("判断対象を取得できません", { cause: proposal })

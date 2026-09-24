@@ -2,7 +2,7 @@ import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { describe, expect, test } from "bun:test"
 import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
 import { createTestToken } from "@tests/api/support/create-test-token"
@@ -61,10 +61,7 @@ async function createTestDb(): Promise<D1Database> {
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
   })
   if (definition instanceof Error) throw definition
-  const published = await new SystemD1ProcedureRepository({ env: { DB: db } }).publish(
-    definition,
-    0,
-  )
+  const published = await openSystemProcedures({ env: { DB: db } }).publish(definition, 0)
   if (published !== true) throw published
   const companyRevision = await db
     .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")

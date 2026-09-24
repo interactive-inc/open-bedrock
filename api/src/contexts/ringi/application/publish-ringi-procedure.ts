@@ -1,3 +1,4 @@
+import { RingiSystemWorkflowAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-system-workflow.adapter"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import {
@@ -6,7 +7,6 @@ import {
 } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { RingiHumanOperationAuthorizationAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-human-operation-authorization.adapter"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
 import { RingiAuditEventAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-audit-event.adapter"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
@@ -103,11 +103,13 @@ export class PublishRingiProcedure {
     })
     if (audit instanceof Error)
       return new UnexpectedError("規程の監査を作成できません", { cause: audit })
-    const saved = await new SystemD1ProcedureRepository({
+    const saved = await new RingiSystemWorkflowAdapter({
       ...this.c,
       publishGuards: human.assertions,
       publishEffects: new RingiAuditEventAdapter(this.c).prepareAppend(audit),
-    }).publish(definition, command.expectedRevision)
+    })
+      .procedures()
+      .publish(definition, command.expectedRevision)
     if (saved === "revision_conflict")
       return new ConflictError("承認規程または設定権限が変更されました", "revision_conflict")
     if (saved instanceof Error)

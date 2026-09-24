@@ -1,3 +1,4 @@
+import { RingiSystemWorkflowAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-system-workflow.adapter"
 import { revalidateCompanyProcedureExecution } from "@/contexts/company/interface/operations/revalidate-company-procedure-execution"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
@@ -5,7 +6,6 @@ import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/reposito
 import type { RingiProcedureBinding } from "@/contexts/ringi/domain/definitions/ringi-procedure.definition"
 import type { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
 import { RingiHumanOperationAuthorizationAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-human-operation-authorization.adapter"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
@@ -155,7 +155,9 @@ export class CompleteApprovedRingiProcedure {
   ): Promise<Readonly<{ status: "approved"; replayed: true }> | ApplicationError> {
     const request = input.request
     const binding = input.binding
-    const proposal = await new SystemD1ProposalAdapter(this.c).findByNumber(binding.applicationId)
+    const proposal = await new RingiSystemWorkflowAdapter(this.c)
+      .proposals()
+      .findByNumber(binding.applicationId)
     const payload = CanonicalSystemJsonValue.create(request.toProposalBody())
     if (
       proposal instanceof Error ||

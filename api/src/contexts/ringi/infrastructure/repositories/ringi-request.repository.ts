@@ -14,10 +14,8 @@ import type { SystemDecisionTaskBundle } from "@system/domain/definitions/workfl
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { prepareSystemAuditEventAppend } from "@system/interface/operations/prepare-system-audit-event-append"
-import {
-  SystemD1WorkflowAdapter,
-  type SystemWorkflowWriter,
-} from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
+import { openSystemWorkflow } from "@system/interface/operations/open-system-workflow"
+import type { SystemWorkflowWriter } from "@system/domain/definitions/workflow/system-workflow-writer.definition"
 import { executeSystemAuthorizedOperation } from "@system/interface/operations/execute-system-authorized-operation"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { eq } from "drizzle-orm"
@@ -38,7 +36,7 @@ export class RingiRequestRepository {
       audit: SystemAuditEventEntity
     }>,
   ) {
-    return new SystemD1WorkflowAdapter({
+    return openSystemWorkflow({
       ...this.c,
       cancelGuards: [
         ...input.guards,
@@ -124,7 +122,7 @@ export class RingiRequestRepository {
     )
     if (notification instanceof Error) return notification
     const database = this.c.env.DB
-    return new SystemD1WorkflowAdapter({
+    return openSystemWorkflow({
       ...this.c,
       decisionGuards: [
         ...input.guards,
@@ -264,7 +262,7 @@ export class RingiRequestRepository {
     }>,
   ): Promise<RingiRequest | Error> {
     const database = this.c.env.DB
-    const system = new SystemD1WorkflowAdapter({ ...this.c, startGuards: input.guards })
+    const system = openSystemWorkflow({ ...this.c, startGuards: input.guards })
     const statements = system.prepareStartStatements(input.workflow)
     try {
       // 新規の稟議 ID は事前に明示し、手続きの結び付けはその ID を束縛値として受け取る。

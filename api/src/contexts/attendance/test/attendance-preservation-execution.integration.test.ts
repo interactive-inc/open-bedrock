@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { z } from "zod"
 import { createAttendancePreservationFixture } from "@/contexts/attendance/test/create-attendance-preservation-fixture.test-support"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 
 test("保全確定APIは認証・権限・原記録の対応・承認済み状態を要求する", async () => {
   const f = await createAttendancePreservationFixture()
@@ -13,7 +13,7 @@ test("保全確定APIは認証・権限・原記録の対応・承認済み状�
   const receipt = z
     .object({ number: z.number(), record_id: z.string() })
     .parse(await submitted.json())
-  const proposal = await new SystemD1ProposalAdapter({ env: { DB: f.database } }).findByNumber(
+  const proposal = await openSystemProposals({ env: { DB: f.database } }).findByNumber(
     receipt.number,
   )
   if (proposal === null || proposal instanceof Error) throw new Error("missing proposal")
@@ -40,7 +40,7 @@ test("保全確定APIは認証・権限・原記録の対応・承認済み状�
     "DELETE FROM system_iam_role_permissions WHERE permission_key='system:record:preserve'",
   )
   expect((await f.request(path, command)).status).toBe(403)
-  const unchanged = await new SystemD1ProposalAdapter({ env: { DB: f.database } }).findByNumber(
+  const unchanged = await openSystemProposals({ env: { DB: f.database } }).findByNumber(
     receipt.number,
   )
   if (unchanged === null || unchanged instanceof Error) throw new Error("missing proposal")
@@ -58,7 +58,7 @@ test("会社資格を持つ別の人間が承認した原記録だけを一回�
   const receipt = z
     .object({ number: z.number(), record_id: z.string() })
     .parse(await submitted.json())
-  const query = new SystemD1ProposalAdapter({ env: { DB: f.database } })
+  const query = openSystemProposals({ env: { DB: f.database } })
   const proposal = await query.findByNumber(receipt.number)
   if (proposal === null || proposal instanceof Error) throw new Error("missing proposal")
   const path = `${f.path}/${receipt.number}`

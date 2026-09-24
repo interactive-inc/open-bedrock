@@ -3,7 +3,7 @@ import { z } from "zod"
 import { app } from "@/api/app"
 import { createRingiPreservationFixture } from "@/contexts/ringi/test/create-ringi-preservation-fixture.test-support"
 import { SystemPrincipalSecretService } from "@system/lib/auth/system-principal-secret-service"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { GET as preservedDossier } from "@system/interface/routes/system.preserved-records.$recordId.dossier"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
@@ -78,7 +78,7 @@ test("稟議起案を停止中に人の承認で保全し、業務コードを�
     const record = z
       .object({ number: z.number(), record_id: z.string() })
       .parse(await submitted.json())
-    const proposal = await new SystemD1ProposalAdapter({ env: { DB: database } }).findByNumber(
+    const proposal = await openSystemProposals({ env: { DB: database } }).findByNumber(
       record.number,
     )
     if (proposal === null || proposal instanceof Error) throw new Error("missing proposal")

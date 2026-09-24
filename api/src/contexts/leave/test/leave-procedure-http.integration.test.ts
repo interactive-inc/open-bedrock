@@ -1,5 +1,5 @@
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
-import { SystemD1ProcedureDelegationAdapter } from "@system/infrastructure/adapters/workflow/system-d1-procedure-delegation.adapter"
+import { openSystemProcedureDelegations } from "@system/interface/operations/open-system-procedure-delegations"
 import { zLeaveProcedureView } from "@/contexts/leave/interface/http/response-schemas"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
 import { createTestContextForDatabase } from "@tests/api/support/create-context-for-database"
@@ -563,7 +563,7 @@ test("委任による判断は本人と代理先を記録し、確定前の委�
       },
     },
   ])
-  const delegated = await new SystemD1ProcedureDelegationAdapter(c.context).create({
+  const delegated = await openSystemProcedureDelegations(c.context).create({
     delegatorAccountId: first.accountId,
     delegateAccountId: delegate.accountId,
     procedureKey: procedureKeySchema.parse("leave_request"),

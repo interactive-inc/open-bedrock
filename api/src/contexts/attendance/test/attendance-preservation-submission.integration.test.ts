@@ -1,7 +1,7 @@
 import { expect, test } from "bun:test"
 import { z } from "zod"
 import { createAttendancePreservationFixture } from "@/contexts/attendance/test/create-attendance-preservation-fixture.test-support"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 
 const receiptSchema = z.strictObject({
   number: z.number().int().positive(),
@@ -23,9 +23,7 @@ test("attendance submission requires both source and preservation permission and
     throw new Error(`submission failed: ${submitted.status} ${await submitted.text()}`)
   expect(submitted.headers.get("cache-control")).toBe("no-store")
   const receipt = receiptSchema.parse(await submitted.json())
-  const stored = await new SystemD1ProposalAdapter({ env: { DB: f.database } }).findByNumber(
-    receipt.number,
-  )
+  const stored = await openSystemProposals({ env: { DB: f.database } }).findByNumber(receipt.number)
   if (stored === null || stored instanceof Error) throw new Error("missing stored proposal")
   const body = JSON.parse(stored.bodyJson)
   expect(body.source).toMatchObject({

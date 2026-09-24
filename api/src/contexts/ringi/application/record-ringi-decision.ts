@@ -1,3 +1,4 @@
+import { RingiSystemWorkflowAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-system-workflow.adapter"
 import { prepareCompanyProcedureDecision } from "@/contexts/company/interface/operations/prepare-company-procedure-decision"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
@@ -7,7 +8,6 @@ import {
   CompanyUnexpectedError,
 } from "@/contexts/company/domain/errors"
 import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/repositories/ringi-request.repository"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { RingiHumanOperationAuthorizationAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-human-operation-authorization.adapter"
 import { HumanAttestationEntity } from "@system/domain/entities/human-attestation.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
@@ -68,7 +68,9 @@ export class RecordRingiDecision {
       return new UnexpectedError("承認案件を取得できません", { cause: binding })
     if (binding === null)
       return new ConflictError("会社の承認規程へ提出してください", "procedure_required")
-    const proposal = await new SystemD1ProposalAdapter(this.c).findByNumber(binding.applicationId)
+    const proposal = await new RingiSystemWorkflowAdapter(this.c)
+      .proposals()
+      .findByNumber(binding.applicationId)
     const payload = CanonicalSystemJsonValue.create(request.toProposalBody())
     if (proposal instanceof Error || payload instanceof Error)
       return new UnexpectedError("稟議内容を確認できません")
@@ -169,9 +171,9 @@ export class RecordRingiDecision {
     if (saved instanceof Error) {
       const concurrent = await repository.findDecisionReceipt(receiptInput)
       if (concurrent === "matching") {
-        const current = await new SystemD1ProposalAdapter(this.c).findByNumber(
-          binding.applicationId,
-        )
+        const current = await new RingiSystemWorkflowAdapter(this.c)
+          .proposals()
+          .findByNumber(binding.applicationId)
         if (current !== null && !(current instanceof Error) && current.status !== "cancelled")
           return {
             status: current.status === "executed" ? "approved" : current.status,

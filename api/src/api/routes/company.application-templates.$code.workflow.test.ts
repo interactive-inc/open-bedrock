@@ -6,7 +6,7 @@ import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restor
 import { zApplicationWorkflow } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 test("旧定義は読めるが再発行できず、公開責務への明示的な変更だけが版を進める", async () => {
@@ -36,9 +36,7 @@ test("旧定義は読めるが再発行できず、公開責務への明示的�
     createdAt: new Date("2026-01-01T00:00:00Z"),
   })
   if (definition instanceof Error) throw definition
-  expect(
-    await new SystemD1ProcedureRepository({ env: { DB: fixture.db } }).publish(definition, 0),
-  ).toBe(true)
+  expect(await openSystemProcedures({ env: { DB: fixture.db } }).publish(definition, 0)).toBe(true)
   const token = await createTestToken("workflow-test-signing-secret", {
     employeeId: restoreWorkforceId("employee", "1"),
   })

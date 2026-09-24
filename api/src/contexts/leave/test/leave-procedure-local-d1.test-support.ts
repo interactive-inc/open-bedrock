@@ -24,7 +24,7 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { iamRoleIdSchema } from "@system/domain/schemas/iam/iam-role.schema"
 import { createProposalId } from "@system/domain/schemas/workflow/proposal-id.schema"
 import { createSystemCaseId } from "@system/domain/schemas/workflow/system-case.schema"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { SystemPrincipalSecretService } from "@system/lib/auth/system-principal-secret-service"
 import { createTestContextForDatabase } from "@tests/api/support/create-context-for-database"
 import type { LocalD1 } from "@tests/d1/support/start-local-d1"
@@ -458,6 +458,6 @@ export async function publishLeaveProcedureDefinition(
   context: CompanyContext,
   definition: ProcedureDefinitionEntity,
 ): Promise<void> {
-  const published = await new SystemD1ProcedureRepository(context).publish(definition, 0)
+  const published = await openSystemProcedures(context).publish(definition, 0)
   if (published !== true) throw published
 }

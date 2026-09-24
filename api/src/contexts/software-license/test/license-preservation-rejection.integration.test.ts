@@ -4,7 +4,7 @@ import { drizzle } from "drizzle-orm/d1"
 import { expect, test } from "bun:test"
 import { z } from "zod"
 import { createLicensePreservationFixture } from "@/contexts/software-license/test/create-license-preservation-fixture.test-support"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 
 test.each(["reject", "return"] as const)(
   "保全の否定判断は規程に従い再送しても一度だけ記録される: %s",
@@ -18,7 +18,7 @@ test.each(["reject", "return"] as const)(
     const receipt = z
       .object({ number: z.number(), case_id: z.string() })
       .parse(await submitted.json())
-    const proposal = await new SystemD1ProposalAdapter({
+    const proposal = await openSystemProposals({
       env: { DB: fixture.f.database },
     }).findByNumber(receipt.number)
     if (proposal === null || proposal instanceof Error) throw new Error("missing proposal")
@@ -137,7 +137,7 @@ test.each(["reject", "return"] as const)(
         })
       ).status,
     ).toBe(409)
-    const query = new SystemD1ProposalAdapter({ env: { DB: fixture.f.database } })
+    const query = openSystemProposals({ env: { DB: fixture.f.database } })
     expect(await query.findByNumber(receipt.number, 1)).toMatchObject({
       bodyJson: proposal.bodyJson,
       digest: proposal.digest,

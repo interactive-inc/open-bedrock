@@ -2,7 +2,7 @@ import { expect, spyOn, test } from "bun:test"
 import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
 import { z } from "zod"
 import { createLicensePreservationFixture } from "@/contexts/software-license/test/create-license-preservation-fixture.test-support"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 
 test("申請者の取り下げは提案と原文を残し、その後の判断・保全実行を拒否する", async () => {
   const fixture = await createLicensePreservationFixture()
@@ -14,7 +14,7 @@ test("申請者の取り下げは提案と原文を残し、その後の判断�
   const receipt = z
     .object({ number: z.number(), case_id: z.string() })
     .parse(await submitted.json())
-  const reader = new SystemD1ProposalAdapter({ env: { DB: fixture.f.database } })
+  const reader = openSystemProposals({ env: { DB: fixture.f.database } })
   const proposal = await reader.findByNumber(receipt.number)
   if (proposal === null || proposal instanceof Error) throw new Error("missing proposal")
   const path = `${fixture.path}/${receipt.number}/withdraw`
@@ -91,7 +91,7 @@ test.each(["approve", "withdraw"])(
     const receipt = z
       .object({ number: z.number(), case_id: z.string() })
       .parse(await submitted.json())
-    const reader = new SystemD1ProposalAdapter({ env: { DB: fixture.f.database } })
+    const reader = openSystemProposals({ env: { DB: fixture.f.database } })
     const proposal = await reader.findByNumber(receipt.number)
     if (proposal === null || proposal instanceof Error) throw new Error("missing proposal")
     const withdraw = () =>

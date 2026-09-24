@@ -2,7 +2,7 @@ import { PrepareSystemCaseReadGuardAdapter } from "@system/infrastructure/adapte
 import { expect, spyOn, test } from "bun:test"
 import { z } from "zod"
 import { createLicensePreservationFixture } from "@/contexts/software-license/test/create-license-preservation-fixture.test-support"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 
 test("次段階へ進んだ後も同じ承認を再送でき、次段階の票は増えない", async () => {
   const fixture = await createLicensePreservationFixture("reject", true)
@@ -14,7 +14,7 @@ test("次段階へ進んだ後も同じ承認を再送でき、次段階の票�
   const receipt = z
     .object({ number: z.number(), case_id: z.string() })
     .parse(await submitted.json())
-  const query = new SystemD1ProposalAdapter({ env: { DB: fixture.f.database } })
+  const query = openSystemProposals({ env: { DB: fixture.f.database } })
   const proposal = await query.findByNumber(receipt.number)
   if (proposal === null || proposal instanceof Error || proposal.currentTaskKey === null)
     throw new Error("proposal missing")

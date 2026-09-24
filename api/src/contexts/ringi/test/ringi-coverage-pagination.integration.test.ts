@@ -4,9 +4,9 @@ import { app } from "@/api/app"
 import { createRingiPreservationFixture } from "@/contexts/ringi/test/create-ringi-preservation-fixture.test-support"
 import { createRingiProcedureTestContext } from "@/contexts/ringi/test/ringi-procedure.test-support"
 import { SystemPrincipalSecretService } from "@system/lib/auth/system-principal-secret-service"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { GET as preservedDossier } from "@system/interface/routes/system.preserved-records.$recordId.dossier"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
@@ -108,7 +108,7 @@ test("稟議起案11件と実System案件対応を分割照合し撤去確定す
     const record = z
       .object({ number: z.number(), record_id: z.string() })
       .parse(await submitted.json())
-    const proposal = await new SystemD1ProposalAdapter({ env: { DB: database } }).findByNumber(
+    const proposal = await openSystemProposals({ env: { DB: database } }).findByNumber(
       record.number,
     )
     if (proposal === null || proposal instanceof Error) throw new Error("missing proposal")
@@ -174,9 +174,7 @@ test("稟議起案11件と実System案件対応を分割照合し撤去確定す
     createdAt: now,
   })
   if (retirementDefinition instanceof Error) throw retirementDefinition
-  expect(
-    await new SystemD1ProcedureRepository(governance.context).publish(retirementDefinition, 0),
-  ).toBe(true)
+  expect(await openSystemProcedures(governance.context).publish(retirementDefinition, 0)).toBe(true)
   await database.exec(`INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
     VALUES ('role:ringi-retirement-review','ringi:retirement-review','custom','Record reviewer',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key)
@@ -203,7 +201,7 @@ test("稟議起案11件と実System案件対応を分割照合し撤去確定す
   const submitted = await post(retirementPath, retirementBody)
   if (submitted.status !== 201) throw new Error(await submitted.text())
   const retirementRequest = z.object({ number: z.number() }).parse(await submitted.json())
-  const proposal = await new SystemD1ProposalAdapter({
+  const proposal = await openSystemProposals({
     env: { DB: database },
     visibleCompletionOperationKeys: ["system.record.retire"],
   }).findByNumber(retirementRequest.number)

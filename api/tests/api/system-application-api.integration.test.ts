@@ -11,8 +11,8 @@ import { requestWithContext } from "@tests/api/support/request-with-context"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
+import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { describe, expect, spyOn, test } from "bun:test"
 import type { ApplicationWorkflowStep } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 
@@ -77,10 +77,7 @@ async function createDb(
     createdAt: new Date(now),
   })
   if (definition instanceof Error) throw definition
-  const published = await new SystemD1ProcedureRepository({ env: { DB: db } }).publish(
-    definition,
-    0,
-  )
+  const published = await openSystemProcedures({ env: { DB: db } }).publish(definition, 0)
   if (published !== true) throw published
 
   return db
@@ -124,7 +121,7 @@ describe("System application API composition", () => {
   ])("閲覧後に改訂された提案へ古い画面の判断を付けない: %s, %s", async (action, reason) => {
     const db = await createDb(undefined, { rejection_behavior: "return" })
     const number = await submit(db, "Viewed content")
-    const seen = await new SystemD1ProposalAdapter({ env: { DB: db } }).findByNumber(number)
+    const seen = await openSystemProposals({ env: { DB: db } }).findByNumber(number)
     if (seen === null || seen instanceof Error) throw new Error("proposal is missing")
     const target = {
       proposal_version: seen.version,
@@ -188,7 +185,7 @@ describe("System application API composition", () => {
   test("内容を見た参照が欠けている場合や段階・round・digestが違う場合は判断しない", async () => {
     const db = await createDb()
     const number = await submit(db, "Exact decision target")
-    const seen = await new SystemD1ProposalAdapter({ env: { DB: db } }).findByNumber(number)
+    const seen = await openSystemProposals({ env: { DB: db } }).findByNumber(number)
     if (seen === null || seen instanceof Error) throw new Error("proposal is missing")
     const target = {
       proposal_version: seen.version,
@@ -253,7 +250,7 @@ describe("System application API composition", () => {
       },
     ])
     const number = await submit(db, "Two separate decisions")
-    const seen = await new SystemD1ProposalAdapter({ env: { DB: db } }).findByNumber(number)
+    const seen = await openSystemProposals({ env: { DB: db } }).findByNumber(number)
     if (seen === null || seen instanceof Error) throw new Error("proposal is missing")
     const body = {
       comment: "First stage",
@@ -348,7 +345,7 @@ describe("System application API composition", () => {
         .prepare("SELECT count(*) AS total FROM system_human_attestations")
         .first<number>("total"),
     ).toBe(1)
-    const latest = await new SystemD1ProposalAdapter({ env: { DB: db } }).findByNumber(number)
+    const latest = await openSystemProposals({ env: { DB: db } }).findByNumber(number)
     expect(latest).toMatchObject({ version: 2, status: "pending" })
   })
 
