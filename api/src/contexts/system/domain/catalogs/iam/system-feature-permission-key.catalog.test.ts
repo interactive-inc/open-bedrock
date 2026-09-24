@@ -18,6 +18,7 @@ test("System feature permission keys are exactly the non-core System vocabulary,
     "system:work:perform",
     "system:work:review",
     "system:work:manage",
+    "personal_data:erase",
   ])
   expect(new Set(SYSTEM_FEATURE_PERMISSION_KEYS).size).toBe(SYSTEM_FEATURE_PERMISSION_KEYS.length)
 })

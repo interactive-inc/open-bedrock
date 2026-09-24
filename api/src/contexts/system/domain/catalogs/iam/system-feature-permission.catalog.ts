@@ -17,4 +17,5 @@ export const SystemFeaturePermission = Object.freeze({
   WORK_REVIEW: PermissionValue.known("system:work:review"),
   WORK_MANAGE: PermissionValue.known("system:work:manage"),
   BATCH_VIEW: PermissionValue.known("batch:view"),
+  PERSONAL_DATA_ERASE: PermissionValue.known("personal_data:erase"),
 })

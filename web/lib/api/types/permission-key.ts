@@ -101,6 +101,7 @@ export const permissionKeys = [
   "oneonone:read:department",
   "org:manage",
   "partner:manage",
+  "personal_data:erase",
   "position:manage",
   "recruitment:manage",
   "regulation:manage",
