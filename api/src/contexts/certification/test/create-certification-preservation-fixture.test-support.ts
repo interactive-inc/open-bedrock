@@ -7,6 +7,7 @@ import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-is
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAttachmentTestBucket } from "@system/test/system-attachment-test-bucket.test-support"
 import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-system-attachment-test-kek-environment.test-support"
+import { createMonotonicTestClock } from "@tests/api/support/create-monotonic-test-clock"
 
 const secret = "certification-integration-test-secret"
 
@@ -83,7 +84,11 @@ export async function createCertificationPreservationFixture() {
       ATTACHMENT_KEKS: createSystemAttachmentTestKekEnvironment(1),
     },
   }
+  const clock = createMonotonicTestClock()
   const bindings = {
+    get NOW() {
+      return clock().toISOString()
+    },
     DB: database,
     JWT_SECRET: secret,
     PEPPER_SECRET: "certification-pagination-test-pepper",
@@ -96,7 +101,7 @@ export async function createCertificationPreservationFixture() {
     const token = await new SystemAccessTokenIssuer(secret).issue({
       accountId: zAccountId.parse(accountId),
       tokenVersion: 0,
-      now: new Date(),
+      now: clock(),
     })
     if (token instanceof Error) throw token
     return token
@@ -126,6 +131,7 @@ export async function createCertificationPreservationFixture() {
     )
   }
   return {
+    clock,
     database,
     governance,
     creator,
