@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { resolveItIncidentAction } from "@/app/(app)/it-incident/it-incidents/actions"
 import type { ItIncidentActionState } from "@/app/(app)/it-incident/it-incidents/actions"
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button"
 const initialState: ItIncidentActionState = { ok: false, error: null }
 
 type Props = {
-  id: number
+  id: EntityId
 }
 
 /**

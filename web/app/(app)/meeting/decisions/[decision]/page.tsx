@@ -1,3 +1,4 @@
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { notFound } from "next/navigation"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
@@ -12,22 +13,11 @@ type Props = {
   params: Promise<{ decision: string }>
 }
 
-/** id 文字列を正の整数へ変換する。無効なら null。 */
-function toDecisionId(rawId: string): number | null {
-  const parsed = Number(rawId)
-
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    return null
-  }
-
-  return parsed
-}
-
 /** /decisions/:id 意思決定記録の詳細。ADR らしく背景・決定・帰結をセクションで分けて表示する。 */
 export default async function DecisionDetailPage(props: Props) {
   const params = await props.params
 
-  const decisionId = toDecisionId(params.decision)
+  const decisionId = toEntityId(params.decision)
 
   if (decisionId === null) {
     notFound()

@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
 import { StatusLabel } from "@/components/status-label"
@@ -7,7 +8,7 @@ import { CandidateStageControls } from "@/app/(app)/recruitment/recruitments/_co
 import { toCandidateStageLabel } from "@/app/(app)/recruitment/recruitments/_lib/to-candidate-stage-label"
 
 type Props = {
-  positionId: number
+  positionId: EntityId
 }
 
 /** GET /job-openings/:id/candidates を取得し、応募者ごとにステージと遷移操作を並べる RSC。 */

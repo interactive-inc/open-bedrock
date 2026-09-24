@@ -1,3 +1,4 @@
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { Pencil } from "lucide-react"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -22,9 +23,9 @@ type Props = {
 export default async function CareerPostingDetailPage(props: Props) {
   const params = await props.params
 
-  const postingId = Number(params.posting)
+  const postingId = toEntityId(params.posting)
 
-  if (Number.isInteger(postingId) === false || postingId <= 0) {
+  if (postingId === null) {
     notFound()
   }
 

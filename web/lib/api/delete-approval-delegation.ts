@@ -1,7 +1,8 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-export async function deleteApprovalDelegation(id: number) {
+export async function deleteApprovalDelegation(id: EntityId) {
   const response = await (
     await createClient()
   ).company["approval-delegations"][":id"].$delete({ param: { id: String(id) } })

@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** POST /announcements/:id/archive。アナウンスをアーカイブする（announcement:manage）。 */
-export async function archiveAnnouncement(id: number) {
+export async function archiveAnnouncement(id: EntityId) {
   const client = await createClient()
 
   const response = await client["announcement"]["announcements"][":id"].archive.$post({

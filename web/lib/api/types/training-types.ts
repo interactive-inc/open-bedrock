@@ -1,3 +1,5 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /**
  * status は API 上 DB の text 列をそのまま返すため string。
  * 作成系ハンドラが返す絞り込み union も string に代入可能。
@@ -14,7 +16,7 @@ export type TrainingEnrollmentStatus = string
  */
 export type TrainingCourseResponse = {
   // 作成系は insert 直後の autoincrement id（number | null）を返す。
-  id: number | null
+  id: EntityId | null
   code: string
   title: string
   description: string | null
@@ -32,8 +34,8 @@ export type TrainingCourseResponse = {
  */
 export type TrainingEnrollmentResponse = {
   // 作成系は insert 直後の autoincrement id（number | null）を返す。
-  id: number | null
-  course_id: number
+  id: EntityId | null
+  course_id: EntityId
   employee_id: string
   status: string
   completed_at: string | null

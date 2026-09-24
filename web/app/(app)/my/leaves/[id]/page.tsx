@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation"
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { LeaveDraftDiscardForm } from "@/app/(app)/my/leaves/[id]/_components/leave-draft-discard-form"
 import { LeaveDecisionHistory } from "@/app/(app)/my/leaves/[id]/_components/leave-decision-history"
 import { leaveProcedureStatusLabel } from "@/lib/leave/leave-procedure-status-label"
@@ -14,13 +16,13 @@ export const metadata = { title: "休暇の内容と判断" }
 /** 休暇内容と判断の履歴を確認し、提出・判断・確定を行う。 */
 export default async function LeaveProcedurePage(props: Props) {
   const params = await props.params
-  const leave = await getLeaveProcedureRequest(Number(params.id))
+  const leaveId = toEntityId(params.id)
+  if (leaveId === null) notFound()
+  const leave = await getLeaveProcedureRequest(leaveId)
   if (leave instanceof Error) return <FetchError message={leave.message} />
-  const previousId = leave.previous_leave_request_id
   const form = {
     id: leave.id,
-    previousId:
-      previousId !== null && Number.isSafeInteger(previousId) && previousId > 0 ? previousId : null,
+    previousId: leave.previous_leave_request_id,
     requestKey: crypto.randomUUID(),
     contentDigest: leave.confirmed_content_digest,
     target: leave.decision_target,

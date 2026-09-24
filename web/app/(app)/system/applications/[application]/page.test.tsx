@@ -56,7 +56,7 @@ describe("申請内容と判断フォームの同じsnapshot", () => {
     const body = new FormData(form)
     for (const [key, value] of Object.entries(target)) expect(body.get(key)).toBe(String(value))
     expect(mocks.getDetail).toHaveBeenCalledTimes(1)
-    expect(mocks.getDetail).toHaveBeenCalledWith(42)
+    expect(mocks.getDetail).toHaveBeenCalledWith("42")
   })
 
   test("対象の判断者でない閲覧者には操作を表示しない", async () => {

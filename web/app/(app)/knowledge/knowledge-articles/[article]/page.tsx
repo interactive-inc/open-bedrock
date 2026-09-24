@@ -1,3 +1,4 @@
+import { toEntityId } from "@/lib/form/to-entity-id"
 import Link from "next/link"
 import { getKnowledgeHistory } from "@/lib/api/get-knowledge-history"
 import { KnowledgeDetailActions } from "@/app/(app)/knowledge/knowledge-articles/[article]/_components/knowledge-detail-actions"
@@ -17,17 +18,6 @@ type Props = {
   searchParams: Promise<{ historyOffset?: string }>
 }
 
-/** id 文字列を正の整数へ変換する。無効なら null。 */
-function toKnowledgeId(rawId: string): number | null {
-  const parsed = Number(rawId)
-
-  if (!Number.isInteger(parsed) || parsed <= 0) {
-    return null
-  }
-
-  return parsed
-}
-
 /**
  * /knowledge/:id 記事詳細画面。RSC で 1 件取得し、本文（Markdown 原文）を表示する。
  * 無効な id や取得失敗・該当なしは notFound。
@@ -35,7 +25,7 @@ function toKnowledgeId(rawId: string): number | null {
 export default async function KnowledgeDetailPage(props: Props) {
   const params = await props.params
 
-  const knowledgeId = toKnowledgeId(params.article)
+  const knowledgeId = toEntityId(params.article)
 
   if (knowledgeId === null) {
     notFound()

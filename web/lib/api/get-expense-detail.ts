@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { ApiResponseError } from "@/lib/api/api-response-error"
 
 /** GET /expenses/:id。1 件の経費詳細を取得する。 */
-export async function getExpenseDetail(id: number) {
+export async function getExpenseDetail(id: EntityId) {
   const client = await createClient()
 
   const response = await client["expense"]["expenses"][":id"].$get({

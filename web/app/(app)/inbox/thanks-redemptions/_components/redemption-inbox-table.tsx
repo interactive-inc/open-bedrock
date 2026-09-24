@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import {
@@ -65,7 +66,7 @@ export function RedemptionInboxTable(props: {
   )
 }
 
-function DecisionForm(props: { redemptionId: number }) {
+function DecisionForm(props: { redemptionId: EntityId }) {
   async function reduce(previousState: RedemptionDecisionState, formData: FormData) {
     const result = await decideRedemptionAction(previousState, formData)
 

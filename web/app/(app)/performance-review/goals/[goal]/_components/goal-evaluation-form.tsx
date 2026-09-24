@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { createGoalEvaluationAction } from "@/app/(app)/performance-review/goals/actions"
@@ -14,7 +15,7 @@ import { evaluationKindLabel } from "@/app/(app)/performance-review/goals/[goal]
 import type { GoalEvaluationKind } from "@/lib/api/types/goal-types"
 
 type Props = {
-  goalId: number
+  goalId: EntityId
   allowedKinds: ReadonlyArray<GoalEvaluationKind>
 }
 

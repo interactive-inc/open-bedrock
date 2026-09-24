@@ -1,9 +1,11 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /** 会社カレンダーの日種別。holiday=会社休日、workday=振替出勤日。 */
 export type CalendarDayKind = "holiday" | "workday"
 
 /** GET /company-calendar-days のレスポンス要素。api は snake_case で返す。 */
 export type CompanyCalendarDayResponse = {
-  id: number
+  id: EntityId
   calendar_date: string
   kind: CalendarDayKind
   name: string | null

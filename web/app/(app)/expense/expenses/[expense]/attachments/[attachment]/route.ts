@@ -1,5 +1,5 @@
 import { downloadExpenseAttachment } from "@/lib/api/download-expense-attachment"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 
 const noStoreHeaders = { "Cache-Control": "no-store" }
 
@@ -21,7 +21,7 @@ type Params = { params: Promise<{ expense: string; attachment: string }> }
 export async function GET(_request: Request, context: Params): Promise<Response> {
   const params = await context.params
 
-  const expenseId = toPositiveIntId(params.expense)
+  const expenseId = toEntityId(params.expense)
 
   if (expenseId === null) return safeError(404)
 

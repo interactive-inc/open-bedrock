@@ -6,7 +6,7 @@ import { updateSurveyResponse } from "@/lib/api/update-survey-response"
 import { withdrawSurveyResponse } from "@/lib/api/withdraw-survey-response"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 import { fitsJsonStringifiedLength } from "@/lib/form/fits-json-stringified-length"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { requireAuth } from "@/lib/auth/require-auth"
 
 /**
@@ -28,7 +28,7 @@ export async function submitSurveyResponseAction(
 ): Promise<SubmitSurveyResponseState> {
   await requireAuth()
 
-  const surveyId = toPositiveIntId(formData.get("surveyId"))
+  const surveyId = toEntityId(formData.get("surveyId"))
 
   if (surveyId === null) {
     return { status: "error", message: "アンケート ID が不正です" }
@@ -89,7 +89,7 @@ export async function updateSurveyResponseAction(
 ): Promise<MyResponseActionState> {
   await requireAuth()
 
-  const responseId = toPositiveIntId(formData.get("responseId"))
+  const responseId = toEntityId(formData.get("responseId"))
 
   if (responseId === null) {
     return { ok: false, error: "回答 ID が不正です" }
@@ -139,7 +139,7 @@ export async function withdrawSurveyResponseAction(
 ): Promise<MyResponseActionState> {
   await requireAuth()
 
-  const responseId = toPositiveIntId(formData.get("responseId"))
+  const responseId = toEntityId(formData.get("responseId"))
 
   if (responseId === null) {
     return { ok: false, error: "回答 ID が不正です" }

@@ -1,5 +1,6 @@
 "use server"
 
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { revalidatePath } from "next/cache"
 import { cancelLicense } from "@/lib/api/cancel-license"
 import { createLicense } from "@/lib/api/create-license"
@@ -53,7 +54,7 @@ export async function cancelLicenseAction(
   previousState: LicenseActionState,
   formData: FormData,
 ): Promise<LicenseActionState> {
-  const id = toInteger(formData.get("id"))
+  const id = toEntityId(formData.get("id"))
 
   if (id === null) {
     return { ok: false, error: "対象のライセンスが不明です" }

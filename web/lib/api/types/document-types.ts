@@ -1,6 +1,8 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /** GET /document-ledger-entries の各要素。 */
 export type DocumentListItem = {
-  id: number
+  id: EntityId
   title: string
   category: string | null
   location: string

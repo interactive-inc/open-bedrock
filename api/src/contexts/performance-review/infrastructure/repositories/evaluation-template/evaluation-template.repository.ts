@@ -46,7 +46,7 @@ export class EvaluationTemplateRepository {
         .select()
         .from(evaluationTemplates)
         .where(where)
-        .orderBy(asc(evaluationTemplates.id))
+        .orderBy(asc(evaluationTemplates.createdAt), asc(evaluationTemplates.id))
         .limit(opts?.limit ?? 50)
         .offset(opts?.offset ?? 0)
 

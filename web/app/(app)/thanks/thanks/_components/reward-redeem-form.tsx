@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { requestRedemptionAction } from "@/app/(app)/thanks/thanks/actions"
@@ -7,7 +8,7 @@ import type { ThanksActionState } from "@/app/(app)/thanks/thanks/actions"
 import { Button } from "@/components/ui/button"
 
 type Props = {
-  rewardId: number
+  rewardId: EntityId
   disabled: boolean
 }
 

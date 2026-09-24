@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useRouter } from "next/navigation"
 import { useActionState, useState, useTransition } from "react"
 import { toast } from "sonner"
@@ -22,7 +23,7 @@ const categories: ReadonlyArray<ExpenseCategory> = [
 type Props = {
   requestKey: string
   initial?: {
-    id: number
+    id: EntityId
     category: ExpenseCategory
     amount: number
     spent_at: string

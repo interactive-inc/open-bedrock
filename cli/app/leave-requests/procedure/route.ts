@@ -3,6 +3,7 @@ import { z } from "zod"
 import { api } from "@/lib/http/client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
+import { isEntityIdSegment } from "@/lib/is-entity-id-segment"
 
 export const help = `bedrock leave-requests procedure --id <id>
   --operation submit --request-key <uuid> --content-digest <確認したdigest> [--previous-leave-request-id <差戻し元>]
@@ -25,11 +26,7 @@ export default factory.createHandlers(
   async (c) => {
     const query = c.req.valid("json")
     if (query.help) return c.text(help)
-    if (
-      query.id === undefined ||
-      !/^[1-9]\d*$/.test(query.id) ||
-      !Number.isSafeInteger(Number(query.id))
-    )
+    if (query.id === undefined || !isEntityIdSegment(query.id))
       throw new UsageError("--id に休暇番号を指定してください")
     const path = `/leave/leave-requests/${query.id}`
     if (query.operation === undefined)

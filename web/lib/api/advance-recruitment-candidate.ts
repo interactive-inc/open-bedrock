@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
@@ -6,7 +7,7 @@ export type CandidateNextStage = Exclude<CandidateStage, "applied">
 
 /** POST /recruitment-candidates/:id/advance。選考ステージを前進・不採用へ（recruitment:manage）。不正遷移は 409。 */
 export async function advanceRecruitmentCandidate(request: {
-  candidateId: number
+  candidateId: EntityId
   stage: CandidateNextStage
 }) {
   const client = await createClient()

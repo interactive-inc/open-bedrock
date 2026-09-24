@@ -1,9 +1,10 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { ReviewFormSubmitRequest } from "@/lib/api/types/review-types"
 
 type Props = {
-  formId: number
+  formId: EntityId
   request: ReviewFormSubmitRequest
 }
 

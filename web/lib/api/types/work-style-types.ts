@@ -1,9 +1,11 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /** 勤務形態の区分。制度の適法性判定はしない。 */
 export type WorkStyle = "regular" | "flextime" | "discretionary" | "shift"
 
 /** GET /employee-work-styles のレスポンス要素。 */
 export type EmployeeWorkStyleResponse = {
-  id: number
+  id: EntityId
   employee_id: string
   style: WorkStyle
   starts_on: string

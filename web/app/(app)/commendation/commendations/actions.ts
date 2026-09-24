@@ -1,5 +1,6 @@
 "use server"
 
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { revalidatePath } from "next/cache"
 import { createCommendation } from "@/lib/api/create-commendation"
 import { deleteCommendation } from "@/lib/api/delete-commendation"
@@ -48,7 +49,7 @@ export async function deleteCommendationAction(
   previousState: CommendationActionState,
   formData: FormData,
 ): Promise<CommendationActionState> {
-  const id = toPositiveInt(formData.get("id"))
+  const id = toEntityId(formData.get("id"))
 
   if (id === null) {
     return { ok: false, error: "削除対象が不正です" }
@@ -72,19 +73,4 @@ function toText(value: FormDataEntryValue | null): string | null {
   }
 
   return value.trim()
-}
-
-/** FormData 値を正の整数へ。不正値は null。 */
-function toPositiveInt(value: FormDataEntryValue | null): number | null {
-  if (typeof value !== "string") {
-    return null
-  }
-
-  const parsed = Number.parseInt(value, 10)
-
-  if (Number.isInteger(parsed) === false || parsed <= 0) {
-    return null
-  }
-
-  return parsed
 }

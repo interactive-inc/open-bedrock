@@ -5,6 +5,7 @@ import { EvaluationSheet } from "@/contexts/performance-review/domain/entities/e
 import type { Context } from "@/env"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
+import { withAllocatedIntegerId } from "@/lib/database/with-allocated-integer-id"
 import { ConflictError } from "@/lib/errors"
 import {
   evaluationSheetAuditLogs,
@@ -59,7 +60,7 @@ export class EvaluationSheetRepository {
         .select()
         .from(evaluationSheets)
         .where(where)
-        .orderBy(asc(evaluationSheets.id))
+        .orderBy(asc(evaluationSheets.createdAt), asc(evaluationSheets.id))
         .limit(opts?.limit ?? 50)
         .offset(opts?.offset ?? 0)
 
@@ -172,42 +173,52 @@ export class EvaluationSheetRepository {
       const db = this.c.env.DB
 
       // シート作成と監査ログ挿入を同一 batch でアトミックに実行する。
-      // last_insert_rowid() は INSERT のみで更新されるため、SELECT（statement 1）の
-      // 後も sheet の rowid を保持する。audit INSERT は statement 2 で実行。
-      const results = await db.batch([
-        db
-          .prepare(
-            `INSERT INTO evaluation_sheets
-               (employee_id, template_id, period, status, primary_evaluator_id,
-                secondary_evaluator_id, submitted_at, approved_at, finalized_at,
-                revision, created_at, updated_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)`,
-          )
-          .bind(
-            sheet.employeeId,
-            sheet.templateId,
-            sheet.period,
-            sheet.status,
-            sheet.primaryEvaluatorId,
-            sheet.secondaryEvaluatorId,
-            sheet.submittedAt,
-            sheet.approvedAt,
-            sheet.finalizedAt,
-            sheet.revision,
-            sheet.createdAt,
-            sheet.updatedAt,
-          ),
-        db.prepare(
-          "SELECT id, employee_id, template_id, period, status, primary_evaluator_id, secondary_evaluator_id, submitted_at, approved_at, finalized_at, revision, created_at, updated_at FROM evaluation_sheets WHERE id = last_insert_rowid()",
-        ),
-        db
-          .prepare(
-            `INSERT INTO evaluation_sheet_audit_logs
-               (sheet_id, actor_id, action, from_value, to_value, note, created_at)
-             VALUES (last_insert_rowid(), ?1, ?2, ?3, ?4, ?5, ?6)`,
-          )
-          .bind(audit.actorId, audit.action, audit.fromValue, audit.toValue, audit.note, audit.now),
-      ])
+      // シート ID は事前に明示し、監査ログはその ID を束縛値として受け取る。
+      const results = await withAllocatedIntegerId(db, "evaluation_sheets", (sheetId) =>
+        db.batch([
+          db
+            .prepare(
+              `INSERT INTO evaluation_sheets
+                 (id, employee_id, template_id, period, status, primary_evaluator_id,
+                  secondary_evaluator_id, submitted_at, approved_at, finalized_at,
+                  revision, created_at, updated_at)
+               VALUES (?13, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)
+               RETURNING id, employee_id, template_id, period, status, primary_evaluator_id,
+                 secondary_evaluator_id, submitted_at, approved_at, finalized_at, revision,
+                 created_at, updated_at`,
+            )
+            .bind(
+              sheet.employeeId,
+              sheet.templateId,
+              sheet.period,
+              sheet.status,
+              sheet.primaryEvaluatorId,
+              sheet.secondaryEvaluatorId,
+              sheet.submittedAt,
+              sheet.approvedAt,
+              sheet.finalizedAt,
+              sheet.revision,
+              sheet.createdAt,
+              sheet.updatedAt,
+              sheetId,
+            ),
+          db
+            .prepare(
+              `INSERT INTO evaluation_sheet_audit_logs
+                 (sheet_id, actor_id, action, from_value, to_value, note, created_at)
+               VALUES (?7, ?1, ?2, ?3, ?4, ?5, ?6)`,
+            )
+            .bind(
+              audit.actorId,
+              audit.action,
+              audit.fromValue,
+              audit.toValue,
+              audit.note,
+              audit.now,
+              sheetId,
+            ),
+        ]),
+      )
 
       type SheetRow = {
         id: number
@@ -225,7 +236,7 @@ export class EvaluationSheetRepository {
         updated_at: string
       }
 
-      const row = (results[1] as D1Result<SheetRow>).results?.at(0)
+      const row = (results[0] as D1Result<SheetRow>).results?.at(0)
 
       if (row === undefined) {
         return new Error("failed to read back created evaluation sheet")

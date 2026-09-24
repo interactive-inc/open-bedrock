@@ -1,9 +1,10 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { DocumentUpdateRequest } from "@/lib/api/types/document-types"
 
 /** PUT /document-ledger-entries/:id。文書台帳のメタデータを更新する（document:manage）。 */
-export async function updateDocument(id: number, request: DocumentUpdateRequest) {
+export async function updateDocument(id: EntityId, request: DocumentUpdateRequest) {
   const client = await createClient()
 
   const response = await client["document"]["document-ledger-entries"][":id"].$put({

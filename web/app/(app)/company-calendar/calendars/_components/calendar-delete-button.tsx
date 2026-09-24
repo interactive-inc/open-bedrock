@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { deleteCalendarDayAction } from "@/app/(app)/company-calendar/calendars/actions"
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button"
 
 type Props = {
   // 削除対象の会社カレンダー日 ID。hidden フィールドへ埋め込む。
-  id: number
+  id: EntityId
 }
 
 const initialState: CalendarActionState = { ok: false, error: null }

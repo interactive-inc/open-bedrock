@@ -16,7 +16,7 @@ import { toOptionalIntInRange } from "@/lib/form/to-optional-int-in-range"
 import { toOptionalIsoDate } from "@/lib/form/to-optional-iso-date"
 import { toOptionalText } from "@/lib/form/to-optional-text"
 import { toRequiredText } from "@/lib/form/to-required-text"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { canAdministerCycle } from "@/lib/review/can-administer-cycle"
 
 /** reviewer_type の許可値。フォーム入力の検証に使う。 */
@@ -119,7 +119,7 @@ export async function openReviewCycleAction(
     return { ok: false, error: "評価サイクルを管理する権限がありません" }
   }
 
-  const cycleId = toPositiveIntId(formData.get("cycle_id"))
+  const cycleId = toEntityId(formData.get("cycle_id"))
 
   if (cycleId === null) {
     return { ok: false, error: "サイクル ID が不正です" }
@@ -148,7 +148,7 @@ export async function closeReviewCycleAction(
     return { ok: false, error: "評価サイクルを管理する権限がありません" }
   }
 
-  const cycleId = toPositiveIntId(formData.get("cycle_id"))
+  const cycleId = toEntityId(formData.get("cycle_id"))
 
   if (cycleId === null) {
     return { ok: false, error: "サイクル ID が不正です" }
@@ -177,7 +177,7 @@ export async function updateReviewCycleAction(
     return { ok: false, error: "評価サイクルを管理する権限がありません" }
   }
 
-  const cycleId = toPositiveIntId(formData.get("cycle_id"))
+  const cycleId = toEntityId(formData.get("cycle_id"))
 
   if (cycleId === null) {
     return { ok: false, error: "サイクル ID が不正です" }
@@ -234,7 +234,7 @@ export async function deleteReviewCycleAction(
     return { ok: false, error: "評価サイクルを管理する権限がありません" }
   }
 
-  const cycleId = toPositiveIntId(formData.get("cycle_id"))
+  const cycleId = toEntityId(formData.get("cycle_id"))
 
   if (cycleId === null) {
     return { ok: false, error: "サイクル ID が不正です" }
@@ -259,7 +259,7 @@ export async function submitReviewFormAction(
 ): Promise<ReviewFormState> {
   await requireAuth()
 
-  const formId = toPositiveIntId(formData.get("form_id"))
+  const formId = toEntityId(formData.get("form_id"))
 
   if (formId === null) {
     return { ok: false, error: "フォーム ID が不正です" }
@@ -310,7 +310,7 @@ export async function discloseReviewCycleAction(
     return { ok: false, error: "評価サイクルを管理する権限がありません" }
   }
 
-  const cycleId = toPositiveIntId(formData.get("cycle_id"))
+  const cycleId = toEntityId(formData.get("cycle_id"))
 
   if (cycleId === null) {
     return { ok: false, error: "サイクル ID が不正です" }
@@ -339,7 +339,7 @@ export async function createReviewFormsBulkAction(
     return { ok: false, error: "評価サイクルを管理する権限がありません" }
   }
 
-  const cycleId = toPositiveIntId(formData.get("cycle_id"))
+  const cycleId = toEntityId(formData.get("cycle_id"))
 
   if (cycleId === null) {
     return { ok: false, error: "サイクル ID が不正です" }

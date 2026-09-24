@@ -1,12 +1,13 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { uncompleteOnboardingTaskAction } from "@/app/(app)/onboarding/onboarding-assignments/actions"
 import type { CompleteState } from "@/app/(app)/onboarding/onboarding-assignments/actions"
 import { useFormAction } from "@/hooks/use-form-action"
 import { Button } from "@/components/ui/button"
 
 type Props = {
-  taskId: number
+  taskId: EntityId
 }
 
 const initialState: CompleteState = { ok: false, message: null }

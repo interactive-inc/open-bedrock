@@ -1,3 +1,5 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /** status は API 上 DB の text 列をそのまま返すため string。 */
 export type ShiftSwapStatus = string
 
@@ -8,9 +10,9 @@ export type ShiftSwapStatus = string
  * pattern_id は nullable 列のため number | null。
  */
 export type ShiftAssignmentResponse = {
-  id: number | null
+  id: EntityId | null
   employee_id: string
-  pattern_id: number | null
+  pattern_id: EntityId | null
   date: string
   note: string | null
   published_at: string | null
@@ -22,9 +24,9 @@ export type ShiftAssignmentResponse = {
  * pattern_* は割当にパターンが紐付かない場合 null。
  */
 export type MyShiftAssignmentResponse = {
-  id: number
+  id: EntityId
   employee_id: string
-  pattern_id: number | null
+  pattern_id: EntityId | null
   pattern_name: string | null
   pattern_start_time: string | null
   pattern_end_time: string | null
@@ -38,7 +40,7 @@ export type MyShiftAssignmentResponse = {
  * id は作成・更新レスポンスで採番前の null を含むため nullable。
  */
 export type ShiftPatternResponse = {
-  id: number | null
+  id: EntityId | null
   code: string
   name: string
   start_time: string
@@ -53,7 +55,7 @@ export type ShiftPatternResponse = {
  * status は api が任意文字列で返すため string。id は採番前 null を含む。
  */
 export type ShiftSwapRequestResponse = {
-  id: number | null
+  id: EntityId | null
   requester_employee_id: string
   target_employee_id: string
   date: string
@@ -68,7 +70,7 @@ export type ShiftSwapRequestResponse = {
  * target_employee_name は該当社員が見つからない場合 null。
  */
 export type MyShiftSwapRequestResponse = {
-  id: number
+  id: EntityId
   requester_employee_id: string
   target_employee_id: string
   target_employee_name: string | null
@@ -84,7 +86,7 @@ export type MyShiftSwapRequestResponse = {
  * 該当者が見つからない場合 api 側は空文字を返す（route.ts の `?? ""`）。
  */
 export type ShiftSwapRequestInboxResponse = {
-  id: number
+  id: EntityId
   requester_employee_code: string
   target_employee_code: string
   date: string
