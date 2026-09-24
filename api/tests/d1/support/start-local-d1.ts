@@ -1,6 +1,10 @@
 import { splitSqlStatements } from "@/lib/database/split-sql-statements"
 import { Miniflare } from "miniflare"
 import {
+  installWorkerdStdioGuard,
+  takeWorkerdStdioFailures,
+} from "@tests/d1/support/guard-workerd-stdio"
+import {
   LOCAL_D1_WORKER_SCRIPT,
   createLocalD1FetchClient,
 } from "@tests/d1/support/local-d1-fetch-client"
@@ -38,6 +42,8 @@ type Template = Readonly<{
 }>
 
 const migrationsDirectory = join(import.meta.dir, "../../../migrations")
+
+installWorkerdStdioGuard()
 
 /** Miniflareが D1 の Durable Object を永続化する、persist directory 内の相対位置。 */
 const D1_OBJECT_DIRECTORY = join("d1", "miniflare-D1DatabaseObject")
@@ -103,7 +109,9 @@ export async function startLocalD1(databases: LocalD1Databases): Promise<LocalD1
     return persist
   }
 
-  const { runtime, persist } = await startRuntime(preparePersist, ids)
+  const { runtime, persist } = await startRuntime(preparePersist, {
+    create: (directory) => createRuntime(directory, ids),
+  })
 
   const migratedNames = new Set(migrated)
   const verified = new Set<string>()
@@ -135,45 +143,88 @@ const RUNTIME_START_ATTEMPTS = 3
 /** 起動が止まったと見なすまでの時間。通常の起動は1秒前後で終わる。 */
 const RUNTIME_START_STALL_MS = 15_000
 
+/** 起動を試す実行環境。Miniflareのうち、起動の待機と停止だけを使う。 */
+export type StartableRuntime = Readonly<{
+  ready: Promise<unknown>
+  dispose: () => Promise<void>
+}>
+
+type StartRuntimeOptions<T extends StartableRuntime> = Readonly<{
+  create: (persist: string) => T
+  stallMs?: number
+  attempts?: number
+}>
+
+type Readiness = Readonly<{ kind: "ready" }> | Readonly<{ kind: "failed"; error: unknown }>
+
 /**
  * 1プロセスで多数のファイルを流すと、Bunが workerd を起動する子プロセスのpipeで
  * EBADF や ENOENT を返し、起動が失敗するか、完了しないまま止まることがある。その場合に起動を作り直す。
  * 作り直しは毎回新しいディレクトリを使い、止まった起動のworkerdが後から動き出しても、
  * 同じDBファイルへ2つのworkerdを向けない。
+ *
+ * 各起動の`ready`は一度だけ観測し、結果を値に変えてから待つ。止まったと見なして作り直した後で
+ * 元の起動が失敗しても、その失敗は作り直しの原因として記録され、未処理のrejectionにならない。
+ * 後から起動が完了した場合は停止する。作り直しても起動しなければ最後の失敗を投げる。
  */
-async function startRuntime(
+export async function startRuntime<T extends StartableRuntime>(
   preparePersist: () => string,
-  d1Databases: Record<string, string>,
-): Promise<{ runtime: Miniflare; persist: string }> {
+  options: StartRuntimeOptions<T>,
+): Promise<{ runtime: T; persist: string }> {
+  const stallMs = options.stallMs ?? RUNTIME_START_STALL_MS
+  const attempts = options.attempts ?? RUNTIME_START_ATTEMPTS
   for (let attempt = 1; ; attempt++) {
     const persist = preparePersist()
-    const runtime = createRuntime(persist, d1Databases)
+    const runtime = options.create(persist)
     const startedAt = performance.now()
+    const readiness: Promise<Readiness> = runtime.ready.then(
+      () => ({ kind: "ready" }),
+      (error: unknown) => ({ kind: "failed", error }),
+    )
     let timer: ReturnType<typeof setTimeout> | undefined
     const stalled = new Promise<"stalled">((resolve) => {
-      timer = setTimeout(() => resolve("stalled"), RUNTIME_START_STALL_MS)
+      timer = setTimeout(() => resolve("stalled"), stallMs)
     })
+    const outcome = await Promise.race([readiness, stalled])
+    clearTimeout(timer)
+    if (outcome !== "stalled" && outcome.kind === "ready") return { runtime, persist }
     let failure: unknown
-    try {
-      const started = await Promise.race([runtime.ready.then(() => "ready" as const), stalled])
-      if (started === "ready") return { runtime, persist }
-      failure = new Error(`local D1 runtime did not start within ${RUNTIME_START_STALL_MS}ms`)
-      // 止まった起動の停止は起動の完了を待つことがあるため、待たずに捨てる。
-      void runtime.dispose().catch(() => undefined)
-    } catch (error) {
-      failure = error
-      await runtime.dispose().catch(() => undefined)
+    if (outcome === "stalled") {
+      failure = new Error(`local D1 runtime did not start within ${stallMs}ms`)
+      abandon(runtime, readiness, attempt)
+    } else {
+      failure = outcome.error
+      // 起動に失敗したMiniflareの停止は、同じ起動の失敗で終わる。別の失敗だけを記録する。
+      await runtime.dispose().catch((error: unknown) => {
+        if (error !== failure) {
+          console.warn(`local D1 runtime of failed attempt ${attempt} did not stop cleanly:`, error)
+        }
+      })
       rmSync(persist, { recursive: true, force: true })
-    } finally {
-      clearTimeout(timer)
     }
     const elapsed = Math.round(performance.now() - startedAt)
     console.warn(
       `local D1 runtime failed to start after ${elapsed}ms (attempt ${attempt}):`,
       failure,
+      ...takeWorkerdStdioFailures(),
     )
-    if (attempt >= RUNTIME_START_ATTEMPTS) throw failure
+    if (attempt >= attempts) throw failure
   }
+}
+
+/**
+ * 止まったと見なした起動を捨てる。停止は起動の完了を待つことがあるため待たずに進め、
+ * 起動が後から終わった時の結果を記録する。失敗はすでに作り直しの原因として扱っている。
+ */
+function abandon(runtime: StartableRuntime, readiness: Promise<Readiness>, attempt: number): void {
+  void readiness.then((late) => {
+    if (late.kind === "failed") {
+      console.warn(`local D1 runtime of abandoned attempt ${attempt} failed later:`, late.error)
+    }
+  })
+  void runtime.dispose().catch((error: unknown) => {
+    console.warn(`local D1 runtime of abandoned attempt ${attempt} did not stop cleanly:`, error)
+  })
 }
 
 function createRuntime(persist: string, d1Databases: Record<string, string>): Miniflare {
@@ -200,17 +251,19 @@ function buildTemplate(): Promise<Template> {
   if (template !== null) return template
 
   template = (async () => {
-    const directory = join(scratchDirectory(), "template")
-    const objectDirectory = join(directory, D1_OBJECT_DIRECTORY)
     const slots = Array.from({ length: MIGRATED_SLOT_COUNT }, (_, index) => slotIdFor(index))
-    const runtime = createRuntime(directory, {
+    const bindings = {
       [TEMPLATE_BINDING]: "local-d1-test-template",
       ...Object.fromEntries(slots.map((id, index) => [`SLOT_${index}`, id])),
-    })
+    }
+    const { runtime, persist: directory } = await startRuntime(
+      () => join(scratchDirectory(), `template-${crypto.randomUUID()}`),
+      { create: (persist) => createRuntime(persist, bindings) },
+    )
+    const objectDirectory = join(directory, D1_OBJECT_DIRECTORY)
     let objectCount: number
     const slotFiles: string[] = []
     try {
-      await runtime.ready
       const database = createLocalD1FetchClient(runtime, TEMPLATE_BINDING)
       await applyMigrations(database)
       objectCount = await countSchemaObjects(database)
