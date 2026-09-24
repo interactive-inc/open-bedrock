@@ -54,7 +54,7 @@ export default async function BudgetsPage() {
   )
 }
 
-/** GET /department-budgets を認証付きで取得して一覧テーブルを描画する非同期 RSC。 */
+/** GET /expense-budgets を認証付きで取得して一覧テーブルを描画する非同期 RSC。 */
 async function BudgetsTable() {
   const budgets = await getBudgetList({ organizationUnitId: null, fiscalPeriod: null })
 

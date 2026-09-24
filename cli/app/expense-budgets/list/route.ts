@@ -3,7 +3,7 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 
-export const help = `bedrock department-budgets list [--department-id <n>] [--fiscal-period <p>]`
+export const help = `bedrock expense-budgets list [--department-id <n>] [--fiscal-period <p>]`
 
 export default factory.createHandlers(
   zValidator(
@@ -21,7 +21,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["expense"]["department-budgets"].$get({
+    const response = await client["expense"]["expense-budgets"].$get({
       query: {
         organization_unit_id: query["department-id"],
         fiscal_period: query["fiscal-period"],

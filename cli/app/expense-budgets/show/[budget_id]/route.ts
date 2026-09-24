@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `bedrock department-budgets show <id>`
+export const help = `bedrock expense-budgets show <id>`
 
 export default factory.createHandlers(
   zValidator("json", z.object({ help: z.string().optional() }).passthrough()),
@@ -18,7 +18,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["expense"]["department-budgets"][":id"].$get({
+    const response = await client["expense"]["expense-budgets"][":id"].$get({
       param: { id: budgetId },
     })
 

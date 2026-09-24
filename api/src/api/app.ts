@@ -392,9 +392,9 @@ import * as documentRetirementPlansPlanIdRequestsNumberRejectRoute from "@/conte
 import * as documentRetirementPlansPlanIdRequestsNumberResubmitRoute from "@/contexts/document/interface/routes/document.retirement-plans.$planId.requests.$number.resubmit"
 import * as documentRetirementPlansPlanIdRequestsNumberWithdrawRoute from "@/contexts/document/interface/routes/document.retirement-plans.$planId.requests.$number.withdraw"
 import * as documentRetirementPlansPlanIdVerificationReceiptsRoute from "@/contexts/document/interface/routes/document.retirement-plans.$planId.verification-receipts"
-import * as departmentBudgetsRoute from "@/contexts/expense/interface/routes/department-budgets"
-import * as departmentBudgetsIdRoute from "@/contexts/expense/interface/routes/department-budgets.$id"
-import * as departmentBudgetsSummaryRoute from "@/contexts/expense/interface/routes/department-budgets.summary"
+import * as expenseBudgetsRoute from "@/contexts/expense/interface/routes/expense-budgets"
+import * as expenseBudgetsIdRoute from "@/contexts/expense/interface/routes/expense-budgets.$id"
+import * as expenseBudgetsSummaryRoute from "@/contexts/expense/interface/routes/expense-budgets.summary"
 import * as expenseProceduresRoute from "@/contexts/expense/interface/routes/expense-procedures"
 import * as expenseRecordSourceFreezesRoute from "@/contexts/expense/interface/routes/expense.record-source-freezes"
 import * as expenseRecordSourceFreezesFreezeIdRoute from "@/contexts/expense/interface/routes/expense.record-source-freezes.$freezeId"
@@ -2547,12 +2547,12 @@ const routePart35 = createRouteApp()
     "/document/retirement-plans/:planId/verification-receipts",
     ...documentRetirementPlansPlanIdVerificationReceiptsRoute.POST,
   )
-  .get("/expense/department-budgets", ...departmentBudgetsRoute.GET)
-  .post("/expense/department-budgets", ...departmentBudgetsRoute.POST)
-  .get("/expense/department-budgets/summary", ...departmentBudgetsSummaryRoute.GET)
-  .get("/expense/department-budgets/:id", ...departmentBudgetsIdRoute.GET)
-  .patch("/expense/department-budgets/:id", ...departmentBudgetsIdRoute.PATCH)
-  .delete("/expense/department-budgets/:id", ...departmentBudgetsIdRoute.DELETE)
+  .get("/expense/expense-budgets", ...expenseBudgetsRoute.GET)
+  .post("/expense/expense-budgets", ...expenseBudgetsRoute.POST)
+  .get("/expense/expense-budgets/summary", ...expenseBudgetsSummaryRoute.GET)
+  .get("/expense/expense-budgets/:id", ...expenseBudgetsIdRoute.GET)
+  .patch("/expense/expense-budgets/:id", ...expenseBudgetsIdRoute.PATCH)
+  .delete("/expense/expense-budgets/:id", ...expenseBudgetsIdRoute.DELETE)
   .get("/expense/expense-procedures", ...expenseProceduresRoute.GET)
   .put("/expense/expense-procedures", ...expenseProceduresRoute.PUT)
   .post("/expense/expenses", ...expensesRoute.POST)

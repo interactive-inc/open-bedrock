@@ -93,12 +93,12 @@ commands:
   ringi-requests cancel <id>                  本人の稟議を取消 (--decision-target)
   ringi-requests execute <id>                 決裁確定を再試行 (--decision-target)
   ringi-requests admin                        稟議全件参照 ([--status --applicant-id --sort --limit --offset])
-  department-budgets list                     部署予算一覧 ([--department-id --fiscal-period])
-  department-budgets show <id>                予算詳細（消化額・残額）
-  department-budgets summary                  部署ごとの消化状況 (--fiscal-period)
-  department-budgets create                   予算を登録 (--department-id --fiscal-period --period-start --period-end --amount --name [--note])
-  department-budgets update <id>              予算の金額・名称・メモを修正 (--amount --name [--note])
-  department-budgets delete <id>              予算を削除
+  expense-budgets list                     部署予算一覧 ([--department-id --fiscal-period])
+  expense-budgets show <id>                予算詳細（消化額・残額）
+  expense-budgets summary                  部署ごとの消化状況 (--fiscal-period)
+  expense-budgets create                   予算を登録 (--department-id --fiscal-period --period-start --period-end --amount --name [--note])
+  expense-budgets update <id>              予算の金額・名称・メモを修正 (--amount --name [--note])
+  expense-budgets delete <id>              予算を削除
   attendance-records clock-in                 出勤打刻 ([--note])
   attendance-records clock-out                退勤打刻 ([--note])
   attendance-records me                       自分の勤怠 ([--from --to])

@@ -509,7 +509,7 @@ test("部署予算の実認証APIは停止中の全書込みを409で拒否し�
     name: "Annual budget",
     note: null,
   }
-  const path = "/expense/department-budgets"
+  const path = "/expense/expense-budgets"
   const created = await c.request(c.requester, path, "POST", body)
   expect(created.status).toBe(201)
   const id = z.object({ id: z.number() }).parse(await created.json()).id

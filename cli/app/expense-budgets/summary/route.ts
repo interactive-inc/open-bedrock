@@ -4,7 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `bedrock department-budgets summary --fiscal-period <p>`
+export const help = `bedrock expense-budgets summary --fiscal-period <p>`
 
 export default factory.createHandlers(
   zValidator(
@@ -25,7 +25,7 @@ export default factory.createHandlers(
 
     const client = await createClient()
 
-    const response = await client["expense"]["department-budgets"].summary.$get({
+    const response = await client["expense"]["expense-budgets"].summary.$get({
       query: { fiscal_period: fiscalPeriod },
     })
 

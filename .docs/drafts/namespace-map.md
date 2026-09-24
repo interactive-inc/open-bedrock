@@ -101,7 +101,7 @@ Company に同居する application workflow、onboarding、governance document�
 
 ### 改名するもの
 
-`budgets` を `department_budgets` にする。行の粒度は部署と会計期間の組であり、主語が部署である。
+`budgets` を `expense_budgets` にする。行の粒度は部署と会計期間の組である。部署予算は経費と同じ不変条件と transaction を共有し、`expense` が所有する。
 
 `contracts` を `partner_contracts` にする。行は取引先に従属する。
 
@@ -187,7 +187,7 @@ URL は所有区分または有効状態を経路に含めない。`/apps/thanks
 
 `/certifications` を `/certification-definitions` にする。`/employee-certifications` は変更しない。
 
-`/budgets` を `/department-budgets` にする。
+`/budgets` を `/expense-budgets` にする。
 
 `/goals` を `/performance-goals` にする。`/goals/tree` は `/performance-goals/tree` とする。
 
@@ -233,7 +233,7 @@ CLI の第一セグメントを URL のリソース名と一致させる。単�
 
 ### 単数形の是正
 
-`employee` を `employees`、`asset` を `assets`、`expense` を `expenses`、`goal` を `performance-goals`、`skill` を `skill-definitions`、`room` を `rooms`、`rental` を `rental-reservations`、`shift` を `shift-patterns` および `shift-assignments` および `shift-swap-requests`、`leave` を `leave-requests`、`review` を `review-cycles` および `review-forms`、`training` を `training-courses` および `training-enrollments`、`org` を `departments`、`career` を `career-postings` および `career-applications` および `career-sheets`、`ringi` を `ringi-requests`、`budget` を `department-budgets`、`stocktake` を `stocktakes`、`survey` を `surveys`、`resignation` を `resignations`、`business-trip` を `business-trips`、`life-event` を `life-events`、`family-care-leave` を `family-care-leaves`、`certificate-request` を `certificate-requests`、`antisocial-check` を `antisocial-checks`、`personnel-action` を `personnel-actions` にする。
+`employee` を `employees`、`asset` を `assets`、`expense` を `expenses`、`goal` を `performance-goals`、`skill` を `skill-definitions`、`room` を `rooms`、`rental` を `rental-reservations`、`shift` を `shift-patterns` および `shift-assignments` および `shift-swap-requests`、`leave` を `leave-requests`、`review` を `review-cycles` および `review-forms`、`training` を `training-courses` および `training-enrollments`、`org` を `departments`、`career` を `career-postings` および `career-applications` および `career-sheets`、`ringi` を `ringi-requests`、`budget` を `expense-budgets`、`stocktake` を `stocktakes`、`survey` を `surveys`、`resignation` を `resignations`、`business-trip` を `business-trips`、`life-event` を `life-events`、`family-care-leave` を `family-care-leaves`、`certificate-request` を `certificate-requests`、`antisocial-check` を `antisocial-checks`、`personnel-action` を `personnel-actions` にする。
 
 `thanks` を `thanks-messages` にする。配下の `reward-add` と `rewards` は `thanks-rewards`、`redeem` と `redemptions` は `thanks-redemptions` へ移す。
 
@@ -279,7 +279,7 @@ CLI の第一セグメントを URL のリソース名と一致させる。単�
 
 ### 組織の三重表現の解消方向
 
-`code` を唯一の識別子とし `departments` を廃止する。`budgets` すなわち `department_budgets` が持つ `department_id` 参照は `department_code` へ付け替える。`org_departments` と `org_memberships` が既に `code` を用いており、整数の `id` を残す理由がない。
+`code` を唯一の識別子とし `departments` を廃止する。`budgets` すなわち `expense_budgets` が持つ `department_id` 参照は `department_code` へ付け替える。`org_departments` と `org_memberships` が既に `code` を用いており、整数の `id` を残す理由がない。
 
 この変更は名前ではなく模型の修正であり、本書では `departments`、`org_departments`、`org_memberships` の改名を行わない。改名はモデル修正と同時に扱う。廃止後に `org_departments` を `departments` へ改名するかは、モデル修正時に決める。
 
