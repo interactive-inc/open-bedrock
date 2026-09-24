@@ -1,4 +1,4 @@
-import { SystemRoleCatalogRepository } from "@system/infrastructure/repositories/iam/system-role-catalog.repository"
+import { openSystemRoleCatalog } from "@system/interface/operations/open-system-role-catalog"
 
 export async function findUnknownCompanyApproverRoles(
   database: D1Database,
@@ -7,7 +7,7 @@ export async function findUnknownCompanyApproverRoles(
   const uniqueRoleKeys = [...new Set(roleKeys)]
   if (uniqueRoleKeys.length === 0) return []
 
-  const roles = await new SystemRoleCatalogRepository({ env: { DB: database } }).findMany()
+  const roles = await openSystemRoleCatalog({ env: { DB: database } }).findMany()
   if (roles instanceof Error) return roles
   const existingKeys = new Set(roles.map((role) => role.key.replace(/^company:/u, "")))
 

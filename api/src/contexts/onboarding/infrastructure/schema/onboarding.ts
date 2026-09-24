@@ -12,7 +12,7 @@ import {
   uniqueIndex,
 } from "drizzle-orm/sqlite-core"
 import { personnelActions } from "@/contexts/company/infrastructure/schema/employee-lifecycle"
-import { systemJobs } from "@system/infrastructure/schema/system-delivery"
+import { systemDeliveryTableReferences } from "@system/interface/operations/system-delivery-table-references"
 
 /** 入社/退職手続きのテンプレート（チェックリストの雛形） */
 export const onboardingTemplates = sqliteTable("onboarding_templates", {
@@ -95,7 +95,7 @@ export const onboardingLifecycleDeliveries = sqliteTable(
     jobId: text("job_id")
       .primaryKey()
       .notNull()
-      .references(() => systemJobs.id, { onDelete: "restrict" }),
+      .references(systemDeliveryTableReferences.jobId, { onDelete: "restrict" }),
     actionId: text("action_id")
       .notNull()
       .references(() => personnelActions.id, { onDelete: "restrict" }),

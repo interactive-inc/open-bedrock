@@ -3,8 +3,8 @@ import { openSystemProposals } from "@system/interface/operations/open-system-pr
 import { expect, test } from "bun:test"
 import { z } from "zod"
 import { createLicensePreservationFixture } from "@/contexts/software-license/test/create-license-preservation-fixture.test-support"
-import { FindPreservedRecordExecutionProofAdapter } from "@system/infrastructure/adapters/records/find-preserved-record-execution-proof.adapter"
-import { PreparePreservedRecordApprovalHistoryAdapter } from "@system/infrastructure/adapters/records/prepare-preserved-record-approval-history.adapter"
+import { findSystemPreservedRecordExecutionProof } from "@system/interface/operations/find-system-preserved-record-execution-proof"
+import { prepareSystemPreservedRecordApprovalHistory } from "@system/interface/operations/prepare-system-preserved-record-approval-history"
 
 test("代理承認で保存した記録は業務撤去後も委任条件を返し、後日の取消と当時の無効を区別する", async () => {
   const fixture = await createLicensePreservationFixture()
@@ -88,20 +88,23 @@ test("代理承認で保存した記録は業務撤去後も委任条件を返�
     "DROP TABLE software_license_assignments; DROP TABLE software_license_changes; DROP TABLE software_licenses;",
   )
   const context = { env: { DB: database } }
-  const proof = await new FindPreservedRecordExecutionProofAdapter({
-    ...context,
-    assertions: [database.prepare("SELECT 1")],
-  }).find(receipt.record_id)
+  const proof = await findSystemPreservedRecordExecutionProof(
+    {
+      ...context,
+      assertions: [database.prepare("SELECT 1")],
+    },
+    receipt.record_id,
+  )
   if (proof === null || proof instanceof Error)
     throw new Error("execution proof missing", { cause: proof })
-  const reader = new PreparePreservedRecordApprovalHistoryAdapter(context)
+  const readerContext = context
   const input = {
     proof,
     accountId: "account:manager",
     permissionKeys: new Set(["system:procedure:read"]),
     at: new Date(),
   }
-  const history = await reader.prepare(input)
+  const history = await prepareSystemPreservedRecordApprovalHistory(readerContext, input)
   if (history instanceof Error) throw history
   expect(history.attestations).toMatchObject([
     {
@@ -168,7 +171,7 @@ test("代理承認で保存した記録は業務撤去後も委任条件を返�
       at: new Date(),
     }),
   ).toBeInstanceOf(Error)
-  const afterRevocation = await reader.prepare(input)
+  const afterRevocation = await prepareSystemPreservedRecordApprovalHistory(readerContext, input)
   if (afterRevocation instanceof Error) throw afterRevocation
   expect(afterRevocation.delegations[0]?.revokedAt).toEqual(
     new Date(decision.decidedAt.getTime() + 1),
@@ -178,14 +181,18 @@ test("代理承認で保存した記録は業務撤去後も委任条件を返�
     .prepare("UPDATE system_delegations SET revoked_at=?1 WHERE id='record-delegation'")
     .bind(decision.decidedAt.getTime())
     .run()
-  expect(await reader.prepare(input)).toBeInstanceOf(Error)
+  expect(await prepareSystemPreservedRecordApprovalHistory(readerContext, input)).toBeInstanceOf(
+    Error,
+  )
   await database
     .prepare(
       "UPDATE system_delegations SET revoked_at=NULL,ends_at=?1 WHERE id='record-delegation'",
     )
     .bind(decision.decidedAt.getTime())
     .run()
-  expect(await reader.prepare(input)).toBeInstanceOf(Error)
+  expect(await prepareSystemPreservedRecordApprovalHistory(readerContext, input)).toBeInstanceOf(
+    Error,
+  )
   await database
     .prepare("UPDATE system_delegations SET ends_at=?1 WHERE id='record-delegation'")
     .bind(endsAt)
@@ -203,7 +210,7 @@ test("代理承認で保存した記録は業務撤去後も委任条件を返�
     )
     .bind(receipt.record_id)
     .run()
-  const scoped = await reader.prepare(input)
+  const scoped = await prepareSystemPreservedRecordApprovalHistory(readerContext, input)
   if (scoped instanceof Error) throw scoped
   expect(scoped.delegations[0]?.scope).toEqual({
     context: "system",
@@ -214,9 +221,13 @@ test("代理承認で保存した記録は業務撤去後も委任条件を返�
   await database.exec(
     "UPDATE system_delegations SET scope_id='different-record' WHERE id='record-delegation'",
   )
-  expect(await reader.prepare(input)).toBeInstanceOf(Error)
+  expect(await prepareSystemPreservedRecordApprovalHistory(readerContext, input)).toBeInstanceOf(
+    Error,
+  )
   await database.exec(
     "PRAGMA foreign_keys=OFF; DROP TRIGGER system_delegations_prevent_delete; DELETE FROM system_delegations WHERE id='record-delegation';",
   )
-  expect(await reader.prepare(input)).toBeInstanceOf(Error)
+  expect(await prepareSystemPreservedRecordApprovalHistory(readerContext, input)).toBeInstanceOf(
+    Error,
+  )
 })

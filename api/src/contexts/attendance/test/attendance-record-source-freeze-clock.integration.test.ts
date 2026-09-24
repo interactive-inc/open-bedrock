@@ -7,7 +7,7 @@ import { ClockOut } from "@/contexts/attendance/application/clock-out"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { CreateRecordSourceFreeze } from "@system/application/records/create-record-source-freeze"
 import { ReleaseRecordSourceFreeze } from "@system/application/records/release-record-source-freeze"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 import { ConflictError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 
@@ -17,7 +17,7 @@ test("実DBの書込み停止が通常の出勤と退勤で409になり、解除
   await f.database
     .exec(`INSERT INTO company_employees (id,official_name,employee_code,created_at,updated_at)
     VALUES ('employee:second','Second','SECOND',0,0)`)
-  const repository = new RecordSourceFreezeRepository({ env: f.context.env, assertions: [] })
+  const repository = openSystemRecordSourceFreezes({ env: f.context.env, assertions: [] })
   const command = {
     id: crypto.randomUUID(),
     sourceNamespace: "example-source",

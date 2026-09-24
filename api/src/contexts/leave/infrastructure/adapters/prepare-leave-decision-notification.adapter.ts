@@ -3,7 +3,7 @@ import { toSha256Hex } from "@/lib/crypto/to-sha256-hex"
 import type { SystemD1Context } from "@system/configuration/system-context"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemDeliveryEntity } from "@system/domain/entities/system-delivery.entity"
-import { SystemDeliveryRepository } from "@system/infrastructure/repositories/events/system-delivery.repository"
+import { openSystemDeliveries } from "@system/interface/operations/open-system-deliveries"
 
 type Context = SystemD1Context
 
@@ -39,7 +39,7 @@ export class PrepareLeaveDecisionNotificationAdapter {
       completedAt: null,
     })
     if (job instanceof Error) return job
-    const queued = new SystemDeliveryRepository(this.c).prepareCreate(job, actorAccountId, null)
+    const queued = openSystemDeliveries(this.c).prepareCreate(job, actorAccountId, null)
     if (queued instanceof Error) return queued
     return [
       ...queued,

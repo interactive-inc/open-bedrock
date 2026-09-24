@@ -13,7 +13,7 @@ import {
   type ExpenseCategory,
 } from "@/contexts/expense/domain/definitions/expense.definition"
 import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/repositories/expense-procedure.repository"
-import { PrepareAttachmentEvidenceAdapter } from "@system/infrastructure/adapters/attachments/prepare-attachment-evidence.adapter"
+import { ExpenseAttachmentEvidenceAdapter } from "@/contexts/expense/infrastructure/adapters/expense-attachment-evidence.adapter"
 import { ExpenseHumanOperationAuthorizationAdapter } from "@/contexts/expense/infrastructure/adapters/expense-human-operation-authorization.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { ProposalEntity } from "@system/domain/entities/proposal.entity"
@@ -166,7 +166,7 @@ export class SubmitExpenseProcedure {
       JSON.stringify([...linkedIds].sort()) !== JSON.stringify([...command.attachmentIds].sort())
     )
       return new ConflictError("既存経費の添付が変わっています", "legacy_expense_changed")
-    const evidence = await new PrepareAttachmentEvidenceAdapter(this.c).prepare({
+    const evidence = await new ExpenseAttachmentEvidenceAdapter(this.c).prepare({
       attachmentIds: command.attachmentIds,
       ownerAccountId: command.session.accountId,
       linkedAttachmentIds: new Set(linkedIds),

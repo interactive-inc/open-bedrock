@@ -61,6 +61,39 @@ const C = await import("@/contexts/system/infrastructure/adapters/auth/resolve-b
     expect(violations[2]?.reason).toContain("無くなりました")
   })
 
+  test("test fileでspyへ差し替えるだけのimportは数えず、生成や値の受け渡しは数える", () => {
+    const spyOnly = `import { A } from "@system/infrastructure/repositories/iam/system-role.repository"
+const original = A.prototype.find
+spyOn(A.prototype, "find").mockImplementation(async function (this: A, id) {
+  return original.call(this, id)
+})`
+    const constructed = `import { A } from "@system/infrastructure/repositories/iam/system-role.repository"
+spyOn(A.prototype, "find")
+const repository = new A(context)`
+    const notSpied = `import { A } from "@system/infrastructure/repositories/iam/system-role.repository"
+const original = A.prototype.find`
+    const partial = `import { A, B } from "@system/infrastructure/repositories/iam/system-role.repository"
+spyOn(A.prototype, "find")`
+    const imports = collectSystemInfrastructureImports(
+      new Map([
+        ["src/contexts/room/test/spy-only.integration.test.ts", spyOnly],
+        ["src/contexts/room/test/constructed.integration.test.ts", constructed],
+        ["src/contexts/room/test/not-spied.integration.test.ts", notSpied],
+        ["src/contexts/room/test/partial.integration.test.ts", partial],
+        ["src/contexts/room/test/spy.test-support.ts", spyOnly],
+        ["src/contexts/room/infrastructure/spy.adapter.ts", spyOnly],
+      ]),
+    )
+
+    expect([...imports.keys()].sort()).toEqual([
+      "src/contexts/room/infrastructure/spy.adapter.ts",
+      "src/contexts/room/test/constructed.integration.test.ts",
+      "src/contexts/room/test/not-spied.integration.test.ts",
+      "src/contexts/room/test/partial.integration.test.ts",
+      "src/contexts/room/test/spy.test-support.ts",
+    ])
+  })
+
   test("基準線と一致すれば違反は無い", () => {
     expect(
       inspectSystemInfrastructureImports(new Map([["src/api/a.ts", [repository]]]), {
