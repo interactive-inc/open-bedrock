@@ -1,61 +1,17 @@
-import { Database } from "bun:sqlite"
-
-type SchemaTemplate = {
-  buffer: Uint8Array
-  foreignKeysEnabled: boolean
-}
-
-const schemaTemplates = new Map<string, SchemaTemplate>()
-
-/**
- * schema 全文の exec は migration 全本ぶんで 1 回 600ms を超える。
- * プロセス内で schema ごとに 1 回だけ構築して serialize し、以降は deserialize した
- * 独立コピー（1ms 未満）を返す。PRAGMA は接続ごとの設定でバイト列に乗らないため、
- * 構築直後の foreign_keys の実値を記録してコピー側で復元する。
- */
-function createSqliteFromSchema(schema: string): Database {
-  const cached = schemaTemplates.get(schema)
-
-  if (cached !== undefined) {
-    return deserializeTemplate(cached)
-  }
-
-  const source = new Database(":memory:")
-
-  source.exec(schema)
-
-  const row = source.query<{ foreign_keys: number }, []>("PRAGMA foreign_keys").get()
-
-  const template: SchemaTemplate = {
-    buffer: source.serialize(),
-    foreignKeysEnabled: row !== null && row.foreign_keys === 1,
-  }
-
-  source.close()
-
-  schemaTemplates.set(schema, template)
-
-  return deserializeTemplate(template)
-}
-
-function deserializeTemplate(template: SchemaTemplate): Database {
-  const copy = Database.deserialize(template.buffer)
-
-  copy.exec(`PRAGMA foreign_keys=${template.foreignKeysEnabled ? "ON" : "OFF"}`)
-
-  return copy
-}
+import type { Database } from "bun:sqlite"
+import { createMigratedSqliteDatabase } from "@tests/api/support/migrated-sqlite-database"
 
 /**
  * テスト用: bun:sqlite を D1Database 互換インターフェースで包む。
  * 本番は Cloudflare D1。テストはこのインメモリ SQLite を env.DB に注入する。
  * D1 の型（abstract class）を別実装で満たす境界アダプタのため、最小限の型アサーションを使う。
+ * 移行中のみ残す互換層であり、機能を追加しない。新しい利用は lint:test-database-wrapper が拒否する。
  */
 export function createD1TestDatabase(
   schema: string,
   options?: { onQuery?: () => void },
 ): D1Database {
-  const sqlite = createSqliteFromSchema(schema)
+  const sqlite = createMigratedSqliteDatabase(schema)
 
   const database = {
     prepare: (query: string) => toPreparedStatement(sqlite, query, [], options?.onQuery),

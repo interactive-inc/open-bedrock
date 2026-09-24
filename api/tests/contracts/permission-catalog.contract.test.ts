@@ -1,7 +1,7 @@
 import { PERMISSION_CATALOG } from "@/api/http/permissions/permission.catalog"
 import { PERMISSION_KEYS } from "@/api/http/permissions/permission-key.catalog"
-import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
 import { loadSchema } from "@tests/api/support/load-schema"
+import { createMigratedSqliteDatabase } from "@tests/api/support/migrated-sqlite-database"
 import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
@@ -72,15 +72,17 @@ describe("permission catalog contract", () => {
     expect({ inKeysOnly, inCatalogOnly }).toEqual({ inKeysOnly: [], inCatalogOnly: [] })
   })
 
-  test("system_iam_role_permissionsのseed行がすべてPERMISSION_KEYSに含まれる", async () => {
+  test("system_iam_role_permissionsのseed行がすべてPERMISSION_KEYSに含まれる", () => {
     const keySet = new Set<string>(PERMISSION_KEYS)
-    const db = createD1TestDatabase(loadSchema())
+    const db = createMigratedSqliteDatabase(loadSchema())
 
-    const result = await db
-      .prepare("SELECT DISTINCT permission_key FROM system_iam_role_permissions")
-      .all<{ permission_key: string }>()
+    const rows = db
+      .query<{ permission_key: string }, []>(
+        "SELECT DISTINCT permission_key FROM system_iam_role_permissions",
+      )
+      .all()
 
-    const unknownKeys = result.results
+    const unknownKeys = rows
       .map((row) => row.permission_key)
       .filter((key) => !keySet.has(key))
       .sort()

@@ -45,7 +45,7 @@ export async function seedIamForEmployees(
         `INSERT OR IGNORE INTO company_account_employee_links (account_id, employee_id)
          VALUES (?1, ?2)`,
       )
-      .bind(String(employee.id), employee.id)
+      .bind(String(employee.id), String(employee.id))
       .run()
 
     await publishTestAccountEmployeeLink(db, {
@@ -63,7 +63,7 @@ export async function seedIamForEmployees(
          FROM company_employees
          WHERE id = ?2`,
       )
-      .bind(String(employee.id), employee.id)
+      .bind(String(employee.id), String(employee.id))
       .run()
 
     await db
