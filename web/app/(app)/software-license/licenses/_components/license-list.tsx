@@ -2,7 +2,7 @@ import Link from "next/link"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
 import { TablePagination } from "@/components/table-pagination"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import {
   Table,
   TableBody,
@@ -73,9 +73,9 @@ export async function LicenseList(props: Props) {
 
                 <TableCell>
                   {license.status === "cancelled" ? (
-                    <Badge variant="outline">解約済み</Badge>
+                    <StatusLabel>解約済み</StatusLabel>
                   ) : (
-                    <Badge variant="secondary">利用中</Badge>
+                    <StatusLabel>利用中</StatusLabel>
                   )}
                 </TableCell>
 

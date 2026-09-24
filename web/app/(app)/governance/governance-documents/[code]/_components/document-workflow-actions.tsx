@@ -9,6 +9,7 @@ import {
   submitGovernanceReviewAction,
   type GovernanceActionState,
 } from "@/app/(app)/governance/governance-documents/actions"
+import { StatusLabel } from "@/components/status-label"
 import { Button } from "@/components/ui/button"
 import { Field, FieldLabel } from "@/components/ui/field"
 import { Textarea } from "@/components/ui/textarea"
@@ -81,9 +82,7 @@ export function DocumentWorkflowActions(props: Props) {
 
         {canAcknowledge && props.acknowledgementRequired && props.versionState === "published" ? (
           props.acknowledged ? (
-            <Button variant="secondary" disabled>
-              確認済み
-            </Button>
+            <StatusLabel size="default">確認済み</StatusLabel>
           ) : (
             <SimpleActionForm
               action={acknowledgeGovernanceAction}

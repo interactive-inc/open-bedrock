@@ -1,18 +1,18 @@
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   status: string
 }
 
-/** 取引先の状態を日本語ラベルと配色付きの Badge で表示する。 */
+/** 取引先の状態を日本語ラベルの StatusLabel で表示する。却下・失効だけ destructive にし、他は secondary に揃える。 */
 export function PartnerStatusBadge(props: Props) {
   if (props.status === "active") {
-    return <Badge>取引中</Badge>
+    return <StatusLabel>取引中</StatusLabel>
   }
 
   if (props.status === "archived") {
-    return <Badge variant="secondary">終了</Badge>
+    return <StatusLabel>終了</StatusLabel>
   }
 
-  return <Badge variant="secondary">{props.status}</Badge>
+  return <StatusLabel>{props.status}</StatusLabel>
 }

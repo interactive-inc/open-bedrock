@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { toFlatGoalRows } from "@/app/(app)/performance-review/goals/tree/_lib/to-flat-goal-rows"
 import { toOwnerTypeLabel } from "@/app/(app)/performance-review/goals/tree/_lib/to-owner-type-label"
 import type { GoalTreeNode } from "@/app/(app)/performance-review/goals/tree/_lib/goal-tree-types"
@@ -24,9 +24,7 @@ export function GoalTreeView(props: Props) {
           className="flex items-center gap-4 rounded-md bg-card border p-4"
           style={{ marginInlineStart: `${row.depth * 24}px` }}
         >
-          <Badge variant={row.ownerType === "individual" ? "outline" : "default"}>
-            {toOwnerTypeLabel(row.ownerType)}
-          </Badge>
+          <StatusLabel>{toOwnerTypeLabel(row.ownerType)}</StatusLabel>
 
           <span className="flex-1 font-medium">{row.title}</span>
 

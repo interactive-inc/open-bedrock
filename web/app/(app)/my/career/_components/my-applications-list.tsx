@@ -8,7 +8,7 @@ import {
 import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
 import { TableRowActions } from "@/components/table-row-actions"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
@@ -79,7 +79,7 @@ export function MyApplicationsList(props: Props) {
                 <TableCell>{application.message ?? "-"}</TableCell>
 
                 <TableCell>
-                  <Badge variant="secondary">{statusLabels[application.status]}</Badge>
+                  <StatusLabel>{statusLabels[application.status]}</StatusLabel>
                 </TableCell>
 
                 <TableCell>

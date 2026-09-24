@@ -4,7 +4,7 @@ import type { ShiftFormState } from "@/app/(app)/my/shifts/actions"
 import { cancelShiftSwapRequestAction } from "@/app/(app)/my/shifts/actions"
 import { useFormAction } from "@/hooks/use-form-action"
 import { EmptyState } from "@/components/empty-state"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
   Table,
@@ -54,9 +54,9 @@ export function MyShiftSwapRequests(props: Props) {
 
               <TableCell>
                 {swapRequest.status === "approved" ? (
-                  <Badge>承認済み</Badge>
+                  <StatusLabel>承認済み</StatusLabel>
                 ) : (
-                  <Badge variant="outline">保留中</Badge>
+                  <StatusLabel>保留中</StatusLabel>
                 )}
               </TableCell>
 

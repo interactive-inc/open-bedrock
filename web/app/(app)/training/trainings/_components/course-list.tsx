@@ -1,7 +1,7 @@
 import Link from "next/link"
 import { EnrollButton } from "@/app/(app)/training/trainings/_components/enroll-button"
 import { EmptyState } from "@/components/empty-state"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import {
   Table,
   TableBody,
@@ -64,19 +64,15 @@ export function CourseList(props: Props) {
 
                 <TableCell>{course.category}</TableCell>
 
-                <TableCell>
-                  {course.is_required ? <Badge variant="secondary">必須</Badge> : "-"}
-                </TableCell>
+                <TableCell>{course.is_required ? <StatusLabel>必須</StatusLabel> : "-"}</TableCell>
 
                 <TableCell>
-                  <Badge variant={course.status === "active" ? "outline" : "secondary"}>
-                    {course.status === "active" ? "公開中" : "アーカイブ"}
-                  </Badge>
+                  <StatusLabel>{course.status === "active" ? "公開中" : "アーカイブ"}</StatusLabel>
                 </TableCell>
 
                 <TableCell className="text-right">
                   {isEnrolled ? (
-                    <Badge variant="secondary">申込済み</Badge>
+                    <StatusLabel>申込済み</StatusLabel>
                   ) : course.status === "active" ? (
                     <EnrollButton courseCode={course.code} />
                   ) : (

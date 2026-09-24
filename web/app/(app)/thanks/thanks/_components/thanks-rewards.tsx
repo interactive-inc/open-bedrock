@@ -2,7 +2,7 @@ import { RewardRedeemForm } from "@/app/(app)/thanks/thanks/_components/reward-r
 import { FetchError } from "@/components/fetch-error"
 import { getThanksRewards } from "@/lib/api/get-thanks-rewards"
 import { EmptyState } from "@/components/empty-state"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { Card, CardContent } from "@/components/ui/card"
 
 /** 交換カタログをサーバ側 fetch して並べる非同期 RSC。各景品に交換申請ボタンを添える。 */
@@ -26,7 +26,7 @@ export async function ThanksRewards() {
               <div className="flex items-center gap-2">
                 <span className="font-medium">{reward.name}</span>
 
-                {reward.is_active ? null : <Badge variant="secondary">無効</Badge>}
+                {reward.is_active ? null : <StatusLabel>無効</StatusLabel>}
               </div>
 
               <p className="text-sm text-muted-foreground">

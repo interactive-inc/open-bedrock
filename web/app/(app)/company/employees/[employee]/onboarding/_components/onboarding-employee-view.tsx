@@ -3,7 +3,7 @@ import { formatDate } from "@/lib/format-date"
 import { formatDateTime } from "@/lib/format-date-time"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { getOnboardingEmployee } from "@/lib/api/get-onboarding-employee"
 import {
   Card,
@@ -49,13 +49,9 @@ export async function OnboardingEmployeeView(props: Props) {
             <CardTitle className="flex items-center gap-2">
               {assignment.template_name}
 
-              <Badge variant={assignment.kind === "join" ? "default" : "secondary"}>
-                {assignment.kind === "join" ? "入社" : "退社"}
-              </Badge>
+              <StatusLabel>{assignment.kind === "join" ? "入社" : "退社"}</StatusLabel>
 
-              <Badge variant={assignment.status === "completed" ? "secondary" : "outline"}>
-                {assignment.status === "completed" ? "完了" : "進行中"}
-              </Badge>
+              <StatusLabel>{assignment.status === "completed" ? "完了" : "進行中"}</StatusLabel>
             </CardTitle>
 
             <CardDescription>
@@ -84,9 +80,7 @@ export async function OnboardingEmployeeView(props: Props) {
                       <TableCell>{task.title}</TableCell>
 
                       <TableCell>
-                        <Badge variant={task.status === "done" ? "secondary" : "outline"}>
-                          {task.status === "done" ? "完了" : "未完了"}
-                        </Badge>
+                        <StatusLabel>{task.status === "done" ? "完了" : "未完了"}</StatusLabel>
                       </TableCell>
 
                       <TableCell className="text-right">

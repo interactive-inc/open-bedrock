@@ -1,5 +1,5 @@
 import { EmptyState } from "@/components/empty-state"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import {
   Table,
   TableBody,
@@ -60,9 +60,7 @@ export function HealthCheckupsTable(props: Props) {
               </TableCell>
 
               <TableCell>
-                <Badge variant={row.status === "completed" ? "default" : "outline"}>
-                  {STATUS_LABELS[row.status] ?? row.status}
-                </Badge>
+                <StatusLabel>{STATUS_LABELS[row.status] ?? row.status}</StatusLabel>
               </TableCell>
 
               <TableCell className="hidden md:table-cell">{row.note ?? "—"}</TableCell>

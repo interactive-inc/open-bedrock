@@ -1,6 +1,6 @@
 import { toBatchStatusLabel } from "@/app/(app)/system/batches/_lib/to-batch-status-label"
 import { toBatchStatusVariant } from "@/app/(app)/system/batches/_lib/to-batch-status-variant"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import {
   Table,
   TableBody,
@@ -38,9 +38,9 @@ export function BatchJobTable(props: Props) {
               <TableCell>{job.name}</TableCell>
 
               <TableCell>
-                <Badge variant={toBatchStatusVariant(job.status)}>
+                <StatusLabel variant={toBatchStatusVariant(job.status)}>
                   {toBatchStatusLabel(job.status)}
-                </Badge>
+                </StatusLabel>
               </TableCell>
 
               <TableCell>{job.finished_at ?? job.started_at ?? "-"}</TableCell>

@@ -1,7 +1,7 @@
 import { toEmployeeEventKindLabel } from "@/lib/employee-event/to-employee-event-kind-label"
 import { getEmployeeEventList } from "@/lib/api/get-employee-event-list"
 import { FetchError } from "@/components/fetch-error"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -52,7 +52,7 @@ export async function EmployeeEventHistory(props: Props) {
                     <TableCell>{event.effective_date}</TableCell>
 
                     <TableCell>
-                      <Badge variant="outline">{toEmployeeEventKindLabel(event.kind)}</Badge>
+                      <StatusLabel>{toEmployeeEventKindLabel(event.kind)}</StatusLabel>
                     </TableCell>
 
                     <TableCell>{event.from_department_code ?? "-"}</TableCell>

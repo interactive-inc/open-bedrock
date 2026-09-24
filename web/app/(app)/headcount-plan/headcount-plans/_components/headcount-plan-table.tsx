@@ -1,6 +1,6 @@
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import {
   Table,
   TableBody,
@@ -82,12 +82,12 @@ export async function HeadcountPlanTable(props: Props) {
 /** 実在籍数と計画人数の差分バッジ。過不足の向きを色で示す。 */
 function GapBadge(props: { gap: number }) {
   if (props.gap === 0) {
-    return <Badge variant="secondary">±0</Badge>
+    return <StatusLabel>±0</StatusLabel>
   }
 
   if (props.gap > 0) {
-    return <Badge variant="outline">+{props.gap}（超過）</Badge>
+    return <StatusLabel>+{props.gap}（超過）</StatusLabel>
   }
 
-  return <Badge variant="destructive">{props.gap}（不足）</Badge>
+  return <StatusLabel variant="destructive">{props.gap}（不足）</StatusLabel>
 }

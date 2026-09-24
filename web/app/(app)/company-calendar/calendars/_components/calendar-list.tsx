@@ -2,7 +2,7 @@ import { CalendarDeleteButton } from "@/app/(app)/company-calendar/calendars/_co
 import { toCalendarDayKindLabel } from "@/app/(app)/company-calendar/calendars/_lib/calendar-day-kind-label"
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import {
   Table,
   TableBody,
@@ -54,9 +54,7 @@ export async function CalendarList(props: Props) {
               <TableCell>{day.calendar_date}</TableCell>
 
               <TableCell>
-                <Badge variant={day.kind === "holiday" ? "secondary" : "outline"}>
-                  {toCalendarDayKindLabel(day.kind)}
-                </Badge>
+                <StatusLabel>{toCalendarDayKindLabel(day.kind)}</StatusLabel>
               </TableCell>
 
               <TableCell>{day.name ?? "-"}</TableCell>

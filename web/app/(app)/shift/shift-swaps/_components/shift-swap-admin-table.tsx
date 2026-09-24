@@ -1,5 +1,5 @@
 import Link from "next/link"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { EmptyState } from "@/components/empty-state"
 import { SortableTableHead } from "@/components/sortable-table-head"
 import {
@@ -36,14 +36,14 @@ type Props = {
 
 function StatusBadge(props: { status: string }) {
   if (props.status === "approved") {
-    return <Badge>承認済み</Badge>
+    return <StatusLabel>承認済み</StatusLabel>
   }
 
   if (props.status === "rejected") {
-    return <Badge variant="destructive">却下</Badge>
+    return <StatusLabel variant="destructive">却下</StatusLabel>
   }
 
-  return <Badge variant="secondary">承認待ち</Badge>
+  return <StatusLabel>承認待ち</StatusLabel>
 }
 
 export function ShiftSwapAdminTable(props: Props) {

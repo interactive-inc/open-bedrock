@@ -1,7 +1,7 @@
 import { FileCheck2, Search, Settings2 } from "lucide-react"
 import Link from "next/link"
 import { PageHeader } from "@/components/page-header"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { Button } from "@/components/ui/button"
 import {
   Card,
@@ -107,7 +107,7 @@ export default async function GovernancePage(props: Props) {
                 </CardTitle>
                 <CardDescription>{document.code}</CardDescription>
                 <CardAction className="flex gap-2">
-                  <Badge variant="outline">{kindLabels[document.kind] ?? document.kind}</Badge>
+                  <StatusLabel>{kindLabels[document.kind] ?? document.kind}</StatusLabel>
                   <VersionStateBadge state={document.version_state} />
                 </CardAction>
               </CardHeader>
@@ -134,9 +134,5 @@ function Meta(props: { label: string; value: string }) {
 }
 
 function VersionStateBadge(props: { state: string }) {
-  return (
-    <Badge variant={props.state === "published" ? "default" : "secondary"}>
-      {versionStateLabels[props.state] ?? props.state}
-    </Badge>
-  )
+  return <StatusLabel>{versionStateLabels[props.state] ?? props.state}</StatusLabel>
 }

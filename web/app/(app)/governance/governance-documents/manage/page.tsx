@@ -4,7 +4,7 @@ import { OrgRoleAssignmentForm } from "@/app/(app)/governance/governance-documen
 import { RevokeOrgRoleButton } from "@/app/(app)/governance/governance-documents/manage/_components/revoke-org-role-button"
 import { PageHeader } from "@/components/page-header"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -74,9 +74,11 @@ export default async function GovernanceManagePage() {
                     key={`${issue.severity}:${issue.code}:${issue.document_code}:${issue.reference}:${issue.message}`}
                   >
                     <TableCell>
-                      <Badge variant={issue.severity === "error" ? "destructive" : "secondary"}>
+                      <StatusLabel
+                        variant={issue.severity === "error" ? "destructive" : "secondary"}
+                      >
                         {issue.severity === "error" ? "エラー" : "警告"}
-                      </Badge>
+                      </StatusLabel>
                     </TableCell>
                     <TableCell>
                       {issue.document_code ? (
@@ -158,7 +160,7 @@ export default async function GovernanceManagePage() {
                               {assignee.employee_name}（{assignee.employee_code}）
                             </span>
                             {assignee.department_code ? (
-                              <Badge variant="outline">{assignee.department_code}</Badge>
+                              <StatusLabel>{assignee.department_code}</StatusLabel>
                             ) : null}
                             {assignee.assignment_id !== null ? (
                               <RevokeOrgRoleButton
@@ -166,7 +168,7 @@ export default async function GovernanceManagePage() {
                                 employeeName={assignee.employee_name}
                               />
                             ) : (
-                              <Badge variant="secondary">自動</Badge>
+                              <StatusLabel>自動</StatusLabel>
                             )}
                           </div>
                         ))}

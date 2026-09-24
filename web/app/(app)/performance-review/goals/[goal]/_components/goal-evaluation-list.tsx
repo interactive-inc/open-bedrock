@@ -1,4 +1,4 @@
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { evaluationKindLabel } from "@/app/(app)/performance-review/goals/[goal]/_lib/evaluation-kind-label"
 import { formatDateTime } from "@/lib/format-date-time"
@@ -34,9 +34,7 @@ export function GoalEvaluationList(props: Props) {
           props.evaluations.map((evaluation) => (
             <div key={evaluation.id} className="flex flex-col gap-2 rounded-2xl bg-card border p-4">
               <div className="flex items-center gap-2">
-                <Badge variant={evaluation.kind === "final" ? "secondary" : "outline"}>
-                  {evaluationKindLabel(evaluation.kind)}
-                </Badge>
+                <StatusLabel>{evaluationKindLabel(evaluation.kind)}</StatusLabel>
 
                 <span>
                   {evaluation.score === null ? "スコアなし" : `スコア ${evaluation.score}`}

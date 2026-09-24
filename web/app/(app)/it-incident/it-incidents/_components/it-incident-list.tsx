@@ -1,7 +1,7 @@
 import { EmptyState } from "@/components/empty-state"
 import { FetchError } from "@/components/fetch-error"
 import { TablePagination } from "@/components/table-pagination"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import {
   Table,
   TableBody,
@@ -63,9 +63,9 @@ export async function ItIncidentList(props: Props) {
 
                 <TableCell>
                   {incident.status === "resolved" ? (
-                    <Badge variant="outline">解消済み</Badge>
+                    <StatusLabel>解消済み</StatusLabel>
                   ) : (
-                    <Badge variant="secondary">対応中</Badge>
+                    <StatusLabel>対応中</StatusLabel>
                   )}
                 </TableCell>
 

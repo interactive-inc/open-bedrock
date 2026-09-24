@@ -1,20 +1,20 @@
 import { leaveProcedureStatusLabel } from "@/lib/leave/leave-procedure-status-label"
-import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import type { LeaveStatus } from "@/lib/api/types/leave-types"
 
 type Props = {
   status: LeaveStatus
 }
 
-/** 休暇申請ステータスを日本語ラベルと配色付きの Badge で表示する。 */
+/** 休暇申請ステータスを日本語ラベルの StatusLabel で表示する。却下・失効だけ destructive にし、他は secondary に揃える。 */
 export function LeaveStatusBadge(props: Props) {
   if (props.status === "approved") {
-    return <Badge>承認済み</Badge>
+    return <StatusLabel>承認済み</StatusLabel>
   }
 
   if (props.status === "rejected") {
-    return <Badge variant="destructive">却下</Badge>
+    return <StatusLabel variant="destructive">却下</StatusLabel>
   }
 
-  return <Badge variant="secondary">{leaveProcedureStatusLabel(props.status, false)}</Badge>
+  return <StatusLabel>{leaveProcedureStatusLabel(props.status, false)}</StatusLabel>
 }
