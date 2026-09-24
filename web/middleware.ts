@@ -3,6 +3,10 @@ import type { NextRequest } from "next/server"
 import { postRefreshToken } from "@/lib/api/post-refresh-token"
 import { setSessionCookies } from "@/lib/auth/set-session-cookies"
 
+/** 更新に失敗した後、同じ refresh token での再試行を止める cookie と期間。 */
+const REFRESH_BACKOFF_COOKIE = "refresh_backoff"
+const REFRESH_BACKOFF_SECONDS = 60
+
 export const config = {
   matcher: ["/((?!monitoring|_next/static|_next/image|favicon.ico).*)"],
 }
@@ -108,13 +112,26 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     return nextWithCsp(request, nonce, csp)
   }
 
+  // 直前の更新に失敗した後は、しばらく同じ token で更新を試さない。
+  if (request.cookies.get(REFRESH_BACKOFF_COOKIE) !== undefined) {
+    return nextWithCsp(request, nonce, csp)
+  }
+
   const refreshed = await deduplicatedRefresh(refreshTokenCookie.value)
 
   if (refreshed instanceof Error) {
     const response = nextWithCsp(request, nonce, csp)
 
-    response.cookies.delete("session")
-    response.cookies.delete("refresh_token")
+    // 同じ token で並行した別のリクエストが先に更新を済ませていることがある。その応答が置いた
+    // 新しい cookie を消すとログアウトさせてしまうので、ここでは cookie を消さず、短い間だけ
+    // 更新を止める。本当に無効な token なら、ログインのやり直しで cookie が置き換わる。
+    response.cookies.set(REFRESH_BACKOFF_COOKIE, "1", {
+      httpOnly: true,
+      secure: true,
+      sameSite: "lax",
+      path: "/",
+      maxAge: REFRESH_BACKOFF_SECONDS,
+    })
 
     return response
   }
@@ -133,6 +150,7 @@ export async function middleware(request: NextRequest): Promise<NextResponse> {
     accessToken: refreshed.access_token,
     refreshToken: refreshed.refresh_token,
   })
+  response.cookies.delete(REFRESH_BACKOFF_COOKIE)
 
   return response
 }

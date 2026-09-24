@@ -37,6 +37,30 @@ describe("session refresh middleware", () => {
     expect(mocks.postRefreshToken).toHaveBeenCalledWith("fixture")
   })
 
+  test("keeps the cookies a concurrent successful refresh may have set when this refresh fails", async () => {
+    mocks.postRefreshToken.mockResolvedValue(new Error("already rotated"))
+    const request = new NextRequest("https://app.bedrock.localhost/employees")
+    request.cookies.set("refresh_token", "rotated-by-another-request")
+
+    const response = await middleware(request)
+
+    const setCookies = response.headers.getSetCookie().join("\n")
+    expect(setCookies).not.toContain("session=;")
+    expect(setCookies).not.toContain("refresh_token=;")
+    expect(response.cookies.get("refresh_backoff")?.value).toBe("1")
+  })
+
+  test("does not retry the refresh while the backoff cookie is present", async () => {
+    const request = new NextRequest("https://app.bedrock.localhost/employees")
+    request.cookies.set("refresh_token", "fixture")
+    request.cookies.set("refresh_backoff", "1")
+
+    const response = await middleware(request)
+
+    expect(mocks.postRefreshToken).not.toHaveBeenCalled()
+    expect(response.headers.get("x-middleware-next")).toBe("1")
+  })
+
   test("injects a refreshed session into the same request without redirecting", async () => {
     mocks.postRefreshToken.mockResolvedValue({
       access_token: "eyJhbGciOiJIUzI1NiJ9.eyJzdWIiOiJFMDExIiwiZXhwIjo0MTAyNDQ0ODAwfQ.signature",
