@@ -28,6 +28,7 @@
     "src/contexts/company/application/employee-lifecycle/transfer-employee.ts",
     "src/contexts/company/application/employees/apply-employee-resource-adoption-batch.ts",
     "src/contexts/company/application/employees/apply-employee-resource-adoption.ts",
+    "src/contexts/company/application/employees/complete-workforce-connection.ts",
     "src/contexts/company/application/employees/create-employees.ts",
     "src/contexts/company/application/employees/delete-employees.ts",
     "src/contexts/company/application/employees/update-employee-name.ts",
@@ -178,6 +179,7 @@
     "src/contexts/company/domain/entities/personnel-annotation.entity.test.ts",
     "src/contexts/company/domain/entities/personnel-annotation.entity.ts",
     "src/contexts/company/domain/entities/responsibility-resource-adoption.entity.ts",
+    "src/contexts/company/domain/entities/workforce-connection-completion.entity.ts",
     "src/contexts/company/domain/entities/workforce-schedule.entity.test.ts",
     "src/contexts/company/domain/entities/workforce-schedule.entity.ts",
     "src/contexts/company/domain/errors.ts",
@@ -438,6 +440,7 @@
     "src/contexts/company/infrastructure/repositories/employee/employee-profile.repository.ts",
     "src/contexts/company/infrastructure/repositories/employee/employee.repository.ts",
     "src/contexts/company/infrastructure/repositories/employee/lib/is-company-unique-constraint-error.ts",
+    "src/contexts/company/infrastructure/repositories/employee/workforce-connection-completion.repository.ts",
     "src/contexts/company/infrastructure/repositories/external-identities/external-identity-import.repository.ts",
     "src/contexts/company/infrastructure/repositories/organization/assignment-resource-adoption.repository.ts",
     "src/contexts/company/infrastructure/repositories/organization/company-bootstrap.repository.ts",
@@ -599,6 +602,7 @@
     "src/contexts/company/interface/routes/company.resource-history.$type.$id.ts",
     "src/contexts/company/interface/routes/company.responsibility-resource-adoptions.ts",
     "src/contexts/company/interface/routes/company.ts",
+    "src/contexts/company/interface/routes/company.workforce-connection-completions.ts",
     "src/contexts/company/lib/workforce/CLAUDE.md",
     "src/contexts/company/lib/workforce/apply-organization-workforce-changes.ts",
     "src/contexts/company/lib/workforce/employee-lifecycle-state.ts",
@@ -708,7 +712,8 @@
     "src/contexts/company/test/read-company-employment-states.integration.test.ts",
     "src/contexts/company/test/record-preservation-execution.integration.test.ts",
     "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts",
-    "src/contexts/company/test/unpublished-employment.test-support.ts"
+    "src/contexts/company/test/unpublished-employment.test-support.ts",
+    "src/contexts/company/test/workforce-connection-completion.integration.test.ts"
   ],
   "implementedCapabilities": [
     "account-employee-link",

@@ -125,7 +125,29 @@ export class CompanyEmploymentJournalAdapter {
             organizationRevision: published.organizationRevision,
           }
         }
-        return { statements: [], bindings: [], resources: [], organizationRevision: null }
+        // 接続の完了を記録した会社では、未接続の従業員への発令は旧台帳だけを変える経路になる。
+        // 公開履歴と食い違う記録を作らないよう拒否し、記録の前なら保存時にも同じ条件を再検査する。
+        const completed = await this.c
+          .prepare(
+            "SELECT 1 FROM company_workforce_connection_completions WHERE organization_id = 'organization:default'",
+          )
+          .first()
+        if (completed !== null)
+          return new CompanyValidationError(
+            "公開履歴へ接続していない従業員には発令できません",
+            "unconnected_employee",
+          )
+        return {
+          statements: [
+            this.c.prepare(`SELECT CASE WHEN EXISTS (
+              SELECT 1 FROM company_workforce_connection_completions
+              WHERE organization_id = 'organization:default'
+            ) THEN json_extract('', '$') ELSE 1 END`),
+          ],
+          bindings: [],
+          resources: [],
+          organizationRevision: null,
+        }
       }
       if (
         revision.data === null ||

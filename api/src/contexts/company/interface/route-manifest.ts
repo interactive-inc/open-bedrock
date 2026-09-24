@@ -224,6 +224,26 @@ export const companyRouteManifest = [
     },
   },
   {
+    method: "GET",
+    path: "/company/workforce-connection-completions",
+    phase: "authenticated",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.workforce-connection-completions",
+      exportName: "GET",
+    },
+  },
+  {
+    method: "POST",
+    path: "/company/workforce-connection-completions",
+    phase: "audited",
+    handler: {
+      kind: "module",
+      module: "@/contexts/company/interface/routes/company.workforce-connection-completions",
+      exportName: "POST",
+    },
+  },
+  {
     method: "POST",
     path: "/company/bootstrap",
     phase: "authenticated",
