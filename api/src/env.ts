@@ -33,6 +33,9 @@ export type Bindings = {
   // 添付の DEK を包む KEK。`{"1": "<base64 32 bytes>"}` 形式で、最大 version が現行鍵。
   // ローテーション中は旧 version も残す。`wrangler secret put ATTACHMENT_KEKS` で登録する。
   ATTACHMENT_KEKS?: string
+  // "true" なら Worker の定期起動で、保持期限を過ぎた未紐付け添付を掃除する。
+  // 未設定・空・"false" なら定期起動では掃除しない。それ以外の値は定期起動を失敗させる。
+  ATTACHMENT_PURGE_SCHEDULE_ENABLED?: string
   // 監査イベントの識別子 HMAC 用。`wrangler secret put AUDIT_HMAC_SECRET` で登録する。
   AUDIT_HMAC_SECRET: string
   // 人事上の会社営業日を求める IANA タイムゾーン。未設定・不正値は認証と人事変更を拒否する。
