@@ -1,8 +1,5 @@
 import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
-import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
-import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
-import { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
-import { SystemNotificationRepository } from "@system/infrastructure/repositories/notifications/system-notification.repository"
+import { prepareSystemNotificationPublicationBatch } from "@system/interface/operations/prepare-system-notification-publication-batch"
 import { withAllocatedIntegerId } from "@/lib/database/with-allocated-integer-id"
 import { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
@@ -391,33 +388,29 @@ export class RingiRequestRepository {
       if (recipient === null) return new Error("ringi notification recipient is missing")
       const words = crypto.getRandomValues(new Uint32Array(2))
       const id = String(((words[0] ?? 0) & 0x000f_ffff) * 0x1_0000_0000 + (words[1] ?? 0) || 1)
-      const message = NotificationMessageEntity.create({
-        id,
-        kind: "company:approval_result",
-        title,
-        body: null,
-        source: {
-          type: "company:notification.source",
-          id: JSON.stringify({ domain: "ringi", id: binding.ringiId }),
-        },
-        createdAt: at,
+      return prepareSystemNotificationPublicationBatch({
+        database: this.c.env.DB,
+        publications: [
+          {
+            message: {
+              id,
+              kind: "company:approval_result",
+              title,
+              body: null,
+              source: {
+                type: "company:notification.source",
+                id: JSON.stringify({ domain: "ringi", id: binding.ringiId }),
+              },
+              action: null,
+              resourceScope: null,
+              priority: "normal",
+              publicationKey: null,
+              createdAt: at,
+            },
+            deliveries: [{ id, recipientAccountId: recipient, deliveredAt: at }],
+          },
+        ],
       })
-      if (message instanceof Error) return message
-      const delivery = NotificationDeliveryEntity.create({
-        id,
-        messageId: message.id,
-        recipientAccountId: recipient,
-        deliveredAt: at,
-        readAt: null,
-        dismissedAt: null,
-      })
-      if (delivery instanceof Error) return delivery
-      const deliveries = NotificationDeliveryBatchValue.create([delivery])
-      if (deliveries instanceof Error) return deliveries
-      return new SystemNotificationRepository({ context: this.c }).preparePublish(
-        message,
-        deliveries,
-      )
     } catch (cause) {
       return new Error("ringi notification cannot be prepared", { cause })
     }

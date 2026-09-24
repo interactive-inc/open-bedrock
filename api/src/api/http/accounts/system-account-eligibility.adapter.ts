@@ -4,7 +4,7 @@ import type {
 } from "@/contexts/company/interface/operations/resolve-company-account-employee-link"
 import type { SystemAccountId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
-import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"
+import { readSystemAccountSnapshot } from "@system/interface/iam/read-system-account-snapshot"
 
 /** API 合成層で System Account の利用可否を Company の抽象境界へ接続する。 */
 export class SystemAccountEligibilityAdapter implements AccountEligibilityPort {
@@ -16,7 +16,7 @@ export class SystemAccountEligibilityAdapter implements AccountEligibilityPort {
     const parsed = zAccountId.safeParse(accountId)
     if (!parsed.success) return { ok: true, eligible: false }
 
-    const account = await new SystemAccountRepository({ database: this.database }).find(parsed.data)
+    const account = await readSystemAccountSnapshot(this.database, parsed.data)
     if (account instanceof Error) return { ok: false, cause: account }
     return { ok: true, eligible: account?.status === "active" }
   }

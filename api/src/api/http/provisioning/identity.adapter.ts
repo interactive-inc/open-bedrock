@@ -7,7 +7,7 @@ import type { IdentityProvider } from "@system/domain/schemas/identity/identity-
 import { identitySubjectSchema } from "@system/domain/schemas/identity/identity-subject.schema"
 import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { IdentityId } from "@system/domain/schemas/identity/identity-id.schema"
-import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"
+import { readSystemAccountSnapshot } from "@system/interface/iam/read-system-account-snapshot"
 import { SystemIdentityLoginAdapter } from "@system/infrastructure/adapters/auth/system-identity-login.adapter"
 import { SystemIdentityByEmailAdapter } from "@system/infrastructure/adapters/identity/system-identity-by-email.adapter"
 import { SystemIdentityCatalogRepository } from "@system/infrastructure/repositories/identity/system-identity-catalog.repository"
@@ -90,7 +90,7 @@ export class IdentityAdapter {
   }
 
   async findAccountById(accountId: AccountId): Promise<AccountAuthState | null | Error> {
-    const account = await new SystemAccountRepository({ database: this.c.env.DB }).find(accountId)
+    const account = await readSystemAccountSnapshot(this.c.env.DB, accountId)
     if (account === null || account instanceof Error) return account
 
     try {
@@ -101,7 +101,7 @@ export class IdentityAdapter {
       const employeeId = links[0]?.employeeId ?? null
 
       return {
-        accountId: account.id,
+        accountId,
         accountStatus: account.status,
         tokenVersion: account.tokenVersion,
         employeeId,

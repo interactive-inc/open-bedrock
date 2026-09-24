@@ -4,10 +4,7 @@ import { withAllocatedIntegerId } from "@/lib/database/with-allocated-integer-id
 import type { AttachmentEvidence } from "@system/domain/definitions/attachments/attachment-evidence.definition"
 import { PrepareAttachmentEvidenceAdapter } from "@system/infrastructure/adapters/attachments/prepare-attachment-evidence.adapter"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
-import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
-import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
-import { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
-import { SystemNotificationRepository } from "@system/infrastructure/repositories/notifications/system-notification.repository"
+import { prepareSystemNotificationPublicationBatch } from "@system/interface/operations/prepare-system-notification-publication-batch"
 import { Expense } from "@/contexts/expense/domain/entities/expense.entity"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { expenses } from "@/contexts/expense/infrastructure/schema/expense"
@@ -433,33 +430,29 @@ export class ExpenseProcedureRepository {
       if (recipient === null) return new Error("expense notification recipient is missing")
       const words = crypto.getRandomValues(new Uint32Array(2))
       const id = String(((words[0] ?? 0) & 0x000f_ffff) * 0x1_0000_0000 + (words[1] ?? 0) || 1)
-      const message = NotificationMessageEntity.create({
-        id,
-        kind: "company:approval_result",
-        title,
-        body: null,
-        source: {
-          type: "company:notification.source",
-          id: JSON.stringify({ domain: "expense", id: binding.expenseId }),
-        },
-        createdAt: at,
+      return prepareSystemNotificationPublicationBatch({
+        database: this.c.env.DB,
+        publications: [
+          {
+            message: {
+              id,
+              kind: "company:approval_result",
+              title,
+              body: null,
+              source: {
+                type: "company:notification.source",
+                id: JSON.stringify({ domain: "expense", id: binding.expenseId }),
+              },
+              action: null,
+              resourceScope: null,
+              priority: "normal",
+              publicationKey: null,
+              createdAt: at,
+            },
+            deliveries: [{ id, recipientAccountId: recipient, deliveredAt: at }],
+          },
+        ],
       })
-      if (message instanceof Error) return message
-      const delivery = NotificationDeliveryEntity.create({
-        id,
-        messageId: message.id,
-        recipientAccountId: recipient,
-        deliveredAt: at,
-        readAt: null,
-        dismissedAt: null,
-      })
-      if (delivery instanceof Error) return delivery
-      const deliveries = NotificationDeliveryBatchValue.create([delivery])
-      if (deliveries instanceof Error) return deliveries
-      return new SystemNotificationRepository({ context: this.c }).preparePublish(
-        message,
-        deliveries,
-      )
     } catch (cause) {
       return new Error("expense notification cannot be prepared", { cause })
     }

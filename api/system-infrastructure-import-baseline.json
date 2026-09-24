@@ -4,12 +4,6 @@
       "src/contexts/system/infrastructure/repositories/iam/system-account-catalog.repository",
       "src/contexts/system/infrastructure/repositories/identity/system-identity-catalog.repository"
     ],
-    "src/api/http/accounts/resolve-active-system-account-id.ts": [
-      "src/contexts/system/infrastructure/repositories/auth/system-account.repository"
-    ],
-    "src/api/http/accounts/system-account-eligibility.adapter.ts": [
-      "src/contexts/system/infrastructure/repositories/auth/system-account.repository"
-    ],
     "src/api/http/application-requests/lib/system-application-operation.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
@@ -45,9 +39,6 @@
       "src/contexts/system/infrastructure/adapters/identity/system-account-provisioning.adapter",
       "src/contexts/system/infrastructure/repositories/iam/system-role-catalog.repository"
     ],
-    "src/api/http/notifications/employee-notification.adapter.ts": [
-      "src/contexts/system/infrastructure/repositories/notifications/system-notification.repository"
-    ],
     "src/api/http/personnel-action-requests/create-personnel-action-request.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
       "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
@@ -58,7 +49,6 @@
     "src/api/http/provisioning/identity.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/auth/system-identity-login.adapter",
       "src/contexts/system/infrastructure/adapters/identity/system-identity-by-email.adapter",
-      "src/contexts/system/infrastructure/repositories/auth/system-account.repository",
       "src/contexts/system/infrastructure/repositories/identity/system-identity-catalog.repository"
     ],
     "src/api/routes/company.application-requests.workflow-repairs.test.ts": [
@@ -122,9 +112,6 @@
     "src/contexts/announcement/infrastructure/adapters/prepare-announcement-retirement-plan.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter",
       "src/contexts/system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-    ],
-    "src/contexts/announcement/infrastructure/adapters/publish-announcement-notification.adapter.ts": [
-      "src/contexts/system/infrastructure/repositories/notifications/system-notification.repository"
     ],
     "src/contexts/announcement/infrastructure/adapters/submit-announcement-retirement-request.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
@@ -1455,8 +1442,7 @@
     "src/contexts/expense/infrastructure/repositories/expense-procedure.repository.ts": [
       "src/contexts/system/infrastructure/adapters/attachments/prepare-attachment-evidence.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-authorized-execution.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
-      "src/contexts/system/infrastructure/repositories/notifications/system-notification.repository"
+      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
     ],
     "src/contexts/expense/infrastructure/schema/expense.ts": [
       "src/contexts/system/infrastructure/schema/system-procedure",
@@ -2171,8 +2157,7 @@
       "src/contexts/system/infrastructure/repositories/records/record-source-retirement.repository"
     ],
     "src/contexts/leave/infrastructure/adapters/leave-decision-notification-delivery.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/events/system-managed-job-runner.adapter",
-      "src/contexts/system/infrastructure/repositories/notifications/system-notification.repository"
+      "src/contexts/system/infrastructure/adapters/events/system-managed-job-runner.adapter"
     ],
     "src/contexts/leave/infrastructure/adapters/leave-procedure-read.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
@@ -3338,8 +3323,7 @@
     ],
     "src/contexts/ringi/infrastructure/repositories/ringi-request.repository.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-authorized-execution.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
-      "src/contexts/system/infrastructure/repositories/notifications/system-notification.repository"
+      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
     ],
     "src/contexts/ringi/infrastructure/schema/ringi.ts": [
       "src/contexts/system/infrastructure/schema/system-procedure",
