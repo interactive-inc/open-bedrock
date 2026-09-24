@@ -95,6 +95,15 @@
       "reason": "System通知配送とCompany宛先資格・製品payloadを通知送信wireへ合成する"
     },
     {
+      "routePrefix": "company.personal-data-erasure-requests",
+      "participants": ["company", "system"],
+      "routes": [
+        "company.personal-data-erasure-requests",
+        "company.personal-data-erasure-requests.$id.execute"
+      ],
+      "reason": "Companyの従業員とAccountの対応、承認経路とSystemの鍵破棄手続を合成する"
+    },
+    {
       "routePrefix": "company.personnel-action-requests",
       "participants": ["company", "system"],
       "routes": ["company.personnel-action-requests"],

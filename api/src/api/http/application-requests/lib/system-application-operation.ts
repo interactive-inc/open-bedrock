@@ -56,6 +56,11 @@ import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-dig
 import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { openSystemWorkflow } from "@system/interface/operations/open-system-workflow"
 import { SystemDecisionTargetValue } from "@system/domain/values/workflow/system-decision-target.value"
+import { AttachmentErasureError } from "@system/application/attachments/errors"
+import { ATTACHMENT_ERASURE_OPERATION_KEY } from "@system/domain/values/attachments/attachment-erasure-request.value"
+import { executeSystemAttachmentErasure } from "@system/interface/operations/execute-system-attachment-erasure"
+import { prepareSystemAttachmentErasureDecisionAudit } from "@system/interface/operations/prepare-system-attachment-erasure-decision-audit"
+import { prepareSystemAttachmentErasureRequest } from "@system/interface/operations/prepare-system-attachment-erasure-request"
 
 export type SystemApplicationResult = Readonly<{
   proposal: SystemProposalView
@@ -70,6 +75,7 @@ export function systemProposalQuery(c: Context) {
       null,
       "company.personnel-action.apply",
       "system.record.preserve",
+      ATTACHMENT_ERASURE_OPERATION_KEY,
     ],
   })
 }
@@ -461,6 +467,10 @@ export async function decideSystemApplication(
     authoritySubjectEmployeeId = null
     targetDepartmentCode = null
   }
+  if (proposal.completionOperationKey === ATTACHMENT_ERASURE_OPERATION_KEY) {
+    authoritySubjectEmployeeId = null
+    targetDepartmentCode = null
+  }
   if (proposal.completionOperationKey === "company.personnel-action.apply") {
     const personnelRequest = await findCompanyPersonnelActionRequest(c, session, {
       applicationId: proposal.number,
@@ -546,9 +556,28 @@ export async function decideSystemApplication(
   }
   const caseId = systemCaseIdSchema.safeParse(proposal.caseId)
   if (!caseId.success) return new UnexpectedError("invalid System Case ID")
+  let decisionEffects: ReadonlyArray<D1PreparedStatement> = []
+  if (proposal.completionOperationKey === ATTACHMENT_ERASURE_OPERATION_KEY) {
+    const audit = prepareSystemAttachmentErasureDecisionAudit(
+      { env: { DB: c.env.DB } },
+      {
+        proposal,
+        actorAccountId,
+        representedAccountId,
+        action: systemAction,
+        taskKey: proposal.currentTaskKey,
+        round: proposal.currentTaskRound,
+        decidedAt: input.decidedAt,
+      },
+    )
+    if (audit instanceof Error)
+      return new UnexpectedError("failed to prepare erasure decision audit", { cause: audit })
+    decisionEffects = audit
+  }
   const workflow = openSystemWorkflow({
     env: { DB: c.env.DB },
     decisionGuards: [authorityGuard, ...nextTaskGuards],
+    decisionEffects,
   })
   const command = {
     caseId: caseId.data,
@@ -594,11 +623,20 @@ export async function decideSystemApplication(
 }
 
 async function completeSystemApplicationIfRequired(
-  c: Context,
+  c: Context & { readonly var: Pick<Variables, "bearerReadAuthentication"> },
   proposal: SystemProposalView,
   completedAt: Date,
 ): Promise<true | ApplicationError> {
   if (proposal.completionOperationKey === null) return true
+  if (proposal.completionOperationKey === ATTACHMENT_ERASURE_OPERATION_KEY) {
+    // 最終承認者が消去権限を持たない場合は承認済みのまま残し、専用の実行操作で確定する。
+    const executed = await executeSystemApplicationErasure(c, proposal.number, completedAt)
+    return executed instanceof ForbiddenError
+      ? true
+      : executed instanceof ApplicationError
+        ? executed
+        : true
+  }
   // 保全実行には原記録の再検査が必要なため、承認後は専用の実行操作へ進む。
   if (proposal.completionOperationKey === "system.record.preserve") return true
   if (proposal.completionOperationKey !== "company.personnel-action.apply") {
@@ -812,9 +850,15 @@ async function startSystemApplication(
     seriesId: string
     version: number
     supersedesProposalId: string | null
+    /** System operationが検査・固定した本文。templateの入力schemaでは検査しない。 */
+    systemBody?: true
+    startGuards?: ReadonlyArray<D1PreparedStatement>
   }>,
 ): Promise<SystemApplicationResult | ApplicationError> {
-  const payload = validateAndNormalizeApplicationPayload(input.schema, input.payload)
+  const payload =
+    input.systemBody === true
+      ? input.payload
+      : validateAndNormalizeApplicationPayload(input.schema, input.payload)
   if (payload instanceof Error) {
     return new UnprocessableError("payload does not match template schema", "invalid_payload", {
       cause: payload,
@@ -856,7 +900,7 @@ async function startSystemApplication(
   const started = await new StartSystemProcedure({
     writer: openSystemWorkflow({
       env: { DB: c.env.DB },
-      startGuards: resolvedTask.guards,
+      startGuards: [...(input.startGuards ?? []), ...resolvedTask.guards],
     }),
   }).run({
     seriesId: input.seriesId,
@@ -903,4 +947,139 @@ function toProcedureApplicant(applicant: CompanyEmployeeDirectoryEntry) {
 function parseJsonPolicy(value: string) {
   const parsed = parseJsonValue(value)
   return parsed instanceof Error ? parsed : parseCompanyProcedureDecisionPolicy(parsed.value)
+}
+
+function toErasureApplicationError(error: AttachmentErasureError): ApplicationError {
+  switch (error.code) {
+    case "forbidden":
+      return new ForbiddenError("personal data erasure is not permitted", "forbidden", {
+        cause: error,
+      })
+    case "not_found":
+      return new NotFoundError("erasure target not found", "erasure_target_not_found", {
+        cause: error,
+      })
+    case "invalid":
+      return new UnprocessableError("erasure request is invalid", "erasure_invalid", {
+        cause: error,
+      })
+    case "unavailable":
+      return new UnexpectedError("personal data erasure is unavailable", { cause: error })
+    default:
+      return new ConflictError(`erasure ${error.code.replace("_", " ")}`, `erasure_${error.code}`, {
+        cause: error,
+      })
+  }
+}
+
+/** 消去申請テンプレートで、System operationが固定した対象と申請監査を承認手続へ提出する。 */
+export async function submitSystemAttachmentErasure(
+  c: Context & { readonly var: Pick<Variables, "bearerReadAuthentication"> },
+  input: Readonly<{
+    applicantId: EmployeeId
+    templateCode: string
+    requestId: string
+    scope: unknown
+    reason: string
+    createdAt: Date
+  }>,
+): Promise<SystemApplicationResult | ApplicationError> {
+  const definition = await loadSystemProcedure(c, input.templateCode)
+  if (definition instanceof Error)
+    return new UnexpectedError("failed to find application template", { cause: definition })
+  if (definition === null) return new NotFoundError("template not found", "template_not_found")
+  if (definition.completionOperationKey !== ATTACHMENT_ERASURE_OPERATION_KEY)
+    return new UnprocessableError(
+      "template is not a personal data erasure template",
+      "erasure_template_required",
+    )
+  const policy = parseSystemProcedurePolicy(definition)
+  if (policy instanceof Error) return new UnexpectedError("invalid application template")
+  const authentication = c.var.bearerReadAuthentication
+  const session = c.var.session
+  if (authentication === undefined || session === null)
+    return new ForbiddenError("personal data erasure requires a person", "forbidden")
+  const accountId = await resolveActiveSystemAccountId(c, session.accountId)
+  if (accountId instanceof Error)
+    return new UnexpectedError("failed to resolve canonical applicant", { cause: accountId })
+  const query = systemProposalQuery(c)
+  const replayed = await query.findBySeriesVersion({
+    seriesId: input.requestId,
+    version: 1,
+    creatorAccountId: accountId,
+  })
+  if (replayed instanceof Error)
+    return new UnexpectedError("failed to find erasure request", { cause: replayed })
+  if (replayed !== null) {
+    if (replayed.completionOperationKey !== ATTACHMENT_ERASURE_OPERATION_KEY)
+      return new ConflictError("request id is already used", "erasure_request_id_conflict")
+    const applicant = await openCompanyEmployeeDirectory(c).findById(input.applicantId)
+    if (applicant instanceof Error || applicant === null)
+      return new UnexpectedError("failed to find applicant", {
+        cause: applicant instanceof Error ? applicant : undefined,
+      })
+    return {
+      proposal: replayed,
+      applicantName: applicant.officialName,
+      approverRoles: policy.approverRoles,
+    }
+  }
+  const prepared = await prepareSystemAttachmentErasureRequest(
+    { env: { DB: c.env.DB } },
+    {
+      authentication,
+      requestId: input.requestId,
+      scope: input.scope,
+      reason: input.reason,
+      at: input.createdAt,
+    },
+  )
+  if (prepared instanceof AttachmentErasureError) return toErasureApplicationError(prepared)
+  const started = await startSystemApplication(c, {
+    applicantId: input.applicantId,
+    schema: null,
+    policy,
+    procedureKey: definition.key,
+    procedureRevision: definition.revision,
+    payload: prepared.body,
+    createdAt: input.createdAt,
+    seriesId: prepared.seriesId,
+    version: 1,
+    supersedesProposalId: null,
+    systemBody: true,
+    startGuards: prepared.startGuards,
+  })
+  if (started instanceof ConflictError && started.code === "authority_changed") {
+    // 同じ添付への申請が並行して作られた場合も、案件作成の検査がここで止める。
+    return new ConflictError("erasure request conflicts", "erasure_duplicate", { cause: started })
+  }
+  return started
+}
+
+/**
+ * 承認済みの消去案件を実行する。System operationが人の消去権限・承認済み状態・一回限りの実行許可を
+ * 検査し、DEKの破棄と監査を同時に確定する。
+ */
+export async function executeSystemApplicationErasure(
+  c: Context & { readonly var: Pick<Variables, "bearerReadAuthentication"> },
+  number: number,
+  executedAt: Date,
+): Promise<
+  | Readonly<{ kind: "destroyed" | "replayed"; attachmentIds: ReadonlyArray<string> }>
+  | ApplicationError
+> {
+  const authentication = c.var.bearerReadAuthentication
+  if (authentication === undefined)
+    return new ForbiddenError("personal data erasure requires a person", "forbidden")
+  const proposal = await systemProposalQuery(c).findByNumber(number)
+  if (proposal instanceof Error)
+    return new UnexpectedError("failed to find erasure request", { cause: proposal })
+  if (proposal === null || proposal.completionOperationKey !== ATTACHMENT_ERASURE_OPERATION_KEY)
+    return new NotFoundError("erasure request not found", "application_not_found")
+  const executed = await executeSystemAttachmentErasure(
+    { env: { DB: c.env.DB } },
+    { authentication, proposal, executionGuards: [], at: executedAt },
+  )
+  if (executed instanceof AttachmentErasureError) return toErasureApplicationError(executed)
+  return { kind: executed.kind, attachmentIds: executed.attachmentIds }
 }
