@@ -6,7 +6,7 @@ import type { CompanyPersonnelSession } from "@/contexts/company/domain/definiti
 import { CompanyOperationError } from "@/contexts/company/domain/errors"
 import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/repositories/ringi-request.repository"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { prepareSystemHumanOperationAuthorization } from "@system/interface/operations/prepare-system-human-operation-authorization"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 
@@ -74,7 +74,8 @@ export class RingiProcedureReadAdapter {
     let canExecute = false
     let canReview = false
     if (proposal !== null && target !== null && input.session.hasPermission("ringi:approve")) {
-      const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+      const human = await prepareSystemHumanOperationAuthorization({
+        database: this.c.env.DB,
         accountId: input.session.accountId,
         tokenVersion: input.tokenVersion,
         permissions: ["ringi:approve"],

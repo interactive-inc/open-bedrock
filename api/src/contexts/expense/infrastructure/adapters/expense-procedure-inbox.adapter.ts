@@ -1,7 +1,7 @@
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { ExpenseProcedureReadAdapter } from "@/contexts/expense/infrastructure/adapters/expense-procedure-read.adapter"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { prepareSystemHumanOperationAuthorization } from "@system/interface/operations/prepare-system-human-operation-authorization"
 import { ApplicationError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 
 type Context = CompanyContext
@@ -23,7 +23,8 @@ export class ExpenseProcedureInboxAdapter {
       at = input.at,
       limit = input.limit,
       offset = input.offset
-    const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+    const human = await prepareSystemHumanOperationAuthorization({
+      database: this.c.env.DB,
       accountId: session.accountId,
       tokenVersion: input.tokenVersion,
       permissions: ["expense:approve"],

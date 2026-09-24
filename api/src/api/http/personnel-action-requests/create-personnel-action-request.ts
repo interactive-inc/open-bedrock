@@ -32,7 +32,7 @@ import { StartSystemProcedure } from "@system/application/workflow/start-system-
 import type { SystemWorkflowWriter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
 import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
 import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
+import { prepareSystemAuditEventAppend } from "@system/interface/operations/prepare-system-audit-event-append"
 
 export type CreatedPersonnelActionRequest = Readonly<{
   id: string
@@ -290,9 +290,7 @@ export class CreatePersonnelActionRequest {
             ...systemStatements.slice(0, -1),
             association,
             abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
-            ...new SystemAuditEventRepository({
-              env: { DB: this.c.env.DB },
-            }).prepareAppend(audit),
+            ...prepareSystemAuditEventAppend({ database: this.c.env.DB, event: audit }),
             finalNumberRead,
           ])
           return results.at(-1)?.results.at(0)?.number ?? new Error("proposal number is missing")

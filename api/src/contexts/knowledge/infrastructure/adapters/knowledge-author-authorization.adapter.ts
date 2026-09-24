@@ -3,7 +3,7 @@ import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interfa
 import type { KnowledgeContext as Context } from "@/contexts/knowledge/configuration/knowledge-context"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
-import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
+import { prepareSystemReadAuthorization } from "@system/interface/operations/prepare-system-read-authorization"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { ForbiddenError, UnavailableError } from "@/lib/errors"
 
@@ -18,10 +18,11 @@ export class KnowledgeAuthorAuthorizationAdapter {
     const now = this.c.var.now()
     if (authentication === undefined || authentication.accountId !== this.c.var.userId)
       return new ForbiddenError("current authentication is required", "knowledge_author_forbidden")
-    const system = await new PrepareSystemReadAuthorizationAdapter(this.c).prepare(
-      authentication,
-      now,
-    )
+    const system = await prepareSystemReadAuthorization({
+      database: this.c.env.DB,
+      authentication: authentication,
+      at: now,
+    })
     if (system instanceof Error)
       return new UnavailableError(
         "knowledge authorization is unavailable",

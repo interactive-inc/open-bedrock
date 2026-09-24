@@ -11,7 +11,6 @@
       "src/contexts/system/infrastructure/repositories/auth/system-account.repository"
     ],
     "src/api/http/application-requests/lib/system-application-operation.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
@@ -51,7 +50,6 @@
     ],
     "src/api/http/personnel-action-requests/create-personnel-action-request.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
-      "src/contexts/system/infrastructure/repositories/audit/system-audit-event.repository",
       "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
     ],
     "src/api/http/personnel-action-requests/list-personnel-action-requests.ts": [
@@ -96,9 +94,6 @@
       "src/contexts/system/infrastructure/repositories/records/record-coverage-page.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
-    ],
-    "src/contexts/announcement/infrastructure/adapters/announcement-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
     ],
     "src/contexts/announcement/infrastructure/adapters/execute-announcement-retirement.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
@@ -199,9 +194,6 @@
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
     ],
-    "src/contexts/antisocial-check/infrastructure/adapters/antisocial-check-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/antisocial-check/infrastructure/adapters/execute-antisocial-check-retirement.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-source-retirement.repository"
@@ -298,9 +290,6 @@
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
     ],
-    "src/contexts/asset/infrastructure/adapters/asset-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/asset/infrastructure/adapters/execute-asset-retirement.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-source-retirement.repository"
@@ -396,9 +385,6 @@
       "src/contexts/system/infrastructure/repositories/records/record-coverage-page.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
-    ],
-    "src/contexts/attendance/infrastructure/adapters/attendance-record-source-authorization.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
     ],
     "src/contexts/attendance/infrastructure/adapters/execute-attendance-retirement.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
@@ -533,9 +519,6 @@
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
     ],
-    "src/contexts/business-trip/infrastructure/adapters/business-trip-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/business-trip/infrastructure/adapters/execute-business-trip-retirement.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-source-retirement.repository"
@@ -631,9 +614,6 @@
       "src/contexts/system/infrastructure/repositories/records/record-coverage-page.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
-    ],
-    "src/contexts/career/infrastructure/adapters/career-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
     ],
     "src/contexts/career/infrastructure/adapters/execute-career-retirement.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
@@ -731,9 +711,6 @@
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
     ],
-    "src/contexts/certificate-request/infrastructure/adapters/certificate-request-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/certificate-request/infrastructure/adapters/execute-certificate-request-retirement.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-source-retirement.repository"
@@ -829,9 +806,6 @@
       "src/contexts/system/infrastructure/repositories/records/record-coverage-page.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
-    ],
-    "src/contexts/certification/infrastructure/adapters/certification-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
     ],
     "src/contexts/certification/infrastructure/adapters/execute-certification-retirement.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
@@ -929,9 +903,6 @@
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
     ],
-    "src/contexts/commendation/infrastructure/adapters/commendation-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/commendation/infrastructure/adapters/execute-commendation-retirement.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-source-retirement.repository"
@@ -1027,9 +998,6 @@
       "src/contexts/system/infrastructure/repositories/records/record-coverage-page.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
-    ],
-    "src/contexts/company-calendar/infrastructure/adapters/company-calendar-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
     ],
     "src/contexts/company-calendar/infrastructure/adapters/execute-company-calendar-retirement.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
@@ -1127,9 +1095,6 @@
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
     ],
-    "src/contexts/compensation-change/infrastructure/adapters/compensation-change-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/compensation-change/infrastructure/adapters/execute-compensation-change-retirement.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-source-retirement.repository"
@@ -1226,9 +1191,6 @@
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
     ],
-    "src/contexts/disciplinary-action/infrastructure/adapters/disciplinary-action-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/disciplinary-action/infrastructure/adapters/execute-disciplinary-action-retirement.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-source-retirement.repository"
@@ -1324,9 +1286,6 @@
       "src/contexts/system/infrastructure/repositories/records/record-coverage-page.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
-    ],
-    "src/contexts/document/infrastructure/adapters/document-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
     ],
     "src/contexts/document/infrastructure/adapters/execute-document-retirement.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
@@ -1453,12 +1412,8 @@
     "src/contexts/expense/infrastructure/adapters/expense-attachment-record-source.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/records/capture-linked-attachment-record.adapter"
     ],
-    "src/contexts/expense/infrastructure/adapters/expense-procedure-inbox.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/expense/infrastructure/adapters/expense-procedure-read.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/attachments/attachment.adapter",
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
     ],
     "src/contexts/expense/infrastructure/adapters/list-frozen-expense-record-page.adapter.ts": [
@@ -1472,11 +1427,7 @@
       "src/contexts/system/infrastructure/adapters/records/verify-preserved-record-source.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-coverage-page.repository"
     ],
-    "src/contexts/expense/infrastructure/adapters/prepare-expense-preservation-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
-    ],
     "src/contexts/expense/infrastructure/adapters/prepare-expense-record-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter"
     ],
     "src/contexts/expense/infrastructure/adapters/prepare-expense-retirement-current-state.adapter.ts": [
@@ -1505,7 +1456,6 @@
       "src/contexts/system/infrastructure/adapters/attachments/prepare-attachment-evidence.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-authorized-execution.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
-      "src/contexts/system/infrastructure/repositories/audit/system-audit-event.repository",
       "src/contexts/system/infrastructure/repositories/notifications/system-notification.repository"
     ],
     "src/contexts/expense/infrastructure/schema/expense.ts": [
@@ -1556,8 +1506,7 @@
       "src/contexts/system/infrastructure/adapters/records/withdraw-record-retirement.adapter"
     ],
     "src/contexts/expense/interface/routes/expenses.$id.attachments.$attachmentId.ts": [
-      "src/contexts/system/infrastructure/adapters/attachments/attachment-object.adapter",
-      "src/contexts/system/infrastructure/repositories/audit/system-audit-event.repository"
+      "src/contexts/system/infrastructure/adapters/attachments/attachment-object.adapter"
     ],
     "src/contexts/expense/test/create-expense-preservation-fixture.test-support.ts": [
       "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
@@ -1610,9 +1559,6 @@
     "src/contexts/family-care-leave/infrastructure/adapters/execute-family-care-leave-retirement.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-source-retirement.repository"
-    ],
-    "src/contexts/family-care-leave/infrastructure/adapters/family-care-leave-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
     ],
     "src/contexts/family-care-leave/infrastructure/adapters/list-frozen-family-care-leave-record-page.adapter.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
@@ -1716,9 +1662,6 @@
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-source-retirement.repository"
     ],
-    "src/contexts/governance/infrastructure/adapters/governance-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/governance/infrastructure/adapters/list-frozen-governance-record-page.adapter.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
     ],
@@ -1818,9 +1761,6 @@
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-source-retirement.repository"
     ],
-    "src/contexts/headcount-plan/infrastructure/adapters/headcount-plan-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/headcount-plan/infrastructure/adapters/list-frozen-headcount-plan-record-page.adapter.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
     ],
@@ -1916,9 +1856,6 @@
     "src/contexts/health-checkup/infrastructure/adapters/execute-health-checkup-retirement.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-source-retirement.repository"
-    ],
-    "src/contexts/health-checkup/infrastructure/adapters/health-checkup-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
     ],
     "src/contexts/health-checkup/infrastructure/adapters/list-frozen-health-checkup-record-page.adapter.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
@@ -2016,9 +1953,6 @@
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-source-retirement.repository"
     ],
-    "src/contexts/it-incident/infrastructure/adapters/it-incident-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/it-incident/infrastructure/adapters/list-frozen-it-incident-record-page.adapter.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
     ],
@@ -2115,12 +2049,6 @@
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-source-retirement.repository"
     ],
-    "src/contexts/knowledge/infrastructure/adapters/knowledge-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
-    "src/contexts/knowledge/infrastructure/adapters/knowledge-author-authorization.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
-    ],
     "src/contexts/knowledge/infrastructure/adapters/list-frozen-knowledge-article-record-page.adapter.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
     ],
@@ -2149,9 +2077,6 @@
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
-    ],
-    "src/contexts/knowledge/infrastructure/repositories/knowledge-article.repository.ts": [
-      "src/contexts/system/infrastructure/repositories/audit/system-audit-event.repository"
     ],
     "src/contexts/knowledge/interface/operations/create-knowledge-preservation-decision-handlers.ts": [
       "src/contexts/system/infrastructure/adapters/records/decide-record-preservation.adapter",
@@ -2245,19 +2170,11 @@
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-source-retirement.repository"
     ],
-    "src/contexts/leave/infrastructure/adapters/leave-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/leave/infrastructure/adapters/leave-decision-notification-delivery.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/events/system-managed-job-runner.adapter",
-      "src/contexts/system/infrastructure/adapters/iam/system-service-operation-authorization.adapter",
       "src/contexts/system/infrastructure/repositories/notifications/system-notification.repository"
     ],
-    "src/contexts/leave/infrastructure/adapters/leave-procedure-inbox.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/leave/infrastructure/adapters/leave-procedure-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
     ],
     "src/contexts/leave/infrastructure/adapters/list-frozen-leave-record-page.adapter.ts": [
@@ -2297,8 +2214,7 @@
     ],
     "src/contexts/leave/infrastructure/repositories/leave-procedure.repository.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-authorized-execution.adapter",
-      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
-      "src/contexts/system/infrastructure/repositories/audit/system-audit-event.repository"
+      "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
     ],
     "src/contexts/leave/interface/operations/create-leave-preservation-decision-handlers.ts": [
       "src/contexts/system/infrastructure/adapters/records/decide-record-preservation.adapter",
@@ -2378,9 +2294,6 @@
     "src/contexts/life-event/infrastructure/adapters/execute-life-event-retirement.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-source-retirement.repository"
-    ],
-    "src/contexts/life-event/infrastructure/adapters/life-event-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
     ],
     "src/contexts/life-event/infrastructure/adapters/list-frozen-life-event-record-page.adapter.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
@@ -2481,9 +2394,6 @@
     "src/contexts/meeting/infrastructure/adapters/list-frozen-meeting-record-page.adapter.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
     ],
-    "src/contexts/meeting/infrastructure/adapters/meeting-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/meeting/infrastructure/adapters/prepare-meeting-coverage-records.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/records/verify-preserved-record-source.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-coverage-page.repository"
@@ -2583,13 +2493,8 @@
     "src/contexts/onboarding/infrastructure/adapters/list-frozen-onboarding-record-page.adapter.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
     ],
-    "src/contexts/onboarding/infrastructure/adapters/onboarding-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/onboarding/infrastructure/adapters/onboarding-lifecycle-delivery.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/events/system-managed-job-runner.adapter",
-      "src/contexts/system/infrastructure/adapters/iam/system-service-operation-authorization.adapter",
-      "src/contexts/system/infrastructure/repositories/audit/system-audit-event.repository",
       "src/contexts/system/infrastructure/repositories/events/system-delivery.repository"
     ],
     "src/contexts/onboarding/infrastructure/adapters/prepare-onboarding-coverage-records.adapter.ts": [
@@ -2619,8 +2524,6 @@
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
     ],
     "src/contexts/onboarding/infrastructure/repositories/onboarding-lifecycle-delivery.repository.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
-      "src/contexts/system/infrastructure/repositories/audit/system-audit-event.repository",
       "src/contexts/system/infrastructure/repositories/events/system-delivery.repository"
     ],
     "src/contexts/onboarding/infrastructure/schema/onboarding.ts": [
@@ -2698,9 +2601,6 @@
     ],
     "src/contexts/one-on-one/infrastructure/adapters/list-frozen-one-on-one-record-page.adapter.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
-    ],
-    "src/contexts/one-on-one/infrastructure/adapters/one-on-one-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
     ],
     "src/contexts/one-on-one/infrastructure/adapters/prepare-one-on-one-coverage-records.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/records/verify-preserved-record-source.adapter",
@@ -2797,9 +2697,6 @@
     ],
     "src/contexts/partner/infrastructure/adapters/list-frozen-partner-record-page.adapter.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
-    ],
-    "src/contexts/partner/infrastructure/adapters/partner-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
     ],
     "src/contexts/partner/infrastructure/adapters/prepare-partner-coverage-records.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/records/verify-preserved-record-source.adapter",
@@ -2899,9 +2796,6 @@
     ],
     "src/contexts/performance-review/infrastructure/adapters/list-frozen-performance-review-record-page.adapter.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
-    ],
-    "src/contexts/performance-review/infrastructure/adapters/performance-review-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
     ],
     "src/contexts/performance-review/infrastructure/adapters/prepare-performance-review-coverage-records.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/records/verify-preserved-record-source.adapter",
@@ -3023,9 +2917,6 @@
       "src/contexts/system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter",
       "src/contexts/system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
     ],
-    "src/contexts/recruitment/infrastructure/adapters/recruitment-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/recruitment/infrastructure/adapters/submit-recruitment-retirement-request.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
@@ -3124,9 +3015,6 @@
     "src/contexts/regulation/infrastructure/adapters/prepare-regulation-retirement-plan.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter",
       "src/contexts/system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-    ],
-    "src/contexts/regulation/infrastructure/adapters/regulation-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
     ],
     "src/contexts/regulation/infrastructure/adapters/submit-regulation-retirement-request.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
@@ -3227,9 +3115,6 @@
       "src/contexts/system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter",
       "src/contexts/system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
     ],
-    "src/contexts/rental/infrastructure/adapters/rental-reservation-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/rental/infrastructure/adapters/submit-rental-reservation-retirement-request.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
@@ -3325,9 +3210,6 @@
     "src/contexts/resignation/infrastructure/adapters/prepare-resignation-retirement-plan.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter",
       "src/contexts/system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-    ],
-    "src/contexts/resignation/infrastructure/adapters/resignation-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
     ],
     "src/contexts/resignation/infrastructure/adapters/submit-resignation-retirement-request.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
@@ -3446,11 +3328,7 @@
       "src/contexts/system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter",
       "src/contexts/system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
     ],
-    "src/contexts/ringi/infrastructure/adapters/ringi-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/ringi/infrastructure/adapters/ringi-procedure-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
     ],
     "src/contexts/ringi/infrastructure/adapters/submit-ringi-retirement-request.adapter.ts": [
@@ -3461,7 +3339,6 @@
     "src/contexts/ringi/infrastructure/repositories/ringi-request.repository.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-authorized-execution.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
-      "src/contexts/system/infrastructure/repositories/audit/system-audit-event.repository",
       "src/contexts/system/infrastructure/repositories/notifications/system-notification.repository"
     ],
     "src/contexts/ringi/infrastructure/schema/ringi.ts": [
@@ -3490,9 +3367,6 @@
     ],
     "src/contexts/ringi/interface/routes/ringi-procedures.ts": [
       "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-    ],
-    "src/contexts/ringi/interface/routes/ringi-requests.inbox.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
     ],
     "src/contexts/ringi/interface/routes/ringi.records.$recordKind.$recordId.preservation-requests.$number.execute.ts": [
       "src/contexts/system/infrastructure/adapters/records/errors",
@@ -3574,9 +3448,6 @@
     "src/contexts/room/infrastructure/adapters/prepare-room-retirement-plan.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter",
       "src/contexts/system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-    ],
-    "src/contexts/room/infrastructure/adapters/room-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
     ],
     "src/contexts/room/infrastructure/adapters/submit-room-retirement-request.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
@@ -3677,9 +3548,6 @@
       "src/contexts/system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter",
       "src/contexts/system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
     ],
-    "src/contexts/shift/infrastructure/adapters/shift-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/shift/infrastructure/adapters/submit-shift-retirement-request.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
@@ -3779,9 +3647,6 @@
       "src/contexts/system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter",
       "src/contexts/system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
     ],
-    "src/contexts/skill/infrastructure/adapters/skill-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/skill/infrastructure/adapters/submit-skill-retirement-request.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
@@ -3854,9 +3719,6 @@
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-source-retirement.repository"
     ],
-    "src/contexts/software-license/infrastructure/adapters/license-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/software-license/infrastructure/adapters/list-frozen-license-record-page.adapter.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
     ],
@@ -3885,9 +3747,6 @@
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
-    ],
-    "src/contexts/software-license/infrastructure/repositories/license-assignment.repository.ts": [
-      "src/contexts/system/infrastructure/repositories/audit/system-audit-event.repository"
     ],
     "src/contexts/software-license/interface/operations/create-license-preservation-decision-handlers.ts": [
       "src/contexts/system/infrastructure/adapters/records/decide-record-preservation.adapter",
@@ -4019,9 +3878,6 @@
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
     ],
-    "src/contexts/survey/infrastructure/adapters/survey-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/survey/interface/operations/create-survey-preservation-decision-handlers.ts": [
       "src/contexts/system/infrastructure/adapters/records/decide-record-preservation.adapter",
       "src/contexts/system/infrastructure/adapters/records/errors"
@@ -4117,9 +3973,6 @@
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
-    ],
-    "src/contexts/thanks/infrastructure/adapters/thanks-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
     ],
     "src/contexts/thanks/interface/operations/create-thanks-preservation-decision-handlers.ts": [
       "src/contexts/system/infrastructure/adapters/records/decide-record-preservation.adapter",
@@ -4217,9 +4070,6 @@
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
     ],
-    "src/contexts/training/infrastructure/adapters/training-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/training/interface/operations/create-training-preservation-decision-handlers.ts": [
       "src/contexts/system/infrastructure/adapters/records/decide-record-preservation.adapter",
       "src/contexts/system/infrastructure/adapters/records/errors"
@@ -4316,9 +4166,6 @@
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
     ],
-    "src/contexts/work-accident/infrastructure/adapters/work-accident-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-    ],
     "src/contexts/work-accident/interface/operations/create-work-accident-preservation-decision-handlers.ts": [
       "src/contexts/system/infrastructure/adapters/records/decide-record-preservation.adapter",
       "src/contexts/system/infrastructure/adapters/records/errors"
@@ -4414,9 +4261,6 @@
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-workflow.adapter",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
-    ],
-    "src/contexts/work-style/infrastructure/adapters/work-style-actor-read.adapter.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
     ],
     "src/contexts/work-style/interface/operations/create-work-style-preservation-decision-handlers.ts": [
       "src/contexts/system/infrastructure/adapters/records/decide-record-preservation.adapter",

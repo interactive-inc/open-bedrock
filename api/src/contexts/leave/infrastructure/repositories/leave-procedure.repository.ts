@@ -11,7 +11,7 @@ import {
   type LeaveProcedureBinding,
 } from "@/contexts/leave/domain/definitions/leave-procedure.definition"
 import type { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
+import { prepareSystemAuditEventAppend } from "@system/interface/operations/prepare-system-audit-event-append"
 import {
   SystemD1WorkflowAdapter,
   type SystemWorkflowWriter,
@@ -52,7 +52,7 @@ export class LeaveProcedureRepository {
           input.taskRound,
         ),
       ],
-      cancelEffects: new SystemAuditEventRepository(this.c).prepareAppend(input.audit),
+      cancelEffects: prepareSystemAuditEventAppend({ database: this.c.env.DB, event: input.audit }),
     }).cancel({
       number: input.binding.applicationId,
       createdByAccountId: input.actorAccountId,
@@ -147,7 +147,7 @@ export class LeaveProcedureRepository {
             input.workflow.proposal.createdAt.getTime(),
           ),
         abortWhenPreviousStatementChangedNoRows(database),
-        ...new SystemAuditEventRepository(this.c).prepareAppend(input.audit),
+        ...prepareSystemAuditEventAppend({ database: this.c.env.DB, event: input.audit }),
       ])
       if (saved.some((entry) => !entry.success)) return new Error("leave submission batch failed")
       const binding = await this.findForRequest(input.leaveRequestId)
@@ -227,7 +227,10 @@ export class LeaveProcedureRepository {
             input.attestation.proposalDigest,
           ),
       ],
-      decisionEffects: new SystemAuditEventRepository(this.c).prepareAppend(input.audit),
+      decisionEffects: prepareSystemAuditEventAppend({
+        database: this.c.env.DB,
+        event: input.audit,
+      }),
     }).decide({
       attestation: input.attestation,
       decidedAt: input.attestation.decidedAt,
@@ -306,7 +309,7 @@ export class LeaveProcedureRepository {
             input.audit.actorAccountId,
           ),
         abortWhenPreviousStatementChangedNoRows(database),
-        ...new SystemAuditEventRepository(this.c).prepareAppend(input.audit),
+        ...prepareSystemAuditEventAppend({ database: this.c.env.DB, event: input.audit }),
         ...input.notification,
       ])
       return result.every((entry) => entry.success)
@@ -400,7 +403,7 @@ export class LeaveProcedureRepository {
             input.binding.requestKey,
           ),
         abortWhenPreviousStatementChangedNoRows(database),
-        ...new SystemAuditEventRepository(this.c).prepareAppend(input.audit),
+        ...prepareSystemAuditEventAppend({ database: this.c.env.DB, event: input.audit }),
         ...input.notification,
       ],
     })

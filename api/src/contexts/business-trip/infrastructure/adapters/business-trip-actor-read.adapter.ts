@@ -2,7 +2,7 @@ import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/opera
 import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import type { BusinessTripContext } from "@/contexts/business-trip/configuration/business-trip-context"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { prepareSystemHumanOperationAuthorization } from "@system/interface/operations/prepare-system-human-operation-authorization"
 import { BusinessTripError } from "@/contexts/business-trip/domain/errors"
 
 type Context = BusinessTripContext
@@ -18,7 +18,8 @@ export class BusinessTripActorReadAdapter {
     const accountId = this.c.var.userId
     if (!Number.isSafeInteger(now.getTime()) || now.getTime() < 0)
       return new BusinessTripError("forbidden", "invalid business-trip actor")
-    const authorization = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+    const authorization = await prepareSystemHumanOperationAuthorization({
+      database: this.c.env.DB,
       accountId,
       tokenVersion: this.c.var.accountTokenVersion,
       permissions: ["business_trip:manage"],

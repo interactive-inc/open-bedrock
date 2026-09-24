@@ -6,7 +6,7 @@ import type { CompanyPersonnelSession } from "@/contexts/company/domain/definiti
 import { CompanyOperationError } from "@/contexts/company/domain/errors"
 import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/repositories/expense-procedure.repository"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { prepareSystemHumanOperationAuthorization } from "@system/interface/operations/prepare-system-human-operation-authorization"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
 import { PrepareExpenseApprovalScopeAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-approval-scope.adapter"
@@ -87,7 +87,8 @@ export class ExpenseProcedureReadAdapter {
     let canExecute = false
     let canReview = false
     if (proposal !== null && target !== null && input.session.hasPermission("expense:approve")) {
-      const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+      const human = await prepareSystemHumanOperationAuthorization({
+        database: this.c.env.DB,
         accountId: input.session.accountId,
         tokenVersion: input.tokenVersion,
         permissions: ["expense:approve"],
