@@ -5,7 +5,7 @@ import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/t
 import { CompanyGovernanceRoleAssignmentReadAdapter } from "@/contexts/governance/infrastructure/adapters/company-governance-role-assignment-read.adapter"
 import { CompanyGovernanceRoleAssignmentWriteAdapter } from "@/contexts/governance/infrastructure/adapters/company-governance-role-assignment-write.adapter"
 import { CreateRecordSourceFreeze } from "@system/application/records/create-record-source-freeze"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 import { expect, test } from "bun:test"
 
 async function fixture() {
@@ -194,7 +194,7 @@ test("取消済みの元記録をactiveとvoidの連続改訂および移行証�
   const freezeId = "24109d85-bc36-4077-809d-315717a0b07c"
   const sourceNamespace = "af0d9d64-9dd8-48d2-8e30-d67226e4d65a"
   const frozen = await new CreateRecordSourceFreeze({
-    repository: new RecordSourceFreezeRepository({ env: f.context.env, assertions: [] }),
+    repository: openSystemRecordSourceFreezes({ env: f.context.env, assertions: [] }),
   }).execute(
     {
       id: freezeId,

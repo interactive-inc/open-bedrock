@@ -1,9 +1,8 @@
-import { AttachmentObjectAdapter } from "@system/infrastructure/adapters/attachments/attachment-object.adapter"
-import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
+import { openSystemAttachmentObjects } from "@system/interface/operations/open-system-attachment-objects"
+import { openSystemAttachments } from "@system/interface/operations/open-system-attachments"
 import { UNLINKED_ATTACHMENT_RETENTION_MILLISECONDS } from "@system/domain/catalogs/attachments/unlinked-attachment-retention.catalog"
-import { systemAttachmentSchema } from "@system/infrastructure/schema/system-attachment"
+import { openSystemAttachmentDatabase } from "@system/interface/operations/open-system-attachment-database"
 import type { Bindings } from "@/env"
-import { drizzle } from "drizzle-orm/d1"
 
 /** 一回の定期起動で回収する上限。残りは次回の起動が拾う。 */
 const PURGE_LIMIT = 100
@@ -28,10 +27,10 @@ export async function runScheduledAttachmentPurge(
 
   const now = input.clock()
   const threshold = new Date(now.getTime() - UNLINKED_ATTACHMENT_RETENTION_MILLISECONDS)
-  const repository = new AttachmentAdapter({
-    var: { database: drizzle(input.env.DB, { schema: systemAttachmentSchema }) },
+  const repository = openSystemAttachments({
+    var: { database: openSystemAttachmentDatabase(input.env.DB) },
   })
-  const store = new AttachmentObjectAdapter({ env: { ATTACHMENTS: input.env.ATTACHMENTS } })
+  const store = openSystemAttachmentObjects({ env: { ATTACHMENTS: input.env.ATTACHMENTS } })
 
   const stale = await repository.listStaleUnlinked(threshold, PURGE_LIMIT, now)
   if (stale instanceof Error) return stale

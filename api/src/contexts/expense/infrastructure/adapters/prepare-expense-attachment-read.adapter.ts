@@ -1,8 +1,8 @@
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
-import { PrepareAttachmentContentReadGuardAdapter } from "@system/infrastructure/adapters/attachments/prepare-attachment-content-read-guard.adapter"
-import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/attachment.adapter"
+import { prepareSystemAttachmentContentReadGuard } from "@system/interface/operations/prepare-system-attachment-content-read-guard"
+import { openSystemAttachments } from "@system/interface/operations/open-system-attachments"
 import { PrepareExpenseRecordReadAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-record-read.adapter"
 import { NotFoundError, UnexpectedError, UnprocessableError } from "@/lib/errors"
 
@@ -28,7 +28,7 @@ export class PrepareExpenseAttachmentReadAdapter {
       return new NotFoundError("添付が見つかりません", "attachment_not_found")
     if (prepared instanceof Error) return prepared
     const evidence = prepared.view.attachments.find((row) => row.id === input.attachmentId)
-    const attachment = await new AttachmentAdapter(this.c).findById(input.attachmentId)
+    const attachment = await openSystemAttachments(this.c).findById(input.attachmentId)
     if (attachment instanceof Error)
       return new UnexpectedError("添付を固定できません", { cause: attachment })
     if (attachment === null || evidence === undefined)
@@ -50,10 +50,7 @@ export class PrepareExpenseAttachmentReadAdapter {
       assertions: (now: Date): ReadonlyArray<D1PreparedStatement> | Error => {
         const current = prepared.assertions(now)
         if (current instanceof Error) return current
-        return [
-          ...current,
-          new PrepareAttachmentContentReadGuardAdapter(this.c).prepare(attachment, now),
-        ]
+        return [...current, prepareSystemAttachmentContentReadGuard(this.c, attachment, now)]
       },
     }
   }

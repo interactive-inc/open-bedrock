@@ -6,7 +6,7 @@ import { GovernanceRoleAssignmentAdoptionSnapshotAdapter } from "@/contexts/gove
 import { GovernanceOrgRoleAssignmentAdoptionAdapter } from "@/contexts/governance/infrastructure/adapters/governance-org-role-assignment-adoption.adapter"
 import { GovernanceResponsibilityCutoverAdapter } from "@/contexts/governance/infrastructure/adapters/governance-responsibility-cutover.adapter"
 import { CreateRecordSourceFreeze } from "@system/application/records/create-record-source-freeze"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 import { expect, test } from "bun:test"
 import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
 import { loadSchema } from "@tests/api/support/load-schema"
@@ -25,7 +25,7 @@ async function fixture() {
     .bind(context.creator.accountId, context.creator.employeeId)
     .run()
   const freeze = await new CreateRecordSourceFreeze({
-    repository: new RecordSourceFreezeRepository({
+    repository: openSystemRecordSourceFreezes({
       env: context.context.env,
       assertions: [],
     }),

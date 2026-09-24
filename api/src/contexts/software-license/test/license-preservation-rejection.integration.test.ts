@@ -1,5 +1,5 @@
 import { RecordPreservationProposalValue } from "@system/domain/values/records/record-preservation-proposal.value"
-import { VerifyPreservedRecordContentAdapter } from "@system/infrastructure/adapters/records/verify-preserved-record-content.adapter"
+import { verifySystemPreservedRecordContent } from "@system/interface/operations/verify-system-preserved-record-content"
 import { drizzle } from "drizzle-orm/d1"
 import { expect, test } from "bun:test"
 import { z } from "zod"
@@ -168,10 +168,14 @@ test.each(["reject", "return"] as const)(
         at: new Date(),
       })
       if (finalization instanceof Error) throw finalization
-      const verified = await new VerifyPreservedRecordContentAdapter({
-        env: { ...fixture.f.settings.recordStorage },
-        var: { database: drizzle(fixture.f.database) },
-      }).execute(finalization.record, "pending")
+      const verified = await verifySystemPreservedRecordContent(
+        {
+          env: { ...fixture.f.settings.recordStorage },
+          var: { database: drizzle(fixture.f.database) },
+        },
+        finalization.record,
+        "pending",
+      )
       if (verified instanceof Error) throw verified
       const original = z
         .object({ license: z.object({ note: z.string().nullable() }) })

@@ -2,8 +2,8 @@ import { expect, test } from "bun:test"
 import { z } from "zod"
 import { createAttendancePreservationFixture } from "@/contexts/attendance/test/create-attendance-preservation-fixture.test-support"
 import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
-import { PreservedRecordRepository } from "@system/infrastructure/repositories/records/preserved-record.repository"
-import { PreparePreservedRecordRetentionGuardAdapter } from "@system/infrastructure/adapters/records/prepare-preserved-record-retention-guard.adapter"
+import { openSystemPreservedRecords } from "@system/interface/operations/open-system-preserved-records"
+import { prepareSystemPreservedRecordRetentionGuard } from "@system/interface/operations/prepare-system-preserved-record-retention-guard"
 
 test("保持期限ちょうどから拒否し、準備済みの検査も実時間の経過後は保存を戻す", async () => {
   const f = await createAttendancePreservationFixture()
@@ -55,19 +55,25 @@ test("保持期限ちょうどから拒否し、準備済みの検査も実時�
       })
     ).status,
   ).toBe(200)
-  const record = await new PreservedRecordRepository({ env, assertions: [] }).find(
-    receipt.record_id,
-  )
+  const record = await openSystemPreservedRecords({ env, assertions: [] }).find(receipt.record_id)
   if (record === null || record instanceof Error) throw new Error("missing receipt")
-  const adapter = new PreparePreservedRecordRetentionGuardAdapter({
+  const adapterContext = {
     env,
     assertions: [f.database.prepare("SELECT 1")],
-  })
-  const proof = await adapter.prepare(record, new Date(until - 1))
+  }
+  const proof = await prepareSystemPreservedRecordRetentionGuard(
+    adapterContext,
+    record,
+    new Date(until - 1),
+  )
   if (proof instanceof Error) throw proof
   await f.database.batch([...proof.assertions])
-  expect(await adapter.prepare(record, new Date(until))).toBeInstanceOf(Error)
-  expect(await adapter.prepare(record, new Date(until + 1))).toBeInstanceOf(Error)
+  expect(
+    await prepareSystemPreservedRecordRetentionGuard(adapterContext, record, new Date(until)),
+  ).toBeInstanceOf(Error)
+  expect(
+    await prepareSystemPreservedRecordRetentionGuard(adapterContext, record, new Date(until + 1)),
+  ).toBeInstanceOf(Error)
   await f.database.exec("CREATE TABLE retention_expiry_receipts(id TEXT PRIMARY KEY)")
   await Bun.sleep(Math.max(0, until - Date.now() + 20))
   expect(

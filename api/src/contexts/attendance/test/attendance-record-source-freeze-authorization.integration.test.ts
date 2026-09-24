@@ -1,9 +1,9 @@
 import { expect, test } from "bun:test"
 import { createAttendanceRecordSourceFixture } from "@/contexts/attendance/test/create-attendance-record-source-fixture.test-support"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
+import { prepareSystemRecordSourceFreezeAuthorization } from "@system/interface/operations/prepare-system-record-source-freeze-authorization"
 import { SystemPrincipalSecretService } from "@system/lib/auth/system-principal-secret-service"
 import { CreateRecordSourceFreeze } from "@system/application/records/create-record-source-freeze"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 test("外部IdPの再認証を受け付け、準備後のgrant取消では停止と監査を保存しない", async () => {
   const f = await createAttendanceRecordSourceFixture()
@@ -20,18 +20,20 @@ test("外部IdPの再認証を受け付け、準備後のgrant取消では停止
     VALUES ('freeze-grant','account:recorder',?1,'external_identity',?2,?3,?2)`)
     .bind(hash, now.getTime(), now.getTime() + 60_000)
     .run()
-  const adapter = new PrepareRecordSourceFreezeAuthorizationAdapter(f.context)
+  const adapterContext = f.context
   const input = { authentication: f.authentication, now, stepUpToken: raw }
-  const proof = await adapter.prepare(input)
+  const proof = await prepareSystemRecordSourceFreezeAuthorization(adapterContext, input)
   if (proof instanceof Error || proof === "forbidden") throw new Error("external step-up rejected")
   await f.database.batch([...proof.assertions])
   await f.database
     .prepare("UPDATE system_step_up_grants SET revoked_at=?1 WHERE id='freeze-grant'")
     .bind(now.getTime())
     .run()
-  expect(await adapter.prepare(input)).toBe("forbidden")
+  expect(await prepareSystemRecordSourceFreezeAuthorization(adapterContext, input)).toBe(
+    "forbidden",
+  )
   const service = new CreateRecordSourceFreeze({
-    repository: new RecordSourceFreezeRepository({
+    repository: openSystemRecordSourceFreezes({
       env: f.context.env,
       assertions: proof.assertions,
     }),
@@ -64,20 +66,22 @@ test("外部IdPの再認証を受け付け、準備後のgrant取消では停止
 
 test("閲覧権限だけの主体・機械・未使用grantを拒否し、読取でも後からの権限取消を検査する", async () => {
   const f = await createAttendanceRecordSourceFixture()
-  const adapter = new PrepareRecordSourceFreezeAuthorizationAdapter(f.context)
+  const adapterContext = f.context
   const now = new Date()
   const input = { authentication: f.authentication, now, stepUpToken: null }
-  expect(await adapter.prepare(input)).toBe("forbidden")
+  expect(await prepareSystemRecordSourceFreezeAuthorization(adapterContext, input)).toBe(
+    "forbidden",
+  )
   await f.database.exec(
     "INSERT INTO system_iam_role_permissions VALUES ('role:recorder','system:admin')",
   )
   expect(
-    await adapter.prepare({
+    await prepareSystemRecordSourceFreezeAuthorization(adapterContext, {
       ...input,
       authentication: { ...f.authentication, machineCredentialId: "machine" },
     }),
   ).toBe("forbidden")
-  const proof = await adapter.prepare(input)
+  const proof = await prepareSystemRecordSourceFreezeAuthorization(adapterContext, input)
   if (proof instanceof Error || proof === "forbidden") throw new Error("human admin read rejected")
   const raw = "b".repeat(64)
   const hash = await new SystemPrincipalSecretService().hashRawSecret(raw)
@@ -87,7 +91,12 @@ test("閲覧権限だけの主体・機械・未使用grantを拒否し、読取
     VALUES ('unused-grant','account:recorder',?1,'external_identity',?2,?3)`)
     .bind(hash, now.getTime(), now.getTime() + 60_000)
     .run()
-  expect(await adapter.prepare({ ...input, stepUpToken: raw })).toBe("forbidden")
+  expect(
+    await prepareSystemRecordSourceFreezeAuthorization(adapterContext, {
+      ...input,
+      stepUpToken: raw,
+    }),
+  ).toBe("forbidden")
   await f.database.exec(
     "DELETE FROM system_iam_role_permissions WHERE permission_key='system:admin'",
   )
