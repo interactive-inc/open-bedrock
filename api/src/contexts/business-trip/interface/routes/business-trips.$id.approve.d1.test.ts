@@ -1,24 +1,37 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { z } from "zod"
 import { seedBusinessTrips } from "@/contexts/business-trip/test/seed/seed-business-trips.test-support"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
-import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
 import { createTestToken } from "@tests/api/support/create-test-token"
-import { loadSchema } from "@tests/api/support/load-schema"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { seedD1 } from "@tests/api/support/seed-d1"
 import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
 import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
+import { type LocalD1, applyMigrations, startLocalD1 } from "@tests/d1/support/start-local-d1"
 
 const jwtSecret = "business-trip-approve-route-test-secret"
 
 const seedId = "10000000-0000-0000-0000-000000000001"
 
-async function createTestDb(): Promise<D1Database> {
-  const db = createD1TestDatabase(loadSchema())
+let local: LocalD1
 
+// 独立したローカルD1へ全migrationを適用するため、1件あたり約2秒かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1(["approve", "member", "conflict", "unauthenticated"])
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
+
+async function createTestDb(name: string): Promise<D1Database> {
+  const db = await local.database(name)
+
+  await applyMigrations(db)
   await seedCompanyEmployees(
     db,
     seedEmployees.map((employee) => ({
@@ -63,10 +76,19 @@ function tokenFor(employeeId: number): Promise<string> {
   })
 }
 
-describe("POST /business-trips/:id/approve", () => {
+function storedStatus(db: D1Database): Promise<string | null> {
+  return db
+    .prepare("SELECT status FROM business_trips WHERE id = ?1")
+    .bind(seedId)
+    .first<string>("status")
+}
+
+describe("POST /business-trips/:id/approve on local D1", () => {
   test("returns 200 and approves the trip for hr", async () => {
+    const db = await createTestDb("approve")
+
     const response = await requestWithContext({
-      db: await createTestDb(),
+      db,
       jwtSecret,
       path: `/business-trip/business-trips/${seedId}/approve`,
       token: await tokenFor(99),
@@ -82,11 +104,15 @@ describe("POST /business-trips/:id/approve", () => {
     if (parsed.success) {
       expect(parsed.data.status).toBe("approved")
     }
+
+    expect(await storedStatus(db)).toBe("approved")
   })
 
-  test("returns 403 for a member", async () => {
+  test("returns 403 for a member and leaves the trip requested", async () => {
+    const db = await createTestDb("member")
+
     const response = await requestWithContext({
-      db: await createTestDb(),
+      db,
       jwtSecret,
       path: `/business-trip/business-trips/${seedId}/approve`,
       token: await tokenFor(5),
@@ -94,10 +120,11 @@ describe("POST /business-trips/:id/approve", () => {
     })
 
     expect(response.status).toBe(403)
+    expect(await storedStatus(db)).toBe("requested")
   })
 
   test("returns 409 when approving an already-approved trip", async () => {
-    const db = await createTestDb()
+    const db = await createTestDb("conflict")
 
     const first = await requestWithContext({
       db,
@@ -118,11 +145,14 @@ describe("POST /business-trips/:id/approve", () => {
     })
 
     expect(second.status).toBe(409)
+    expect(await storedStatus(db)).toBe("approved")
   })
 
-  test("returns 401 without a bearer token", async () => {
+  test("returns 401 without a bearer token and leaves the trip requested", async () => {
+    const db = await createTestDb("unauthenticated")
+
     const response = await requestWithContext({
-      db: await createTestDb(),
+      db,
       jwtSecret,
       path: `/business-trip/business-trips/${seedId}/approve`,
       token: null,
@@ -130,5 +160,6 @@ describe("POST /business-trips/:id/approve", () => {
     })
 
     expect(response.status).toBe(401)
+    expect(await storedStatus(db)).toBe("requested")
   })
 })

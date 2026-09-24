@@ -219,7 +219,7 @@ describe("collectRegistrations", () => {
     for (const module of ROUTE_MODULE_REGISTRY) {
       const routesDirectory = resolve(import.meta.dir, `../src/${module.routesDirectory}`)
       for await (const file of new Glob("*.test.ts").scan(routesDirectory)) {
-        const source = file.replace(/\.test\.ts$/, ".ts")
+        const source = file.replace(/(?:\.d1)?\.test\.ts$/, ".ts")
         if (!existsSync(resolve(routesDirectory, source))) {
           unmatched.push(`${module.context}:${file}`)
         }
