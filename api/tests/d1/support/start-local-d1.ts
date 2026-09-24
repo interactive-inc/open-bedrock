@@ -1,6 +1,10 @@
 import { splitSqlStatements } from "@/lib/database/split-sql-statements"
 import { Miniflare } from "miniflare"
 import {
+  LOCAL_D1_WORKER_SCRIPT,
+  createLocalD1FetchClient,
+} from "@tests/d1/support/local-d1-fetch-client"
+import {
   copyFileSync,
   existsSync,
   mkdirSync,
@@ -60,6 +64,7 @@ let scratchRoot: string | null = null
  * 起動前に各DBのファイル位置へ複製して用意する。数百のmigrationをDBごとに再生せず、
  * workerdの起動もファイルごとに1回にする。
  * 複製後はtemplateと同じschema object数かを検査し、Miniflareの保存形式が変わったら失敗させる。
+ * DBへはMiniflareの同期proxyを使わず、SQLを実行するだけのWorkerへfetchで送る（local-d1-fetch-client.ts）。
  * Worker scriptは外向き通信を持たず、outboundも拒否する。
  */
 export async function startLocalD1(databases: LocalD1Databases): Promise<LocalD1> {
@@ -106,8 +111,7 @@ export async function startLocalD1(databases: LocalD1Databases): Promise<LocalD1
   return {
     database: async (name) => {
       if (!(name in ids)) throw new Error(`local D1 "${name}" was not declared in startLocalD1`)
-      // Miniflare の D1Database は workers-types と同形の別宣言のため、境界で一度だけ読み替える。
-      const database = (await runtime.getD1Database(name)) as unknown as D1Database
+      const database = createLocalD1FetchClient(runtime, name)
       if (migratedNames.has(name) && !verified.has(name)) {
         await verifyCopy(name, database)
         verified.add(name)
@@ -125,14 +129,17 @@ function slotIdFor(index: number): string {
   return `local-d1-test-migrated-slot-${index}`
 }
 
-/** workerd の起動が失敗した時に作り直す回数。 */
+/** workerd の起動が失敗した時、または止まった時に作り直す回数。 */
 const RUNTIME_START_ATTEMPTS = 3
+
+/** 起動が止まったと見なすまでの時間。通常の起動は1秒前後で終わる。 */
+const RUNTIME_START_STALL_MS = 15_000
 
 /**
  * 1プロセスで多数のファイルを流すと、Bunが workerd を起動する子プロセスのpipeで
- * EBADF や ENOENT を返し、起動が失敗することがある。その失敗に限って起動を作り直す。
- * 作り直しは毎回新しいディレクトリを使い、失敗した起動のworkerdとDBファイルを共有しない。
- * 起動が遅いだけの場合は待ち続け、同じDBファイルへ2つのworkerdを向けない。
+ * EBADF や ENOENT を返し、起動が失敗するか、完了しないまま止まることがある。その場合に起動を作り直す。
+ * 作り直しは毎回新しいディレクトリを使い、止まった起動のworkerdが後から動き出しても、
+ * 同じDBファイルへ2つのworkerdを向けない。
  */
 async function startRuntime(
   preparePersist: () => string,
@@ -141,22 +148,38 @@ async function startRuntime(
   for (let attempt = 1; ; attempt++) {
     const persist = preparePersist()
     const runtime = createRuntime(persist, d1Databases)
+    const startedAt = performance.now()
+    let timer: ReturnType<typeof setTimeout> | undefined
+    const stalled = new Promise<"stalled">((resolve) => {
+      timer = setTimeout(() => resolve("stalled"), RUNTIME_START_STALL_MS)
+    })
+    let failure: unknown
     try {
-      await runtime.ready
-      return { runtime, persist }
+      const started = await Promise.race([runtime.ready.then(() => "ready" as const), stalled])
+      if (started === "ready") return { runtime, persist }
+      failure = new Error(`local D1 runtime did not start within ${RUNTIME_START_STALL_MS}ms`)
+      // 止まった起動の停止は起動の完了を待つことがあるため、待たずに捨てる。
+      void runtime.dispose().catch(() => undefined)
     } catch (error) {
-      console.warn(`local D1 runtime failed to start (attempt ${attempt}):`, error)
+      failure = error
       await runtime.dispose().catch(() => undefined)
       rmSync(persist, { recursive: true, force: true })
-      if (attempt >= RUNTIME_START_ATTEMPTS) throw error
+    } finally {
+      clearTimeout(timer)
     }
+    const elapsed = Math.round(performance.now() - startedAt)
+    console.warn(
+      `local D1 runtime failed to start after ${elapsed}ms (attempt ${attempt}):`,
+      failure,
+    )
+    if (attempt >= RUNTIME_START_ATTEMPTS) throw failure
   }
 }
 
 function createRuntime(persist: string, d1Databases: Record<string, string>): Miniflare {
   return new Miniflare({
     modules: true,
-    script: "export default {}",
+    script: LOCAL_D1_WORKER_SCRIPT,
     resourcePersistencePath: persist,
     d1Databases,
     outboundService: () => new Response("outbound is disabled in local D1 tests", { status: 503 }),
@@ -187,13 +210,14 @@ function buildTemplate(): Promise<Template> {
     let objectCount: number
     const slotFiles: string[] = []
     try {
-      const database = (await runtime.getD1Database(TEMPLATE_BINDING)) as unknown as D1Database
+      await runtime.ready
+      const database = createLocalD1FetchClient(runtime, TEMPLATE_BINDING)
       await applyMigrations(database)
       objectCount = await countSchemaObjects(database)
       // 枠のDBを1つずつ開き、Miniflareが作ったファイル名を記録する。ファイル名はidから決まる。
       for (const index of slots.keys()) {
         const before = new Set(databaseFiles(objectDirectory))
-        const slot = (await runtime.getD1Database(`SLOT_${index}`)) as unknown as D1Database
+        const slot = createLocalD1FetchClient(runtime, `SLOT_${index}`)
         await slot.prepare("SELECT 1").run()
         const created = databaseFiles(objectDirectory).filter((file) => !before.has(file))
         const file = created.at(0)
