@@ -63,12 +63,12 @@ function tokenFor(employeeId: number): Promise<string> {
 }
 
 describe("POST /family-care-leaves/:id/approve", () => {
-  test("returns 200 and approves the leave for hr", async () => {
+  test("returns 200 and approves the leave for the applicant's manager", async () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
       path: `/family-care-leave/family-care-leaves/${seedId}/approve`,
-      token: await tokenFor(99),
+      token: await tokenFor(1),
       method: "POST",
     })
 
@@ -102,7 +102,7 @@ describe("POST /family-care-leaves/:id/approve", () => {
       db,
       jwtSecret,
       path: `/family-care-leave/family-care-leaves/${seedId}/approve`,
-      token: await tokenFor(99),
+      token: await tokenFor(1),
       method: "POST",
     })
 
@@ -112,7 +112,7 @@ describe("POST /family-care-leaves/:id/approve", () => {
       db,
       jwtSecret,
       path: `/family-care-leave/family-care-leaves/${seedId}/approve`,
-      token: await tokenFor(99),
+      token: await tokenFor(1),
       method: "POST",
     })
 

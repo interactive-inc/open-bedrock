@@ -201,6 +201,7 @@ export class ThanksRedemptionRepository {
     rewardId: number
     deciderId: EmployeeId
     decidedAt: string
+    guards: ReadonlyArray<D1PreparedStatement>
   }): Promise<ThanksRedemption | null | Error> {
     try {
       const db = this.c.env.DB
@@ -208,6 +209,7 @@ export class ThanksRedemptionRepository {
 
       try {
         const results = await db.batch([
+          ...props.guards,
           db
             .prepare(
               "UPDATE thanks_rewards SET stock = stock - 1 WHERE id = ?1 AND stock IS NOT NULL AND stock > 0",
@@ -257,9 +259,11 @@ export class ThanksRedemptionRepository {
           abortWhenPreviousStatementChangedNoRows(db),
         ])
 
-        approveResult = results.at(1)
+        approveResult = results.at(props.guards.length + 1)
       } catch (error) {
         if (isAbortedByGuard(error)) {
+          if (await this.companyAuthorityChanged(props.guards))
+            return new Error("company authority changed before saving", { cause: error })
           return null
         }
         return error instanceof Error ? error : new Error("failed to approve thanks redemption")
@@ -277,30 +281,64 @@ export class ThanksRedemptionRepository {
     }
   }
 
-  /** 却下を pending からの条件付き UPDATE で原子的に行う。0 行更新は既に決裁済み。 */
+  /**
+   * 却下を pending からの条件付き UPDATE で原子的に行う。判断資格の検査文と同じbatchで確定し、
+   * 0 行更新は既に決裁済み。
+   */
   async rejectFromPending(props: {
     redemptionId: number
     deciderId: EmployeeId
     decidedAt: string
+    guards: ReadonlyArray<D1PreparedStatement>
   }): Promise<ThanksRedemption | null | Error> {
     try {
-      const rows = await this.c.var.database
-        .update(thanksRedemptions)
-        .set({ status: "rejected", decidedAt: props.decidedAt, deciderId: props.deciderId })
-        .where(
-          and(
-            eq(thanksRedemptions.id, props.redemptionId),
-            eq(thanksRedemptions.status, "pending"),
-          ),
-        )
-        .returning()
+      const db = this.c.env.DB
+      const results = await db.batch([
+        ...props.guards,
+        db
+          .prepare(
+            `UPDATE thanks_redemptions
+             SET status = 'rejected', decided_at = ?2, decider_id = ?3
+             WHERE id = ?1 AND status = 'pending'
+             RETURNING
+               id,
+               employee_id AS employeeId,
+               reward_id AS rewardId,
+               point_cost AS pointCost,
+               status,
+               created_at AS createdAt,
+               decided_at AS decidedAt,
+               decider_id AS deciderId`,
+          )
+          .bind(props.redemptionId, props.decidedAt, props.deciderId),
+      ])
 
-      const row = rows.at(0)
+      const row = parseD1Row(results.at(-1), thanksRedemptionD1RowSchema)
 
-      return row === undefined ? null : ThanksRedemption.fromRow(row)
+      if (row instanceof Error) {
+        return row
+      }
+
+      return row === undefined ? null : new ThanksRedemption(row)
     } catch (error) {
+      if (isAbortedByGuard(error) && (await this.companyAuthorityChanged(props.guards)))
+        return new Error("company authority changed before saving", { cause: error })
       return error instanceof Error ? error : new Error("failed to reject thanks redemption")
     }
+  }
+
+  /** batch中止後に、判断資格の検査文だけを再評価してCompany状態の変更による中止かを判別する。 */
+  private async companyAuthorityChanged(
+    guards: ReadonlyArray<D1PreparedStatement>,
+  ): Promise<boolean> {
+    for (const guard of guards) {
+      try {
+        await guard.first()
+      } catch {
+        return true
+      }
+    }
+    return false
   }
 
   async findByEmployee(props: {

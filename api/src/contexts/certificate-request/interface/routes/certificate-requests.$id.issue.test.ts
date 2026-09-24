@@ -63,12 +63,12 @@ function tokenFor(employeeId: number): Promise<string> {
 }
 
 describe("POST /certificate-requests/:id/issue", () => {
-  test("returns 200 and issues the request for hr", async () => {
+  test("returns 200 and issues the request for the applicant's manager", async () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
       path: `/certificate-request/certificate-requests/${seedId}/issue`,
-      token: await tokenFor(99),
+      token: await tokenFor(1),
       method: "POST",
     })
 
@@ -102,7 +102,7 @@ describe("POST /certificate-requests/:id/issue", () => {
       db,
       jwtSecret,
       path: `/certificate-request/certificate-requests/${seedId}/issue`,
-      token: await tokenFor(99),
+      token: await tokenFor(1),
       method: "POST",
     })
 
@@ -112,7 +112,7 @@ describe("POST /certificate-requests/:id/issue", () => {
       db,
       jwtSecret,
       path: `/certificate-request/certificate-requests/${seedId}/issue`,
-      token: await tokenFor(99),
+      token: await tokenFor(1),
       method: "POST",
     })
 
@@ -124,7 +124,7 @@ describe("POST /certificate-requests/:id/issue", () => {
       db: await createTestDb(),
       jwtSecret,
       path: "/certificate-request/certificate-requests/99999999-0000-0000-0000-000000000000/issue",
-      token: await tokenFor(99),
+      token: await tokenFor(1),
       method: "POST",
     })
 

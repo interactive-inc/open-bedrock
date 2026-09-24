@@ -84,14 +84,14 @@ function storedStatus(db: D1Database): Promise<string | null> {
 }
 
 describe("POST /business-trips/:id/approve on local D1", () => {
-  test("returns 200 and approves the trip for hr", async () => {
+  test("returns 200 and approves the trip for the traveler's manager", async () => {
     const db = await createTestDb("approve")
 
     const response = await requestWithContext({
       db,
       jwtSecret,
       path: `/business-trip/business-trips/${seedId}/approve`,
-      token: await tokenFor(99),
+      token: await tokenFor(1),
       method: "POST",
     })
 
@@ -130,7 +130,7 @@ describe("POST /business-trips/:id/approve on local D1", () => {
       db,
       jwtSecret,
       path: `/business-trip/business-trips/${seedId}/approve`,
-      token: await tokenFor(99),
+      token: await tokenFor(1),
       method: "POST",
     })
 
@@ -140,7 +140,7 @@ describe("POST /business-trips/:id/approve on local D1", () => {
       db,
       jwtSecret,
       path: `/business-trip/business-trips/${seedId}/approve`,
-      token: await tokenFor(99),
+      token: await tokenFor(1),
       method: "POST",
     })
 

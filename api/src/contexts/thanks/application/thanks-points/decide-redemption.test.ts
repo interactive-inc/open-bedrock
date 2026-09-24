@@ -70,7 +70,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
   })
 
   test("allows admin to reject a redemption", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const repository = new ThanksRedemptionRepository(context)
 
@@ -95,7 +95,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
   })
 
   test("allows hr to reject a redemption", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const repository = new ThanksRedemptionRepository(context)
 

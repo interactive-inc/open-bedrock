@@ -5,6 +5,8 @@ import type { ApplicationError } from "@/lib/errors"
 import type { ShiftSwapRequest } from "@/contexts/shift/domain/entities/shift-swap-request.entity"
 import type { Context as HonoContext } from "@/env"
 import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
+import { isCompanyWriteAbortedByGuard } from "@/contexts/company/interface/operations/is-company-write-aborted-by-guard"
+import { ShiftSwapDecisionAuthorityAdapter } from "@/contexts/shift/infrastructure/adapters/shift-swap-decision-authority.adapter"
 import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/repositories/shift-swap-request.repository"
 
 export type Input = {
@@ -28,7 +30,7 @@ type Context = Readonly<{
 }>
 
 /**
- * 権限を確認し、保留中のシフト交代申請を承認する。
+ * 技術的権限と、申請者・交代相手の両方に対するCompany上の管理範囲を確認し、保留中のシフト交代申請を承認する。
  * 承認時に両者のシフト割当の pattern_id をアトミックに入れ替え、両者へ通知を送る。
  */
 export class ApproveShiftSwapRequest {
@@ -100,15 +102,31 @@ export class ApproveShiftSwapRequest {
     //
     // 各割当の UPDATE にも楽観ロック（AND pattern_id = ?expected）を付けて、同一社員が
     // 同日に複数の交換申請を持つ場合の並行承認で lost update を防ぐ。
+    const authority = await new ShiftSwapDecisionAuthorityAdapter(this.c.context).prepare({
+      session: input.session,
+      subjectEmployeeIds: [swapRequest.requesterEmployeeId, swapRequest.targetEmployeeId],
+    })
+
+    if (authority instanceof Error) {
+      return new ForbiddenError(authority.message, authority.code, { cause: authority })
+    }
+
     const approved = swapRequest.withApproved(input.approvedAt)
 
     const persisted = await swapRequestRepository.approveWithAssignmentSwap({
       approved,
       requesterAssignment,
       targetAssignment,
+      guards: authority.guards,
     })
 
     if (persisted instanceof Error) {
+      if (isCompanyWriteAbortedByGuard(persisted))
+        return new ConflictError(
+          "company authority changed before saving",
+          "company_authority_changed",
+          { cause: persisted },
+        )
       return new UnexpectedError("failed to swap shift assignments", { cause: persisted })
     }
 

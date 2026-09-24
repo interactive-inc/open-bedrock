@@ -289,7 +289,7 @@ describe("RequestRedemption", () => {
 
 describe("ApproveRedemption / RejectRedemption", () => {
   test("approves a pending redemption and decrements stock", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     await seedBalance(context, toWorkforceEmployeeId(5), 100)
 
@@ -329,7 +329,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
   })
 
   test("returns out_of_stock when stock is consumed between request and approve", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     await seedBalance(context, toWorkforceEmployeeId(5), 100)
     await seedBalance(context, toWorkforceEmployeeId(6), 100)
@@ -388,7 +388,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
   })
 
   test("rejects a pending redemption", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     await seedBalance(context, toWorkforceEmployeeId(5), 100)
 
@@ -419,7 +419,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
   })
 
   test("returns self_approval_forbidden for self-decide", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     await seedBalance(context, toWorkforceEmployeeId(5), 100)
 
@@ -446,7 +446,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
   })
 
   test("returns redemption_not_found for unknown id", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     const result = await new ApproveRedemption(context).execute({
       session: makeTestSession("root"),
@@ -459,7 +459,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
   })
 
   test("returns already_decided for a fulfilled redemption", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     await seedBalance(context, toWorkforceEmployeeId(5), 100)
 
@@ -495,7 +495,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
   })
 
   test("returns insufficient_balance when balance is consumed between request and approve", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createTestContext({ withCompanyOrganization: true })
 
     // 残高 50 ぴったりで申請（申請の pending で 50 が引かれる）
     await seedBalance(context, toWorkforceEmployeeId(5), 50)
