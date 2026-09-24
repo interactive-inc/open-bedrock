@@ -72,6 +72,15 @@
     "src/api/routes/company.personnel-action-requests.test.ts": [
       "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
     ],
+    "src/api/scheduled/run-attachment-purge.d1.test.ts": [
+      "src/contexts/system/infrastructure/adapters/attachments/attachment.adapter",
+      "src/contexts/system/infrastructure/schema/system-attachment"
+    ],
+    "src/api/scheduled/run-attachment-purge.ts": [
+      "src/contexts/system/infrastructure/adapters/attachments/attachment-object.adapter",
+      "src/contexts/system/infrastructure/adapters/attachments/attachment.adapter",
+      "src/contexts/system/infrastructure/schema/system-attachment"
+    ],
     "src/contexts/announcement/application/create-announcement-retirement-plan.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
     ],
