@@ -1,3 +1,5 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /** 取引先の分類。POST /partners の category enum と一致させる。 */
 export type PartnerCategory = "customer" | "supplier" | "other"
 
@@ -6,7 +8,7 @@ export type PartnerStatus = "active" | "archived"
 
 /** GET /partners・GET /partners/:code の各要素（取引先。API は snake_case で返す）。 */
 export type PartnerResponse = {
-  id: number
+  id: EntityId
   code: string
   name: string
   category: string | null

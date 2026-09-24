@@ -1,9 +1,10 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { SubmitSurveyResponseRequest } from "@/lib/api/types/survey-types"
 
 /** アンケート回答を送信する。POST /surveys/:surveyId/responses。 */
-export async function submitSurveyResponse(surveyId: number, body: SubmitSurveyResponseRequest) {
+export async function submitSurveyResponse(surveyId: EntityId, body: SubmitSurveyResponseRequest) {
   const client = await createClient()
 
   const response = await client["survey"]["surveys"][":surveyId"].responses.$post({

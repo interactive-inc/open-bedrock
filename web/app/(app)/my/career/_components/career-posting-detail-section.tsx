@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { notFound } from "next/navigation"
 import { CareerPostingApplyForm } from "@/app/(app)/my/career/_components/career-posting-apply-form"
 import { PostingManagement } from "@/app/(app)/my/career/_components/posting-management"
@@ -10,7 +11,7 @@ import type { CareerPosting } from "@/lib/api/types/career-types"
 import { toPostingDepartmentLabel } from "@/app/(app)/my/career/_lib/to-posting-department-label"
 
 type Props = {
-  postingId: number
+  postingId: EntityId
   canManage: boolean
 }
 
@@ -20,7 +21,10 @@ function toPostingStatus(value: string): "open" | "closed" {
 }
 
 /** 1 件の公募を取得する。管理ロールは詳細 API（締切も含む）、それ以外は一覧から id で絞り込む。 */
-async function loadPosting(postingId: number, canManage: boolean): Promise<CareerPosting | Error> {
+async function loadPosting(
+  postingId: EntityId,
+  canManage: boolean,
+): Promise<CareerPosting | Error> {
   if (canManage) {
     return getCareerPosting(postingId)
   }
@@ -31,7 +35,7 @@ async function loadPosting(postingId: number, canManage: boolean): Promise<Caree
     return postings
   }
 
-  const found = postings.find((row) => row.id === postingId)
+  const found = postings.find((row) => String(row.id) === String(postingId))
 
   if (found === undefined) {
     return new Error("posting not found")

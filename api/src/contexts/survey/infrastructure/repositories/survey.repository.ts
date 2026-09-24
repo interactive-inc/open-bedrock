@@ -198,22 +198,23 @@ export class SurveyRepository {
     try {
       const answersJsonStr = JSON.stringify(response.answersJson)
 
-      const result = await this.c.var.database.run(
+      const inserted = await this.c.var.database.all<{ id: number }>(
         sql`INSERT INTO survey_responses (survey_id, respondent_id, answers_json, submitted_at)
             SELECT ${response.surveyId}, ${response.respondentId}, ${answersJsonStr}, ${response.submittedAt}
-            WHERE EXISTS (SELECT 1 FROM surveys WHERE id = ${response.surveyId} AND status = 'open')`,
+            WHERE EXISTS (SELECT 1 FROM surveys WHERE id = ${response.surveyId} AND status = 'open')
+            RETURNING id`,
       )
 
-      if (result.meta.changes === 0) {
+      const insertedId = inserted.at(0)?.id
+
+      if (insertedId === undefined) {
         return { reason: "survey_not_open" }
       }
-
-      const lastId = Number(result.meta.last_row_id)
 
       const rows = await this.c.var.database
         .select()
         .from(surveyResponses)
-        .where(eq(surveyResponses.id, lastId))
+        .where(eq(surveyResponses.id, insertedId))
         .limit(1)
 
       const row = rows.at(0)

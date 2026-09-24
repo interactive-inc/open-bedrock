@@ -1,3 +1,4 @@
+import { toEntityId } from "@/lib/form/to-entity-id"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { SurveyAnswerForm } from "@/app/(app)/survey/surveys/[survey]/_components/survey-answer-form"
@@ -24,9 +25,9 @@ type Props = {
 export default async function SurveyAnswerPage(props: Props) {
   const routeParams = await props.params
 
-  const surveyId = Number(routeParams.survey)
+  const surveyId = toEntityId(routeParams.survey)
 
-  if (!Number.isInteger(surveyId)) {
+  if (surveyId === null) {
     notFound()
   }
 

@@ -6,7 +6,7 @@ import { publishAnnouncement } from "@/lib/api/publish-announcement"
 import { archiveAnnouncement } from "@/lib/api/archive-announcement"
 import { getMe } from "@/lib/api/get-me"
 import { canManageAnnouncements } from "@/lib/announcement/can-manage-announcements"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 
 export type AnnouncementActionState = {
   ok: boolean
@@ -54,7 +54,7 @@ export async function publishAnnouncementAction(
     return { ok: false, error: "アナウンスを管理する権限がありません" }
   }
 
-  const announcementId = toPositiveIntId(formData.get("announcement_id"))
+  const announcementId = toEntityId(formData.get("announcement_id"))
 
   if (announcementId === null) {
     return { ok: false, error: "アナウンスを特定できませんでした" }
@@ -84,7 +84,7 @@ export async function archiveAnnouncementAction(
     return { ok: false, error: "アナウンスを管理する権限がありません" }
   }
 
-  const announcementId = toPositiveIntId(formData.get("announcement_id"))
+  const announcementId = toEntityId(formData.get("announcement_id"))
 
   if (announcementId === null) {
     return { ok: false, error: "アナウンスを特定できませんでした" }

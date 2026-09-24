@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { formatDateTime } from "@/lib/format-date-time"
 import Link from "next/link"
 import { EmptyState } from "@/components/empty-state"
@@ -16,7 +17,7 @@ import type { LeaveAdminSort } from "@/lib/api/get-leave-admin-list"
 import type { LeaveStatus, LeaveType } from "@/lib/api/types/leave-types"
 
 export type LeaveAdminRow = {
-  id: number
+  id: EntityId
   applicant_id: string
   applicant_name: string
   applicant_dept_name: string | null

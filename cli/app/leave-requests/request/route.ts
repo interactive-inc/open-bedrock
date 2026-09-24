@@ -24,7 +24,7 @@ export default factory.createHandlers(
     "json",
     z.object({
       help: z.string().optional(),
-      "previous-leave-request-id": z.coerce.number().int().positive().safe().optional(),
+      "previous-leave-request-id": z.string().optional(),
       type: z.enum(LEAVE_TYPES).optional(),
       start: z.string().optional(),
       end: z.string().optional(),
@@ -42,11 +42,21 @@ export default factory.createHandlers(
 
     if (!query.start || !query.end) throw new UsageError("--start と --end が必要です")
 
+    // APIは差戻し元をまだ整数で受け取るため、送信直前にだけ数値へ変換する。
+    const previous = z.coerce
+      .number()
+      .int()
+      .positive()
+      .safe()
+      .nullable()
+      .safeParse(query["previous-leave-request-id"] ?? null)
+    if (!previous.success) throw new UsageError("差戻し元の番号が不正です")
+
     const client = await createClient()
 
     const response = await client["leave"]["leave-requests"].$post({
       json: {
-        previous_leave_request_id: query["previous-leave-request-id"] ?? null,
+        previous_leave_request_id: previous.data,
         leave_type: query.type,
         start_date: query.start,
         end_date: query.end,

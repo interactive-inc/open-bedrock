@@ -15,7 +15,7 @@ import {
 } from "@/lib/api/update-lifecycle-template-binding"
 import { removeLifecycleTemplateBinding } from "@/lib/api/remove-lifecycle-template-binding"
 import type { OnboardingKind } from "@/lib/api/types/onboarding-types"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { canManageOnboarding } from "@/lib/onboarding/can-manage-onboarding"
 import { requireAuth } from "@/lib/auth/require-auth"
 
@@ -87,7 +87,7 @@ export async function completeOnboardingTaskAction(
     return { ok: false, message: "タスクが不明です" }
   }
 
-  const taskId = toPositiveIntId(rawTaskId)
+  const taskId = toEntityId(rawTaskId)
 
   if (taskId === null) {
     return { ok: false, message: "タスクIDが不正です" }
@@ -122,7 +122,7 @@ export async function uncompleteOnboardingTaskAction(
     return { ok: false, message: "タスクが不明です" }
   }
 
-  const taskId = toPositiveIntId(rawTaskId)
+  const taskId = toEntityId(rawTaskId)
 
   if (taskId === null) {
     return { ok: false, message: "タスクIDが不正です" }
@@ -171,7 +171,7 @@ export async function rescheduleOnboardingAssignmentAction(
     return { ok: false, message: "割り当てを特定できませんでした" }
   }
 
-  const assignmentId = toPositiveIntId(rawId)
+  const assignmentId = toEntityId(rawId)
 
   if (assignmentId === null) {
     return { ok: false, message: "割り当てIDが不正です" }
@@ -218,7 +218,7 @@ export async function cancelOnboardingAssignmentAction(
     return { ok: false, message: "割り当てを特定できませんでした" }
   }
 
-  const assignmentId = toPositiveIntId(rawId)
+  const assignmentId = toEntityId(rawId)
 
   if (assignmentId === null) {
     return { ok: false, message: "割り当てIDが不正です" }

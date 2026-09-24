@@ -14,7 +14,7 @@ import { canManageCareerPostings } from "@/lib/career/can-manage-career-postings
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 import { toOptionalText } from "@/lib/form/to-optional-text"
 import { toRequiredText } from "@/lib/form/to-required-text"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 
 export type CareerSheetFormState = {
   ok: boolean
@@ -80,7 +80,7 @@ export async function applyCareerPostingAction(
 ): Promise<CareerApplyFormState> {
   await requireAuth()
 
-  const postingId = toPositiveIntId(formData.get("posting_id"))
+  const postingId = toEntityId(formData.get("posting_id"))
 
   if (postingId === null) {
     return { ok: false, error: "公募が不正です" }
@@ -118,7 +118,7 @@ export async function updateCareerApplicationAction(
 ): Promise<CareerApplicationActionState> {
   await requireAuth()
 
-  const applicationId = toPositiveIntId(formData.get("application_id"))
+  const applicationId = toEntityId(formData.get("application_id"))
 
   if (applicationId === null) {
     return { ok: false, error: "応募を特定できませんでした" }
@@ -154,7 +154,7 @@ export async function withdrawCareerApplicationAction(
 ): Promise<CareerApplicationActionState> {
   await requireAuth()
 
-  const applicationId = toPositiveIntId(formData.get("application_id"))
+  const applicationId = toEntityId(formData.get("application_id"))
 
   if (applicationId === null) {
     return { ok: false, error: "応募を特定できませんでした" }
@@ -236,7 +236,7 @@ export async function updateCareerPostingAction(
     return { ok: false, error: "公募を管理する権限がありません" }
   }
 
-  const postingId = toPositiveIntId(formData.get("posting_id"))
+  const postingId = toEntityId(formData.get("posting_id"))
 
   if (postingId === null) {
     return { ok: false, error: "公募を特定できませんでした" }
@@ -290,7 +290,7 @@ export async function deleteCareerPostingAction(
     return { ok: false, error: "公募を管理する権限がありません" }
   }
 
-  const postingId = toPositiveIntId(formData.get("posting_id"))
+  const postingId = toEntityId(formData.get("posting_id"))
 
   if (postingId === null) {
     return { ok: false, error: "公募を特定できませんでした" }

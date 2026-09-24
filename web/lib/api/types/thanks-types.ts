@@ -1,7 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /** GET /thanks-messages の各要素・POST /thanks-messages のレスポンス（感謝のタイムライン要素）。 */
 export type ThanksResponse = {
   // 作成系は insert 直後の autoincrement id（number | null）を返す。
-  id: number | null
+  id: EntityId | null
   sender_employee_id: string
   sender_name: string
   recipient_employee_id: string

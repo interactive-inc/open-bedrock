@@ -239,8 +239,8 @@ test("キー・確認版・割当ID・理由の欠落や不正入力ではAPIを
     ["cancel", "8", "--expected-revision", "1.5"],
     ["cancel", "8", "--expected-revision", "9007199254740992"],
     ["get"],
-    ["get", "9007199254740992"],
-    ["history", "0"],
+    ["get", "..%2Fadmin"],
+    ["history", "8.1"],
     ["assign", "8", "--employee-id", "employee:one", "--reason", "Confirmed"],
     ["assign", "8", "--assignment-id", assignmentId, "--reason", "Confirmed"],
     ["assign", "8", "--assignment-id", assignmentId, "--employee-id", "employee:one"],
@@ -273,4 +273,13 @@ test("全コマンドのhelpは認証や通信なしで読める", async () => {
   }
   expect(await (await run()).text()).toContain("--expected-revision")
   expect(requests).toHaveLength(0)
+})
+
+test("UUIDのライセンスIDもpathへそのまま渡す", async () => {
+  const licenseId = "0b7a3c1e-2f4d-4e5a-9b8c-7d6e5f4a3b2c"
+  responses.push(Response.json({ id: licenseId, revision: 0 }))
+  expect((await run("get", licenseId)).status).toBe(200)
+  expect(new URL(requests[0]!.url).pathname).toBe(
+    `/software-license/software-licenses/${licenseId}`,
+  )
 })

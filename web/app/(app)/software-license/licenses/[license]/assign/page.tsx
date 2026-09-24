@@ -1,5 +1,6 @@
 import Link from "next/link"
 import { z } from "zod"
+import { ENTITY_ID_PATTERN } from "@/lib/form/to-entity-id"
 import { notFound } from "next/navigation"
 import { AssignmentForm } from "@/app/(app)/software-license/licenses/[license]/_components/assignment-form"
 import { BackButton } from "@/components/back-button"
@@ -25,12 +26,12 @@ export default async function LicenseAssignmentPage(props: Props) {
   if (viewer instanceof Error || !canManageLicenses(viewer.permissions)) notFound()
   const params = await props.params
   const query = await props.searchParams
-  const id = Number(params.license)
+  const id = params.license
   const offset = Number(query.offset ?? "0")
   const search = query.q?.trim() ?? ""
   const location = z
     .object({
-      id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+      id: z.string().regex(ENTITY_ID_PATTERN),
       offset: z.number().int().min(0).max(10000),
       search: z.string().max(200),
     })

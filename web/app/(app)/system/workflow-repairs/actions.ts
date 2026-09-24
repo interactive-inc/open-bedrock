@@ -6,6 +6,7 @@ import { canManageWorkflowRepairs } from "@/lib/application/can-manage-workflow-
 import { ApiResponseError } from "@/lib/api/api-response-error"
 import { getMe } from "@/lib/api/get-me"
 import { reassignWorkflowStep } from "@/lib/api/reassign-workflow-step"
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
 
 export type WorkflowRepairState = { ok: boolean; error: string | null }
@@ -20,7 +21,7 @@ export async function reassignWorkflowStepAction(
     return { ok: false, error: "承認フローを修復する権限がありません" }
   }
 
-  const applicationId = toPositiveIntId(formData.get("application_id"))
+  const applicationId = toEntityId(formData.get("application_id"))
   const rawCandidates = formData.get("candidate_employee_ids")
   const rawRequiredApprovals = formData.get("required_approvals")
   const rawReason = formData.get("reason")

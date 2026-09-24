@@ -118,7 +118,7 @@ export class RecruitmentRepository {
         .select()
         .from(recruitmentCandidates)
         .where(eq(recruitmentCandidates.positionId, props.positionId))
-        .orderBy(asc(recruitmentCandidates.id))
+        .orderBy(asc(recruitmentCandidates.createdAt), asc(recruitmentCandidates.id))
         .limit(props.limit)
         .offset(props.offset)
 

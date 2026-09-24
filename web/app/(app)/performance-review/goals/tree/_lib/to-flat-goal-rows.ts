@@ -1,7 +1,8 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import type { GoalTreeNode } from "@/app/(app)/performance-review/goals/tree/_lib/goal-tree-types"
 
 export type FlatGoalRow = {
-  id: number
+  id: EntityId
   depth: number
   title: string
   ownerType: GoalTreeNode["owner_type"]

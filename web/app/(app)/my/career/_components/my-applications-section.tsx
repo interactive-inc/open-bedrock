@@ -13,10 +13,12 @@ export async function MyApplicationsSection() {
 
   const postings = await getCareerPostings()
 
-  const postingTitleMap: Record<number, string> =
+  const postingTitleMap: Record<string, string> =
     postings instanceof Error
       ? {}
-      : Object.fromEntries(postings.filter((p) => p.id !== null).map((p) => [p.id, p.title]))
+      : Object.fromEntries(
+          postings.filter((p) => p.id !== null).map((p) => [String(p.id), p.title]),
+        )
 
   return <MyApplicationsList applications={applications} postingTitleMap={postingTitleMap} />
 }

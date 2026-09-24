@@ -1,5 +1,6 @@
 "use server"
 
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { revalidatePath } from "next/cache"
 import { createCalendarDay } from "@/lib/api/create-calendar-day"
 import { deleteCalendarDay } from "@/lib/api/delete-calendar-day"
@@ -58,9 +59,9 @@ export async function deleteCalendarDayAction(
 ): Promise<CalendarActionState> {
   const idValue = formData.get("id")
 
-  const id = typeof idValue === "string" ? Number(idValue) : Number.NaN
+  const id = toEntityId(idValue)
 
-  if (Number.isInteger(id) === false || id <= 0) {
+  if (id === null) {
     return { ok: false, error: "削除対象が不正です" }
   }
 

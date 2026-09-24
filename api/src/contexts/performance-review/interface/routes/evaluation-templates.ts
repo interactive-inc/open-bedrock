@@ -134,7 +134,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select()
     .from(evaluationTemplates)
     .where(where)
-    .orderBy(asc(evaluationTemplates.id))
+    .orderBy(asc(evaluationTemplates.createdAt), asc(evaluationTemplates.id))
     .limit(limit)
     .offset(offset)
 

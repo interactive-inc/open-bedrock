@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { useRouter } from "next/navigation"
 import { deleteCommendationAction } from "@/app/(app)/commendation/commendations/actions"
@@ -9,7 +10,7 @@ import { Button } from "@/components/ui/button"
 const initialState: CommendationActionState = { ok: false, error: null }
 
 type Props = {
-  id: number
+  id: EntityId
 }
 
 /**

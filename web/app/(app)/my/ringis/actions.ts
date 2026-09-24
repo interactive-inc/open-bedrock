@@ -7,7 +7,7 @@ import { revalidatePath } from "next/cache"
 import { approveRingi } from "@/lib/api/approve-ringi"
 import { rejectRingi } from "@/lib/api/reject-ringi"
 import { submitRingi } from "@/lib/api/submit-ringi"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { toRequiredText } from "@/lib/form/to-required-text"
 
 export type RingiSubmitFormState = {
@@ -63,8 +63,8 @@ export async function submitRingiAction(
     return { ok: false, error: "提出の識別子がありません。画面を読み直してください" }
   const created = await submitRingi({
     request_key: requestKey,
-    existing_ringi_id: toPositiveIntId(formData.get("existing_ringi_id")),
-    previous_ringi_id: toPositiveIntId(formData.get("previous_ringi_id")),
+    existing_ringi_id: toEntityId(formData.get("existing_ringi_id")),
+    previous_ringi_id: toEntityId(formData.get("previous_ringi_id")),
     approver_id: approverId,
     title: title,
     amount: amount,
@@ -90,7 +90,7 @@ export async function approveRingiAction(
   previousState: RingiDecisionFormState,
   formData: FormData,
 ): Promise<RingiDecisionFormState> {
-  const ringiId = toPositiveIntId(formData.get("ringi_id"))
+  const ringiId = toEntityId(formData.get("ringi_id"))
 
   if (ringiId === null) {
     return { ok: false, error: "稟議が不正です" }
@@ -125,7 +125,7 @@ export async function rejectRingiAction(
   previousState: RingiDecisionFormState,
   formData: FormData,
 ): Promise<RingiDecisionFormState> {
-  const ringiId = toPositiveIntId(formData.get("ringi_id"))
+  const ringiId = toEntityId(formData.get("ringi_id"))
 
   if (ringiId === null) {
     return { ok: false, error: "稟議が不正です" }
@@ -157,7 +157,7 @@ export async function advanceRingiAction(
   _previous: RingiDecisionFormState,
   formData: FormData,
 ): Promise<RingiDecisionFormState> {
-  const id = toPositiveIntId(formData.get("ringi_id"))
+  const id = toEntityId(formData.get("ringi_id"))
   const target = toRingiDecisionTarget(formData.get("decision_target"))
   if (id === null || target instanceof Error)
     return { ok: false, error: "稟議の判断対象を確認してください" }

@@ -61,7 +61,7 @@ export class TrainingEnrollmentRepository {
     trainingEnrollment: TrainingEnrollment,
   ): Promise<TrainingEnrollment | AlreadyEnrolledError | CourseArchivedError | Error> {
     try {
-      const result = await this.c.var.database.run(
+      const inserted = await this.c.var.database.all<{ id: number }>(
         sql`INSERT INTO training_enrollments (course_id, employee_id, status, completed_at, score, due_date)
             SELECT ${trainingEnrollment.courseId}, ${trainingEnrollment.employeeId},
                    ${trainingEnrollment.status}, ${trainingEnrollment.completedAt},
@@ -69,17 +69,20 @@ export class TrainingEnrollmentRepository {
             WHERE EXISTS (
               SELECT 1 FROM training_courses
               WHERE id = ${trainingEnrollment.courseId} AND status != 'archived'
-            )`,
+            )
+            RETURNING id`,
       )
 
-      if (result.meta.changes === 0) {
+      const insertedId = inserted.at(0)?.id
+
+      if (insertedId === undefined) {
         return { reason: "course_archived" }
       }
 
       const rows = await this.c.var.database
         .select()
         .from(trainingEnrollments)
-        .where(eq(trainingEnrollments.id, Number(result.meta.last_row_id)))
+        .where(eq(trainingEnrollments.id, insertedId))
         .limit(1)
 
       const row = rows.at(0)

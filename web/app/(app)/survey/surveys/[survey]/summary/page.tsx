@@ -1,3 +1,4 @@
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { notFound } from "next/navigation"
@@ -24,9 +25,9 @@ export default async function SurveySummaryPage(props: Props) {
 
   const routeParams = await props.params
 
-  const surveyId = Number(routeParams.survey)
+  const surveyId = toEntityId(routeParams.survey)
 
-  if (!Number.isInteger(surveyId)) {
+  if (surveyId === null) {
     notFound()
   }
 

@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { ApiResponseError } from "@/lib/api/api-response-error"
 
 /** GET /decision-records/:id を session トークン付きで呼び、意思決定記録詳細を取得する。 */
-export async function getDecisionDetail(id: number) {
+export async function getDecisionDetail(id: EntityId) {
   const client = await createClient()
 
   const response = await client["meeting"]["decision-records"][":id"].$get({

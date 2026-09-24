@@ -5,7 +5,7 @@ import { createRoom } from "@/lib/api/create-room"
 import { deleteRoom } from "@/lib/api/delete-room"
 import { getMe } from "@/lib/api/get-me"
 import { updateRoom } from "@/lib/api/update-room"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { canManageRooms } from "@/lib/room/can-manage-rooms"
 
 export type RoomCreateFormState = {
@@ -96,7 +96,7 @@ export async function updateRoomAction(
     return { ok: false, error: "権限がありません" }
   }
 
-  const roomId = toPositiveIntId(formData.get("id"))
+  const roomId = toEntityId(formData.get("id"))
 
   if (roomId === null) {
     return { ok: false, error: "会議室が不正です" }
@@ -146,7 +146,7 @@ export async function deleteRoomAction(
     return { ok: false, error: "権限がありません" }
   }
 
-  const roomId = toPositiveIntId(formData.get("id"))
+  const roomId = toEntityId(formData.get("id"))
 
   if (roomId === null) {
     return { ok: false, error: "会議室が不正です" }

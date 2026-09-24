@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** POST /announcements/:id/publish。アナウンスを公開し全社へ通知する（announcement:manage）。 */
-export async function publishAnnouncement(id: number) {
+export async function publishAnnouncement(id: EntityId) {
   const client = await createClient()
 
   const response = await client["announcement"]["announcements"][":id"].publish.$post({

@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { ExpenseProcedureActionForm } from "@/app/(app)/my/expenses/_components/expense-procedure-action-form"
 import { ExpenseDecisionForm } from "@/app/(app)/my/expenses/_components/expense-decision-form"
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card"
@@ -5,7 +6,7 @@ import type { ExpenseDecisionTarget } from "@/lib/api/types/expense-types"
 
 type Props = {
   expense: {
-    id: number
+    id: EntityId
     decision_target: ExpenseDecisionTarget | null
     can_decide: boolean
     can_execute: boolean

@@ -1,5 +1,6 @@
 "use server"
 
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { revalidatePath } from "next/cache"
 import { createItIncident } from "@/lib/api/create-it-incident"
 import { resolveItIncident } from "@/lib/api/resolve-it-incident"
@@ -46,7 +47,7 @@ export async function resolveItIncidentAction(
   previousState: ItIncidentActionState,
   formData: FormData,
 ): Promise<ItIncidentActionState> {
-  const id = toInteger(formData.get("id"))
+  const id = toEntityId(formData.get("id"))
 
   if (id === null) {
     return { ok: false, error: "対象のインシデントが不明です" }
@@ -70,19 +71,6 @@ function toText(value: FormDataEntryValue | null): string | null {
   }
 
   return value.trim()
-}
-
-/** FormData 値を整数へ。未入力や不正は null。 */
-function toInteger(value: FormDataEntryValue | null): number | null {
-  const text = toText(value)
-
-  if (text === null) {
-    return null
-  }
-
-  const parsed = Number(text)
-
-  return Number.isInteger(parsed) ? parsed : null
 }
 
 /** severity の許容値だけを返す。それ以外は null。 */

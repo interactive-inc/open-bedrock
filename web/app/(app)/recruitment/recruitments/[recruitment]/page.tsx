@@ -1,3 +1,4 @@
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
 import { CandidateNewForm } from "@/app/(app)/recruitment/recruitments/_components/candidate-new-form"
@@ -23,9 +24,9 @@ export default async function RecruitmentPositionPage(props: Props) {
 
   const params = await props.params
 
-  const positionId = Number.parseInt(params.recruitment, 10)
+  const positionId = toEntityId(params.recruitment)
 
-  if (Number.isInteger(positionId) === false || positionId <= 0) {
+  if (positionId === null) {
     notFound()
   }
 

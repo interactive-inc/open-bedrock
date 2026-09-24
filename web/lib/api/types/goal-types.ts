@@ -1,6 +1,8 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /** api/src/goal/goal-schema.ts と同形。 */
 export type Goal = {
-  id: number
+  id: EntityId
   employeeId: string
   period: string
   title: string
@@ -11,8 +13,8 @@ export type Goal = {
 
 /** api/src/goal/goal-evaluation-schema.ts と同形。kind は self|manager|final。 */
 export type GoalEvaluation = {
-  id: number
-  goalId: number
+  id: EntityId
+  goalId: EntityId
   evaluatorId: string
   kind: GoalEvaluationKind
   score: number | null
@@ -34,7 +36,7 @@ export type GoalSearchQuery = {
  * id は api の型上 number | null になりうる。
  */
 export type GoalResponse = {
-  id: number | null
+  id: EntityId | null
   employee_id: string
   period: string
   title: string
@@ -56,7 +58,7 @@ export type GoalCreateRequest = {
   kpi?: string
   owner_type?: GoalOwnerType
   department_code?: string
-  parent_goal_id?: number
+  parent_goal_id?: EntityId
 }
 
 /** PUT /performance-goals/:goalId のリクエストボディ。 */

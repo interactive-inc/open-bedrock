@@ -1,3 +1,4 @@
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { FetchError } from "@/components/fetch-error"
 import { formatDateTime } from "@/lib/format-date-time"
 import { Suspense } from "react"
@@ -33,7 +34,7 @@ export default async function ReviewResultsPage(props: Props) {
 
   const employeeCodeValue = searchParamsValue.employee_code
 
-  const cycleId = typeof cycleIdValue === "string" ? Number(cycleIdValue) : Number.NaN
+  const cycleId = toEntityId(typeof cycleIdValue === "string" ? cycleIdValue : null)
 
   const employeeCode = typeof employeeCodeValue === "string" ? employeeCodeValue : ""
 
@@ -51,13 +52,13 @@ export default async function ReviewResultsPage(props: Props) {
 }
 
 type ResultsProps = {
-  cycleId: number
+  cycleId: string | null
   employeeCode: string
 }
 
 /** 結果を認証付きで取得して描画する非同期 RSC。閲覧可否と表示範囲は API を正とする。 */
 async function Results(props: ResultsProps) {
-  if (Number.isInteger(props.cycleId) === false || props.employeeCode === "") {
+  if (props.cycleId === null || props.employeeCode === "") {
     return (
       <p className="text-sm text-muted-foreground">サイクル ID と社員コードを指定してください</p>
     )

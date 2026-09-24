@@ -1,3 +1,5 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /** バッチジョブの実行状態。api/src/batch/batch-response-schema.ts の status enum と一致させる。 */
 export type BatchJobStatus = "running" | "completed" | "failed"
 
@@ -6,7 +8,7 @@ export type BatchJobStatus = "running" | "completed" | "failed"
  * レスポンスは snake_case なので型もそれに合わせる。値なしは null。
  */
 export type BatchJobResponse = {
-  id: number
+  id: EntityId
   name: string
   status: BatchJobStatus
   started_at: string | null

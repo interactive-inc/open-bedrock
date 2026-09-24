@@ -1,7 +1,8 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 
 /** GET /performance-goals/:goalId。1 件の目標詳細を取得する。 */
-export async function getGoal(id: number) {
+export async function getGoal(id: EntityId) {
   const client = await createClient()
 
   const response = await client["performance-review"]["performance-goals"][":goalId"].$get({

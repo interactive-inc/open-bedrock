@@ -1,7 +1,8 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 
 /** GET /announcements/:id。アナウンス1件の詳細。 */
-export async function getAnnouncementDetail(id: number) {
+export async function getAnnouncementDetail(id: EntityId) {
   const client = await createClient()
 
   const response = await client["announcement"]["announcements"][":id"].$get({

@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { getServerSession } from "@/lib/auth/get-server-session"
 
 /**
@@ -5,7 +6,7 @@ import { getServerSession } from "@/lib/auth/get-server-session"
  * 認可は API 側が親の経費の閲覧可否で判定するため、ここでは素通しでよい。
  */
 export async function downloadExpenseAttachment(
-  expenseId: number,
+  expenseId: EntityId,
   attachmentId: string,
 ): Promise<Response> {
   const token = await getServerSession()

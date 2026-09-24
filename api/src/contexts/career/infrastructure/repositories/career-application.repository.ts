@@ -20,25 +20,28 @@ export class CareerApplicationRepository {
     careerApplication: CareerApplication,
   ): Promise<CareerApplication | AlreadyAppliedError | PostingClosedError | Error> {
     try {
-      const result = await this.c.var.database.run(
+      const inserted = await this.c.var.database.all<{ id: number }>(
         sql`INSERT INTO career_applications (posting_id, applicant_id, message, status)
             SELECT ${careerApplication.postingId}, ${careerApplication.applicantId},
                    ${careerApplication.message}, ${careerApplication.status}
             WHERE EXISTS (
               SELECT 1 FROM career_postings
               WHERE id = ${careerApplication.postingId} AND status = 'open'
-            )`,
+            )
+            RETURNING id`,
       )
 
-      if (result.meta.changes === 0) {
+      const insertedId = inserted.at(0)?.id
+
+      if (insertedId === undefined) {
         return { reason: "posting_closed" }
       }
 
-      // last_insert_rowid で採番された行を取得する
+      // RETURNING で受け取った採番済みの行を取得する
       const rows = await this.c.var.database
         .select()
         .from(careerApplications)
-        .where(eq(careerApplications.id, Number(result.meta.last_row_id)))
+        .where(eq(careerApplications.id, insertedId))
         .limit(1)
 
       const row = rows.at(0)

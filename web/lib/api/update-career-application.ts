@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type {
@@ -10,7 +11,7 @@ import type {
  * 本人以外は 403、選考確定済みは 409 を api が返すため、戻りは Error になる。
  */
 export async function updateCareerApplication(
-  id: number,
+  id: EntityId,
   request: CareerApplicationUpdateRequest,
 ): Promise<CareerApplication | Error> {
   const client = await createClient()

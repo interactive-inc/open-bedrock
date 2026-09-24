@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 import { updateBudgetAction } from "@/app/(app)/expense/budgets/actions"
@@ -19,7 +20,7 @@ import { Textarea } from "@/components/ui/textarea"
 
 type Props = {
   // 編集対象の予算。hidden の budget_id と各入力の初期値に使う。
-  budgetId: number
+  budgetId: EntityId
   amount: number
   name: string
   note: string | null

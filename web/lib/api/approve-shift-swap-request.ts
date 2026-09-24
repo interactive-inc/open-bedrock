@@ -1,7 +1,8 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-export async function approveShiftSwapRequest(id: number) {
+export async function approveShiftSwapRequest(id: EntityId) {
   const client = await createClient()
 
   const response = await client["shift"]["shift-swap-requests"][":id"].approve.$post({

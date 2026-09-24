@@ -144,3 +144,20 @@ test.each([
   ).toBe(400)
   expect(requests).toHaveLength(0)
 })
+
+test("UUIDの休暇IDもpathへそのまま渡す", async () => {
+  const id = "0b7a3c1e-2f4d-4e5a-9b8c-7d6e5f4a3b2c"
+  expect((await command("/leave-requests/procedure", { id })).status).toBe(200)
+  expect(requests).toHaveLength(1)
+  const request = requests[0]
+  if (request === undefined) throw new Error("request missing")
+  expect(new URL(request.url).pathname).toBe(`/leave/leave-requests/${id}/procedure`)
+})
+
+test.each(["../admin", "42/cancel", ""])(
+  "別のpathへ到達させる休暇IDではAPIを呼ばない: %s",
+  async (id) => {
+    expect((await command("/leave-requests/procedure", { id })).status).toBe(400)
+    expect(requests).toHaveLength(0)
+  },
+)

@@ -1,9 +1,10 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** 契約の利用者と解除履歴をページ単位で取得する。 */
 export async function getLicenseAssignments(query: {
-  licenseId: number
+  licenseId: EntityId
   state: "assigned" | "released"
   offset: number
 }) {

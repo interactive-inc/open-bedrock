@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { toDurationLabel } from "@/app/(app)/my/attendances/_lib/to-duration-label"
 import { formatDateTime } from "@/lib/format-date-time"
 import { StatusLabel } from "@/components/status-label"
@@ -13,7 +14,7 @@ import {
 
 /** api の実レスポンス（snake_case）と同形の表示用レコード型。 */
 type AttendanceRecord = {
-  id: number
+  id: EntityId
   employee_id: string
   work_date: string
   clock_in_at: string | null

@@ -10,7 +10,7 @@ import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 import { toOptionalIntInRange } from "@/lib/form/to-optional-int-in-range"
 import { toOptionalText } from "@/lib/form/to-optional-text"
 import { toRequiredText } from "@/lib/form/to-required-text"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { requireAuth } from "@/lib/auth/require-auth"
 
 /** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
@@ -158,7 +158,7 @@ export async function updateGoalAction(
 ): Promise<GoalActionState> {
   await requireAuth()
 
-  const goalId = toPositiveIntId(formData.get("goalId"))
+  const goalId = toEntityId(formData.get("goalId"))
 
   if (goalId === null) {
     return { ok: false, error: "目標 ID が不正です" }
@@ -225,7 +225,7 @@ export async function deleteGoalAction(
 ): Promise<GoalActionState> {
   await requireAuth()
 
-  const goalId = toPositiveIntId(formData.get("goalId"))
+  const goalId = toEntityId(formData.get("goalId"))
 
   if (goalId === null) {
     return { ok: false, error: "目標 ID が不正です" }
@@ -253,7 +253,7 @@ export async function createGoalEvaluationAction(
 ): Promise<GoalActionState> {
   await requireAuth()
 
-  const goalId = toPositiveIntId(formData.get("goalId"))
+  const goalId = toEntityId(formData.get("goalId"))
 
   if (goalId === null) {
     return { ok: false, error: "目標 ID が不正です" }
