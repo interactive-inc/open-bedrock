@@ -14,7 +14,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { MyShiftSwapRequestResponse } from "@/lib/api/types/shift-types"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   swapRequests: Array<MyShiftSwapRequestResponse>
@@ -54,13 +54,9 @@ export function MyShiftSwapRequests(props: Props) {
 
               <TableCell>
                 {swapRequest.status === "approved" ? (
-                  <Button type="button" variant="secondary" size="sm">
-                    承認済み
-                  </Button>
+                  <StatusLabel>承認済み</StatusLabel>
                 ) : (
-                  <Button type="button" variant="secondary" size="sm">
-                    保留中
-                  </Button>
+                  <StatusLabel>保留中</StatusLabel>
                 )}
               </TableCell>
 

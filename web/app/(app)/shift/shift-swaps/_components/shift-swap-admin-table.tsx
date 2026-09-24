@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { ShiftSwapAdminSort } from "@/lib/api/get-shift-swap-admin-list"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 export type ShiftSwapAdminRow = {
   id: number
@@ -36,26 +36,14 @@ type Props = {
 
 function StatusBadge(props: { status: string }) {
   if (props.status === "approved") {
-    return (
-      <Button type="button" variant="secondary" size="sm">
-        承認済み
-      </Button>
-    )
+    return <StatusLabel>承認済み</StatusLabel>
   }
 
   if (props.status === "rejected") {
-    return (
-      <Button type="button" variant="destructive" size="sm">
-        却下
-      </Button>
-    )
+    return <StatusLabel variant="destructive">却下</StatusLabel>
   }
 
-  return (
-    <Button type="button" variant="secondary" size="sm">
-      承認待ち
-    </Button>
-  )
+  return <StatusLabel>承認待ち</StatusLabel>
 }
 
 export function ShiftSwapAdminTable(props: Props) {

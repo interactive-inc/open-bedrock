@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   period: string | null
@@ -73,9 +73,7 @@ export async function GoalList(props: Props) {
               <TableCell className="text-right">{goal.weight}</TableCell>
 
               <TableCell>
-                <Button type="button" variant="secondary" size="sm">
-                  {statusLabel(goal.status)}
-                </Button>
+                <StatusLabel>{statusLabel(goal.status)}</StatusLabel>
               </TableCell>
             </TableRow>
           ))}

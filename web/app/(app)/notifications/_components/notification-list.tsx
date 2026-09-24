@@ -11,6 +11,7 @@ import {
 } from "@/app/(app)/notifications/actions"
 import { EmptyState } from "@/components/empty-state"
 import { Badge } from "@/components/ui/badge"
+import { StatusLabel } from "@/components/status-label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import type { NotificationResponse } from "@/lib/api/types/notification-types"
@@ -86,9 +87,7 @@ export function NotificationList(props: Props) {
                     </Link>
                   ) : null}
 
-                  <Button type="button" variant="secondary" size="sm">
-                    {notification.is_read ? "既読" : "未読"}
-                  </Button>
+                  <StatusLabel>{notification.is_read ? "既読" : "未読"}</StatusLabel>
                 </div>
 
                 <span className="text-xs text-muted-foreground">

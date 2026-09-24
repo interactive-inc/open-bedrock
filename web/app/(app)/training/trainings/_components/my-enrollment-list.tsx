@@ -12,7 +12,7 @@ import type {
   TrainingCourseResponse,
   TrainingEnrollmentResponse,
 } from "@/lib/api/types/training-types"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   enrollments: Array<TrainingEnrollmentResponse>
@@ -52,9 +52,9 @@ export function MyEnrollmentList(props: Props) {
                 <TableCell>{courseLabel}</TableCell>
 
                 <TableCell>
-                  <Button type="button" variant="secondary" size="sm">
+                  <StatusLabel>
                     {enrollment.status === "completed" ? "受講済み" : "受講中"}
-                  </Button>
+                  </StatusLabel>
                 </TableCell>
 
                 <TableCell>{enrollment.due_date ?? "-"}</TableCell>

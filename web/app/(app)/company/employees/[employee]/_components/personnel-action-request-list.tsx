@@ -2,7 +2,7 @@ import { formatLifecycleKind } from "@/app/(app)/company/employees/[employee]/_l
 import { TextLink } from "@/components/text-link"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import type { PersonnelActionRequests } from "@/lib/api/list-personnel-action-requests"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 export function PersonnelActionRequestList(props: { data: PersonnelActionRequests }) {
   if (props.data.requests.length === 0) return null
@@ -27,9 +27,7 @@ export function PersonnelActionRequestList(props: { data: PersonnelActionRequest
                 </p>
               </div>
               <div className="flex items-center gap-2">
-                <Button type="button" variant="secondary" size="sm">
-                  承認待ち
-                </Button>
+                <StatusLabel>承認待ち</StatusLabel>
                 <TextLink
                   href={`/system/applications/${request.application_id}`}
                   prefetch={false}

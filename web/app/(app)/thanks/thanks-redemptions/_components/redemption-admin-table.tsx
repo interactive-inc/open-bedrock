@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { RedemptionAdminSort, RedemptionStatus } from "@/lib/api/get-redemption-admin-list"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 const pointFormatter = new Intl.NumberFormat("ja-JP")
 
@@ -38,26 +38,14 @@ type Props = {
 
 function StatusBadge(props: { status: RedemptionStatus }) {
   if (props.status === "fulfilled") {
-    return (
-      <Button type="button" variant="secondary" size="sm">
-        交換済み
-      </Button>
-    )
+    return <StatusLabel>交換済み</StatusLabel>
   }
 
   if (props.status === "rejected") {
-    return (
-      <Button type="button" variant="destructive" size="sm">
-        却下
-      </Button>
-    )
+    return <StatusLabel variant="destructive">却下</StatusLabel>
   }
 
-  return (
-    <Button type="button" variant="secondary" size="sm">
-      承認待ち
-    </Button>
-  )
+  return <StatusLabel>承認待ち</StatusLabel>
 }
 
 export function RedemptionAdminTable(props: Props) {

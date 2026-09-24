@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   code: string
@@ -67,9 +67,7 @@ export async function EmployeeEventHistory(props: Props) {
                     <TableCell>{event.effective_date}</TableCell>
 
                     <TableCell>
-                      <Button type="button" variant="secondary" size="sm">
-                        {toEmployeeEventKindLabel(event.kind)}
-                      </Button>
+                      <StatusLabel>{toEmployeeEventKindLabel(event.kind)}</StatusLabel>
                     </TableCell>
 
                     <TableCell>{event.from_department_code ?? "-"}</TableCell>

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table"
 import { formatDate } from "@/lib/format-date"
 import type { HealthCheckupResponse } from "@/lib/api/types/health-checkup-types"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   rows: ReadonlyArray<HealthCheckupResponse>
@@ -60,9 +60,7 @@ export function HealthCheckupsTable(props: Props) {
               </TableCell>
 
               <TableCell>
-                <Button type="button" variant="secondary" size="sm">
-                  {STATUS_LABELS[row.status] ?? row.status}
-                </Button>
+                <StatusLabel>{STATUS_LABELS[row.status] ?? row.status}</StatusLabel>
               </TableCell>
 
               <TableCell className="hidden md:table-cell">{row.note ?? "—"}</TableCell>

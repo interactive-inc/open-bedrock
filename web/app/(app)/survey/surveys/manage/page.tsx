@@ -8,6 +8,7 @@ import { EmptyState } from "@/components/empty-state"
 import { ListSkeleton } from "@/components/list-skeleton"
 import { PageHeader } from "@/components/page-header"
 import { TableRowActions } from "@/components/table-row-actions"
+import { StatusLabel } from "@/components/status-label"
 import { Button } from "@/components/ui/button"
 import {
   Table,
@@ -88,9 +89,7 @@ async function SurveysTable() {
               <TableCell>{survey.title}</TableCell>
 
               <TableCell>
-                <Button type="button" variant="secondary" size="sm">
-                  {survey.status === "open" ? "実施中" : "終了"}
-                </Button>
+                <StatusLabel>{survey.status === "open" ? "実施中" : "終了"}</StatusLabel>
               </TableCell>
 
               <TableCell>{survey.questions_json.length}</TableCell>

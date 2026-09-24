@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getHeadcountPlanList } from "@/lib/api/get-headcount-plan-list"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   fiscalYear?: number
@@ -82,24 +82,12 @@ export async function HeadcountPlanTable(props: Props) {
 /** 実在籍数と計画人数の差分表示。過不足の向きを色で示す。 */
 function GapLabel(props: { gap: number }) {
   if (props.gap === 0) {
-    return (
-      <Button type="button" variant="secondary" size="sm">
-        ±0
-      </Button>
-    )
+    return <StatusLabel>±0</StatusLabel>
   }
 
   if (props.gap > 0) {
-    return (
-      <Button type="button" variant="secondary" size="sm">
-        +{props.gap}（超過）
-      </Button>
-    )
+    return <StatusLabel>+{props.gap}（超過）</StatusLabel>
   }
 
-  return (
-    <Button type="button" variant="destructive" size="sm">
-      {props.gap}（不足）
-    </Button>
-  )
+  return <StatusLabel variant="destructive">{props.gap}（不足）</StatusLabel>
 }

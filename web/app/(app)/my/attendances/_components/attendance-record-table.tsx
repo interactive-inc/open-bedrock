@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 /** api の実レスポンス（snake_case）と同形の表示用レコード型。 */
 type AttendanceRecord = {
@@ -63,9 +63,7 @@ export function AttendanceRecordTable(props: Props) {
               <TableCell className="text-right">{toDurationLabel(record.work_minutes)}</TableCell>
 
               <TableCell>
-                <Button type="button" variant="secondary" size="sm">
-                  {statusLabel(record.status)}
-                </Button>
+                <StatusLabel>{statusLabel(record.status)}</StatusLabel>
               </TableCell>
             </TableRow>
           ))}

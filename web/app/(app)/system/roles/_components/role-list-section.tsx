@@ -9,6 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
+import { StatusLabel } from "@/components/status-label"
 import { Button, buttonVariants } from "@/components/ui/button"
 import { getRoles } from "@/lib/api/get-roles"
 import Link from "next/link"
@@ -51,13 +52,9 @@ export async function RoleListSection(props: { actorPermissionKeys: ReadonlyArra
                 <TableCell>{role.description ?? "—"}</TableCell>
                 <TableCell>
                   {role.is_system ? (
-                    <Button type="button" variant="secondary" size="sm">
-                      システム
-                    </Button>
+                    <StatusLabel>システム</StatusLabel>
                   ) : (
-                    <Button type="button" variant="secondary" size="sm">
-                      動的
-                    </Button>
+                    <StatusLabel>動的</StatusLabel>
                   )}
                 </TableCell>
                 <TableCell>

@@ -9,7 +9,7 @@ import {
 } from "@/components/ui/table"
 import { formatDate } from "@/lib/format-date"
 import type { WorkAccidentResponse } from "@/lib/api/types/work-accident-types"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   rows: ReadonlyArray<WorkAccidentResponse>
@@ -62,9 +62,7 @@ export function WorkAccidentsTable(props: Props) {
               </TableCell>
 
               <TableCell>
-                <Button type="button" variant="secondary" size="sm">
-                  {STATUS_LABELS[row.status] ?? row.status}
-                </Button>
+                <StatusLabel>{STATUS_LABELS[row.status] ?? row.status}</StatusLabel>
               </TableCell>
             </TableRow>
           ))}

@@ -12,7 +12,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 import { getAccounts } from "@/lib/api/get-accounts"
 import { getRoles } from "@/lib/api/get-roles"
 
@@ -62,9 +62,7 @@ export async function AccountListSection(props: {
             <TableRow key={account.id}>
               <TableCell>{account.id}</TableCell>
               <TableCell>
-                <Button type="button" variant="secondary" size="sm">
-                  {account.status}
-                </Button>
+                <StatusLabel>{account.status}</StatusLabel>
               </TableCell>
               <TableCell className="flex flex-wrap gap-2">
                 {account.role_bindings.length === 0 ? (
@@ -90,11 +88,7 @@ export async function AccountListSection(props: {
                       )
                     }
 
-                    return (
-                      <Button key={binding.id} type="button" variant="secondary" size="sm">
-                        {roleLabel}
-                      </Button>
-                    )
+                    return <StatusLabel key={binding.id}>{roleLabel}</StatusLabel>
                   })
                 )}
               </TableCell>

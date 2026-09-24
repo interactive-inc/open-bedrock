@@ -17,7 +17,7 @@ import {
 } from "@/components/ui/table"
 import { getReviewResults } from "@/lib/api/get-review-results"
 import type { ReviewFormResponse } from "@/lib/api/types/review-types"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 export const metadata = { title: "評価結果" }
 
@@ -128,13 +128,9 @@ function ResultsTable(props: ResultsTableProps) {
 
               <TableCell>
                 {form.status === "submitted" ? (
-                  <Button type="button" variant="secondary" size="sm">
-                    提出済み
-                  </Button>
+                  <StatusLabel>提出済み</StatusLabel>
                 ) : (
-                  <Button type="button" variant="secondary" size="sm">
-                    未提出
-                  </Button>
+                  <StatusLabel>未提出</StatusLabel>
                 )}
               </TableCell>
 

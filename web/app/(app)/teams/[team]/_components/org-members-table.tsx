@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   code: string
@@ -57,13 +57,9 @@ export async function OrgMembersTable(props: Props) {
 
               <TableCell>
                 {member.is_manager ? (
-                  <Button type="button" variant="secondary" size="sm">
-                    マネージャー
-                  </Button>
+                  <StatusLabel>マネージャー</StatusLabel>
                 ) : (
-                  <Button type="button" variant="secondary" size="sm">
-                    メンバー
-                  </Button>
+                  <StatusLabel>メンバー</StatusLabel>
                 )}
               </TableCell>
             </TableRow>

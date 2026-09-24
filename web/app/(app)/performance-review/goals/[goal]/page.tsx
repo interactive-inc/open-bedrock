@@ -10,7 +10,7 @@ import { getGoalEvaluations } from "@/lib/api/get-goal-evaluations"
 import { statusLabel } from "@/lib/status-label"
 import { getMe } from "@/lib/api/get-me"
 import type { GoalEvaluationKind } from "@/lib/api/types/goal-types"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 export const metadata = { title: "目標詳細" }
 
@@ -90,9 +90,7 @@ export default async function GoalDetailPage(props: Props) {
 
           <div className="flex items-center gap-2">
             <span className="w-24 text-muted-foreground">ステータス</span>
-            <Button type="button" variant="secondary" size="sm">
-              {statusLabel(goal.status)}
-            </Button>
+            <StatusLabel>{statusLabel(goal.status)}</StatusLabel>
           </div>
         </CardContent>
       </Card>

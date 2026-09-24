@@ -20,7 +20,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   code: string
@@ -49,13 +49,9 @@ export async function OnboardingEmployeeView(props: Props) {
             <CardTitle className="flex items-center gap-2">
               {assignment.template_name}
 
-              <Button type="button" variant="secondary" size="sm">
-                {assignment.kind === "join" ? "入社" : "退社"}
-              </Button>
+              <StatusLabel>{assignment.kind === "join" ? "入社" : "退社"}</StatusLabel>
 
-              <Button type="button" variant="secondary" size="sm">
-                {assignment.status === "completed" ? "完了" : "進行中"}
-              </Button>
+              <StatusLabel>{assignment.status === "completed" ? "完了" : "進行中"}</StatusLabel>
             </CardTitle>
 
             <CardDescription>
@@ -84,9 +80,7 @@ export async function OnboardingEmployeeView(props: Props) {
                       <TableCell>{task.title}</TableCell>
 
                       <TableCell>
-                        <Button type="button" variant="secondary" size="sm">
-                          {task.status === "done" ? "完了" : "未完了"}
-                        </Button>
+                        <StatusLabel>{task.status === "done" ? "完了" : "未完了"}</StatusLabel>
                       </TableCell>
 
                       <TableCell className="text-right">

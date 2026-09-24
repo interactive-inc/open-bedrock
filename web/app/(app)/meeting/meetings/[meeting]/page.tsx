@@ -7,7 +7,7 @@ import { PageHeader } from "@/components/page-header"
 import { Card, CardContent } from "@/components/ui/card"
 import { getMeetingDetail } from "@/lib/api/get-meeting-detail"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 export const metadata = { title: "会議体詳細" }
 
@@ -35,13 +35,9 @@ export default async function MeetingDetailPage(props: Props) {
 
       <div className="flex flex-wrap items-center gap-2">
         {meeting.status === "archived" ? (
-          <Button type="button" variant="secondary" size="sm">
-            アーカイブ
-          </Button>
+          <StatusLabel>アーカイブ</StatusLabel>
         ) : (
-          <Button type="button" variant="secondary" size="sm">
-            {meeting.cadence ?? "随時"}
-          </Button>
+          <StatusLabel>{meeting.cadence ?? "随時"}</StatusLabel>
         )}
       </div>
 

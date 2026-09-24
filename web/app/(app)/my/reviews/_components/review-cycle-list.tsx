@@ -23,6 +23,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { EmptyState } from "@/components/empty-state"
 import { TableRowActions } from "@/components/table-row-actions"
+import { StatusLabel } from "@/components/status-label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader } from "@/components/ui/card"
 import {
@@ -118,9 +119,7 @@ export function ReviewCycleList(props: Props) {
               <div className="flex items-center gap-2">
                 <span className="font-medium">{cycle.title}</span>
 
-                <Button type="button" variant="secondary" size="sm">
-                  {toCycleStatusLabel(cycle.status)}
-                </Button>
+                <StatusLabel>{toCycleStatusLabel(cycle.status)}</StatusLabel>
               </div>
 
               <span className="text-xs text-muted-foreground">{cycle.period}</span>

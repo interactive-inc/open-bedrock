@@ -6,7 +6,7 @@ import { summarizeLifecycleEvent } from "@/app/(app)/company/employees/[employee
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Empty, EmptyDescription, EmptyHeader, EmptyTitle } from "@/components/ui/empty"
 import type { EmployeeLifecycleEvents } from "@/lib/api/get-employee-lifecycle-events"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 export function EmployeeLifecycleTimeline(props: {
   code: string
@@ -39,9 +39,7 @@ export function EmployeeLifecycleTimeline(props: {
                         <time dateTime={event.event_on}>{formatLifecycleDate(event.event_on)}</time>
                       </p>
                     </div>
-                    <Button type="button" variant="secondary" size="sm">
-                      {formatLifecycleDisplayStatus(event.display_status)}
-                    </Button>
+                    <StatusLabel>{formatLifecycleDisplayStatus(event.display_status)}</StatusLabel>
                   </div>
                   {details.length > 0 ? (
                     <ul className="mt-4 flex flex-col gap-2 text-sm text-muted-foreground">

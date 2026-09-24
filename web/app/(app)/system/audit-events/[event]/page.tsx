@@ -15,7 +15,7 @@ import { AuthError } from "@/lib/api/auth-error"
 import { getAuditEvent } from "@/lib/api/get-audit-event"
 import type { AuditEventDetail } from "@/lib/api/types/audit-types"
 import { requirePermission } from "@/lib/auth/require-permission"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 export const metadata = { title: "監査イベント" }
 
@@ -104,9 +104,9 @@ export default async function AuditEventDetailPage(props: Props) {
               </DetailField>
               <DetailField label="操作">{auditActionLabel(event.action)}</DetailField>
               <DetailField label="結果">
-                <Button type="button" variant={outcomeVariant[event.outcome]} size="sm">
+                <StatusLabel variant={outcomeVariant[event.outcome]}>
                   {auditOutcomeLabel(event.outcome)}
-                </Button>
+                </StatusLabel>
               </DetailField>
               <DetailField label="理由">{auditReasonLabel(event.reason_code)}</DetailField>
               <DetailField label="実行者" mono>

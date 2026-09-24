@@ -10,7 +10,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { TrainingCourseResponse } from "@/lib/api/types/training-types"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   courses: Array<TrainingCourseResponse>
@@ -64,27 +64,15 @@ export function CourseList(props: Props) {
 
                 <TableCell>{course.category}</TableCell>
 
-                <TableCell>
-                  {course.is_required ? (
-                    <Button type="button" variant="secondary" size="sm">
-                      必須
-                    </Button>
-                  ) : (
-                    "-"
-                  )}
-                </TableCell>
+                <TableCell>{course.is_required ? <StatusLabel>必須</StatusLabel> : "-"}</TableCell>
 
                 <TableCell>
-                  <Button type="button" variant="secondary" size="sm">
-                    {course.status === "active" ? "公開中" : "アーカイブ"}
-                  </Button>
+                  <StatusLabel>{course.status === "active" ? "公開中" : "アーカイブ"}</StatusLabel>
                 </TableCell>
 
                 <TableCell className="text-right">
                   {isEnrolled ? (
-                    <Button type="button" variant="secondary" size="sm">
-                      申込済み
-                    </Button>
+                    <StatusLabel>申込済み</StatusLabel>
                   ) : course.status === "active" ? (
                     <EnrollButton courseCode={course.code} />
                   ) : (

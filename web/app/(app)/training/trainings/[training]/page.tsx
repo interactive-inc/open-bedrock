@@ -2,6 +2,7 @@ import Link from "next/link"
 import { EnrollButton } from "@/app/(app)/training/trainings/_components/enroll-button"
 import { BackButton } from "@/components/back-button"
 import { PageHeader } from "@/components/page-header"
+import { StatusLabel } from "@/components/status-label"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { getMe } from "@/lib/api/get-me"
@@ -52,9 +53,7 @@ export default async function TrainingCourseDetailPage(props: Props) {
           <CardTitle className="flex items-center justify-between gap-4">
             <span>ステータス</span>
 
-            <Button type="button" variant="secondary" size="sm">
-              {course.status === "active" ? "公開中" : "アーカイブ"}
-            </Button>
+            <StatusLabel>{course.status === "active" ? "公開中" : "アーカイブ"}</StatusLabel>
           </CardTitle>
         </CardHeader>
 

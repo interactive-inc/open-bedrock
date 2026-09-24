@@ -6,6 +6,7 @@ import { auditOutcomeLabel } from "@/app/(app)/system/audit-events/_lib/audit-ou
 import { auditReasonLabel } from "@/app/(app)/system/audit-events/_lib/audit-reason-label"
 import { auditTargetTypeLabel } from "@/app/(app)/system/audit-events/_lib/audit-target-type-label"
 import { formatAuditDateTime } from "@/app/(app)/system/audit-events/_lib/format-audit-date-time"
+import { StatusLabel } from "@/components/status-label"
 import { Button } from "@/components/ui/button"
 import { Empty, EmptyDescription, EmptyHeader, EmptyMedia, EmptyTitle } from "@/components/ui/empty"
 import {
@@ -79,9 +80,9 @@ export function AuditEventTable(props: Props) {
               </div>
             </TableCell>
             <TableCell>
-              <Button type="button" variant={outcomeVariant[event.outcome]} size="sm">
+              <StatusLabel variant={outcomeVariant[event.outcome]}>
                 {auditOutcomeLabel(event.outcome)}
-              </Button>
+              </StatusLabel>
             </TableCell>
             <TableCell translate="no">{actorLabel(event)}</TableCell>
             <TableCell className="whitespace-normal">

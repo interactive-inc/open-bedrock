@@ -7,7 +7,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { RoomAvailability } from "@/lib/api/types/room-types"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   availabilities: ReadonlyArray<RoomAvailability>
@@ -36,13 +36,9 @@ export function RoomAvailabilityTable(props: Props) {
 
               <TableCell>
                 {availability.available ? (
-                  <Button type="button" variant="secondary" size="sm">
-                    空き
-                  </Button>
+                  <StatusLabel>空き</StatusLabel>
                 ) : (
-                  <Button type="button" variant="destructive" size="sm">
-                    予約あり
-                  </Button>
+                  <StatusLabel variant="destructive">予約あり</StatusLabel>
                 )}
               </TableCell>
 

@@ -4,7 +4,7 @@ import { PageHeader } from "@/components/page-header"
 import { Card } from "@/components/ui/card"
 import { getDecisionDetail } from "@/lib/api/get-decision-detail"
 import { handleDetailError } from "@/lib/api/handle-detail-error"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 export const metadata = { title: "意思決定記録の詳細" }
 
@@ -47,13 +47,9 @@ export default async function DecisionDetailPage(props: Props) {
 
       <div className="flex flex-wrap items-center gap-2">
         {decision.status === "superseded" ? (
-          <Button type="button" variant="secondary" size="sm">
-            置き換え済み
-          </Button>
+          <StatusLabel>置き換え済み</StatusLabel>
         ) : (
-          <Button type="button" variant="secondary" size="sm">
-            有効
-          </Button>
+          <StatusLabel>有効</StatusLabel>
         )}
 
         {decision.superseded_by_id === null ? null : (

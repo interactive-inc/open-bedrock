@@ -11,7 +11,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import { getCalendar } from "@/lib/api/get-calendar"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   year: string | null
@@ -54,9 +54,7 @@ export async function CalendarList(props: Props) {
               <TableCell>{day.calendar_date}</TableCell>
 
               <TableCell>
-                <Button type="button" variant="secondary" size="sm">
-                  {toCalendarDayKindLabel(day.kind)}
-                </Button>
+                <StatusLabel>{toCalendarDayKindLabel(day.kind)}</StatusLabel>
               </TableCell>
 
               <TableCell>{day.name ?? "-"}</TableCell>

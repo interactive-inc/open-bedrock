@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 /** GET /employee-skills/me を認証付きで取得し、本人の登録スキルをテーブル描画する非同期 RSC。 */
 export async function MySkillList() {
@@ -52,9 +52,7 @@ export async function MySkillList() {
                 </span>
               </TableCell>
               <TableCell>
-                <Button type="button" variant="secondary" size="sm">
-                  {mySkill.skill_category}
-                </Button>
+                <StatusLabel>{mySkill.skill_category}</StatusLabel>
               </TableCell>
               <TableCell>{mySkill.level}</TableCell>
               <TableCell>{mySkill.years === null ? "-" : `${mySkill.years}年`}</TableCell>

@@ -11,7 +11,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 /**
  * GET /onboarding-assignments/me を取得して自分のタスク一覧を描画する非同期 RSC。
@@ -48,9 +48,7 @@ export async function MyTasksList() {
               <TableCell>{task.title}</TableCell>
 
               <TableCell>
-                <Button type="button" variant="secondary" size="sm">
-                  {task.status === "done" ? "完了" : "未完了"}
-                </Button>
+                <StatusLabel>{task.status === "done" ? "完了" : "未完了"}</StatusLabel>
               </TableCell>
 
               <TableCell className="text-right">

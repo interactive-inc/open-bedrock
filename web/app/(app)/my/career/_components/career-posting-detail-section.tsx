@@ -6,7 +6,7 @@ import { Card } from "@/components/ui/card"
 import { getCareerPosting } from "@/lib/api/get-career-posting"
 import { getCareerPostings } from "@/lib/api/get-career-postings"
 import type { CareerPosting } from "@/lib/api/types/career-types"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   postingId: number
@@ -65,9 +65,7 @@ export async function CareerPostingDetailSection(props: Props) {
           <div className="flex items-center gap-2">
             <h2 className="text-xl font-semibold">{posting.title}</h2>
 
-            <Button type="button" variant="secondary" size="sm">
-              {posting.status === "closed" ? "締切" : "募集中"}
-            </Button>
+            <StatusLabel>{posting.status === "closed" ? "締切" : "募集中"}</StatusLabel>
           </div>
 
           <div className="flex flex-col gap-2">

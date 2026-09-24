@@ -10,6 +10,7 @@ import {
 } from "@/app/(app)/my/shifts/actions"
 import { EmptyState } from "@/components/empty-state"
 import { TableRowActions } from "@/components/table-row-actions"
+import { StatusLabel } from "@/components/status-label"
 import { Button } from "@/components/ui/button"
 import { ConfirmActionDialog } from "@/components/confirm-action-dialog"
 import {
@@ -102,13 +103,9 @@ export function ShiftAssignmentList(props: Props) {
 
               <TableCell>
                 {assignment.published_at !== null ? (
-                  <Button type="button" variant="secondary" size="sm">
-                    公開済み
-                  </Button>
+                  <StatusLabel>公開済み</StatusLabel>
                 ) : (
-                  <Button type="button" variant="secondary" size="sm">
-                    未公開
-                  </Button>
+                  <StatusLabel>未公開</StatusLabel>
                 )}
               </TableCell>
 

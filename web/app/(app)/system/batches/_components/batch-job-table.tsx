@@ -9,7 +9,7 @@ import {
   TableRow,
 } from "@/components/ui/table"
 import type { BatchJobResponse } from "@/lib/api/types/batch-types"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   jobs: ReadonlyArray<BatchJobResponse>
@@ -38,9 +38,9 @@ export function BatchJobTable(props: Props) {
               <TableCell>{job.name}</TableCell>
 
               <TableCell>
-                <Button type="button" variant={toBatchStatusVariant(job.status)} size="sm">
+                <StatusLabel variant={toBatchStatusVariant(job.status)}>
                   {toBatchStatusLabel(job.status)}
-                </Button>
+                </StatusLabel>
               </TableCell>
 
               <TableCell>{job.finished_at ?? job.started_at ?? "-"}</TableCell>

@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table"
 import { getItIncidentList } from "@/lib/api/get-it-incident-list"
 import { ItIncidentResolveButton } from "@/app/(app)/it-incident/it-incidents/_components/it-incident-resolve-button"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 const PAGE_SIZE = 20
 
@@ -63,13 +63,9 @@ export async function ItIncidentList(props: Props) {
 
                 <TableCell>
                   {incident.status === "resolved" ? (
-                    <Button type="button" variant="secondary" size="sm">
-                      解消済み
-                    </Button>
+                    <StatusLabel>解消済み</StatusLabel>
                   ) : (
-                    <Button type="button" variant="secondary" size="sm">
-                      対応中
-                    </Button>
+                    <StatusLabel>対応中</StatusLabel>
                   )}
                 </TableCell>
 

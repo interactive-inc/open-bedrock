@@ -4,7 +4,7 @@ import { OrgRoleAssignmentForm } from "@/app/(app)/governance/governance-documen
 import { RevokeOrgRoleButton } from "@/app/(app)/governance/governance-documents/manage/_components/revoke-org-role-button"
 import { PageHeader } from "@/components/page-header"
 import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import {
   Table,
@@ -74,13 +74,11 @@ export default async function GovernanceManagePage() {
                     key={`${issue.severity}:${issue.code}:${issue.document_code}:${issue.reference}:${issue.message}`}
                   >
                     <TableCell>
-                      <Button
-                        type="button"
+                      <StatusLabel
                         variant={issue.severity === "error" ? "destructive" : "secondary"}
-                        size="sm"
                       >
                         {issue.severity === "error" ? "エラー" : "警告"}
-                      </Button>
+                      </StatusLabel>
                     </TableCell>
                     <TableCell>
                       {issue.document_code ? (
@@ -162,9 +160,7 @@ export default async function GovernanceManagePage() {
                               {assignee.employee_name}（{assignee.employee_code}）
                             </span>
                             {assignee.department_code ? (
-                              <Button type="button" variant="secondary" size="sm">
-                                {assignee.department_code}
-                              </Button>
+                              <StatusLabel>{assignee.department_code}</StatusLabel>
                             ) : null}
                             {assignee.assignment_id !== null ? (
                               <RevokeOrgRoleButton
@@ -172,9 +168,7 @@ export default async function GovernanceManagePage() {
                                 employeeName={assignee.employee_name}
                               />
                             ) : (
-                              <Button type="button" variant="secondary" size="sm">
-                                自動
-                              </Button>
+                              <StatusLabel>自動</StatusLabel>
                             )}
                           </div>
                         ))}

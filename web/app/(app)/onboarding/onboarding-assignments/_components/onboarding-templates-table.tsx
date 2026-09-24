@@ -10,7 +10,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 /** GET /onboarding-templates を取得してテンプレート一覧テーブルを描画する非同期 RSC。 */
 export async function OnboardingTemplatesTable() {
@@ -47,9 +47,7 @@ export async function OnboardingTemplatesTable() {
               <TableCell>{template.name}</TableCell>
 
               <TableCell>
-                <Button type="button" variant="secondary" size="sm">
-                  {template.kind === "join" ? "入社" : "退社"}
-                </Button>
+                <StatusLabel>{template.kind === "join" ? "入社" : "退社"}</StatusLabel>
               </TableCell>
 
               <TableCell>{template.description ?? "—"}</TableCell>
@@ -60,9 +58,9 @@ export async function OnboardingTemplatesTable() {
                 {template.lifecycle_effect === null ? (
                   <span className="text-muted-foreground">未設定</span>
                 ) : (
-                  <Button type="button" variant="secondary" size="sm">
+                  <StatusLabel>
                     {template.lifecycle_effect === "hire" ? "入社" : "退職"}
-                  </Button>
+                  </StatusLabel>
                 )}
               </TableCell>
 

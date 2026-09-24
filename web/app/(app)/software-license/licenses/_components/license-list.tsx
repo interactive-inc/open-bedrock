@@ -11,7 +11,7 @@ import {
 } from "@/components/ui/table"
 import { getLicenseList } from "@/lib/api/get-license-list"
 import { LicenseCancelButton } from "@/app/(app)/software-license/licenses/_components/license-cancel-button"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 const PAGE_SIZE = 20
 
@@ -68,13 +68,9 @@ export async function LicenseList(props: Props) {
 
                 <TableCell>
                   {license.status === "cancelled" ? (
-                    <Button type="button" variant="secondary" size="sm">
-                      解約済み
-                    </Button>
+                    <StatusLabel>解約済み</StatusLabel>
                   ) : (
-                    <Button type="button" variant="secondary" size="sm">
-                      利用中
-                    </Button>
+                    <StatusLabel>利用中</StatusLabel>
                   )}
                 </TableCell>
 

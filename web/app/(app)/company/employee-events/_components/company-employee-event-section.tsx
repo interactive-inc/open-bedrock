@@ -11,7 +11,7 @@ import {
 import { getEmployeeEventList } from "@/lib/api/get-employee-event-list"
 import type { EmployeeEventKind } from "@/lib/api/types/employee-event-types"
 import { toEmployeeEventKindLabel } from "@/lib/employee-event/to-employee-event-kind-label"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   employeeCode: string
@@ -61,9 +61,7 @@ export async function CompanyEmployeeEventSection(props: Props) {
               <TableCell className="whitespace-nowrap">{event.effective_date}</TableCell>
 
               <TableCell>
-                <Button type="button" variant="secondary" size="sm">
-                  {toEmployeeEventKindLabel(event.kind)}
-                </Button>
+                <StatusLabel>{toEmployeeEventKindLabel(event.kind)}</StatusLabel>
               </TableCell>
 
               <TableCell>{event.from_department_code ?? "-"}</TableCell>

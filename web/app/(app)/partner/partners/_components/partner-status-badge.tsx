@@ -1,30 +1,18 @@
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   status: string
 }
 
-/** 取引先の状態を日本語ラベルと配色付きの Button で表示する。 */
+/** 取引先の状態を日本語ラベルと配色付きの StatusLabel で表示する。 */
 export function PartnerStatusBadge(props: Props) {
   if (props.status === "active") {
-    return (
-      <Button type="button" variant="secondary" size="sm">
-        取引中
-      </Button>
-    )
+    return <StatusLabel>取引中</StatusLabel>
   }
 
   if (props.status === "archived") {
-    return (
-      <Button type="button" variant="secondary" size="sm">
-        終了
-      </Button>
-    )
+    return <StatusLabel>終了</StatusLabel>
   }
 
-  return (
-    <Button type="button" variant="secondary" size="sm">
-      {props.status}
-    </Button>
-  )
+  return <StatusLabel>{props.status}</StatusLabel>
 }

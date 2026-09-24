@@ -9,7 +9,7 @@ import {
   TableHeader,
   TableRow,
 } from "@/components/ui/table"
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 
 type Props = {
   q: string | null
@@ -45,9 +45,7 @@ export async function SkillTable(props: Props) {
               <TableCell>{skill.code}</TableCell>
               <TableCell>{skill.name}</TableCell>
               <TableCell>
-                <Button type="button" variant="secondary" size="sm">
-                  {skill.category}
-                </Button>
+                <StatusLabel>{skill.category}</StatusLabel>
               </TableCell>
             </TableRow>
           ))}

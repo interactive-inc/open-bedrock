@@ -1,31 +1,19 @@
-import { Button } from "@/components/ui/button"
+import { StatusLabel } from "@/components/status-label"
 import type { LeaveStatus } from "@/lib/api/types/leave-types"
 
 type Props = {
   status: LeaveStatus
 }
 
-/** 休暇申請ステータスを日本語ラベルの Button で表示する。却下・失敗だけ destructive にし、他は secondary に揃える。 */
+/** 休暇申請ステータスを日本語ラベルの StatusLabel で表示する。却下・失敗だけ destructive にし、他は secondary に揃える。 */
 export function LeaveStatusBadge(props: Props) {
   if (props.status === "approved") {
-    return (
-      <Button type="button" variant="secondary" size="sm">
-        承認済み
-      </Button>
-    )
+    return <StatusLabel>承認済み</StatusLabel>
   }
 
   if (props.status === "rejected") {
-    return (
-      <Button type="button" variant="destructive" size="sm">
-        却下
-      </Button>
-    )
+    return <StatusLabel variant="destructive">却下</StatusLabel>
   }
 
-  return (
-    <Button type="button" variant="secondary" size="sm">
-      承認待ち
-    </Button>
-  )
+  return <StatusLabel>承認待ち</StatusLabel>
 }
