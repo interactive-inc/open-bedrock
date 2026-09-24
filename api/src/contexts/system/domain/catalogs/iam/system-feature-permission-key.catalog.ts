@@ -15,6 +15,7 @@ export const SYSTEM_FEATURE_PERMISSION_KEYS = [
   "system:work:perform",
   "system:work:review",
   "system:work:manage",
+  "personal_data:erase",
 ] as const
 
 export type SystemFeaturePermissionKey = (typeof SYSTEM_FEATURE_PERMISSION_KEYS)[number]
