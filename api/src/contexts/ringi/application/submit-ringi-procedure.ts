@@ -6,7 +6,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { parseCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/parse-company-procedure-decision.policy"
 import { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
 import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/repositories/ringi-request.repository"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { RingiHumanOperationAuthorizationAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-human-operation-authorization.adapter"
 import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { ProposalEntity } from "@system/domain/entities/proposal.entity"
@@ -58,7 +58,7 @@ export class SubmitRingiProcedure {
       return new ValidationError("稟議の入力が不正です", "invalid_ringi")
     if (command.approverId === command.session.employeeId)
       return new ValidationError("自分を提出先に指定できません", "invalid_approver")
-    const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+    const human = await new RingiHumanOperationAuthorizationAdapter(this.c).prepare({
       accountId: command.session.accountId,
       tokenVersion: command.tokenVersion,
       permissions: ["ringi:submit"],

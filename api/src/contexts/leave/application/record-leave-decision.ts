@@ -9,7 +9,7 @@ import {
 } from "@/contexts/company/domain/errors"
 import { LeaveProcedureRepository } from "@/contexts/leave/infrastructure/repositories/leave-procedure.repository"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { LeaveHumanOperationAuthorizationAdapter } from "@/contexts/leave/infrastructure/adapters/leave-human-operation-authorization.adapter"
 import { HumanAttestationEntity } from "@system/domain/entities/human-attestation.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
@@ -48,7 +48,7 @@ export class RecordLeaveDecision {
   }
 
   async run(command: Command): Promise<Result | ApplicationError> {
-    const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+    const human = await new LeaveHumanOperationAuthorizationAdapter(this.c).prepare({
       accountId: command.session.accountId,
       tokenVersion: command.tokenVersion,
       permissions: ["leave:approve"],

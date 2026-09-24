@@ -2,7 +2,7 @@ import { PrepareLeaveHumanEmployeeAdapter } from "@/contexts/leave/infrastructur
 import type { Context } from "@/env"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { LeaveProcedureRepository } from "@/contexts/leave/infrastructure/repositories/leave-procedure.repository"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { LeaveHumanOperationAuthorizationAdapter } from "@/contexts/leave/infrastructure/adapters/leave-human-operation-authorization.adapter"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemDecisionTargetValue } from "@system/domain/values/workflow/system-decision-target.value"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
@@ -29,7 +29,7 @@ export class CancelLeaveProcedure {
   async run(
     command: Command,
   ): Promise<Readonly<{ status: "cancelled"; replayed: boolean }> | ApplicationError> {
-    const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+    const human = await new LeaveHumanOperationAuthorizationAdapter(this.c).prepare({
       accountId: command.session.accountId,
       tokenVersion: command.tokenVersion,
       permissions: ["leave:submit"],

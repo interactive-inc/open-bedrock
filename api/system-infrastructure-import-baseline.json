@@ -1355,28 +1355,22 @@
       "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
     ],
     "src/contexts/expense/application/cancel-expense-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
     ],
     "src/contexts/expense/application/complete-approved-expense-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
     ],
     "src/contexts/expense/application/create-expense-retirement-plan.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
     ],
     "src/contexts/expense/application/publish-expense-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
-      "src/contexts/system/infrastructure/repositories/audit/system-audit-event.repository",
       "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
     ],
     "src/contexts/expense/application/record-expense-decision.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
     ],
     "src/contexts/expense/application/submit-expense-procedure.ts": [
       "src/contexts/system/infrastructure/adapters/attachments/prepare-attachment-evidence.adapter",
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
       "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
     ],
     "src/contexts/expense/application/verify-expense-coverage-page.ts": [
@@ -2112,31 +2106,24 @@
       "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
     ],
     "src/contexts/leave/application/cancel-leave-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
     ],
     "src/contexts/leave/application/complete-approved-leave-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
     ],
     "src/contexts/leave/application/complete-rejected-leave-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
     ],
     "src/contexts/leave/application/create-leave-retirement-plan.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
     ],
     "src/contexts/leave/application/publish-leave-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
-      "src/contexts/system/infrastructure/repositories/audit/system-audit-event.repository",
       "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
     ],
     "src/contexts/leave/application/record-leave-decision.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
     ],
     "src/contexts/leave/application/submit-leave-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
       "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
     ],
     "src/contexts/leave/application/verify-leave-coverage-page.ts": [
@@ -3249,27 +3236,21 @@
       "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
     ],
     "src/contexts/ringi/application/cancel-ringi-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
     ],
     "src/contexts/ringi/application/complete-approved-ringi-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
     ],
     "src/contexts/ringi/application/create-ringi-retirement-plan.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
     ],
     "src/contexts/ringi/application/publish-ringi-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
-      "src/contexts/system/infrastructure/repositories/audit/system-audit-event.repository",
       "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
     ],
     "src/contexts/ringi/application/record-ringi-decision.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
     ],
     "src/contexts/ringi/application/submit-ringi-procedure.ts": [
-      "src/contexts/system/infrastructure/adapters/iam/system-human-operation-authorization.adapter",
       "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
     ],
     "src/contexts/ringi/application/verify-ringi-coverage-page.ts": [

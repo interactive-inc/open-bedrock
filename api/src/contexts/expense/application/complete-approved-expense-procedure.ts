@@ -6,7 +6,7 @@ import type { CompanyPersonnelSession } from "@/contexts/company/domain/definiti
 import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/repositories/expense-procedure.repository"
 import type { ExpenseProcedureBinding } from "@/contexts/expense/domain/definitions/expense-procedure.definition"
 import type { Expense } from "@/contexts/expense/domain/entities/expense.entity"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { ExpenseHumanOperationAuthorizationAdapter } from "@/contexts/expense/infrastructure/adapters/expense-human-operation-authorization.adapter"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
@@ -45,7 +45,7 @@ export class CompleteApprovedExpenseProcedure {
     command: Command,
   ): Promise<Readonly<{ status: "approved"; replayed: boolean }> | ApplicationError> {
     const writeGuard = new PrepareExpenseWriteGuardAdapter(this.c).prepare()
-    const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+    const human = await new ExpenseHumanOperationAuthorizationAdapter(this.c).prepare({
       accountId: command.session.accountId,
       tokenVersion: command.tokenVersion,
       permissions: ["expense:approve"],

@@ -13,7 +13,7 @@ import {
 } from "@/contexts/expense/domain/definitions/expense.definition"
 import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/repositories/expense-procedure.repository"
 import { PrepareAttachmentEvidenceAdapter } from "@system/infrastructure/adapters/attachments/prepare-attachment-evidence.adapter"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { ExpenseHumanOperationAuthorizationAdapter } from "@/contexts/expense/infrastructure/adapters/expense-human-operation-authorization.adapter"
 import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { ProposalEntity } from "@system/domain/entities/proposal.entity"
@@ -74,7 +74,7 @@ export class SubmitExpenseProcedure {
     )
       return new ValidationError("経費の入力が不正です", "invalid_expense")
     const writeGuard = new PrepareExpenseWriteGuardAdapter(this.c).prepare()
-    const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+    const human = await new ExpenseHumanOperationAuthorizationAdapter(this.c).prepare({
       accountId: command.session.accountId,
       tokenVersion: command.tokenVersion,
       permissions: ["expense:submit"],
