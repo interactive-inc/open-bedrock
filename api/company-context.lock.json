@@ -601,7 +601,7 @@
     "src/contexts/company/interface/routes/company.resource-history.$type.$id.test.ts": "ca167a0354e302d7e7bff5f76bf389e4c07fe58b78557c69aae4336cc7f51cea",
     "src/contexts/company/interface/routes/company.resource-history.$type.$id.ts": "4653e2dc33c9eeaddd82f1c12a568060c95c300bf015fcaaa28575cb4b810c76",
     "src/contexts/company/interface/routes/company.responsibility-resource-adoptions.ts": "e80a96cb957a2026edd1b7ea0d32dcede26cbd74b49351a344136a1eb2f6b4cc",
-    "src/contexts/company/interface/routes/company.ts": "a1a8fa84a7a1cadab8e8df334375799c5f3367e2bacbf48870f0e8a61978935f",
+    "src/contexts/company/interface/routes/company.ts": "a2d61ee8348d536f9f04fe433a5c90fe61c43640d169fab8e1897c182fab9171",
     "src/contexts/company/interface/routes/company.workforce-connection-completions.ts": "cf1c219185bf2033235bac9d90bb7490dfd60feb62c06cc68f2a34fd365a74a1",
     "src/contexts/company/lib/workforce/CLAUDE.md": "fbdf55de84b7848a96e85c4d166d1a6b886fd799835e736ae56d61309522fcb2",
     "src/contexts/company/lib/workforce/apply-organization-workforce-changes.ts": "36a92b7029da22a5df92f76935e3256f373b9fcd46a5ffda939ff795cfd8a75f",
@@ -713,6 +713,6 @@
     "src/contexts/company/test/record-preservation-execution.integration.test.ts": "6fb89877730222fe43bd5f44fee68bfeda6991a6485bc1db16427a17706ead0b",
     "src/contexts/company/test/responsibility-resource-adoption.integration.test.ts": "426625f351ca9bf7f43aba30e7a3aae44cfbb020e3cbd246a3a8ee8eae7052d9",
     "src/contexts/company/test/unpublished-employment.test-support.ts": "0638ae9929296893ef2d46c676094b44bda08e1535ca800d06b10c012e4babe1",
-    "src/contexts/company/test/workforce-connection-completion.integration.test.ts": "2c7edfe3fa6ecab50e5d9642f5a64f76bfce791de06729cb85dfa18a7921f168"
+    "src/contexts/company/test/workforce-connection-completion.integration.test.ts": "a65950be72871d7444356838c6d3a8555d5743cef6e361712d80fa1bea6e942b"
   }
 }

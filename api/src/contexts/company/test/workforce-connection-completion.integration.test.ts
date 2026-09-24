@@ -24,7 +24,7 @@ function complete(
 test("未接続が残る間は記録せず、全件の接続後に一度だけ記録して再送は同じ結果を返す", async () => {
   const f = await createEmployeeAdoptionFixture()
   const before = await f.app.request(path, {}, f.environment)
-  expect(await before.json()).toMatchObject({
+  expect((await before.json()) as unknown).toMatchObject({
     completion: null,
     unconnectedEmployeeCount: 1,
     unconnectedEmploymentCount: 1,
@@ -54,18 +54,22 @@ test("未接続が残る間は記録せず、全件の接続後に一度だけ�
     body: { code: "workforce_connection_already_completed" },
   })
   const status = await f.app.request(path, {}, f.environment)
-  expect(await status.json()).toEqual({
+  expect((await status.json()) as unknown).toEqual({
     completion: saved,
     unconnectedEmployeeCount: 0,
     unconnectedEmploymentCount: 0,
   })
 
-  await expect(
-    f.database.exec("UPDATE company_workforce_connection_completions SET reason = 'changed'"),
-  ).rejects.toThrow("company_workforce_connection_completion_immutable")
-  await expect(
-    f.database.exec("DELETE FROM company_workforce_connection_completions"),
-  ).rejects.toThrow("company_workforce_connection_completion_immutable")
+  for (const sql of [
+    "UPDATE company_workforce_connection_completions SET reason = 'changed'",
+    "DELETE FROM company_workforce_connection_completions",
+  ]) {
+    const failure = await f.database.exec(sql).then(
+      () => null,
+      (error: unknown) => error,
+    )
+    expect(String(failure)).toContain("company_workforce_connection_completion_immutable")
+  }
 })
 
 test("Company管理資格が無ければ接続の状態も完了も扱わない", async () => {
