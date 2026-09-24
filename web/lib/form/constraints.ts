@@ -18,7 +18,6 @@ export const FORM_CONSTRAINTS = {
   career: {
     sheetTextMax: 5_000,
     postingTitleMax: 500,
-    deptNameMax: 200,
     requiredSkillsMax: 3_000,
     applicationMessageMax: 3_000,
   },

@@ -109,8 +109,7 @@ test("キャリア公募・応募・シート記録を全件保全し、人の�
       method: "POST",
       body: {
         title: "Blocked",
-        dept_id: null,
-        dept_name: null,
+        organization_unit_id: null,
         required_skills: null,
         status: "open",
       },
@@ -119,8 +118,7 @@ test("キャリア公募・応募・シート記録を全件保全し、人の�
       method: "PUT",
       body: {
         title: "Must not change",
-        dept_id: null,
-        dept_name: null,
+        organization_unit_id: null,
         required_skills: null,
         status: "open",
       },

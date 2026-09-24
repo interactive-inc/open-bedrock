@@ -2,28 +2,16 @@ import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
 import { DeleteCareerPosting } from "@/contexts/career/application/delete-career-posting"
 import { UpdateCareerPosting } from "@/contexts/career/application/update-career-posting"
-import type { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
+import { toCareerPostingResponse } from "@/contexts/career/interface/http/career-posting-response"
+import { zOrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { validateIntParam } from "@/lib/http/validate-int-param"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { zAppCareerPosting } from "@/contexts/career/interface/http/response-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-
-/** 公募をレスポンス用の snake_case に整形する。 */
-function toResponseBody(posting: CareerPosting) {
-  return zAppCareerPosting.parse({
-    id: posting.id,
-    title: posting.title,
-    dept_id: posting.deptId,
-    dept_name: posting.deptName,
-    required_skills: posting.requiredSkills,
-    status: posting.status,
-  })
-}
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ
 /** GET /career-postings/:postingId — 応募に必要な公募の詳細（認証済みユーザー） */
@@ -60,7 +48,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw toHttpException(posting)
   }
 
-  return c.json(toResponseBody(posting), 200)
+  const responseBody = await toCareerPostingResponse(c, posting)
+
+  return c.json(responseBody, 200)
 })
 
 // @authorization service - session を application service に渡して判定する
@@ -69,10 +59,9 @@ export const PUT = factory.createHandlers(
   verifyBearer,
   zValidator(
     "json",
-    z.object({
+    z.strictObject({
       title: z.string().min(1).max(500),
-      dept_id: z.number().int().positive().nullable().optional(),
-      dept_name: z.string().max(200).nullable().optional(),
+      organization_unit_id: zOrganizationUnitId.nullable().optional(),
       required_skills: z.string().max(3_000).nullable().optional(),
       status: z.enum(["open", "closed"]).optional(),
     }),
@@ -92,8 +81,7 @@ export const PUT = factory.createHandlers(
       session: session,
       postingId: postingId,
       title: body.title,
-      deptId: body.dept_id ?? null,
-      deptName: body.dept_name ?? null,
+      organizationUnitId: body.organization_unit_id ?? null,
       requiredSkills: body.required_skills ?? null,
       status: body.status,
     })
@@ -102,7 +90,9 @@ export const PUT = factory.createHandlers(
       throw toHttpException(updated)
     }
 
-    return c.json(toResponseBody(updated), 200)
+    const responseBody = await toCareerPostingResponse(c, updated)
+
+    return c.json(responseBody, 200)
   },
 )
 

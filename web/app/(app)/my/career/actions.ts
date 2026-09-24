@@ -197,20 +197,7 @@ export async function createCareerPostingAction(
     return { ok: false, error: title.message }
   }
 
-  const deptId = toOptionalId(formData.get("dept_id"))
-
-  if (deptId === "invalid") {
-    return { ok: false, error: "部署IDは整数で入力してください" }
-  }
-
-  const deptName = toOptionalText(formData.get("dept_name"), {
-    label: "部署名",
-    max: FORM_CONSTRAINTS.career.deptNameMax,
-  })
-
-  if (deptName instanceof Error) {
-    return { ok: false, error: deptName.message }
-  }
+  const organizationUnitId = toText(formData.get("organization_unit_id"))
 
   const requiredSkills = toOptionalText(formData.get("required_skills"), {
     label: "必要スキル",
@@ -223,8 +210,7 @@ export async function createCareerPostingAction(
 
   const created = await createCareerPosting({
     title: title,
-    dept_id: deptId,
-    dept_name: deptName,
+    organization_unit_id: organizationUnitId,
     required_skills: requiredSkills,
     status: toPostingStatus(formData.get("status")),
   })
@@ -265,20 +251,7 @@ export async function updateCareerPostingAction(
     return { ok: false, error: title.message }
   }
 
-  const deptId = toOptionalId(formData.get("dept_id"))
-
-  if (deptId === "invalid") {
-    return { ok: false, error: "部署IDは整数で入力してください" }
-  }
-
-  const deptName = toOptionalText(formData.get("dept_name"), {
-    label: "部署名",
-    max: FORM_CONSTRAINTS.career.deptNameMax,
-  })
-
-  if (deptName instanceof Error) {
-    return { ok: false, error: deptName.message }
-  }
+  const organizationUnitId = toText(formData.get("organization_unit_id"))
 
   const requiredSkills = toOptionalText(formData.get("required_skills"), {
     label: "必要スキル",
@@ -291,8 +264,7 @@ export async function updateCareerPostingAction(
 
   const updated = await updateCareerPosting(postingId, {
     title: title,
-    dept_id: deptId,
-    dept_name: deptName,
+    organization_unit_id: organizationUnitId,
     required_skills: requiredSkills,
     status: toPostingStatus(formData.get("status")),
   })
@@ -345,19 +317,6 @@ function toText(value: FormDataEntryValue | null): string | null {
   const trimmed = value.trim()
 
   return trimmed === "" ? null : trimmed
-}
-
-/** 任意の整数 ID フィールド。未入力は null、整数でなければ "invalid"。 */
-function toOptionalId(value: FormDataEntryValue | null): number | null | "invalid" {
-  const text = toText(value)
-
-  if (text === null) {
-    return null
-  }
-
-  const parsed = Number(text)
-
-  return Number.isInteger(parsed) ? parsed : "invalid"
 }
 
 /** status フィールドを open/closed に正規化する。closed 以外は open。 */

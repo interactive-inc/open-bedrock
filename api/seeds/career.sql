@@ -2,10 +2,10 @@
 -- 対象テーブル: career_postings, career_applications, career_sheets
 -- migration: migrations/career.sql / 値: src/infrastructure/seed/seed-career-postings.ts, seed-career-applications.ts, seed-career-sheets.ts
 
-INSERT INTO career_postings (id, title, dept_id, dept_name, required_skills, status) VALUES
-  (1, 'プロダクト開発リード', 3, '開発部', 'typescript,project_mgmt', 'open'),
-  (2, 'カスタマーサクセスマネージャー', 5, 'カスタマーサクセス部', 'customer_success,english', 'open'),
-  (3, '経営企画スペシャリスト', 1, '経営企画部', 'accounting,project_mgmt', 'closed');
+INSERT INTO career_postings (id, title, organization_unit_id, required_skills, status) VALUES
+  (1, 'プロダクト開発リード', 'department:D003', 'typescript,project_mgmt', 'open'),
+  (2, 'カスタマーサクセスマネージャー', 'department:D005', 'customer_success,english', 'open'),
+  (3, '経営企画スペシャリスト', 'department:D001', 'accounting,project_mgmt', 'closed');
 
 INSERT INTO career_applications (id, posting_id, applicant_id, message, status) VALUES
   (1, 1, 6, '開発リード職に挑戦したいです', 'applied'),

@@ -1,12 +1,12 @@
+import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
 import { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
 import { describe, expect, test } from "bun:test"
 
 describe("CareerPosting.create", () => {
-  test("builds with null id", () => {
+  test("builds with null id and no legacy department name", () => {
     const posting = CareerPosting.create({
       title: "Backend Engineer",
-      deptId: 10,
-      deptName: "Engineering",
+      organizationUnitId: toWorkforceOrganizationUnitId("D003"),
       requiredSkills: "TypeScript, SQL",
       status: "open",
     })
@@ -14,37 +14,56 @@ describe("CareerPosting.create", () => {
     expect(posting).toBeInstanceOf(CareerPosting)
     expect(posting.id).toBeNull()
     expect(posting.title).toBe("Backend Engineer")
-    expect(posting.deptId).toBe(10)
-    expect(posting.deptName).toBe("Engineering")
+    expect(posting.organizationUnitId).toBe(toWorkforceOrganizationUnitId("D003"))
+    expect(posting.legacyDeptName).toBeNull()
     expect(posting.requiredSkills).toBe("TypeScript, SQL")
     expect(posting.status).toBe("open")
   })
 })
 
+describe("CareerPosting.fromRow", () => {
+  test("keeps the legacy department name without exposing the legacy numeric id", () => {
+    const posting = CareerPosting.fromRow({
+      id: 1,
+      title: "Backend Engineer",
+      deptId: 3,
+      deptName: "Engineering",
+      organizationUnitId: null,
+      requiredSkills: null,
+      status: "open",
+    })
+
+    expect(posting.organizationUnitId).toBeNull()
+    expect(posting.legacyDeptName).toBe("Engineering")
+    expect("deptId" in posting).toBe(false)
+  })
+})
+
 describe("CareerPosting.withDetails", () => {
-  test("returns new with changed title, dept, skills, and status", () => {
-    const posting = CareerPosting.create({
+  test("returns new with changed title, organization unit, skills, and status", () => {
+    const posting = CareerPosting.fromRow({
+      id: 7,
       title: "Backend Engineer",
       deptId: 10,
       deptName: "Engineering",
+      organizationUnitId: null,
       requiredSkills: "TypeScript",
       status: "open",
     })
 
     const updated = posting.withDetails({
       title: "Frontend Engineer",
-      deptId: 20,
-      deptName: "Design",
+      organizationUnitId: toWorkforceOrganizationUnitId("D004"),
       requiredSkills: "React, CSS",
       status: "closed",
     })
 
     expect(updated).toBeInstanceOf(CareerPosting)
     expect(updated.title).toBe("Frontend Engineer")
-    expect(updated.deptId).toBe(20)
-    expect(updated.deptName).toBe("Design")
+    expect(updated.organizationUnitId).toBe(toWorkforceOrganizationUnitId("D004"))
+    expect(updated.legacyDeptName).toBe("Engineering")
     expect(updated.requiredSkills).toBe("React, CSS")
     expect(updated.status).toBe("closed")
-    expect(updated.id).toBeNull()
+    expect(updated.id).toBe(7)
   })
 })

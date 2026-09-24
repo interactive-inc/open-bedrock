@@ -16,8 +16,9 @@ import { initializeStandardCompanyTestState } from "@tests/api/support/initializ
 const careerPostingResponseSchema = z.object({
   id: z.number(),
   title: z.string(),
-  dept_id: z.number().nullable(),
-  dept_name: z.string().nullable(),
+  organization_unit_id: z.string().nullable(),
+  organization_unit_name: z.string().nullable(),
+  legacy_dept_name: z.string().nullable(),
   required_skills: z.string().nullable(),
   status: z.enum(["open", "closed"]),
 })
@@ -106,7 +107,7 @@ describe("POST /career-postings", () => {
       path: "/career/career-postings",
       token: await tokenFor(1),
       method: "POST",
-      body: { title: "Backend Engineer", dept_id: 3, dept_name: "Engineering" },
+      body: { title: "Backend Engineer", organization_unit_id: "department:D003" },
     })
 
     expect(response.status).toBe(201)
@@ -118,6 +119,9 @@ describe("POST /career-postings", () => {
     if (parsed.success) {
       expect(parsed.data.title).toBe("Backend Engineer")
       expect(parsed.data.status).toBe("open")
+      expect(parsed.data.organization_unit_id).toBe("department:D003")
+      expect(parsed.data.organization_unit_name).toBe("開発部")
+      expect(parsed.data.legacy_dept_name).toBeNull()
     }
   })
 
@@ -137,32 +141,43 @@ describe("POST /career-postings", () => {
       path: "/career/career-postings",
       token: await tokenFor(1),
       method: "POST",
-      body: { dept_name: "Engineering" },
+      body: { organization_unit_id: "department:D003" },
     })
 
     expect(response.status).toBe(400)
   })
 
-  test("returns 400 when dept_id is zero", async () => {
+  test("returns 400 when the retired numeric dept_id is sent", async () => {
     const response = await request({
       path: "/career/career-postings",
       token: await tokenFor(1),
       method: "POST",
-      body: { title: "Invalid Dept", dept_id: 0 },
+      body: { title: "Invalid Dept", dept_id: 3 },
     })
 
     expect(response.status).toBe(400)
   })
 
-  test("returns 400 when dept_id is negative", async () => {
+  test("returns 400 when organization_unit_id is malformed", async () => {
     const response = await request({
       path: "/career/career-postings",
       token: await tokenFor(1),
       method: "POST",
-      body: { title: "Invalid Dept", dept_id: -1 },
+      body: { title: "Invalid Dept", organization_unit_id: "/bad id" },
     })
 
     expect(response.status).toBe(400)
+  })
+
+  test("returns 422 when the organization unit does not exist", async () => {
+    const response = await request({
+      path: "/career/career-postings",
+      token: await tokenFor(1),
+      method: "POST",
+      body: { title: "Invalid Dept", organization_unit_id: "department:D999" },
+    })
+
+    expect(response.status).toBe(422)
   })
 
   test("returns 401 without a bearer token", async () => {
@@ -241,8 +256,7 @@ describe("PUT /career-postings/:postingId", () => {
       method: "PUT",
       body: {
         title: "Updated Lead",
-        dept_id: 4,
-        dept_name: "Platform",
+        organization_unit_id: "department:D004",
         required_skills: "go",
         status: "closed",
       },
@@ -257,6 +271,9 @@ describe("PUT /career-postings/:postingId", () => {
     if (parsed.success) {
       expect(parsed.data.title).toBe("Updated Lead")
       expect(parsed.data.status).toBe("closed")
+      expect(parsed.data.organization_unit_id).toBe("department:D004")
+      expect(parsed.data.organization_unit_name).toBe("営業部")
+      expect(parsed.data.legacy_dept_name).toBe("開発部")
     }
   })
 
@@ -282,26 +299,26 @@ describe("PUT /career-postings/:postingId", () => {
     expect(response.status).toBe(404)
   })
 
-  test("returns 400 when dept_id is zero", async () => {
+  test("returns 400 when the retired dept_name is sent", async () => {
     const response = await request({
       path: "/career/career-postings/1",
       token: await tokenFor(1),
       method: "PUT",
-      body: { title: "Updated Lead", dept_id: 0 },
+      body: { title: "Updated Lead", dept_name: "Platform" },
     })
 
     expect(response.status).toBe(400)
   })
 
-  test("returns 400 when dept_id is negative", async () => {
+  test("returns 422 when moving to the company itself", async () => {
     const response = await request({
       path: "/career/career-postings/1",
       token: await tokenFor(1),
       method: "PUT",
-      body: { title: "Updated Lead", dept_id: -5 },
+      body: { title: "Updated Lead", organization_unit_id: "company:root" },
     })
 
-    expect(response.status).toBe(400)
+    expect(response.status).toBe(422)
   })
 })
 
@@ -347,5 +364,65 @@ describe("DELETE /career-postings/:postingId", () => {
     })
 
     expect(response.status).toBe(409)
+  })
+})
+
+describe("organization unit picked from the Company organization units list", () => {
+  test("stores the id listed by /company/organization-units for a newly created unit", async () => {
+    const db = await createTestDb()
+    const token = await tokenFor(1)
+
+    const createdUnit = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/company/organization-units",
+      token,
+      method: "POST",
+      headers: { "Idempotency-Key": "career-posting-new-unit" },
+      body: { code: "D100", name: "新設部", parent_code: null },
+    })
+
+    expect([200, 201]).toContain(createdUnit.status)
+
+    const listed = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/company/organization-units",
+      token,
+    })
+
+    expect(listed.status).toBe(200)
+
+    const units = z
+      .array(z.object({ id: z.string(), code: z.string(), name: z.string() }))
+      .parse(await listed.json())
+    const unit = units.find((candidate) => candidate.code === "D100")
+
+    if (unit === undefined) {
+      throw new Error("new unit is not listed")
+    }
+
+    const created = await requestWithContext({
+      db,
+      jwtSecret,
+      path: "/career/career-postings",
+      token,
+      method: "POST",
+      body: { title: "New Unit Lead", organization_unit_id: unit.id },
+    })
+
+    expect(created.status).toBe(201)
+
+    const parsed = careerPostingResponseSchema.parse(await created.json())
+
+    expect(parsed.organization_unit_id).toBe(unit.id)
+    expect(parsed.organization_unit_name).toBe("新設部")
+
+    const stored = await db
+      .prepare("SELECT organization_unit_id FROM career_postings WHERE id = ?1")
+      .bind(parsed.id)
+      .first<{ organization_unit_id: string | null }>()
+
+    expect(stored?.organization_unit_id).toBe(unit.id)
   })
 })

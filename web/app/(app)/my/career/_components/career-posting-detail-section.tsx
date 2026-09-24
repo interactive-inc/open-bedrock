@@ -7,6 +7,7 @@ import { Card } from "@/components/ui/card"
 import { getCareerPosting } from "@/lib/api/get-career-posting"
 import { getCareerPostings } from "@/lib/api/get-career-postings"
 import type { CareerPosting } from "@/lib/api/types/career-types"
+import { toPostingDepartmentLabel } from "@/app/(app)/my/career/_lib/to-posting-department-label"
 
 type Props = {
   postingId: number
@@ -39,8 +40,9 @@ async function loadPosting(postingId: number, canManage: boolean): Promise<Caree
   return {
     id: found.id,
     title: found.title,
-    dept_id: found.dept_id,
-    dept_name: found.dept_name,
+    organization_unit_id: found.organization_unit_id,
+    organization_unit_name: found.organization_unit_name,
+    legacy_dept_name: found.legacy_dept_name,
     required_skills: found.required_skills,
     status: toPostingStatus(found.status),
   }
@@ -71,7 +73,7 @@ export async function CareerPostingDetailSection(props: Props) {
           <div className="flex flex-col gap-2">
             <span className="text-xs text-muted-foreground">部署</span>
 
-            <span className="text-sm">{posting.dept_name ?? "部署未設定"}</span>
+            <span className="text-sm">{toPostingDepartmentLabel(posting)}</span>
           </div>
 
           <div className="flex flex-col gap-2">

@@ -15,8 +15,9 @@ import { initializeStandardCompanyTestState } from "@tests/api/support/initializ
 const careerPostingResponseSchema = z.object({
   id: z.number(),
   title: z.string(),
-  dept_id: z.number().nullable(),
-  dept_name: z.string().nullable(),
+  organization_unit_id: z.string().nullable(),
+  organization_unit_name: z.string().nullable(),
+  legacy_dept_name: z.string().nullable(),
   required_skills: z.string().nullable(),
   status: z.enum(["open", "closed"]),
 })
@@ -101,7 +102,8 @@ describe("GET /career-postings", () => {
       const first = parsed.data.data.find((posting) => posting.id === 1)
 
       expect(first?.title).toBe("プロダクト開発リード")
-      expect(first?.dept_name).toBe("開発部")
+      expect(first?.legacy_dept_name).toBe("開発部")
+      expect(first?.organization_unit_id).toBeNull()
       expect(first?.required_skills).toBe("typescript,project_mgmt")
 
       const closed = parsed.data.data.find((posting) => posting.id === 3)

@@ -7,8 +7,12 @@ import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records
 export const zAppCareerPosting = z.object({
   id: z.number().nullable(),
   title: z.string(),
-  dept_id: z.number().nullable(),
-  dept_name: z.string().nullable(),
+  /** 募集部署として参照する Company の組織単位。未設定は null。 */
+  organization_unit_id: z.string().nullable(),
+  /** 組織単位の表示名。会社営業日の名称、廃止済みなら最後の名称。 */
+  organization_unit_name: z.string().nullable(),
+  /** 組織単位を参照できなかった頃に手入力された部署名。読み取り専用で、新たに書き込まない。 */
+  legacy_dept_name: z.string().nullable(),
   required_skills: z.string().nullable(),
   status: z.enum(["open", "closed"]),
 })

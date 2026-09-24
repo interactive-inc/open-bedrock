@@ -3,6 +3,7 @@ import { CardLink } from "@/components/card-link"
 import { FetchError } from "@/components/fetch-error"
 import { Badge } from "@/components/ui/badge"
 import { getCareerPostings } from "@/lib/api/get-career-postings"
+import { toPostingDepartmentLabel } from "@/app/(app)/my/career/_lib/to-posting-department-label"
 
 type Props = {
   canManage: boolean
@@ -40,7 +41,7 @@ export async function CareerPostingsSection(props: Props) {
             <Badge variant="secondary">{posting.status === "closed" ? "締切" : "募集中"}</Badge>
           </div>
 
-          <p className="text-sm text-muted-foreground">{posting.dept_name ?? "部署未設定"}</p>
+          <p className="text-sm text-muted-foreground">{toPostingDepartmentLabel(posting)}</p>
 
           <div className="flex flex-col gap-2">
             <span className="text-xs text-muted-foreground">必要スキル</span>
