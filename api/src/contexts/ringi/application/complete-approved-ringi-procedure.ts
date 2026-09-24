@@ -4,7 +4,7 @@ import type { CompanyPersonnelSession } from "@/contexts/company/domain/definiti
 import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/repositories/ringi-request.repository"
 import type { RingiProcedureBinding } from "@/contexts/ringi/domain/definitions/ringi-procedure.definition"
 import type { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { RingiHumanOperationAuthorizationAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-human-operation-authorization.adapter"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
@@ -35,7 +35,7 @@ export class CompleteApprovedRingiProcedure {
   async run(
     command: Command,
   ): Promise<Readonly<{ status: "approved"; replayed: boolean }> | ApplicationError> {
-    const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+    const human = await new RingiHumanOperationAuthorizationAdapter(this.c).prepare({
       accountId: command.session.accountId,
       tokenVersion: command.tokenVersion,
       permissions: ["ringi:approve"],
