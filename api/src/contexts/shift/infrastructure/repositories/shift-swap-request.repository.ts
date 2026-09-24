@@ -141,6 +141,7 @@ export class ShiftSwapRequestRepository {
     approved: ShiftSwapRequest
     requesterAssignment: ShiftAssignment
     targetAssignment: ShiftAssignment
+    guards: ReadonlyArray<D1PreparedStatement>
   }): Promise<ShiftSwapRequest | ShiftSwapConflict | Error> {
     if (
       props.approved.id === null ||
@@ -153,6 +154,7 @@ export class ShiftSwapRequestRepository {
     try {
       const db = this.c.env.DB
       await db.batch([
+        ...props.guards,
         db
           .prepare(
             "UPDATE shift_swap_requests SET status = ?1, approved_at = ?2 WHERE id = ?3 AND status = 'pending'",
@@ -182,9 +184,27 @@ export class ShiftSwapRequestRepository {
       ])
       return props.approved
     } catch (error) {
-      if (isAbortedByGuard(error)) return { reason: "conflict" }
+      if (isAbortedByGuard(error)) {
+        if (await this.companyAuthorityChanged(props.guards))
+          return new Error("company authority changed before saving", { cause: error })
+        return { reason: "conflict" }
+      }
       return error instanceof Error ? error : new Error("failed to swap shift assignments")
     }
+  }
+
+  /** batch中止後に、判断資格の検査文だけを再評価してCompany状態の変更による中止かを判別する。 */
+  private async companyAuthorityChanged(
+    guards: ReadonlyArray<D1PreparedStatement>,
+  ): Promise<boolean> {
+    for (const guard of guards) {
+      try {
+        await guard.first()
+      } catch {
+        return true
+      }
+    }
+    return false
   }
 
   async delete(swapRequestId: number): Promise<true | null | Error> {

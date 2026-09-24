@@ -8,7 +8,7 @@ import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 
 // @authorization service - session を application service に渡して判定する
-/** POST /business-trips/:id/approve — 人事が出張申請を承認する */
+/** POST /business-trips/:id/approve — 管理権限と申請者への会社上の管理範囲を持つ判断者が出張申請を承認する */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 

@@ -8,7 +8,7 @@ import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 
 // @authorization service - session を application service に渡して判定する
-/** POST /resignations/:id/accept — 人事が退職申請を受理する */
+/** POST /resignations/:id/accept — 技術的権限と申請者に対する会社上の管理範囲を持つ判断者が退職申請を受理する */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 

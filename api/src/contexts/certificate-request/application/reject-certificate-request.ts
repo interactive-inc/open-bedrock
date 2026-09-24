@@ -5,13 +5,15 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/repositories/certificate-request.repository"
 import { isCertificateRequestRecordSourceFrozenError } from "@/contexts/certificate-request/infrastructure/repositories/lib/is-certificate-request-record-source-frozen-error"
+import { CertificateRequestDecisionAuthorityAdapter } from "@/contexts/certificate-request/infrastructure/adapters/certificate-request-decision-authority.adapter"
+import { isCompanyWriteAbortedByGuard } from "@/contexts/company/interface/operations/is-company-write-aborted-by-guard"
 
 export type Command = {
   session: CompanySessionValue
   certificateRequestId: string
 }
 
-/** 証明書発行依頼を却下する。 */
+/** 証明書発行依頼を、技術的権限と依頼者に対するCompany上の管理範囲の両方を満たす判断者が却下する。 */
 export class RejectCertificateRequest {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -40,13 +42,32 @@ export class RejectCertificateRequest {
       return new ConflictError("certificate request is not in a transitionable state", next.reason)
     }
 
+    const authority = await new CertificateRequestDecisionAuthorityAdapter(this.c).prepare({
+      session: command.session,
+      subjectEmployeeId: current.requesterId,
+    })
+
+    if (authority instanceof Error) {
+      return new ForbiddenError(authority.message, authority.code, { cause: authority })
+    }
+
     const updated = await certificateRequestRepository.updateStatus({
       id: current.id,
       fromStatus: current.status,
       toStatus: next.status,
+      guards: authority.guards,
     })
 
     if (updated instanceof Error) {
+      if (isCompanyWriteAbortedByGuard(updated)) {
+        return new ConflictError(
+          "company authority changed before saving",
+          "company_authority_changed",
+          {
+            cause: updated,
+          },
+        )
+      }
       if (isCertificateRequestRecordSourceFrozenError(updated)) {
         return new ConflictError("certificate request writes are frozen", "record_source_frozen", {
           cause: updated,

@@ -5,13 +5,15 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import { LifeEventRepository } from "@/contexts/life-event/infrastructure/repositories/life-event.repository"
 import { isLifeEventRecordSourceFrozenError } from "@/contexts/life-event/infrastructure/repositories/lib/is-life-event-record-source-frozen-error"
+import { LifeEventDecisionAuthorityAdapter } from "@/contexts/life-event/infrastructure/adapters/life-event-decision-authority.adapter"
+import { isCompanyWriteAbortedByGuard } from "@/contexts/company/interface/operations/is-company-write-aborted-by-guard"
 
 export type Command = {
   session: CompanySessionValue
   lifeEventId: string
 }
 
-/** ライフイベント届出を却下する。 */
+/** ライフイベント届出を、技術的権限と申請者に対するCompany上の管理範囲の両方を満たす判断者が却下する。 */
 export class RejectLifeEvent {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -40,13 +42,32 @@ export class RejectLifeEvent {
       return new ConflictError("life event is not in a transitionable state", next.reason)
     }
 
+    const authority = await new LifeEventDecisionAuthorityAdapter(this.c).prepare({
+      session: command.session,
+      subjectEmployeeId: current.employeeId,
+    })
+
+    if (authority instanceof Error) {
+      return new ForbiddenError(authority.message, authority.code, { cause: authority })
+    }
+
     const updated = await lifeEventRepository.updateStatus({
       id: current.id,
       fromStatus: current.status,
       toStatus: next.status,
+      guards: authority.guards,
     })
 
     if (updated instanceof Error) {
+      if (isCompanyWriteAbortedByGuard(updated)) {
+        return new ConflictError(
+          "company authority changed before saving",
+          "company_authority_changed",
+          {
+            cause: updated,
+          },
+        )
+      }
       if (isLifeEventRecordSourceFrozenError(updated))
         return new ConflictError("life event writes are frozen", "record_source_frozen", {
           cause: updated,

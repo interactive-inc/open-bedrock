@@ -121,8 +121,9 @@ test("11件の出張申請記録を全件保全し、人の承認・取消・再
     ).status,
   ).toBe(409)
   expect((await apiRequest(frozenTripPath, { method: "DELETE" })).status).toBe(409)
-  expect((await apiRequest(`${frozenTripPath}/approve`, { method: "POST" })).status).toBe(409)
-  expect((await apiRequest(`${frozenTripPath}/reject`, { method: "POST" })).status).toBe(409)
+  // 申請者本人の判断は凍結の検査より前に会社上の資格で拒否する。
+  expect((await apiRequest(`${frozenTripPath}/approve`, { method: "POST" })).status).toBe(403)
+  expect((await apiRequest(`${frozenTripPath}/reject`, { method: "POST" })).status).toBe(403)
   const mappings = []
   for (const id of tripIds) {
     const path = `/business-trip/business-trips/${id}/preservation-requests`

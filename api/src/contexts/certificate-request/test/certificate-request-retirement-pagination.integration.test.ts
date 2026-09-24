@@ -122,6 +122,7 @@ test("11件のcertificate request記録を全件保全し、人の承認・取�
       `unexpected frozen update response: ${frozenUpdate.status} ${await frozenUpdate.text()}`,
     )
   expect((await apiRequest(frozenCertificateRequestPath, { method: "DELETE" })).status).toBe(409)
+  // 依頼者本人の判断は凍結の検査より前に会社上の資格で拒否する。
   expect(
     (
       await apiRequest(
@@ -129,7 +130,7 @@ test("11件のcertificate request記録を全件保全し、人の承認・取�
         { method: "POST" },
       )
     ).status,
-  ).toBe(409)
+  ).toBe(403)
   expect(
     (
       await apiRequest(
@@ -137,7 +138,7 @@ test("11件のcertificate request記録を全件保全し、人の承認・取�
         { method: "POST" },
       )
     ).status,
-  ).toBe(409)
+  ).toBe(403)
   const mappings = []
   for (const id of certificateRequestIds) {
     const path = `/certificate-request/certificate-requests/${id}/preservation-requests`

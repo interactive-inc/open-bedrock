@@ -80,24 +80,30 @@ export class LifeEventRepository {
     }
   }
 
-  /** status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。 */
+  /**
+   * 判断による status の遷移を、判断資格の検査文と同じbatchで確定する。検査が失敗すれば
+   * 遷移しない。行が fromStatus でなければ 0 行更新となり null を返す。
+   */
   async updateStatus(props: {
     id: string
     fromStatus: string
     toStatus: string
+    guards: ReadonlyArray<D1PreparedStatement>
   }): Promise<LifeEvent | null | Error> {
     try {
-      const rows = await this.c.var.database
-        .update(lifeEvents)
-        .set({ status: props.toStatus })
-        .where(and(eq(lifeEvents.id, props.id), eq(lifeEvents.status, props.fromStatus)))
-        .returning()
+      const database = this.c.env.DB
+      const results = await database.batch([
+        ...props.guards,
+        database
+          .prepare("UPDATE life_events SET status = ?1 WHERE id = ?2 AND status = ?3 RETURNING id")
+          .bind(props.toStatus, props.id, props.fromStatus),
+      ])
 
-      const row = rows.at(0)
+      if ((results.at(-1)?.results.length ?? 0) === 0) return null
 
-      return row === undefined ? null : LifeEvent.fromRow(row)
+      return await this.findById(props.id)
     } catch (error) {
-      return error instanceof Error ? error : new Error("failed to update life_event status")
+      return error instanceof Error ? error : new Error("failed to update life_events status")
     }
   }
 

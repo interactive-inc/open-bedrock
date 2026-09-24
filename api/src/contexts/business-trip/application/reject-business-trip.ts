@@ -5,13 +5,15 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 import type { ApplicationError } from "@/lib/errors"
 import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/repositories/business-trip.repository"
 import { isBusinessTripRecordSourceFrozenError } from "@/contexts/business-trip/infrastructure/repositories/lib/is-business-trip-record-source-frozen-error"
+import { BusinessTripDecisionAuthorityAdapter } from "@/contexts/business-trip/infrastructure/adapters/business-trip-decision-authority.adapter"
+import { isCompanyWriteAbortedByGuard } from "@/contexts/company/interface/operations/is-company-write-aborted-by-guard"
 
 export type Command = {
   session: CompanySessionValue
   businessTripId: string
 }
 
-/** 出張申請を却下する。 */
+/** 出張申請を、技術的権限と申請者に対するCompany上の管理範囲の両方を満たす判断者が却下する。 */
 export class RejectBusinessTrip {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -40,13 +42,32 @@ export class RejectBusinessTrip {
       return new ConflictError("business trip is not in a transitionable state", next.reason)
     }
 
+    const authority = await new BusinessTripDecisionAuthorityAdapter(this.c).prepare({
+      session: command.session,
+      subjectEmployeeId: current.travelerId,
+    })
+
+    if (authority instanceof Error) {
+      return new ForbiddenError(authority.message, authority.code, { cause: authority })
+    }
+
     const updated = await businessTripRepository.updateStatus({
       id: current.id,
       fromStatus: current.status,
       toStatus: next.status,
+      guards: authority.guards,
     })
 
     if (updated instanceof Error) {
+      if (isCompanyWriteAbortedByGuard(updated)) {
+        return new ConflictError(
+          "company authority changed before saving",
+          "company_authority_changed",
+          {
+            cause: updated,
+          },
+        )
+      }
       if (isBusinessTripRecordSourceFrozenError(updated)) {
         return new ConflictError("business trip writes are frozen", "record_source_frozen", {
           cause: updated,

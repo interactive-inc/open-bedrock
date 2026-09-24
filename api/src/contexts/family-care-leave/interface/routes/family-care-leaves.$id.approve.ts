@@ -8,7 +8,7 @@ import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 
 // @authorization service - session を application service に渡して判定する
-/** POST /family-care-leaves/:id/approve — 人事が産休・育休・介護休業の申出を承認する */
+/** POST /family-care-leaves/:id/approve — 申出者に対する会社上の管理範囲を持つ判断者が産休・育休・介護休業の申出を承認する */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
 

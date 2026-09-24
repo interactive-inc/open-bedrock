@@ -64,12 +64,12 @@ function tokenFor(employeeId: number): Promise<string> {
 }
 
 describe("POST /business-trips/:id/reject", () => {
-  test("returns 200 and rejects the trip for hr", async () => {
+  test("returns 200 and rejects the trip for the traveler's manager", async () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
       path: `/business-trip/business-trips/${seedId}/reject`,
-      token: await tokenFor(99),
+      token: await tokenFor(1),
       method: "POST",
     })
 
@@ -103,7 +103,7 @@ describe("POST /business-trips/:id/reject", () => {
       db,
       jwtSecret,
       path: `/business-trip/business-trips/${seedId}/reject`,
-      token: await tokenFor(99),
+      token: await tokenFor(1),
       method: "POST",
     })
 
@@ -113,7 +113,7 @@ describe("POST /business-trips/:id/reject", () => {
       db,
       jwtSecret,
       path: `/business-trip/business-trips/${seedId}/reject`,
-      token: await tokenFor(99),
+      token: await tokenFor(1),
       method: "POST",
     })
 
