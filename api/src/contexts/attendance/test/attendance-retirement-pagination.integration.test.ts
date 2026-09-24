@@ -7,6 +7,7 @@ import { createAttendancePreservationFixture } from "@/contexts/attendance/test/
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
 import { SystemPrincipalSecretService } from "@system/lib/auth/system-principal-secret-service"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
+import { createMonotonicTestClock } from "@tests/api/support/create-monotonic-test-clock"
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("11件の打刻を全件保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
@@ -38,7 +39,8 @@ test("11件の打刻を全件保全し、人の承認・取消・再提出を経
       )
       .run()
   }
-  const at = new Date()
+  const clock = createMonotonicTestClock()
+  const at = clock()
   const secret = "attendance-pagination-test-jwt-secret"
   const token = await new SystemAccessTokenIssuer(secret).issue({
     accountId: creator,
@@ -55,6 +57,9 @@ test("11件の打刻を全件保全し、人の承認・取消・再提出を経
     .bind(creator, hash, at.getTime(), at.getTime() + 60_000)
     .run()
   const bindings = {
+    get NOW() {
+      return clock().toISOString()
+    },
     DB: f.database,
     JWT_SECRET: secret,
     PEPPER_SECRET: "attendance-pagination-test-pepper",
@@ -268,7 +273,7 @@ test("11件の打刻を全件保全し、人の承認・取消・再提出を経
   const reviewerToken = await new SystemAccessTokenIssuer(secret).issue({
     accountId: f.reviewer.accountId,
     tokenVersion: 0,
-    now: new Date(),
+    now: clock(),
   })
   if (reviewerToken instanceof Error) throw reviewerToken
   const decide = (action: string, body: unknown) =>
