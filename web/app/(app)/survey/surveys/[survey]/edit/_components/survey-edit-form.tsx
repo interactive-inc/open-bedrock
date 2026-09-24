@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { updateSurveyAction } from "@/app/(app)/survey/surveys/manage/actions"
@@ -12,7 +13,7 @@ import { NativeSelect, NativeSelectOption } from "@/components/ui/native-select"
 import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
-  id: number
+  id: EntityId
   title: string
   status: "open" | "closed"
   questionsJson: ReadonlyArray<{

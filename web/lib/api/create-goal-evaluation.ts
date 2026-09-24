@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import type { ApiClient } from "api/app"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
@@ -8,7 +9,7 @@ type GoalEvaluationCreateRequest = Parameters<
 >[0]["json"]
 
 type Props = {
-  goalId: number
+  goalId: EntityId
   request: GoalEvaluationCreateRequest
 }
 

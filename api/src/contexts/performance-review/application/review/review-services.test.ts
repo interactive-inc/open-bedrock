@@ -42,10 +42,11 @@ async function seedForm(
 ): Promise<number> {
   const db = context.env.DB
 
-  const result = await db
+  const formId = await db
     .prepare(
       `INSERT INTO review_forms (cycle_id, subject_employee_id, reviewer_employee_id, reviewer_type, answers, score, comment, status, submitted_at)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)`,
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+       RETURNING id`,
     )
     .bind(
       cycleId,
@@ -58,11 +59,9 @@ async function seedForm(
       status,
       status === "submitted" ? "2026-01-15T00:00:00.000Z" : null,
     )
-    .run()
+    .first<number>("id")
 
-  const formId = result.meta.last_row_id
-
-  if (formId === undefined) {
+  if (formId === null) {
     throw new Error("seed form failed")
   }
 

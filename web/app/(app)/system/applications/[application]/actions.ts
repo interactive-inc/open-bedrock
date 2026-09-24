@@ -1,12 +1,13 @@
 "use server"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { z } from "zod"
 import type { ApplicationDecisionTarget } from "@/lib/api/types/application-types"
 import { revalidatePath } from "next/cache"
 import { approveApplication } from "@/lib/api/approve-application"
 import { getMe } from "@/lib/api/get-me"
 import { rejectApplication } from "@/lib/api/reject-application"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 
 export type DecisionState = {
   ok: boolean
@@ -15,7 +16,7 @@ export type DecisionState = {
 
 /** 承認処理。コメント任意。 */
 async function approve(
-  applicationId: number,
+  applicationId: EntityId,
   comment: string | null,
   decisionTarget: ApplicationDecisionTarget,
 ): Promise<DecisionState> {
@@ -30,7 +31,7 @@ async function approve(
 
 /** 却下処理。コメント必須。 */
 async function reject(
-  applicationId: number,
+  applicationId: EntityId,
   comment: string | null,
   decisionTarget: ApplicationDecisionTarget,
 ): Promise<DecisionState> {
@@ -59,7 +60,7 @@ export async function decideApplicationAction(
     return { ok: false, error: "申請を承認・却下する権限がありません" }
   }
 
-  const applicationId = toPositiveIntId(formData.get("application_id"))
+  const applicationId = toEntityId(formData.get("application_id"))
 
   if (applicationId === null) {
     return { ok: false, error: "申請が指定されていません" }

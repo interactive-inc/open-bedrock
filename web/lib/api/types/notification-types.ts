@@ -1,3 +1,5 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 export type NotificationKind =
   | "task"
   | "approval_request"
@@ -40,5 +42,5 @@ export type NotificationCreateRequest = {
   kind?: NotificationKind
   body?: string
   source_domain?: string
-  source_id?: number
+  source_id?: EntityId
 }

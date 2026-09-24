@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** DELETE /review-cycles/:cycleId。特権ロールがサイクルを削除する。成功時は null。 */
-export async function deleteReviewCycle(cycleId: number): Promise<null | Error> {
+export async function deleteReviewCycle(cycleId: EntityId): Promise<null | Error> {
   const client = await createClient()
 
   const response = await client["performance-review"]["review-cycles"][":cycleId"].$delete({

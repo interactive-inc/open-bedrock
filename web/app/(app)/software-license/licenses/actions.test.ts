@@ -38,7 +38,7 @@ test("a stale cancellation does not fetch or replace the reviewed revision", asy
     ok: false,
     error: "契約が変更されています",
   })
-  expect(mocks.cancel).toHaveBeenCalledExactlyOnceWith(1, 4)
+  expect(mocks.cancel).toHaveBeenCalledExactlyOnceWith("1", 4)
   expect(mocks.revalidate).not.toHaveBeenCalled()
 })
 

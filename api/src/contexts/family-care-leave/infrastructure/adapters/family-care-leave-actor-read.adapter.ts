@@ -3,7 +3,6 @@ import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interfa
 import type { FamilyCareLeaveContext } from "@/contexts/family-care-leave/configuration/family-care-leave-context"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
-import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { FamilyCareLeaveError } from "@/contexts/family-care-leave/domain/errors"
 
 type Context = FamilyCareLeaveContext
@@ -16,11 +15,11 @@ export class FamilyCareLeaveActorReadAdapter {
 
   async prepare(employeeIds: ReadonlyArray<EmployeeId> = []) {
     const now = this.c.var.now()
-    const account = zAccountId.safeParse(this.c.var.userId)
-    if (!account.success || !Number.isSafeInteger(now.getTime()) || now.getTime() < 0)
+    const accountId = this.c.var.userId
+    if (!Number.isSafeInteger(now.getTime()) || now.getTime() < 0)
       return new FamilyCareLeaveError("forbidden", "invalid family-care-leave actor")
     const authorization = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
-      accountId: account.data,
+      accountId,
       tokenVersion: this.c.var.accountTokenVersion,
       permissions: ["family_care_leave:manage"],
       now,
@@ -40,7 +39,7 @@ export class FamilyCareLeaveActorReadAdapter {
         database: this.c.env.DB,
       },
       {
-        accountIds: [account.data],
+        accountIds: [accountId],
         employeeCodes: [],
       },
     )
@@ -59,7 +58,7 @@ export class FamilyCareLeaveActorReadAdapter {
         NOW: now.toISOString(),
       },
     })
-    const actors = await directory.findForAccountIds([account.data])
+    const actors = await directory.findForAccountIds([accountId])
     const employees = await directory.findForEmployeeIds(employeeIds)
     if (actors instanceof Error || employees instanceof Error)
       return new FamilyCareLeaveError(
@@ -69,7 +68,7 @@ export class FamilyCareLeaveActorReadAdapter {
     return {
       actor: actors[0]?.employee ?? null,
       employees,
-      accountId: account.data,
+      accountId,
       principalId: authorization.principalId,
       now,
       assertions: [...authorization.assertions, guard],

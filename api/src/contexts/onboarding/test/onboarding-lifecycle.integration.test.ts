@@ -16,6 +16,10 @@ import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/t
 import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
 import { loadSchema } from "@tests/api/support/load-schema"
 import { runScheduledOnboarding } from "@/api/scheduled/run-onboarding"
+import { CompleteOnboardingTask } from "@/contexts/onboarding/application/complete-onboarding-task"
+import { UpdateOnboardingAssignment } from "@/contexts/onboarding/application/update-onboarding-assignment"
+import { ConflictError } from "@/lib/errors"
+import { makeTestSession } from "@tests/api/support/make-test-session"
 
 async function fixture() {
   const f = await createCompanyAssignmentResourceTestContext(createD1TestDatabase(loadSchema()))
@@ -56,7 +60,36 @@ async function fixture() {
     if (retired instanceof Error) throw retired
     return retired.action.id
   }
-  return { ...f, env, clock, run, assignments, retire }
+  const correctRetirement = async (original: string, retirementOn: string, key: string) => {
+    const correction = await f.personnel(
+      {
+        kind: "corrected",
+        eventOn: restoreCalendarDate("2030-06-01"),
+        correctsActionId: original,
+        reason: "Correct retirement date",
+        replacementAction: {
+          kind: "retired",
+          employeeCode: "EMPLOYEE-001",
+          retirementOn: restoreCalendarDate(retirementOn),
+        },
+      },
+      key,
+    )
+    if (correction instanceof Error) throw correction
+    return correction.action.id
+  }
+  const deliverRetirement = async () => {
+    const original = await retire()
+    clock.at = new Date("2030-07-01T00:00:00Z")
+    expect(await run()).toMatchObject([{ status: "succeeded" }])
+    const generated = await f.database
+      .prepare("SELECT id FROM onboarding_assignments WHERE lifecycle_action_id = ?1")
+      .bind(original)
+      .first<number>("id")
+    if (generated === null) throw new Error("generated assignment missing")
+    return { original, generated }
+  }
+  return { ...f, env, clock, run, assignments, retire, correctRetirement, deliverRetirement }
 }
 
 test("定期起動は会社の日付で退職翌日から手続きを一度だけ生成する", async () => {
@@ -129,6 +162,163 @@ test("訂正された元の発令を省き、訂正後の日付に退職手続�
   expect(await f.run()).not.toBeInstanceOf(Error)
   expect((await f.assignments()).results).toMatchObject([
     { kind: "leave", lifecycle_action_id: correction.action.id },
+  ])
+})
+
+test("生成後に退職が訂正されたら、元のチェックリストを置換済みとして残し訂正後の手続きを生成する", async () => {
+  const f = await fixture()
+  const { original, generated } = await f.deliverRetirement()
+  const correction = await f.correctRetirement(original, "2030-07-31", "automatic:late-correct")
+  f.clock.at = new Date("2030-08-01T00:00:00Z")
+  expect(await f.run()).toMatchObject([{ status: "succeeded" }])
+  expect((await f.assignments()).results).toMatchObject([
+    { id: generated, kind: "leave", status: "superseded", lifecycle_action_id: original },
+    { kind: "leave", status: "in_progress", lifecycle_action_id: correction },
+  ])
+  expect(
+    await f.database
+      .prepare("SELECT status FROM onboarding_tasks WHERE assignment_id = ?1")
+      .bind(generated)
+      .first<string>("status"),
+  ).toBe("pending")
+  expect(
+    await f.database
+      .prepare(
+        "SELECT reason_code, before_json, after_json FROM system_audit_events WHERE action = 'onboarding.lifecycle.assignment_superseded' AND target_id = ?1",
+      )
+      .bind(String(generated))
+      .first<{ reason_code: string; before_json: string; after_json: string }>(),
+  ).toEqual({
+    reason_code: "personnel_action.corrected",
+    before_json: JSON.stringify({ status: "in_progress" }),
+    after_json: JSON.stringify({ status: "superseded" }),
+  })
+
+  const context = createTestContextForDatabase(f.database)
+  const taskId = await f.database
+    .prepare("SELECT id FROM onboarding_tasks WHERE assignment_id = ?1")
+    .bind(generated)
+    .first<number>("id")
+  if (taskId === null) throw new Error("superseded task missing")
+  const completed = await new CompleteOnboardingTask(context).run({
+    taskId,
+    session: makeTestSession("root"),
+    completedAt: "2030-08-01",
+  })
+  expect(completed).toBeInstanceOf(ConflictError)
+  expect(completed).toMatchObject({ code: "assignment_superseded" })
+  expect(
+    await new UpdateOnboardingAssignment(context).run({
+      assignmentId: generated,
+      assignedAt: "2030-08-02",
+      session: makeTestSession("root"),
+    }),
+  ).toMatchObject({ code: "not_modifiable" })
+  const repository = new OnboardingAssignmentRepository(context)
+  expect(await repository.completeTask(taskId, generated, "2030-08-01")).toBeNull()
+  for (const sql of [
+    "UPDATE onboarding_assignments SET status = 'in_progress' WHERE id = ?1",
+    "DELETE FROM onboarding_assignments WHERE id = ?1",
+    "UPDATE onboarding_tasks SET status = 'done', completed_at = '2030-08-01' WHERE assignment_id = ?1",
+    "DELETE FROM onboarding_tasks WHERE assignment_id = ?1",
+  ])
+    expect(
+      await f.database
+        .prepare(sql)
+        .bind(generated)
+        .run()
+        .then(
+          () => null,
+          (error: unknown) => error,
+        ),
+    ).toBeInstanceOf(Error)
+  expect(await f.run()).toEqual([])
+  expect((await f.assignments()).results).toHaveLength(2)
+})
+
+test("完了済みのチェックリストは訂正後も完了のまま残し、訂正後の手続きを別に生成する", async () => {
+  const f = await fixture()
+  const { original, generated } = await f.deliverRetirement()
+  await f.database
+    .prepare(
+      "UPDATE onboarding_tasks SET status = 'done', completed_at = '2030-07-02' WHERE assignment_id = ?1",
+    )
+    .bind(generated)
+    .run()
+  await f.database
+    .prepare("UPDATE onboarding_assignments SET status = 'completed' WHERE id = ?1")
+    .bind(generated)
+    .run()
+  const correction = await f.correctRetirement(original, "2030-07-31", "automatic:done-correct")
+  f.clock.at = new Date("2030-08-01T00:00:00Z")
+  expect(await f.run()).toMatchObject([{ status: "succeeded" }])
+  expect((await f.assignments()).results).toMatchObject([
+    { id: generated, status: "completed", lifecycle_action_id: original },
+    { status: "in_progress", lifecycle_action_id: correction },
+  ])
+  expect(
+    await f.database
+      .prepare(
+        "SELECT count(*) AS total FROM system_audit_events WHERE action = 'onboarding.lifecycle.assignment_superseded'",
+      )
+      .first<number>("total"),
+  ).toBe(0)
+})
+
+test("置換の監査に失敗したら置換と新しい割当を戻し、再試行で一度だけ置換する", async () => {
+  const f = await fixture()
+  const { original, generated } = await f.deliverRetirement()
+  const correction = await f.correctRetirement(original, "2030-07-31", "automatic:retry-correct")
+  f.clock.at = new Date("2030-08-01T00:00:00Z")
+  await f.database.exec(
+    "CREATE TRIGGER fail_supersede_audit BEFORE INSERT ON system_audit_events WHEN NEW.action = 'onboarding.lifecycle.assignment_superseded' BEGIN SELECT RAISE(ABORT, 'audit unavailable'); END",
+  )
+  expect(await f.run()).toMatchObject([{ status: "queued" }])
+  expect((await f.assignments()).results).toMatchObject([
+    { id: generated, status: "in_progress", lifecycle_action_id: original },
+  ])
+  expect((await f.assignments()).results).toHaveLength(1)
+  await f.database.exec("DROP TRIGGER fail_supersede_audit")
+  f.clock.at = new Date(f.clock.at.getTime() + 10000)
+  expect(await f.run()).toMatchObject([{ status: "succeeded" }])
+  expect((await f.assignments()).results).toMatchObject([
+    { id: generated, status: "superseded" },
+    { status: "in_progress", lifecycle_action_id: correction },
+  ])
+  expect(
+    await f.database
+      .prepare(
+        "SELECT count(*) AS total FROM system_audit_events WHERE action = 'onboarding.lifecycle.assignment_superseded'",
+      )
+      .first<number>("total"),
+  ).toBe(1)
+})
+
+test("訂正後の発令が現在の雇用と一致しなければ、元のチェックリストを置換済みにして新しく生成しない", async () => {
+  const f = await fixture()
+  const { original, generated } = await f.deliverRetirement()
+  const correction = await f.correctRetirement(original, "2030-07-31", "automatic:obsolete-correct")
+  const rehire = await f.personnel(
+    {
+      kind: "rehire",
+      employeeCode: "EMPLOYEE-001",
+      eventOn: restoreCalendarDate("2030-09-01"),
+      employmentType: "FULL_TIME",
+    },
+    "automatic:rehire-after-correct",
+  )
+  if (rehire instanceof Error) throw rehire
+  f.clock.at = new Date("2030-09-01T00:00:00Z")
+  expect(await f.run()).not.toBeInstanceOf(Error)
+  expect(
+    await f.database
+      .prepare("SELECT outcome FROM onboarding_lifecycle_deliveries WHERE action_id = ?1")
+      .bind(correction)
+      .first<string>("outcome"),
+  ).toBe("obsolete")
+  expect((await f.assignments()).results).toMatchObject([
+    { id: generated, kind: "leave", status: "superseded", lifecycle_action_id: original },
+    { kind: "join", status: "in_progress", lifecycle_action_id: rehire.action.id },
   ])
 })
 

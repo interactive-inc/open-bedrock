@@ -1,3 +1,4 @@
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { ExpenseResubmission } from "@/app/(app)/expense/expenses/_components/expense-resubmission"
 import { ExpenseProcedureControls } from "@/app/(app)/expense/expenses/_components/expense-procedure-controls"
 import { ExpenseDecisionHistory } from "@/app/(app)/expense/expenses/_components/expense-decision-history"
@@ -47,9 +48,9 @@ type ViewProps = {
 
 /** /expenses/:id を認証付きで取得して詳細カードと意思決定フォームを描画する非同期 RSC。 */
 async function ExpenseDetailView(props: ViewProps) {
-  const expenseId = Number(props.id)
+  const expenseId = toEntityId(props.id)
 
-  if (!Number.isInteger(expenseId) || expenseId <= 0) {
+  if (expenseId === null) {
     return <FetchError message="経費 ID が不正です" />
   }
 

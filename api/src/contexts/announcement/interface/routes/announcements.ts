@@ -66,7 +66,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       .select()
       .from(announcements)
       .where(where)
-      .orderBy(desc(announcements.id))
+      .orderBy(desc(announcements.createdAt), desc(announcements.id))
       .limit(limit)
       .offset(offset),
     c.var.database.select({ total: count() }).from(announcements).where(where),

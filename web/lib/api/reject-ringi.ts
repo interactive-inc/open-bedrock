@@ -1,10 +1,11 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import type { RingiDecisionTarget } from "@/lib/api/types/ringi-types"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** POST /ringi-requests/:id/reject。任意コメント付きで稟議を却下する。表示した判断対象と会社上の判断資格を検査する。 */
 export async function rejectRingi(
-  id: number,
+  id: EntityId,
   comment: string | null,
   decisionTarget: RingiDecisionTarget,
 ) {

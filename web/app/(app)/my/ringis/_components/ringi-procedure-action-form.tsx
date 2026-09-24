@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { advanceRingiAction } from "@/app/(app)/my/ringis/actions"
 import { Button } from "@/components/ui/button"
@@ -7,7 +8,7 @@ import { FieldError } from "@/components/ui/field"
 import type { RingiDecisionTarget } from "@/lib/api/types/ringi-types"
 
 type Props = {
-  ringiId: number
+  ringiId: EntityId
   decisionTarget: RingiDecisionTarget
   operation: "cancel" | "execute"
 }

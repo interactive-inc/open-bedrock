@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { GoalResponse, GoalUpdateRequest } from "@/lib/api/types/goal-types"
@@ -7,7 +8,7 @@ import type { GoalResponse, GoalUpdateRequest } from "@/lib/api/types/goal-types
  * 本人以外は 403、確定評価済みは 409 を api が返すため、戻りは Error になる。
  */
 export async function updateGoal(
-  goalId: number,
+  goalId: EntityId,
   request: GoalUpdateRequest,
 ): Promise<GoalResponse | Error> {
   const client = await createClient()

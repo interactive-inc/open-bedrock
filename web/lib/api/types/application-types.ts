@@ -1,3 +1,5 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 export type ApplicationStatus = "pending" | "approved" | "rejected"
 
 /** GET /templates の各要素。 */
@@ -24,7 +26,7 @@ export type ApplicationTemplateDetail = {
 
 /** GET /application-requests の各要素（自分の申請一覧）。 */
 export type ApplicationMineResponse = {
-  id: number
+  id: EntityId
   template_name: string
   status: ApplicationStatus
   current_step: string | null
@@ -36,8 +38,8 @@ export type ApplicationMineResponse = {
  * id は永続化前に null になりうる実 API レスポンスに合わせる。
  */
 export type ApplicationListItem = {
-  id: number | null
-  template_id: number
+  id: EntityId | null
+  template_id: EntityId
   status: ApplicationStatus
   current_step: string | null
   created_at: string
@@ -46,7 +48,7 @@ export type ApplicationListItem = {
 
 /** GET /application-requests/inbox の各要素（承認待ち一覧）。 */
 export type ApplicationInboxResponse = {
-  id: number
+  id: EntityId
   template_name: string
   applicant_name: string
   current_step: string | null
@@ -58,7 +60,7 @@ export type ApplicationApprovalAction = "approve" | "reject"
 
 /** 申請への承認/却下アクション 1 件。GET /application-requests/:id の approvals[] に並ぶ。 */
 export type ApplicationApprovalEntry = {
-  id: number
+  id: EntityId
   approver_name: string
   action: ApplicationApprovalAction
   comment: string | null
@@ -77,7 +79,7 @@ export type ApplicationDecisionTarget = {
 export type ApplicationDetailResponse = {
   decision_target: ApplicationDecisionTarget
   can_decide: boolean
-  id: number
+  id: EntityId
   template_code: string
   template_name: string
   applicant_name: string
@@ -105,7 +107,7 @@ export type ApplicationWorkflowProgress = {
     status: "waiting" | "pending" | "approved" | "rejected" | "returned"
   }>
   approvals: ReadonlyArray<{
-    id: number
+    id: EntityId
     step_key: string
     round: number
     approver_name: string

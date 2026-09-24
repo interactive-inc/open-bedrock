@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState, useState } from "react"
 import { createLeaveRequestAction, updateLeaveRequestAction } from "@/app/(app)/my/leaves/actions"
 import type { LeaveActionState } from "@/app/(app)/my/leaves/actions"
@@ -15,8 +16,8 @@ const initialState: LeaveActionState = { ok: false, error: null }
  * 休暇の下書きを保存し、提出前の内容確認へ進む。
  */
 export function LeaveRequestCreateForm(props: {
-  requestId?: number
-  previousId?: number
+  requestId?: EntityId
+  previousId?: EntityId
   initial?: {
     leave_type: string
     unit: string

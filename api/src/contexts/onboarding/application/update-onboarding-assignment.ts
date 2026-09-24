@@ -43,7 +43,7 @@ export class UpdateOnboardingAssignment {
       return new NotFoundError("assignment not found", "assignment_not_found")
     }
 
-    if (current.status === "completed") {
+    if (current.status !== "in_progress") {
       return new ConflictError("assignment is not modifiable", "not_modifiable")
     }
 

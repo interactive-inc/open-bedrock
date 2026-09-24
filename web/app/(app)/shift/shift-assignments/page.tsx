@@ -57,10 +57,10 @@ async function AllAssignments() {
 
   const patterns = await getShiftPatterns()
 
-  const patternNameMap: Record<number, string> =
+  const patternNameMap: Record<string, string> =
     patterns instanceof Error
       ? {}
-      : Object.fromEntries(patterns.filter((p) => p.id !== null).map((p) => [p.id, p.name]))
+      : Object.fromEntries(patterns.filter((p) => p.id !== null).map((p) => [String(p.id), p.name]))
 
   return (
     <ShiftAssignmentList

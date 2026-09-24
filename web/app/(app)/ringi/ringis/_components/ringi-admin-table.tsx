@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { formatDateTime } from "@/lib/format-date-time"
 import Link from "next/link"
 import { RingiStatusBadge } from "@/components/ringi-status-badge"
@@ -17,7 +18,7 @@ import type { RingiStatus } from "@/lib/api/types/ringi-types"
 const amountFormatter = new Intl.NumberFormat("ja-JP")
 
 export type RingiAdminRow = {
-  id: number
+  id: EntityId
   applicant_id: string
   applicant_name: string
   applicant_dept_name: string | null

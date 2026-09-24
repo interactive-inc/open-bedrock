@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import { approveRingiAction, rejectRingiAction } from "@/app/(app)/my/ringis/actions"
@@ -11,7 +12,7 @@ import type { RingiDecisionTarget } from "@/lib/api/types/ringi-types"
 
 type Props = {
   decisionTarget: RingiDecisionTarget
-  ringiId: number
+  ringiId: EntityId
 }
 
 const initialApproveState: RingiDecisionFormState = {

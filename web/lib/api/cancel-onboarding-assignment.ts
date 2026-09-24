@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
@@ -5,7 +6,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
  * DELETE /onboarding-assignments/:id。割り当てを配下タスクごと取り消す。特権ロールのみ。
  * 成功時は null、失敗時は Error を返す。
  */
-export async function cancelOnboardingAssignment(id: number): Promise<null | Error> {
+export async function cancelOnboardingAssignment(id: EntityId): Promise<null | Error> {
   const client = await createClient()
 
   const response = await client["onboarding"]["onboarding-assignments"][":id"].$delete({

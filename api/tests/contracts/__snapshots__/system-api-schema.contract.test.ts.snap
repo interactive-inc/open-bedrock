@@ -1,0 +1,3568 @@
+// Bun Snapshot v1, https://bun.sh/docs/test/snapshots
+
+exports[`System API schema snapshot route表、認可宣言、応答schemaの変更は、snapshotの更新として明示する 1`] = `
+{
+  "responseSchemas": {
+    "interface/http/attachment-preservation-response-schemas.ts#attachmentPreservationListResponseSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "next_cursor": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+        },
+        "preservations": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "actorAccountId": {
+                "maxLength": 255,
+                "minLength": 1,
+                "type": "string",
+              },
+              "attachmentId": {
+                "maxLength": 64,
+                "minLength": 1,
+                "type": "string",
+              },
+              "auditEventId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "createdAt": {
+                "format": "date-time",
+                "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                "type": "string",
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "kind": {
+                "enum": [
+                  "hold",
+                  "retention",
+                ],
+                "type": "string",
+              },
+              "reason": {
+                "maxLength": 1000,
+                "minLength": 1,
+                "type": "string",
+              },
+              "release": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "actorAccountId": {
+                        "maxLength": 255,
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                      "at": {
+                        "format": "date-time",
+                        "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                        "type": "string",
+                      },
+                      "auditEventId": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "operationId": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "reason": {
+                        "maxLength": 1000,
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                    },
+                    "required": [
+                      "operationId",
+                      "reason",
+                      "actorAccountId",
+                      "at",
+                      "auditEventId",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "retainUntil": {
+                "anyOf": [
+                  {},
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "revision": {
+                "anyOf": [
+                  {
+                    "const": 1,
+                    "type": "number",
+                  },
+                  {
+                    "const": 2,
+                    "type": "number",
+                  },
+                ],
+              },
+              "sha256": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+              "attachmentId",
+              "sha256",
+              "kind",
+              "retainUntil",
+              "reason",
+              "actorAccountId",
+              "createdAt",
+              "auditEventId",
+              "revision",
+              "release",
+            ],
+            "type": "object",
+          },
+          "maxItems": 100,
+          "type": "array",
+        },
+      },
+      "required": [
+        "preservations",
+        "next_cursor",
+      ],
+      "type": "object",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+    "interface/http/attachment-preservation-response-schemas.ts#attachmentPreservationResponseSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "preservation": {
+          "additionalProperties": false,
+          "properties": {
+            "actorAccountId": {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string",
+            },
+            "attachmentId": {
+              "maxLength": 64,
+              "minLength": 1,
+              "type": "string",
+            },
+            "auditEventId": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "createdAt": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "type": "string",
+            },
+            "id": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "kind": {
+              "enum": [
+                "hold",
+                "retention",
+              ],
+              "type": "string",
+            },
+            "reason": {
+              "maxLength": 1000,
+              "minLength": 1,
+              "type": "string",
+            },
+            "release": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "actorAccountId": {
+                      "maxLength": 255,
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                    "at": {
+                      "format": "date-time",
+                      "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                      "type": "string",
+                    },
+                    "auditEventId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "operationId": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "reason": {
+                      "maxLength": 1000,
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                  },
+                  "required": [
+                    "operationId",
+                    "reason",
+                    "actorAccountId",
+                    "at",
+                    "auditEventId",
+                  ],
+                  "type": "object",
+                },
+                {
+                  "type": "null",
+                },
+              ],
+            },
+            "retainUntil": {
+              "anyOf": [
+                {},
+                {
+                  "type": "null",
+                },
+              ],
+            },
+            "revision": {
+              "anyOf": [
+                {
+                  "const": 1,
+                  "type": "number",
+                },
+                {
+                  "const": 2,
+                  "type": "number",
+                },
+              ],
+            },
+            "sha256": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string",
+            },
+          },
+          "required": [
+            "id",
+            "attachmentId",
+            "sha256",
+            "kind",
+            "retainUntil",
+            "reason",
+            "actorAccountId",
+            "createdAt",
+            "auditEventId",
+            "revision",
+            "release",
+          ],
+          "type": "object",
+        },
+        "replayed": {
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "preservation",
+        "replayed",
+      ],
+      "type": "object",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+    "interface/http/audit-disclosure-response-schemas.ts#auditDisclosureCurrentPolicyResponseSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "actorAccountId": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "allowedFields": {
+                  "readOnly": true,
+                },
+                "allowedPurposes": {
+                  "anyOf": [
+                    {
+                      "readOnly": true,
+                    },
+                    {
+                      "type": "null",
+                    },
+                  ],
+                },
+                "allowedTargetTypes": {
+                  "anyOf": [
+                    {
+                      "readOnly": true,
+                    },
+                    {
+                      "type": "null",
+                    },
+                  ],
+                },
+                "auditEventId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "commandId": {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                "enabled": {
+                  "type": "boolean",
+                },
+                "expiresAt": {
+                  "anyOf": [
+                    {},
+                    {
+                      "type": "null",
+                    },
+                  ],
+                },
+                "reason": {
+                  "maxLength": 1000,
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "recordedAt": {
+                  "format": "date-time",
+                  "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+                  "type": "string",
+                },
+                "revision": {
+                  "exclusiveMinimum": 0,
+                  "maximum": 9007199254740991,
+                  "type": "integer",
+                },
+                "scope": {
+                  "anyOf": [
+                    {
+                      "const": "*",
+                      "type": "string",
+                    },
+                    {
+                      "maxLength": 255,
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                  ],
+                },
+              },
+              "required": [
+                "scope",
+                "commandId",
+                "enabled",
+                "allowedFields",
+                "allowedTargetTypes",
+                "allowedPurposes",
+                "expiresAt",
+                "reason",
+                "actorAccountId",
+                "revision",
+                "recordedAt",
+                "auditEventId",
+              ],
+              "type": "object",
+            },
+            {
+              "type": "null",
+            },
+          ],
+        },
+      },
+      "required": [
+        "policy",
+      ],
+      "type": "object",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+    "interface/http/audit-disclosure-response-schemas.ts#auditDisclosurePolicyResponseSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "policy": {
+          "additionalProperties": false,
+          "properties": {
+            "actorAccountId": {
+              "maxLength": 255,
+              "minLength": 1,
+              "type": "string",
+            },
+            "allowedFields": {
+              "readOnly": true,
+            },
+            "allowedPurposes": {
+              "anyOf": [
+                {
+                  "readOnly": true,
+                },
+                {
+                  "type": "null",
+                },
+              ],
+            },
+            "allowedTargetTypes": {
+              "anyOf": [
+                {
+                  "readOnly": true,
+                },
+                {
+                  "type": "null",
+                },
+              ],
+            },
+            "auditEventId": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "commandId": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "enabled": {
+              "type": "boolean",
+            },
+            "expiresAt": {
+              "anyOf": [
+                {},
+                {
+                  "type": "null",
+                },
+              ],
+            },
+            "reason": {
+              "maxLength": 1000,
+              "minLength": 1,
+              "type": "string",
+            },
+            "recordedAt": {
+              "format": "date-time",
+              "pattern": "^(?:(?:\\d\\d[2468][048]|\\d\\d[13579][26]|\\d\\d0[48]|[02468][048]00|[13579][26]00)-02-29|\\d{4}-(?:(?:0[13578]|1[02])-(?:0[1-9]|[12]\\d|3[01])|(?:0[469]|11)-(?:0[1-9]|[12]\\d|30)|(?:02)-(?:0[1-9]|1\\d|2[0-8])))T(?:(?:[01]\\d|2[0-3]):[0-5]\\d(?::[0-5]\\d(?:\\.\\d+)?)?(?:Z))$",
+              "type": "string",
+            },
+            "revision": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer",
+            },
+            "scope": {
+              "anyOf": [
+                {
+                  "const": "*",
+                  "type": "string",
+                },
+                {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+              ],
+            },
+          },
+          "required": [
+            "scope",
+            "commandId",
+            "enabled",
+            "allowedFields",
+            "allowedTargetTypes",
+            "allowedPurposes",
+            "expiresAt",
+            "reason",
+            "actorAccountId",
+            "revision",
+            "recordedAt",
+            "auditEventId",
+          ],
+          "type": "object",
+        },
+        "replayed": {
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "policy",
+        "replayed",
+      ],
+      "type": "object",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+    "interface/http/audit-disclosure-response-schemas.ts#systemAuditEventResponseSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+    "interface/http/work-item-response-schemas.ts#systemWorkCommandResponseSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "replayed": {
+          "type": "boolean",
+        },
+        "workItem": {
+          "additionalProperties": false,
+          "properties": {
+            "acceptanceCriteria": {},
+            "accountable": {
+              "additionalProperties": false,
+              "properties": {
+                "accountId": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "kind": {
+                  "const": "human",
+                  "type": "string",
+                },
+                "principalId": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+              },
+              "readOnly": true,
+              "required": [
+                "accountId",
+                "principalId",
+                "kind",
+              ],
+              "type": "object",
+            },
+            "action": {
+              "enum": [
+                "create",
+                "accept",
+                "submit",
+                "approve",
+                "return",
+                "request_handover",
+                "accept_handover",
+                "decline_handover",
+                "cancel",
+              ],
+              "type": "string",
+            },
+            "actor": {
+              "additionalProperties": false,
+              "properties": {
+                "accountId": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "kind": {
+                  "enum": [
+                    "human",
+                    "agent",
+                  ],
+                  "type": "string",
+                },
+                "principalId": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+              },
+              "readOnly": true,
+              "required": [
+                "accountId",
+                "principalId",
+                "kind",
+              ],
+              "type": "object",
+            },
+            "assignee": {
+              "additionalProperties": false,
+              "properties": {
+                "accountId": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "kind": {
+                  "enum": [
+                    "human",
+                    "agent",
+                  ],
+                  "type": "string",
+                },
+                "principalId": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+              },
+              "readOnly": true,
+              "required": [
+                "accountId",
+                "principalId",
+                "kind",
+              ],
+              "type": "object",
+            },
+            "auditEventId": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "authentication": {
+              "additionalProperties": false,
+              "properties": {
+                "credentialId": {
+                  "anyOf": [
+                    {
+                      "maxLength": 255,
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                    {
+                      "type": "null",
+                    },
+                  ],
+                },
+                "stepUpGrantId": {
+                  "anyOf": [
+                    {
+                      "maxLength": 255,
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                    {
+                      "type": "null",
+                    },
+                  ],
+                },
+                "tokenVersion": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+              },
+              "readOnly": true,
+              "required": [
+                "tokenVersion",
+                "credentialId",
+                "stepUpGrantId",
+              ],
+              "type": "object",
+            },
+            "commandId": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "createdAt": {},
+            "createdBy": {
+              "additionalProperties": false,
+              "properties": {
+                "accountId": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "kind": {
+                  "const": "human",
+                  "type": "string",
+                },
+                "principalId": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+              },
+              "readOnly": true,
+              "required": [
+                "accountId",
+                "principalId",
+                "kind",
+              ],
+              "type": "object",
+            },
+            "dueAt": {
+              "anyOf": [
+                {},
+                {
+                  "type": "null",
+                },
+              ],
+            },
+            "handover": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "reason": {
+                      "maxLength": 1000,
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                    "requestedAt": {},
+                    "requestedBy": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "accountId": {
+                          "maxLength": 255,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                        "kind": {
+                          "const": "human",
+                          "type": "string",
+                        },
+                        "principalId": {
+                          "maxLength": 255,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                      },
+                      "readOnly": true,
+                      "required": [
+                        "accountId",
+                        "principalId",
+                        "kind",
+                      ],
+                      "type": "object",
+                    },
+                    "to": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "accountId": {
+                          "maxLength": 255,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                        "kind": {
+                          "const": "human",
+                          "type": "string",
+                        },
+                        "principalId": {
+                          "maxLength": 255,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                      },
+                      "readOnly": true,
+                      "required": [
+                        "accountId",
+                        "principalId",
+                        "kind",
+                      ],
+                      "type": "object",
+                    },
+                  },
+                  "readOnly": true,
+                  "required": [
+                    "id",
+                    "to",
+                    "requestedBy",
+                    "requestedAt",
+                    "reason",
+                  ],
+                  "type": "object",
+                },
+                {
+                  "type": "null",
+                },
+              ],
+            },
+            "id": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "instructions": {},
+            "previousRevisionId": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                {
+                  "type": "null",
+                },
+              ],
+            },
+            "reason": {
+              "maxLength": 1000,
+              "minLength": 1,
+              "type": "string",
+            },
+            "recordedAt": {},
+            "recovery": {
+              "type": "boolean",
+            },
+            "requestDigest": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string",
+            },
+            "result": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "digest": {
+                      "pattern": "^[0-9a-f]{64}$",
+                      "type": "string",
+                    },
+                    "evidence": {
+                      "readOnly": true,
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "submittedAt": {},
+                    "submittedBy": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "accountId": {
+                          "maxLength": 255,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                        "kind": {
+                          "enum": [
+                            "human",
+                            "agent",
+                          ],
+                          "type": "string",
+                        },
+                        "principalId": {
+                          "maxLength": 255,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                      },
+                      "readOnly": true,
+                      "required": [
+                        "accountId",
+                        "principalId",
+                        "kind",
+                      ],
+                      "type": "object",
+                    },
+                    "summary": {},
+                  },
+                  "readOnly": true,
+                  "required": [
+                    "summary",
+                    "evidence",
+                    "id",
+                    "digest",
+                    "submittedAt",
+                    "submittedBy",
+                  ],
+                  "type": "object",
+                },
+                {
+                  "type": "null",
+                },
+              ],
+            },
+            "revision": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer",
+            },
+            "state": {
+              "enum": [
+                "offered",
+                "active",
+                "review_pending",
+                "completed",
+                "cancelled",
+              ],
+              "type": "string",
+            },
+            "title": {
+              "maxLength": 300,
+              "minLength": 1,
+              "type": "string",
+            },
+          },
+          "readOnly": true,
+          "required": [
+            "id",
+            "revision",
+            "commandId",
+            "requestDigest",
+            "action",
+            "title",
+            "instructions",
+            "acceptanceCriteria",
+            "dueAt",
+            "previousRevisionId",
+            "createdBy",
+            "createdAt",
+            "assignee",
+            "accountable",
+            "state",
+            "result",
+            "handover",
+            "actor",
+            "authentication",
+            "recovery",
+            "reason",
+            "recordedAt",
+            "auditEventId",
+          ],
+          "type": "object",
+        },
+      },
+      "required": [
+        "workItem",
+        "replayed",
+      ],
+      "type": "object",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+    "interface/http/work-item-response-schemas.ts#systemWorkHistoryResponseSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "nextRevision": {
+          "anyOf": [
+            {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer",
+            },
+            {
+              "type": "null",
+            },
+          ],
+        },
+        "revisions": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "acceptanceCriteria": {},
+              "accountable": {
+                "additionalProperties": false,
+                "properties": {
+                  "accountId": {
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                  "kind": {
+                    "const": "human",
+                    "type": "string",
+                  },
+                  "principalId": {
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "readOnly": true,
+                "required": [
+                  "accountId",
+                  "principalId",
+                  "kind",
+                ],
+                "type": "object",
+              },
+              "action": {
+                "enum": [
+                  "create",
+                  "accept",
+                  "submit",
+                  "approve",
+                  "return",
+                  "request_handover",
+                  "accept_handover",
+                  "decline_handover",
+                  "cancel",
+                ],
+                "type": "string",
+              },
+              "actor": {
+                "additionalProperties": false,
+                "properties": {
+                  "accountId": {
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                  "kind": {
+                    "enum": [
+                      "human",
+                      "agent",
+                    ],
+                    "type": "string",
+                  },
+                  "principalId": {
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "readOnly": true,
+                "required": [
+                  "accountId",
+                  "principalId",
+                  "kind",
+                ],
+                "type": "object",
+              },
+              "assignee": {
+                "additionalProperties": false,
+                "properties": {
+                  "accountId": {
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                  "kind": {
+                    "enum": [
+                      "human",
+                      "agent",
+                    ],
+                    "type": "string",
+                  },
+                  "principalId": {
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "readOnly": true,
+                "required": [
+                  "accountId",
+                  "principalId",
+                  "kind",
+                ],
+                "type": "object",
+              },
+              "auditEventId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "authentication": {
+                "additionalProperties": false,
+                "properties": {
+                  "credentialId": {
+                    "anyOf": [
+                      {
+                        "maxLength": 255,
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                      {
+                        "type": "null",
+                      },
+                    ],
+                  },
+                  "stepUpGrantId": {
+                    "anyOf": [
+                      {
+                        "maxLength": 255,
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                      {
+                        "type": "null",
+                      },
+                    ],
+                  },
+                  "tokenVersion": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                },
+                "readOnly": true,
+                "required": [
+                  "tokenVersion",
+                  "credentialId",
+                  "stepUpGrantId",
+                ],
+                "type": "object",
+              },
+              "commandId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "createdAt": {},
+              "createdBy": {
+                "additionalProperties": false,
+                "properties": {
+                  "accountId": {
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                  "kind": {
+                    "const": "human",
+                    "type": "string",
+                  },
+                  "principalId": {
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "readOnly": true,
+                "required": [
+                  "accountId",
+                  "principalId",
+                  "kind",
+                ],
+                "type": "object",
+              },
+              "dueAt": {
+                "anyOf": [
+                  {},
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "handover": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "reason": {
+                        "maxLength": 1000,
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                      "requestedAt": {},
+                      "requestedBy": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "accountId": {
+                            "maxLength": 255,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "kind": {
+                            "const": "human",
+                            "type": "string",
+                          },
+                          "principalId": {
+                            "maxLength": 255,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                        },
+                        "readOnly": true,
+                        "required": [
+                          "accountId",
+                          "principalId",
+                          "kind",
+                        ],
+                        "type": "object",
+                      },
+                      "to": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "accountId": {
+                            "maxLength": 255,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "kind": {
+                            "const": "human",
+                            "type": "string",
+                          },
+                          "principalId": {
+                            "maxLength": 255,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                        },
+                        "readOnly": true,
+                        "required": [
+                          "accountId",
+                          "principalId",
+                          "kind",
+                        ],
+                        "type": "object",
+                      },
+                    },
+                    "readOnly": true,
+                    "required": [
+                      "id",
+                      "to",
+                      "requestedBy",
+                      "requestedAt",
+                      "reason",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "instructions": {},
+              "previousRevisionId": {
+                "anyOf": [
+                  {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "reason": {
+                "maxLength": 1000,
+                "minLength": 1,
+                "type": "string",
+              },
+              "recordedAt": {},
+              "recovery": {
+                "type": "boolean",
+              },
+              "requestDigest": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string",
+              },
+              "result": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "digest": {
+                        "pattern": "^[0-9a-f]{64}$",
+                        "type": "string",
+                      },
+                      "evidence": {
+                        "readOnly": true,
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "submittedAt": {},
+                      "submittedBy": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "accountId": {
+                            "maxLength": 255,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "kind": {
+                            "enum": [
+                              "human",
+                              "agent",
+                            ],
+                            "type": "string",
+                          },
+                          "principalId": {
+                            "maxLength": 255,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                        },
+                        "readOnly": true,
+                        "required": [
+                          "accountId",
+                          "principalId",
+                          "kind",
+                        ],
+                        "type": "object",
+                      },
+                      "summary": {},
+                    },
+                    "readOnly": true,
+                    "required": [
+                      "summary",
+                      "evidence",
+                      "id",
+                      "digest",
+                      "submittedAt",
+                      "submittedBy",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "revision": {
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "type": "integer",
+              },
+              "state": {
+                "enum": [
+                  "offered",
+                  "active",
+                  "review_pending",
+                  "completed",
+                  "cancelled",
+                ],
+                "type": "string",
+              },
+              "title": {
+                "maxLength": 300,
+                "minLength": 1,
+                "type": "string",
+              },
+            },
+            "readOnly": true,
+            "required": [
+              "id",
+              "revision",
+              "commandId",
+              "requestDigest",
+              "action",
+              "title",
+              "instructions",
+              "acceptanceCriteria",
+              "dueAt",
+              "previousRevisionId",
+              "createdBy",
+              "createdAt",
+              "assignee",
+              "accountable",
+              "state",
+              "result",
+              "handover",
+              "actor",
+              "authentication",
+              "recovery",
+              "reason",
+              "recordedAt",
+              "auditEventId",
+            ],
+            "type": "object",
+          },
+          "maxItems": 50,
+          "type": "array",
+        },
+      },
+      "required": [
+        "revisions",
+        "nextRevision",
+      ],
+      "type": "object",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+    "interface/http/work-item-response-schemas.ts#systemWorkItemResponseSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "workItem": {
+          "additionalProperties": false,
+          "properties": {
+            "acceptanceCriteria": {},
+            "accountable": {
+              "additionalProperties": false,
+              "properties": {
+                "accountId": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "kind": {
+                  "const": "human",
+                  "type": "string",
+                },
+                "principalId": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+              },
+              "readOnly": true,
+              "required": [
+                "accountId",
+                "principalId",
+                "kind",
+              ],
+              "type": "object",
+            },
+            "action": {
+              "enum": [
+                "create",
+                "accept",
+                "submit",
+                "approve",
+                "return",
+                "request_handover",
+                "accept_handover",
+                "decline_handover",
+                "cancel",
+              ],
+              "type": "string",
+            },
+            "actor": {
+              "additionalProperties": false,
+              "properties": {
+                "accountId": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "kind": {
+                  "enum": [
+                    "human",
+                    "agent",
+                  ],
+                  "type": "string",
+                },
+                "principalId": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+              },
+              "readOnly": true,
+              "required": [
+                "accountId",
+                "principalId",
+                "kind",
+              ],
+              "type": "object",
+            },
+            "assignee": {
+              "additionalProperties": false,
+              "properties": {
+                "accountId": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "kind": {
+                  "enum": [
+                    "human",
+                    "agent",
+                  ],
+                  "type": "string",
+                },
+                "principalId": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+              },
+              "readOnly": true,
+              "required": [
+                "accountId",
+                "principalId",
+                "kind",
+              ],
+              "type": "object",
+            },
+            "auditEventId": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "authentication": {
+              "additionalProperties": false,
+              "properties": {
+                "credentialId": {
+                  "anyOf": [
+                    {
+                      "maxLength": 255,
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                    {
+                      "type": "null",
+                    },
+                  ],
+                },
+                "stepUpGrantId": {
+                  "anyOf": [
+                    {
+                      "maxLength": 255,
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                    {
+                      "type": "null",
+                    },
+                  ],
+                },
+                "tokenVersion": {
+                  "maximum": 9007199254740991,
+                  "minimum": 0,
+                  "type": "integer",
+                },
+              },
+              "readOnly": true,
+              "required": [
+                "tokenVersion",
+                "credentialId",
+                "stepUpGrantId",
+              ],
+              "type": "object",
+            },
+            "commandId": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "createdAt": {},
+            "createdBy": {
+              "additionalProperties": false,
+              "properties": {
+                "accountId": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+                "kind": {
+                  "const": "human",
+                  "type": "string",
+                },
+                "principalId": {
+                  "maxLength": 255,
+                  "minLength": 1,
+                  "type": "string",
+                },
+              },
+              "readOnly": true,
+              "required": [
+                "accountId",
+                "principalId",
+                "kind",
+              ],
+              "type": "object",
+            },
+            "dueAt": {
+              "anyOf": [
+                {},
+                {
+                  "type": "null",
+                },
+              ],
+            },
+            "handover": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "reason": {
+                      "maxLength": 1000,
+                      "minLength": 1,
+                      "type": "string",
+                    },
+                    "requestedAt": {},
+                    "requestedBy": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "accountId": {
+                          "maxLength": 255,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                        "kind": {
+                          "const": "human",
+                          "type": "string",
+                        },
+                        "principalId": {
+                          "maxLength": 255,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                      },
+                      "readOnly": true,
+                      "required": [
+                        "accountId",
+                        "principalId",
+                        "kind",
+                      ],
+                      "type": "object",
+                    },
+                    "to": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "accountId": {
+                          "maxLength": 255,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                        "kind": {
+                          "const": "human",
+                          "type": "string",
+                        },
+                        "principalId": {
+                          "maxLength": 255,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                      },
+                      "readOnly": true,
+                      "required": [
+                        "accountId",
+                        "principalId",
+                        "kind",
+                      ],
+                      "type": "object",
+                    },
+                  },
+                  "readOnly": true,
+                  "required": [
+                    "id",
+                    "to",
+                    "requestedBy",
+                    "requestedAt",
+                    "reason",
+                  ],
+                  "type": "object",
+                },
+                {
+                  "type": "null",
+                },
+              ],
+            },
+            "id": {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            "instructions": {},
+            "previousRevisionId": {
+              "anyOf": [
+                {
+                  "format": "uuid",
+                  "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                  "type": "string",
+                },
+                {
+                  "type": "null",
+                },
+              ],
+            },
+            "reason": {
+              "maxLength": 1000,
+              "minLength": 1,
+              "type": "string",
+            },
+            "recordedAt": {},
+            "recovery": {
+              "type": "boolean",
+            },
+            "requestDigest": {
+              "pattern": "^[0-9a-f]{64}$",
+              "type": "string",
+            },
+            "result": {
+              "anyOf": [
+                {
+                  "additionalProperties": false,
+                  "properties": {
+                    "digest": {
+                      "pattern": "^[0-9a-f]{64}$",
+                      "type": "string",
+                    },
+                    "evidence": {
+                      "readOnly": true,
+                    },
+                    "id": {
+                      "format": "uuid",
+                      "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                      "type": "string",
+                    },
+                    "submittedAt": {},
+                    "submittedBy": {
+                      "additionalProperties": false,
+                      "properties": {
+                        "accountId": {
+                          "maxLength": 255,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                        "kind": {
+                          "enum": [
+                            "human",
+                            "agent",
+                          ],
+                          "type": "string",
+                        },
+                        "principalId": {
+                          "maxLength": 255,
+                          "minLength": 1,
+                          "type": "string",
+                        },
+                      },
+                      "readOnly": true,
+                      "required": [
+                        "accountId",
+                        "principalId",
+                        "kind",
+                      ],
+                      "type": "object",
+                    },
+                    "summary": {},
+                  },
+                  "readOnly": true,
+                  "required": [
+                    "summary",
+                    "evidence",
+                    "id",
+                    "digest",
+                    "submittedAt",
+                    "submittedBy",
+                  ],
+                  "type": "object",
+                },
+                {
+                  "type": "null",
+                },
+              ],
+            },
+            "revision": {
+              "exclusiveMinimum": 0,
+              "maximum": 9007199254740991,
+              "type": "integer",
+            },
+            "state": {
+              "enum": [
+                "offered",
+                "active",
+                "review_pending",
+                "completed",
+                "cancelled",
+              ],
+              "type": "string",
+            },
+            "title": {
+              "maxLength": 300,
+              "minLength": 1,
+              "type": "string",
+            },
+          },
+          "readOnly": true,
+          "required": [
+            "id",
+            "revision",
+            "commandId",
+            "requestDigest",
+            "action",
+            "title",
+            "instructions",
+            "acceptanceCriteria",
+            "dueAt",
+            "previousRevisionId",
+            "createdBy",
+            "createdAt",
+            "assignee",
+            "accountable",
+            "state",
+            "result",
+            "handover",
+            "actor",
+            "authentication",
+            "recovery",
+            "reason",
+            "recordedAt",
+            "auditEventId",
+          ],
+          "type": "object",
+        },
+      },
+      "required": [
+        "workItem",
+      ],
+      "type": "object",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+    "interface/http/work-item-response-schemas.ts#systemWorkListResponseSchema": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "nextCursor": {
+          "anyOf": [
+            {
+              "format": "uuid",
+              "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+              "type": "string",
+            },
+            {
+              "type": "null",
+            },
+          ],
+        },
+        "workItems": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "acceptanceCriteria": {},
+              "accountable": {
+                "additionalProperties": false,
+                "properties": {
+                  "accountId": {
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                  "kind": {
+                    "const": "human",
+                    "type": "string",
+                  },
+                  "principalId": {
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "readOnly": true,
+                "required": [
+                  "accountId",
+                  "principalId",
+                  "kind",
+                ],
+                "type": "object",
+              },
+              "action": {
+                "enum": [
+                  "create",
+                  "accept",
+                  "submit",
+                  "approve",
+                  "return",
+                  "request_handover",
+                  "accept_handover",
+                  "decline_handover",
+                  "cancel",
+                ],
+                "type": "string",
+              },
+              "actor": {
+                "additionalProperties": false,
+                "properties": {
+                  "accountId": {
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                  "kind": {
+                    "enum": [
+                      "human",
+                      "agent",
+                    ],
+                    "type": "string",
+                  },
+                  "principalId": {
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "readOnly": true,
+                "required": [
+                  "accountId",
+                  "principalId",
+                  "kind",
+                ],
+                "type": "object",
+              },
+              "assignee": {
+                "additionalProperties": false,
+                "properties": {
+                  "accountId": {
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                  "kind": {
+                    "enum": [
+                      "human",
+                      "agent",
+                    ],
+                    "type": "string",
+                  },
+                  "principalId": {
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "readOnly": true,
+                "required": [
+                  "accountId",
+                  "principalId",
+                  "kind",
+                ],
+                "type": "object",
+              },
+              "auditEventId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "authentication": {
+                "additionalProperties": false,
+                "properties": {
+                  "credentialId": {
+                    "anyOf": [
+                      {
+                        "maxLength": 255,
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                      {
+                        "type": "null",
+                      },
+                    ],
+                  },
+                  "stepUpGrantId": {
+                    "anyOf": [
+                      {
+                        "maxLength": 255,
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                      {
+                        "type": "null",
+                      },
+                    ],
+                  },
+                  "tokenVersion": {
+                    "maximum": 9007199254740991,
+                    "minimum": 0,
+                    "type": "integer",
+                  },
+                },
+                "readOnly": true,
+                "required": [
+                  "tokenVersion",
+                  "credentialId",
+                  "stepUpGrantId",
+                ],
+                "type": "object",
+              },
+              "commandId": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "createdAt": {},
+              "createdBy": {
+                "additionalProperties": false,
+                "properties": {
+                  "accountId": {
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                  "kind": {
+                    "const": "human",
+                    "type": "string",
+                  },
+                  "principalId": {
+                    "maxLength": 255,
+                    "minLength": 1,
+                    "type": "string",
+                  },
+                },
+                "readOnly": true,
+                "required": [
+                  "accountId",
+                  "principalId",
+                  "kind",
+                ],
+                "type": "object",
+              },
+              "dueAt": {
+                "anyOf": [
+                  {},
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "handover": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "id": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "reason": {
+                        "maxLength": 1000,
+                        "minLength": 1,
+                        "type": "string",
+                      },
+                      "requestedAt": {},
+                      "requestedBy": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "accountId": {
+                            "maxLength": 255,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "kind": {
+                            "const": "human",
+                            "type": "string",
+                          },
+                          "principalId": {
+                            "maxLength": 255,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                        },
+                        "readOnly": true,
+                        "required": [
+                          "accountId",
+                          "principalId",
+                          "kind",
+                        ],
+                        "type": "object",
+                      },
+                      "to": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "accountId": {
+                            "maxLength": 255,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "kind": {
+                            "const": "human",
+                            "type": "string",
+                          },
+                          "principalId": {
+                            "maxLength": 255,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                        },
+                        "readOnly": true,
+                        "required": [
+                          "accountId",
+                          "principalId",
+                          "kind",
+                        ],
+                        "type": "object",
+                      },
+                    },
+                    "readOnly": true,
+                    "required": [
+                      "id",
+                      "to",
+                      "requestedBy",
+                      "requestedAt",
+                      "reason",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "id": {
+                "format": "uuid",
+                "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                "type": "string",
+              },
+              "instructions": {},
+              "previousRevisionId": {
+                "anyOf": [
+                  {
+                    "format": "uuid",
+                    "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "reason": {
+                "maxLength": 1000,
+                "minLength": 1,
+                "type": "string",
+              },
+              "recordedAt": {},
+              "recovery": {
+                "type": "boolean",
+              },
+              "requestDigest": {
+                "pattern": "^[0-9a-f]{64}$",
+                "type": "string",
+              },
+              "result": {
+                "anyOf": [
+                  {
+                    "additionalProperties": false,
+                    "properties": {
+                      "digest": {
+                        "pattern": "^[0-9a-f]{64}$",
+                        "type": "string",
+                      },
+                      "evidence": {
+                        "readOnly": true,
+                      },
+                      "id": {
+                        "format": "uuid",
+                        "pattern": "^([0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[1-8][0-9a-fA-F]{3}-[89abAB][0-9a-fA-F]{3}-[0-9a-fA-F]{12}|00000000-0000-0000-0000-000000000000|ffffffff-ffff-ffff-ffff-ffffffffffff)$",
+                        "type": "string",
+                      },
+                      "submittedAt": {},
+                      "submittedBy": {
+                        "additionalProperties": false,
+                        "properties": {
+                          "accountId": {
+                            "maxLength": 255,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                          "kind": {
+                            "enum": [
+                              "human",
+                              "agent",
+                            ],
+                            "type": "string",
+                          },
+                          "principalId": {
+                            "maxLength": 255,
+                            "minLength": 1,
+                            "type": "string",
+                          },
+                        },
+                        "readOnly": true,
+                        "required": [
+                          "accountId",
+                          "principalId",
+                          "kind",
+                        ],
+                        "type": "object",
+                      },
+                      "summary": {},
+                    },
+                    "readOnly": true,
+                    "required": [
+                      "summary",
+                      "evidence",
+                      "id",
+                      "digest",
+                      "submittedAt",
+                      "submittedBy",
+                    ],
+                    "type": "object",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "revision": {
+                "exclusiveMinimum": 0,
+                "maximum": 9007199254740991,
+                "type": "integer",
+              },
+              "state": {
+                "enum": [
+                  "offered",
+                  "active",
+                  "review_pending",
+                  "completed",
+                  "cancelled",
+                ],
+                "type": "string",
+              },
+              "title": {
+                "maxLength": 300,
+                "minLength": 1,
+                "type": "string",
+              },
+            },
+            "readOnly": true,
+            "required": [
+              "id",
+              "revision",
+              "commandId",
+              "requestDigest",
+              "action",
+              "title",
+              "instructions",
+              "acceptanceCriteria",
+              "dueAt",
+              "previousRevisionId",
+              "createdBy",
+              "createdAt",
+              "assignee",
+              "accountable",
+              "state",
+              "result",
+              "handover",
+              "actor",
+              "authentication",
+              "recovery",
+              "reason",
+              "recordedAt",
+              "auditEventId",
+            ],
+            "type": "object",
+          },
+          "maxItems": 50,
+          "type": "array",
+        },
+      },
+      "required": [
+        "workItems",
+        "nextCursor",
+      ],
+      "type": "object",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+    "interface/models/audit-log.ts#zAppAuditLogs": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "items": {
+          "items": {
+            "additionalProperties": false,
+            "properties": {
+              "action": {
+                "type": "string",
+              },
+              "createdAt": {
+                "type": "string",
+              },
+              "id": {
+                "type": "string",
+              },
+              "metadata": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "resourceId": {
+                "anyOf": [
+                  {
+                    "type": "string",
+                  },
+                  {
+                    "type": "null",
+                  },
+                ],
+              },
+              "resourceType": {
+                "type": "string",
+              },
+              "role": {
+                "type": "string",
+              },
+              "userEmail": {
+                "type": "string",
+              },
+              "userId": {
+                "type": "string",
+              },
+              "userName": {
+                "type": "string",
+              },
+            },
+            "required": [
+              "id",
+              "userId",
+              "userName",
+              "userEmail",
+              "role",
+              "action",
+              "resourceType",
+              "resourceId",
+              "metadata",
+              "createdAt",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+        "total": {
+          "maximum": 9007199254740991,
+          "minimum": 0,
+          "type": "integer",
+        },
+      },
+      "required": [
+        "items",
+        "total",
+      ],
+      "type": "object",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+    "interface/models/auth.ts#zAppAuthAcknowledgement": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "item": {
+          "additionalProperties": false,
+          "properties": {
+            "ok": {
+              "const": true,
+              "type": "boolean",
+            },
+          },
+          "required": [
+            "ok",
+          ],
+          "type": "object",
+        },
+      },
+      "required": [
+        "item",
+      ],
+      "type": "object",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+    "interface/models/auth.ts#zAppLogoutResponse": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "item": {
+          "additionalProperties": false,
+          "properties": {
+            "ok": {
+              "const": true,
+              "type": "boolean",
+            },
+            "switchedTo": {
+              "anyOf": [
+                {
+                  "const": true,
+                  "type": "boolean",
+                },
+                {
+                  "type": "null",
+                },
+              ],
+            },
+          },
+          "required": [
+            "ok",
+            "switchedTo",
+          ],
+          "type": "object",
+        },
+      },
+      "required": [
+        "item",
+      ],
+      "type": "object",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+    "interface/models/auth.ts#zAppMcpGrantResponse": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "type": "string",
+        },
+        "item": {
+          "anyOf": [
+            {
+              "additionalProperties": false,
+              "properties": {
+                "grant": {
+                  "type": "string",
+                },
+              },
+              "required": [
+                "grant",
+              ],
+              "type": "object",
+            },
+            {
+              "type": "null",
+            },
+          ],
+        },
+      },
+      "required": [
+        "item",
+      ],
+      "type": "object",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+    "interface/models/auth.ts#zAppOidcAuthorizationResponse": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "redirect_uri": {
+          "format": "uri",
+          "type": "string",
+        },
+      },
+      "required": [
+        "redirect_uri",
+      ],
+      "type": "object",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+    "interface/models/validation-error.ts#zAppDefaultZodValidationError": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "additionalProperties": {},
+          "properties": {
+            "issues": {
+              "items": {
+                "additionalProperties": {},
+                "properties": {
+                  "code": {
+                    "type": "string",
+                  },
+                  "expected": {},
+                  "format": {},
+                  "keys": {},
+                  "maximum": {},
+                  "message": {
+                    "type": "string",
+                  },
+                  "minimum": {},
+                  "origin": {},
+                  "path": {
+                    "items": {
+                      "anyOf": [
+                        {
+                          "type": "string",
+                        },
+                        {
+                          "type": "number",
+                        },
+                      ],
+                    },
+                    "type": "array",
+                  },
+                  "reason": {
+                    "type": "string",
+                  },
+                  "values": {},
+                },
+                "required": [
+                  "code",
+                  "path",
+                  "message",
+                ],
+                "type": "object",
+              },
+              "type": "array",
+            },
+            "message": {
+              "type": "string",
+            },
+            "name": {
+              "const": "ZodError",
+              "type": "string",
+            },
+          },
+          "required": [
+            "name",
+            "message",
+          ],
+          "type": "object",
+        },
+        "success": {
+          "const": false,
+          "type": "boolean",
+        },
+      },
+      "required": [
+        "success",
+        "error",
+      ],
+      "type": "object",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+    "interface/models/validation-error.ts#zAppErrorPayload": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "type": "string",
+        },
+        "message": {
+          "type": "string",
+        },
+      },
+      "required": [
+        "error",
+      ],
+      "type": "object",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+    "interface/models/validation-error.ts#zAppStructuredValidationError": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": false,
+      "properties": {
+        "error": {
+          "enum": [
+            "invalid_body",
+            "invalid_query",
+            "invalid_fields",
+            "invalid_input",
+          ],
+          "type": "string",
+        },
+        "issues": {
+          "items": {
+            "additionalProperties": {},
+            "properties": {
+              "code": {
+                "type": "string",
+              },
+              "expected": {},
+              "format": {},
+              "keys": {},
+              "maximum": {},
+              "message": {
+                "type": "string",
+              },
+              "minimum": {},
+              "origin": {},
+              "path": {
+                "items": {
+                  "anyOf": [
+                    {
+                      "type": "string",
+                    },
+                    {
+                      "type": "number",
+                    },
+                  ],
+                },
+                "type": "array",
+              },
+              "reason": {
+                "type": "string",
+              },
+              "values": {},
+            },
+            "required": [
+              "code",
+              "path",
+              "message",
+            ],
+            "type": "object",
+          },
+          "type": "array",
+        },
+      },
+      "required": [
+        "error",
+      ],
+      "type": "object",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+    "interface/models/validation-error.ts#zAppValidationIssue": {
+      "$schema": "https://json-schema.org/draft/2020-12/schema",
+      "additionalProperties": {},
+      "properties": {
+        "code": {
+          "type": "string",
+        },
+        "expected": {},
+        "format": {},
+        "keys": {},
+        "maximum": {},
+        "message": {
+          "type": "string",
+        },
+        "minimum": {},
+        "origin": {},
+        "path": {
+          "items": {
+            "anyOf": [
+              {
+                "type": "string",
+              },
+              {
+                "type": "number",
+              },
+            ],
+          },
+          "type": "array",
+        },
+        "reason": {
+          "type": "string",
+        },
+        "values": {},
+      },
+      "required": [
+        "code",
+        "path",
+        "message",
+      ],
+      "type": "object",
+      "~standard": {
+        "jsonSchema": {
+          "input": [Function],
+          "output": [Function],
+        },
+        "validate": [Function],
+        "vendor": "zod",
+        "version": 1,
+      },
+    },
+  },
+  "routes": [
+    {
+      "authorization": "permission iam:read - Company profileを含まないSystem Accountだけを読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.accounts",
+      "path": "/system/accounts",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:write - Company主体を作らずopaque System Accountだけを作る",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.accounts",
+      "path": "/system/accounts",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:read - 一つのSystem AccountをCompany情報なしで読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.accounts.$accountId",
+      "path": "/system/accounts/:accountId",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:write - live権限・自己停止・last-rootを同じ更新境界で検査する",
+      "exportName": "PATCH",
+      "method": "PATCH",
+      "module": "@system/interface/routes/system.accounts.$accountId",
+      "path": "/system/accounts/:accountId",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:read - AccountのIdentity bindingと公開profileだけを読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.accounts.$accountId.identities",
+      "path": "/system/accounts/:accountId/identities",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:write - provider credentialをIdentityと同じtransactionで作る",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.accounts.$accountId.identities",
+      "path": "/system/accounts/:accountId/identities",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:write - last active Identityとlast-rootを原子的に保護する",
+      "exportName": "DELETE",
+      "method": "DELETE",
+      "module": "@system/interface/routes/system.accounts.$accountId.identities.$identityId",
+      "path": "/system/accounts/:accountId/identities/:identityId",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:read - 一つのIdentity bindingと公開profileだけを読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.accounts.$accountId.identities.$identityId",
+      "path": "/system/accounts/:accountId/identities/:identityId",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:write - credential変更・token失効・監査を同じtransactionで確定する",
+      "exportName": "PATCH",
+      "method": "PATCH",
+      "module": "@system/interface/routes/system.accounts.$accountId.password-credentials",
+      "path": "/system/accounts/:accountId/password-credentials",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:read - Accountが所有するSystem Role Binding履歴を読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.accounts.$accountId.role-bindings",
+      "path": "/system/accounts/:accountId/role-bindings",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:write - 自己付与とactor未保有permissionの付与を拒否する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.accounts.$accountId.role-bindings",
+      "path": "/system/accounts/:accountId/role-bindings",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:write - live権限・token失効・last-rootを同じ更新境界で検査する",
+      "exportName": "DELETE",
+      "method": "DELETE",
+      "module": "@system/interface/routes/system.accounts.$accountId.role-bindings.$bindingId",
+      "path": "/system/accounts/:accountId/role-bindings/:bindingId",
+      "phase": "public",
+    },
+    {
+      "authorization": "authenticated - ログインしていれば自分の添付を預けられる。業務レコードへの紐づけは各業務contextが認可する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.attachments",
+      "path": "/system/attachments",
+      "phase": "public",
+    },
+    {
+      "authorization": "owner - アップロード本人の未紐づけ添付に限定する",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.attachments.$attachmentId",
+      "path": "/system/attachments/:attachmentId",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission system:admin - 人の現在の権限で保全と解除の記録を読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.attachments.$attachmentId.preservations",
+      "path": "/system/attachments/:attachmentId/preservations",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission system:admin - 人の再認証と現在の権限を確認し、内容を固定した添付を保全する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.attachments.$attachmentId.preservations",
+      "path": "/system/attachments/:attachmentId/preservations",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission system:admin - 指定した削除停止だけを再認証した人が解除する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.attachments.$attachmentId.preservations.$preservationId.release",
+      "path": "/system/attachments/:attachmentId/preservations/:preservationId/release",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission - 本体を物理削除するため system:admin に限定する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.attachments.purge-unlinked",
+      "path": "/system/attachments/purge-unlinked",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission system:admin - 現在の人の管理資格で開示設定の最新版を読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.audit-disclosure-policies",
+      "path": "/system/audit-disclosure-policies",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission system:admin - 人の再認証と現在の管理資格で開示条件を版付きで公開する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.audit-disclosure-policies",
+      "path": "/system/audit-disclosure-policies",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission audit:read - append-only System監査台帳を固定上限で読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.audit-events",
+      "path": "/system/audit-events",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission audit:read - 一つのSystem監査イベントを開示条件に従って読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.audit-events.$eventId",
+      "path": "/system/audit-events/:eventId",
+      "phase": "public",
+    },
+    {
+      "authorization": "public - challenge possessionを認証要素とし、拒否理由は同じ応答へ畳む",
+      "exportName": "PATCH",
+      "method": "PATCH",
+      "module": "@system/interface/routes/system.auth.password.reset",
+      "path": "/system/auth/password/reset",
+      "phase": "public",
+    },
+    {
+      "authorization": "public - Accountの実在を漏らさず常に同じ受付結果を返す",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.auth.password.reset",
+      "path": "/system/auth/password/reset",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission batch:view - System batch jobの実行履歴を読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.batch-jobs",
+      "path": "/system/batch-jobs",
+      "phase": "public",
+    },
+    {
+      "authorization": "public - single-use secretと永続bootstrap stateで初期root作成だけを許す",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.bootstrap",
+      "path": "/system/bootstrap",
+      "phase": "public",
+    },
+    {
+      "authorization": "owner - 認証済みSystem Account自身へだけone-time codeを発行する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.browser-login-codes",
+      "path": "/system/browser-login-codes",
+      "phase": "public",
+    },
+    {
+      "authorization": "public - one-time code自体をcredentialとしてSystem Sessionへ交換する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.browser-sessions",
+      "path": "/system/browser-sessions",
+      "phase": "public",
+    },
+    {
+      "authorization": "public - 外部Identity providerからCLI authorizationを完了する",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.cli-authorization-callback",
+      "path": "/system/cli-authorization-callback",
+      "phase": "public",
+    },
+    {
+      "authorization": "public - CLIが外部Identity providerで本人確認を始める",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.cli-authorizations",
+      "path": "/system/cli-authorizations",
+      "phase": "public",
+    },
+    {
+      "authorization": "public - one-time CLI codeをcredentialとしてSystem Sessionへ交換する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.cli-sessions",
+      "path": "/system/cli-sessions",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission integration:read - Connector定義だけを読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.connectors",
+      "path": "/system/connectors",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission integration:write - secretを含まないConnector定義を作成する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.connectors",
+      "path": "/system/connectors",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission integration:write - step-upとexpected revisionでConnectorを停止・再開する",
+      "exportName": "PATCH",
+      "method": "PATCH",
+      "module": "@system/interface/routes/system.connectors.$connectorId",
+      "path": "/system/connectors/:connectorId",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission batch:view - dead letterと再実行状態を読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.dead-letters",
+      "path": "/system/dead-letters",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission batch:write system:admin - step-up後にdead letterを一度だけjobへ再投入する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.dead-letters.$deadLetterId.requeue",
+      "path": "/system/dead-letters/:deadLetterId/requeue",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission batch:view - jobとoutboxのlifecycle metadataを読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.deliveries",
+      "path": "/system/deliveries",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission batch:write - digest参照だけを持つjob・outbox・inboxを冪等登録する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.deliveries",
+      "path": "/system/deliveries",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission batch:execute - 機械Principalのlease tokenでjob・outboxを単調遷移する",
+      "exportName": "PATCH",
+      "method": "PATCH",
+      "module": "@system/interface/routes/system.deliveries.$deliveryId",
+      "path": "/system/deliveries/:deliveryId",
+      "phase": "public",
+    },
+    {
+      "authorization": "public - versioned health checkは認証前に到達できてよい",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.health",
+      "path": "/system/health",
+      "phase": "pre-database",
+    },
+    {
+      "authorization": "public - 外部Identity token自体をcredentialとしてSystem Sessionへ交換する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.identity-sessions",
+      "path": "/system/identity-sessions",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission integration:write - inboxを処理済みまたは拒否へ一度だけ確定する",
+      "exportName": "PATCH",
+      "method": "PATCH",
+      "module": "@system/interface/routes/system.inbox-messages.$messageId",
+      "path": "/system/inbox-messages/:messageId",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission integration:read - Connector単位の外部交換履歴を読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.integration-exchanges",
+      "path": "/system/integration-exchanges",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission integration:write - digestとidempotency keyで交換を開始する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.integration-exchanges",
+      "path": "/system/integration-exchanges",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission integration:read - 一つの外部交換を読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.integration-exchanges.$exchangeId",
+      "path": "/system/integration-exchanges/:exchangeId",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission integration:write - 交換を成功・失敗・取消・retryへ進める",
+      "exportName": "PATCH",
+      "method": "PATCH",
+      "module": "@system/interface/routes/system.integration-exchanges.$exchangeId",
+      "path": "/system/integration-exchanges/:exchangeId",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission integration:read - 外部交換の照合履歴を読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.integration-exchanges.$exchangeId.reconciliations",
+      "path": "/system/integration-exchanges/:exchangeId/reconciliations",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission integration:write - immutable assertionとsemantic item差分を記録する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.integration-exchanges.$exchangeId.reconciliations",
+      "path": "/system/integration-exchanges/:exchangeId/reconciliations",
+      "phase": "public",
+    },
+    {
+      "authorization": "public - bodyの機械credentialを検証して短命access tokenだけを発行する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.machine-sessions",
+      "path": "/system/machine-sessions",
+      "phase": "public",
+    },
+    {
+      "authorization": "authenticated - 自分のAccount Deliveryだけを読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.notifications",
+      "path": "/system/notifications",
+      "phase": "public",
+    },
+    {
+      "authorization": "authenticated - 自分の未読Deliveryを一括で既読にする",
+      "exportName": "PATCH",
+      "method": "PATCH",
+      "module": "@system/interface/routes/system.notifications",
+      "path": "/system/notifications",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission notification:send - 任意のactive System Accountへ配信する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.notifications",
+      "path": "/system/notifications",
+      "phase": "public",
+    },
+    {
+      "authorization": "owner - 自分のAccount Deliveryだけを非表示にする",
+      "exportName": "DELETE",
+      "method": "DELETE",
+      "module": "@system/interface/routes/system.notifications.$id",
+      "path": "/system/notifications/:id",
+      "phase": "public",
+    },
+    {
+      "authorization": "owner - 自分のAccount Deliveryだけを読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.notifications.$id",
+      "path": "/system/notifications/:id",
+      "phase": "public",
+    },
+    {
+      "authorization": "owner - 自分のAccount Deliveryだけを単調に既読化する",
+      "exportName": "PATCH",
+      "method": "PATCH",
+      "module": "@system/interface/routes/system.notifications.$id",
+      "path": "/system/notifications/:id",
+      "phase": "public",
+    },
+    {
+      "authorization": "authenticated - 自分のAccount Deliveryだけを集計する",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.notifications.unread-count",
+      "path": "/system/notifications/unread-count",
+      "phase": "public",
+    },
+    {
+      "authorization": "authenticated - 検証済みSystem Account本人の同意だけを受け付ける",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.oauth.authorizations",
+      "path": "/system/oauth/authorizations",
+      "phase": "authenticated",
+    },
+    {
+      "authorization": "authenticated - 検証済みSystem Account本人のgrantだけを発行する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.oauth.mcp-grants",
+      "path": "/system/oauth/mcp-grants",
+      "phase": "audited",
+    },
+    {
+      "authorization": "public - authorization codeとPKCE verifierをcredentialとして検証する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.oauth.token",
+      "path": "/system/oauth/token",
+      "phase": "public",
+    },
+    {
+      "authorization": "public - OIDC access token自体をcredentialとして検証する",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.oauth.userinfo",
+      "path": "/system/oauth/userinfo",
+      "phase": "public",
+    },
+    {
+      "authorization": "service - 現在の参照・出力権限と個別開示条件を満たす保全記録だけを探す",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.preserved-records",
+      "path": "/system/preserved-records",
+      "phase": "public",
+    },
+    {
+      "authorization": "service - 現在の操作権限・個別開示設定・監査保存を満たす保全原文だけを返す",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.preserved-records.$recordId.content",
+      "path": "/system/preserved-records/:recordId/content",
+      "phase": "public",
+    },
+    {
+      "authorization": "service - 原文・承認・保全・監査それぞれの開示資格と最終監査保存を要求する",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.preserved-records.$recordId.dossier",
+      "path": "/system/preserved-records/:recordId/dossier",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:read - Accountと独立したPrincipal分類を読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.principals",
+      "path": "/system/principals",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:write - step-up後に非Human Principalと専用Accountを原子的に作る",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.principals",
+      "path": "/system/principals",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:read - 指定Principal分類を読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.principals.$principalId",
+      "path": "/system/principals/:principalId",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:write - step-upとexpected revisionを満たす名称変更だけを許す",
+      "exportName": "PATCH",
+      "method": "PATCH",
+      "module": "@system/interface/routes/system.principals.$principalId",
+      "path": "/system/principals/:principalId",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:read - raw secretを含まない機械credential metadataを読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.principals.$principalId.machine-credentials",
+      "path": "/system/principals/:principalId/machine-credentials",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:write - step-up後に機械credentialを発行しraw secretを一度だけ返す",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.principals.$principalId.machine-credentials",
+      "path": "/system/principals/:principalId/machine-credentials",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:write - step-up後にcredentialを失効し履歴を保持する",
+      "exportName": "DELETE",
+      "method": "DELETE",
+      "module": "@system/interface/routes/system.machine-credentials.$credentialId",
+      "path": "/system/principals/:principalId/machine-credentials/:credentialId",
+      "phase": "public",
+    },
+    {
+      "authorization": "service - 明示した閲覧権限・申請判断の関係・開示監査を満たす提案版だけを読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.proposals.$number.versions.$version",
+      "path": "/system/proposals/:number/versions/:version",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:read - namespaced permissionを持つSystem Roleだけを読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.roles",
+      "path": "/system/roles",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:write - actorが保持しないpermissionをRoleへ追加できない",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.roles",
+      "path": "/system/roles",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:write - active bindingを持つRoleとmanaged Roleは削除しない",
+      "exportName": "DELETE",
+      "method": "DELETE",
+      "module": "@system/interface/routes/system.roles.$roleId",
+      "path": "/system/roles/:roleId",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:read - 一つのSystem Roleをpermission集合付きで読む",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.roles.$roleId",
+      "path": "/system/roles/:roleId",
+      "phase": "public",
+    },
+    {
+      "authorization": "permission iam:write - managed Role不変・permission昇格・last-rootを検査する",
+      "exportName": "PATCH",
+      "method": "PATCH",
+      "module": "@system/interface/routes/system.roles.$roleId",
+      "path": "/system/roles/:roleId",
+      "phase": "public",
+    },
+    {
+      "authorization": "public - tokenの実在を漏らさずSession familyを冪等失効する",
+      "exportName": "DELETE",
+      "method": "DELETE",
+      "module": "@system/interface/routes/system.sessions",
+      "path": "/system/sessions",
+      "phase": "public",
+    },
+    {
+      "authorization": "public - opaque Session token自体をcredentialとして検証する",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.sessions",
+      "path": "/system/sessions",
+      "phase": "public",
+    },
+    {
+      "authorization": "public - refresh tokenのrotationと再利用検知をSystemが行う",
+      "exportName": "PATCH",
+      "method": "PATCH",
+      "module": "@system/interface/routes/system.sessions",
+      "path": "/system/sessions",
+      "phase": "public",
+    },
+    {
+      "authorization": "public - password credentialを検証しcanonical opaque Sessionを発行する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.sessions",
+      "path": "/system/sessions",
+      "phase": "public",
+    },
+    {
+      "authorization": "authenticated - 現在のHuman Accountのpasswordを再検証して短命grantを発行する",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.step-up-grants",
+      "path": "/system/step-up-grants",
+      "phase": "public",
+    },
+    {
+      "authorization": "service - 現在の参加者または管理者に作業一覧を限定する",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.work-items",
+      "path": "/system/work-items",
+      "phase": "public",
+    },
+    {
+      "authorization": "service - 作業の依頼と責任者を記録する。",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.work-items",
+      "path": "/system/work-items",
+      "phase": "public",
+    },
+    {
+      "authorization": "service - 現在の参加者または管理者に作業の最新版を開示する",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.work-items.$id",
+      "path": "/system/work-items/:id",
+      "phase": "public",
+    },
+    {
+      "authorization": "service - 担当者が作業を受領する。",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.work-items.$id.accept",
+      "path": "/system/work-items/:id/accept",
+      "phase": "public",
+    },
+    {
+      "authorization": "service - 責任者が正確な成果を確認し作業を完了する。",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.work-items.$id.approve",
+      "path": "/system/work-items/:id/approve",
+      "phase": "public",
+    },
+    {
+      "authorization": "service - 責任者が作業の中止を記録する。",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.work-items.$id.cancel",
+      "path": "/system/work-items/:id/cancel",
+      "phase": "public",
+    },
+    {
+      "authorization": "service - 現在の参加資格・証拠の完全性・開示監査を確認して添付を渡す",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.work-items.$id.evidence.$attachmentId",
+      "path": "/system/work-items/:id/evidence/:attachmentId",
+      "phase": "public",
+    },
+    {
+      "authorization": "service - 受領が必要な責任の引き継ぎを依頼する。",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.work-items.$id.handovers",
+      "path": "/system/work-items/:id/handovers",
+      "phase": "public",
+    },
+    {
+      "authorization": "service - 引き継ぎ先が作業の責任を受領する。",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.work-items.$id.handovers.accept",
+      "path": "/system/work-items/:id/handovers/accept",
+      "phase": "public",
+    },
+    {
+      "authorization": "service - 引き継ぎ先が受領を辞退する。",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.work-items.$id.handovers.decline",
+      "path": "/system/work-items/:id/handovers/decline",
+      "phase": "public",
+    },
+    {
+      "authorization": "service - 現在の参加者または管理者に変更不能な作業履歴を開示する",
+      "exportName": "GET",
+      "method": "GET",
+      "module": "@system/interface/routes/system.work-items.$id.history",
+      "path": "/system/work-items/:id/history",
+      "phase": "public",
+    },
+    {
+      "authorization": "service - 担当者が確認対象の成果を提出する。",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.work-items.$id.results",
+      "path": "/system/work-items/:id/results",
+      "phase": "public",
+    },
+    {
+      "authorization": "service - 責任者が成果の修正を求める。",
+      "exportName": "POST",
+      "method": "POST",
+      "module": "@system/interface/routes/system.work-items.$id.return",
+      "path": "/system/work-items/:id/return",
+      "phase": "public",
+    },
+  ],
+}
+`;

@@ -1,10 +1,11 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { TrainingEnrollmentResponse } from "@/lib/api/types/training-types"
 
 /** POST /training-enrollments/:id/complete。受講を完了にして更新後の受講を返す。 */
 export async function completeTrainingEnrollment(
-  enrollmentId: number,
+  enrollmentId: EntityId,
 ): Promise<TrainingEnrollmentResponse | Error> {
   const client = await createClient()
 

@@ -1,3 +1,4 @@
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { FetchError } from "@/components/fetch-error"
 import Link from "next/link"
 import { GoalEvaluationForm } from "@/app/(app)/performance-review/goals/[goal]/_components/goal-evaluation-form"
@@ -25,9 +26,9 @@ type Props = {
 export default async function GoalDetailPage(props: Props) {
   const params = await props.params
 
-  const goalId = Number(params.goal)
+  const goalId = toEntityId(params.goal)
 
-  if (!Number.isInteger(goalId)) {
+  if (goalId === null) {
     return <FetchError message="目標 ID が不正です" />
   }
 

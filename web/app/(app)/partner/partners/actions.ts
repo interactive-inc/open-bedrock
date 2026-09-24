@@ -1,5 +1,6 @@
 "use server"
 
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { revalidatePath } from "next/cache"
 import { redirect } from "next/navigation"
 import { createPartner } from "@/lib/api/create-partner"
@@ -115,9 +116,9 @@ export async function updatePartnerAction(
     return { ok: false, error: "取引先を管理する権限がありません" }
   }
 
-  const id = Number(toStringValue(formData.get("id")))
+  const id = toEntityId(formData.get("id"))
 
-  if (Number.isInteger(id) === false || id <= 0) {
+  if (id === null) {
     return { ok: false, error: "取引先が不正です" }
   }
 
@@ -160,9 +161,9 @@ export async function archivePartnerAction(
     return { ok: false, error: "取引先を管理する権限がありません" }
   }
 
-  const id = Number(toStringValue(formData.get("id")))
+  const id = toEntityId(formData.get("id"))
 
-  if (Number.isInteger(id) === false || id <= 0) {
+  if (id === null) {
     return { ok: false, error: "取引先が不正です" }
   }
 
@@ -188,9 +189,9 @@ export async function createContractAction(
     return { ok: false, error: "契約記録を管理する権限がありません" }
   }
 
-  const partnerId = Number(toStringValue(formData.get("partner_id")))
+  const partnerId = toEntityId(formData.get("partner_id"))
 
-  if (Number.isInteger(partnerId) === false || partnerId <= 0) {
+  if (partnerId === null) {
     return { ok: false, error: "取引先が不正です" }
   }
 
@@ -240,9 +241,9 @@ export async function updateContractAction(
     return { ok: false, error: "契約記録を管理する権限がありません" }
   }
 
-  const id = Number(toStringValue(formData.get("id")))
+  const id = toEntityId(formData.get("id"))
 
-  if (Number.isInteger(id) === false || id <= 0) {
+  if (id === null) {
     return { ok: false, error: "契約記録が不正です" }
   }
 

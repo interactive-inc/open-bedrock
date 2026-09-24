@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { formatDateTime } from "@/lib/format-date-time"
 import Link from "next/link"
 import { ApplicationStatusBadge } from "@/components/application-status-badge"
@@ -14,7 +15,7 @@ import {
 import type { ApplicationStatus } from "@/lib/api/types/application-types"
 
 export type AdminApplicationRow = {
-  id: number
+  id: EntityId
   template_code: string
   template_name: string
   template_category: string

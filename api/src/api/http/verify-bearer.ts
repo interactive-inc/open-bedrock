@@ -7,7 +7,6 @@ import type { SystemAccountId } from "@/contexts/company/domain/definitions/work
 import { UnauthorizedError } from "@/lib/http/errors"
 import { createMiddleware } from "hono/factory"
 import { authenticateSystemBearer } from "@/api/http/authenticate-system-bearer"
-import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 /**
  * Bearer トークンを検証し、本人と権限を c.var.session に載せる。
@@ -16,7 +15,7 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
  */
 export const verifyBearer = createMiddleware<HonoEnv>(async (c, next) => {
   await authenticateSystemBearer(c)
-  const accountId = zAccountId.parse(c.var.userId)
+  const accountId = c.var.userId
   const workforceAccountId = restoreWorkforceId("system_account", accountId)
   const account = await resolveCompanyAccountEmployeeLink(
     c,

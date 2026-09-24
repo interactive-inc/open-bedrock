@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { ShiftPatternResponse } from "@/lib/api/types/shift-types"
@@ -12,7 +13,7 @@ export type ShiftPatternUpdateRequest = {
 
 /** PUT /shift-patterns/:id。特権ロールがシフトパターンの内容を変更する。 */
 export async function updateShiftPattern(
-  id: number,
+  id: EntityId,
   request: ShiftPatternUpdateRequest,
 ): Promise<ShiftPatternResponse | Error> {
   const client = await createClient()

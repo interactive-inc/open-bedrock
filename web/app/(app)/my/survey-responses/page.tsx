@@ -34,8 +34,8 @@ async function MyResponsesSection() {
 
   const surveys = await getSurveyList()
 
-  const surveyTitleMap: Record<number, string> =
-    surveys instanceof Error ? {} : Object.fromEntries(surveys.map((s) => [s.id, s.title]))
+  const surveyTitleMap: Record<string, string> =
+    surveys instanceof Error ? {} : Object.fromEntries(surveys.map((s) => [String(s.id), s.title]))
 
   return <MyResponsesList responses={responses} surveyTitleMap={surveyTitleMap} />
 }

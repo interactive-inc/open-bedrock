@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { toast } from "sonner"
 import type { TrainingFormState } from "@/app/(app)/training/trainings/actions"
@@ -7,7 +8,7 @@ import { cancelTrainingEnrollmentAction } from "@/app/(app)/training/trainings/a
 import { Button } from "@/components/ui/button"
 
 type Props = {
-  enrollmentId: number
+  enrollmentId: EntityId
 }
 
 const initialState: TrainingFormState = { ok: false, error: null }

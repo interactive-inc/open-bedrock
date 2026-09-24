@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
@@ -5,7 +6,7 @@ import { toResponseError } from "@/lib/api/to-response-error"
  * DELETE /career-postings/:postingId。管理ロールが公募を削除する。
  * 権限不足は 403、不存在は 404 を api が返すため、戻りは Error になる。成功時は null。
  */
-export async function deleteCareerPosting(postingId: number): Promise<null | Error> {
+export async function deleteCareerPosting(postingId: EntityId): Promise<null | Error> {
   const client = await createClient()
 
   const response = await client["career"]["career-postings"][":postingId"].$delete({

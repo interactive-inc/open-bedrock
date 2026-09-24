@@ -1,5 +1,6 @@
 "use server"
 
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { revalidatePath } from "next/cache"
 import { createReward } from "@/lib/api/create-reward"
 import { getMe } from "@/lib/api/get-me"
@@ -68,9 +69,9 @@ export async function requestRedemptionAction(
 
   const rawRewardId = formData.get("reward_id")
 
-  const rewardId = typeof rawRewardId === "string" ? Number(rawRewardId) : Number.NaN
+  const rewardId = toEntityId(rawRewardId)
 
-  if (Number.isInteger(rewardId) === false || rewardId <= 0) {
+  if (rewardId === null) {
     return { ok: false, error: "交換する景品を選択してください" }
   }
 

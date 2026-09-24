@@ -60,7 +60,7 @@ export const GET = factory.createHandlers(
       .select({ ...getTableColumns(leaveRequests), status: leaveProcedureStatusSql })
       .from(leaveRequests)
       .where(and(...conditions))
-      .orderBy(desc(leaveRequests.id))
+      .orderBy(desc(leaveRequests.createdAt), desc(leaveRequests.id))
       .limit(limit)
       .offset(offset)
 

@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { useRouter } from "next/navigation"
 import { advanceCandidateAction } from "@/app/(app)/recruitment/recruitments/actions"
@@ -12,8 +13,8 @@ import { Button } from "@/components/ui/button"
 const initialState: RecruitmentActionState = { ok: false, error: null }
 
 type Props = {
-  candidateId: number
-  positionId: number
+  candidateId: EntityId
+  positionId: EntityId
   stage: string
 }
 

@@ -37,10 +37,13 @@ export class ThanksRewardRepository {
       const rows = props.activeOnly
         ? await base
             .where(eq(thanksRewards.isActive, true))
-            .orderBy(desc(thanksRewards.id))
+            .orderBy(desc(thanksRewards.createdAt), desc(thanksRewards.id))
             .limit(props.limit)
             .offset(props.offset)
-        : await base.orderBy(desc(thanksRewards.id)).limit(props.limit).offset(props.offset)
+        : await base
+            .orderBy(desc(thanksRewards.createdAt), desc(thanksRewards.id))
+            .limit(props.limit)
+            .offset(props.offset)
 
       return rows.map((row) => ThanksReward.fromRow(row))
     } catch (error) {

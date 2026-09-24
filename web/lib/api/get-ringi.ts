@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** 稟議の内容と現在の判断対象を取得する。 */
-export async function getRingi(id: number) {
+export async function getRingi(id: EntityId) {
   const client = await createClient()
   const response = await client.ringi["ringi-requests"][":id"].$get({ param: { id: String(id) } })
   if (response.status >= 400) return toResponseError(response, { fallback: "稟議を取得できません" })

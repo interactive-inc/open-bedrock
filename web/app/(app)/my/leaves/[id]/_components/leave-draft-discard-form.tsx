@@ -1,12 +1,13 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { cancelLeaveRequestAction } from "@/app/(app)/my/leaves/actions"
 import { Button } from "@/components/ui/button"
 import { FieldError } from "@/components/ui/field"
 
 /** 本人の未提出の内容だけを削除する。提出済みの案件は履歴を残す取消を使う。 */
-export function LeaveDraftDiscardForm(props: { id: number }) {
+export function LeaveDraftDiscardForm(props: { id: EntityId }) {
   const [state, action, pending] = useActionState(cancelLeaveRequestAction, {
     ok: false,
     error: null,

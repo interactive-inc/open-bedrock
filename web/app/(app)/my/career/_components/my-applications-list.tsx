@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useState } from "react"
 import {
   updateCareerApplicationAction,
@@ -34,7 +35,7 @@ import { FORM_CONSTRAINTS } from "@/lib/form/constraints"
 
 type Props = {
   applications: ReadonlyArray<CareerApplication>
-  postingTitleMap: Record<number, string>
+  postingTitleMap: Record<string, string>
 }
 
 const statusLabels: Record<CareerApplication["status"], string> = {
@@ -73,7 +74,8 @@ export function MyApplicationsList(props: Props) {
             return (
               <TableRow key={applicationId}>
                 <TableCell>
-                  {props.postingTitleMap[application.posting_id] ?? `#${application.posting_id}`}
+                  {props.postingTitleMap[String(application.posting_id)] ??
+                    `#${application.posting_id}`}
                 </TableCell>
 
                 <TableCell>{application.message ?? "-"}</TableCell>
@@ -106,7 +108,10 @@ export function MyApplicationsList(props: Props) {
 }
 
 /** 応募メッセージ変更フォームを Dialog で開く。 */
-function UpdateApplicationDialog(props: { applicationId: number; application: CareerApplication }) {
+function UpdateApplicationDialog(props: {
+  applicationId: EntityId
+  application: CareerApplication
+}) {
   const [open, setOpen] = useState(false)
 
   const [state, formAction, pending] = useFormAction(
@@ -156,7 +161,7 @@ function UpdateApplicationDialog(props: { applicationId: number; application: Ca
 }
 
 /** 応募取り下げボタン。Server Action を呼び、成功時はリストが revalidate される。 */
-function WithdrawApplicationButton(props: { applicationId: number }) {
+function WithdrawApplicationButton(props: { applicationId: EntityId }) {
   const [_state, formAction, pending] = useFormAction(
     withdrawCareerApplicationAction,
     {

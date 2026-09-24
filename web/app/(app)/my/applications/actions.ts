@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { updateApplication } from "@/lib/api/update-application"
 import { withdrawApplication } from "@/lib/api/withdraw-application"
 import { resubmitApplication } from "@/lib/api/resubmit-application"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { requireAuth } from "@/lib/auth/require-auth"
 
 /** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
@@ -23,7 +23,7 @@ export async function updateApplicationAction(
 ): Promise<ApplicationActionState> {
   await requireAuth()
 
-  const applicationId = toPositiveIntId(formData.get("application_id"))
+  const applicationId = toEntityId(formData.get("application_id"))
 
   if (applicationId === null) {
     return { ok: false, error: "申請を特定できませんでした" }
@@ -55,7 +55,7 @@ export async function resubmitApplicationAction(
 ): Promise<ApplicationActionState> {
   await requireAuth()
 
-  const applicationId = toPositiveIntId(formData.get("application_id"))
+  const applicationId = toEntityId(formData.get("application_id"))
   if (applicationId === null) return { ok: false, error: "申請を特定できませんでした" }
   const payload = toPayload(formData.get("payload"))
   if (payload instanceof Error) return { ok: false, error: "申請内容の形式が正しくありません" }
@@ -73,7 +73,7 @@ export async function withdrawApplicationAction(
 ): Promise<ApplicationActionState> {
   await requireAuth()
 
-  const applicationId = toPositiveIntId(formData.get("application_id"))
+  const applicationId = toEntityId(formData.get("application_id"))
 
   if (applicationId === null) {
     return { ok: false, error: "申請を特定できませんでした" }

@@ -46,7 +46,7 @@ describe("稟議の表示内容と再送", () => {
   test.each(["approve", "reject"] as const)("表示した判断対象を送る: %s", async (operation) => {
     const action = operation === "approve" ? approveRingiAction : rejectRingiAction
     expect(await action(initial, form())).toEqual({ ok: true, error: null })
-    expect(mocks[operation]).toHaveBeenCalledExactlyOnceWith(42, "内容を確認しました", target)
+    expect(mocks[operation]).toHaveBeenCalledExactlyOnceWith("42", "内容を確認しました", target)
     expect(mocks.revalidatePath).toHaveBeenCalledWith("/my/ringis/42")
   })
 
@@ -67,7 +67,7 @@ describe("稟議の表示内容と再送", () => {
     data.set("operation", operation)
     expect(await advanceRingiAction(initial, data)).toEqual({ ok: true, error: null })
     expect(operation === "cancel" ? mocks.cancel : mocks.execute).toHaveBeenCalledExactlyOnceWith(
-      42,
+      "42",
       target,
     )
   })
@@ -98,7 +98,7 @@ describe("稟議の表示内容と再送", () => {
     for (const call of mocks.submit.mock.calls)
       expect(call[0]).toEqual({
         request_key: requestKey,
-        previous_ringi_id: 41,
+        previous_ringi_id: "41",
         existing_ringi_id: null,
         approver_id: "reviewer",
         title: "備品購入",

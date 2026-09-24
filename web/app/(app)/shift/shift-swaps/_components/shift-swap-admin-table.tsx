@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import Link from "next/link"
 import { StatusLabel } from "@/components/status-label"
 import { EmptyState } from "@/components/empty-state"
@@ -13,7 +14,7 @@ import {
 import type { ShiftSwapAdminSort } from "@/lib/api/get-shift-swap-admin-list"
 
 export type ShiftSwapAdminRow = {
-  id: number
+  id: EntityId
   requester_employee_id: string
   requester_employee_code: string
   requester_name: string
