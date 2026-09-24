@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import type { RecordRetirementDecisionContext } from "@system/configuration/record-retirement-decision-context"
 import type { SystemDatabaseContext } from "@system/configuration/system-context"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
@@ -94,7 +95,7 @@ export class WithdrawRecordRetirementAdapter {
 
     const audit = SystemAuditEventEntity.create({
       actorAccountId: authentication.accountId,
-      action: "system.record.retirement.withdrawn",
+      action: SYSTEM_AUDIT_ACTIONS.systemRecordRetirementWithdrawn,
       targetType: "system:case",
       targetId: proposal.caseId,
       outcome: "succeeded",

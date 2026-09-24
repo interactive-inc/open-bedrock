@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
@@ -47,7 +48,10 @@ export const PATCH = systemFactory.createHandlers(
     if (after === null || after instanceof Error) throw new SystemDeliveryUnavailableError(after)
     const event = SystemAuditEventEntity.create({
       actorAccountId: accountId.data,
-      action: `system.inbox.${input.outcome}`,
+      action:
+        input.outcome === "processed"
+          ? SYSTEM_AUDIT_ACTIONS.systemInboxProcessed
+          : SYSTEM_AUDIT_ACTIONS.systemInboxRejected,
       targetType: "system:inbox_message",
       targetId: messageId,
       outcome: "succeeded",

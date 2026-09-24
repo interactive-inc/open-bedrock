@@ -1,3 +1,5 @@
+import { notFound } from "next/navigation"
+import { toEntityId } from "@/lib/form/to-entity-id"
 import Link from "next/link"
 import { getRingi } from "@/lib/api/get-ringi"
 import { FetchError } from "@/components/fetch-error"
@@ -13,7 +15,9 @@ export const metadata = { title: "稟議の内容と判断" }
 /** 内容・判断履歴を確認し、取消・再提出・確定待ちの処理を行う。 */
 export default async function RingiDetailPage(props: Props) {
   const params = await props.params
-  const ringi = await getRingi(Number(params.id))
+  const ringiId = toEntityId(params.id)
+  if (ringiId === null) notFound()
+  const ringi = await getRingi(ringiId)
   if (ringi instanceof Error) return <FetchError message={ringi.message} />
   const requestKey = crypto.randomUUID()
   return (

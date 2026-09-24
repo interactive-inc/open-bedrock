@@ -18,6 +18,7 @@ import {
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("資格定義・従業員資格を全件保全し、人の承認を経て2台帳を撤去確定する", async () => {
   const {
+    clock,
     database,
     governance,
     creator: creatorPerson,
@@ -56,7 +57,7 @@ test("資格定義・従業員資格を全件保全し、人の承認を経て2�
     VALUES (1,?1,1,'2026-01-02','2027-01-02','Original evidence','2026-01-02T00:00:00.000Z')`)
     .bind(creatorPerson.employeeId)
     .run()
-  const at = new Date()
+  const at = clock()
   const token = await tokenFor(creator)
   const stepUpToken = "e".repeat(64)
   const hash = await new SystemPrincipalSecretService().hashRawSecret(stepUpToken)

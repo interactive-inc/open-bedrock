@@ -1,3 +1,5 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 export type RingiStatus =
   | "pending"
   | "approved"
@@ -8,7 +10,7 @@ export type RingiStatus =
 
 /** GET /ringi-requests/me の各要素（自分の起案一覧）。 */
 export type RingiMineResponse = {
-  id: number
+  id: EntityId
   approver_id: string
   approver_name: string
   title: string
@@ -20,7 +22,7 @@ export type RingiMineResponse = {
 
 /** GET /ringi-requests/inbox の各要素（承認待ち一覧）。 */
 export type RingiInboxResponse = {
-  id: number
+  id: EntityId
   applicant_id: string
   applicant_name: string
   title: string
@@ -32,7 +34,7 @@ export type RingiInboxResponse = {
 
 /** GET /ringi-requests/admin の各要素（全社横断の稟議一覧）。 */
 export type RingiAdminResponse = {
-  id: number
+  id: EntityId
   applicant_id: string
   applicant_name: string
   applicant_dept_name: string | null
@@ -53,8 +55,8 @@ export type RingiDecisionResponse = {
 /** POST /ringi-requests のリクエスト body。 */
 export type RingiSubmitRequest = {
   request_key: string
-  existing_ringi_id?: number | null
-  previous_ringi_id?: number | null
+  existing_ringi_id?: EntityId | null
+  previous_ringi_id?: EntityId | null
   approver_id: string
   title: string
   amount: number

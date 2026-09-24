@@ -1,6 +1,7 @@
 import { LicenseUsagePagination } from "@/app/(app)/software-license/licenses/[license]/_components/license-usage-pagination"
 import Link from "next/link"
 import { z } from "zod"
+import { ENTITY_ID_PATTERN } from "@/lib/form/to-entity-id"
 import { notFound } from "next/navigation"
 import { PageHeader } from "@/components/page-header"
 import { FetchError } from "@/components/fetch-error"
@@ -24,12 +25,12 @@ export default async function LicenseUsagePage(props: Props) {
   if (viewer instanceof Error || !canViewAllLicenses(viewer.permissions)) notFound()
   const params = await props.params
   const query = await props.searchParams
-  const id = Number(params.license)
+  const id = params.license
   const state = query.state === "released" ? "released" : "assigned"
   const offset = Number(query.offset ?? "0")
   const location = z
     .object({
-      id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+      id: z.string().regex(ENTITY_ID_PATTERN),
       offset: z.number().int().min(0).max(100000),
     })
     .safeParse({ id, offset })

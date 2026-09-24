@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import Link from "next/link"
 import { EnrollButton } from "@/app/(app)/training/trainings/_components/enroll-button"
 import { EmptyState } from "@/components/empty-state"
@@ -14,7 +15,7 @@ import type { TrainingCourseResponse } from "@/lib/api/types/training-types"
 
 type Props = {
   courses: Array<TrainingCourseResponse>
-  enrolledCourseIds: ReadonlyArray<number>
+  enrolledCourseIds: ReadonlyArray<EntityId>
 }
 
 /**

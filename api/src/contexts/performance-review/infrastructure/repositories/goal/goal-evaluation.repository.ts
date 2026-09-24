@@ -26,7 +26,7 @@ export class GoalEvaluationRepository {
         .select()
         .from(goalEvaluations)
         .where(eq(goalEvaluations.goalId, goalId))
-        .orderBy(asc(goalEvaluations.id))
+        .orderBy(asc(goalEvaluations.createdAt), asc(goalEvaluations.id))
 
       return rows.map((row) => GoalEvaluation.fromRow(row))
     } catch (error) {

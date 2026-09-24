@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toApiResponseError } from "@/lib/api/to-api-response-error"
 
@@ -9,7 +10,7 @@ export type ReassignWorkflowStepRequest = {
 
 /** POST /application-requests/:id/reassign-workflow-step。API の監査・競合・再検証をそのまま利用する。 */
 export async function reassignWorkflowStep(
-  applicationId: number,
+  applicationId: EntityId,
   request: ReassignWorkflowStepRequest,
 ) {
   const client = await createClient()

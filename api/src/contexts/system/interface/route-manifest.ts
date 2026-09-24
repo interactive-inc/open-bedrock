@@ -495,16 +495,6 @@ export const systemRouteManifest = [
     },
   },
   {
-    method: "GET",
-    path: "/system/sessions",
-    phase: "public",
-    handler: {
-      kind: "module",
-      module: "@system/interface/routes/system.sessions",
-      exportName: "GET",
-    },
-  },
-  {
     method: "POST",
     path: "/system/sessions",
     phase: "public",

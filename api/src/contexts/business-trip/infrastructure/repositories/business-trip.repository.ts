@@ -121,22 +121,30 @@ export class BusinessTripRepository {
     }
   }
 
-  /** status を fromStatus から toStatus へ遷移する。行が fromStatus でなければ 0 行更新となり null を返す。 */
+  /**
+   * status を fromStatus から toStatus へ遷移する。判断資格の検査文と同じbatchで確定し、
+   * 検査が失敗すれば遷移しない。行が fromStatus でなければ 0 行更新となり null を返す。
+   */
   async updateStatus(props: {
     id: string
     fromStatus: string
     toStatus: string
+    guards: ReadonlyArray<D1PreparedStatement>
   }): Promise<BusinessTrip | null | Error> {
     try {
-      const rows = await this.c.var.database
-        .update(businessTrips)
-        .set({ status: props.toStatus })
-        .where(and(eq(businessTrips.id, props.id), eq(businessTrips.status, props.fromStatus)))
-        .returning()
+      const database = this.c.env.DB
+      const results = await database.batch([
+        ...props.guards,
+        database
+          .prepare(
+            "UPDATE business_trips SET status = ?1 WHERE id = ?2 AND status = ?3 RETURNING id",
+          )
+          .bind(props.toStatus, props.id, props.fromStatus),
+      ])
 
-      const row = rows.at(0)
+      if ((results.at(-1)?.results.length ?? 0) === 0) return null
 
-      return row === undefined ? null : BusinessTrip.fromRow(row)
+      return await this.findById(props.id)
     } catch (error) {
       return error instanceof Error ? error : new Error("failed to update business_trip status")
     }

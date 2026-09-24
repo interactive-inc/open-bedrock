@@ -1,10 +1,11 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { StatusLabel } from "@/components/status-label"
 import { Card, CardContent, CardDescription, CardHeader } from "@/components/ui/card"
 import { evaluationKindLabel } from "@/app/(app)/performance-review/goals/[goal]/_lib/evaluation-kind-label"
 import { formatDateTime } from "@/lib/format-date-time"
 
 type Evaluation = {
-  id: number
+  id: EntityId
   kind: string
   score: number | null
   comment: string | null

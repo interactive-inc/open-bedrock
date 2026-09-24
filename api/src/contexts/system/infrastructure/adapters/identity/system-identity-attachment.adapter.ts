@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
@@ -39,7 +40,7 @@ export class SystemIdentityAttachmentAdapter {
     if (afterJson instanceof Error) return afterJson
     const auditEvent = SystemAuditEventEntity.create({
       actorAccountId: input.actorAccountId ?? null,
-      action: "system.identity.attached",
+      action: SYSTEM_AUDIT_ACTIONS.systemIdentityAttached,
       targetType: "system:identity",
       targetId: identityId.data,
       outcome: "succeeded",

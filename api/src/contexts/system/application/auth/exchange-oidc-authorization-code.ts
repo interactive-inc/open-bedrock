@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import {
   OidcInvalidGrantApplicationError,
   OidcTemporarilyUnavailableApplicationError,
@@ -94,7 +95,7 @@ export class ExchangeOidcAuthorizationCode {
 
     const audit = SystemAuditEventEntity.createOidc({
       accountId: authorizationCode.accountId,
-      action: "auth.oidc.token_exchange",
+      action: SYSTEM_AUDIT_ACTIONS.authOidcTokenExchange,
       outcome: "succeeded",
       reasonCode: null,
       authorization: null,

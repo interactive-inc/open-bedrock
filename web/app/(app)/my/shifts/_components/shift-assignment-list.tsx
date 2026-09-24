@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 import type { ShiftFormState } from "@/app/(app)/my/shifts/actions"
@@ -37,7 +38,7 @@ type Props = {
   assignments: Array<ShiftAssignmentResponse>
   canManage: boolean
   employeeNameMap: Record<string, string>
-  patternNameMap: Record<number, string>
+  patternNameMap: Record<string, string>
 }
 
 const initialState: ShiftFormState = { ok: false, error: null }
@@ -95,7 +96,7 @@ export function ShiftAssignmentList(props: Props) {
 
               <TableCell>
                 {assignment.pattern_id !== null
-                  ? (props.patternNameMap[assignment.pattern_id] ?? "-")
+                  ? (props.patternNameMap[String(assignment.pattern_id)] ?? "-")
                   : "-"}
               </TableCell>
 
@@ -211,7 +212,7 @@ function UpdateAssignmentDialog(props: { assignment: ShiftAssignmentResponse }) 
 }
 
 /** 割当削除ボタン。成功・失敗の通知は action の結果を見て toast() で出す。 */
-function DeleteAssignmentButton(props: { assignmentId: number | null }) {
+function DeleteAssignmentButton(props: { assignmentId: EntityId | null }) {
   async function reduce(
     previousState: ShiftFormState,
     formData: FormData,

@@ -3428,14 +3428,6 @@ exports[`System API schema snapshot route表、認可宣言、応答schemaの変
       "phase": "public",
     },
     {
-      "authorization": "public - opaque Session token自体をcredentialとして検証する",
-      "exportName": "GET",
-      "method": "GET",
-      "module": "@system/interface/routes/system.sessions",
-      "path": "/system/sessions",
-      "phase": "public",
-    },
-    {
       "authorization": "public - refresh tokenのrotationと再利用検知をSystemが行う",
       "exportName": "PATCH",
       "method": "PATCH",

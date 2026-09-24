@@ -81,7 +81,7 @@ export class ShiftSwapRequestRepository {
    */
   async create(swapRequest: ShiftSwapRequest): Promise<ShiftSwapRequest | null | Error> {
     try {
-      const result = await this.c.var.database.run(
+      const inserted = await this.c.var.database.all<{ id: number }>(
         sql`INSERT INTO shift_swap_requests (requester_employee_id, target_employee_id, date, note, status, approved_at)
             SELECT ${swapRequest.requesterEmployeeId}, ${swapRequest.targetEmployeeId},
                    ${swapRequest.date}, ${swapRequest.note}, ${swapRequest.status}, ${swapRequest.approvedAt}
@@ -91,18 +91,21 @@ export class ShiftSwapRequestRepository {
                 AND target_employee_id = ${swapRequest.targetEmployeeId}
                 AND date = ${swapRequest.date}
                 AND status = 'pending'
-            )`,
+            )
+            RETURNING id`,
       )
 
-      if (result.meta.changes === 0) {
+      const insertedId = inserted.at(0)?.id
+
+      if (insertedId === undefined) {
         return null
       }
 
-      // last_insert_rowid で採番された行を取得する
+      // RETURNING で受け取った採番済みの行を取得する
       const rows = await this.c.var.database
         .select()
         .from(shiftSwapRequests)
-        .where(eq(shiftSwapRequests.id, Number(result.meta.last_row_id)))
+        .where(eq(shiftSwapRequests.id, insertedId))
         .limit(1)
 
       const row = rows.at(0)
@@ -141,6 +144,7 @@ export class ShiftSwapRequestRepository {
     approved: ShiftSwapRequest
     requesterAssignment: ShiftAssignment
     targetAssignment: ShiftAssignment
+    guards: ReadonlyArray<D1PreparedStatement>
   }): Promise<ShiftSwapRequest | ShiftSwapConflict | Error> {
     if (
       props.approved.id === null ||
@@ -153,6 +157,7 @@ export class ShiftSwapRequestRepository {
     try {
       const db = this.c.env.DB
       await db.batch([
+        ...props.guards,
         db
           .prepare(
             "UPDATE shift_swap_requests SET status = ?1, approved_at = ?2 WHERE id = ?3 AND status = 'pending'",
@@ -182,9 +187,27 @@ export class ShiftSwapRequestRepository {
       ])
       return props.approved
     } catch (error) {
-      if (isAbortedByGuard(error)) return { reason: "conflict" }
+      if (isAbortedByGuard(error)) {
+        if (await this.companyAuthorityChanged(props.guards))
+          return new Error("company authority changed before saving", { cause: error })
+        return { reason: "conflict" }
+      }
       return error instanceof Error ? error : new Error("failed to swap shift assignments")
     }
+  }
+
+  /** batch中止後に、判断資格の検査文だけを再評価してCompany状態の変更による中止かを判別する。 */
+  private async companyAuthorityChanged(
+    guards: ReadonlyArray<D1PreparedStatement>,
+  ): Promise<boolean> {
+    for (const guard of guards) {
+      try {
+        await guard.first()
+      } catch {
+        return true
+      }
+    }
+    return false
   }
 
   async delete(swapRequestId: number): Promise<true | null | Error> {

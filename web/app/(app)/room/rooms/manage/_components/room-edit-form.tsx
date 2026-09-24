@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState, useState } from "react"
 import { toast } from "sonner"
 import { updateRoomAction } from "@/app/(app)/room/rooms/manage/actions"
@@ -18,7 +19,7 @@ import { Input } from "@/components/ui/input"
 
 type Props = {
   // 編集対象の会議室。hidden の id と各入力の初期値に使う。
-  id: number
+  id: EntityId
   name: string
   capacity: number
   location: string | null

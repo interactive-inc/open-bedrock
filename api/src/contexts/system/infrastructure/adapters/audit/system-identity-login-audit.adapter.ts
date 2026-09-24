@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
 import type { SystemD1Context } from "@system/configuration/system-context"
@@ -12,7 +13,7 @@ export class SystemIdentityLoginAuditAdapter {
   async recordDenied(reasonCode: string, occurredAt: Date): Promise<null | Error> {
     const event = SystemAuditEventEntity.create({
       actorAccountId: null,
-      action: "auth.session.identity_login_denied",
+      action: SYSTEM_AUDIT_ACTIONS.authSessionIdentityLoginDenied,
       targetType: "session",
       targetId: null,
       outcome: "denied",

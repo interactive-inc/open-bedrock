@@ -14,6 +14,7 @@ import { drizzle } from "drizzle-orm/d1"
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("11件のantisocial check記録を全件保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
   const {
+    clock,
     database,
     governance,
     creator: creatorPerson,
@@ -64,7 +65,7 @@ test("11件のantisocial check記録を全件保全し、人の承認・取消�
       .prepare("SELECT count(*) AS total FROM antisocial_checks")
       .first<number>("total"),
   ).toBe(11)
-  const at = new Date()
+  const at = clock()
   const token = await tokenFor(creator)
   const stepUpToken = "e".repeat(64)
   const hash = await new SystemPrincipalSecretService().hashRawSecret(stepUpToken)

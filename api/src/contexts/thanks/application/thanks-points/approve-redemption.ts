@@ -7,6 +7,11 @@ import type { ApplicationError } from "@/lib/errors"
 import type { Context } from "@/env"
 import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-redemption.repository"
 import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
+import { isCompanyWriteAbortedByGuard } from "@/contexts/company/interface/operations/is-company-write-aborted-by-guard"
+import {
+  ThanksRedemptionDecisionAuthorityAdapter,
+  type ThanksRedemptionDecisionAuthority,
+} from "@/contexts/thanks/infrastructure/adapters/thanks-redemption-decision-authority.adapter"
 import { isThanksRecordSourceFrozenError } from "@/contexts/thanks/infrastructure/repositories/lib/is-thanks-record-source-frozen-error"
 
 export type Command = {
@@ -24,7 +29,7 @@ export type ApproveResult =
   | FulfilledWithStockError
   | ApplicationError
 
-/** 交換申請を承認する。 */
+/** 技術的権限と申請者に対するCompany上の管理範囲の両方を満たす判断者が、交換申請を承認する。 */
 export class ApproveRedemption {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -51,7 +56,20 @@ export class ApproveRedemption {
     if (existing.employeeId === command.deciderId) {
       return new ForbiddenError("cannot decide own redemption", "self_approval_forbidden")
     }
-    return this.approve(redemptionRepository, existing, command)
+    if (existing.status !== "pending") {
+      return new ConflictError("redemption already decided", "already_decided")
+    }
+
+    const authority = await new ThanksRedemptionDecisionAuthorityAdapter(this.c).prepare({
+      session: command.session,
+      subjectEmployeeIds: [existing.employeeId],
+    })
+
+    if (authority instanceof Error) {
+      return new ForbiddenError(authority.message, authority.code, { cause: authority })
+    }
+
+    return this.approve(redemptionRepository, existing, command, authority.guards)
   }
 
   /**
@@ -62,6 +80,7 @@ export class ApproveRedemption {
     redemptionRepository: ThanksRedemptionRepository,
     existing: ThanksRedemption,
     command: Command,
+    guards: ThanksRedemptionDecisionAuthority["guards"],
   ): Promise<ThanksRedemption | OutOfStock | FulfilledWithStockError | ApplicationError> {
     if (existing.status !== "pending") {
       return new ConflictError("redemption already decided", "already_decided")
@@ -73,9 +92,16 @@ export class ApproveRedemption {
       rewardId: existing.rewardId,
       deciderId: command.deciderId,
       decidedAt: command.decidedAt,
+      guards,
     })
 
     if (updated instanceof Error) {
+      if (isCompanyWriteAbortedByGuard(updated))
+        return new ConflictError(
+          "company authority changed before saving",
+          "company_authority_changed",
+          { cause: updated },
+        )
       if (isThanksRecordSourceFrozenError(updated))
         return new ConflictError("thanks writes are frozen", "record_source_frozen", {
           cause: updated,

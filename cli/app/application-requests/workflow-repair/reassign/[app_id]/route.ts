@@ -4,6 +4,7 @@ import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 import { createClient } from "@/lib/http/hc-client"
 import { ensureOk } from "@/lib/http/ensure-ok"
+import { isEntityIdSegment } from "@/lib/is-entity-id-segment"
 
 export const help = `bedrock application-requests workflow-repair reassign <app_id> --candidates <id,id,...> --reason <text> [--required-approvals <n>]`
 
@@ -34,8 +35,8 @@ export default factory.createHandlers(
       throw new UsageError("app_id と --candidates と --reason が必要です")
     }
 
-    if (/^[1-9]\d*$/.test(applicationId) === false) {
-      throw new UsageError("app_id は正の整数で指定してください")
+    if (isEntityIdSegment(applicationId) === false) {
+      throw new UsageError("app_id を指定してください")
     }
 
     const candidateEmployeeIds = parseCandidateEmployeeIds(input.candidates)

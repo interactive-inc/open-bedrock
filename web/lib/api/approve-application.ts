@@ -1,10 +1,11 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import type { ApplicationDecisionTarget } from "@/lib/api/types/application-types"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** 確認した提案版と判断段階へ承認を送る。 */
 export async function approveApplication(
-  id: number,
+  id: EntityId,
   comment: string | null,
   decisionTarget: ApplicationDecisionTarget,
 ) {

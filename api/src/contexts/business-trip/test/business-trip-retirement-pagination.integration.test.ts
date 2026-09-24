@@ -14,6 +14,7 @@ import { drizzle } from "drizzle-orm/d1"
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("11件の出張申請記録を全件保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
   const {
+    clock,
     database,
     governance,
     creator: creatorPerson,
@@ -58,7 +59,7 @@ test("11件の出張申請記録を全件保全し、人の承認・取消・再
       )
       .run()
   }
-  const at = new Date()
+  const at = clock()
   const token = await tokenFor(creator)
   const stepUpToken = "e".repeat(64)
   const hash = await new SystemPrincipalSecretService().hashRawSecret(stepUpToken)
@@ -121,8 +122,9 @@ test("11件の出張申請記録を全件保全し、人の承認・取消・再
     ).status,
   ).toBe(409)
   expect((await apiRequest(frozenTripPath, { method: "DELETE" })).status).toBe(409)
-  expect((await apiRequest(`${frozenTripPath}/approve`, { method: "POST" })).status).toBe(409)
-  expect((await apiRequest(`${frozenTripPath}/reject`, { method: "POST" })).status).toBe(409)
+  // 申請者本人の判断は凍結の検査より前に会社上の資格で拒否する。
+  expect((await apiRequest(`${frozenTripPath}/approve`, { method: "POST" })).status).toBe(403)
+  expect((await apiRequest(`${frozenTripPath}/reject`, { method: "POST" })).status).toBe(403)
   const mappings = []
   for (const id of tripIds) {
     const path = `/business-trip/business-trips/${id}/preservation-requests`

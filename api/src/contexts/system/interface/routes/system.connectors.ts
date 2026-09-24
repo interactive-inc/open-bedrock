@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 /** /system/connectors */
 import { CreateSystemConnector } from "@system/application/integration/create-system-connector"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
@@ -63,7 +64,7 @@ export const POST = systemFactory.createHandlers(
     }
     const event = SystemAuditEventEntity.create({
       actorAccountId: context.var.userId,
-      action: "system.connector.created",
+      action: SYSTEM_AUDIT_ACTIONS.systemConnectorCreated,
       targetType: "system:connector",
       targetId: body.id,
       outcome: "succeeded",

@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { z } from "zod"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
@@ -84,7 +85,7 @@ export class RecordRetirementVerificationPlanEntity {
     return SystemAuditEventEntity.restore({
       eventId: this.snapshot.auditEventId,
       actorAccountId: this.snapshot.actorAccountId,
-      action: "system.record.retirement.plan.created",
+      action: SYSTEM_AUDIT_ACTIONS.systemRecordRetirementPlanCreated,
       targetType: "system:record-retirement-plan",
       targetId: this.snapshot.id,
       outcome: "succeeded",

@@ -1,5 +1,6 @@
 import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import { z } from "zod"
+import { withAllocatedIntegerId } from "@/lib/database/with-allocated-integer-id"
 import type { AttachmentEvidence } from "@system/domain/definitions/attachments/attachment-evidence.definition"
 import { PrepareAttachmentEvidenceAdapter } from "@system/infrastructure/adapters/attachments/prepare-attachment-evidence.adapter"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
@@ -285,53 +286,56 @@ export class ExpenseProcedureRepository {
     const system = new SystemD1WorkflowAdapter({ ...this.c, startGuards: input.guards })
     const statements = system.prepareStartStatements(input.workflow)
     try {
-      const saved = await database.batch<{ id: number }>([
-        ...statements.slice(0, -1),
-        ...input.attachmentEffects,
-        ...(input.existingExpenseId == null
-          ? [
-              database
-                .prepare(`INSERT INTO expenses
-          (employee_id, organization_unit_id, category, amount, spent_at, note, status, created_at)
-          VALUES (?1, ?2, ?3, ?4, ?5, ?6, 'pending', ?7)`)
-                .bind(
-                  input.expense.employeeId,
-                  input.expense.organizationUnitId,
-                  input.expense.category,
-                  input.expense.amount,
-                  input.expense.spentAt,
-                  input.expense.note,
-                  input.expense.createdAt,
-                ),
-              abortWhenPreviousStatementChangedNoRows(database),
-            ]
-          : []),
-        database
-          .prepare(`INSERT INTO expense_procedure_bindings
+      // 新規の経費 ID は事前に明示し、手続きの結び付けはその ID を束縛値として受け取る。
+      const writeProcedure = (newExpenseId: number | null) =>
+        database.batch<{ id: number }>([
+          ...statements.slice(0, -1),
+          ...input.attachmentEffects,
+          ...(input.existingExpenseId == null
+            ? [
+                database
+                  .prepare(`INSERT INTO expenses
+          (id, employee_id, organization_unit_id, category, amount, spent_at, note, status, created_at)
+          VALUES (?8, ?1, ?2, ?3, ?4, ?5, ?6, 'pending', ?7)`)
+                  .bind(
+                    input.expense.employeeId,
+                    input.expense.organizationUnitId,
+                    input.expense.category,
+                    input.expense.amount,
+                    input.expense.spentAt,
+                    input.expense.note,
+                    input.expense.createdAt,
+                    newExpenseId,
+                  ),
+                abortWhenPreviousStatementChangedNoRows(database),
+              ]
+            : []),
+          database
+            .prepare(`INSERT INTO expense_procedure_bindings
           (request_key, expense_id, application_id, series_id, case_id, proposal_digest, created_at, previous_expense_id, attachment_evidence_json)
-          VALUES (?1, coalesce(?6, last_insert_rowid()),
+          VALUES (?1, ?6,
             (SELECT number FROM system_proposal_numbers WHERE series_id = ?2), ?2, ?3, ?4, ?5, ?7, ?8)`)
-          .bind(
-            input.requestKey,
-            input.workflow.proposal.seriesId,
-            input.workflow.workflowCase.id,
-            input.workflow.proposal.digest,
-            input.workflow.proposal.createdAt.getTime(),
-            input.existingExpenseId ?? null,
-            input.previousExpenseId ?? null,
-            evidence.toString(),
-          ),
-        abortWhenPreviousStatementChangedNoRows(database),
-        ...(input.existingExpenseId == null
-          ? input.attachments.map((attachment) =>
-              database
-                .prepare(`INSERT INTO expense_attachments
+            .bind(
+              input.requestKey,
+              input.workflow.proposal.seriesId,
+              input.workflow.workflowCase.id,
+              input.workflow.proposal.digest,
+              input.workflow.proposal.createdAt.getTime(),
+              input.existingExpenseId ?? newExpenseId,
+              input.previousExpenseId ?? null,
+              evidence.toString(),
+            ),
+          abortWhenPreviousStatementChangedNoRows(database),
+          ...(input.existingExpenseId == null
+            ? input.attachments.map((attachment) =>
+                database
+                  .prepare(`INSERT INTO expense_attachments
           (expense_id, attachment_id, created_at) VALUES ((SELECT expense_id FROM expense_procedure_bindings WHERE request_key = ?1), ?2, ?3)`)
-                .bind(input.requestKey, attachment.id, input.expense.createdAt),
-            )
-          : []),
-        database
-          .prepare(`SELECT CASE WHEN (SELECT count(*) FROM expense_attachments WHERE expense_id =
+                  .bind(input.requestKey, attachment.id, input.expense.createdAt),
+              )
+            : []),
+          database
+            .prepare(`SELECT CASE WHEN (SELECT count(*) FROM expense_attachments WHERE expense_id =
           (SELECT expense_id FROM expense_procedure_bindings WHERE request_key = ?1)) = ?2
           AND NOT EXISTS (
             SELECT 1 FROM expense_attachments link
@@ -341,16 +345,22 @@ export class ExpenseProcedureRepository {
             )
           )
           THEN 1 ELSE abs(-9223372036854775808) END`)
-          .bind(
-            input.requestKey,
-            input.attachments.length,
-            JSON.stringify(input.attachments.map((attachment) => attachment.id)),
-          ),
-        ...new SystemAuditEventRepository(this.c).prepareAppend(input.audit),
-        database
-          .prepare("SELECT expense_id AS id FROM expense_procedure_bindings WHERE request_key = ?1")
-          .bind(input.requestKey),
-      ])
+            .bind(
+              input.requestKey,
+              input.attachments.length,
+              JSON.stringify(input.attachments.map((attachment) => attachment.id)),
+            ),
+          ...new SystemAuditEventRepository(this.c).prepareAppend(input.audit),
+          database
+            .prepare(
+              "SELECT expense_id AS id FROM expense_procedure_bindings WHERE request_key = ?1",
+            )
+            .bind(input.requestKey),
+        ])
+      const saved =
+        input.existingExpenseId == null
+          ? await withAllocatedIntegerId(database, "expenses", writeProcedure)
+          : await writeProcedure(null)
       const id = saved.at(-1)?.results.at(0)?.id
       if (id === undefined) return new Error("expense procedure was not saved")
       const expense = await this.findById(id)
@@ -441,6 +451,7 @@ export class ExpenseProcedureRepository {
         recipientAccountId: recipient,
         deliveredAt: at,
         readAt: null,
+        dismissedAt: null,
       })
       if (delivery instanceof Error) return delivery
       const deliveries = NotificationDeliveryBatchValue.create([delivery])

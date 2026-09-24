@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import type { SessionRotationAuditEvents } from "@system/domain/definitions/auth/session-rotation-audit-events.definition"
 import type { SessionRotationValue } from "@system/domain/values/auth/session-rotation.value"
 
@@ -13,7 +14,7 @@ export function validateSystemSessionRotationAudits(
   const hasInvalidCommonField = commonEvents.some(
     (event) =>
       event.actorAccountId !== previous.accountId ||
-      event.action !== "auth.session.rotate" ||
+      event.action !== SYSTEM_AUDIT_ACTIONS.authSessionRotate ||
       event.targetType !== "session" ||
       event.targetId !== previous.id ||
       event.occurredAtEpochMilliseconds !== rotatedAt,

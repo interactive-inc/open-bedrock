@@ -1,7 +1,8 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 
 /** GET /job-openings/:jobOpeningId/candidates。募集配下の応募者一覧（recruitment:manage）。 */
-export async function getRecruitmentCandidateList(positionId: number) {
+export async function getRecruitmentCandidateList(positionId: EntityId) {
   const client = await createClient()
 
   const response = await client["recruitment"]["job-openings"][":jobOpeningId"].candidates.$get({

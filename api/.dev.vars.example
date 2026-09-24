@@ -10,6 +10,8 @@ PEPPER_SECRET="open-bedrock-local-seed-pepper"
 # 添付の DEK を包む KEK。{"version": "base64 32 バイト"} 形式で、最大 version が現行鍵。
 # ローテーション中は旧 version も残す。未設定なら添付 API は 503 を返す。
 ATTACHMENT_KEKS=
+# "true" なら Worker の定期起動で保持期限を過ぎた未紐付け添付を掃除する。未設定なら掃除しない。
+ATTACHMENT_PURGE_SCHEDULE_ENABLED=
 COMPANY_TIME_ZONE="Asia/Tokyo"
 # 外部identity同期にはSystem機械credentialとproviderごとの権限を使用する。
 IDENTITY_JWKS=

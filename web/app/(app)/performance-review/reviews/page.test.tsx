@@ -45,7 +45,7 @@ describe("ReviewResultsPage", () => {
     await renderResults({ cycle_id: "2", employee_code: "E005" })
 
     expect(await screen.findByText("平均スコア: 80")).toBeTruthy()
-    expect(mocks.getReviewResults).toHaveBeenCalledWith({ cycleId: 2, employeeCode: "E005" })
+    expect(mocks.getReviewResults).toHaveBeenCalledWith({ cycleId: "2", employeeCode: "E005" })
   })
 
   test("keeps an unauthorized API response denied", async () => {

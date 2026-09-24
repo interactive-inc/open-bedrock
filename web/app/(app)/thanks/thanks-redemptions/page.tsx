@@ -1,3 +1,4 @@
+import { toEntityId } from "@/lib/form/to-entity-id"
 import Link from "next/link"
 import { notFound } from "next/navigation"
 import { Suspense } from "react"
@@ -56,7 +57,7 @@ export default async function AdminRedemptionsPage(props: { searchParams: Search
   const filter: RedemptionAdminFilter = {
     status: status,
     employeeId: toEmployeeId(employeeIdRaw),
-    rewardId: toPositiveInt(rewardIdRaw),
+    rewardId: toEntityId(rewardIdRaw),
     from: from,
     to: to,
   }
@@ -176,20 +177,6 @@ function toStatus(value: string | null): RedemptionStatus | null {
   }
 
   return null
-}
-
-function toPositiveInt(raw: string | null): number | null {
-  if (raw === null) {
-    return null
-  }
-
-  const parsed = Number(raw)
-
-  if (Number.isInteger(parsed) === false || parsed <= 0) {
-    return null
-  }
-
-  return parsed
 }
 
 function toEmployeeId(raw: string | null): string | null {

@@ -1,3 +1,5 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 export type ExpenseCategory = "transport" | "supplies" | "entertainment" | "books" | "other"
 
 export type ExpenseStatus =
@@ -11,7 +13,7 @@ export type ExpenseStatus =
 
 /** GET /expenses/me の各要素（自分の経費一覧）。 */
 export type ExpenseMineResponse = {
-  id: number
+  id: EntityId
   category: ExpenseCategory
   amount: number
   spent_at: string
@@ -21,7 +23,7 @@ export type ExpenseMineResponse = {
 
 /** GET /expenses/inbox の各要素（承認待ち一覧）。 */
 export type ExpenseInboxResponse = {
-  id: number
+  id: EntityId
   applicant_name: string
   category: ExpenseCategory
   amount: number
@@ -42,7 +44,7 @@ export type ExpenseAttachmentSummary = {
 }
 
 export type ExpenseDetailResponse = {
-  id: number
+  id: EntityId
   employee_id: string
   applicant_name: string
   category: ExpenseCategory
@@ -59,7 +61,7 @@ export type ExpenseDetailResponse = {
  * id は Expense ドメインで number | null（永続化前は null）。
  */
 export type ExpenseCreatedResponse = {
-  id: number | null
+  id: EntityId | null
   employee_id: string
   category: ExpenseCategory
   amount: number
@@ -77,8 +79,8 @@ export type ExpenseDecisionResponse = {
 /** POST /expenses のリクエスト body。 */
 export type ExpenseSubmitRequest = {
   request_key: string
-  existing_expense_id?: number | null
-  previous_expense_id?: number | null
+  existing_expense_id?: EntityId | null
+  previous_expense_id?: EntityId | null
   category: ExpenseCategory
   amount: number
   spent_at: string

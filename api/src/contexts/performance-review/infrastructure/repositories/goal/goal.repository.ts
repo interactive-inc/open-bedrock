@@ -5,6 +5,7 @@ import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"
 import { evaluationSheets } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
+import { withAllocatedIntegerId } from "@/lib/database/with-allocated-integer-id"
 import { ConflictError } from "@/lib/errors"
 import { and, asc, eq, ne, sum } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
@@ -155,60 +156,62 @@ export class GoalRepository {
     try {
       if (goal.evaluationSheetId === null) return new Error("evaluation sheet is required")
       const db = this.c.env.DB
-      const results = await db.batch([
-        db
-          .prepare(
-            `INSERT INTO performance_goals
-               (employee_id, period, title, kpi, weight, status, owner_type,
-                parent_goal_id, department_code, evaluation_sheet_id)
-             SELECT ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10
-             WHERE EXISTS (
-               SELECT 1 FROM evaluation_sheets
-               WHERE id = ?10 AND employee_id = ?1 AND period = ?2
-                 AND status IN ('draft', 'rejected')
-             )
-             AND (
-               SELECT COALESCE(SUM(weight), 0) FROM performance_goals
-               WHERE evaluation_sheet_id = ?10
-             ) + ?5 <= 100`,
-          )
-          .bind(
-            goal.employeeId,
-            goal.period,
-            goal.title,
-            goal.kpi,
-            goal.weight,
-            goal.status,
-            goal.ownerType,
-            goal.parentGoalId,
-            goal.departmentCode,
-            goal.evaluationSheetId,
-          ),
-        abortWhenPreviousStatementChangedNoRows(db),
-        db.prepare(
-          `SELECT id, employee_id, period, title, kpi, weight, status,
-                  owner_type, parent_goal_id, department_code, evaluation_sheet_id
-           FROM performance_goals WHERE id = last_insert_rowid()`,
-        ),
-        db
-          .prepare(
-            `INSERT INTO evaluation_sheet_audit_logs
-               (sheet_id, actor_id, action, from_value, to_value, note, created_at)
-             VALUES (?1, ?2, 'goal_add', NULL,
-               json_object('goal_id', last_insert_rowid(), 'title', ?3, 'weight', ?4, 'period', ?5, 'kpi', ?6),
-               NULL, ?7)`,
-          )
-          .bind(
-            goal.evaluationSheetId,
-            actorEmployeeId,
-            goal.title,
-            goal.weight,
-            goal.period,
-            goal.kpi,
-            now,
-          ),
-      ])
-      const row = (results[2] as D1Result<GoalRow> | undefined)?.results?.at(0)
+      // 目標 ID は事前に明示し、監査ログはその ID を束縛値として受け取る。
+      const results = await withAllocatedIntegerId(db, "performance_goals", (goalId) =>
+        db.batch([
+          db
+            .prepare(
+              `INSERT INTO performance_goals
+                 (id, employee_id, period, title, kpi, weight, status, owner_type,
+                  parent_goal_id, department_code, evaluation_sheet_id)
+               SELECT ?11, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10
+               WHERE EXISTS (
+                 SELECT 1 FROM evaluation_sheets
+                 WHERE id = ?10 AND employee_id = ?1 AND period = ?2
+                   AND status IN ('draft', 'rejected')
+               )
+               AND (
+                 SELECT COALESCE(SUM(weight), 0) FROM performance_goals
+                 WHERE evaluation_sheet_id = ?10
+               ) + ?5 <= 100
+               RETURNING id, employee_id, period, title, kpi, weight, status,
+                 owner_type, parent_goal_id, department_code, evaluation_sheet_id`,
+            )
+            .bind(
+              goal.employeeId,
+              goal.period,
+              goal.title,
+              goal.kpi,
+              goal.weight,
+              goal.status,
+              goal.ownerType,
+              goal.parentGoalId,
+              goal.departmentCode,
+              goal.evaluationSheetId,
+              goalId,
+            ),
+          abortWhenPreviousStatementChangedNoRows(db),
+          db
+            .prepare(
+              `INSERT INTO evaluation_sheet_audit_logs
+                 (sheet_id, actor_id, action, from_value, to_value, note, created_at)
+               VALUES (?1, ?2, 'goal_add', NULL,
+                 json_object('goal_id', ?8, 'title', ?3, 'weight', ?4, 'period', ?5, 'kpi', ?6),
+                 NULL, ?7)`,
+            )
+            .bind(
+              goal.evaluationSheetId,
+              actorEmployeeId,
+              goal.title,
+              goal.weight,
+              goal.period,
+              goal.kpi,
+              now,
+              goalId,
+            ),
+        ]),
+      )
+      const row = (results[0] as D1Result<GoalRow> | undefined)?.results?.at(0)
       return row === undefined
         ? new Error("failed to read back created goal")
         : Goal.fromRow({

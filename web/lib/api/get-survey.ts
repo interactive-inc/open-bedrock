@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { ApiResponseError } from "@/lib/api/api-response-error"
 
 /** 指定アンケートを取得する。GET /surveys/:surveyId。 */
-export async function getSurvey(surveyId: number) {
+export async function getSurvey(surveyId: EntityId) {
   const client = await createClient()
 
   const response = await client["survey"]["surveys"][":surveyId"].$get({

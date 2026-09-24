@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import Link from "next/link"
 import { deleteCareerPostingAction } from "@/app/(app)/my/career/actions"
 import { useFormAction } from "@/hooks/use-form-action"
@@ -35,7 +36,7 @@ export function PostingManagement(props: Props) {
 }
 
 type DeleteProps = {
-  postingId: number | null
+  postingId: EntityId | null
 }
 
 /** 公募を削除するボタン。Server Action を呼び、成功時は一覧が revalidate される。 */

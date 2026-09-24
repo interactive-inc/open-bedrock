@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { decryptAttachment } from "@system/application/attachments/lib/decrypt-attachment"
 import { SystemAttachmentError } from "@system/domain/errors"
 import { toSha256Hex } from "@system/application/attachments/lib/to-sha256-hex"
@@ -124,7 +125,7 @@ export const GET = systemFactory.createHandlers(authenticateSystemAccessToken, a
 
   const audit = SystemAuditEventEntity.create({
     actorAccountId: context.var.userId,
-    action: "attachment.read",
+    action: SYSTEM_AUDIT_ACTIONS.attachmentRead,
     targetType: "attachment",
     targetId: attachmentId,
     outcome: "succeeded",

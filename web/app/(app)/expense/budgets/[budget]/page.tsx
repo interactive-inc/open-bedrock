@@ -1,3 +1,4 @@
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { formatDate } from "@/lib/format-date"
 import { formatDateTime } from "@/lib/format-date-time"
 import { Suspense } from "react"
@@ -46,9 +47,9 @@ type ViewProps = {
 
 /** /budgets/:id を認証付きで取得して詳細カードと消化状況を描画する非同期 RSC。 */
 async function BudgetDetailView(props: ViewProps) {
-  const budgetId = Number(props.id)
+  const budgetId = toEntityId(props.id)
 
-  if (!Number.isInteger(budgetId) || budgetId <= 0) {
+  if (budgetId === null) {
     return <FetchError message="予算 ID が不正です" />
   }
 

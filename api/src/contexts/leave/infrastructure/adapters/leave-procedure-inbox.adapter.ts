@@ -48,7 +48,7 @@ export class LeaveProcedureInboxAdapter {
             AND delegation.delegate_account_id = ?1 AND delegation.starts_at <= ?2 AND delegation.ends_at > ?2
             AND (delegation.revoked_at IS NULL OR delegation.revoked_at > ?2)
         ))
-    )) ORDER BY binding.leave_request_id DESC LIMIT ?3 OFFSET ?4`)
+    )) ORDER BY binding.created_at DESC, binding.leave_request_id DESC LIMIT ?3 OFFSET ?4`)
           .bind(session.accountId, at.getTime(), limit + 1, offset)
           .all<{ id: number }>()
       const reader = new LeaveProcedureReadAdapter(this.c)

@@ -9,7 +9,7 @@ import { rejectExpense } from "@/lib/api/reject-expense"
 import { submitExpense } from "@/lib/api/submit-expense"
 import type { ExpenseCategory } from "@/lib/api/types/expense-types"
 import { requireAuth } from "@/lib/auth/require-auth"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 
 export type ExpenseSubmitFormState = {
   ok: boolean
@@ -89,8 +89,8 @@ export async function submitExpenseAction(
   if (attachmentIds.length > 10) return { ok: false, error: "添付は10件までです" }
   const created = await submitExpense({
     request_key: requestKey,
-    existing_expense_id: toPositiveIntId(formData.get("existing_expense_id")),
-    previous_expense_id: toPositiveIntId(formData.get("previous_expense_id")),
+    existing_expense_id: toEntityId(formData.get("existing_expense_id")),
+    previous_expense_id: toEntityId(formData.get("previous_expense_id")),
     category: category,
     amount: amount,
     spent_at: spentAt,
@@ -117,7 +117,7 @@ export async function approveExpenseAction(
   previousState: ExpenseDecisionFormState,
   formData: FormData,
 ): Promise<ExpenseDecisionFormState> {
-  const expenseId = toPositiveIntId(formData.get("expense_id"))
+  const expenseId = toEntityId(formData.get("expense_id"))
 
   if (expenseId === null) {
     return { ok: false, error: "経費が不正です" }
@@ -152,7 +152,7 @@ export async function rejectExpenseAction(
   previousState: ExpenseDecisionFormState,
   formData: FormData,
 ): Promise<ExpenseDecisionFormState> {
-  const expenseId = toPositiveIntId(formData.get("expense_id"))
+  const expenseId = toEntityId(formData.get("expense_id"))
 
   if (expenseId === null) {
     return { ok: false, error: "経費が不正です" }
@@ -184,7 +184,7 @@ export async function advanceExpenseAction(
   _previous: ExpenseDecisionFormState,
   formData: FormData,
 ): Promise<ExpenseDecisionFormState> {
-  const id = toPositiveIntId(formData.get("expense_id"))
+  const id = toEntityId(formData.get("expense_id"))
   const target = toExpenseDecisionTarget(formData.get("decision_target"))
   if (id === null || target instanceof Error)
     return { ok: false, error: "経費の判断対象を確認してください" }

@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import type {
   SystemDatabaseContext,
   SystemAttachmentStorageContext,
@@ -35,7 +36,7 @@ export class DisclosePreservedRecordDossier {
     const at = this.c.now()
     const audit = SystemAuditEventEntity.create({
       actorAccountId: this.c.accountId,
-      action: "system.record.dossier.exported",
+      action: SYSTEM_AUDIT_ACTIONS.systemRecordDossierExported,
       targetType: "system:preserved-record",
       targetId: recordId,
       outcome: "succeeded",

@@ -1,3 +1,4 @@
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { getLeaveProcedureRequest } from "@/lib/api/get-leave-procedure-request"
 import { notFound } from "next/navigation"
 import { LeaveRequestCreateForm } from "@/app/(app)/my/leaves/_components/leave-request-create-form"
@@ -14,8 +15,8 @@ export default async function NewLeaveRequestPage(props: {
   searchParams: Promise<{ previous?: string }>
 }) {
   const params = await props.searchParams
-  const previousId = params.previous === undefined ? null : Number(params.previous)
-  if (previousId !== null && (!Number.isSafeInteger(previousId) || previousId <= 0)) notFound()
+  const previousId = params.previous === undefined ? null : toEntityId(params.previous)
+  if (params.previous !== undefined && previousId === null) notFound()
   const previous = previousId === null ? null : await getLeaveProcedureRequest(previousId)
   if (previous instanceof Error || (previous !== null && !previous.can_resubmit)) notFound()
   return (

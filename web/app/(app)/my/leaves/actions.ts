@@ -7,7 +7,7 @@ import { createLeaveRequest } from "@/lib/api/create-leave-request"
 import { updateLeaveRequest } from "@/lib/api/update-leave-request"
 import type { LeaveType } from "@/lib/api/types/leave-types"
 import type { LeaveRequestCreateRequest } from "@/lib/api/types/leave-types"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { requireAuth } from "@/lib/auth/require-auth"
 
 const LEAVE_TYPES: ReadonlyArray<LeaveType> = [
@@ -43,7 +43,7 @@ export async function createLeaveRequestAction(
 
   const previousValue = formData.get("previous_leave_request_id")
   const previousId =
-    previousValue === null || previousValue === "" ? null : toPositiveIntId(previousValue)
+    previousValue === null || previousValue === "" ? null : toEntityId(previousValue)
   if (previousValue !== null && previousValue !== "" && previousId === null)
     return { ok: false, error: "差戻し元の休暇番号が不正です" }
 
@@ -107,7 +107,7 @@ export async function updateLeaveRequestAction(
 ): Promise<LeaveActionState> {
   await requireAuth()
 
-  const leaveRequestId = toPositiveIntId(formData.get("leave_request_id"))
+  const leaveRequestId = toEntityId(formData.get("leave_request_id"))
 
   if (leaveRequestId === null) {
     return { ok: false, error: "休暇申請を特定できませんでした" }
@@ -172,7 +172,7 @@ export async function cancelLeaveRequestAction(
 ): Promise<LeaveActionState> {
   await requireAuth()
 
-  const leaveRequestId = toPositiveIntId(formData.get("leave_request_id"))
+  const leaveRequestId = toEntityId(formData.get("leave_request_id"))
 
   if (leaveRequestId === null) {
     return { ok: false, error: "休暇申請を特定できませんでした" }

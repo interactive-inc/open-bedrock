@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** DELETE /shift-patterns/:id。特権ロールがシフトパターンを削除する。成功時は null。 */
-export async function deleteShiftPattern(id: number): Promise<null | Error> {
+export async function deleteShiftPattern(id: EntityId): Promise<null | Error> {
   const client = await createClient()
 
   const response = await client["shift"]["shift-patterns"][":id"].$delete({

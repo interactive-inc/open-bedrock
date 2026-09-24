@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import type { DisclosePreservedRecordPersistenceAdapter } from "@system/infrastructure/adapters/records/disclose-preserved-record-persistence.adapter"
 import { PreservedRecordDisclosureDeniedError } from "@system/domain/errors"
 import type {
@@ -39,7 +40,7 @@ export class DisclosePreservedRecordContent {
     if (!policy.permits({ ...request, at })) return new PreservedRecordDisclosureDeniedError()
     const audit = SystemAuditEventEntity.create({
       actorAccountId: this.c.accountId,
-      action: "system.record.disclosed",
+      action: SYSTEM_AUDIT_ACTIONS.systemRecordDisclosed,
       targetType: "system:preserved-record",
       targetId: record.snapshot.id,
       outcome: "succeeded",

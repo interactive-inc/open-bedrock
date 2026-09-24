@@ -1,3 +1,5 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /** api/src/onboarding/*-response-schema.ts と同形の手書き type（API と疎結合に保つ）。 */
 export type OnboardingKind = "join" | "leave"
 
@@ -23,7 +25,7 @@ export type OnboardingTemplate = {
  * id は作成/更新ルートが整形して返すため number、未採番の保険として null を含める。
  */
 export type OnboardingTemplateDetail = {
-  id: number | null
+  id: EntityId | null
   code: string
   name: string
   kind: string
@@ -47,7 +49,7 @@ export type OnboardingTemplateUpdateRequest = {
 
 /** GET /onboarding-assignments/me / 各 assignment 配下のタスク。 */
 export type OnboardingTask = {
-  id: number
+  id: EntityId
   template_task_code: string
   title: string
   order: number
@@ -61,7 +63,7 @@ export type OnboardingTask = {
  * assignments/:id の GET/PUT レスポンスには含まれないため任意とする。
  */
 export type OnboardingAssignment = {
-  id: number
+  id: EntityId
   employee_code: string
   employee_name: string
   template_code: string

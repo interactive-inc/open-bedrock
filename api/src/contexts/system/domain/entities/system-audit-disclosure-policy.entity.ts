@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import {
   auditDisclosureCommandSchema,
   auditDisclosurePolicySchema,
@@ -57,7 +58,7 @@ export class SystemAuditDisclosurePolicyEntity {
     return SystemAuditEventEntity.restore({
       eventId: this.snapshot.auditEventId,
       actorAccountId: this.snapshot.actorAccountId,
-      action: "system.audit.disclosure.published",
+      action: SYSTEM_AUDIT_ACTIONS.systemAuditDisclosurePublished,
       targetType: "system:audit-disclosure-policy",
       targetId: this.snapshot.scope,
       outcome: "succeeded",

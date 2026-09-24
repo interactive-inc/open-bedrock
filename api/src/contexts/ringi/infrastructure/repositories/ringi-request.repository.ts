@@ -3,6 +3,7 @@ import { NotificationMessageEntity } from "@system/domain/entities/notification-
 import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
 import { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
 import { SystemNotificationRepository } from "@system/infrastructure/repositories/notifications/system-notification.repository"
+import { withAllocatedIntegerId } from "@/lib/database/with-allocated-integer-id"
 import { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { ringiRequests } from "@/contexts/ringi/infrastructure/schema/ringi"
@@ -269,45 +270,52 @@ export class RingiRequestRepository {
     const system = new SystemD1WorkflowAdapter({ ...this.c, startGuards: input.guards })
     const statements = system.prepareStartStatements(input.workflow)
     try {
-      const saved = await database.batch<{ id: number }>([
-        ...statements.slice(0, -1),
-        ...(input.existingRingiId == null
-          ? [
-              database
-                .prepare(`INSERT INTO ringi_requests
-          (applicant_id, approver_id, title, amount, reason, status, created_at)
-          VALUES (?1, ?2, ?3, ?4, ?5, 'pending', ?6)`)
-                .bind(
-                  input.ringi.applicantId,
-                  input.ringi.approverId,
-                  input.ringi.title,
-                  input.ringi.amount,
-                  input.ringi.reason,
-                  input.ringi.createdAt,
-                ),
-              abortWhenPreviousStatementChangedNoRows(database),
-            ]
-          : []),
-        database
-          .prepare(`INSERT INTO ringi_procedure_bindings
+      // 新規の稟議 ID は事前に明示し、手続きの結び付けはその ID を束縛値として受け取る。
+      const writeProcedure = (newRingiId: number | null) =>
+        database.batch<{ id: number }>([
+          ...statements.slice(0, -1),
+          ...(input.existingRingiId == null
+            ? [
+                database
+                  .prepare(`INSERT INTO ringi_requests
+          (id, applicant_id, approver_id, title, amount, reason, status, created_at)
+          VALUES (?7, ?1, ?2, ?3, ?4, ?5, 'pending', ?6)`)
+                  .bind(
+                    input.ringi.applicantId,
+                    input.ringi.approverId,
+                    input.ringi.title,
+                    input.ringi.amount,
+                    input.ringi.reason,
+                    input.ringi.createdAt,
+                    newRingiId,
+                  ),
+                abortWhenPreviousStatementChangedNoRows(database),
+              ]
+            : []),
+          database
+            .prepare(`INSERT INTO ringi_procedure_bindings
           (request_key, ringi_id, application_id, series_id, case_id, proposal_digest, created_at, previous_ringi_id)
-          VALUES (?1, coalesce(?6, last_insert_rowid()),
+          VALUES (?1, ?6,
             (SELECT number FROM system_proposal_numbers WHERE series_id = ?2), ?2, ?3, ?4, ?5, ?7)`)
-          .bind(
-            input.requestKey,
-            input.workflow.proposal.seriesId,
-            input.workflow.workflowCase.id,
-            input.workflow.proposal.digest,
-            input.workflow.proposal.createdAt.getTime(),
-            input.existingRingiId ?? null,
-            input.previousRingiId ?? null,
-          ),
-        abortWhenPreviousStatementChangedNoRows(database),
-        ...new SystemAuditEventRepository(this.c).prepareAppend(input.audit),
-        database
-          .prepare("SELECT ringi_id AS id FROM ringi_procedure_bindings WHERE request_key = ?1")
-          .bind(input.requestKey),
-      ])
+            .bind(
+              input.requestKey,
+              input.workflow.proposal.seriesId,
+              input.workflow.workflowCase.id,
+              input.workflow.proposal.digest,
+              input.workflow.proposal.createdAt.getTime(),
+              input.existingRingiId ?? newRingiId,
+              input.previousRingiId ?? null,
+            ),
+          abortWhenPreviousStatementChangedNoRows(database),
+          ...new SystemAuditEventRepository(this.c).prepareAppend(input.audit),
+          database
+            .prepare("SELECT ringi_id AS id FROM ringi_procedure_bindings WHERE request_key = ?1")
+            .bind(input.requestKey),
+        ])
+      const saved =
+        input.existingRingiId == null
+          ? await withAllocatedIntegerId(database, "ringi_requests", writeProcedure)
+          : await writeProcedure(null)
       const id = saved.at(-1)?.results.at(0)?.id
       if (id === undefined) return new Error("ringi procedure was not saved")
       const ringi = await this.findById(id)
@@ -401,6 +409,7 @@ export class RingiRequestRepository {
         recipientAccountId: recipient,
         deliveredAt: at,
         readAt: null,
+        dismissedAt: null,
       })
       if (delivery instanceof Error) return delivery
       const deliveries = NotificationDeliveryBatchValue.create([delivery])

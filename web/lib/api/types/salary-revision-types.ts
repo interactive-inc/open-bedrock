@@ -1,6 +1,8 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /** GET /salary-revisions のレスポンス要素。api は snake_case で返す。 */
 export type SalaryRevisionResponse = {
-  id: number
+  id: EntityId
   employee_id: string
   effective_date: string
   previous_base_salary: number

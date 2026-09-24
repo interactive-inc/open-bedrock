@@ -14,6 +14,7 @@ import { drizzle } from "drizzle-orm/d1"
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("11件のcertificate request記録を全件保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
   const {
+    clock,
     database,
     governance,
     creator: creatorPerson,
@@ -63,7 +64,7 @@ test("11件のcertificate request記録を全件保全し、人の承認・取�
       .prepare("SELECT count(*) AS total FROM certificate_requests")
       .first<number>("total"),
   ).toBe(11)
-  const at = new Date()
+  const at = clock()
   const token = await tokenFor(creator)
   const stepUpToken = "e".repeat(64)
   const hash = await new SystemPrincipalSecretService().hashRawSecret(stepUpToken)
@@ -122,6 +123,7 @@ test("11件のcertificate request記録を全件保全し、人の承認・取�
       `unexpected frozen update response: ${frozenUpdate.status} ${await frozenUpdate.text()}`,
     )
   expect((await apiRequest(frozenCertificateRequestPath, { method: "DELETE" })).status).toBe(409)
+  // 依頼者本人の判断は凍結の検査より前に会社上の資格で拒否する。
   expect(
     (
       await apiRequest(
@@ -129,7 +131,7 @@ test("11件のcertificate request記録を全件保全し、人の承認・取�
         { method: "POST" },
       )
     ).status,
-  ).toBe(409)
+  ).toBe(403)
   expect(
     (
       await apiRequest(
@@ -137,7 +139,7 @@ test("11件のcertificate request記録を全件保全し、人の承認・取�
         { method: "POST" },
       )
     ).status,
-  ).toBe(409)
+  ).toBe(403)
   const mappings = []
   for (const id of certificateRequestIds) {
     const path = `/certificate-request/certificate-requests/${id}/preservation-requests`

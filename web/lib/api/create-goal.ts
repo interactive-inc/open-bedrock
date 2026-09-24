@@ -9,7 +9,13 @@ import type { GoalCreateRequest } from "@/lib/api/types/goal-types"
 export async function createGoal(request: GoalCreateRequest) {
   const client = await createClient()
 
-  const response = await client["performance-review"]["performance-goals"].$post({ json: request })
+  const response = await client["performance-review"]["performance-goals"].$post({
+    json: {
+      ...request,
+      parent_goal_id:
+        request.parent_goal_id === undefined ? undefined : Number(request.parent_goal_id),
+    },
+  })
 
   if (response.status >= 400) {
     return toResponseError(response, {

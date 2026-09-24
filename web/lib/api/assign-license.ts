@@ -1,9 +1,10 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** 利用開始時のプランと記録者を含む職員の利用記録を保存する。 */
 export async function assignLicense(
-  licenseId: number,
+  licenseId: EntityId,
   command: {
     id: string
     employee_id: string

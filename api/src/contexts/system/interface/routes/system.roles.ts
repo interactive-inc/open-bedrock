@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import {
   SystemForbiddenError,
   SystemIAMUnavailableError,
@@ -114,7 +115,7 @@ export const POST = systemFactory.createHandlers(
     }
     const auditEvent = SystemAuditEventEntity.create({
       actorAccountId: actorAccountId.data,
-      action: "system.iam.role.created",
+      action: SYSTEM_AUDIT_ACTIONS.systemIamRoleCreated,
       targetType: "system:iam-role",
       targetId: role.id,
       outcome: "succeeded",

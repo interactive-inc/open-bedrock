@@ -1,3 +1,5 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 /**
  * GET /rooms/availability のクエリ条件。期間と最低定員で空き状況を絞り込む。
  * start_at / end_at は ISO 文字列。capacity は 0 でフィルタ無し。
@@ -10,7 +12,7 @@ export type RoomAvailabilitySearch = {
 
 /** availability レスポンス要素に含まれる会議室サマリ。 */
 export type RoomSummary = {
-  id: number
+  id: EntityId
   name: string
   capacity: number
 }
@@ -29,7 +31,7 @@ export type RoomAvailability = {
 
 /** POST /rooms/reservations のリクエストボディ。 */
 export type RoomReservationCreateRequest = {
-  room_id: number
+  room_id: EntityId
   start_at: string
   end_at: string
   purpose: string | null
@@ -41,7 +43,7 @@ export type RoomReservationCreateRequest = {
  */
 export type RoomReservationCreated = {
   id: string
-  room_id: number
+  room_id: EntityId
   reserver_id: string
   start_at: string
   end_at: string
@@ -51,7 +53,7 @@ export type RoomReservationCreated = {
 /** GET /rooms/reservations/me と /rooms/reservations/:id のレスポンス要素。api は snake_case で返す。 */
 export type RoomReservationResponse = {
   id: string
-  room_id: number
+  room_id: EntityId
   reserver_id: string
   start_at: string
   end_at: string
@@ -67,7 +69,7 @@ export type RoomReservationUpdateRequest = {
 
 /** GET /rooms・GET /rooms/:id のレスポンス要素（会議室マスタ 1 件）。 */
 export type RoomResponse = {
-  id: number
+  id: EntityId
   name: string
   capacity: number
   location: string | null

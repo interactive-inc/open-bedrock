@@ -1,3 +1,4 @@
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { notFound } from "next/navigation"
 import { z } from "zod"
 import { SurveyEditForm } from "@/app/(app)/survey/surveys/[survey]/edit/_components/survey-edit-form"
@@ -31,9 +32,9 @@ type Props = {
 export default async function EditSurveyPage(props: Props) {
   const routeParams = await props.params
 
-  const surveyId = Number(routeParams.survey)
+  const surveyId = toEntityId(routeParams.survey)
 
-  if (!Number.isInteger(surveyId)) {
+  if (surveyId === null) {
     notFound()
   }
 

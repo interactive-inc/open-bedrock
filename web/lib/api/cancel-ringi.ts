@@ -1,9 +1,10 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { RingiDecisionTarget } from "@/lib/api/types/ringi-types"
 
 /** 確認した稟議を取り消す。 */
-export async function cancelRingi(id: number, target: RingiDecisionTarget) {
+export async function cancelRingi(id: EntityId, target: RingiDecisionTarget) {
   const client = await createClient()
   const response = await client.ringi["ringi-requests"][":id"].cancel.$post({
     param: { id: String(id) },

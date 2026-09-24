@@ -1,7 +1,8 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 
 /** 指定アンケートの集計を取得する。GET /surveys/:surveyId/summary。 */
-export async function getSurveySummary(surveyId: number) {
+export async function getSurveySummary(surveyId: EntityId) {
   const client = await createClient()
 
   const response = await client["survey"]["surveys"][":surveyId"].summary.$get({

@@ -5,7 +5,7 @@ import { registerDocument } from "@/lib/api/register-document"
 import { updateDocument } from "@/lib/api/update-document"
 import { getMe } from "@/lib/api/get-me"
 import { canManageDocuments } from "@/lib/document/can-manage-documents"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 
 export type DocumentActionState = {
   ok: boolean
@@ -60,7 +60,7 @@ export async function updateDocumentAction(
     return { ok: false, error: "文書を管理する権限がありません" }
   }
 
-  const documentId = toPositiveIntId(formData.get("document_id"))
+  const documentId = toEntityId(formData.get("document_id"))
 
   if (documentId === null) {
     return { ok: false, error: "文書を特定できませんでした" }

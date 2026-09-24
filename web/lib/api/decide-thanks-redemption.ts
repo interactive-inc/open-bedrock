@@ -1,7 +1,8 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
-export async function decideThanksRedemption(id: number, decision: "approve" | "reject") {
+export async function decideThanksRedemption(id: EntityId, decision: "approve" | "reject") {
   const client = await createClient()
 
   const response =

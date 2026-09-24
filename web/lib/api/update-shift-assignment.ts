@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { ShiftAssignmentResponse } from "@/lib/api/types/shift-types"
@@ -10,7 +11,7 @@ export type ShiftAssignmentUpdateRequest = {
 
 /** PUT /shift-assignments/:id。特権ロールが割当のパターン・日付・備考を変更する。 */
 export async function updateShiftAssignment(
-  id: number,
+  id: EntityId,
   request: ShiftAssignmentUpdateRequest,
 ): Promise<ShiftAssignmentResponse | Error> {
   const client = await createClient()

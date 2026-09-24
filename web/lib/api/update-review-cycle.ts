@@ -1,9 +1,10 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 import type { ReviewCycleUpdateRequest } from "@/lib/api/types/review-types"
 
 /** PUT /review-cycles/:cycleId。特権ロールがサイクルの題目・期間・締切を更新する。 */
-export async function updateReviewCycle(cycleId: number, request: ReviewCycleUpdateRequest) {
+export async function updateReviewCycle(cycleId: EntityId, request: ReviewCycleUpdateRequest) {
   const client = await createClient()
 
   const json: { title: string; period: string; dueDate?: string } =

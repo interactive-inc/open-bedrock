@@ -1,7 +1,8 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 
 /** DELETE /company-calendar-days/:id。会社カレンダーから 1 日を削除する（calendar:manage）。 */
-export async function deleteCalendarDay(id: number) {
+export async function deleteCalendarDay(id: EntityId) {
   const client = await createClient()
 
   const response = await client["company-calendar"]["company-calendar-days"][":id"].$delete({

@@ -937,6 +937,7 @@ function createDelivery(props: {
     ...props,
     deliveredAt: new Date(2_000),
     readAt: null,
+    dismissedAt: null,
   })
 
   if (delivery instanceof Error) throw delivery

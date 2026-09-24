@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import type { FinalizePreservedRecordPersistenceAdapter } from "@system/infrastructure/adapters/records/finalize-preserved-record-persistence.adapter"
 import type {
   SystemDatabaseContext,
@@ -51,14 +52,14 @@ export class FinalizePreservedRecord {
     }
     const recordAudit = this.audit({
       snapshot: record,
-      action: "system.record.preserved",
+      action: SYSTEM_AUDIT_ACTIONS.systemRecordPreserved,
       targetType: "system:preserved-record",
       at: record.finalizedAt,
     })
     if (recordAudit instanceof Error) return recordAudit
     const policyAudit = this.audit({
       snapshot: policy,
-      action: "system.record.disclosure_policy.published",
+      action: SYSTEM_AUDIT_ACTIONS.systemRecordDisclosurePolicyPublished,
       targetType: "system:record-disclosure-policy",
       at: policy.publishedAt,
     })

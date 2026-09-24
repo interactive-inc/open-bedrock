@@ -1,8 +1,10 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 export type RegulationStatus = "active" | "archived"
 
 /** GET /regulations の各要素。 */
 export type RegulationListItem = {
-  id: number
+  id: EntityId
   code: string
   title: string
   category: string | null
@@ -14,7 +16,7 @@ export type RegulationListItem = {
 
 /** 規程の改定版。 */
 export type RegulationVersion = {
-  id: number
+  id: EntityId
   version: number
   body_md: string
   effective_on: string
@@ -24,7 +26,7 @@ export type RegulationVersion = {
 
 /** GET /regulations/:code の詳細（最新版＋版一覧）。 */
 export type RegulationDetail = {
-  id: number
+  id: EntityId
   code: string
   title: string
   category: string | null

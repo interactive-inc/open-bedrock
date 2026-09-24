@@ -1,3 +1,5 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
+
 export type KnowledgeSearchQuery = {
   q: string | null
   category: string | null
@@ -6,7 +8,7 @@ export type KnowledgeSearchQuery = {
 export type KnowledgeSearchResult = {
   revision: number
   status: "active" | "withdrawn"
-  id: number
+  id: EntityId
   category: string
   title: string
   snippet: string
@@ -17,7 +19,7 @@ export type KnowledgeSearchResult = {
 export type KnowledgeDetailResponse = {
   revision: number
   status: "active" | "withdrawn"
-  id: number
+  id: EntityId
   title: string
   category: string
   tags: string | null

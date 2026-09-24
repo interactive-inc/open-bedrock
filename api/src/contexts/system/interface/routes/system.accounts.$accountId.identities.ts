@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import {
   SystemAccountNotFoundError,
   SystemForbiddenError,
@@ -170,7 +171,7 @@ export const POST = systemFactory.createHandlers(
     }
     const auditEvent = SystemAuditEventEntity.create({
       actorAccountId: actorAccountId.data,
-      action: "system.identity.created",
+      action: SYSTEM_AUDIT_ACTIONS.systemIdentityCreated,
       targetType: "system:identity",
       targetId: binding.id,
       outcome: "succeeded",

@@ -4,7 +4,7 @@ import { revalidatePath } from "next/cache"
 import { cancelRoomReservation } from "@/lib/api/cancel-room-reservation"
 import { createRoomReservation } from "@/lib/api/create-room-reservation"
 import { updateRoomReservation } from "@/lib/api/update-room-reservation"
-import { toPositiveIntId } from "@/lib/form/to-positive-int-id"
+import { toEntityId } from "@/lib/form/to-entity-id"
 import { requireAuth } from "@/lib/auth/require-auth"
 
 /** useActionState で参照する共通の戻り値。ok=成功 / error=表示するエラー文言。 */
@@ -23,7 +23,7 @@ export async function createRoomReservationAction(
 ): Promise<RoomReservationActionState> {
   await requireAuth()
 
-  const roomId = toPositiveIntId(formData.get("room_id"))
+  const roomId = toEntityId(formData.get("room_id"))
 
   if (roomId === null) {
     return { ok: false, error: "会議室を選択してください" }

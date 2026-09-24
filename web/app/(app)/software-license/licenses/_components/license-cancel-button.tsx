@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useActionState } from "react"
 import { cancelLicenseAction } from "@/app/(app)/software-license/licenses/actions"
 import type { LicenseActionState } from "@/app/(app)/software-license/licenses/actions"
@@ -8,7 +9,7 @@ import { Button } from "@/components/ui/button"
 const initialState: LicenseActionState = { ok: false, error: null }
 
 type Props = {
-  id: number
+  id: EntityId
   name: string
   expectedRevision: number
 }

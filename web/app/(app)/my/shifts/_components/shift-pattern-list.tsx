@@ -1,5 +1,6 @@
 "use client"
 
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { useState } from "react"
 import type { ShiftFormState } from "@/app/(app)/my/shifts/actions"
 import { deleteShiftPatternAction, updateShiftPatternAction } from "@/app/(app)/my/shifts/actions"
@@ -166,7 +167,7 @@ function UpdatePatternDialog(props: { pattern: ShiftPatternResponse }) {
 }
 
 /** パターン削除ボタン。割当から参照されているとサーバーが拒否し action がエラーを返す。 */
-function DeletePatternButton(props: { patternId: number | null }) {
+function DeletePatternButton(props: { patternId: EntityId | null }) {
   const [, formAction, pending] = useFormAction(
     deleteShiftPatternAction,
     initialState,

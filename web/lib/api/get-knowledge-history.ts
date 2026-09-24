@@ -1,8 +1,9 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** 本文と同じ閲覧範囲で、過去の版・記録理由・記録者を取得する。 */
-export async function getKnowledgeHistory(id: number, offset = 0) {
+export async function getKnowledgeHistory(id: EntityId, offset = 0) {
   const client = await createClient()
   const response = await client.knowledge["knowledge-articles"][":id"].revisions.$get({
     param: { id: String(id) },

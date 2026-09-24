@@ -8,6 +8,7 @@ const validProps = {
   recipientAccountId: "account-1",
   deliveredAt: new Date("2026-08-11T00:00:00.000Z"),
   readAt: null,
+  dismissedAt: null,
 } as const
 
 describe("NotificationDeliveryEntity", () => {
@@ -100,6 +101,16 @@ describe("NotificationDeliveryEntity", () => {
     ["invalid delivery clock", { ...validProps, deliveredAt: new Date(Number.NaN) }],
     ["read before delivery", { ...validProps, readAt: new Date("2026-08-10T23:59:59.999Z") }],
     ["retired user recipient", { ...validProps, userId: "user-1" }],
+    [
+      "omitted dismissal state",
+      {
+        id: validProps.id,
+        messageId: validProps.messageId,
+        recipientAccountId: validProps.recipientAccountId,
+        deliveredAt: validProps.deliveredAt,
+        readAt: validProps.readAt,
+      },
+    ],
   ])("fails closed for %s", (_name, input) => {
     const result = NotificationDeliveryEntity.create(input)
 

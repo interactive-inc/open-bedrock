@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { PasswordResetTokenHash } from "@system/domain/schemas/auth/password-reset-token-hash.schema"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
@@ -69,7 +70,7 @@ export class CreatePendingSystemPasswordIdentityAdapter {
       if (afterJson instanceof Error) return afterJson
       const identityAudit = SystemAuditEventEntity.create({
         actorAccountId: actorAccountId.data,
-        action: "system.identity.created",
+        action: SYSTEM_AUDIT_ACTIONS.systemIdentityCreated,
         targetType: "system:identity",
         targetId: identityId.data,
         outcome: "succeeded",
@@ -82,7 +83,7 @@ export class CreatePendingSystemPasswordIdentityAdapter {
       })
       const challengeAudit = SystemAuditEventEntity.create({
         actorAccountId: actorAccountId.data,
-        action: "auth.password_setup.requested",
+        action: SYSTEM_AUDIT_ACTIONS.authPasswordSetupRequested,
         targetType: "system:identity",
         targetId: identityId.data,
         outcome: "succeeded",

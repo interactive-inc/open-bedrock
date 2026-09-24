@@ -1,3 +1,4 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import { formatDateTime } from "@/lib/format-date-time"
 import Link from "next/link"
 import { StatusLabel } from "@/components/status-label"
@@ -16,11 +17,11 @@ import type { RedemptionAdminSort, RedemptionStatus } from "@/lib/api/get-redemp
 const pointFormatter = new Intl.NumberFormat("ja-JP")
 
 export type RedemptionAdminRow = {
-  id: number
+  id: EntityId
   employee_id: string
   employee_name: string
   employee_dept_name: string | null
-  reward_id: number
+  reward_id: EntityId
   reward_name: string
   point_cost: number
   status: RedemptionStatus

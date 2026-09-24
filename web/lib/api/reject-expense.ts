@@ -1,10 +1,11 @@
+import type { EntityId } from "@/lib/api/types/entity-id"
 import type { ExpenseDecisionTarget } from "@/lib/api/types/expense-types"
 import { createClient } from "@/lib/api/hc-client"
 import { toResponseError } from "@/lib/api/to-response-error"
 
 /** POST /expenses/:id/reject。任意コメント付きで経費を却下する。表示した判断対象と会社上の判断資格を検査する。 */
 export async function rejectExpense(
-  id: number,
+  id: EntityId,
   comment: string | null,
   decisionTarget: ExpenseDecisionTarget,
 ) {
