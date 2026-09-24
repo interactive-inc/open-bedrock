@@ -7,50 +7,57 @@ import { grantAccountRole } from "@/lib/api/grant-account-role"
 import { resetAccountPassword } from "@/lib/api/reset-account-password"
 import { revokeAccountRole } from "@/lib/api/revoke-account-role"
 import { setAccountStatus } from "@/lib/api/set-account-status"
+import { getStepUpToken } from "@/lib/auth/get-step-up-token"
 import { canAssignRoles } from "@/lib/iam/can-assign-roles"
 import { canManageAccounts } from "@/lib/iam/can-manage-accounts"
 
-export type GrantRoleFormState = {
-  ok: boolean
-  error: string | null
-}
-
-export type AccountActionFormState = {
-  ok: boolean
-  error: string | null
-}
+/**
+ * アカウント操作の結果。`step_up_required` は拒否ではなく、パスワード再入力を挟めば
+ * 同じ操作を再実行できることを表す。画面はこれを見て再認証ダイアログを開く。
+ */
+export type AccountActionState =
+  | { kind: "idle" }
+  | { kind: "succeeded" }
+  | { kind: "step_up_required" }
+  | { kind: "failed"; error: string }
 
 /**
- * api の {error, code} 応答の code を、そのアクションの文脈に合った日本語文言へ変換する。
+ * API の失敗を画面の状態へ変換する。`step_up_required` は 403 だが `forbidden` と意味が違うため、
+ * status ではなく code だけで判別する。
+ * それ以外の code は、そのアクションの文脈に合った日本語文言へ変換する。
  * 同じ code でもアクションによって意味が変わる（last_admin は剥奪では「外せません」、
  * 停止では「停止できません」）ため、マップはアクションごとに分ける。
- * 未知の code や code の無い応答（ApiResponseError 以外の Error）は fallback を返す。
+ * 未知の code や code の無い応答は fallback を返す。
  */
-function toActionErrorMessage(
+function toFailedState(
   error: Error,
   messages: Record<string, string>,
   fallback: string,
-): string {
+): AccountActionState {
+  if (error instanceof ApiResponseError && error.code === "step_up_required") {
+    return { kind: "step_up_required" }
+  }
+
   if (error instanceof ApiResponseError && error.code !== null) {
     const mapped = messages[error.code]
 
     if (mapped !== undefined) {
-      return mapped
+      return { kind: "failed", error: mapped }
     }
   }
 
-  return fallback
+  return { kind: "failed", error: fallback }
 }
 
-/** アカウントから Role Binding を剥奪する。iam:write 権限が必要。 */
+/** アカウントから Role Binding を剥奪する。iam:write 権限と再認証 grant が必要。 */
 export async function revokeAccountRoleAction(
-  _prevState: AccountActionFormState,
+  _previousState: AccountActionState,
   formData: FormData,
-): Promise<AccountActionFormState> {
+): Promise<AccountActionState> {
   const currentUser = await getMe()
 
   if (currentUser instanceof Error || canAssignRoles(currentUser.permissions) === false) {
-    return { ok: false, error: "ロールを管理する権限がありません" }
+    return { kind: "failed", error: "ロールを管理する権限がありません" }
   }
 
   const accountId = toOpaqueAccountId(formData.get("account_id"))
@@ -58,40 +65,41 @@ export async function revokeAccountRoleAction(
   const bindingId = toOpaqueAccountId(formData.get("binding_id"))
 
   if (accountId === null || bindingId === null) {
-    return { ok: false, error: "アカウントとロールを指定してください" }
+    return { kind: "failed", error: "アカウントとロールを指定してください" }
   }
 
-  const revoked = await revokeAccountRole(accountId, bindingId)
+  const stepUpToken = await getStepUpToken()
+
+  const revoked = await revokeAccountRole(accountId, bindingId, stepUpToken)
 
   if (revoked instanceof Error) {
-    const message = toActionErrorMessage(
+    return toFailedState(
       revoked,
       {
         last_admin: "最後の管理者はロールを外せません",
         role_escalation: "自分より強い権限のロールは外せません",
         role_not_found: "指定したロールが見つかりません",
         forbidden: "ロールを管理する権限がありません",
+        invalid_session: "セッションが無効です。ログインし直してください",
       },
       "ロールの剥奪に失敗しました",
     )
-
-    return { ok: false, error: message }
   }
 
   revalidatePath("/system/accounts")
 
-  return { ok: true, error: null }
+  return { kind: "succeeded" }
 }
 
-/** 管理者がアカウントのパスワードを再設定する。iam:write 権限が必要。 */
+/** 管理者がアカウントのパスワードを再設定する。iam:write 権限と再認証 grant が必要。 */
 export async function resetPasswordAction(
-  _prevState: AccountActionFormState,
+  _previousState: AccountActionState,
   formData: FormData,
-): Promise<AccountActionFormState> {
+): Promise<AccountActionState> {
   const currentUser = await getMe()
 
   if (currentUser instanceof Error || canManageAccounts(currentUser.permissions) === false) {
-    return { ok: false, error: "アカウントを管理する権限がありません" }
+    return { kind: "failed", error: "アカウントを管理する権限がありません" }
   }
 
   const accountId = toOpaqueAccountId(formData.get("account_id"))
@@ -99,17 +107,19 @@ export async function resetPasswordAction(
   const newPassword = toText(formData.get("new_password"))
 
   if (accountId === null || newPassword === null) {
-    return { ok: false, error: "アカウントとパスワードを指定してください" }
+    return { kind: "failed", error: "アカウントとパスワードを指定してください" }
   }
 
   if (newPassword.length < 12) {
-    return { ok: false, error: "パスワードは12文字以上にしてください" }
+    return { kind: "failed", error: "パスワードは12文字以上にしてください" }
   }
 
-  const reset = await resetAccountPassword(accountId, newPassword)
+  const stepUpToken = await getStepUpToken()
+
+  const reset = await resetAccountPassword(accountId, newPassword, stepUpToken)
 
   if (reset instanceof Error) {
-    const message = toActionErrorMessage(
+    return toFailedState(
       reset,
       {
         weak_password: "パスワードは12文字以上にしてください",
@@ -117,27 +127,26 @@ export async function resetPasswordAction(
         account_not_found: "対象のアカウントが見つかりません",
         identity_not_found: "このアカウントにはパスワードが設定されていません",
         forbidden: "アカウントを管理する権限がありません",
+        invalid_session: "セッションが無効です。ログインし直してください",
       },
       "パスワードの再設定に失敗しました",
     )
-
-    return { ok: false, error: message }
   }
 
   revalidatePath("/system/accounts")
 
-  return { ok: true, error: null }
+  return { kind: "succeeded" }
 }
 
-/** アカウントの状態を変更する（停止・有効化）。iam:write 権限が必要。 */
+/** アカウントの状態を変更する（停止・有効化）。iam:write 権限と再認証 grant が必要。 */
 export async function setAccountStatusAction(
-  _prevState: AccountActionFormState,
+  _previousState: AccountActionState,
   formData: FormData,
-): Promise<AccountActionFormState> {
+): Promise<AccountActionState> {
   const currentUser = await getMe()
 
   if (currentUser instanceof Error || canManageAccounts(currentUser.permissions) === false) {
-    return { ok: false, error: "アカウントを管理する権限がありません" }
+    return { kind: "failed", error: "アカウントを管理する権限がありません" }
   }
 
   const accountId = toOpaqueAccountId(formData.get("account_id"))
@@ -145,13 +154,15 @@ export async function setAccountStatusAction(
   const status = toStatus(formData.get("status"))
 
   if (accountId === null || status === null) {
-    return { ok: false, error: "アカウントと状態を指定してください" }
+    return { kind: "failed", error: "アカウントと状態を指定してください" }
   }
 
-  const updated = await setAccountStatus(accountId, status)
+  const stepUpToken = await getStepUpToken()
+
+  const updated = await setAccountStatus(accountId, status, stepUpToken)
 
   if (updated instanceof Error) {
-    const message = toActionErrorMessage(
+    return toFailedState(
       updated,
       {
         self_deactivation: "自分自身は停止できません",
@@ -160,16 +171,15 @@ export async function setAccountStatusAction(
         account_not_found: "対象のアカウントが見つかりません",
         invalid_status: "指定した状態が不正です",
         forbidden: "アカウントを管理する権限がありません",
+        invalid_session: "セッションが無効です。ログインし直してください",
       },
       "状態の変更に失敗しました",
     )
-
-    return { ok: false, error: message }
   }
 
   revalidatePath("/system/accounts")
 
-  return { ok: true, error: null }
+  return { kind: "succeeded" }
 }
 
 function toStatus(value: FormDataEntryValue | null): "active" | "suspended" | "locked" | null {
@@ -180,15 +190,15 @@ function toStatus(value: FormDataEntryValue | null): "active" | "suspended" | "l
   return null
 }
 
-/** FormData からアカウントへの Role Binding 作成を実行する。iam:write 権限が必要。 */
+/** FormData からアカウントへの Role Binding 作成を実行する。iam:write 権限と再認証 grant が必要。 */
 export async function grantAccountRoleAction(
-  _prevState: GrantRoleFormState,
+  _previousState: AccountActionState,
   formData: FormData,
-): Promise<GrantRoleFormState> {
+): Promise<AccountActionState> {
   const currentUser = await getMe()
 
   if (currentUser instanceof Error || canAssignRoles(currentUser.permissions) === false) {
-    return { ok: false, error: "ロールを管理する権限がありません" }
+    return { kind: "failed", error: "ロールを管理する権限がありません" }
   }
 
   const accountId = toOpaqueAccountId(formData.get("account_id"))
@@ -196,13 +206,15 @@ export async function grantAccountRoleAction(
   const roleId = toOpaqueAccountId(formData.get("role_id"))
 
   if (accountId === null || roleId === null) {
-    return { ok: false, error: "アカウントとロールを指定してください" }
+    return { kind: "failed", error: "アカウントとロールを指定してください" }
   }
 
-  const granted = await grantAccountRole(accountId, roleId)
+  const stepUpToken = await getStepUpToken()
+
+  const granted = await grantAccountRole(accountId, roleId, stepUpToken)
 
   if (granted instanceof Error) {
-    const message = toActionErrorMessage(
+    return toFailedState(
       granted,
       {
         self_assignment: "自分自身にはロールを付与できません",
@@ -210,16 +222,15 @@ export async function grantAccountRoleAction(
         role_not_found: "指定したロールが見つかりません",
         account_not_found: "対象のアカウントが見つかりません",
         forbidden: "ロールを管理する権限がありません",
+        invalid_session: "セッションが無効です。ログインし直してください",
       },
       "ロールの付与に失敗しました",
     )
-
-    return { ok: false, error: message }
   }
 
   revalidatePath("/system/accounts")
 
-  return { ok: true, error: null }
+  return { kind: "succeeded" }
 }
 
 function toOpaqueAccountId(value: FormDataEntryValue | null): string | null {

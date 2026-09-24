@@ -1,12 +1,13 @@
 "use client"
 
-import { useActionState } from "react"
+import { startTransition, useActionState, useRef, useState } from "react"
+import type { FormEvent } from "react"
 import { toast } from "sonner"
 import { resetPasswordAction } from "@/app/(app)/system/accounts/actions"
-import type { AccountActionFormState } from "@/app/(app)/system/accounts/actions"
+import type { AccountActionState } from "@/app/(app)/system/accounts/actions"
+import { StepUpDialog } from "@/components/step-up-dialog"
 import {
   AlertDialog,
-  AlertDialogAction,
   AlertDialogCancel,
   AlertDialogContent,
   AlertDialogDescription,
@@ -15,37 +16,83 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { Alert, AlertDescription } from "@/components/ui/alert"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Field, FieldLabel } from "@/components/ui/field"
 
-const initialState: AccountActionFormState = { ok: false, error: null }
+const initialState: AccountActionState = { kind: "idle" }
 
 type Props = {
   accountId: string
 }
 
-/** アカウントのパスワードを管理者が再設定するボタン。ダイアログで新パスワードを入力する。 */
+/**
+ * アカウントのパスワードを管理者が再設定するボタン。ダイアログで新パスワードを入力する。
+ * 再認証を求められたら入力ダイアログを閉じて再入力を挟み、同じパスワードで再実行する。
+ * modal を重ねると背面の dialog が focus を握ったままになるため、同時には開かない。
+ */
 export function ResetPasswordButton(props: Props) {
+  const [isFormOpen, setFormOpen] = useState(false)
+
+  const [isStepUpOpen, setStepUpOpen] = useState(false)
+
+  // 再認証を挟んだあと同じ入力で再送するため、送信した FormData を持っておく。
+  const submittedFormData = useRef<FormData | null>(null)
+
   async function reduce(
-    previousState: AccountActionFormState,
+    previousState: AccountActionState,
     formData: FormData,
-  ): Promise<AccountActionFormState> {
+  ): Promise<AccountActionState> {
     const result = await resetPasswordAction(previousState, formData)
 
-    if (result.ok) {
+    if (result.kind === "succeeded") {
       toast.success("パスワードを再設定しました")
-    } else if (result.error !== null) {
-      toast.error(result.error)
+
+      submittedFormData.current = null
+
+      setFormOpen(false)
+    }
+
+    if (result.kind === "step_up_required") {
+      setFormOpen(false)
+
+      setStepUpOpen(true)
+    }
+
+    // 再認証のあとに拒否された場合も、理由は入力ダイアログの中に出す。
+    if (result.kind === "failed") {
+      setFormOpen(true)
     }
 
     return result
   }
 
-  const [, formAction, isPending] = useActionState(reduce, initialState)
+  const [state, formAction, isPending] = useActionState(reduce, initialState)
+
+  // form の action prop を使うと React が送信後にフォームをリセットし、失敗しても入力が消える。
+  function handleSubmit(event: FormEvent<HTMLFormElement>): void {
+    event.preventDefault()
+
+    const formData = new FormData(event.currentTarget)
+
+    submittedFormData.current = formData
+
+    startTransition(() => formAction(formData))
+  }
+
+  function handleStepUpSucceeded(): void {
+    setStepUpOpen(false)
+
+    const formData = submittedFormData.current
+
+    if (formData !== null) {
+      startTransition(() => formAction(formData))
+    }
+  }
 
   return (
-    <AlertDialog>
+    <AlertDialog open={isFormOpen} onOpenChange={setFormOpen}>
       <AlertDialogTrigger render={<Button variant="secondary" size="sm" disabled={isPending} />}>
         PW再設定
       </AlertDialogTrigger>
@@ -59,7 +106,7 @@ export function ResetPasswordButton(props: Props) {
           </AlertDialogDescription>
         </AlertDialogHeader>
 
-        <form action={formAction} className="flex flex-col gap-4">
+        <form onSubmit={handleSubmit} className="flex flex-col gap-4">
           <input type="hidden" name="account_id" value={props.accountId} />
 
           <Field>
@@ -77,15 +124,27 @@ export function ResetPasswordButton(props: Props) {
             />
           </Field>
 
+          {state.kind === "failed" ? (
+            <Alert variant="destructive">
+              <AlertDescription>{state.error}</AlertDescription>
+            </Alert>
+          ) : null}
+
           <AlertDialogFooter>
             <AlertDialogCancel>やめる</AlertDialogCancel>
 
-            <AlertDialogAction type="submit" disabled={isPending}>
+            <Button type="submit" disabled={isPending}>
               再設定する
-            </AlertDialogAction>
+            </Button>
           </AlertDialogFooter>
         </form>
       </AlertDialogContent>
+
+      <StepUpDialog
+        open={isStepUpOpen}
+        onSucceeded={handleStepUpSucceeded}
+        onCancel={() => setStepUpOpen(false)}
+      />
     </AlertDialog>
   )
 }
