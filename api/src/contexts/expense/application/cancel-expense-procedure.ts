@@ -3,7 +3,7 @@ import { PrepareExpenseWriteGuardAdapter } from "@/contexts/expense/infrastructu
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/repositories/expense-procedure.repository"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { ExpenseHumanOperationAuthorizationAdapter } from "@/contexts/expense/infrastructure/adapters/expense-human-operation-authorization.adapter"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemDecisionTargetValue } from "@system/domain/values/workflow/system-decision-target.value"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
@@ -39,7 +39,7 @@ export class CancelExpenseProcedure {
     command: Command,
   ): Promise<Readonly<{ status: "cancelled"; replayed: boolean }> | ApplicationError> {
     const writeGuard = new PrepareExpenseWriteGuardAdapter(this.c).prepare()
-    const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+    const human = await new ExpenseHumanOperationAuthorizationAdapter(this.c).prepare({
       accountId: command.session.accountId,
       tokenVersion: command.tokenVersion,
       permissions: ["expense:submit"],

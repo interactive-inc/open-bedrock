@@ -5,9 +5,9 @@ import {
   type ApplicationWorkflow,
 } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { LeaveHumanOperationAuthorizationAdapter } from "@/contexts/leave/infrastructure/adapters/leave-human-operation-authorization.adapter"
 import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
-import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
+import { LeaveAuditEventAdapter } from "@/contexts/leave/infrastructure/adapters/leave-audit-event.adapter"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import {
@@ -51,7 +51,7 @@ export class PublishLeaveProcedure {
         "会社上の責務・役職・合議体を指定してください",
         "invalid_authority",
       )
-    const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+    const human = await new LeaveHumanOperationAuthorizationAdapter(this.c).prepare({
       accountId: command.session.accountId,
       tokenVersion: command.tokenVersion,
       permissions: ["leave:procedure:manage"],
@@ -112,7 +112,7 @@ export class PublishLeaveProcedure {
     const saved = await new SystemD1ProcedureRepository({
       ...this.c,
       publishGuards: human.assertions,
-      publishEffects: new SystemAuditEventRepository(this.c).prepareAppend(audit),
+      publishEffects: new LeaveAuditEventAdapter(this.c).prepareAppend(audit),
     }).publish(definition, command.expectedRevision)
     if (saved === "revision_conflict")
       return new ConflictError("承認規程または設定権限が変更されました", "revision_conflict")

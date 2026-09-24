@@ -5,7 +5,7 @@ import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/reposito
 import { LeaveProcedureRepository } from "@/contexts/leave/infrastructure/repositories/leave-procedure.repository"
 import { LeaveDecisionNotificationValue } from "@/contexts/leave/domain/values/leave-decision-notification.value"
 import { PrepareLeaveDecisionNotificationAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-decision-notification.adapter"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { LeaveHumanOperationAuthorizationAdapter } from "@/contexts/leave/infrastructure/adapters/leave-human-operation-authorization.adapter"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
@@ -27,7 +27,7 @@ export class CompleteRejectedLeaveProcedure {
   async run(
     command: Command,
   ): Promise<Readonly<{ status: "rejected"; replayed: boolean }> | ApplicationError> {
-    const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+    const human = await new LeaveHumanOperationAuthorizationAdapter(this.c).prepare({
       accountId: command.session.accountId,
       tokenVersion: command.tokenVersion,
       permissions: ["leave:approve"],

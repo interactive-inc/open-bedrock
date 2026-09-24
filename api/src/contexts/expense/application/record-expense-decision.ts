@@ -10,7 +10,7 @@ import {
 } from "@/contexts/company/domain/errors"
 import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/repositories/expense-procedure.repository"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { ExpenseHumanOperationAuthorizationAdapter } from "@/contexts/expense/infrastructure/adapters/expense-human-operation-authorization.adapter"
 import { HumanAttestationEntity } from "@system/domain/entities/human-attestation.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
@@ -56,7 +56,7 @@ export class RecordExpenseDecision {
 
   private async runWithWriteGuards(command: Command): Promise<Result | ApplicationError> {
     const writeGuard = new PrepareExpenseWriteGuardAdapter(this.c).prepare()
-    const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+    const human = await new ExpenseHumanOperationAuthorizationAdapter(this.c).prepare({
       accountId: command.session.accountId,
       tokenVersion: command.tokenVersion,
       permissions: ["expense:approve"],

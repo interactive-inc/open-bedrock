@@ -9,7 +9,7 @@ import type { CompanyPersonnelSession } from "@/contexts/company/domain/definiti
 import { LeaveProcedureRepository } from "@/contexts/leave/infrastructure/repositories/leave-procedure.repository"
 import type { LeaveProcedureBinding } from "@/contexts/leave/domain/definitions/leave-procedure.definition"
 import type { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { LeaveHumanOperationAuthorizationAdapter } from "@/contexts/leave/infrastructure/adapters/leave-human-operation-authorization.adapter"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
@@ -39,7 +39,7 @@ export class CompleteApprovedLeaveProcedure {
   async run(
     command: Command,
   ): Promise<Readonly<{ status: "approved"; replayed: boolean }> | ApplicationError> {
-    const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+    const human = await new LeaveHumanOperationAuthorizationAdapter(this.c).prepare({
       accountId: command.session.accountId,
       tokenVersion: command.tokenVersion,
       permissions: ["leave:approve"],
