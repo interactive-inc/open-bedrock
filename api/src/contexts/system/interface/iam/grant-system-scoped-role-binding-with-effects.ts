@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { iamRoleIdSchema } from "@system/domain/schemas/iam/iam-role.schema"
 import { roleBindingIdSchema } from "@system/domain/schemas/iam/role-binding.schema"
@@ -88,7 +89,7 @@ export async function grantSystemScopedRoleBindingWithEffects(
     if (after instanceof Error) return after
     const audit = SystemAuditEventEntity.create({
       actorAccountId: actor.data,
-      action: "system.iam.role_binding.created",
+      action: SYSTEM_AUDIT_ACTIONS.systemIamRoleBindingCreated,
       targetType: "system:role-binding",
       targetId: bindingId.data,
       outcome: "succeeded",

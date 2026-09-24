@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
@@ -84,7 +85,7 @@ export async function revokeSystemScopedRoleBindingsWithEffects(
     if (before instanceof Error) return before
     const audit = SystemAuditEventEntity.create({
       actorAccountId: actor.data,
-      action: "system.iam.role_binding.revoked",
+      action: SYSTEM_AUDIT_ACTIONS.systemIamRoleBindingRevoked,
       targetType: "system:role-binding",
       targetId: binding.id,
       outcome: "succeeded",
@@ -143,7 +144,7 @@ export async function revokeSystemScopedRoleBindingsWithEffects(
       if (before instanceof Error) return before
       const audit = SystemAuditEventEntity.create({
         actorAccountId: actor.data,
-        action: "system.account_invitation.revoked",
+        action: SYSTEM_AUDIT_ACTIONS.systemAccountInvitationRevoked,
         targetType: "system:account-invitation",
         targetId: invitation.id,
         outcome: "succeeded",

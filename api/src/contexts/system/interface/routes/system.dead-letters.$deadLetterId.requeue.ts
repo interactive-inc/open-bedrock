@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemDeliveryEntity } from "@system/domain/entities/system-delivery.entity"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
@@ -91,7 +92,7 @@ export const POST = systemFactory.createHandlers(
     }
     const event = SystemAuditEventEntity.create({
       actorAccountId: accountId.data,
-      action: "system.dead_letter.requeued",
+      action: SYSTEM_AUDIT_ACTIONS.systemDeadLetterRequeued,
       targetType: "system:dead_letter",
       targetId: deadLetter.id,
       outcome: "succeeded",

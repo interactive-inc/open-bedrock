@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import {
   SystemForbiddenError,
   SystemInvalidSessionError,
@@ -73,7 +74,7 @@ export const PATCH = systemFactory.createHandlers(
     }
     const auditEvent = SystemAuditEventEntity.create({
       actorAccountId: actorAccountId.data,
-      action: "system.password_credential.reset",
+      action: SYSTEM_AUDIT_ACTIONS.systemPasswordCredentialReset,
       targetType: "system:identity",
       targetId: identityId,
       outcome: "succeeded",

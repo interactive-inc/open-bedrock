@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { InvalidSystemAuditEventError } from "@system/domain/errors"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { SessionId } from "@system/domain/schemas/auth/session-id.schema"
@@ -144,7 +145,10 @@ export class SystemAuditEventEntity<
   static createSession(
     props: Readonly<{
       actorAccountId: AccountId | null
-      action: "auth.session.create" | "auth.session.revoke" | "auth.session.rotate"
+      action:
+        | typeof SYSTEM_AUDIT_ACTIONS.authSessionCreate
+        | typeof SYSTEM_AUDIT_ACTIONS.authSessionRevoke
+        | typeof SYSTEM_AUDIT_ACTIONS.authSessionRotate
       targetId: SessionId | null
       outcome: "succeeded" | "denied"
       reasonCode: "refresh_token_reused" | "session_invalid" | null
@@ -176,7 +180,7 @@ export class SystemAuditEventEntity<
 
     const rotated = SystemAuditEventEntity.createSession({
       actorAccountId: rotation.previous.accountId,
-      action: "auth.session.rotate",
+      action: SYSTEM_AUDIT_ACTIONS.authSessionRotate,
       targetId: rotation.previous.id,
       outcome: "succeeded",
       reasonCode: null,
@@ -187,7 +191,7 @@ export class SystemAuditEventEntity<
 
     const reused = SystemAuditEventEntity.createSession({
       actorAccountId: rotation.previous.accountId,
-      action: "auth.session.rotate",
+      action: SYSTEM_AUDIT_ACTIONS.authSessionRotate,
       targetId: rotation.previous.id,
       outcome: "denied",
       reasonCode: "refresh_token_reused",
@@ -198,7 +202,7 @@ export class SystemAuditEventEntity<
 
     const invalid = SystemAuditEventEntity.createSession({
       actorAccountId: rotation.previous.accountId,
-      action: "auth.session.rotate",
+      action: SYSTEM_AUDIT_ACTIONS.authSessionRotate,
       targetId: rotation.previous.id,
       outcome: "denied",
       reasonCode: "session_invalid",
@@ -213,7 +217,9 @@ export class SystemAuditEventEntity<
   static createOidc(
     props: Readonly<{
       accountId: AccountId
-      action: "auth.oidc.authorization" | "auth.oidc.token_exchange"
+      action:
+        | typeof SYSTEM_AUDIT_ACTIONS.authOidcAuthorization
+        | typeof SYSTEM_AUDIT_ACTIONS.authOidcTokenExchange
       outcome: "succeeded" | "denied"
       reasonCode: "user_denied" | null
       authorization: SystemAuditJsonValue

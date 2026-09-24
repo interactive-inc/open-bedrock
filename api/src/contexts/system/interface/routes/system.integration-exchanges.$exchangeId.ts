@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 /** /system/integration-exchanges/:exchangeId */
 import { UpdateIntegrationExchange } from "@system/application/integration/update-integration-exchange"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
@@ -17,6 +18,13 @@ import { systemFactory } from "@system/interface/request-environment/system-fact
 import { systemIntegrationExchangeResponse } from "@system/interface/responses/system-integration-exchange-response"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+
+const systemIntegrationExchangeAuditActions = Object.freeze({
+  pending: SYSTEM_AUDIT_ACTIONS.systemIntegrationExchangePending,
+  succeeded: SYSTEM_AUDIT_ACTIONS.systemIntegrationExchangeSucceeded,
+  failed: SYSTEM_AUDIT_ACTIONS.systemIntegrationExchangeFailed,
+  cancelled: SYSTEM_AUDIT_ACTIONS.systemIntegrationExchangeCancelled,
+})
 
 // @authorization permission integration:read - 一つの外部交換を読む
 export const GET = systemFactory.createHandlers(
@@ -87,7 +95,7 @@ export const PATCH = systemFactory.createHandlers(
     }
     const event = SystemAuditEventEntity.create({
       actorAccountId: context.var.userId,
-      action: `system.integration_exchange.${body.status}`,
+      action: systemIntegrationExchangeAuditActions[body.status],
       targetType: "system:integration_exchange",
       targetId: current.id,
       outcome: "succeeded",

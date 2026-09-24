@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import type { RecordPreservationDecisionContext } from "@system/configuration/record-preservation-decision-context"
 import type {
   SystemDatabaseContext,
@@ -155,7 +156,7 @@ export class ReviewRecordPreservationAdapter {
     if (assertions instanceof Error) throw new RecordPreservationReviewError("forbidden")
     const audit = SystemAuditEventEntity.create({
       actorAccountId: authentication.accountId,
-      action: "system.proposal.review.read",
+      action: SYSTEM_AUDIT_ACTIONS.systemProposalReviewRead,
       targetType: "system:proposal",
       targetId: proposal.proposalId,
       outcome: "succeeded",

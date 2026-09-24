@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemStepUpGrantEntity } from "@system/domain/entities/system-step-up-grant.entity"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
@@ -136,7 +137,7 @@ export const POST = systemFactory.createHandlers(
     }
     const event = SystemAuditEventEntity.create({
       actorAccountId: context.var.userId,
-      action: "auth.step_up.issued",
+      action: SYSTEM_AUDIT_ACTIONS.authStepUpIssued,
       targetType: "system:account",
       targetId: context.var.userId,
       outcome: "succeeded",

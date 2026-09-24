@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records/record-source-freeze.schema"
 import type { z } from "zod"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
@@ -47,8 +48,8 @@ export class RecordSourceFreezeEntity {
       actorAccountId: release?.actorAccountId ?? value.actorAccountId,
       action:
         release === null
-          ? "system.record.source.freeze.created"
-          : "system.record.source.freeze.released",
+          ? SYSTEM_AUDIT_ACTIONS.systemRecordSourceFreezeCreated
+          : SYSTEM_AUDIT_ACTIONS.systemRecordSourceFreezeReleased,
       targetType: "system:record-source-freeze",
       targetId: value.id,
       outcome: "succeeded",

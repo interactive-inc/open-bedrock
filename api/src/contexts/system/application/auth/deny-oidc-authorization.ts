@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import {
   OidcInvalidRequestApplicationError,
   OidcInvalidScopeApplicationError,
@@ -94,7 +95,7 @@ export class DenyOidcAuthorization {
   private async recordAudit(props: AuditProps): Promise<Error | null> {
     const audit = SystemAuditEventEntity.createOidc({
       accountId: props.accountId,
-      action: "auth.oidc.authorization",
+      action: SYSTEM_AUDIT_ACTIONS.authOidcAuthorization,
       outcome: props.outcome,
       reasonCode: props.reasonCode,
       authorization: { role: this.c.var.role },

@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemDeliveryEntity } from "@system/domain/entities/system-delivery.entity"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
@@ -116,7 +117,7 @@ export const POST = systemFactory.createHandlers(
       }
       const event = SystemAuditEventEntity.create({
         actorAccountId: accountId.data,
-        action: "system.inbox.accepted",
+        action: SYSTEM_AUDIT_ACTIONS.systemInboxAccepted,
         targetType: "system:inbox_message",
         targetId: body.id,
         outcome: "succeeded",
@@ -169,7 +170,10 @@ export const POST = systemFactory.createHandlers(
     if (after === null || after instanceof Error) throw new SystemDeliveryUnavailableError(after)
     const event = SystemAuditEventEntity.create({
       actorAccountId: accountId.data,
-      action: body.kind === "job" ? "system.job.queued" : "system.outbox.queued",
+      action:
+        body.kind === "job"
+          ? SYSTEM_AUDIT_ACTIONS.systemJobQueued
+          : SYSTEM_AUDIT_ACTIONS.systemOutboxQueued,
       targetType: body.kind === "job" ? "system:job" : "system:outbox_message",
       targetId: body.id,
       outcome: "succeeded",

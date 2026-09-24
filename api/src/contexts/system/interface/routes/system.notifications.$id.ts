@@ -5,6 +5,7 @@ import {
   SystemNotificationUnavailableError,
 } from "@system/interface/errors"
 /** /system/notifications/:id */
+import { DismissSystemNotification } from "@system/application/notifications/dismiss-system-notification"
 import { MarkSystemNotificationRead } from "@system/application/notifications/mark-system-notification-read"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemNotificationRepository } from "@system/infrastructure/repositories/notifications/system-notification.repository"
@@ -122,14 +123,23 @@ export const DELETE = systemFactory.createHandlers(
     if (!Number.isSafeInteger(dismissedAt.getTime())) {
       throw new SystemNotificationUnavailableError()
     }
-    const dismissed = await new SystemNotificationRepository({
-      context: { env: { DB: context.env.DB } },
-    }).dismissDelivery(context.req.valid("param").id, accountId.data, dismissedAt)
-    if (dismissed instanceof Error) {
+    const transition = await new DismissSystemNotification({
+      notificationRepository: new SystemNotificationRepository({
+        context: { env: { DB: context.env.DB } },
+      }),
+    }).execute({
+      deliveryId: context.req.valid("param").id,
+      recipientAccountId: accountId.data,
+      dismissedAt,
+    })
+    if (transition instanceof Error) {
       throw new SystemNotificationUnavailableError()
     }
-    if (!dismissed) {
+    if (transition.kind === "not_found") {
       throw new SystemNotificationNotFoundError()
+    }
+    if (transition.kind === "rejected") {
+      throw new SystemNotificationTransitionInvalidError()
     }
 
     return context.body(null, 204)

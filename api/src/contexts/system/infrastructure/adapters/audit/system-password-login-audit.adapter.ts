@@ -4,8 +4,8 @@ import { SystemAuditEventRepository } from "@system/infrastructure/repositories/
 import type { SystemD1Context } from "@system/configuration/system-context"
 type Context = SystemD1Context
 
-/** 外部Identity login拒否をSystem監査へfail-closedで記録する。 */
-export class SystemIdentityLoginAuditAdapter {
+/** password login拒否をSystem監査へfail-closedで記録する。 */
+export class SystemPasswordLoginAuditAdapter {
   constructor(private readonly c: Context) {
     Object.freeze(this)
   }
@@ -13,7 +13,7 @@ export class SystemIdentityLoginAuditAdapter {
   async recordDenied(reasonCode: string, occurredAt: Date): Promise<null | Error> {
     const event = SystemAuditEventEntity.create({
       actorAccountId: null,
-      action: SYSTEM_AUDIT_ACTIONS.authSessionIdentityLoginDenied,
+      action: SYSTEM_AUDIT_ACTIONS.authSessionPasswordLoginDenied,
       targetType: "session",
       targetId: null,
       outcome: "denied",

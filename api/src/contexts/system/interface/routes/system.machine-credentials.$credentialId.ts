@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
@@ -39,7 +40,7 @@ export const DELETE = systemFactory.createHandlers(
     }
     const event = SystemAuditEventEntity.create({
       actorAccountId: context.var.userId,
-      action: "auth.machine_credential.revoked",
+      action: SYSTEM_AUDIT_ACTIONS.authMachineCredentialRevoked,
       targetType: "system:machine_credential",
       targetId: identifiers.credentialId,
       outcome: "succeeded",

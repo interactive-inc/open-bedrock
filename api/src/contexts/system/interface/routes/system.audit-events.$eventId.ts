@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { prepareSystemAuditDisclosure } from "@system/interface/audit/prepare-system-audit-disclosure"
 import { systemAuditEventResponseSchema } from "@system/interface/http/audit-disclosure-response-schemas"
 import {
@@ -42,7 +43,7 @@ export const GET = systemFactory.createHandlers(
     ) {
       const deniedAudit = SystemAuditEventEntity.create({
         actorAccountId: context.var.userId,
-        action: "system.audit.detail",
+        action: SYSTEM_AUDIT_ACTIONS.systemAuditDetail,
         targetType: "system:audit-event",
         targetId: eventId,
         outcome: "denied",
@@ -66,7 +67,7 @@ export const GET = systemFactory.createHandlers(
       permission: SystemFeaturePermission.AUDIT_READ.key,
       purpose: context.req.valid("query").purpose ?? null,
       now,
-      action: "system.audit.detail",
+      action: SYSTEM_AUDIT_ACTIONS.systemAuditDetail,
       targetId: eventId,
     })
     const event = await new SystemAuditEventQueryAdapter({
@@ -78,7 +79,7 @@ export const GET = systemFactory.createHandlers(
     const outcome = event === null ? "denied" : "succeeded"
     const readAudit = SystemAuditEventEntity.create({
       actorAccountId: context.var.userId,
-      action: "system.audit.detail",
+      action: SYSTEM_AUDIT_ACTIONS.systemAuditDetail,
       targetType: "system:audit-event",
       targetId: eventId,
       outcome,

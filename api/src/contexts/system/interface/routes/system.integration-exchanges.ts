@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 /** /system/integration-exchanges */
 import { CreateIntegrationExchange } from "@system/application/integration/create-integration-exchange"
 import { IntegrationExchangeEntity } from "@system/domain/entities/integration-exchange.entity"
@@ -88,7 +89,7 @@ export const POST = systemFactory.createHandlers(
     }
     const event = SystemAuditEventEntity.create({
       actorAccountId: context.var.userId,
-      action: "system.integration_exchange.created",
+      action: SYSTEM_AUDIT_ACTIONS.systemIntegrationExchangeCreated,
       targetType: "system:integration_exchange",
       targetId: exchange.id,
       outcome: "succeeded",
