@@ -10,7 +10,7 @@ const zProps = z.object({
   employeeId: zEmployeeId,
   templateCode: z.string(),
   kind: z.enum(["join", "leave"]),
-  status: z.enum(["in_progress", "completed"]),
+  status: z.enum(["in_progress", "completed", "superseded"]),
   assignedAt: z.string(),
   tasks: z.array(z.instanceof(OnboardingTask)).readonly(),
 })
@@ -79,7 +79,8 @@ export class OnboardingAssignment implements Props {
       employeeId: row.employeeId,
       templateCode: row.templateCode,
       kind: row.kind === "leave" ? "leave" : "join",
-      status: row.status === "completed" ? "completed" : "in_progress",
+      status:
+        row.status === "completed" || row.status === "superseded" ? row.status : "in_progress",
       assignedAt: row.assignedAt,
       tasks,
     })
@@ -106,6 +107,8 @@ export class OnboardingAssignment implements Props {
 
   /** 内包タスクの完了状況から割り当ての状態を再計算した割り当てを返す。 */
   withRecomputedStatus() {
+    if (this.status === "superseded") return this
+
     const hasPending = this.tasks.some((task) => task.status !== "done")
 
     const status: Props["status"] = hasPending ? "in_progress" : "completed"

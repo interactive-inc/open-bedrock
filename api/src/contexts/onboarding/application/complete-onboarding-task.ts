@@ -1,6 +1,6 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { canCompleteTask } from "@/contexts/onboarding/domain/policies/task-completion.policy"
-import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingTask } from "@/contexts/onboarding/domain/entities/onboarding-task.entity"
 import type { Context } from "@/env"
@@ -42,6 +42,10 @@ export class CompleteOnboardingTask {
       return new ForbiddenError("cannot complete task", "forbidden")
     }
 
+    if (assignment.status === "superseded") {
+      return new ConflictError("assignment is superseded", "assignment_superseded")
+    }
+
     if (assignment.id === null) {
       return new UnexpectedError("assignment has no id")
     }
@@ -68,6 +72,10 @@ export class CompleteOnboardingTask {
       }
       if (current === null) {
         return new NotFoundError("task not found", "task_not_found")
+      }
+      // 読取り後に人事訂正で置き換えられた割当は、タスクを変更せず競合として返す。
+      if (current.status === "superseded") {
+        return new ConflictError("assignment is superseded", "assignment_superseded")
       }
       source = current
     }

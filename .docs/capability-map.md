@@ -70,7 +70,7 @@ Systemの添付証拠の準備処理は、所有Account、状態、作成時刻�
 
 未紐付け添付の掃除は、作成から24時間を超えた予約・未紐付け行を対象とする。本体の削除前にDBで状態を再検査し、鍵を破棄して紐付けを禁止する。先に業務への紐付けが確定した場合は本体を残し、先に削除が始まった場合は準備済みの証拠を含む業務保存を拒否する。本体またはDB行の削除に失敗した場合は消去済み行を残し、次回の掃除で再試行する。重複実行時は実際に行を回収した処理だけが回収数へ加算する。
 
-[業務原記録の保全](system-record-preservation.md)には、サービス利用台帳の原文取得・提出・判断・保全確定と、所有業務のコードに依存しないSystemの原文参照・出力経路がある。他業務の必要記録・添付の収集、撤去対象の網羅確認、承認・監査を含む一括出力は揃っていない。外部交換履歴は本文を保持せず、添付の保全は閲覧資格を付与しない。勤怠の元行には独立した改訂番号・記録日時がなく、退勤時に同じ行を更新するため、原記録の履歴と保全時の取得情報を区別する必要がある。
+[業務原記録の保全](system-record-preservation.md)は、`system`と`company`を除くすべての業務contextへ接続している。各業務は個別記録の保全申請・判断・確定、書込み停止と解除、停止世代の照合ページ、撤去の検査計画とページ再検証、撤去申請の判断・取下げ・再提出・確定の経路を持つ。所有業務のコードに依存しないSystemの原文参照・出力と、承認・保持・開示設定・監査を含む一括出力もある。`api/tests/contracts/business-record-source-coverage.contract.test.ts`は、業務の全tableが撤去の停止中にDBで書込みを拒否することを検査する。外部交換履歴は本文を保持せず、添付の保全は閲覧資格を付与しない。勤怠の元行には独立した改訂番号・記録日時がなく、退勤時に同じ行を更新するため、原記録の履歴と保全時の取得情報を区別する必要がある。
 
 ### 非同期実行と通知
 
@@ -81,7 +81,7 @@ Systemの添付証拠の準備処理は、所有Account、状態、作成時刻�
 
 現行実装には batch、通知、冪等な Job 登録、lease、heartbeat、成功、retry、dead letter、step-up 付き再投入、outbox、重複排除する inbox がある。lease token と lease Account の両方を検査し、別主体による完了、期限外完了、二重再投入を拒否する。
 
-登録処理に束縛したJobは、Serviceの現在の権限を検査する実行adapterが業務変更・完了・監査を同じtransactionへ保存する。失敗は待機時間を置いて再試行し、上限到達時はdead letterへ残す。汎用HTTP APIからのclaim・完了・再投入を拒否し、再投入でも登録処理と操作を保持する。[入退社の自動配送](onboarding-automation.md)には、定期起動の入口、人事発令からのチェックリスト生成、受領結果、状態確認と再投入APIがある。配備先の定期実行設定、他のAppへの配送、生成後の訂正に伴うタスクの取消・置換は、この接続だけでは完了しない。
+登録処理に束縛したJobは、Serviceの現在の権限を検査する実行adapterが業務変更・完了・監査を同じtransactionへ保存する。失敗は待機時間を置いて再試行し、上限到達時はdead letterへ残す。汎用HTTP APIからのclaim・完了・再投入を拒否し、再投入でも登録処理と操作を保持する。[入退社の自動配送](onboarding-automation.md)には、定期起動の入口、人事発令からのチェックリスト生成、受領結果、状態確認と再投入APIがある。生成後の人事訂正では、訂正元から生成した進行中のチェックリストを置換済みとして残し、訂正後の発令から生成し直す。配備先の定期実行設定と他のAppへの配送は、この接続だけでは完了しない。
 
 ### 外部接続
 
@@ -121,7 +121,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - 雇用開始、在籍状態、休職、復職、終了、再雇用
 - valid time と recorded time を持つ履歴、訂正、重複禁止
 
-現行実装には従業員台帳、在籍期間、状態期間、ライフサイクル revision がある。人事発令による判断と組織変更は期間モデルを正本にし、旧 employee 現在値は既存 wire の表示 projection として同じ transaction で更新する。版付きresource APIと業務台帳の接続は未完成であり、[Company APIの保存先と参照整合性](company-api.md#storage-と移行)に制約を記載する。
+現行実装には従業員台帳、在籍期間、状態期間、ライフサイクル revision がある。人事発令による判断と組織変更は期間モデルを正本にし、旧 employee 現在値は既存 wire の表示 projection として同じ transaction で更新する。既存従業員と雇用を公開履歴へ接続した後、会社管理者は[接続完了](company-api.md#接続完了の記録)を一度だけ記録でき、記録後は未接続の従業員への発令を拒否する。版付きresource APIと業務台帳の接続は未完成であり、[Company APIの保存先と参照整合性](company-api.md#storage-と移行)に制約を記載する。
 
 ### 組織
 
@@ -146,7 +146,7 @@ Company は一つの deployment で運営する会社の同一性、人、組織
 - CollectiveBody、構成員、定足数、決議方式
 - 委任可能性と継続責任主体
 
-現行実装には Job、Position、Grade、OrganizationalOffice、OfficeAssignment、汎用 Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody と期間付き構成員がある。版付きresourceを参照するCompany resolverは、在籍、System Account、対象本人の除外、scope、合議規則を同一revisionと時点で評価する。汎用申請、人事変更申請、稟議、経費、休暇では、Companyの公開責務・役職・合議体をSystem DecisionTaskへ接続している。その他の独自承認経路には接続が残り、技術的権限と会社上の判断資格の合成を全業務では保証していない。
+現行実装には Job、Position、Grade、OrganizationalOffice、OfficeAssignment、汎用 Responsibility、AuthorityScope、ResponsibilityAssignment、CollectiveBody と期間付き構成員がある。版付きresourceを参照するCompany resolverは、在籍、System Account、対象本人の除外、scope、合議規則を同一revisionと時点で評価する。汎用申請、人事変更申請、稟議、経費、休暇、業務原記録の保全と撤去の申請では、Companyの公開責務・役職・合議体をSystem DecisionTaskへ接続している。出張、証明書の発行、育児・介護休業、ライフイベント届出、退職、シフト交代、感謝pointの交換の承認は、各業務の技術的権限だけで判断しており、会社上の判断資格を合成していない。技術的権限と会社上の判断資格の合成を全業務では保証していない。
 
 職務・役職・責務・合議体・決裁資格の定義と任用は、[過去から将来までの参照期間](company-organizational-authority.md#公開責務と期間台帳)をDBでも検査する。定義の短縮や将来取消によって、期間外の任用を残す変更は確定しない。
 
