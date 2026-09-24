@@ -1,9 +1,12 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { RoomRepository } from "@/contexts/room/infrastructure/repositories/room.repository"
+import type { RoomRepository } from "@/contexts/room/infrastructure/repositories/room.repository"
 import type { Room } from "@/contexts/room/domain/entities/room.entity"
+
+type Context = Readonly<{
+  roomRepository: Pick<RoomRepository, "findById" | "deleteWithReservations">
+}>
 
 export type Command = {
   session: CompanySessionValue
@@ -22,13 +25,11 @@ export class DeleteRoom {
   }
 
   async run(command: Command): Promise<Deleted | ApplicationError> {
-    const roomRepository = new RoomRepository(this.c)
-
     if (command.session.hasPermission("room:manage") === false) {
       return new ForbiddenError("cannot manage rooms", "forbidden")
     }
 
-    const room: Room | null | Error = await roomRepository.findById(command.roomId)
+    const room: Room | null | Error = await this.c.roomRepository.findById(command.roomId)
 
     if (room instanceof Error) {
       return new UnexpectedError("failed to find room", { cause: room })
@@ -38,7 +39,7 @@ export class DeleteRoom {
       return new NotFoundError("room not found", "room_not_found")
     }
 
-    const deleted = await roomRepository.deleteWithReservations(room)
+    const deleted = await this.c.roomRepository.deleteWithReservations(room)
 
     if (deleted instanceof Error) {
       return new UnexpectedError("failed to delete room", { cause: deleted })

@@ -2,9 +2,13 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import { Contract } from "@/contexts/partner/domain/entities/contract.entity"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { ContractRepository } from "@/contexts/partner/infrastructure/repositories/contract/contract.repository"
-import { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
+import type { ContractRepository } from "@/contexts/partner/infrastructure/repositories/contract/contract.repository"
+import type { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
+
+type Context = Readonly<{
+  partnerRepository: Pick<PartnerRepository, "findById">
+  contractRepository: Pick<ContractRepository, "create">
+}>
 
 export type Command = {
   session: CompanySessionValue
@@ -33,7 +37,7 @@ export class CreateContract {
       return new ForbiddenError("cannot manage contracts", "forbidden")
     }
 
-    const partner = await new PartnerRepository(this.c).findById(command.contract.partnerId)
+    const partner = await this.c.partnerRepository.findById(command.contract.partnerId)
 
     if (partner instanceof Error) {
       return new UnexpectedError("failed to find partner", { cause: partner })
@@ -54,7 +58,7 @@ export class CreateContract {
       createdAt: command.createdAt,
     })
 
-    const created = await new ContractRepository(this.c).create(contract)
+    const created = await this.c.contractRepository.create(contract)
 
     if (created instanceof Error) {
       return new UnexpectedError("failed to create contract", { cause: created })

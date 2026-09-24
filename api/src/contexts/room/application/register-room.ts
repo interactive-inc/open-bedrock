@@ -2,8 +2,11 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Room } from "@/contexts/room/domain/entities/room.entity"
-import type { Context } from "@/env"
-import { RoomRepository } from "@/contexts/room/infrastructure/repositories/room.repository"
+import type { RoomRepository } from "@/contexts/room/infrastructure/repositories/room.repository"
+
+type Context = Readonly<{
+  roomRepository: Pick<RoomRepository, "create">
+}>
 
 export type Command = {
   session: CompanySessionValue
@@ -23,13 +26,11 @@ export class RegisterRoom {
   }
 
   async run(command: Command): Promise<Room | ApplicationError> {
-    const roomRepository = new RoomRepository(this.c)
-
     if (command.session.hasPermission("room:manage") === false) {
       return new ForbiddenError("cannot manage rooms", "forbidden")
     }
 
-    const created = await roomRepository.create({
+    const created = await this.c.roomRepository.create({
       name: command.room.name,
       capacity: command.room.capacity,
       location: command.room.location,

@@ -1,4 +1,5 @@
 import { UnauthorizedError } from "@/lib/http/errors"
+import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { factory } from "@/api/http/factory"
@@ -43,7 +44,9 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const created = await new CreateTrainingCourse(c).run({
+    const created = await new CreateTrainingCourse({
+      courseRepository: new TrainingCourseRepository(c),
+    }).run({
       session: session,
       code: body.code,
       title: body.title,

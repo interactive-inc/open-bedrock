@@ -1,4 +1,6 @@
 import { CreateOneOnOne } from "@/contexts/one-on-one/application/oneonone/create-one-on-one"
+import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { listDepartmentEmployeeIds } from "@/api/http/company-employees/list-department-employee-ids"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -165,7 +167,10 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const created = await new CreateOneOnOne(c).run({
+    const created = await new CreateOneOnOne({
+      employeeDirectory: openCompanyEmployeeDirectory(c),
+      oneOnOneRepository: new OneOnOneRepository(c),
+    }).run({
       memberCode: json.member_employee_code,
       managerId: session.employeeId,
       heldAt: c.env.NOW ?? new Date().toISOString(),

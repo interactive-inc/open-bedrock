@@ -1,4 +1,5 @@
 import { ArchiveTrainingCourse } from "@/contexts/training/application/archive-training-course"
+import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
 import { UpdateTrainingCourse } from "@/contexts/training/application/update-training-course"
 import type { TrainingCourse } from "@/contexts/training/domain/entities/training-course.entity"
 import { factory } from "@/api/http/factory"
@@ -80,7 +81,9 @@ export const PUT = factory.createHandlers(
 
     const body = c.req.valid("json")
 
-    const updated = await new UpdateTrainingCourse(c).run({
+    const updated = await new UpdateTrainingCourse({
+      courseRepository: new TrainingCourseRepository(c),
+    }).run({
       session: session,
       code: validateCodeParam(c.req.param("code"), "training course"),
       title: body.title,
@@ -107,7 +110,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const result = await new ArchiveTrainingCourse(c).run({
+  const result = await new ArchiveTrainingCourse({
+    courseRepository: new TrainingCourseRepository(c),
+  }).run({
     session: session,
     code: validateCodeParam(c.req.param("code"), "training course"),
   })

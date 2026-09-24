@@ -1,4 +1,7 @@
 import { AssignOnboarding } from "@/contexts/onboarding/application/assign-onboarding"
+import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
+import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-template.repository"
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
@@ -28,7 +31,11 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const result = await new AssignOnboarding(c).run({
+    const result = await new AssignOnboarding({
+      employeeDirectory: openCompanyEmployeeDirectory(c),
+      templateRepository: new OnboardingTemplateRepository(c),
+      assignmentRepository: new OnboardingAssignmentRepository(c),
+    }).run({
       session: viewer,
       employeeCode: json.employee_code,
       templateCode: json.template_code,

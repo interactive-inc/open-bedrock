@@ -1,4 +1,5 @@
 import { PublishShiftAssignment } from "@/contexts/shift/application/publish-shift-assignment"
+import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppShiftAssignment } from "@/contexts/shift/interface/http/response-schemas"
@@ -18,7 +19,9 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const assignment = await new PublishShiftAssignment(c).run({
+  const assignment = await new PublishShiftAssignment({
+    assignmentRepository: new ShiftAssignmentRepository(c),
+  }).run({
     session: session,
     assignmentId,
     publishedAt: c.env.NOW ?? new Date().toISOString(),

@@ -2,9 +2,12 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import type { CertificateRequest } from "@/contexts/certificate-request/domain/entities/certificate-request.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/repositories/certificate-request.repository"
+import type { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/repositories/certificate-request.repository"
 import { isCertificateRequestRecordSourceFrozenError } from "@/contexts/certificate-request/infrastructure/repositories/lib/is-certificate-request-record-source-frozen-error"
+
+type Context = Readonly<{
+  certificateRequestRepository: Pick<CertificateRequestRepository, "findById" | "update">
+}>
 
 export type Command = {
   certificateRequestId: string
@@ -24,9 +27,7 @@ export class UpdateCertificateRequest {
   }
 
   async run(command: Command): Promise<CertificateRequest | ApplicationError> {
-    const certificateRequestRepository = new CertificateRequestRepository(this.c)
-
-    const current = await certificateRequestRepository.findById(command.certificateRequestId)
+    const current = await this.c.certificateRequestRepository.findById(command.certificateRequestId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find certificate request", { cause: current })
@@ -51,7 +52,7 @@ export class UpdateCertificateRequest {
       note: command.note,
     })
 
-    const result = await certificateRequestRepository.update(updated)
+    const result = await this.c.certificateRequestRepository.update(updated)
 
     if (result instanceof Error) {
       if (isCertificateRequestRecordSourceFrozenError(result)) {

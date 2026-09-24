@@ -110,7 +110,10 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const result = await new UpdateOnboardingAssignment(c).run({
+    const result = await new UpdateOnboardingAssignment({
+      assignmentRepository: new OnboardingAssignmentRepository(c),
+      employeeDirectory: openCompanyEmployeeDirectory(c),
+    }).run({
       assignmentId,
       session: session,
       assignedAt: json.assigned_at,
@@ -135,7 +138,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const assignmentId = validateIntParam(c.req.param("id"), "assignment")
 
-  const result = await new CancelOnboardingAssignment(c).run({
+  const result = await new CancelOnboardingAssignment({
+    assignmentRepository: new OnboardingAssignmentRepository(c),
+  }).run({
     assignmentId,
     session: session,
   })

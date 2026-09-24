@@ -2,10 +2,14 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-redemption.repository"
-import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
+import type { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-redemption.repository"
+import type { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
 import { isThanksRecordSourceFrozenError } from "@/contexts/thanks/infrastructure/repositories/lib/is-thanks-record-source-frozen-error"
+
+type Context = Readonly<{
+  rewardRepository: Pick<ThanksRewardRepository, "findById">
+  redemptionRepository: Pick<ThanksRedemptionRepository, "createIfSufficientBalance">
+}>
 
 export type Command = {
   employeeId: EmployeeId
@@ -23,11 +27,7 @@ export class RequestRedemption {
   }
 
   async run(command: Command): Promise<ThanksRedemption | ApplicationError> {
-    const rewardRepository = new ThanksRewardRepository(this.c)
-
-    const redemptionRepository = new ThanksRedemptionRepository(this.c)
-
-    const reward = await rewardRepository.findById(command.rewardId)
+    const reward = await this.c.rewardRepository.findById(command.rewardId)
 
     if (reward instanceof Error) {
       return new UnexpectedError("failed to find reward", { cause: reward })
@@ -53,7 +53,7 @@ export class RequestRedemption {
     })
 
     // 残高チェックと重複 pending チェックを INSERT にアトミックに畳み込む（TOCTOU 対策）。
-    const created = await redemptionRepository.createIfSufficientBalance(redemption)
+    const created = await this.c.redemptionRepository.createIfSufficientBalance(redemption)
 
     if (created instanceof Error) {
       if (isThanksRecordSourceFrozenError(created))

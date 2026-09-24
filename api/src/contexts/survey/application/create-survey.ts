@@ -1,10 +1,13 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { Survey } from "@/contexts/survey/domain/entities/survey.entity"
-import type { Context } from "@/env"
-import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
+import type { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { isSurveyRecordSourceFrozenError } from "@/contexts/survey/infrastructure/repositories/lib/is-survey-record-source-frozen-error"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+
+type Context = Readonly<{
+  surveyRepository: Pick<SurveyRepository, "create">
+}>
 
 export type Command = {
   session: CompanySessionValue
@@ -26,15 +29,13 @@ export class CreateSurvey {
       return new ForbiddenError("cannot manage surveys", "forbidden")
     }
 
-    const surveyRepository = new SurveyRepository(this.c)
-
     const survey = Survey.create({
       title: command.title,
       status: command.status,
       questionsJson: command.questionsJson,
     })
 
-    const created = await surveyRepository.create(survey)
+    const created = await this.c.surveyRepository.create(survey)
 
     if (created instanceof Error) {
       if (isSurveyRecordSourceFrozenError(created)) {

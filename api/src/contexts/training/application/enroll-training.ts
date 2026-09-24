@@ -1,4 +1,4 @@
-import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
+import type { CompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { isTrainingRecordSourceFrozenError } from "@/contexts/training/infrastructure/repositories/lib/is-training-record-source-frozen-error"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
@@ -10,9 +10,14 @@ import {
   UnexpectedError,
 } from "@/lib/errors"
 import { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
-import type { Context } from "@/env"
-import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
-import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
+import type { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
+import type { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
+
+type Context = Readonly<{
+  courseRepository: Pick<TrainingCourseRepository, "findByCode">
+  enrollmentRepository: Pick<TrainingEnrollmentRepository, "create">
+  employeeDirectory: Pick<CompanyEmployeeDirectory, "findByCode">
+}>
 
 export type Command = {
   viewerEmployeeId: EmployeeId
@@ -31,17 +36,13 @@ export class EnrollTraining {
   }
 
   async run(command: Command): Promise<TrainingEnrollment | ApplicationError> {
-    const courseRepository = new TrainingCourseRepository(this.c)
-
-    const enrollmentRepository = new TrainingEnrollmentRepository(this.c)
-
     const employeeId = await this.toEnrolleeId(command)
 
     if (employeeId instanceof ApplicationError) {
       return employeeId
     }
 
-    const course = await courseRepository.findByCode(command.courseCode)
+    const course = await this.c.courseRepository.findByCode(command.courseCode)
 
     if (course instanceof Error) {
       return new UnexpectedError("failed to find training course", { cause: course })
@@ -63,7 +64,7 @@ export class EnrollTraining {
 
     // INSERT...SELECT WHERE EXISTS でコースがアーカイブ済みでないことをアトミックに検証する。
     // UNIQUE 制約で重複登録も検出する。
-    const created = await enrollmentRepository.create(enrollment)
+    const created = await this.c.enrollmentRepository.create(enrollment)
 
     if (created instanceof Error) {
       if (isTrainingRecordSourceFrozenError(created))
@@ -93,9 +94,7 @@ export class EnrollTraining {
       return new ForbiddenError("cannot enroll others", "forbidden")
     }
 
-    const employeeRepository = openCompanyEmployeeDirectory(this.c)
-
-    const employee = await employeeRepository.findByCode(command.enrolleeEmployeeCode)
+    const employee = await this.c.employeeDirectory.findByCode(command.enrolleeEmployeeCode)
 
     if (employee instanceof Error) {
       return new UnexpectedError("failed to find employee", { cause: employee })

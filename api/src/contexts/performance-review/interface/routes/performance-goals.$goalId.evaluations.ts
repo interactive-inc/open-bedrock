@@ -131,7 +131,11 @@ export const POST = factory.createHandlers(
 
     const createdAt = c.env.NOW ?? new Date().toISOString()
 
-    const evaluation = await new CreateGoalEvaluation(c).run({
+    const evaluation = await new CreateGoalEvaluation({
+      goalRepository: new GoalRepository(c),
+      goalEvaluationRepository: new GoalEvaluationRepository(c),
+      resolveEmployeeRelation: (props) => resolveCompanyEmployeeRelation(c, props),
+    }).run({
       goalId,
       kind: json.kind,
       score: json.score ?? null,

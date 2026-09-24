@@ -1,48 +1,30 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
-import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
 import { ApproveRedemption } from "@/contexts/thanks/application/thanks-points/approve-redemption"
 import { RejectRedemption } from "@/contexts/thanks/application/thanks-points/reject-redemption"
+import { ThanksError } from "@/contexts/thanks/domain/errors"
+import { FakeThanksPoints } from "@/contexts/thanks/test/thanks-points-fakes.test-support"
 import { ForbiddenError } from "@/lib/errors"
-import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-redemption.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import { makeTestSession } from "@tests/api/support/make-test-session"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
 import { describe, expect, test } from "bun:test"
 
-async function seedPendingRedemption(
-  repository: ThanksRedemptionRepository,
-  employeeId: EmployeeId,
-): Promise<ThanksRedemption> {
-  const created = await repository.create(
-    ThanksRedemption.create({
-      employeeId,
-      rewardId: 1,
-      pointCost: 10,
-      createdAt: "2026-06-01T00:00:00.000Z",
-    }),
-  )
-
-  if (created instanceof Error) {
-    throw new Error("seed failed")
-  }
-
-  if ("reason" in created) {
-    throw new Error(`seed failed: ${created.reason}`)
-  }
-
-  return created
+function seedPendingRedemption(points: FakeThanksPoints): ThanksRedemption {
+  return points.seedRedemption({
+    employeeId: toWorkforceEmployeeId(5),
+    rewardId: 1,
+    pointCost: 10,
+    status: "pending",
+  })
 }
 
 describe("ApproveRedemption / RejectRedemption", () => {
   test("returns forbidden for a member role", async () => {
-    const { context } = await createTestContext()
+    const points = new FakeThanksPoints()
 
-    const repository = new ThanksRedemptionRepository(context)
+    const redemption = seedPendingRedemption(points)
 
-    const redemption = await seedPendingRedemption(repository, toWorkforceEmployeeId(5))
-
-    const result = await new ApproveRedemption(context).execute({
+    const result = await new ApproveRedemption(points).execute({
       session: makeTestSession("member"),
       redemptionId: redemption.id ?? 0,
       deciderId: toWorkforceEmployeeId(2),
@@ -53,13 +35,11 @@ describe("ApproveRedemption / RejectRedemption", () => {
   })
 
   test("returns self_approval_forbidden when decider is the applicant", async () => {
-    const { context } = await createTestContext()
+    const points = new FakeThanksPoints()
 
-    const repository = new ThanksRedemptionRepository(context)
+    const redemption = seedPendingRedemption(points)
 
-    const redemption = await seedPendingRedemption(repository, toWorkforceEmployeeId(5))
-
-    const result = await new RejectRedemption(context).execute({
+    const result = await new RejectRedemption(points).execute({
       session: makeTestSession("root"),
       redemptionId: redemption.id ?? 0,
       deciderId: toWorkforceEmployeeId(5),
@@ -69,23 +49,45 @@ describe("ApproveRedemption / RejectRedemption", () => {
     expectApplicationError(result, ForbiddenError, "self_approval_forbidden")
   })
 
+  test("returns the Company authority failure without deciding", async () => {
+    for (const decide of ["approve", "reject"] as const) {
+      const points = new FakeThanksPoints()
+
+      points.authorityError = new ThanksError(
+        "company_authority_required",
+        "company authority over the requester is required",
+      )
+
+      const redemption = seedPendingRedemption(points)
+
+      const command = {
+        session: makeTestSession("root"),
+        redemptionId: redemption.id ?? 0,
+        deciderId: toWorkforceEmployeeId(2),
+        decidedAt: "2026-06-02T00:00:00.000Z",
+      }
+
+      const result =
+        decide === "approve"
+          ? await new ApproveRedemption(points).execute(command)
+          : await new RejectRedemption(points).execute(command)
+
+      expectApplicationError(result, ForbiddenError, "company_authority_required")
+      expect(points.redemptions.get(redemption.id ?? 0)?.status).toBe("pending")
+    }
+  })
+
   test("allows admin to reject a redemption", async () => {
-    const { context } = await createTestContext({ withCompanyOrganization: true })
+    const points = new FakeThanksPoints()
 
-    const repository = new ThanksRedemptionRepository(context)
+    const redemption = seedPendingRedemption(points)
 
-    const redemption = await seedPendingRedemption(repository, toWorkforceEmployeeId(5))
-
-    const result = await new RejectRedemption(context).execute({
+    const result = await new RejectRedemption(points).execute({
       session: makeTestSession("root"),
       redemptionId: redemption.id ?? 0,
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-06-02T00:00:00.000Z",
     })
-
-    if (result instanceof Error) {
-      throw result
-    }
 
     if (!(result instanceof ThanksRedemption)) {
       throw new Error("unexpected failure")
@@ -95,22 +97,16 @@ describe("ApproveRedemption / RejectRedemption", () => {
   })
 
   test("allows hr to reject a redemption", async () => {
-    const { context } = await createTestContext({ withCompanyOrganization: true })
+    const points = new FakeThanksPoints()
 
-    const repository = new ThanksRedemptionRepository(context)
+    const redemption = seedPendingRedemption(points)
 
-    const redemption = await seedPendingRedemption(repository, toWorkforceEmployeeId(5))
-
-    const result = await new RejectRedemption(context).execute({
+    const result = await new RejectRedemption(points).execute({
       session: makeTestSession("hr"),
       redemptionId: redemption.id ?? 0,
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-06-02T00:00:00.000Z",
     })
-
-    if (result instanceof Error) {
-      throw result
-    }
 
     if (!(result instanceof ThanksRedemption)) {
       throw new Error("unexpected failure")

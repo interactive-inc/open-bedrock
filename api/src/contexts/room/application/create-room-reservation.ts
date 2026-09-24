@@ -8,9 +8,15 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { RoomReservationRepository } from "@/contexts/room/infrastructure/repositories/room-reservation.repository"
-import { RoomRepository } from "@/contexts/room/infrastructure/repositories/room.repository"
+import type { RoomReservationRepository } from "@/contexts/room/infrastructure/repositories/room-reservation.repository"
+import type { RoomRepository } from "@/contexts/room/infrastructure/repositories/room.repository"
+
+type Context = Readonly<{
+  roomRepository: Pick<RoomRepository, "findById">
+  reservationRepository: Pick<RoomReservationRepository, "createIfNoOverlap">
+  /** 開始時刻が過去かを判定する基準のISO時刻。 */
+  now: string
+}>
 
 export type Command = {
   roomId: number
@@ -33,15 +39,11 @@ export class CreateRoomReservation {
       return new ValidationError("invalid time range", "invalid_time_range")
     }
 
-    const now = this.c.env.NOW ?? new Date().toISOString()
-
-    if (command.startAt < now) {
+    if (command.startAt < this.c.now) {
       return new UnprocessableError("start_at must be in the future", "start_in_past")
     }
 
-    const roomRepository = new RoomRepository(this.c)
-
-    const room = await roomRepository.findById(command.roomId)
+    const room = await this.c.roomRepository.findById(command.roomId)
 
     if (room instanceof Error) {
       return new UnexpectedError("failed to find room", { cause: room })
@@ -50,8 +52,6 @@ export class CreateRoomReservation {
     if (room === null) {
       return new NotFoundError("room not found", "room_not_found")
     }
-
-    const reservationRepository = new RoomReservationRepository(this.c)
 
     const reservation = RoomReservation.create({
       roomId: command.roomId,
@@ -65,7 +65,7 @@ export class CreateRoomReservation {
       return new ValidationError("invalid time range", "invalid_time_range")
     }
 
-    const created = await reservationRepository.createIfNoOverlap(reservation)
+    const created = await this.c.reservationRepository.createIfNoOverlap(reservation)
 
     if (created instanceof Error) {
       return new UnexpectedError("failed to create reservation", { cause: created })

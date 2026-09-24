@@ -1,3 +1,4 @@
+import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/repositories/antisocial-check.repository"
 import { CreateAntisocialCheck } from "@/contexts/antisocial-check/application/create-antisocial-check"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
@@ -28,7 +29,9 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const antisocialCheck = await new CreateAntisocialCheck(c).run({
+    const antisocialCheck = await new CreateAntisocialCheck({
+      antisocialCheckRepository: new AntisocialCheckRepository(c),
+    }).run({
       requesterId: viewer.employeeId,
       partnerName: json.partner_name,
       partnerAddress: json.partner_address ?? null,

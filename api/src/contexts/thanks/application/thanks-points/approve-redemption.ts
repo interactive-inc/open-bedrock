@@ -4,15 +4,20 @@ import type { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-
 import type { FulfilledWithStockError } from "@/contexts/thanks/application/thanks-points/errors"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-redemption.repository"
-import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
+import type { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-redemption.repository"
+import type { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
 import { isCompanyWriteAbortedByGuard } from "@/contexts/company/interface/operations/is-company-write-aborted-by-guard"
-import {
+import type {
+  ThanksRedemptionDecisionAuthority,
   ThanksRedemptionDecisionAuthorityAdapter,
-  type ThanksRedemptionDecisionAuthority,
 } from "@/contexts/thanks/infrastructure/adapters/thanks-redemption-decision-authority.adapter"
 import { isThanksRecordSourceFrozenError } from "@/contexts/thanks/infrastructure/repositories/lib/is-thanks-record-source-frozen-error"
+
+type Context = Readonly<{
+  redemptionRepository: Pick<ThanksRedemptionRepository, "findById" | "approveFromPending">
+  rewardRepository: Pick<ThanksRewardRepository, "findById">
+  decisionAuthority: Pick<ThanksRedemptionDecisionAuthorityAdapter, "prepare">
+}>
 
 export type Command = {
   session: CompanySessionValue
@@ -40,9 +45,7 @@ export class ApproveRedemption {
       return new ForbiddenError("cannot decide redemption", "forbidden")
     }
 
-    const redemptionRepository = new ThanksRedemptionRepository(this.c)
-
-    const existing = await redemptionRepository.findById(command.redemptionId)
+    const existing = await this.c.redemptionRepository.findById(command.redemptionId)
 
     if (existing instanceof Error) {
       return new UnexpectedError("failed to find redemption", { cause: existing })
@@ -60,7 +63,7 @@ export class ApproveRedemption {
       return new ConflictError("redemption already decided", "already_decided")
     }
 
-    const authority = await new ThanksRedemptionDecisionAuthorityAdapter(this.c).prepare({
+    const authority = await this.c.decisionAuthority.prepare({
       session: command.session,
       subjectEmployeeIds: [existing.employeeId],
     })
@@ -69,7 +72,7 @@ export class ApproveRedemption {
       return new ForbiddenError(authority.message, authority.code, { cause: authority })
     }
 
-    return this.approve(redemptionRepository, existing, command, authority.guards)
+    return this.approve(existing, command, authority.guards)
   }
 
   /**
@@ -77,7 +80,6 @@ export class ApproveRedemption {
    * 0 行更新は「残高不足 or 在庫切れ or 既に決裁済み」。findById で pending を確認してから区別する。
    */
   private async approve(
-    redemptionRepository: ThanksRedemptionRepository,
     existing: ThanksRedemption,
     command: Command,
     guards: ThanksRedemptionDecisionAuthority["guards"],
@@ -86,7 +88,7 @@ export class ApproveRedemption {
       return new ConflictError("redemption already decided", "already_decided")
     }
 
-    const updated = await redemptionRepository.approveFromPending({
+    const updated = await this.c.redemptionRepository.approveFromPending({
       redemptionId: command.redemptionId,
       employeeId: existing.employeeId,
       rewardId: existing.rewardId,
@@ -121,9 +123,7 @@ export class ApproveRedemption {
    * pending のまま残っていれば在庫 or 残高、消えていれば既に決裁済み。
    */
   private async classifyZeroUpdate(redemptionId: number): Promise<OutOfStock | ApplicationError> {
-    const redemptionRepository = new ThanksRedemptionRepository(this.c)
-
-    const after = await redemptionRepository.findById(redemptionId)
+    const after = await this.c.redemptionRepository.findById(redemptionId)
 
     if (after instanceof Error) {
       return new UnexpectedError("failed to find redemption", { cause: after })
@@ -137,7 +137,7 @@ export class ApproveRedemption {
       return new ConflictError("redemption already decided", "already_decided")
     }
 
-    const reward = await new ThanksRewardRepository(this.c).findById(after.rewardId)
+    const reward = await this.c.rewardRepository.findById(after.rewardId)
 
     if (reward instanceof Error) {
       return new UnexpectedError("failed to find reward", { cause: reward })

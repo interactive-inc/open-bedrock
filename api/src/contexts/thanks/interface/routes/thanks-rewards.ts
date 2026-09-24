@@ -112,12 +112,14 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const created = await new CreateReward(c).run({
-      name: json.name,
-      pointCost: json.point_cost,
-      stock: json.stock ?? null,
-      createdAt: c.env.NOW ?? new Date().toISOString(),
-    })
+    const created = await new CreateReward({ rewardRepository: new ThanksRewardRepository(c) }).run(
+      {
+        name: json.name,
+        pointCost: json.point_cost,
+        stock: json.stock ?? null,
+        createdAt: c.env.NOW ?? new Date().toISOString(),
+      },
+    )
 
     if (created instanceof ApplicationError) {
       throw toHttpException(created)

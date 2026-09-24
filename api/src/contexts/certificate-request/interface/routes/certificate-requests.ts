@@ -1,3 +1,4 @@
+import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/repositories/certificate-request.repository"
 import { CreateCertificateRequest } from "@/contexts/certificate-request/application/create-certificate-request"
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/api/http/factory"
@@ -30,7 +31,9 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const certificateRequest = await new CreateCertificateRequest(c).run({
+    const certificateRequest = await new CreateCertificateRequest({
+      certificateRequestRepository: new CertificateRequestRepository(c),
+    }).run({
       requesterId: viewer.employeeId,
       certificateType: json.certificate_type,
       submitTo: json.submit_to ?? null,

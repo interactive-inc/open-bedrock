@@ -100,7 +100,9 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const businessTrip = await new UpdateBusinessTrip(c).run({
+    const businessTrip = await new UpdateBusinessTrip({
+      businessTripRepository: new BusinessTripRepository(c),
+    }).run({
       businessTripId: validateUuidParam(c.req.param("id"), "business trip"),
       travelerId: viewer.employeeId,
       destination: json.destination,

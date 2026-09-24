@@ -1,11 +1,10 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { EmployeeSkill } from "@/contexts/skill/domain/entities/employee-skill.entity"
 import type { Skill } from "@/contexts/skill/domain/entities/skill.entity"
-import type { Context } from "@/env"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { EmployeeSkillRepository } from "@/contexts/skill/infrastructure/repositories/employee-skill.repository"
-import { SkillRepository } from "@/contexts/skill/infrastructure/repositories/skill.repository"
+import type { EmployeeSkillRepository } from "@/contexts/skill/infrastructure/repositories/employee-skill.repository"
+import type { SkillRepository } from "@/contexts/skill/infrastructure/repositories/skill.repository"
 import { isSkillRecordSourceFrozenError } from "@/contexts/skill/infrastructure/repositories/lib/is-skill-record-source-frozen-error"
 
 export type Command = {
@@ -15,6 +14,11 @@ export type Command = {
   years: number | null
   note: string | null
 }
+
+type Context = Readonly<{
+  skillRepository: Pick<SkillRepository, "findByCode">
+  employeeSkillRepository: Pick<EmployeeSkillRepository, "save">
+}>
 
 export type SetMySkillResult = {
   employeeSkill: EmployeeSkill
@@ -30,11 +34,7 @@ export class SetMySkill {
   }
 
   async run(command: Command): Promise<SetMySkillResult | ApplicationError> {
-    const skillRepository = new SkillRepository(this.c)
-
-    const employeeSkillRepository = new EmployeeSkillRepository(this.c)
-
-    const skill = await skillRepository.findByCode(command.skillCode)
+    const skill = await this.c.skillRepository.findByCode(command.skillCode)
 
     if (skill instanceof Error) {
       return new UnexpectedError("failed to find skill", { cause: skill })
@@ -52,7 +52,7 @@ export class SetMySkill {
       note: command.note,
     })
 
-    const saved = await employeeSkillRepository.save(employeeSkill)
+    const saved = await this.c.employeeSkillRepository.save(employeeSkill)
 
     if (saved instanceof Error) {
       if (isSkillRecordSourceFrozenError(saved))

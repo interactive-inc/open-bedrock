@@ -87,7 +87,10 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const reservation = await new UpdateRoomReservation(c).run({
+    const reservation = await new UpdateRoomReservation({
+      reservationRepository: new RoomReservationRepository(c),
+      now: c.env.NOW ?? new Date().toISOString(),
+    }).run({
       reservationId: validateUuidParam(c.req.param("id"), "reservation"),
       reserverId: viewer.employeeId,
       startAt: json.start_at,

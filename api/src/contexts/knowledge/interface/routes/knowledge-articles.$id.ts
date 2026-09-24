@@ -1,3 +1,5 @@
+import { KnowledgeAuthorAuthorizationAdapter } from "@/contexts/knowledge/infrastructure/adapters/knowledge-author-authorization.adapter"
+import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/repositories/knowledge-article.repository"
 import { WithdrawKnowledgeArticle } from "@/contexts/knowledge/application/withdraw-knowledge-article"
 import { UpdateKnowledgeArticle } from "@/contexts/knowledge/application/update-knowledge-article"
 import { factory } from "@/api/http/factory"
@@ -87,7 +89,10 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const article = await new UpdateKnowledgeArticle(c).run({
+    const article = await new UpdateKnowledgeArticle({
+      articleRepository: new KnowledgeArticleRepository(c),
+      authorAuthorization: new KnowledgeAuthorAuthorizationAdapter(c),
+    }).run({
       articleId,
       expectedRevision: c.req.valid("header")["if-match"],
       commandId: c.req.valid("header")["idempotency-key"],

@@ -1,3 +1,5 @@
+import { ReviewCyclePolicyAdapter } from "@/contexts/performance-review/infrastructure/adapters/review/review-cycle-policy.adapter"
+import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
@@ -45,7 +47,10 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const cycle = await new CreateReviewCycle(c).run({
+    const cycle = await new CreateReviewCycle({
+      reviewCycleRepository: new ReviewCycleRepository(c),
+      reviewCyclePolicyAdapter: new ReviewCyclePolicyAdapter(c),
+    }).run({
       session: session,
       title: json.title,
       period: json.period,

@@ -1,3 +1,4 @@
+import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/repositories/family-care-leave.repository"
 import { CreateFamilyCareLeave } from "@/contexts/family-care-leave/application/create-family-care-leave"
 import { factory } from "@/api/http/factory"
 import { isoDate } from "@/lib/validation/iso-date.schema"
@@ -35,7 +36,9 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const familyCareLeave = await new CreateFamilyCareLeave(c).run({
+    const familyCareLeave = await new CreateFamilyCareLeave({
+      familyCareLeaveRepository: new FamilyCareLeaveRepository(c),
+    }).run({
       employeeId: viewer.employeeId,
       leaveKind: json.leave_kind,
       startDate: json.start_date,

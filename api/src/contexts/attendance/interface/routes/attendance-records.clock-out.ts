@@ -1,3 +1,4 @@
+import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/repositories/attendance-record.repository"
 import { ClockOut } from "@/contexts/attendance/application/clock-out"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { factory } from "@/api/http/factory"
@@ -27,7 +28,7 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const record = await new ClockOut(c).run({
+    const record = await new ClockOut({ recordRepository: new AttendanceRecordRepository(c) }).run({
       employeeId: session.employeeId,
       now: c.env.NOW ?? new Date().toISOString(),
       note: json.note === undefined ? undefined : (json.note ?? null),

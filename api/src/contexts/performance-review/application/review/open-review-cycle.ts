@@ -1,11 +1,16 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
-import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
-import { ReviewCyclePolicyAdapter } from "@/contexts/performance-review/infrastructure/adapters/review/review-cycle-policy.adapter"
-import { ReviewFormGenerationAdapter } from "@/contexts/performance-review/infrastructure/adapters/review/review-form-generation.adapter"
+import type { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
+import type { ReviewCyclePolicyAdapter } from "@/contexts/performance-review/infrastructure/adapters/review/review-cycle-policy.adapter"
+import type { ReviewFormGenerationAdapter } from "@/contexts/performance-review/infrastructure/adapters/review/review-form-generation.adapter"
+
+type Context = Readonly<{
+  reviewCycleRepository: Pick<ReviewCycleRepository, "findById" | "updateStatus">
+  reviewCyclePolicyAdapter: Pick<ReviewCyclePolicyAdapter, "find">
+  reviewFormGenerationAdapter: Pick<ReviewFormGenerationAdapter, "generate">
+}>
 
 export type Input = {
   session: CompanySessionValue
@@ -23,9 +28,7 @@ export class OpenReviewCycle {
       return new ForbiddenError("cannot manage review cycles", "forbidden")
     }
 
-    const repository = new ReviewCycleRepository(this.c)
-
-    const reviewCycle = await repository.findById(input.cycleId)
+    const reviewCycle = await this.c.reviewCycleRepository.findById(input.cycleId)
 
     if (reviewCycle instanceof Error) {
       return new UnexpectedError("failed to find review cycle", { cause: reviewCycle })
@@ -44,13 +47,13 @@ export class OpenReviewCycle {
     }
 
     if (reviewCycle.id !== null) {
-      const policy = await new ReviewCyclePolicyAdapter(this.c).find(reviewCycle.id)
+      const policy = await this.c.reviewCyclePolicyAdapter.find(reviewCycle.id)
 
       if (policy instanceof Error) {
         return new UnexpectedError("failed to load review cycle policy", { cause: policy })
       }
 
-      const generated = await new ReviewFormGenerationAdapter(this.c).generate({
+      const generated = await this.c.reviewFormGenerationAdapter.generate({
         cycleId: reviewCycle.id,
         policy,
       })
@@ -60,7 +63,7 @@ export class OpenReviewCycle {
       }
     }
 
-    const updated = await repository.updateStatus(transitioned, previousStatus)
+    const updated = await this.c.reviewCycleRepository.updateStatus(transitioned, previousStatus)
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to update review cycle", { cause: updated })

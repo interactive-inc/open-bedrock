@@ -1,10 +1,13 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { Resignation } from "@/contexts/resignation/domain/entities/resignation.entity"
-import type { Context } from "@/env"
-import { ResignationRepository } from "@/contexts/resignation/infrastructure/repositories/resignation.repository"
+import type { ResignationRepository } from "@/contexts/resignation/infrastructure/repositories/resignation.repository"
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { isResignationRecordSourceFrozenError } from "@/contexts/resignation/infrastructure/repositories/lib/is-resignation-record-source-frozen-error"
+
+type Context = Readonly<{
+  resignationRepository: Pick<ResignationRepository, "findPendingByEmployeeId" | "create">
+}>
 
 export type Command = {
   employeeId: EmployeeId
@@ -24,9 +27,7 @@ export class CreateResignation {
   }
 
   async run(command: Command): Promise<Resignation | ApplicationError> {
-    const resignationRepository = new ResignationRepository(this.c)
-
-    const existing = await resignationRepository.findPendingByEmployeeId(command.employeeId)
+    const existing = await this.c.resignationRepository.findPendingByEmployeeId(command.employeeId)
 
     if (existing instanceof Error) {
       return new UnexpectedError("failed to find resignation", { cause: existing })
@@ -44,7 +45,7 @@ export class CreateResignation {
       createdAt: command.createdAt,
     })
 
-    const created = await resignationRepository.create(resignation)
+    const created = await this.c.resignationRepository.create(resignation)
 
     if (created instanceof Error) {
       if (isResignationRecordSourceFrozenError(created))

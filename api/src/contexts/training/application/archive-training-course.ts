@@ -2,9 +2,12 @@ import { isTrainingRecordSourceFrozenError } from "@/contexts/training/infrastru
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
+import type { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
 import type { TrainingCourse } from "@/contexts/training/domain/entities/training-course.entity"
+
+type Context = Readonly<{
+  courseRepository: Pick<TrainingCourseRepository, "findByCode" | "update">
+}>
 
 export type Command = {
   session: CompanySessionValue
@@ -22,13 +25,13 @@ export class ArchiveTrainingCourse {
   }
 
   async run(command: Command): Promise<Archived | ApplicationError> {
-    const courseRepository = new TrainingCourseRepository(this.c)
-
     if (command.session.hasPermission("training:manage") === false) {
       return new ForbiddenError("cannot manage training", "forbidden")
     }
 
-    const current: TrainingCourse | null | Error = await courseRepository.findByCode(command.code)
+    const current: TrainingCourse | null | Error = await this.c.courseRepository.findByCode(
+      command.code,
+    )
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find training course", { cause: current })
@@ -38,7 +41,7 @@ export class ArchiveTrainingCourse {
       return new NotFoundError("course not found", "course_not_found")
     }
 
-    const updated = await courseRepository.update(current.archive())
+    const updated = await this.c.courseRepository.update(current.archive())
 
     if (updated instanceof Error) {
       if (isTrainingRecordSourceFrozenError(updated))

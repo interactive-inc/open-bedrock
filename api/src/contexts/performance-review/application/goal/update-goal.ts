@@ -1,9 +1,8 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { hasFinalEvaluation } from "@/contexts/performance-review/domain/policies/final-goal-evaluation.policy"
 import type { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
-import type { Context } from "@/env"
-import { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal-evaluation.repository"
-import { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
+import type { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal-evaluation.repository"
+import type { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
 import type { ApplicationError } from "@/lib/errors"
 import {
   ConflictError,
@@ -12,6 +11,16 @@ import {
   UnexpectedError,
   ValidationError,
 } from "@/lib/errors"
+
+type Context = Readonly<{
+  goalRepository: Pick<
+    GoalRepository,
+    "findById" | "findEvaluationSheetState" | "updateForEvaluationSheet" | "update"
+  >
+  goalEvaluationRepository: Pick<GoalEvaluationRepository, "findByGoalId">
+  /** 評価シート監査記録へ残す現在時刻（ISO）。 */
+  now: string
+}>
 
 export type Command = {
   goalId: number
@@ -37,9 +46,7 @@ export class UpdateGoal {
   }
 
   async run(command: Command): Promise<Goal | ApplicationError> {
-    const repository = new GoalRepository(this.c)
-
-    const current = await repository.findById(command.goalId)
+    const current = await this.c.goalRepository.findById(command.goalId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find goal", { cause: current })
@@ -55,7 +62,7 @@ export class UpdateGoal {
 
     // 評価シートに紐づく場合の検証
     if (current.evaluationSheetId !== null && current.evaluationSheetId !== undefined) {
-      const sheet = await repository.findEvaluationSheetState(current.evaluationSheetId)
+      const sheet = await this.c.goalRepository.findEvaluationSheetState(current.evaluationSheetId)
       if (sheet instanceof Error) {
         return new UnexpectedError("failed to load evaluation sheet", { cause: sheet })
       }
@@ -77,7 +84,7 @@ export class UpdateGoal {
       }
     }
 
-    const evaluations = await new GoalEvaluationRepository(this.c).findByGoalId(command.goalId)
+    const evaluations = await this.c.goalEvaluationRepository.findByGoalId(command.goalId)
 
     if (evaluations instanceof Error) {
       return new UnexpectedError("failed to find goal evaluations", {
@@ -98,11 +105,11 @@ export class UpdateGoal {
 
     // 評価シートに紐づく場合は atomic UPDATE（weight + status guard 付き）
     if (current.evaluationSheetId !== null && current.evaluationSheetId !== undefined) {
-      const saved = await repository.updateForEvaluationSheet(
+      const saved = await this.c.goalRepository.updateForEvaluationSheet(
         updated,
         current,
         command.employeeId,
-        this.c.env.NOW ?? new Date().toISOString(),
+        this.c.now,
       )
       if (saved instanceof ConflictError) return saved
       return saved instanceof Error
@@ -110,7 +117,7 @@ export class UpdateGoal {
         : saved
     }
 
-    const saved = await repository.update(updated)
+    const saved = await this.c.goalRepository.update(updated)
 
     if (saved instanceof Error) {
       return new UnexpectedError("failed to update goal", { cause: saved })

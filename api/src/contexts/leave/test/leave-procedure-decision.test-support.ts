@@ -1,5 +1,5 @@
 import { createLeaveProcedureTestContext } from "@/contexts/leave/test/leave-procedure.test-support"
-import { createTestContextForDatabase } from "@tests/api/support/create-test-context"
+import { createTestContextForDatabase } from "@tests/api/support/create-context-for-database"
 import { RecordLeaveDecision } from "@/contexts/leave/application/record-leave-decision"
 import { CompleteApprovedLeaveProcedure } from "@/contexts/leave/application/complete-approved-leave-procedure"
 import { CompleteRejectedLeaveProcedure } from "@/contexts/leave/application/complete-rejected-leave-procedure"

@@ -97,7 +97,9 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const certificateRequest = await new UpdateCertificateRequest(c).run({
+    const certificateRequest = await new UpdateCertificateRequest({
+      certificateRequestRepository: new CertificateRequestRepository(c),
+    }).run({
       certificateRequestId: validateUuidParam(c.req.param("id"), "certificate request"),
       requesterId: viewer.employeeId,
       certificateType: json.certificate_type,

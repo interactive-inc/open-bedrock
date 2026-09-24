@@ -1,3 +1,4 @@
+import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
 import { CloseReviewCycle } from "@/contexts/performance-review/application/review/close-review-cycle"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -18,7 +19,9 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
 
   const cycleId = validateIntParam(c.req.param("cycleId"), "review cycle")
 
-  const updated = await new CloseReviewCycle(c).execute({
+  const updated = await new CloseReviewCycle({
+    reviewCycleRepository: new ReviewCycleRepository(c),
+  }).execute({
     session: session,
     cycleId,
   })

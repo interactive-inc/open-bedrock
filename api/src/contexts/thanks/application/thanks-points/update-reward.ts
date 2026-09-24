@@ -2,8 +2,11 @@ import { ThanksReward } from "@/contexts/thanks/domain/entities/thanks-reward.en
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import { isThanksRecordSourceFrozenError } from "@/contexts/thanks/infrastructure/repositories/lib/is-thanks-record-source-frozen-error"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
+import type { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
+
+type Context = Readonly<{
+  rewardRepository: Pick<ThanksRewardRepository, "findById" | "updateWithoutStock">
+}>
 
 export type Command = {
   rewardId: number
@@ -22,9 +25,7 @@ export class UpdateReward {
   }
 
   async run(command: Command): Promise<ThanksReward | ApplicationError> {
-    const rewardRepository = new ThanksRewardRepository(this.c)
-
-    const existing = await rewardRepository.findById(command.rewardId)
+    const existing = await this.c.rewardRepository.findById(command.rewardId)
 
     if (existing instanceof Error) {
       return new UnexpectedError("failed to find reward", { cause: existing })
@@ -61,7 +62,7 @@ export class UpdateReward {
 
     // stock は decrementStock() で原子的に管理するため、管理画面からは上書きしない。
     // 並行する交換申請の承認と競合しても消費済み在庫が復活しない。
-    const updated = await rewardRepository.updateWithoutStock(next)
+    const updated = await this.c.rewardRepository.updateWithoutStock(next)
 
     if (updated instanceof Error) {
       if (isThanksRecordSourceFrozenError(updated))

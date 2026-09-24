@@ -2,9 +2,12 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { FamilyCareLeave } from "@/contexts/family-care-leave/domain/entities/family-care-leave.entity"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/repositories/family-care-leave.repository"
+import type { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/repositories/family-care-leave.repository"
 import { isFamilyCareLeaveRecordSourceFrozenError } from "@/contexts/family-care-leave/infrastructure/repositories/lib/is-family-care-leave-record-source-frozen-error"
+
+type Context = Readonly<{
+  familyCareLeaveRepository: Pick<FamilyCareLeaveRepository, "create">
+}>
 
 export type Command = {
   employeeId: EmployeeId
@@ -24,8 +27,6 @@ export class CreateFamilyCareLeave {
   }
 
   async run(command: Command): Promise<FamilyCareLeave | ApplicationError> {
-    const familyCareLeaveRepository = new FamilyCareLeaveRepository(this.c)
-
     const familyCareLeave = FamilyCareLeave.create({
       employeeId: command.employeeId,
       leaveKind: command.leaveKind,
@@ -39,7 +40,7 @@ export class CreateFamilyCareLeave {
       return new ValidationError("invalid date range", "invalid_date_range")
     }
 
-    const created = await familyCareLeaveRepository.create(familyCareLeave)
+    const created = await this.c.familyCareLeaveRepository.create(familyCareLeave)
 
     if (created instanceof Error) {
       if (isFamilyCareLeaveRecordSourceFrozenError(created))

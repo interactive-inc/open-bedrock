@@ -1,4 +1,3 @@
-import { resolveCompanyEmployeeRelation } from "@/contexts/company/interface/operations/resolve-company-employee-relation"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import {
@@ -7,11 +6,23 @@ import {
 } from "@/contexts/performance-review/domain/entities/goal-evaluation.entity"
 import { resolveEvaluationPermission } from "@/contexts/performance-review/domain/policies/goal-evaluation-permission.policy"
 import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
-import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal-evaluation.repository"
-import { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
+import type { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal-evaluation.repository"
+import type { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
+
+type Context = Readonly<{
+  goalRepository: Pick<GoalRepository, "findById">
+  goalEvaluationRepository: Pick<
+    GoalEvaluationRepository,
+    "findByGoalId" | "create" | "createWithGoalCompletion"
+  >
+  /** manager・final評価で評価者と目標所有者の組織上の関係を解決する。 */
+  resolveEmployeeRelation: (props: {
+    viewerEmployeeId: EmployeeId
+    targetEmployeeId: EmployeeId
+  }) => Promise<EmployeeRelation | Error>
+}>
 
 export type Command = {
   goalId: number
@@ -32,11 +43,7 @@ export class CreateGoalEvaluation {
   }
 
   async run(command: Command): Promise<GoalEvaluation | ApplicationError> {
-    const goalRepository = new GoalRepository(this.c)
-
-    const goalEvaluationRepository = new GoalEvaluationRepository(this.c)
-
-    const goal = await goalRepository.findById(command.goalId)
+    const goal = await this.c.goalRepository.findById(command.goalId)
 
     if (goal instanceof Error) {
       return new UnexpectedError("failed to find goal", { cause: goal })
@@ -71,7 +78,7 @@ export class CreateGoalEvaluation {
     // self/manager は同一 evaluatorId + kind の重複を禁止する。
     // DB 側にも UNIQUE 制約があるが、先にチェックして明示的なエラーを返す。
     if (command.kind === "self" || command.kind === "manager") {
-      const existing = await goalEvaluationRepository.findByGoalId(command.goalId)
+      const existing = await this.c.goalEvaluationRepository.findByGoalId(command.goalId)
 
       if (existing instanceof Error) {
         return new UnexpectedError("failed to find goal evaluations", { cause: existing })
@@ -98,7 +105,10 @@ export class CreateGoalEvaluation {
     // final 評価は goal の status='done' 更新と D1 batch でアトミックに行う。
     // 非 final 評価は単独 INSERT で十分。
     if (command.kind === "final") {
-      const result = await goalEvaluationRepository.createWithGoalCompletion(newEvaluation, goal)
+      const result = await this.c.goalEvaluationRepository.createWithGoalCompletion(
+        newEvaluation,
+        goal,
+      )
 
       if (result instanceof Error) {
         return new UnexpectedError("failed to create goal evaluation", { cause: result })
@@ -115,7 +125,7 @@ export class CreateGoalEvaluation {
       return result
     }
 
-    const evaluation = await goalEvaluationRepository.create(newEvaluation)
+    const evaluation = await this.c.goalEvaluationRepository.create(newEvaluation)
 
     if (evaluation instanceof Error) {
       return new UnexpectedError("failed to create goal evaluation", { cause: evaluation })
@@ -142,7 +152,7 @@ export class CreateGoalEvaluation {
       return { isSelf: false, isReport: false, isSameDepartment: false }
     }
 
-    return resolveCompanyEmployeeRelation(this.c, {
+    return this.c.resolveEmployeeRelation({
       viewerEmployeeId: evaluatorId,
       targetEmployeeId: goalEmployeeId,
     })

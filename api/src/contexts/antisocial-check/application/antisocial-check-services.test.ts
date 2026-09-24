@@ -3,13 +3,32 @@ import { describe, expect, test } from "bun:test"
 import { CreateAntisocialCheck } from "@/contexts/antisocial-check/application/create-antisocial-check"
 import { UpdateAntisocialCheck } from "@/contexts/antisocial-check/application/update-antisocial-check"
 import { AntisocialCheck } from "@/contexts/antisocial-check/domain/entities/antisocial-check.entity"
-import type { Context } from "@/env"
 import { ApplicationError, ForbiddenError } from "@/lib/errors"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import { makeTestSession } from "@tests/api/support/make-test-session"
 
-async function seedCheck(context: Context, requesterId: number): Promise<string> {
+/** 反社チェックRepositoryの型付きfake。SQLは模倣せず、保存したDomain modelを返す。 */
+function createRepository() {
+  const stored = new Map<string, AntisocialCheck>()
+
+  const repository = {
+    findById: async (id: string) => stored.get(id) ?? null,
+    create: async (antisocialCheck: AntisocialCheck) => {
+      stored.set(antisocialCheck.id, antisocialCheck)
+      return antisocialCheck
+    },
+    update: async (antisocialCheck: AntisocialCheck) => {
+      stored.set(antisocialCheck.id, antisocialCheck)
+      return antisocialCheck
+    },
+  }
+
+  return { context: { antisocialCheckRepository: repository }, stored }
+}
+
+type FakeContext = ReturnType<typeof createRepository>["context"]
+
+async function seedCheck(context: FakeContext, requesterId: number): Promise<string> {
   const created = await new CreateAntisocialCheck(context).run({
     requesterId: toWorkforceEmployeeId(requesterId),
     partnerName: "Example Trading Co.",
@@ -27,7 +46,7 @@ async function seedCheck(context: Context, requesterId: number): Promise<string>
 
 describe("CreateAntisocialCheck", () => {
   test("creates an antisocial check with status requested and null result", async () => {
-    const { context } = await createTestContext()
+    const { context, stored } = createRepository()
 
     const created = await new CreateAntisocialCheck(context).run({
       requesterId: toWorkforceEmployeeId(2),
@@ -46,6 +65,7 @@ describe("CreateAntisocialCheck", () => {
     expect(created.status).toBe("requested")
     expect(created.result).toBe(null)
     expect(created.partnerAddress).toBe(null)
+    expect(stored.get(created.id)).toBe(created)
   })
 })
 
@@ -55,7 +75,7 @@ describe("ListMyAntisocialChecks", () => {})
 
 describe("UpdateAntisocialCheck", () => {
   test("allows a manager to complete another request without changing its details", async () => {
-    const { context } = await createTestContext()
+    const { context } = createRepository()
 
     const checkId = await seedCheck(context, 5)
 
@@ -80,7 +100,7 @@ describe("UpdateAntisocialCheck", () => {
   })
 
   test("allows a non-manager requester to update details but ignores result", async () => {
-    const { context } = await createTestContext()
+    const { context } = createRepository()
 
     const checkId = await seedCheck(context, 5)
 
@@ -104,7 +124,7 @@ describe("UpdateAntisocialCheck", () => {
   })
 
   test("rejects result change from a non-manager requester with result_forbidden", async () => {
-    const { context } = await createTestContext()
+    const { context } = createRepository()
 
     const checkId = await seedCheck(context, 5)
 
@@ -121,7 +141,7 @@ describe("UpdateAntisocialCheck", () => {
   })
 
   test("rejects a manager deciding their own request", async () => {
-    const { context } = await createTestContext()
+    const { context } = createRepository()
 
     const checkId = await seedCheck(context, 5)
 
@@ -138,7 +158,7 @@ describe("UpdateAntisocialCheck", () => {
   })
 
   test("rejects a non requester with not_requester", async () => {
-    const { context } = await createTestContext()
+    const { context } = createRepository()
 
     const checkId = await seedCheck(context, 5)
 

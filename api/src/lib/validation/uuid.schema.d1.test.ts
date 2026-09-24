@@ -39,7 +39,7 @@ const probes: ReadonlyArray<string> = [
 let local: LocalD1
 
 beforeAll(async () => {
-  local = await startLocalD1(["uuid-check"])
+  local = await startLocalD1({ empty: ["uuid-check"] })
 })
 
 afterAll(async () => {

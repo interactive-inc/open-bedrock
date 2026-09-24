@@ -1,7 +1,7 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { OrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
-import { CareerOrganizationUnitAdapter } from "@/contexts/career/infrastructure/adapters/career-organization-unit.adapter"
+import type { CareerOrganizationUnitAdapter } from "@/contexts/career/infrastructure/adapters/career-organization-unit.adapter"
 import { isCareerRecordSourceFrozenError } from "@/contexts/career/infrastructure/repositories/lib/is-career-record-source-frozen-error"
 import {
   ConflictError,
@@ -11,8 +11,7 @@ import {
   UnprocessableError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
+import type { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
 
 export type Command = {
   session: CompanySessionValue
@@ -21,6 +20,11 @@ export type Command = {
   requiredSkills: string | null
   status: "open" | "closed"
 }
+
+type Context = Readonly<{
+  postingRepository: Pick<CareerPostingRepository, "create">
+  organizationUnits: Pick<CareerOrganizationUnitAdapter, "load">
+}>
 
 /**
  * 管理ロールが新しい社内公募を作成する。id は DB が採番する。
@@ -32,14 +36,12 @@ export class CreateCareerPosting {
   }
 
   async run(command: Command): Promise<CareerPosting | ApplicationError> {
-    const postingRepository = new CareerPostingRepository(this.c)
-
     if (command.session.hasPermission("career_posting:manage") === false) {
       return new ForbiddenError("cannot manage career postings", "forbidden")
     }
 
     if (command.organizationUnitId !== null) {
-      const units = await new CareerOrganizationUnitAdapter(this.c).load()
+      const units = await this.c.organizationUnits.load()
 
       if (units instanceof Error) {
         return new UnavailableError(
@@ -64,7 +66,7 @@ export class CreateCareerPosting {
       status: command.status,
     })
 
-    const created = await postingRepository.create(careerPosting)
+    const created = await this.c.postingRepository.create(careerPosting)
 
     if (created instanceof Error) {
       if (isCareerRecordSourceFrozenError(created)) {

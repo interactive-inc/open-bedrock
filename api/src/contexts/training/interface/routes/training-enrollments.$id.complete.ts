@@ -1,4 +1,5 @@
 import { CompleteTrainingEnrollment } from "@/contexts/training/application/complete-training-enrollment"
+import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
@@ -29,7 +30,9 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const completed = await new CompleteTrainingEnrollment(c).run({
+    const completed = await new CompleteTrainingEnrollment({
+      enrollmentRepository: new TrainingEnrollmentRepository(c),
+    }).run({
       enrollmentId: enrollmentId,
       viewerEmployeeId: session.employeeId,
       session: session,

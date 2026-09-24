@@ -108,7 +108,9 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const oneOnOne = await new UpdateOneOnOne(c).run({
+    const oneOnOne = await new UpdateOneOnOne({
+      oneOnOneRepository: new OneOnOneRepository(c),
+    }).run({
       oneOnOneId: validateUuidParam(c.req.param("id"), "one-on-one"),
       managerId: viewer.employeeId,
       topics: json.topics ?? null,

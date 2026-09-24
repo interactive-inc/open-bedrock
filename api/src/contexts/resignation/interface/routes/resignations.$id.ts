@@ -106,7 +106,9 @@ export const PUT = factory.createHandlers(
       )
     }
 
-    const resignation = await new UpdateResignation(c).run({
+    const resignation = await new UpdateResignation({
+      resignationRepository: new ResignationRepository(c),
+    }).run({
       resignationId: validateUuidParam(c.req.param("id"), "resignation"),
       employeeId: viewer.employeeId,
       resignationDate: json.resignation_date,

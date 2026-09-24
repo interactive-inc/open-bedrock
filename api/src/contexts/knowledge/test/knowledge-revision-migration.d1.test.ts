@@ -1,27 +1,46 @@
 import { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
-import { expect, test } from "bun:test"
+import { splitSqlStatements } from "@/lib/database/split-sql-statements"
+import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"
 import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
-import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
 import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
+
+const migrations = join(import.meta.dir, "../../../../migrations")
+
+let local: LocalD1
+
+// 独立したローカルD1へ0178より前のmigrationを適用するため、数秒かかる。
+setDefaultTimeout(60_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({ empty: ["revision-migration"] })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
+
+/** migrationファイルを、本番の適用と同じくファイル単位のbatchで適用する。 */
+async function applyMigrationFile(db: D1Database, name: string): Promise<void> {
+  const statements = splitSqlStatements(readFileSync(join(migrations, name), "utf8"))
+  if (statements.length === 0) return
+  await db.batch(statements.map((statement) => db.prepare(statement)))
+}
 
 test("migration preserves the existing text without inventing an editor or past revision time", async () => {
-  const migrations = join(import.meta.dir, "../../../../migrations")
+  const db = await local.database("revision-migration")
   const baseline = readdirSync(migrations)
     .filter((name) => name.endsWith(".sql") && name < "0178_")
     .sort()
-    .map((name) => readFileSync(join(migrations, name), "utf8"))
-    .join("\n")
-  const db = createD1TestDatabase(baseline)
+  for (const name of baseline) await applyMigrationFile(db, name)
   await seedCompanyEmployees(db, [{ id: 1, code: "E001", name: "Example Employee" }])
   await db
     .prepare(`INSERT INTO knowledge_articles
     (id,title,category,tags,body_md,author_id,created_at)
     VALUES (1,'Procedure','Operations',NULL,'Known current text','1','2020-01-01T00:00:00Z')`)
     .run()
-  await db.exec(
-    readFileSync(join(migrations, "0178_record_knowledge_article_revisions.sql"), "utf8"),
-  )
+  await applyMigrationFile(db, "0178_record_knowledge_article_revisions.sql")
 
   const revision = await db
     .prepare("SELECT * FROM knowledge_article_revisions WHERE article_id=1")

@@ -1,3 +1,5 @@
+import { RoomReservationRepository } from "@/contexts/room/infrastructure/repositories/room-reservation.repository"
+import { RoomRepository } from "@/contexts/room/infrastructure/repositories/room.repository"
 import { CreateRoomReservation } from "@/contexts/room/application/create-room-reservation"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
@@ -34,7 +36,11 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const reservation = await new CreateRoomReservation(c).run({
+    const reservation = await new CreateRoomReservation({
+      roomRepository: new RoomRepository(c),
+      reservationRepository: new RoomReservationRepository(c),
+      now: c.env.NOW ?? new Date().toISOString(),
+    }).run({
       roomId: json.room_id,
       reserverId: viewer.employeeId,
       startAt: json.start_at,

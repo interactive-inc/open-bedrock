@@ -2,8 +2,11 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-assignment.entity"
-import type { Context } from "@/env"
-import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
+import type { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
+
+type Context = Readonly<{
+  assignmentRepository: Pick<ShiftAssignmentRepository, "findById" | "markPublished">
+}>
 
 export type Input = {
   session: CompanySessionValue
@@ -24,9 +27,7 @@ export class PublishShiftAssignment {
       return new ForbiddenError("cannot manage shift", "forbidden")
     }
 
-    const assignmentRepository = new ShiftAssignmentRepository(this.c)
-
-    const assignment = await assignmentRepository.findById(input.assignmentId)
+    const assignment = await this.c.assignmentRepository.findById(input.assignmentId)
 
     if (assignment instanceof Error) {
       return new UnexpectedError("failed to find shift assignment", { cause: assignment })
@@ -40,7 +41,7 @@ export class PublishShiftAssignment {
       return new ConflictError("shift assignment is already published", "already_published")
     }
 
-    const published = await assignmentRepository.markPublished(
+    const published = await this.c.assignmentRepository.markPublished(
       input.assignmentId,
       input.publishedAt,
     )
@@ -51,7 +52,7 @@ export class PublishShiftAssignment {
 
     // 0 行更新（null）は事前チェック後に並行 publish 等で状態が変わったケース。再取得して理由を判別する。
     if (published === null) {
-      const latest = await assignmentRepository.findById(input.assignmentId)
+      const latest = await this.c.assignmentRepository.findById(input.assignmentId)
 
       if (latest instanceof Error) {
         return new UnexpectedError("failed to find shift assignment", { cause: latest })

@@ -100,7 +100,9 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const response = await new UpdateSurveyResponse(c).run({
+    const response = await new UpdateSurveyResponse({
+      surveyRepository: new SurveyRepository(c),
+    }).run({
       responseId,
       respondentId: viewer.employeeId,
       answersJson: json.answers_json,

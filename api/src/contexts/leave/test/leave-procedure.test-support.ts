@@ -1,10 +1,10 @@
 import { resolveCompanyGovernanceTask } from "@/contexts/company/interface/operations/resolve-company-governance-task"
-import { createTestContextForDatabase } from "@tests/api/support/create-test-context"
+import { createTestContextForDatabase } from "@tests/api/support/create-context-for-database"
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
 import { LeaveProcedureRepository } from "@/contexts/leave/infrastructure/repositories/leave-procedure.repository"
-import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"
+import { publishLeaveProcedureDefinition } from "@/contexts/leave/test/leave-procedure-local-d1.test-support"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { ProposalEntity } from "@system/domain/entities/proposal.entity"
@@ -50,8 +50,7 @@ export async function createLeaveProcedureTestContext() {
     createdAt: c.at,
   })
   if (definition instanceof Error) throw definition
-  const published = await new SystemD1ProcedureRepository(c.context).publish(definition, 0)
-  if (published !== true) throw published
+  await publishLeaveProcedureDefinition(c.context, definition)
   const leave = LeaveRequest.create({
     employeeId: requester.employeeId,
     leaveType: "annual",

@@ -1,4 +1,7 @@
 import { findCompanyEmployeeIdByCode } from "@/contexts/company/interface/operations/find-company-employee-id-by-code"
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
+import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
+import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
 import { readCompanyEmployeeProfiles } from "@/contexts/company/interface/operations/read-company-employee-profiles"
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
@@ -45,7 +48,11 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const created = await new EnrollTraining(c).run({
+    const created = await new EnrollTraining({
+      courseRepository: new TrainingCourseRepository(c),
+      enrollmentRepository: new TrainingEnrollmentRepository(c),
+      employeeDirectory: openCompanyEmployeeDirectory(c),
+    }).run({
       viewerEmployeeId: session.employeeId,
       session: session,
       courseCode: body.course_code,

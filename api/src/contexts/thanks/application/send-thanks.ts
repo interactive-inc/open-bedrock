@@ -1,4 +1,4 @@
-import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
+import type { CompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { Thanks } from "@/contexts/thanks/domain/entities/thanks.entity"
 import {
@@ -12,9 +12,8 @@ import { isThanksRecordSourceFrozenError } from "@/contexts/thanks/infrastructur
 import type { ApplicationError } from "@/lib/errors"
 import { periodOf } from "@/contexts/thanks/domain/definitions/thanks-period.definition"
 import { toNonNegativePoints } from "@/contexts/thanks/domain/policies/non-negative-points.policy"
-import type { Context as HonoContext } from "@/env"
-import { ThanksPointBudgetRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-point-budget.repository"
-import { ThanksRepository } from "@/contexts/thanks/infrastructure/repositories/thanks.repository"
+import type { ThanksPointBudgetRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-point-budget.repository"
+import type { ThanksRepository } from "@/contexts/thanks/infrastructure/repositories/thanks.repository"
 
 export type Command = {
   senderEmployeeId: EmployeeId
@@ -25,7 +24,9 @@ export type Command = {
 }
 
 type Context = Readonly<{
-  context: HonoContext
+  employeeDirectory: Pick<CompanyEmployeeDirectory, "findById" | "findByCode">
+  thanksRepository: Pick<ThanksRepository, "consumeBudgetAndCreate">
+  budgetRepository: Pick<ThanksPointBudgetRepository, "findOrCreate">
   publishEmployeeNotification?: (notification: {
     recipientEmployeeId: EmployeeId
     kind: "thanks"
@@ -47,9 +48,7 @@ export class SendThanks {
   }
 
   async run(command: Command): Promise<Thanks | ApplicationError> {
-    const employeeRepository = openCompanyEmployeeDirectory(this.c.context)
-
-    const sender = await employeeRepository.findById(command.senderEmployeeId)
+    const sender = await this.c.employeeDirectory.findById(command.senderEmployeeId)
 
     if (sender instanceof Error) {
       return new UnexpectedError("failed to find sender", { cause: sender })
@@ -67,7 +66,7 @@ export class SendThanks {
       return new ForbiddenError("sender is no longer active", "sender_inactive")
     }
 
-    const recipient = await employeeRepository.findByCode(command.recipientEmployeeCode)
+    const recipient = await this.c.employeeDirectory.findByCode(command.recipientEmployeeCode)
 
     if (recipient instanceof Error) {
       return new UnexpectedError("failed to find recipient", { cause: recipient })
@@ -128,7 +127,7 @@ export class SendThanks {
 
     // ポイント消費と感謝 INSERT を D1 batch でアトミックに実行する。
     // batch 内のいずれかが失敗すれば全体がロールバックされるため補償処理は不要。
-    const created = await new ThanksRepository(this.c.context).consumeBudgetAndCreate({
+    const created = await this.c.thanksRepository.consumeBudgetAndCreate({
       thanksRecord: thanks,
       period,
     })
@@ -170,9 +169,7 @@ export class SendThanks {
     period: string
     createdAt: string
   }): Promise<null | ApplicationError> {
-    const budgetRepository = new ThanksPointBudgetRepository(this.c.context)
-
-    const budget = await budgetRepository.findOrCreate({
+    const budget = await this.c.budgetRepository.findOrCreate({
       employeeId: props.senderEmployeeId,
       period: props.period,
       createdAt: props.createdAt,

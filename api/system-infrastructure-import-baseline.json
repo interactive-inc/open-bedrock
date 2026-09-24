@@ -2353,7 +2353,7 @@
     "src/contexts/leave/test/leave-procedure-http.integration.test.ts": [
       "src/contexts/system/infrastructure/adapters/workflow/system-d1-procedure-delegation.adapter"
     ],
-    "src/contexts/leave/test/leave-procedure.test-support.ts": [
+    "src/contexts/leave/test/leave-procedure-local-d1.test-support.ts": [
       "src/contexts/system/infrastructure/repositories/workflow/system-d1-procedure.repository"
     ],
     "src/contexts/leave/test/leave-record-preservation.integration.test.ts": [

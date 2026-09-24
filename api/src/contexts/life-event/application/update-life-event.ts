@@ -2,10 +2,13 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import type { LifeEvent } from "@/contexts/life-event/domain/entities/life-event.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { LifeEventRepository } from "@/contexts/life-event/infrastructure/repositories/life-event.repository"
+import type { LifeEventRepository } from "@/contexts/life-event/infrastructure/repositories/life-event.repository"
 import { isLifeEventRecordSourceFrozenError } from "@/contexts/life-event/infrastructure/repositories/lib/is-life-event-record-source-frozen-error"
 import type { LifeEventType } from "@/contexts/life-event/domain/definitions/life-event-type.definition"
+
+type Context = Readonly<{
+  lifeEventRepository: Pick<LifeEventRepository, "findById" | "update">
+}>
 
 export type Command = {
   lifeEventId: string
@@ -24,9 +27,7 @@ export class UpdateLifeEvent {
   }
 
   async run(command: Command): Promise<LifeEvent | ApplicationError> {
-    const lifeEventRepository = new LifeEventRepository(this.c)
-
-    const current = await lifeEventRepository.findById(command.lifeEventId)
+    const current = await this.c.lifeEventRepository.findById(command.lifeEventId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find life event", { cause: current })
@@ -50,7 +51,7 @@ export class UpdateLifeEvent {
       detail: command.detail,
     })
 
-    const saved = await lifeEventRepository.update(updated)
+    const saved = await this.c.lifeEventRepository.update(updated)
 
     if (saved instanceof Error) {
       if (isLifeEventRecordSourceFrozenError(saved))

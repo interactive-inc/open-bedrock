@@ -8,7 +8,7 @@ import { requestWithContext } from "@tests/api/support/request-with-context"
 import { seedD1 } from "@tests/api/support/seed-d1"
 import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
-import { type LocalD1, applyMigrations, startLocalD1 } from "@tests/d1/support/start-local-d1"
+import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
 
 const jwtSecret = "business-trip-company-authority-test-secret"
 
@@ -26,7 +26,9 @@ let local: LocalD1
 setDefaultTimeout(60_000)
 
 beforeAll(async () => {
-  local = await startLocalD1(actions.flatMap((action) => cases.map((kind) => `${action}-${kind}`)))
+  local = await startLocalD1({
+    migrated: actions.flatMap((action) => cases.map((kind) => `${action}-${kind}`)),
+  })
 })
 
 afterAll(async () => {
@@ -37,7 +39,6 @@ afterAll(async () => {
 async function createTestDb(name: string, cycle = false): Promise<D1Database> {
   const db = await local.database(name)
 
-  await applyMigrations(db)
   await initializeStandardCompanyTestState(db, {
     memberships: cycle
       ? [{ departmentCode: "D001", employeeCode: "E001", managerEmployeeCode: "E002" }]

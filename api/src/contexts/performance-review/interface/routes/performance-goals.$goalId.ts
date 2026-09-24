@@ -1,3 +1,4 @@
+import { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal-evaluation.repository"
 import { resolveCompanyEmployeeRelation } from "@/contexts/company/interface/operations/resolve-company-employee-relation"
 import { canReadGoalOf } from "@/contexts/performance-review/domain/policies/goal-read-access.policy"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
@@ -114,7 +115,11 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const goal = await new UpdateGoal(c).run({
+    const goal = await new UpdateGoal({
+      goalRepository: new GoalRepository(c),
+      goalEvaluationRepository: new GoalEvaluationRepository(c),
+      now: c.env.NOW ?? new Date().toISOString(),
+    }).run({
       goalId: toGoalId(c.req.param("goalId") ?? ""),
       employeeId: viewer.employeeId,
       period: json.period,
@@ -140,7 +145,11 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const result = await new DeleteGoal(c).run({
+  const result = await new DeleteGoal({
+    goalRepository: new GoalRepository(c),
+    goalEvaluationRepository: new GoalEvaluationRepository(c),
+    now: c.env.NOW ?? new Date().toISOString(),
+  }).run({
     goalId: toGoalId(c.req.param("goalId") ?? ""),
     employeeId: viewer.employeeId,
   })

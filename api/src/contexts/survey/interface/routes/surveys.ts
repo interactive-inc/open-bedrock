@@ -1,4 +1,5 @@
 import { InternalError, UnauthorizedError } from "@/lib/http/errors"
+import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { factory } from "@/api/http/factory"
@@ -39,7 +40,7 @@ export const POST = factory.createHandlers(
 
     const body = c.req.valid("json")
 
-    const survey = await new CreateSurvey(c).run({
+    const survey = await new CreateSurvey({ surveyRepository: new SurveyRepository(c) }).run({
       session: session,
       title: body.title,
       status: body.status,

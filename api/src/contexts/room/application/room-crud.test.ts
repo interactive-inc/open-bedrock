@@ -8,7 +8,6 @@ import { UpdateRoom } from "@/contexts/room/application/update-room"
 import { DeleteRoom } from "@/contexts/room/application/delete-room"
 import { CreateRoomReservation } from "@/contexts/room/application/create-room-reservation"
 import { UpdateRoomReservation } from "@/contexts/room/application/update-room-reservation"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import { makeTestSession } from "@tests/api/support/make-test-session"
 import {
   ConflictError,
@@ -18,10 +17,67 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
-import type { Context } from "@/env"
 
-async function seedRoom(context: Context): Promise<Room> {
-  const result = await new RegisterRoom(context).run({
+const now = "2026-01-01T00:00:00.000Z"
+
+/**
+ * 会議室と予約のRepositoryを型付きfakeにする。採番、batch削除、重複判定の条件付きSQLは
+ * room.repository.d1.test.tsとroom-reservation.repository.test.tsが検証する。
+ */
+function createRepositories() {
+  const rooms = new Map<number, Room>()
+  const reservations = new Map<string, RoomReservation>()
+
+  const overlaps = (candidate: RoomReservation) =>
+    [...reservations.values()].some(
+      (row) =>
+        row.id !== candidate.id &&
+        row.roomId === candidate.roomId &&
+        row.startAt < candidate.endAt &&
+        candidate.startAt < row.endAt,
+    )
+
+  const roomRepository = {
+    findById: async (id: number) => rooms.get(id) ?? null,
+    create: async (room: { name: string; capacity: number; location: string | null }) => {
+      const created = new Room({ id: rooms.size + 1, ...room })
+      rooms.set(created.id, created)
+      return created
+    },
+    update: async (room: Room) => {
+      if (!rooms.has(room.id)) return null
+      rooms.set(room.id, room)
+      return room
+    },
+    deleteWithReservations: async (room: Room): Promise<true | null> => {
+      for (const reservation of reservations.values()) {
+        if (reservation.roomId === room.id) reservations.delete(reservation.id)
+      }
+      return rooms.delete(room.id) ? true : null
+    },
+  }
+
+  const reservationRepository = {
+    findById: async (id: string) => reservations.get(id) ?? null,
+    createIfNoOverlap: async (reservation: RoomReservation) => {
+      if (overlaps(reservation)) return null
+      reservations.set(reservation.id, reservation)
+      return reservation
+    },
+    updateIfNoOverlap: async (reservation: RoomReservation) => {
+      if (!reservations.has(reservation.id) || overlaps(reservation)) return null
+      reservations.set(reservation.id, reservation)
+      return reservation
+    },
+  }
+
+  return { rooms, reservations, roomRepository, reservationRepository }
+}
+
+type Repositories = ReturnType<typeof createRepositories>
+
+async function seedRoom(repositories: Repositories): Promise<Room> {
+  const result = await new RegisterRoom(repositories).run({
     session: makeTestSession("root"),
     room: { name: "Room A", capacity: 10, location: "3F" },
   })
@@ -34,11 +90,11 @@ async function seedRoom(context: Context): Promise<Room> {
 }
 
 async function seedReservation(
-  context: Context,
+  repositories: Repositories,
   roomId: number,
   reserverId: EmployeeId,
 ): Promise<RoomReservation> {
-  const result = await new CreateRoomReservation(context).run({
+  const result = await new CreateRoomReservation({ ...repositories, now }).run({
     roomId: roomId,
     reserverId: reserverId,
     startAt: "2026-06-01T10:00:00.000Z",
@@ -55,9 +111,9 @@ async function seedReservation(
 
 describe("RegisterRoom", () => {
   test("registers a room as admin", async () => {
-    const { context } = await createTestContext()
+    const repositories = createRepositories()
 
-    const result = await new RegisterRoom(context).run({
+    const result = await new RegisterRoom(repositories).run({
       session: makeTestSession("root"),
       room: { name: "Room A", capacity: 10, location: "3F" },
     })
@@ -73,25 +129,24 @@ describe("RegisterRoom", () => {
   })
 
   test("rejects member with forbidden", async () => {
-    const { context } = await createTestContext()
+    const repositories = createRepositories()
 
-    const result = await new RegisterRoom(context).run({
+    const result = await new RegisterRoom(repositories).run({
       session: makeTestSession("member"),
       room: { name: "Room A", capacity: 10, location: null },
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
+    expect(repositories.rooms.size).toBe(0)
   })
 })
 
-describe("GetRoom", () => {})
-
 describe("UpdateRoom", () => {
   test("updates the room as admin", async () => {
-    const { context } = await createTestContext()
-    const room = await seedRoom(context)
+    const repositories = createRepositories()
+    const room = await seedRoom(repositories)
 
-    const result = await new UpdateRoom(context).run({
+    const result = await new UpdateRoom(repositories).run({
       session: makeTestSession("root"),
       roomId: room.id,
       details: { name: "Updated Room", capacity: 20, location: "5F" },
@@ -108,22 +163,23 @@ describe("UpdateRoom", () => {
   })
 
   test("rejects member with forbidden", async () => {
-    const { context } = await createTestContext()
-    const room = await seedRoom(context)
+    const repositories = createRepositories()
+    const room = await seedRoom(repositories)
 
-    const result = await new UpdateRoom(context).run({
+    const result = await new UpdateRoom(repositories).run({
       session: makeTestSession("member"),
       roomId: room.id,
       details: { name: "Hijacked", capacity: 1, location: null },
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
+    expect(repositories.rooms.get(room.id)?.name).toBe("Room A")
   })
 
   test("rejects unknown id with room_not_found", async () => {
-    const { context } = await createTestContext()
+    const repositories = createRepositories()
 
-    const result = await new UpdateRoom(context).run({
+    const result = await new UpdateRoom(repositories).run({
       session: makeTestSession("root"),
       roomId: 9999,
       details: { name: "Missing", capacity: 1, location: null },
@@ -135,33 +191,35 @@ describe("UpdateRoom", () => {
 
 describe("DeleteRoom", () => {
   test("deletes the room as admin", async () => {
-    const { context } = await createTestContext()
-    const room = await seedRoom(context)
+    const repositories = createRepositories()
+    const room = await seedRoom(repositories)
 
-    const result = await new DeleteRoom(context).run({
+    const result = await new DeleteRoom(repositories).run({
       session: makeTestSession("root"),
       roomId: room.id,
     })
 
     expect(result).toEqual({ reason: "deleted" })
+    expect(repositories.rooms.has(room.id)).toBe(false)
   })
 
   test("rejects member with forbidden", async () => {
-    const { context } = await createTestContext()
-    const room = await seedRoom(context)
+    const repositories = createRepositories()
+    const room = await seedRoom(repositories)
 
-    const result = await new DeleteRoom(context).run({
+    const result = await new DeleteRoom(repositories).run({
       session: makeTestSession("member"),
       roomId: room.id,
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
+    expect(repositories.rooms.has(room.id)).toBe(true)
   })
 
   test("rejects unknown id with room_not_found", async () => {
-    const { context } = await createTestContext()
+    const repositories = createRepositories()
 
-    const result = await new DeleteRoom(context).run({
+    const result = await new DeleteRoom(repositories).run({
       session: makeTestSession("root"),
       roomId: 9999,
     })
@@ -170,14 +228,12 @@ describe("DeleteRoom", () => {
   })
 })
 
-describe("ListRooms", () => {})
-
 describe("CreateRoomReservation", () => {
   test("creates a reservation", async () => {
-    const { context } = await createTestContext()
-    const room = await seedRoom(context)
+    const repositories = createRepositories()
+    const room = await seedRoom(repositories)
 
-    const result = await new CreateRoomReservation(context).run({
+    const result = await new CreateRoomReservation({ ...repositories, now }).run({
       roomId: room.id,
       reserverId: toWorkforceEmployeeId(1),
       startAt: "2026-06-01T10:00:00.000Z",
@@ -195,10 +251,10 @@ describe("CreateRoomReservation", () => {
   })
 
   test("rejects invalid time range", async () => {
-    const { context } = await createTestContext()
-    const room = await seedRoom(context)
+    const repositories = createRepositories()
+    const room = await seedRoom(repositories)
 
-    const result = await new CreateRoomReservation(context).run({
+    const result = await new CreateRoomReservation({ ...repositories, now }).run({
       roomId: room.id,
       reserverId: toWorkforceEmployeeId(1),
       startAt: "2026-06-01T12:00:00.000Z",
@@ -210,10 +266,10 @@ describe("CreateRoomReservation", () => {
   })
 
   test("rejects start in past", async () => {
-    const { context } = await createTestContext()
-    const room = await seedRoom(context)
+    const repositories = createRepositories()
+    const room = await seedRoom(repositories)
 
-    const result = await new CreateRoomReservation(context).run({
+    const result = await new CreateRoomReservation({ ...repositories, now }).run({
       roomId: room.id,
       reserverId: toWorkforceEmployeeId(1),
       startAt: "2025-12-31T10:00:00.000Z",
@@ -225,9 +281,9 @@ describe("CreateRoomReservation", () => {
   })
 
   test("rejects unknown room with room_not_found", async () => {
-    const { context } = await createTestContext()
+    const repositories = createRepositories()
 
-    const result = await new CreateRoomReservation(context).run({
+    const result = await new CreateRoomReservation({ ...repositories, now }).run({
       roomId: 9999,
       reserverId: toWorkforceEmployeeId(1),
       startAt: "2026-06-01T10:00:00.000Z",
@@ -239,12 +295,12 @@ describe("CreateRoomReservation", () => {
   })
 
   test("rejects overlapping reservation with room_already_reserved", async () => {
-    const { context } = await createTestContext()
-    const room = await seedRoom(context)
+    const repositories = createRepositories()
+    const room = await seedRoom(repositories)
 
-    await seedReservation(context, room.id, toWorkforceEmployeeId(1))
+    await seedReservation(repositories, room.id, toWorkforceEmployeeId(1))
 
-    const result = await new CreateRoomReservation(context).run({
+    const result = await new CreateRoomReservation({ ...repositories, now }).run({
       roomId: room.id,
       reserverId: toWorkforceEmployeeId(2),
       startAt: "2026-06-01T10:30:00.000Z",
@@ -256,15 +312,13 @@ describe("CreateRoomReservation", () => {
   })
 })
 
-describe("GetRoomReservation", () => {})
-
 describe("UpdateRoomReservation", () => {
   test("updates the reservation for the reserver", async () => {
-    const { context } = await createTestContext()
-    const room = await seedRoom(context)
-    const reservation = await seedReservation(context, room.id, toWorkforceEmployeeId(1))
+    const repositories = createRepositories()
+    const room = await seedRoom(repositories)
+    const reservation = await seedReservation(repositories, room.id, toWorkforceEmployeeId(1))
 
-    const result = await new UpdateRoomReservation(context).run({
+    const result = await new UpdateRoomReservation({ ...repositories, now }).run({
       reservationId: reservation.id,
       reserverId: toWorkforceEmployeeId(1),
       startAt: "2026-06-01T14:00:00.000Z",
@@ -283,11 +337,11 @@ describe("UpdateRoomReservation", () => {
   })
 
   test("rejects non-reserver with not_reserver", async () => {
-    const { context } = await createTestContext()
-    const room = await seedRoom(context)
-    const reservation = await seedReservation(context, room.id, toWorkforceEmployeeId(1))
+    const repositories = createRepositories()
+    const room = await seedRoom(repositories)
+    const reservation = await seedReservation(repositories, room.id, toWorkforceEmployeeId(1))
 
-    const result = await new UpdateRoomReservation(context).run({
+    const result = await new UpdateRoomReservation({ ...repositories, now }).run({
       reservationId: reservation.id,
       reserverId: toWorkforceEmployeeId(999),
       startAt: "2026-06-01T14:00:00.000Z",
@@ -299,9 +353,9 @@ describe("UpdateRoomReservation", () => {
   })
 
   test("rejects invalid time range", async () => {
-    const { context } = await createTestContext()
+    const repositories = createRepositories()
 
-    const result = await new UpdateRoomReservation(context).run({
+    const result = await new UpdateRoomReservation({ ...repositories, now }).run({
       reservationId: "some-id",
       reserverId: toWorkforceEmployeeId(1),
       startAt: "2026-06-01T15:00:00.000Z",
@@ -312,7 +366,3 @@ describe("UpdateRoomReservation", () => {
     expectApplicationError(result, ValidationError, "invalid_time_range")
   })
 })
-
-describe("CancelRoomReservation", () => {})
-
-describe("ListMyRoomReservations", () => {})

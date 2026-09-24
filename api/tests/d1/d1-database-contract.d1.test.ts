@@ -42,15 +42,17 @@ async function failureOf(operation: Promise<unknown>): Promise<string> {
 }
 
 beforeAll(async () => {
-  local = await startLocalD1([
-    "batch-meta",
-    "batch-rollback",
-    "constraints",
-    "bind-types",
-    "number-into-text",
-    "returning",
-    "conditional-update",
-  ])
+  local = await startLocalD1({
+    empty: [
+      "batch-meta",
+      "batch-rollback",
+      "constraints",
+      "bind-types",
+      "number-into-text",
+      "returning",
+      "conditional-update",
+    ],
+  })
 })
 
 afterAll(async () => {

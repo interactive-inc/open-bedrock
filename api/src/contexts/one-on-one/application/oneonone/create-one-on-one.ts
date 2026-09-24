@@ -1,12 +1,16 @@
-import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
+import type { CompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"
-import type { Context } from "@/env"
-import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
+import type { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
 import { isOneOnOneRecordSourceFrozenError } from "@/contexts/one-on-one/infrastructure/repositories/lib/is-one-on-one-record-source-frozen-error"
 import { UniqueConstraintError } from "@/lib/d1/errors"
 import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+
+type Context = Readonly<{
+  employeeDirectory: Pick<CompanyEmployeeDirectory, "findByCode">
+  oneOnOneRepository: Pick<OneOnOneRepository, "save">
+}>
 
 export type Command = {
   memberCode: string
@@ -26,9 +30,7 @@ export class CreateOneOnOne {
   }
 
   async run(command: Command): Promise<OneOnOne | ApplicationError> {
-    const oneOnOneRepository = new OneOnOneRepository(this.c)
-
-    const employee = await openCompanyEmployeeDirectory(this.c).findByCode(command.memberCode)
+    const employee = await this.c.employeeDirectory.findByCode(command.memberCode)
     const memberId = employee instanceof Error ? employee : (employee?.id ?? null)
 
     if (memberId instanceof Error) {
@@ -52,7 +54,7 @@ export class CreateOneOnOne {
       return new ValidationError("member and manager must be different", "self_reference")
     }
 
-    const saved = await oneOnOneRepository.save(oneOnOne)
+    const saved = await this.c.oneOnOneRepository.save(oneOnOne)
 
     if (saved instanceof UniqueConstraintError) {
       return new ConflictError("one-on-one already exists", "duplicate")

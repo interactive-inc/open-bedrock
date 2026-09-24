@@ -1,14 +1,17 @@
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type {
+  EmployeeId,
+  OrganizationUnitId,
+} from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { describe, expect, test } from "bun:test"
 import { ApplyToCareerPosting } from "@/contexts/career/application/apply-to-career-posting"
 import { CreateCareerPosting } from "@/contexts/career/application/create-career-posting"
 import { DeleteCareerPosting } from "@/contexts/career/application/delete-career-posting"
 import { UpdateCareerPosting } from "@/contexts/career/application/update-career-posting"
 import { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
-import { CareerApplicationRepository } from "@/contexts/career/infrastructure/repositories/career-application.repository"
-import type { Context } from "@/env"
+import { CareerApplication } from "@/contexts/career/domain/entities/career-application.entity"
 import {
   ApplicationError,
   ConflictError,
@@ -17,10 +20,72 @@ import {
   UnprocessableError,
 } from "@/lib/errors"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import { makeTestSession } from "@tests/api/support/make-test-session"
 
-async function seedPosting(context: Context): Promise<number> {
+/**
+ * 公募・応募Repositoryと募集部署Adapterの型付きfake。SQLは模倣せず、保存したDomain modelを返す。
+ * 募集部署として選べる組織単位は標準の会社組織に合わせてD003だけにする。
+ * 採番、条件付き削除、会社組織からの解決はlocal D1の career-posting-persistence.d1.test.ts で検証する。
+ */
+function createContext() {
+  const postings = new Map<number, CareerPosting>()
+  const applications: CareerApplication[] = []
+  const selectable = new Set<OrganizationUnitId>([toWorkforceOrganizationUnitId("D003")])
+
+  const postingRepository = {
+    findById: async (id: number) => postings.get(id) ?? null,
+    create: async (careerPosting: CareerPosting) => {
+      const saved = new CareerPosting({
+        id: postings.size + 1,
+        title: careerPosting.title,
+        organizationUnitId: careerPosting.organizationUnitId,
+        legacyDeptName: careerPosting.legacyDeptName,
+        requiredSkills: careerPosting.requiredSkills,
+        status: careerPosting.status,
+      })
+      postings.set(postings.size + 1, saved)
+      return saved
+    },
+    update: async (careerPosting: CareerPosting) => {
+      if (careerPosting.id === null || !postings.has(careerPosting.id)) return null
+      postings.set(careerPosting.id, careerPosting)
+      return careerPosting
+    },
+    deleteIfNoAppliedApplications: async (posting: CareerPosting) => {
+      if (
+        applications.some(
+          (application) => application.postingId === posting.id && application.status === "applied",
+        )
+      )
+        return null
+      if (posting.id !== null) postings.delete(posting.id)
+      return true as const
+    },
+  }
+
+  const applicationRepository = {
+    findByPostingAndApplicant: async (postingId: number, applicantId: EmployeeId) =>
+      applications.find(
+        (application) =>
+          application.postingId === postingId && application.applicantId === applicantId,
+      ) ?? null,
+    create: async (careerApplication: CareerApplication) => {
+      applications.push(careerApplication)
+      return careerApplication
+    },
+  }
+
+  const organizationUnits = {
+    load: async () => ({
+      isSelectable: (organizationUnitId: OrganizationUnitId) => selectable.has(organizationUnitId),
+      nameOf: () => null,
+    }),
+  }
+
+  return { postingRepository, applicationRepository, organizationUnits, postings }
+}
+
+async function seedPosting(context: ReturnType<typeof createContext>): Promise<number> {
   const created = await new CreateCareerPosting(context).run({
     session: makeTestSession("root"),
     title: "Platform Engineer",
@@ -38,7 +103,7 @@ async function seedPosting(context: Context): Promise<number> {
 
 describe("CreateCareerPosting", () => {
   test("admin creates a posting and the DB assigns an id", async () => {
-    const { context } = await createTestContext({ withCompanyOrganization: true })
+    const context = createContext()
 
     const created = await new CreateCareerPosting(context).run({
       session: makeTestSession("hr"),
@@ -59,7 +124,7 @@ describe("CreateCareerPosting", () => {
   })
 
   test("a non-privileged role is forbidden", async () => {
-    const { context } = await createTestContext({ withCompanyOrganization: true })
+    const context = createContext()
 
     const created = await new CreateCareerPosting(context).run({
       session: makeTestSession("member"),
@@ -75,7 +140,7 @@ describe("CreateCareerPosting", () => {
   })
 
   test("stores the selected organization unit", async () => {
-    const { context } = await createTestContext({ withCompanyOrganization: true })
+    const context = createContext()
 
     const created = await new CreateCareerPosting(context).run({
       session: makeTestSession("root"),
@@ -94,7 +159,7 @@ describe("CreateCareerPosting", () => {
   })
 
   test("rejects an organization unit that does not exist", async () => {
-    const { context } = await createTestContext({ withCompanyOrganization: true })
+    const context = createContext()
 
     const created = await new CreateCareerPosting(context).run({
       session: makeTestSession("root"),
@@ -108,7 +173,7 @@ describe("CreateCareerPosting", () => {
   })
 
   test("rejects the company itself as a posting department", async () => {
-    const { context } = await createTestContext({ withCompanyOrganization: true })
+    const context = createContext()
 
     const created = await new CreateCareerPosting(context).run({
       session: makeTestSession("root"),
@@ -126,7 +191,7 @@ describe("GetCareerPosting", () => {})
 
 describe("UpdateCareerPosting", () => {
   test("admin updates a posting's content and status", async () => {
-    const { context } = await createTestContext({ withCompanyOrganization: true })
+    const context = createContext()
 
     const postingId = await seedPosting(context)
 
@@ -150,7 +215,7 @@ describe("UpdateCareerPosting", () => {
   })
 
   test("rejects moving a posting to an unknown organization unit", async () => {
-    const { context } = await createTestContext({ withCompanyOrganization: true })
+    const context = createContext()
 
     const postingId = await seedPosting(context)
 
@@ -167,7 +232,7 @@ describe("UpdateCareerPosting", () => {
   })
 
   test("returns posting_not_found for a missing id", async () => {
-    const { context } = await createTestContext({ withCompanyOrganization: true })
+    const context = createContext()
 
     const updated = await new UpdateCareerPosting(context).run({
       session: makeTestSession("root"),
@@ -184,7 +249,7 @@ describe("UpdateCareerPosting", () => {
 
 describe("DeleteCareerPosting", () => {
   test("a non-privileged role is forbidden", async () => {
-    const { context } = await createTestContext({ withCompanyOrganization: true })
+    const context = createContext()
 
     const postingId = await seedPosting(context)
 
@@ -197,7 +262,7 @@ describe("DeleteCareerPosting", () => {
   })
 
   test("returns has_applied_applications when the posting has applied applications", async () => {
-    const { context } = await createTestContext({ withCompanyOrganization: true })
+    const context = createContext()
 
     const postingId = await seedPosting(context)
 
@@ -220,20 +285,11 @@ describe("DeleteCareerPosting", () => {
     expectApplicationError(result, ConflictError, "has_applied_applications")
   })
 
-  test("deletes rejected applications atomically when deleting a posting", async () => {
-    const { context, db } = await createTestContext({ withCompanyOrganization: true })
+  test("deletes the posting when it has no applied applications", async () => {
+    const context = createContext()
 
     const postingId = await seedPosting(context)
 
-    // Seed a rejected application directly (no service sets status=rejected on career_applications)
-    await db
-      .prepare(
-        "INSERT INTO career_applications (posting_id, applicant_id, message, status) VALUES (?1, ?2, NULL, 'rejected')",
-      )
-      .bind(postingId, 10)
-      .run()
-
-    // Now delete the posting — should succeed (no applied applications)
     const result = await new DeleteCareerPosting(context).run({
       session: makeTestSession("root"),
       postingId,
@@ -244,11 +300,6 @@ describe("DeleteCareerPosting", () => {
     }
 
     expect(result.reason).toBe("deleted")
-
-    // Verify the rejected application was also deleted (no orphan records)
-    const applicationRepository = new CareerApplicationRepository(context)
-    const count = await applicationRepository.countByPostingIdAndStatus(postingId, "rejected")
-
-    expect(count).toBe(0)
+    expect(context.postings.has(postingId)).toBe(false)
   })
 })

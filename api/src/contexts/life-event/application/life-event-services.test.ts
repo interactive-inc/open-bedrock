@@ -3,14 +3,34 @@ import { describe, expect, test } from "bun:test"
 import { CreateLifeEvent } from "@/contexts/life-event/application/create-life-event"
 import { UpdateLifeEvent } from "@/contexts/life-event/application/update-life-event"
 import { LifeEvent } from "@/contexts/life-event/domain/entities/life-event.entity"
-import { ForbiddenError } from "@/lib/errors"
-import { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { createTestContext } from "@tests/api/support/create-test-context"
+import { ApplicationError, ConflictError, ForbiddenError } from "@/lib/errors"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
 
-async function seedEvent(context: Context, employeeId: number): Promise<string> {
-  const created = await new CreateLifeEvent(context).run({
+/** ライフイベント届出のRepositoryを型付きfakeにして、application の業務判断だけを検証する。 */
+function createRepository() {
+  const stored = new Map<string, LifeEvent>()
+
+  return {
+    stored,
+    repository: {
+      create: async (lifeEvent: LifeEvent) => {
+        stored.set(lifeEvent.id, lifeEvent)
+        return lifeEvent
+      },
+      findById: async (id: string) => stored.get(id) ?? null,
+      update: async (lifeEvent: LifeEvent) => {
+        if (stored.get(lifeEvent.id)?.status !== "submitted") return null
+        stored.set(lifeEvent.id, lifeEvent)
+        return lifeEvent
+      },
+    },
+  }
+}
+
+type Repository = ReturnType<typeof createRepository>["repository"]
+
+async function seedEvent(repository: Repository, employeeId: number): Promise<string> {
+  const created = await new CreateLifeEvent({ lifeEventRepository: repository }).run({
     employeeId: toWorkforceEmployeeId(employeeId),
     eventType: "marriage",
     eventDate: "2026-05-10",
@@ -27,9 +47,9 @@ async function seedEvent(context: Context, employeeId: number): Promise<string> 
 
 describe("CreateLifeEvent", () => {
   test("creates a life event with status submitted", async () => {
-    const { context } = await createTestContext()
+    const { repository, stored } = createRepository()
 
-    const created = await new CreateLifeEvent(context).run({
+    const created = await new CreateLifeEvent({ lifeEventRepository: repository }).run({
       employeeId: toWorkforceEmployeeId(2),
       eventType: "relocation",
       eventDate: "2026-05-20",
@@ -45,20 +65,17 @@ describe("CreateLifeEvent", () => {
 
     expect(created.status).toBe("submitted")
     expect(created.detail).toBe(null)
+    expect(stored.get(created.id)).toBe(created)
   })
 })
 
-describe("GetLifeEvent", () => {})
-
-describe("ListMyLifeEvents", () => {})
-
 describe("UpdateLifeEvent", () => {
   test("updates the details for the applicant", async () => {
-    const { context } = await createTestContext()
+    const { repository } = createRepository()
 
-    const lifeEventId = await seedEvent(context, 5)
+    const lifeEventId = await seedEvent(repository, 5)
 
-    const result = await new UpdateLifeEvent(context).run({
+    const result = await new UpdateLifeEvent({ lifeEventRepository: repository }).run({
       lifeEventId: lifeEventId,
       employeeId: toWorkforceEmployeeId(5),
       eventType: "childbirth",
@@ -77,11 +94,11 @@ describe("UpdateLifeEvent", () => {
   })
 
   test("rejects a non applicant with not_applicant", async () => {
-    const { context } = await createTestContext()
+    const { repository } = createRepository()
 
-    const lifeEventId = await seedEvent(context, 5)
+    const lifeEventId = await seedEvent(repository, 5)
 
-    const result = await new UpdateLifeEvent(context).run({
+    const result = await new UpdateLifeEvent({ lifeEventRepository: repository }).run({
       lifeEventId: lifeEventId,
       employeeId: toWorkforceEmployeeId(6),
       eventType: "childbirth",
@@ -91,6 +108,22 @@ describe("UpdateLifeEvent", () => {
 
     expectApplicationError(result, ForbiddenError, "not_applicant")
   })
-})
 
-describe("CancelLifeEvent", () => {})
+  test("maps a zero-row conditional update to not_modifiable", async () => {
+    const { repository } = createRepository()
+
+    const lifeEventId = await seedEvent(repository, 5)
+
+    const result = await new UpdateLifeEvent({
+      lifeEventRepository: { ...repository, update: async () => null },
+    }).run({
+      lifeEventId: lifeEventId,
+      employeeId: toWorkforceEmployeeId(5),
+      eventType: "childbirth",
+      eventDate: "2026-07-01",
+      detail: null,
+    })
+
+    expectApplicationError(result, ConflictError, "not_modifiable")
+  })
+})

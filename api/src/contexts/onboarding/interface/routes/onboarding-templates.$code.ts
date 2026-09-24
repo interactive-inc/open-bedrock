@@ -1,4 +1,5 @@
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
 import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-template.repository"
 import { DeleteOnboardingTemplate } from "@/contexts/onboarding/application/delete-onboarding-template"
 import { UpdateOnboardingTemplate } from "@/contexts/onboarding/application/update-onboarding-template"
@@ -86,7 +87,9 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const updated = await new UpdateOnboardingTemplate(c).run({
+    const updated = await new UpdateOnboardingTemplate({
+      templateRepository: new OnboardingTemplateRepository(c),
+    }).run({
       session: session,
       code: validateCodeParam(c.req.param("code"), "onboarding template"),
       name: json.name,
@@ -111,7 +114,10 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const result = await new DeleteOnboardingTemplate(c).run({
+  const result = await new DeleteOnboardingTemplate({
+    templateRepository: new OnboardingTemplateRepository(c),
+    assignmentRepository: new OnboardingAssignmentRepository(c),
+  }).run({
     session: session,
     code: validateCodeParam(c.req.param("code"), "onboarding template"),
   })

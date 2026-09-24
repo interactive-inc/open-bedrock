@@ -2,6 +2,7 @@ import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
 import { DeleteShiftAssignment } from "@/contexts/shift/application/delete-shift-assignment"
 import { UpdateShiftAssignment } from "@/contexts/shift/application/update-shift-assignment"
+import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/repositories/shift-pattern.repository"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppShiftAssignment } from "@/contexts/shift/interface/http/response-schemas"
@@ -93,7 +94,10 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const assignment = await new UpdateShiftAssignment(c).run({
+    const assignment = await new UpdateShiftAssignment({
+      assignmentRepository: new ShiftAssignmentRepository(c),
+      patternRepository: new ShiftPatternRepository(c),
+    }).run({
       session: session,
       assignmentId,
       patternCode: json.pattern_code ?? null,

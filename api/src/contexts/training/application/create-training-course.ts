@@ -3,9 +3,12 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { TrainingCourse } from "@/contexts/training/domain/entities/training-course.entity"
-import type { Context } from "@/env"
 import { UniqueConstraintError } from "@/lib/d1/errors"
-import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
+import type { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
+
+type Context = Readonly<{
+  courseRepository: Pick<TrainingCourseRepository, "findByCode" | "create">
+}>
 
 export type Command = {
   session: CompanySessionValue
@@ -26,13 +29,11 @@ export class CreateTrainingCourse {
   }
 
   async run(command: Command): Promise<TrainingCourse | ApplicationError> {
-    const courseRepository = new TrainingCourseRepository(this.c)
-
     if (command.session.hasPermission("training:manage") === false) {
       return new ForbiddenError("cannot manage training", "forbidden")
     }
 
-    const existing = await courseRepository.findByCode(command.code)
+    const existing = await this.c.courseRepository.findByCode(command.code)
 
     if (existing instanceof Error) {
       return new UnexpectedError("failed to find training course", { cause: existing })
@@ -51,7 +52,7 @@ export class CreateTrainingCourse {
       isRequired: command.isRequired,
     })
 
-    const result = await courseRepository.create(trainingCourse)
+    const result = await this.c.courseRepository.create(trainingCourse)
 
     if (result instanceof UniqueConstraintError) {
       return new ConflictError("course code already exists", "course_code_conflict")

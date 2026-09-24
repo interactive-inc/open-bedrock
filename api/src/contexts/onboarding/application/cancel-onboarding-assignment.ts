@@ -1,9 +1,12 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
+import type { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
 import type { OnboardingAssignment } from "@/contexts/onboarding/domain/entities/onboarding-assignment.entity"
+
+type Context = Readonly<{
+  assignmentRepository: Pick<OnboardingAssignmentRepository, "findById" | "delete">
+}>
 
 export type Command = {
   assignmentId: number
@@ -25,9 +28,7 @@ export class CancelOnboardingAssignment {
       return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
 
-    const assignmentRepository = new OnboardingAssignmentRepository(this.c)
-
-    const current: OnboardingAssignment | null | Error = await assignmentRepository.findById(
+    const current: OnboardingAssignment | null | Error = await this.c.assignmentRepository.findById(
       command.assignmentId,
     )
 
@@ -43,7 +44,7 @@ export class CancelOnboardingAssignment {
       return new ConflictError("assignment is not modifiable", "not_modifiable")
     }
 
-    const deleted = await assignmentRepository.delete(current)
+    const deleted = await this.c.assignmentRepository.delete(current)
 
     if (deleted instanceof Error) {
       return new UnexpectedError("failed to delete assignment", { cause: deleted })

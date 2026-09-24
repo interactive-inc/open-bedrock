@@ -97,7 +97,9 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const reservation = await new UpdateRentalReservation(c).run({
+    const reservation = await new UpdateRentalReservation({
+      reservationRepository: new RentalReservationRepository(c),
+    }).run({
       reservationId: validateUuidParam(c.req.param("id"), "reservation"),
       requesterId: viewer.employeeId,
       itemName: json.item_name,

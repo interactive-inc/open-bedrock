@@ -94,7 +94,9 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const antisocialCheck = await new UpdateAntisocialCheck(c).run({
+    const antisocialCheck = await new UpdateAntisocialCheck({
+      antisocialCheckRepository: new AntisocialCheckRepository(c),
+    }).run({
       antisocialCheckId: validateUuidParam(c.req.param("id"), "antisocial check"),
       session: viewer,
       partnerName: json.partner_name,

@@ -1,4 +1,5 @@
 import { CreateOnboardingTemplate } from "@/contexts/onboarding/application/create-onboarding-template"
+import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-template.repository"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { factory } from "@/api/http/factory"
@@ -140,7 +141,9 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const created = await new CreateOnboardingTemplate(c).run({
+    const created = await new CreateOnboardingTemplate({
+      templateRepository: new OnboardingTemplateRepository(c),
+    }).run({
       session: session,
       code: json.code,
       name: json.name,

@@ -8,9 +8,12 @@ import {
   UnexpectedError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { RentalReservationRepository } from "@/contexts/rental/infrastructure/repositories/rental-reservation.repository"
+import type { RentalReservationRepository } from "@/contexts/rental/infrastructure/repositories/rental-reservation.repository"
 import { isRentalReservationRecordSourceFrozenError } from "@/contexts/rental/infrastructure/repositories/lib/is-rental-reservation-record-source-frozen-error"
+
+type Context = Readonly<{
+  reservationRepository: Pick<RentalReservationRepository, "findById" | "updateIfNoOverlap">
+}>
 
 export type Command = {
   reservationId: string
@@ -30,9 +33,7 @@ export class UpdateRentalReservation {
   }
 
   async run(command: Command): Promise<RentalReservation | ApplicationError> {
-    const reservationRepository = new RentalReservationRepository(this.c)
-
-    const current = await reservationRepository.findById(command.reservationId)
+    const current = await this.c.reservationRepository.findById(command.reservationId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find reservation", { cause: current })
@@ -64,7 +65,7 @@ export class UpdateRentalReservation {
 
     // 同一品名・重複期間の requested 予約（自身を除く）があれば 0 行更新となり null を返す。
     // チェックと UPDATE をアトミックに行い、並行リクエストによる二重予約を防ぐ。
-    const result = await reservationRepository.updateIfNoOverlap(updated)
+    const result = await this.c.reservationRepository.updateIfNoOverlap(updated)
 
     if (result instanceof Error) {
       if (isRentalReservationRecordSourceFrozenError(result)) {
@@ -77,7 +78,7 @@ export class UpdateRentalReservation {
 
     // 0 行更新の理由（消失 / status 変更 / 重複）を再取得して判別する。
     if (result === null) {
-      const latest = await reservationRepository.findById(command.reservationId)
+      const latest = await this.c.reservationRepository.findById(command.reservationId)
 
       if (latest instanceof Error) {
         return new UnexpectedError("failed to find reservation", { cause: latest })

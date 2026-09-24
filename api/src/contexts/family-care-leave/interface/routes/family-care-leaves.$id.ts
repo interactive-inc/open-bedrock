@@ -97,7 +97,9 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const familyCareLeave = await new UpdateFamilyCareLeave(c).run({
+    const familyCareLeave = await new UpdateFamilyCareLeave({
+      familyCareLeaveRepository: new FamilyCareLeaveRepository(c),
+    }).run({
       familyCareLeaveId: validateUuidParam(c.req.param("id"), "family care leave"),
       employeeId: viewer.employeeId,
       leaveKind: json.leave_kind,

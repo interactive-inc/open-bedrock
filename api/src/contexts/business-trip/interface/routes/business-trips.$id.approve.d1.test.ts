@@ -9,7 +9,7 @@ import { seedD1 } from "@tests/api/support/seed-d1"
 import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
 import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
-import { type LocalD1, applyMigrations, startLocalD1 } from "@tests/d1/support/start-local-d1"
+import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
 
 const jwtSecret = "business-trip-approve-route-test-secret"
 
@@ -17,11 +17,11 @@ const seedId = "10000000-0000-0000-0000-000000000001"
 
 let local: LocalD1
 
-// 独立したローカルD1へ全migrationを適用するため、1件あたり約2秒かかる。
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
 setDefaultTimeout(30_000)
 
 beforeAll(async () => {
-  local = await startLocalD1(["approve", "member", "conflict", "unauthenticated"])
+  local = await startLocalD1({ migrated: ["approve", "member", "conflict", "unauthenticated"] })
 })
 
 afterAll(async () => {
@@ -31,7 +31,6 @@ afterAll(async () => {
 async function createTestDb(name: string): Promise<D1Database> {
   const db = await local.database(name)
 
-  await applyMigrations(db)
   await seedCompanyEmployees(
     db,
     seedEmployees.map((employee) => ({

@@ -9,6 +9,8 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { SetMySkill } from "@/contexts/skill/application/set-my-skill"
+import { EmployeeSkillRepository } from "@/contexts/skill/infrastructure/repositories/employee-skill.repository"
+import { SkillRepository } from "@/contexts/skill/infrastructure/repositories/skill.repository"
 import { employeeSkills, skills } from "@/contexts/skill/infrastructure/schema/skill"
 import {
   zAppEmployeeSkill,
@@ -93,7 +95,10 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const result = await new SetMySkill(c).run({
+    const result = await new SetMySkill({
+      skillRepository: new SkillRepository(c),
+      employeeSkillRepository: new EmployeeSkillRepository(c),
+    }).run({
       employeeId: session.employeeId,
       skillCode: json.skill_code,
       level: json.level,

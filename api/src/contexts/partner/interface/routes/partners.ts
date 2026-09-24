@@ -1,4 +1,5 @@
 import { RegisterPartner } from "@/contexts/partner/application/register-partner"
+import { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
 import { factory } from "@/api/http/factory"
 import { likeKeyword } from "@/lib/database/like-keyword"
 import {
@@ -125,7 +126,7 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const created = await new RegisterPartner(c).run({
+    const created = await new RegisterPartner({ partnerRepository: new PartnerRepository(c) }).run({
       session: session,
       partner: {
         code: json.code,

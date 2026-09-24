@@ -1,4 +1,6 @@
 import { RejectRedemption } from "@/contexts/thanks/application/thanks-points/reject-redemption"
+import { ThanksRedemptionDecisionAuthorityAdapter } from "@/contexts/thanks/infrastructure/adapters/thanks-redemption-decision-authority.adapter"
+import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-redemption.repository"
 import { toPositiveInt } from "@/lib/http/to-positive-int"
 import { ApplicationError, UnexpectedError } from "@/lib/errors"
 import { zAppThanksRedemptionDecision } from "@/contexts/thanks/interface/http/response-schemas"
@@ -26,7 +28,10 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new BadRequestError("invalid redemption id")
   }
 
-  const result = await new RejectRedemption(c).execute({
+  const result = await new RejectRedemption({
+    redemptionRepository: new ThanksRedemptionRepository(c),
+    decisionAuthority: new ThanksRedemptionDecisionAuthorityAdapter(c),
+  }).execute({
     session,
     redemptionId,
     deciderId: session.employeeId,

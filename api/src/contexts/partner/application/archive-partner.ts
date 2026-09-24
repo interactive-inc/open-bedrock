@@ -1,9 +1,12 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
+import type { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
 import type { Partner } from "@/contexts/partner/domain/entities/partner.entity"
+
+type Context = Readonly<{
+  partnerRepository: Pick<PartnerRepository, "findById" | "update">
+}>
 
 export type Command = {
   session: CompanySessionValue
@@ -21,13 +24,11 @@ export class ArchivePartner {
   }
 
   async run(command: Command): Promise<Archived | ApplicationError> {
-    const partnerRepository = new PartnerRepository(this.c)
-
     if (command.session.hasPermission("partner:manage") === false) {
       return new ForbiddenError("cannot manage partners", "forbidden")
     }
 
-    const current: Partner | null | Error = await partnerRepository.findById(command.id)
+    const current: Partner | null | Error = await this.c.partnerRepository.findById(command.id)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find partner", { cause: current })
@@ -37,7 +38,7 @@ export class ArchivePartner {
       return new NotFoundError("partner not found", "partner_not_found")
     }
 
-    const updated = await partnerRepository.update(current.archive())
+    const updated = await this.c.partnerRepository.update(current.archive())
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to update partner", { cause: updated })

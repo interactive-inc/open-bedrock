@@ -2,9 +2,12 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import { Partner } from "@/contexts/partner/domain/entities/partner.entity"
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
+import type { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
 import { UniqueConstraintError } from "@/lib/d1/errors"
+
+type Context = Readonly<{
+  partnerRepository: Pick<PartnerRepository, "findByCode" | "create">
+}>
 
 export type Command = {
   session: CompanySessionValue
@@ -27,13 +30,11 @@ export class RegisterPartner {
   }
 
   async run(command: Command): Promise<Partner | ApplicationError> {
-    const partnerRepository = new PartnerRepository(this.c)
-
     if (command.session.hasPermission("partner:manage") === false) {
       return new ForbiddenError("cannot manage partners", "forbidden")
     }
 
-    const existing = await partnerRepository.findByCode(command.partner.code)
+    const existing = await this.c.partnerRepository.findByCode(command.partner.code)
 
     if (existing instanceof Error) {
       return new UnexpectedError("failed to find partner", { cause: existing })
@@ -52,7 +53,7 @@ export class RegisterPartner {
       createdAt: command.createdAt,
     })
 
-    const created = await partnerRepository.create(partner)
+    const created = await this.c.partnerRepository.create(partner)
 
     // findByCode と insert の間に並行リクエストが挿入されると UNIQUE 制約違反になる。
     // リポジトリが UniqueConstraintError として返すので、重複として扱う（TOCTOU 競合対策）。

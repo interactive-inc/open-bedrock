@@ -1,7 +1,7 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { OrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
-import { CareerOrganizationUnitAdapter } from "@/contexts/career/infrastructure/adapters/career-organization-unit.adapter"
+import type { CareerOrganizationUnitAdapter } from "@/contexts/career/infrastructure/adapters/career-organization-unit.adapter"
 import { isCareerRecordSourceFrozenError } from "@/contexts/career/infrastructure/repositories/lib/is-career-record-source-frozen-error"
 import {
   ConflictError,
@@ -12,8 +12,7 @@ import {
   UnprocessableError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
+import type { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
 
 export type Command = {
   session: CompanySessionValue
@@ -23,6 +22,11 @@ export type Command = {
   requiredSkills: string | null
   status?: "open" | "closed"
 }
+
+type Context = Readonly<{
+  postingRepository: Pick<CareerPostingRepository, "findById" | "update">
+  organizationUnits: Pick<CareerOrganizationUnitAdapter, "load">
+}>
 
 /**
  * 管理ロールが社内公募の内容と状態を変更する。
@@ -35,13 +39,11 @@ export class UpdateCareerPosting {
   }
 
   async run(command: Command): Promise<CareerPosting | ApplicationError> {
-    const postingRepository = new CareerPostingRepository(this.c)
-
     if (command.session.hasPermission("career_posting:manage") === false) {
       return new ForbiddenError("cannot manage career postings", "forbidden")
     }
 
-    const current = await postingRepository.findById(command.postingId)
+    const current = await this.c.postingRepository.findById(command.postingId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find career posting", { cause: current })
@@ -55,7 +57,7 @@ export class UpdateCareerPosting {
       command.organizationUnitId !== null &&
       command.organizationUnitId !== current.organizationUnitId
     ) {
-      const units = await new CareerOrganizationUnitAdapter(this.c).load()
+      const units = await this.c.organizationUnits.load()
 
       if (units instanceof Error) {
         return new UnavailableError(
@@ -73,7 +75,7 @@ export class UpdateCareerPosting {
       }
     }
 
-    const updated = await postingRepository.update(
+    const updated = await this.c.postingRepository.update(
       current.withDetails({
         title: command.title,
         organizationUnitId: command.organizationUnitId,

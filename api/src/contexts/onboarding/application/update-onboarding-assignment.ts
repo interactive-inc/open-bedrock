@@ -1,11 +1,15 @@
-import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
+import type { CompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingAssignment } from "@/contexts/onboarding/domain/entities/onboarding-assignment.entity"
-import type { Context } from "@/env"
-import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
+import type { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
+
+type Context = Readonly<{
+  assignmentRepository: Pick<OnboardingAssignmentRepository, "findById" | "update">
+  employeeDirectory: Pick<CompanyEmployeeDirectory, "findById">
+}>
 
 export type Command = {
   assignmentId: number
@@ -31,9 +35,7 @@ export class UpdateOnboardingAssignment {
       return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
 
-    const assignmentRepository = new OnboardingAssignmentRepository(this.c)
-
-    const current = await assignmentRepository.findById(command.assignmentId)
+    const current = await this.c.assignmentRepository.findById(command.assignmentId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find assignment", { cause: current })
@@ -47,15 +49,15 @@ export class UpdateOnboardingAssignment {
       return new ConflictError("assignment is not modifiable", "not_modifiable")
     }
 
-    const updated = await assignmentRepository.update(current.withRescheduled(command.assignedAt))
+    const updated = await this.c.assignmentRepository.update(
+      current.withRescheduled(command.assignedAt),
+    )
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to update assignment", { cause: updated })
     }
 
-    const employeeRepository = openCompanyEmployeeDirectory(this.c)
-
-    const employee = await employeeRepository.findById(updated.employeeId)
+    const employee = await this.c.employeeDirectory.findById(updated.employeeId)
 
     if (employee instanceof Error) {
       return new UnexpectedError("failed to find employee", { cause: employee })

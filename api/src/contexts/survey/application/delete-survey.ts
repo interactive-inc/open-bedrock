@@ -1,10 +1,13 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
+import type { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { isSurveyRecordSourceFrozenError } from "@/contexts/survey/infrastructure/repositories/lib/is-survey-record-source-frozen-error"
 import type { Survey } from "@/contexts/survey/domain/entities/survey.entity"
+
+type Context = Readonly<{
+  surveyRepository: Pick<SurveyRepository, "findById" | "deleteWithResponses">
+}>
 
 export type Command = {
   session: CompanySessionValue
@@ -27,9 +30,7 @@ export class DeleteSurvey {
       return new ForbiddenError("cannot manage surveys", "forbidden")
     }
 
-    const surveyRepository = new SurveyRepository(this.c)
-
-    const current: Survey | null | Error = await surveyRepository.findById(command.surveyId)
+    const current: Survey | null | Error = await this.c.surveyRepository.findById(command.surveyId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find survey", { cause: current })
@@ -43,7 +44,7 @@ export class DeleteSurvey {
       return new ConflictError("open survey cannot be deleted", "not_deletable")
     }
 
-    const deleted = await surveyRepository.deleteWithResponses(current)
+    const deleted = await this.c.surveyRepository.deleteWithResponses(current)
 
     if (deleted instanceof Error) {
       if (isSurveyRecordSourceFrozenError(deleted)) {

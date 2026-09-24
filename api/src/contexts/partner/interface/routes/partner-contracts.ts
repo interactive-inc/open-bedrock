@@ -1,4 +1,6 @@
 import { CreateContract } from "@/contexts/partner/application/contract/create-contract"
+import { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
+import { ContractRepository } from "@/contexts/partner/infrastructure/repositories/contract/contract.repository"
 import { factory } from "@/api/http/factory"
 import {
   DEFAULT_LIST_LIMIT,
@@ -142,7 +144,10 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const created = await new CreateContract(c).run({
+    const created = await new CreateContract({
+      partnerRepository: new PartnerRepository(c),
+      contractRepository: new ContractRepository(c),
+    }).run({
       session: session,
       contract: {
         partnerId: json.partner_id,

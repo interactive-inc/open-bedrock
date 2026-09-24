@@ -2,7 +2,7 @@ import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-ke
 import { SystemD1ProcedureDelegationAdapter } from "@system/infrastructure/adapters/workflow/system-d1-procedure-delegation.adapter"
 import { zLeaveProcedureView } from "@/contexts/leave/interface/http/response-schemas"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
-import { createTestContextForDatabase } from "@tests/api/support/create-test-context"
+import { createTestContextForDatabase } from "@tests/api/support/create-context-for-database"
 import { PublishLeaveProcedure } from "@/contexts/leave/application/publish-leave-procedure"
 import { expect, test } from "bun:test"
 import { z } from "zod"
