@@ -1,6 +1,5 @@
 import { app } from "@/api/app"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
-import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
@@ -8,14 +7,15 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAttachmentTestBucket } from "@system/test/system-attachment-test-bucket.test-support"
 import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-system-attachment-test-kek-environment.test-support"
 import { createMonotonicTestClock } from "@tests/api/support/create-monotonic-test-clock"
+import type { createLocalD1Governance } from "@tests/d1/support/create-local-d1-governance"
+import { execSql } from "@tests/d1/support/exec-sql"
 
 const secret = "ringi-integration-test-secret"
 
 /** 実System・Companyと稟議2台帳の原記録を接続する保全fixture。 */
 export async function createRingiPreservationFixture(
-  existingGovernance?: Awaited<ReturnType<typeof createGovernanceTaskTestContext>>,
+  governance: Awaited<ReturnType<typeof createLocalD1Governance>>,
 ) {
-  const governance = existingGovernance ?? (await createGovernanceTaskTestContext())
   const database = governance.database
   const creator = governance.creator
   const reviewer = governance.people.find((person) => person.accountId !== creator.accountId)
@@ -68,7 +68,9 @@ export async function createRingiPreservationFixture(
   if (definition instanceof Error) throw definition
   if ((await openSystemProcedures(governance.context).publish(definition, 0)) !== true)
     throw new Error("failed to publish preservation procedure")
-  await database.exec(`INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
+  await execSql(
+    database,
+    `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
     VALUES ('ringi-test-manager','ringi:test-manager','custom','Ringi manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
       ('ringi-test-manager','system:admin'),
@@ -76,7 +78,8 @@ export async function createRingiPreservationFixture(
       ('ringi-test-manager','system:record:read'),
       ('ringi-test-manager','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('ringi-test-binding','${creator.accountId}','ringi-test-manager',0);`)
+    VALUES ('ringi-test-binding','${creator.accountId}','ringi-test-manager',0);`,
+  )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {
     recordSourceNamespace: "example-source",

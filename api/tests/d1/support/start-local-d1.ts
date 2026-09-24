@@ -44,7 +44,7 @@ const TEMPLATE_BINDING = "TEMPLATE"
  * 1ファイルで宣言できるmigration済みDBの上限。複製先の database id を固定の枠にし、
  * そのSQLiteファイル名をtemplate作成時に一度だけ調べる。
  */
-const MIGRATED_SLOT_COUNT = 64
+export const MIGRATED_SLOT_COUNT = 64
 
 let migrationStatements: ReadonlyArray<ReadonlyArray<string>> | null = null
 
@@ -57,7 +57,7 @@ let scratchRoot: string | null = null
  * 宣言した名前ごとに独立したDBを1つのMiniflareに載せ、testの間でDBを共有しない。
  *
  * migration済みDBは、プロセスで一度だけ全migrationを適用したtemplateのSQLiteファイルを、
- * 起動前に各DBのファイル位置へ複製して用意する。数百のmigrationをDBごとに再生せず、
+ * 各DBを最初に使う時にそのファイル位置へ複製して用意する。数百のmigrationをDBごとに再生せず、
  * workerdの起動もファイルごとに1回にする。
  * 複製後はtemplateと同じschema object数かを検査し、Miniflareの保存形式が変わったら失敗させる。
  * Worker scriptは外向き通信を持たず、outboundも拒否する。
@@ -82,33 +82,33 @@ export async function startLocalD1(databases: LocalD1Databases): Promise<LocalD1
 
   const source = migrated.length > 0 ? await buildTemplate() : null
 
-  /** 起動のたびに新しいディレクトリへtemplateを複製し、失敗した起動とファイルを共有しない。 */
+  /** 起動のたびに新しいディレクトリを使い、失敗した起動とファイルを共有しない。 */
   const preparePersist = (): string => {
     const persist = join(scratchDirectory(), `run-${crypto.randomUUID()}`)
-    if (source === null) return persist
-    mkdirSync(join(persist, D1_OBJECT_DIRECTORY), { recursive: true })
-    migrated.forEach((_, index) => {
-      const slotFile = source.slotFiles[index]
-      if (slotFile === undefined) throw new Error(`local D1 slot ${index} has no discovered file`)
-      copyDatabaseFile(
-        join(source.directory, D1_OBJECT_DIRECTORY, source.file),
-        join(persist, D1_OBJECT_DIRECTORY, slotFile),
-      )
-    })
+    if (source !== null) mkdirSync(join(persist, D1_OBJECT_DIRECTORY), { recursive: true })
     return persist
   }
 
   const { runtime, persist } = await startRuntime(preparePersist, ids)
 
-  const migratedNames = new Set(migrated)
   const verified = new Set<string>()
 
   return {
     database: async (name) => {
       if (!(name in ids)) throw new Error(`local D1 "${name}" was not declared in startLocalD1`)
+      const index = migrated.indexOf(name)
+      // workerd はDBへ最初に触れた時にファイルを開くため、その前にtemplateを複製する。
+      if (source !== null && index !== -1 && !verified.has(name)) {
+        const slotFile = source.slotFiles[index]
+        if (slotFile === undefined) throw new Error(`local D1 slot ${index} has no discovered file`)
+        copyDatabaseFile(
+          join(source.directory, D1_OBJECT_DIRECTORY, source.file),
+          join(persist, D1_OBJECT_DIRECTORY, slotFile),
+        )
+      }
       // Miniflare の D1Database は workers-types と同形の別宣言のため、境界で一度だけ読み替える。
       const database = (await runtime.getD1Database(name)) as unknown as D1Database
-      if (migratedNames.has(name) && !verified.has(name)) {
+      if (index !== -1 && !verified.has(name)) {
         await verifyCopy(name, database)
         verified.add(name)
       }

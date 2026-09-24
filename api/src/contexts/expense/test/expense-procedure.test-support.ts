@@ -1,4 +1,3 @@
-import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/test/company-assignment-resource.test-support"
 import { PublishExpenseProcedure } from "@/contexts/expense/application/publish-expense-procedure"
 import { SubmitExpenseProcedure } from "@/contexts/expense/application/submit-expense-procedure"
 import { RecordExpenseDecision } from "@/contexts/expense/application/record-expense-decision"
@@ -8,12 +7,15 @@ import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/a
 import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
+import { createLocalD1CompanyAssignment } from "@tests/d1/support/create-local-d1-company-assignment"
+import { execSql } from "@tests/d1/support/exec-sql"
 
-/** 実Company APIで主務所属を作り、実DBの経費規程へ提出する。 */
+/** migration済みのローカルD1へ実Company APIで主務所属を作り、経費規程へ提出する。 */
 export async function createExpenseProcedureTestContext(
+  database: D1Database,
   rejectionBehavior: "reject" | "return" = "reject",
 ) {
-  const c = await createCompanyAssignmentResourceTestContext()
+  const c = await createLocalD1CompanyAssignment(database)
   const assigned = await c.write([
     { ...c.assignment, effectiveFrom: c.at.toISOString().slice(0, 10) },
   ])
@@ -49,10 +51,13 @@ export async function createExpenseProcedureTestContext(
     if (changed.kind !== "applied")
       throw new Error("return authority setup failed", { cause: changed })
   }
-  await c.database.exec(`INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
+  await execSql(
+    c.database,
+    `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
     VALUES ('expense-test-role','test:expense','custom','Expense approval',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-    ('expense-test-role','expense:submit'),('expense-test-role','expense:approve'),('expense-test-role','expense:procedure:manage');`)
+    ('expense-test-role','expense:submit'),('expense-test-role','expense:approve'),('expense-test-role','expense:procedure:manage');`,
+  )
   for (const person of [requester, first, second])
     await c.database
       .prepare(

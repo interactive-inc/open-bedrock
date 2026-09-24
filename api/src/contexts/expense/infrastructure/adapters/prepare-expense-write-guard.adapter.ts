@@ -15,14 +15,17 @@ export class PrepareExpenseWriteGuardAdapter {
     ) THEN 1 ELSE json_extract('{}','expense_record_source_frozen') END`)
   }
 
-  /** SQL本文や入力値でなく、停止trigger・最終guardが返した原因だけを変換する。 */
+  /**
+   * SQL本文や入力値でなく、停止trigger・最終guardが返した原因だけを変換する。
+   * D1はtriggerの拒否に拡張結果コードを付けて返すため、その後置も受け付ける。
+   */
   failure(error: unknown): ConflictError | null {
     const visited = new Set<Error>()
     let current = error
     while (current instanceof Error && !visited.has(current)) {
       visited.add(current)
       if (
-        /^(?:D1_ERROR: )?(?:expense_record_source_frozen|bad JSON path: 'expense_record_source_frozen'|JSON path error near 'expense_record_source_frozen')(?:: SQLITE_(?:ERROR|CONSTRAINT))?$/.test(
+        /^(?:D1_ERROR: )?(?:expense_record_source_frozen|bad JSON path: 'expense_record_source_frozen'|JSON path error near 'expense_record_source_frozen')(?:: SQLITE_(?:ERROR|CONSTRAINT)(?: \(extended: SQLITE_[A-Z_]+\))?)?$/.test(
           current.message,
         )
       )

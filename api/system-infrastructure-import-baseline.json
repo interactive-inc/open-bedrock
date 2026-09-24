@@ -25,16 +25,6 @@
       "src/contexts/system/infrastructure/adapters/attachments/attachment.adapter",
       "src/contexts/system/infrastructure/schema/system-attachment"
     ],
-    "src/contexts/attendance/test/attendance-record-source-freeze-authorization.integration.test.ts": [
-      "src/contexts/system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter",
-      "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
-    ],
-    "src/contexts/attendance/test/attendance-record-source-freeze-clock.integration.test.ts": [
-      "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
-    ],
-    "src/contexts/attendance/test/attendance-record-source-freeze-workflow.integration.test.ts": [
-      "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
-    ],
     "src/contexts/attendance/test/frozen-attendance-preserved-source.integration.test.ts": [
       "src/contexts/system/infrastructure/adapters/records/prepare-preserved-record-retention-guard.adapter",
       "src/contexts/system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter",
@@ -42,12 +32,6 @@
       "src/contexts/system/infrastructure/repositories/attachments/attachment-preservation.repository",
       "src/contexts/system/infrastructure/repositories/records/preserved-record.repository",
       "src/contexts/system/infrastructure/repositories/records/record-coverage-page.repository",
-      "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
-    ],
-    "src/contexts/attendance/test/frozen-attendance-record-capture.integration.test.ts": [
-      "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
-    ],
-    "src/contexts/attendance/test/frozen-attendance-record-page.integration.test.ts": [
       "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
     ],
     "src/contexts/attendance/test/record-retention-expiry.integration.test.ts": [
@@ -92,23 +76,11 @@
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-plan.repository",
       "src/contexts/system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
     ],
-    "src/contexts/expense/test/expense-procedure-http.integration.test.ts": [
-      "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
-    ],
     "src/contexts/expense/test/expense-procedure.test-support.ts": [
       "src/contexts/system/infrastructure/adapters/attachments/attachment.adapter"
     ],
-    "src/contexts/governance/application/adopt-governance-org-role-assignment.test.ts": [
-      "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
-    ],
-    "src/contexts/governance/infrastructure/adapters/company-governance-role-assignment-write.adapter.test.ts": [
-      "src/contexts/system/infrastructure/repositories/records/record-source-freeze.repository"
-    ],
     "src/contexts/leave/infrastructure/adapters/leave-decision-notification-delivery.adapter.ts": [
       "src/contexts/system/infrastructure/adapters/events/system-managed-job-runner.adapter"
-    ],
-    "src/contexts/leave/infrastructure/adapters/prepare-leave-decision-notification.adapter.test.ts": [
-      "src/contexts/system/infrastructure/repositories/audit/system-audit-event.repository"
     ],
     "src/contexts/leave/infrastructure/adapters/prepare-leave-decision-notification.adapter.ts": [
       "src/contexts/system/infrastructure/repositories/events/system-delivery.repository"
