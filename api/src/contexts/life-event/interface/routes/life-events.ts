@@ -1,3 +1,4 @@
+import { LifeEventRepository } from "@/contexts/life-event/infrastructure/repositories/life-event.repository"
 import { CreateLifeEvent } from "@/contexts/life-event/application/create-life-event"
 import { ApplicationError } from "@/lib/errors"
 import { zAppLifeEvent } from "@/contexts/life-event/interface/http/response-schemas"
@@ -30,7 +31,9 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const lifeEvent = await new CreateLifeEvent(c).run({
+    const lifeEvent = await new CreateLifeEvent({
+      lifeEventRepository: new LifeEventRepository(c),
+    }).run({
       employeeId: viewer.employeeId,
       eventType: json.event_type,
       eventDate: json.event_date,

@@ -1,4 +1,5 @@
 import { SubmitSurveyResponse } from "@/contexts/survey/application/submit-survey-response"
+import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { jsonPayloadSchema } from "@/lib/http/json-payload-schema"
 import { validateIntParam } from "@/lib/http/validate-int-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
@@ -28,7 +29,9 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const submission = await new SubmitSurveyResponse(c).run({
+    const submission = await new SubmitSurveyResponse({
+      surveyRepository: new SurveyRepository(c),
+    }).run({
       surveyId,
       respondentId: c.var.session.employeeId,
       answersJson: json.answers_json,

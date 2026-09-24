@@ -3,15 +3,19 @@ import { CareerApplication } from "@/contexts/career/domain/entities/career-appl
 import { isCareerRecordSourceFrozenError } from "@/contexts/career/infrastructure/repositories/lib/is-career-record-source-frozen-error"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { CareerApplicationRepository } from "@/contexts/career/infrastructure/repositories/career-application.repository"
-import { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
+import type { CareerApplicationRepository } from "@/contexts/career/infrastructure/repositories/career-application.repository"
+import type { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
 
 export type Command = {
   postingId: number
   applicantId: EmployeeId
   message: string | null
 }
+
+type Context = Readonly<{
+  postingRepository: Pick<CareerPostingRepository, "findById">
+  applicationRepository: Pick<CareerApplicationRepository, "findByPostingAndApplicant" | "create">
+}>
 
 /**
  * 公募への応募を作成する。公募が公開中でない・重複応募は判別可能な失敗で返す。
@@ -22,11 +26,7 @@ export class ApplyToCareerPosting {
   }
 
   async run(command: Command): Promise<CareerApplication | ApplicationError> {
-    const postingRepository = new CareerPostingRepository(this.c)
-
-    const applicationRepository = new CareerApplicationRepository(this.c)
-
-    const posting = await postingRepository.findById(command.postingId)
+    const posting = await this.c.postingRepository.findById(command.postingId)
 
     if (posting instanceof Error) {
       return new UnexpectedError("failed to find career posting", { cause: posting })
@@ -36,7 +36,7 @@ export class ApplyToCareerPosting {
       return new NotFoundError("career posting is not open", "posting_not_open")
     }
 
-    const existing = await applicationRepository.findByPostingAndApplicant(
+    const existing = await this.c.applicationRepository.findByPostingAndApplicant(
       command.postingId,
       command.applicantId,
     )
@@ -49,7 +49,7 @@ export class ApplyToCareerPosting {
       return new ConflictError("already applied to career posting", "already_applied")
     }
 
-    const created = await applicationRepository.create(
+    const created = await this.c.applicationRepository.create(
       CareerApplication.create({
         postingId: command.postingId,
         applicantId: command.applicantId,

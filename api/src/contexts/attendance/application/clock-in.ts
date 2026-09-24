@@ -1,8 +1,7 @@
 import { AttendanceRecordSourceFrozenError } from "@/contexts/attendance/infrastructure/repositories/errors"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendance-record.entity"
-import type { Context } from "@/env"
-import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/repositories/attendance-record.repository"
+import type { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/repositories/attendance-record.repository"
 import { UniqueConstraintError } from "@/lib/d1/errors"
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -13,6 +12,10 @@ export type Command = {
   note: string | null
 }
 
+type Context = Readonly<{
+  recordRepository: Pick<AttendanceRecordRepository, "findOpenByEmployeeId" | "create">
+}>
+
 /**
  * 出勤を打刻する。既に出勤中なら判別可能な失敗を返す。
  */
@@ -22,9 +25,7 @@ export class ClockIn {
   }
 
   async run(command: Command): Promise<AttendanceRecord | ApplicationError> {
-    const recordRepository = new AttendanceRecordRepository(this.c)
-
-    const open = await recordRepository.findOpenByEmployeeId(command.employeeId)
+    const open = await this.c.recordRepository.findOpenByEmployeeId(command.employeeId)
 
     if (open instanceof Error) {
       return new UnexpectedError("failed to find attendance record", { cause: open })
@@ -34,7 +35,7 @@ export class ClockIn {
       return new ConflictError("already clocked in", "already_clocked_in")
     }
 
-    const record = await recordRepository.create(
+    const record = await this.c.recordRepository.create(
       AttendanceRecord.create({
         employeeId: command.employeeId,
         clockInAt: command.now,

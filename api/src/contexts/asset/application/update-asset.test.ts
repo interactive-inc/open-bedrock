@@ -2,18 +2,37 @@ import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-
 import { Asset } from "@/contexts/asset/domain/entities/asset.entity"
 import { DeleteAsset } from "@/contexts/asset/application/delete-asset"
 import { UpdateAsset } from "@/contexts/asset/application/update-asset"
-import { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
 import { makeTestSession } from "@tests/api/support/make-test-session"
 import { describe, expect, test } from "bun:test"
-import type { Context } from "@/env"
 
-async function seedInStock(context: Context, code: string): Promise<void> {
-  const repository = new AssetRepository(context)
+/** 資産Repositoryの型付きfake。貸出中の削除拒否はRepositoryの条件付き削除に合わせてnullを返す。 */
+function createContext() {
+  const stored = new Map<string, Asset>()
 
-  const created = await repository.create(
+  const assetRepository = {
+    findByCode: async (code: string) => stored.get(code) ?? null,
+    updateDetails: async (asset: Asset) => {
+      if (!stored.has(asset.code)) return null
+      stored.set(asset.code, asset)
+      return asset
+    },
+    deleteIfNotLent: async (asset: Asset) => {
+      if (stored.get(asset.code)?.status === "lent") return null
+      stored.delete(asset.code)
+      return "deleted" as const
+    },
+  }
+
+  return { context: { assetRepository }, stored }
+}
+
+type FakeContext = ReturnType<typeof createContext>
+
+function seedInStock(fake: FakeContext, code: string): void {
+  fake.stored.set(
+    code,
     Asset.create({
       code: code,
       name: "Notebook",
@@ -22,33 +41,37 @@ async function seedInStock(context: Context, code: string): Promise<void> {
       purchasedOn: "2025-01-01",
     }),
   )
-
-  if (created instanceof Error) {
-    throw new Error("seed failed")
-  }
 }
 
-async function seedLent(context: Context, code: string): Promise<void> {
-  const repository = new AssetRepository(context)
+function seedLent(fake: FakeContext, code: string): void {
+  seedInStock(fake, code)
 
-  await seedInStock(context, code)
+  const inStock = fake.stored.get(code)
 
-  const lent = await repository.lendFromStock({
-    assetCode: code,
-    employeeId: toWorkforceEmployeeId(5),
-    lentAt: "2026-01-01T00:00:00.000Z",
-  })
+  if (inStock === undefined) throw new Error("seed lent failed")
 
-  if (lent instanceof Error || lent === null) {
-    throw new Error("seed lent failed")
-  }
+  fake.stored.set(
+    code,
+    new Asset({
+      code: inStock.code,
+      name: inStock.name,
+      kind: inStock.kind,
+      serial: inStock.serial,
+      purchasedOn: inStock.purchasedOn,
+      status: "lent",
+      holderEmployeeId: toWorkforceEmployeeId(5),
+      disposedOn: null,
+      disposalReason: null,
+    }),
+  )
 }
 
 describe("UpdateAsset", () => {
   test("updates details for a privileged role", async () => {
-    const { context } = await createTestContext()
+    const fake = createContext()
+    const { context } = fake
 
-    await seedInStock(context, "A1001")
+    seedInStock(fake, "A1001")
 
     const result = await new UpdateAsset(context).run({
       session: makeTestSession("root"),
@@ -69,9 +92,10 @@ describe("UpdateAsset", () => {
   })
 
   test("rejects a non privileged role with forbidden", async () => {
-    const { context } = await createTestContext()
+    const fake = createContext()
+    const { context } = fake
 
-    await seedInStock(context, "A1002")
+    seedInStock(fake, "A1002")
 
     const result = await new UpdateAsset(context).run({
       session: makeTestSession("member"),
@@ -83,7 +107,8 @@ describe("UpdateAsset", () => {
   })
 
   test("rejects an unknown code with asset_not_found", async () => {
-    const { context } = await createTestContext()
+    const fake = createContext()
+    const { context } = fake
 
     const result = await new UpdateAsset(context).run({
       session: makeTestSession("root"),
@@ -97,9 +122,10 @@ describe("UpdateAsset", () => {
 
 describe("DeleteAsset", () => {
   test("deletes an in_stock asset for a privileged role", async () => {
-    const { context } = await createTestContext()
+    const fake = createContext()
+    const { context } = fake
 
-    await seedInStock(context, "A1003")
+    seedInStock(fake, "A1003")
 
     const result = await new DeleteAsset(context).run({
       session: makeTestSession("root"),
@@ -108,17 +134,14 @@ describe("DeleteAsset", () => {
 
     expect(result).toEqual({ reason: "deleted" })
 
-    const repository = new AssetRepository(context)
-
-    const found = await repository.findByCode("A1003")
-
-    expect(found).toBeNull()
+    expect(fake.stored.has("A1003")).toBe(false)
   })
 
   test("rejects a lent asset with asset_in_use", async () => {
-    const { context } = await createTestContext()
+    const fake = createContext()
+    const { context } = fake
 
-    await seedLent(context, "A1004")
+    seedLent(fake, "A1004")
 
     const result = await new DeleteAsset(context).run({
       session: makeTestSession("root"),
@@ -129,9 +152,10 @@ describe("DeleteAsset", () => {
   })
 
   test("rejects a non privileged role with forbidden", async () => {
-    const { context } = await createTestContext()
+    const fake = createContext()
+    const { context } = fake
 
-    await seedInStock(context, "A1005")
+    seedInStock(fake, "A1005")
 
     const result = await new DeleteAsset(context).run({
       session: makeTestSession("member"),
@@ -142,7 +166,8 @@ describe("DeleteAsset", () => {
   })
 
   test("rejects an unknown code with asset_not_found", async () => {
-    const { context } = await createTestContext()
+    const fake = createContext()
+    const { context } = fake
 
     const result = await new DeleteAsset(context).run({
       session: makeTestSession("root"),

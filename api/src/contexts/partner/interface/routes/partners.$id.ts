@@ -1,4 +1,5 @@
 import { UpdatePartner } from "@/contexts/partner/application/update-partner"
+import { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
@@ -31,7 +32,7 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const updated = await new UpdatePartner(c).run({
+    const updated = await new UpdatePartner({ partnerRepository: new PartnerRepository(c) }).run({
       session: session,
       id: validateIntParam(c.req.param("id"), "partner"),
       details: {

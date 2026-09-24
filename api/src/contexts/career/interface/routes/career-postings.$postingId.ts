@@ -1,3 +1,4 @@
+import { CareerOrganizationUnitAdapter } from "@/contexts/career/infrastructure/adapters/career-organization-unit.adapter"
 import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
 import { DeleteCareerPosting } from "@/contexts/career/application/delete-career-posting"
@@ -77,7 +78,10 @@ export const PUT = factory.createHandlers(
 
     const body = c.req.valid("json")
 
-    const updated = await new UpdateCareerPosting(c).run({
+    const updated = await new UpdateCareerPosting({
+      postingRepository: new CareerPostingRepository(c),
+      organizationUnits: new CareerOrganizationUnitAdapter(c),
+    }).run({
       session: session,
       postingId: postingId,
       title: body.title,
@@ -107,7 +111,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const postingId = validateIntParam(c.req.param("postingId"), "posting")
 
-  const result = await new DeleteCareerPosting(c).run({
+  const result = await new DeleteCareerPosting({
+    postingRepository: new CareerPostingRepository(c),
+  }).run({
     session: session,
     postingId: postingId,
   })

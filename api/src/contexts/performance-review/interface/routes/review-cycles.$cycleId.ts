@@ -1,3 +1,4 @@
+import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
 import { DeleteReviewCycle } from "@/contexts/performance-review/application/review/delete-review-cycle"
 import { UpdateReviewCycle } from "@/contexts/performance-review/application/review/update-review-cycle"
 import { factory } from "@/api/http/factory"
@@ -35,7 +36,9 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const updated = await new UpdateReviewCycle(c).run({
+    const updated = await new UpdateReviewCycle({
+      reviewCycleRepository: new ReviewCycleRepository(c),
+    }).run({
       session: session,
       cycleId,
       title: json.title,
@@ -70,7 +73,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const cycleId = validateIntParam(c.req.param("cycleId"), "review cycle")
 
-  const result = await new DeleteReviewCycle(c).run({
+  const result = await new DeleteReviewCycle({
+    reviewCycleRepository: new ReviewCycleRepository(c),
+  }).run({
     session: session,
     cycleId,
   })

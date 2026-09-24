@@ -2,8 +2,7 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import { isCareerRecordSourceFrozenError } from "@/contexts/career/infrastructure/repositories/lib/is-career-record-source-frozen-error"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
+import type { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
 import type { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
 
 export type Command = {
@@ -12,6 +11,10 @@ export type Command = {
 }
 
 export type Deleted = { reason: "deleted" }
+
+type Context = Readonly<{
+  postingRepository: Pick<CareerPostingRepository, "findById" | "deleteIfNoAppliedApplications">
+}>
 
 /**
  * 管理ロールが社内公募を削除する。
@@ -25,13 +28,11 @@ export class DeleteCareerPosting {
   }
 
   async run(command: Command): Promise<Deleted | ApplicationError> {
-    const postingRepository = new CareerPostingRepository(this.c)
-
     if (command.session.hasPermission("career_posting:manage") === false) {
       return new ForbiddenError("cannot manage career postings", "forbidden")
     }
 
-    const current: CareerPosting | null | Error = await postingRepository.findById(
+    const current: CareerPosting | null | Error = await this.c.postingRepository.findById(
       command.postingId,
     )
 
@@ -43,7 +44,7 @@ export class DeleteCareerPosting {
       return new NotFoundError("career posting not found", "posting_not_found")
     }
 
-    const result = await postingRepository.deleteIfNoAppliedApplications(current)
+    const result = await this.c.postingRepository.deleteIfNoAppliedApplications(current)
 
     if (result instanceof Error) {
       if (isCareerRecordSourceFrozenError(result)) {

@@ -2,8 +2,11 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import type { Contract } from "@/contexts/partner/domain/entities/contract.entity"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { ContractRepository } from "@/contexts/partner/infrastructure/repositories/contract/contract.repository"
+import type { ContractRepository } from "@/contexts/partner/infrastructure/repositories/contract/contract.repository"
+
+type Context = Readonly<{
+  contractRepository: Pick<ContractRepository, "findById" | "update">
+}>
 
 export type Command = {
   session: CompanySessionValue
@@ -27,13 +30,11 @@ export class UpdateContract {
   }
 
   async run(command: Command): Promise<Contract | ApplicationError> {
-    const contractRepository = new ContractRepository(this.c)
-
     if (command.session.hasPermission("contract:manage") === false) {
       return new ForbiddenError("cannot manage contracts", "forbidden")
     }
 
-    const contract = await contractRepository.findById(command.id)
+    const contract = await this.c.contractRepository.findById(command.id)
 
     if (contract instanceof Error) {
       return new UnexpectedError("failed to find contract", { cause: contract })
@@ -43,7 +44,7 @@ export class UpdateContract {
       return new NotFoundError("contract not found", "contract_not_found")
     }
 
-    const updated = await contractRepository.update(contract.withDetails(command.details))
+    const updated = await this.c.contractRepository.update(contract.withDetails(command.details))
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to update contract", { cause: updated })

@@ -1,4 +1,5 @@
 import { UpdateReward } from "@/contexts/thanks/application/thanks-points/update-reward"
+import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
 import { toPositiveInt } from "@/lib/http/to-positive-int"
 import { rewardPointCostSchema } from "@/contexts/thanks/domain/entities/thanks-reward.entity"
 import { ApplicationError } from "@/lib/errors"
@@ -41,12 +42,14 @@ export const PATCH = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const updated = await new UpdateReward(c).run({
-      rewardId,
-      name: json.name,
-      pointCost: json.point_cost,
-      isActive: json.is_active,
-    })
+    const updated = await new UpdateReward({ rewardRepository: new ThanksRewardRepository(c) }).run(
+      {
+        rewardId,
+        name: json.name,
+        pointCost: json.point_cost,
+        isActive: json.is_active,
+      },
+    )
 
     if (updated instanceof ApplicationError) {
       throw toHttpException(updated)

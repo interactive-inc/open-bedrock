@@ -6,73 +6,140 @@ import { CloseReviewCycle } from "@/contexts/performance-review/application/revi
 import { OpenReviewCycle } from "@/contexts/performance-review/application/review/open-review-cycle"
 import { SubmitReviewForm } from "@/contexts/performance-review/application/review/submit-review-form"
 import { UpdateReviewCycle } from "@/contexts/performance-review/application/review/update-review-cycle"
+import { defaultReviewCyclePolicy } from "@/contexts/performance-review/domain/definitions/review-cycle-policy.definition"
 import { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
 import { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
-import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import { makeTestSession } from "@tests/api/support/make-test-session"
-import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
-async function seedCycle(context: Context, status: "draft" | "open" | "closed"): Promise<number> {
-  const created = await new ReviewCycleRepository(context).create(
-    new ReviewCycle({
-      id: null,
-      title: "Test Cycle",
-      period: "2026-H1",
-      status: status,
-      dueDate: null,
-    }),
-  )
+type CycleStatus = "draft" | "open" | "closed"
 
-  if (created instanceof Error || created.id === null) {
-    throw new Error("seed cycle failed")
+/**
+ * 評価サイクルと評価フォームのRepository・Adapterを型付きfakeにする。
+ * 条件付き状態更新、batch削除、フォーム生成のSQLは performance-review/test/review-cycle.d1.test.ts が検証する。
+ */
+function createReviewPorts() {
+  const cycles = new Map<number, ReviewCycle>()
+  const forms = new Map<number, ReviewForm>()
+  const policies = new Map<number, unknown>()
+  const generatedFor: number[] = []
+
+  const store = (cycle: ReviewCycle, id: number) => {
+    const stored = new ReviewCycle({
+      id,
+      title: cycle.title,
+      period: cycle.period,
+      status: cycle.status,
+      dueDate: cycle.dueDate,
+    })
+    cycles.set(id, stored)
+    return stored
   }
 
-  return created.id
-}
-
-async function seedForm(
-  context: Context,
-  cycleId: number,
-  reviewerEmployeeId: number,
-  status: "pending" | "submitted",
-): Promise<number> {
-  const db = context.env.DB
-
-  const formId = await db
-    .prepare(
-      `INSERT INTO review_forms (cycle_id, subject_employee_id, reviewer_employee_id, reviewer_type, answers, score, comment, status, submitted_at)
-       VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
-       RETURNING id`,
-    )
-    .bind(
-      cycleId,
-      10,
-      reviewerEmployeeId,
-      "peer",
-      "[]",
-      null,
-      null,
-      status,
-      status === "submitted" ? "2026-01-15T00:00:00.000Z" : null,
-    )
-    .first<number>("id")
-
-  if (formId === null) {
-    throw new Error("seed form failed")
+  const reviewCycleRepository = {
+    findById: async (cycleId: number) => cycles.get(cycleId) ?? null,
+    create: async (cycle: ReviewCycle) => store(cycle, cycles.size + 1),
+    delete: async (cycleId: number) => {
+      cycles.delete(cycleId)
+      return null
+    },
+    updateStatus: async (cycle: ReviewCycle, previousStatus: ReviewCycle["status"]) => {
+      if (cycle.id === null || cycles.get(cycle.id)?.status !== previousStatus) return null
+      cycles.set(cycle.id, cycle)
+      return cycle
+    },
+    updateDetails: async (cycle: ReviewCycle) => {
+      if (cycle.id === null || cycles.get(cycle.id)?.status === "closed") return null
+      cycles.set(cycle.id, cycle)
+      return cycle
+    },
+    deleteWithForms: async (cycle: ReviewCycle) => {
+      if (cycle.id === null) return null
+      cycles.delete(cycle.id)
+      for (const form of forms.values()) {
+        if (form.cycleId === cycle.id) forms.delete(form.id)
+      }
+      return null
+    },
   }
 
-  return Number(formId)
+  const reviewFormRepository = {
+    findById: async (formId: number) => forms.get(formId) ?? null,
+    update: async (form: ReviewForm) => {
+      if (forms.get(form.id)?.status !== "pending") return null
+      forms.set(form.id, form)
+      return form
+    },
+  }
+
+  const reviewCyclePolicyAdapter = {
+    upsert: async (cycleId: number, policy: unknown) => {
+      policies.set(cycleId, policy)
+      return null
+    },
+    find: async () => defaultReviewCyclePolicy,
+  }
+
+  const reviewFormGenerationAdapter = {
+    generate: async (props: { cycleId: number }) => {
+      generatedFor.push(props.cycleId)
+      return 0
+    },
+  }
+
+  const seedCycle = (status: CycleStatus): number =>
+    store(
+      new ReviewCycle({ id: null, title: "Test Cycle", period: "2026-H1", status, dueDate: null }),
+      cycles.size + 1,
+    ).id ?? -1
+
+  const seedForm = (
+    cycleId: number,
+    reviewerEmployeeId: number,
+    status: "pending" | "submitted",
+  ): number => {
+    const id = forms.size + 1
+    forms.set(
+      id,
+      new ReviewForm({
+        id,
+        cycleId,
+        subjectEmployeeId: toWorkforceEmployeeId(10),
+        reviewerEmployeeId: toWorkforceEmployeeId(reviewerEmployeeId),
+        reviewerType: "peer",
+        answers: [],
+        score: null,
+        comment: null,
+        status,
+        submittedAt: status === "submitted" ? "2026-01-15T00:00:00.000Z" : null,
+        visibility: "hidden",
+      }),
+    )
+    return id
+  }
+
+  return {
+    ports: {
+      reviewCycleRepository,
+      reviewFormRepository,
+      reviewCyclePolicyAdapter,
+      reviewFormGenerationAdapter,
+    },
+    cycles,
+    forms,
+    policies,
+    generatedFor,
+    seedCycle,
+    seedForm,
+  }
 }
 
 describe("CreateReviewCycle", () => {
   test("creates a draft cycle with admin role", async () => {
-    const { context } = await createTestContext()
+    const { ports, policies } = createReviewPorts()
 
-    const created = await new CreateReviewCycle(context).run({
+    const created = await new CreateReviewCycle(ports).run({
       session: makeTestSession("root"),
       title: "2026 H1 Review",
       period: "2026-H1",
@@ -89,12 +156,15 @@ describe("CreateReviewCycle", () => {
     expect(created.period).toBe("2026-H1")
     expect(created.status).toBe("draft")
     expect(created.dueDate).toBe("2026-06-30")
+    expect(created.id === null ? undefined : policies.get(created.id)).toEqual(
+      defaultReviewCyclePolicy,
+    )
   })
 
   test("creates a draft cycle with hr role", async () => {
-    const { context } = await createTestContext()
+    const { ports } = createReviewPorts()
 
-    const created = await new CreateReviewCycle(context).run({
+    const created = await new CreateReviewCycle(ports).run({
       session: makeTestSession("hr"),
       title: "HR Cycle",
       period: "2026-Q1",
@@ -105,9 +175,9 @@ describe("CreateReviewCycle", () => {
   })
 
   test("returns forbidden for member role", async () => {
-    const { context } = await createTestContext()
+    const { ports, cycles } = createReviewPorts()
 
-    const result = await new CreateReviewCycle(context).run({
+    const result = await new CreateReviewCycle(ports).run({
       session: makeTestSession("member"),
       title: "Cycle",
       period: "2026-H1",
@@ -115,16 +185,34 @@ describe("CreateReviewCycle", () => {
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
+    expect(cycles.size).toBe(0)
+  })
+
+  test("removes the created cycle when the policy cannot be saved", async () => {
+    const { ports, cycles } = createReviewPorts()
+
+    const result = await new CreateReviewCycle({
+      ...ports,
+      reviewCyclePolicyAdapter: { upsert: async () => new Error("policy write failed") },
+    }).run({
+      session: makeTestSession("root"),
+      title: "Cycle",
+      period: "2026-H1",
+      dueDate: null,
+    })
+
+    expect(result).toBeInstanceOf(Error)
+    expect(cycles.size).toBe(0)
   })
 })
 
 describe("DeleteReviewCycle", () => {
   test("deletes a draft cycle", async () => {
-    const { context } = await createTestContext()
+    const { ports, cycles, seedCycle } = createReviewPorts()
 
-    const cycleId = await seedCycle(context, "draft")
+    const cycleId = seedCycle("draft")
 
-    const result = await new DeleteReviewCycle(context).run({
+    const result = await new DeleteReviewCycle(ports).run({
       session: makeTestSession("root"),
       cycleId: cycleId,
     })
@@ -134,14 +222,15 @@ describe("DeleteReviewCycle", () => {
     }
 
     expect(result.reason).toBe("deleted")
+    expect(cycles.has(cycleId)).toBe(false)
   })
 
   test("returns not_deletable for an open cycle", async () => {
-    const { context } = await createTestContext()
+    const { ports, seedCycle } = createReviewPorts()
 
-    const cycleId = await seedCycle(context, "open")
+    const cycleId = seedCycle("open")
 
-    const result = await new DeleteReviewCycle(context).run({
+    const result = await new DeleteReviewCycle(ports).run({
       session: makeTestSession("root"),
       cycleId: cycleId,
     })
@@ -150,11 +239,11 @@ describe("DeleteReviewCycle", () => {
   })
 
   test("returns not_deletable for a closed cycle", async () => {
-    const { context } = await createTestContext()
+    const { ports, seedCycle } = createReviewPorts()
 
-    const cycleId = await seedCycle(context, "closed")
+    const cycleId = seedCycle("closed")
 
-    const result = await new DeleteReviewCycle(context).run({
+    const result = await new DeleteReviewCycle(ports).run({
       session: makeTestSession("root"),
       cycleId: cycleId,
     })
@@ -163,9 +252,9 @@ describe("DeleteReviewCycle", () => {
   })
 
   test("returns cycle_not_found for a missing cycle", async () => {
-    const { context } = await createTestContext()
+    const { ports } = createReviewPorts()
 
-    const result = await new DeleteReviewCycle(context).run({
+    const result = await new DeleteReviewCycle(ports).run({
       session: makeTestSession("root"),
       cycleId: 9999,
     })
@@ -174,50 +263,47 @@ describe("DeleteReviewCycle", () => {
   })
 
   test("returns forbidden for member role", async () => {
-    const { context } = await createTestContext()
+    const { ports, cycles, seedCycle } = createReviewPorts()
 
-    const cycleId = await seedCycle(context, "draft")
+    const cycleId = seedCycle("draft")
 
-    const result = await new DeleteReviewCycle(context).run({
+    const result = await new DeleteReviewCycle(ports).run({
       session: makeTestSession("member"),
       cycleId: cycleId,
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
+    expect(cycles.has(cycleId)).toBe(true)
   })
 
-  // D1 の json_extract('', '$') を使ったガード。
-  // 前の DELETE が 0 行のとき malformed JSON エラーでバッチを中断し、
-  // 後続の review_forms 削除を防ぐ（レースコンディション対策）。
-  test("guard aborts batch when cycle was concurrently changed from draft", async () => {
-    const { context } = await createTestContext()
+  test("keeps forms of a cycle that was changed from draft before deletion", async () => {
+    const { ports, cycles, forms, seedCycle, seedForm } = createReviewPorts()
 
-    const cycleId = await seedCycle(context, "draft")
-    await seedForm(context, cycleId, 5, "pending")
+    const cycleId = seedCycle("draft")
+    const formId = seedForm(cycleId, 5, "pending")
+    const current = cycles.get(cycleId)?.open()
 
-    // draft→open に変更して削除条件 (status='draft') を満たさなくする
-    const db = context.env.DB
+    if (current === null || current === undefined) throw new Error("open failed")
 
-    await db.prepare("UPDATE review_cycles SET status = 'open' WHERE id = ?1").bind(cycleId).run()
+    cycles.set(cycleId, current)
 
-    const result = await new DeleteReviewCycle(context).run({
+    const result = await new DeleteReviewCycle(ports).run({
       session: makeTestSession("root"),
       cycleId: cycleId,
     })
 
-    // isDeletable チェックで弾かれる
     expectApplicationError(result, ConflictError, "not_deletable")
+    expect(forms.has(formId)).toBe(true)
   })
 })
 
 describe("OpenReviewCycle / CloseReviewCycle", () => {
   test("transitions draft to open", async () => {
-    const { context, db } = await createTestContext()
-    await initializeStandardCompanyTestState(db)
+    const { ports, generatedFor, seedCycle } = createReviewPorts()
 
-    const cycleId = await seedCycle(context, "draft")
+    const cycleId = seedCycle("draft")
 
-    const result = await new OpenReviewCycle(context).execute({
+    const result = await new OpenReviewCycle(ports).execute({
       session: makeTestSession("root"),
       cycleId: cycleId,
     })
@@ -229,14 +315,15 @@ describe("OpenReviewCycle / CloseReviewCycle", () => {
     }
 
     expect(result.status).toBe("open")
+    expect(generatedFor).toEqual([cycleId])
   })
 
   test("transitions open to closed", async () => {
-    const { context } = await createTestContext()
+    const { ports, seedCycle } = createReviewPorts()
 
-    const cycleId = await seedCycle(context, "open")
+    const cycleId = seedCycle("open")
 
-    const result = await new CloseReviewCycle(context).execute({
+    const result = await new CloseReviewCycle(ports).execute({
       session: makeTestSession("root"),
       cycleId: cycleId,
     })
@@ -251,11 +338,11 @@ describe("OpenReviewCycle / CloseReviewCycle", () => {
   })
 
   test("returns invalid_transition for draft to closed", async () => {
-    const { context } = await createTestContext()
+    const { ports, seedCycle } = createReviewPorts()
 
-    const cycleId = await seedCycle(context, "draft")
+    const cycleId = seedCycle("draft")
 
-    const result = await new CloseReviewCycle(context).execute({
+    const result = await new CloseReviewCycle(ports).execute({
       session: makeTestSession("root"),
       cycleId: cycleId,
     })
@@ -264,22 +351,23 @@ describe("OpenReviewCycle / CloseReviewCycle", () => {
   })
 
   test("returns invalid_transition for closed to open", async () => {
-    const { context } = await createTestContext()
+    const { ports, generatedFor, seedCycle } = createReviewPorts()
 
-    const cycleId = await seedCycle(context, "closed")
+    const cycleId = seedCycle("closed")
 
-    const result = await new OpenReviewCycle(context).execute({
+    const result = await new OpenReviewCycle(ports).execute({
       session: makeTestSession("root"),
       cycleId: cycleId,
     })
 
     expectApplicationError(result, ConflictError, "invalid_transition")
+    expect(generatedFor).toEqual([])
   })
 
   test("returns cycle_not_found for a missing cycle", async () => {
-    const { context } = await createTestContext()
+    const { ports } = createReviewPorts()
 
-    const result = await new OpenReviewCycle(context).execute({
+    const result = await new OpenReviewCycle(ports).execute({
       session: makeTestSession("root"),
       cycleId: 9999,
     })
@@ -288,9 +376,9 @@ describe("OpenReviewCycle / CloseReviewCycle", () => {
   })
 
   test("returns forbidden for member role", async () => {
-    const { context } = await createTestContext()
+    const { ports } = createReviewPorts()
 
-    const result = await new OpenReviewCycle(context).execute({
+    const result = await new OpenReviewCycle(ports).execute({
       session: makeTestSession("member"),
       cycleId: 1,
     })
@@ -301,11 +389,11 @@ describe("OpenReviewCycle / CloseReviewCycle", () => {
 
 describe("UpdateReviewCycle", () => {
   test("updates a draft cycle", async () => {
-    const { context } = await createTestContext()
+    const { ports, seedCycle } = createReviewPorts()
 
-    const cycleId = await seedCycle(context, "draft")
+    const cycleId = seedCycle("draft")
 
-    const result = await new UpdateReviewCycle(context).run({
+    const result = await new UpdateReviewCycle(ports).run({
       session: makeTestSession("root"),
       cycleId: cycleId,
       title: "Updated Title",
@@ -325,11 +413,11 @@ describe("UpdateReviewCycle", () => {
   })
 
   test("updates an open cycle", async () => {
-    const { context } = await createTestContext()
+    const { ports, seedCycle } = createReviewPorts()
 
-    const cycleId = await seedCycle(context, "open")
+    const cycleId = seedCycle("open")
 
-    const result = await new UpdateReviewCycle(context).run({
+    const result = await new UpdateReviewCycle(ports).run({
       session: makeTestSession("root"),
       cycleId: cycleId,
       title: "Open Updated",
@@ -347,11 +435,11 @@ describe("UpdateReviewCycle", () => {
   })
 
   test("returns not_modifiable for a closed cycle", async () => {
-    const { context } = await createTestContext()
+    const { ports, seedCycle } = createReviewPorts()
 
-    const cycleId = await seedCycle(context, "closed")
+    const cycleId = seedCycle("closed")
 
-    const result = await new UpdateReviewCycle(context).run({
+    const result = await new UpdateReviewCycle(ports).run({
       session: makeTestSession("root"),
       cycleId: cycleId,
       title: "Should Fail",
@@ -363,9 +451,9 @@ describe("UpdateReviewCycle", () => {
   })
 
   test("returns cycle_not_found for a missing cycle", async () => {
-    const { context } = await createTestContext()
+    const { ports } = createReviewPorts()
 
-    const result = await new UpdateReviewCycle(context).run({
+    const result = await new UpdateReviewCycle(ports).run({
       session: makeTestSession("root"),
       cycleId: 9999,
       title: "Missing",
@@ -377,9 +465,9 @@ describe("UpdateReviewCycle", () => {
   })
 
   test("returns forbidden for member role", async () => {
-    const { context } = await createTestContext()
+    const { ports } = createReviewPorts()
 
-    const result = await new UpdateReviewCycle(context).run({
+    const result = await new UpdateReviewCycle(ports).run({
       session: makeTestSession("member"),
       cycleId: 1,
       title: "Should Fail",
@@ -393,12 +481,12 @@ describe("UpdateReviewCycle", () => {
 
 describe("SubmitReviewForm", () => {
   test("submits a pending form in an open cycle", async () => {
-    const { context } = await createTestContext()
+    const { ports, seedCycle, seedForm } = createReviewPorts()
 
-    const cycleId = await seedCycle(context, "open")
-    const formId = await seedForm(context, cycleId, 5, "pending")
+    const cycleId = seedCycle("open")
+    const formId = seedForm(cycleId, 5, "pending")
 
-    const result = await new SubmitReviewForm(context).run({
+    const result = await new SubmitReviewForm(ports).run({
       viewerEmployeeId: toWorkforceEmployeeId(5),
       formId: formId,
       score: 80,
@@ -419,9 +507,9 @@ describe("SubmitReviewForm", () => {
   })
 
   test("returns form_not_found for a missing form", async () => {
-    const { context } = await createTestContext()
+    const { ports } = createReviewPorts()
 
-    const result = await new SubmitReviewForm(context).run({
+    const result = await new SubmitReviewForm(ports).run({
       viewerEmployeeId: toWorkforceEmployeeId(5),
       formId: 9999,
       score: null,
@@ -434,12 +522,12 @@ describe("SubmitReviewForm", () => {
   })
 
   test("returns forbidden when viewer is not the assigned reviewer", async () => {
-    const { context } = await createTestContext()
+    const { ports, seedCycle, seedForm } = createReviewPorts()
 
-    const cycleId = await seedCycle(context, "open")
-    const formId = await seedForm(context, cycleId, 5, "pending")
+    const cycleId = seedCycle("open")
+    const formId = seedForm(cycleId, 5, "pending")
 
-    const result = await new SubmitReviewForm(context).run({
+    const result = await new SubmitReviewForm(ports).run({
       viewerEmployeeId: toWorkforceEmployeeId(99),
       formId: formId,
       score: null,
@@ -452,12 +540,12 @@ describe("SubmitReviewForm", () => {
   })
 
   test("returns already_submitted for an already submitted form", async () => {
-    const { context } = await createTestContext()
+    const { ports, seedCycle, seedForm } = createReviewPorts()
 
-    const cycleId = await seedCycle(context, "open")
-    const formId = await seedForm(context, cycleId, 5, "submitted")
+    const cycleId = seedCycle("open")
+    const formId = seedForm(cycleId, 5, "submitted")
 
-    const result = await new SubmitReviewForm(context).run({
+    const result = await new SubmitReviewForm(ports).run({
       viewerEmployeeId: toWorkforceEmployeeId(5),
       formId: formId,
       score: 90,
@@ -470,12 +558,12 @@ describe("SubmitReviewForm", () => {
   })
 
   test("returns cycle_not_open when cycle is draft", async () => {
-    const { context } = await createTestContext()
+    const { ports, seedCycle, seedForm } = createReviewPorts()
 
-    const cycleId = await seedCycle(context, "draft")
-    const formId = await seedForm(context, cycleId, 5, "pending")
+    const cycleId = seedCycle("draft")
+    const formId = seedForm(cycleId, 5, "pending")
 
-    const result = await new SubmitReviewForm(context).run({
+    const result = await new SubmitReviewForm(ports).run({
       viewerEmployeeId: toWorkforceEmployeeId(5),
       formId: formId,
       score: null,
@@ -488,12 +576,12 @@ describe("SubmitReviewForm", () => {
   })
 
   test("returns cycle_not_open when cycle is closed", async () => {
-    const { context } = await createTestContext()
+    const { ports, seedCycle, seedForm } = createReviewPorts()
 
-    const cycleId = await seedCycle(context, "closed")
-    const formId = await seedForm(context, cycleId, 5, "pending")
+    const cycleId = seedCycle("closed")
+    const formId = seedForm(cycleId, 5, "pending")
 
-    const result = await new SubmitReviewForm(context).run({
+    const result = await new SubmitReviewForm(ports).run({
       viewerEmployeeId: toWorkforceEmployeeId(5),
       formId: formId,
       score: null,

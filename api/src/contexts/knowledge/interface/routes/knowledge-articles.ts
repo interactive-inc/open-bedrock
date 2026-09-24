@@ -1,3 +1,5 @@
+import { KnowledgeAuthorAuthorizationAdapter } from "@/contexts/knowledge/infrastructure/adapters/knowledge-author-authorization.adapter"
+import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/repositories/knowledge-article.repository"
 import { CreateKnowledgeArticle } from "@/contexts/knowledge/application/create-knowledge-article"
 import { factory } from "@/api/http/factory"
 import { likeKeyword } from "@/lib/database/like-keyword"
@@ -119,7 +121,10 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const article = await new CreateKnowledgeArticle(c).run({
+    const article = await new CreateKnowledgeArticle({
+      articleRepository: new KnowledgeArticleRepository(c),
+      authorAuthorization: new KnowledgeAuthorAuthorizationAdapter(c),
+    }).run({
       title: json.title,
       category: json.category,
       tags: json.tags ?? null,

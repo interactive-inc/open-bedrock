@@ -4,9 +4,12 @@ import { canModifyEnrollment } from "@/contexts/training/domain/policies/enrollm
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
-import type { Context } from "@/env"
-import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
+import type { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+
+type Context = Readonly<{
+  enrollmentRepository: Pick<TrainingEnrollmentRepository, "findById" | "rescheduleEnrollment">
+}>
 
 export type Command = {
   enrollmentId: number
@@ -24,9 +27,7 @@ export class RescheduleTrainingEnrollment {
   }
 
   async run(command: Command): Promise<TrainingEnrollment | ApplicationError> {
-    const enrollmentRepository = new TrainingEnrollmentRepository(this.c)
-
-    const enrollment = await enrollmentRepository.findById(command.enrollmentId)
+    const enrollment = await this.c.enrollmentRepository.findById(command.enrollmentId)
 
     if (enrollment instanceof Error) {
       return new UnexpectedError("failed to find training enrollment", { cause: enrollment })
@@ -50,7 +51,7 @@ export class RescheduleTrainingEnrollment {
       return new ConflictError("enrollment is already completed", "already_completed")
     }
 
-    const updated = await enrollmentRepository.rescheduleEnrollment(
+    const updated = await this.c.enrollmentRepository.rescheduleEnrollment(
       enrollment.withRescheduled(command.dueDate),
     )
 

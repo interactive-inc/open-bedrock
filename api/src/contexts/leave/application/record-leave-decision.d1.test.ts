@@ -1,20 +1,38 @@
 import { PrepareLeaveDecisionNotificationAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-decision-notification.adapter"
 import { CompleteRejectedLeaveProcedure } from "@/contexts/leave/application/complete-rejected-leave-procedure"
 import { CompleteApprovedLeaveProcedure } from "@/contexts/leave/application/complete-approved-leave-procedure"
-import { expect, spyOn, test } from "bun:test"
+import { afterAll, beforeAll, expect, setDefaultTimeout, spyOn, test } from "bun:test"
 import { RecordLeaveDecision } from "@/contexts/leave/application/record-leave-decision"
-import { createLeaveProcedureTestContext } from "@/contexts/leave/test/leave-procedure.test-support"
-import { createTestContextForDatabase } from "@tests/api/support/create-test-context"
+import { createLeaveProcedureLocalD1Context } from "@/contexts/leave/test/leave-procedure-local-d1.test-support"
+import { createTestContextForDatabase } from "@tests/api/support/create-context-for-database"
+import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(120_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({ migrated: ["approve", "reject"] })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 test.each(["approve", "reject"] as const)(
   "合議の票を重複なく記録し、最終確定までは残数を消費しない: %s",
   async (action) => {
-    const c = await createLeaveProcedureTestContext()
+    const c = await createLeaveProcedureLocalD1Context(local, action)
     const binding = await c.repository.submit(c.submission)
     if (binding instanceof Error) throw binding
-    await c.database.exec(`INSERT INTO system_iam_roles
-    (id, key, kind, name, created_at, updated_at) VALUES ('leave-approve-role', 'test:leave-approve', 'custom', 'Leave decision', 0, 0);
-    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('leave-approve-role', 'leave:approve');`)
+    await c.database.batch([
+      c.database.prepare(`INSERT INTO system_iam_roles
+    (id, key, kind, name, created_at, updated_at) VALUES ('leave-approve-role', 'test:leave-approve', 'custom', 'Leave decision', 0, 0)`),
+      c.database.prepare(
+        "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('leave-approve-role', 'leave:approve')",
+      ),
+    ])
     await c.database
       .prepare(
         "INSERT INTO leave_balances (employee_id, fiscal_year, leave_type, granted_days, used_days, remaining_days) VALUES (?1, '2026', 'annual', 10, 0, 10)",
@@ -149,9 +167,11 @@ test.each(["approve", "reject"] as const)(
         interception.mockRestore()
         command.tokenVersion = 1
       }
-      await c.database.exec(
-        "CREATE TRIGGER fail_leave_notification BEFORE INSERT ON leave_decision_notifications BEGIN SELECT RAISE(ABORT, 'notification failed'); END;",
-      )
+      await c.database
+        .prepare(
+          "CREATE TRIGGER fail_leave_notification BEFORE INSERT ON leave_decision_notifications BEGIN SELECT RAISE(ABORT, 'notification failed'); END",
+        )
+        .run()
       expect(await complete.run(command)).toBeInstanceOf(Error)
       expect(
         await c.database
@@ -175,7 +195,7 @@ test.each(["approve", "reject"] as const)(
           .prepare("SELECT count(*) AS count FROM leave_decision_notifications")
           .first<number>("count"),
       ).toBe(0)
-      await c.database.exec("DROP TRIGGER fail_leave_notification")
+      await c.database.prepare("DROP TRIGGER fail_leave_notification").run()
       if (action === "approve") {
         await c.database
           .prepare(

@@ -8,9 +8,12 @@ import {
   ValidationError,
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/repositories/family-care-leave.repository"
+import type { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/repositories/family-care-leave.repository"
 import { isFamilyCareLeaveRecordSourceFrozenError } from "@/contexts/family-care-leave/infrastructure/repositories/lib/is-family-care-leave-record-source-frozen-error"
+
+type Context = Readonly<{
+  familyCareLeaveRepository: Pick<FamilyCareLeaveRepository, "findById" | "updateIfNoOverlap">
+}>
 
 export type Command = {
   familyCareLeaveId: string
@@ -30,9 +33,7 @@ export class UpdateFamilyCareLeave {
   }
 
   async run(command: Command): Promise<FamilyCareLeave | ApplicationError> {
-    const familyCareLeaveRepository = new FamilyCareLeaveRepository(this.c)
-
-    const current = await familyCareLeaveRepository.findById(command.familyCareLeaveId)
+    const current = await this.c.familyCareLeaveRepository.findById(command.familyCareLeaveId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find family care leave", { cause: current })
@@ -63,7 +64,7 @@ export class UpdateFamilyCareLeave {
 
     // 自身を除く同一社員・重複期間の requested 申出があれば 0 行更新となり null を返す。
     // チェックと UPDATE をアトミックに行い、並行リクエストによる二重申出を防ぐ。
-    const saved = await familyCareLeaveRepository.updateIfNoOverlap(updated)
+    const saved = await this.c.familyCareLeaveRepository.updateIfNoOverlap(updated)
 
     if (saved instanceof Error) {
       if (isFamilyCareLeaveRecordSourceFrozenError(saved))
@@ -75,7 +76,7 @@ export class UpdateFamilyCareLeave {
 
     // 0 行更新の理由（消失 / status 変更 / 重複）を再取得して判別する。
     if (saved === null) {
-      const latest = await familyCareLeaveRepository.findById(command.familyCareLeaveId)
+      const latest = await this.c.familyCareLeaveRepository.findById(command.familyCareLeaveId)
 
       if (latest instanceof Error) {
         return new UnexpectedError("failed to find family care leave", { cause: latest })

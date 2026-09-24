@@ -1,4 +1,7 @@
 import { SendThanks } from "@/contexts/thanks/application/send-thanks"
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
+import { ThanksRepository } from "@/contexts/thanks/infrastructure/repositories/thanks.repository"
+import { ThanksPointBudgetRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-point-budget.repository"
 import { EmployeeNotificationAdapter } from "@/api/http/notifications/employee-notification.adapter"
 import { Thanks } from "@/contexts/thanks/domain/entities/thanks.entity"
 import { UnauthorizedError } from "@/lib/http/errors"
@@ -102,7 +105,9 @@ export const POST = factory.createHandlers(
     const json = c.req.valid("json")
 
     const result = await new SendThanks({
-      context: c,
+      employeeDirectory: openCompanyEmployeeDirectory(c),
+      thanksRepository: new ThanksRepository(c),
+      budgetRepository: new ThanksPointBudgetRepository(c),
       publishEmployeeNotification: (notification) =>
         new EmployeeNotificationAdapter(c).create(notification),
     }).run({

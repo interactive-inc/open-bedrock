@@ -1,7 +1,6 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { BusinessTrip } from "@/contexts/business-trip/domain/entities/business-trip.entity"
-import type { Context } from "@/env"
-import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/repositories/business-trip.repository"
+import type { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/repositories/business-trip.repository"
 import { isBusinessTripRecordSourceFrozenError } from "@/contexts/business-trip/infrastructure/repositories/lib/is-business-trip-record-source-frozen-error"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
@@ -16,6 +15,10 @@ export type Command = {
   createdAt: string
 }
 
+type Context = Readonly<{
+  businessTripRepository: Pick<BusinessTripRepository, "findOverlapping" | "create">
+}>
+
 /**
  * 出張申請を作成する。status は "requested" で登録する。
  * 同一申請者の期間が重複する出張申請が既に存在する場合は拒否する。
@@ -26,9 +29,7 @@ export class CreateBusinessTrip {
   }
 
   async run(command: Command): Promise<BusinessTrip | ApplicationError> {
-    const businessTripRepository = new BusinessTripRepository(this.c)
-
-    const overlapping = await businessTripRepository.findOverlapping({
+    const overlapping = await this.c.businessTripRepository.findOverlapping({
       travelerId: command.travelerId,
       startDate: command.startDate,
       endDate: command.endDate,
@@ -57,7 +58,7 @@ export class CreateBusinessTrip {
       return new ValidationError("invalid date range", "invalid_date_range")
     }
 
-    const result = await businessTripRepository.create(businessTrip)
+    const result = await this.c.businessTripRepository.create(businessTrip)
 
     if (result instanceof Error) {
       if (isBusinessTripRecordSourceFrozenError(result)) {

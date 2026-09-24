@@ -1,80 +1,68 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
+import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
+import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { SendThanks } from "@/contexts/thanks/application/send-thanks"
 import { Thanks } from "@/contexts/thanks/domain/entities/thanks.entity"
-import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { employments } from "@/contexts/company/infrastructure/schema/employment"
-import { prepareUnpublishedEmployment } from "@/contexts/company/test/unpublished-employment.test-support"
-import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
-import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { ThanksPointBudget } from "@/contexts/thanks/domain/entities/thanks-point-budget.entity"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
-import { createTestContext } from "@tests/api/support/create-test-context"
-import { publishTestEmployeeResources } from "@tests/api/support/company/publish-test-employee-resources"
 import { NotFoundError, ValidationError } from "@/lib/errors"
 import { describe, expect, test } from "bun:test"
 
-async function seedEmployee(
-  context: Awaited<ReturnType<typeof createTestContext>>["context"],
-  code: string,
-  name: string,
-): Promise<EmployeeId> {
-  const employeeId = toWorkforceEmployeeId(`employee:${code}`)
-
-  await context.var.database.insert(employees).values({
-    id: employeeId,
+function activeEmployee(code: string, name: string): CompanyEmployeeDirectoryEntry {
+  return {
+    id: toWorkforceEmployeeId(`employee:${code}`),
     officialName: name,
     employeeCode: code,
     email: null,
     phone: null,
-    createdAt: new Date(0),
-    updatedAt: new Date(0),
-  })
-  await context.var.database.insert(employments).values({
-    id: `employment:${code}`,
-    employeeId,
-    contractName: name,
-    employmentType: "FULL_TIME",
-    hireDate: "1970-01-01",
-    status: "ACTIVE",
-    terminationDate: null,
-    createdAt: new Date(0),
-    updatedAt: new Date(0),
+    employment: { id: restoreWorkforceId("employment", `employment:${code}`), status: "ACTIVE" },
+    primaryAssignment: null,
+  }
+}
+
+/**
+ * 従業員名簿・感謝・原資を型付きfakeにしてSendThanksの業務判断だけを検証する。
+ * 名簿の実データ解決と感謝の保存は send-thanks.d1.test.ts がローカルD1で検証する。
+ */
+function createSendThanks(employees: ReadonlyArray<CompanyEmployeeDirectoryEntry>) {
+  const created: Thanks[] = []
+
+  const sendThanks = new SendThanks({
+    employeeDirectory: {
+      findById: async (id: EmployeeId) => employees.find((employee) => employee.id === id) ?? null,
+      findByCode: async (code: string) =>
+        employees.find((employee) => employee.employeeCode === code) ?? null,
+    },
+    thanksRepository: {
+      consumeBudgetAndCreate: async ({ thanksRecord }) => {
+        const saved = new Thanks({
+          id: created.length + 1,
+          senderEmployeeId: thanksRecord.senderEmployeeId,
+          recipientEmployeeId: thanksRecord.recipientEmployeeId,
+          message: thanksRecord.message,
+          points: thanksRecord.points,
+          createdAt: thanksRecord.createdAt,
+        })
+        created.push(saved)
+        return saved
+      },
+    },
+    budgetRepository: {
+      findOrCreate: async (props) => ThanksPointBudget.create({ ...props, grantedPoints: 100 }),
+    },
   })
 
-  const initialEmployment = await prepareUnpublishedEmployment(context.env.DB, {
-    employeeId,
-    employmentId: restoreWorkforceId("employment", `employment:${code}`),
-    effectiveOn: restoreCalendarDate("1970-01-01"),
-    status: "active",
-    occurredAt: new Date(0),
-    actorAccountId: null,
-    operationId: `seed:${code}`,
-    reason: "Initial test employment",
-  })
-  await context.env.DB.batch([...initialEmployment])
-  await publishTestEmployeeResources(context.env.DB, {
-    employeeId: String(employeeId),
-    employmentId: `employment:${code}`,
-    officialName: name,
-    employeeCode: code,
-    employmentType: "FULL_TIME",
-    employmentStatus: "ACTIVE",
-    effectiveFrom: "1970-01-01",
-    recordedAt: 0,
-  })
-
-  return employeeId
+  return { sendThanks, created }
 }
 
 describe("SendThanks", () => {
   test("rejects self-thanks with reason self_thanks", async () => {
-    const { context } = await createTestContext()
+    const alice = activeEmployee("E100", "Alice")
+    const { sendThanks, created } = createSendThanks([alice, activeEmployee("E101", "Bob")])
 
-    const senderId = await seedEmployee(context, "E100", "Alice")
-    await seedEmployee(context, "E101", "Bob")
-
-    const result = await new SendThanks({ context }).run({
-      senderEmployeeId: senderId,
+    const result = await sendThanks.run({
+      senderEmployeeId: alice.id,
       recipientEmployeeCode: "E100",
       message: "ありがとう",
       points: null,
@@ -82,16 +70,16 @@ describe("SendThanks", () => {
     })
 
     expectApplicationError(result, ValidationError, "self_thanks")
+    expect(created).toEqual([])
   })
 
   test("sends thanks to another employee successfully", async () => {
-    const { context } = await createTestContext()
+    const alice = activeEmployee("E200", "Alice")
+    const bob = activeEmployee("E201", "Bob")
+    const { sendThanks, created } = createSendThanks([alice, bob])
 
-    const senderId = await seedEmployee(context, "E200", "Alice")
-    await seedEmployee(context, "E201", "Bob")
-
-    const result = await new SendThanks({ context }).run({
-      senderEmployeeId: senderId,
+    const result = await sendThanks.run({
+      senderEmployeeId: alice.id,
       recipientEmployeeCode: "E201",
       message: "助けてくれてありがとう",
       points: null,
@@ -99,15 +87,15 @@ describe("SendThanks", () => {
     })
 
     expect(result).toBeInstanceOf(Thanks)
+    expect(created.map((thanks) => thanks.recipientEmployeeId)).toEqual([bob.id])
   })
 
   test("returns recipient_not_found for unknown recipient", async () => {
-    const { context } = await createTestContext()
+    const alice = activeEmployee("E300", "Alice")
+    const { sendThanks } = createSendThanks([alice])
 
-    const senderId = await seedEmployee(context, "E300", "Alice")
-
-    const result = await new SendThanks({ context }).run({
-      senderEmployeeId: senderId,
+    const result = await sendThanks.run({
+      senderEmployeeId: alice.id,
       recipientEmployeeCode: "E999",
       message: "ありがとう",
       points: null,

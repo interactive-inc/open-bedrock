@@ -9,7 +9,7 @@ import {
   lifecycleRouteJwtSecret,
 } from "@tests/api/support/lifecycle-route-fixture"
 import { requestWithContext } from "@tests/api/support/request-with-context"
-import { createTestContextForDatabase } from "@tests/api/support/create-test-context"
+import { createTestContextForDatabase } from "@tests/api/support/create-context-for-database"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { SystemD1ProcedureRepository } from "@system/infrastructure/repositories/workflow/system-d1-procedure.repository"

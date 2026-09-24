@@ -1,8 +1,7 @@
 import { AttendanceRecordSourceFrozenError } from "@/contexts/attendance/infrastructure/repositories/errors"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendance-record.entity"
-import type { Context } from "@/env"
-import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/repositories/attendance-record.repository"
+import type { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/repositories/attendance-record.repository"
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
@@ -11,6 +10,10 @@ export type Command = {
   now: string
   note?: string | null
 }
+
+type Context = Readonly<{
+  recordRepository: Pick<AttendanceRecordRepository, "findOpenByEmployeeId" | "update">
+}>
 
 /**
  * 退勤を打刻する。出勤中の記録に労働時間を確定する。
@@ -21,9 +24,7 @@ export class ClockOut {
   }
 
   async run(command: Command): Promise<AttendanceRecord | ApplicationError> {
-    const recordRepository = new AttendanceRecordRepository(this.c)
-
-    const open = await recordRepository.findOpenByEmployeeId(command.employeeId)
+    const open = await this.c.recordRepository.findOpenByEmployeeId(command.employeeId)
 
     if (open instanceof Error) {
       return new UnexpectedError("failed to find attendance record", { cause: open })
@@ -46,7 +47,7 @@ export class ClockOut {
       return new UnexpectedError("failed to calculate work minutes", { cause: workMinutes })
     }
 
-    const record = await recordRepository.update(
+    const record = await this.c.recordRepository.update(
       open.withClosed({
         clockOutAt: command.now,
         workMinutes,

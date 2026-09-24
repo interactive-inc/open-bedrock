@@ -10,71 +10,125 @@ import { EnrollTraining } from "@/contexts/training/application/enroll-training"
 import { RescheduleTrainingEnrollment } from "@/contexts/training/application/reschedule-training-enrollment"
 import { CompleteTrainingEnrollment } from "@/contexts/training/application/complete-training-enrollment"
 import { CancelTrainingEnrollment } from "@/contexts/training/application/cancel-training-enrollment"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import { makeTestSession } from "@tests/api/support/make-test-session"
-import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
-import type { Context } from "@/env"
 
-async function seedCourse(context: Context, code: string): Promise<TrainingCourse> {
-  const result = await new CreateTrainingCourse(context).run({
-    session: makeTestSession("root"),
-    code: code,
-    title: "Test Course",
-    category: "engineering",
-    description: null,
-    durationMinutes: 60,
-    isRequired: false,
-  })
+/**
+ * 研修コースと受講登録のRepositoryを、Domain modelだけを持つ型付きfakeにする。
+ * アーカイブ済みコースへの条件付きINSERT、完了の条件付きUPDATEのSQLは
+ * training-enrollment.repository.test.ts が検証する。
+ */
+class FakeTraining {
+  private readonly courses = new Map<string, TrainingCourse>()
 
-  if (result instanceof Error) {
-    throw new Error("seed course failed")
-  }
+  private readonly enrollments = new Map<number, TrainingEnrollment>()
 
-  return result
-}
+  private nextCourseId = 1
 
-async function seedEnrollment(
-  context: Context,
-  db: D1Database,
-  courseCode: string,
-  employeeId: EmployeeId,
-): Promise<TrainingEnrollment> {
-  await seedCourse(context, courseCode)
+  private nextEnrollmentId = 1
 
-  await seedCompanyEmployees(db, [
-    {
-      id: employeeId,
-      code: `E${String(employeeId).padStart(3, "0")}`,
-      name: "Test Employee",
-      deptId: 1,
-      deptName: "Engineering",
-      position: "Engineer",
-      status: "active",
+  readonly courseRepository = {
+    findByCode: async (code: string) => this.courses.get(code) ?? null,
+    create: async (course: TrainingCourse) => {
+      const created = new TrainingCourse({
+        id: this.nextCourseId++,
+        code: course.code,
+        title: course.title,
+        description: course.description,
+        durationMinutes: course.durationMinutes,
+        category: course.category,
+        isRequired: course.isRequired,
+        status: course.status,
+      })
+      this.courses.set(created.code, created)
+      return created
     },
-  ])
-
-  const result = await new EnrollTraining(context).run({
-    viewerEmployeeId: employeeId,
-    session: makeTestSession("member"),
-    courseCode: courseCode,
-    enrolleeEmployeeCode: null,
-    dueDate: "2026-06-30",
-  })
-
-  if (result instanceof Error) {
-    throw new Error("seed enrollment failed")
+    update: async (course: TrainingCourse) => {
+      if (!this.courses.has(course.code)) return null
+      this.courses.set(course.code, course)
+      return course
+    },
   }
 
-  return result
+  readonly enrollmentRepository = {
+    findById: async (id: number) => this.enrollments.get(id) ?? null,
+    create: async (enrollment: TrainingEnrollment) => {
+      const course = [...this.courses.values()].find((item) => item.id === enrollment.courseId)
+      if (course === undefined || course.status === "archived") {
+        return { reason: "course_archived" as const }
+      }
+      const created = new TrainingEnrollment({
+        id: this.nextEnrollmentId++,
+        courseId: enrollment.courseId,
+        employeeId: enrollment.employeeId,
+        status: enrollment.status,
+        completedAt: enrollment.completedAt,
+        score: enrollment.score,
+        dueDate: enrollment.dueDate,
+      })
+      this.enrollments.set(created.id ?? 0, created)
+      return created
+    },
+    completeEnrollment: async (enrollment: TrainingEnrollment) => this.replaceEnrolled(enrollment),
+    rescheduleEnrollment: async (enrollment: TrainingEnrollment) =>
+      this.replaceEnrolled(enrollment),
+    delete: async (id: number) => (this.enrollments.delete(id) ? (true as const) : null),
+  }
+
+  readonly employeeDirectory = {
+    findByCode: async () => null,
+  }
+
+  private replaceEnrolled(enrollment: TrainingEnrollment): TrainingEnrollment | null {
+    if (enrollment.id === null) return null
+    if (this.enrollments.get(enrollment.id)?.status !== "enrolled") return null
+    this.enrollments.set(enrollment.id, enrollment)
+    return enrollment
+  }
+
+  async seedCourse(code: string): Promise<TrainingCourse> {
+    const result = await new CreateTrainingCourse(this).run({
+      session: makeTestSession("root"),
+      code: code,
+      title: "Test Course",
+      category: "engineering",
+      description: null,
+      durationMinutes: 60,
+      isRequired: false,
+    })
+
+    if (result instanceof Error) {
+      throw new Error("seed course failed")
+    }
+
+    return result
+  }
+
+  async seedEnrollment(courseCode: string, employeeId: EmployeeId): Promise<number> {
+    await this.seedCourse(courseCode)
+
+    const result = await new EnrollTraining(this).run({
+      viewerEmployeeId: employeeId,
+      session: makeTestSession("member"),
+      courseCode: courseCode,
+      enrolleeEmployeeCode: null,
+      dueDate: "2026-06-30",
+    })
+
+    if (result instanceof Error || result.id === null) {
+      throw new Error("seed enrollment failed")
+    }
+
+    return result.id
+  }
 }
 
 describe("CreateTrainingCourse", () => {
   test("creates a course as admin", async () => {
-    const { context } = await createTestContext()
+    const training = new FakeTraining()
 
-    const result = await new CreateTrainingCourse(context).run({
+    const result = await new CreateTrainingCourse(training).run({
       session: makeTestSession("root"),
       code: "TS101",
       title: "TypeScript Basics",
@@ -95,9 +149,9 @@ describe("CreateTrainingCourse", () => {
   })
 
   test("rejects member with forbidden", async () => {
-    const { context } = await createTestContext()
+    const training = new FakeTraining()
 
-    const result = await new CreateTrainingCourse(context).run({
+    const result = await new CreateTrainingCourse(training).run({
       session: makeTestSession("member"),
       code: "TS101",
       title: "TypeScript Basics",
@@ -111,11 +165,11 @@ describe("CreateTrainingCourse", () => {
   })
 
   test("rejects duplicate code with course_code_conflict", async () => {
-    const { context } = await createTestContext()
+    const training = new FakeTraining()
 
-    await seedCourse(context, "TS101")
+    await training.seedCourse("TS101")
 
-    const result = await new CreateTrainingCourse(context).run({
+    const result = await new CreateTrainingCourse(training).run({
       session: makeTestSession("root"),
       code: "TS101",
       title: "Another Course",
@@ -129,15 +183,13 @@ describe("CreateTrainingCourse", () => {
   })
 })
 
-describe("GetTrainingCourse", () => {})
-
 describe("UpdateTrainingCourse", () => {
   test("updates the course as admin", async () => {
-    const { context } = await createTestContext()
+    const training = new FakeTraining()
 
-    await seedCourse(context, "TS101")
+    await training.seedCourse("TS101")
 
-    const result = await new UpdateTrainingCourse(context).run({
+    const result = await new UpdateTrainingCourse(training).run({
       session: makeTestSession("root"),
       code: "TS101",
       title: "Updated Title",
@@ -158,11 +210,11 @@ describe("UpdateTrainingCourse", () => {
   })
 
   test("rejects member with forbidden", async () => {
-    const { context } = await createTestContext()
+    const training = new FakeTraining()
 
-    await seedCourse(context, "TS101")
+    await training.seedCourse("TS101")
 
-    const result = await new UpdateTrainingCourse(context).run({
+    const result = await new UpdateTrainingCourse(training).run({
       session: makeTestSession("member"),
       code: "TS101",
       title: "Hijacked",
@@ -176,16 +228,16 @@ describe("UpdateTrainingCourse", () => {
   })
 
   test("rejects archived course with course_archived", async () => {
-    const { context } = await createTestContext()
+    const training = new FakeTraining()
 
-    await seedCourse(context, "TS101")
+    await training.seedCourse("TS101")
 
-    await new ArchiveTrainingCourse(context).run({
+    await new ArchiveTrainingCourse(training).run({
       session: makeTestSession("root"),
       code: "TS101",
     })
 
-    const result = await new UpdateTrainingCourse(context).run({
+    const result = await new UpdateTrainingCourse(training).run({
       session: makeTestSession("root"),
       code: "TS101",
       title: "Too late",
@@ -199,9 +251,9 @@ describe("UpdateTrainingCourse", () => {
   })
 
   test("rejects unknown code with course_not_found", async () => {
-    const { context } = await createTestContext()
+    const training = new FakeTraining()
 
-    const result = await new UpdateTrainingCourse(context).run({
+    const result = await new UpdateTrainingCourse(training).run({
       session: makeTestSession("root"),
       code: "NOPE",
       title: "Missing",
@@ -217,11 +269,11 @@ describe("UpdateTrainingCourse", () => {
 
 describe("ArchiveTrainingCourse", () => {
   test("archives the course as admin", async () => {
-    const { context } = await createTestContext()
+    const training = new FakeTraining()
 
-    await seedCourse(context, "TS101")
+    await training.seedCourse("TS101")
 
-    const result = await new ArchiveTrainingCourse(context).run({
+    const result = await new ArchiveTrainingCourse(training).run({
       session: makeTestSession("root"),
       code: "TS101",
     })
@@ -230,11 +282,11 @@ describe("ArchiveTrainingCourse", () => {
   })
 
   test("rejects member with forbidden", async () => {
-    const { context } = await createTestContext()
+    const training = new FakeTraining()
 
-    await seedCourse(context, "TS101")
+    await training.seedCourse("TS101")
 
-    const result = await new ArchiveTrainingCourse(context).run({
+    const result = await new ArchiveTrainingCourse(training).run({
       session: makeTestSession("member"),
       code: "TS101",
     })
@@ -243,9 +295,9 @@ describe("ArchiveTrainingCourse", () => {
   })
 
   test("rejects unknown code with course_not_found", async () => {
-    const { context } = await createTestContext()
+    const training = new FakeTraining()
 
-    const result = await new ArchiveTrainingCourse(context).run({
+    const result = await new ArchiveTrainingCourse(training).run({
       session: makeTestSession("root"),
       code: "NOPE",
     })
@@ -256,23 +308,11 @@ describe("ArchiveTrainingCourse", () => {
 
 describe("EnrollTraining", () => {
   test("enrolls self without permission check", async () => {
-    const { context, db } = await createTestContext()
+    const training = new FakeTraining()
 
-    await seedCourse(context, "TS101")
+    await training.seedCourse("TS101")
 
-    await seedCompanyEmployees(db, [
-      {
-        id: 1,
-        code: "E001",
-        name: "Test Employee",
-        deptId: 1,
-        deptName: "Engineering",
-        position: "Engineer",
-        status: "active",
-      },
-    ])
-
-    const result = await new EnrollTraining(context).run({
+    const result = await new EnrollTraining(training).run({
       viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
       courseCode: "TS101",
@@ -287,12 +327,13 @@ describe("EnrollTraining", () => {
     }
 
     expect(result.status).toBe("enrolled")
+    expect(result.employeeId).toBe(toWorkforceEmployeeId(1))
   })
 
   test("rejects member enrolling another with forbidden", async () => {
-    const { context } = await createTestContext()
+    const training = new FakeTraining()
 
-    const result = await new EnrollTraining(context).run({
+    const result = await new EnrollTraining(training).run({
       viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
       courseCode: "TS101",
@@ -304,9 +345,9 @@ describe("EnrollTraining", () => {
   })
 
   test("rejects unknown course with course_not_found", async () => {
-    const { context } = await createTestContext()
+    const training = new FakeTraining()
 
-    const result = await new EnrollTraining(context).run({
+    const result = await new EnrollTraining(training).run({
       viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
       courseCode: "NOPE",
@@ -318,19 +359,13 @@ describe("EnrollTraining", () => {
   })
 })
 
-describe("GetTrainingEnrollment", () => {})
-
 describe("RescheduleTrainingEnrollment", () => {
   test("reschedules the enrollment for the enrollee", async () => {
-    const { context, db } = await createTestContext()
-    const enrollment = await seedEnrollment(context, db, "TS101", toWorkforceEmployeeId(1))
+    const training = new FakeTraining()
+    const enrollmentId = await training.seedEnrollment("TS101", toWorkforceEmployeeId(1))
 
-    if (enrollment.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new RescheduleTrainingEnrollment(context).run({
-      enrollmentId: enrollment.id,
+    const result = await new RescheduleTrainingEnrollment(training).run({
+      enrollmentId,
       viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
       dueDate: "2026-12-31",
@@ -346,15 +381,11 @@ describe("RescheduleTrainingEnrollment", () => {
   })
 
   test("rejects non-owner member with forbidden", async () => {
-    const { context, db } = await createTestContext()
-    const enrollment = await seedEnrollment(context, db, "TS101", toWorkforceEmployeeId(1))
+    const training = new FakeTraining()
+    const enrollmentId = await training.seedEnrollment("TS101", toWorkforceEmployeeId(1))
 
-    if (enrollment.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new RescheduleTrainingEnrollment(context).run({
-      enrollmentId: enrollment.id,
+    const result = await new RescheduleTrainingEnrollment(training).run({
+      enrollmentId,
       viewerEmployeeId: toWorkforceEmployeeId(999),
       session: makeTestSession("member", 999),
       dueDate: "2026-12-31",
@@ -366,15 +397,11 @@ describe("RescheduleTrainingEnrollment", () => {
 
 describe("CompleteTrainingEnrollment", () => {
   test("completes the enrollment for the enrollee", async () => {
-    const { context, db } = await createTestContext()
-    const enrollment = await seedEnrollment(context, db, "TS101", toWorkforceEmployeeId(1))
+    const training = new FakeTraining()
+    const enrollmentId = await training.seedEnrollment("TS101", toWorkforceEmployeeId(1))
 
-    if (enrollment.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new CompleteTrainingEnrollment(context).run({
-      enrollmentId: enrollment.id,
+    const result = await new CompleteTrainingEnrollment(training).run({
+      enrollmentId,
       viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member", 1),
       score: 85,
@@ -392,15 +419,11 @@ describe("CompleteTrainingEnrollment", () => {
   })
 
   test("rejects non-owner member with forbidden", async () => {
-    const { context, db } = await createTestContext()
-    const enrollment = await seedEnrollment(context, db, "TS101", toWorkforceEmployeeId(1))
+    const training = new FakeTraining()
+    const enrollmentId = await training.seedEnrollment("TS101", toWorkforceEmployeeId(1))
 
-    if (enrollment.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new CompleteTrainingEnrollment(context).run({
-      enrollmentId: enrollment.id,
+    const result = await new CompleteTrainingEnrollment(training).run({
+      enrollmentId,
       viewerEmployeeId: toWorkforceEmployeeId(999),
       session: makeTestSession("member", 999),
       score: null,
@@ -411,23 +434,19 @@ describe("CompleteTrainingEnrollment", () => {
   })
 
   test("rejects already completed enrollment", async () => {
-    const { context, db } = await createTestContext()
-    const enrollment = await seedEnrollment(context, db, "TS101", toWorkforceEmployeeId(1))
+    const training = new FakeTraining()
+    const enrollmentId = await training.seedEnrollment("TS101", toWorkforceEmployeeId(1))
 
-    if (enrollment.id === null) {
-      throw new Error("id is null")
-    }
-
-    await new CompleteTrainingEnrollment(context).run({
-      enrollmentId: enrollment.id,
+    await new CompleteTrainingEnrollment(training).run({
+      enrollmentId,
       viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member", 1),
       score: 90,
       completedAt: "2026-06-15T10:00:00.000Z",
     })
 
-    const result = await new CompleteTrainingEnrollment(context).run({
-      enrollmentId: enrollment.id,
+    const result = await new CompleteTrainingEnrollment(training).run({
+      enrollmentId,
       viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member", 1),
       score: 95,
@@ -440,15 +459,11 @@ describe("CompleteTrainingEnrollment", () => {
 
 describe("CancelTrainingEnrollment", () => {
   test("cancels the enrollment for the enrollee", async () => {
-    const { context, db } = await createTestContext()
-    const enrollment = await seedEnrollment(context, db, "TS101", toWorkforceEmployeeId(1))
+    const training = new FakeTraining()
+    const enrollmentId = await training.seedEnrollment("TS101", toWorkforceEmployeeId(1))
 
-    if (enrollment.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new CancelTrainingEnrollment(context).run({
-      enrollmentId: enrollment.id,
+    const result = await new CancelTrainingEnrollment(training).run({
+      enrollmentId,
       viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
     })
@@ -457,15 +472,11 @@ describe("CancelTrainingEnrollment", () => {
   })
 
   test("rejects non-owner member with forbidden", async () => {
-    const { context, db } = await createTestContext()
-    const enrollment = await seedEnrollment(context, db, "TS101", toWorkforceEmployeeId(1))
+    const training = new FakeTraining()
+    const enrollmentId = await training.seedEnrollment("TS101", toWorkforceEmployeeId(1))
 
-    if (enrollment.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new CancelTrainingEnrollment(context).run({
-      enrollmentId: enrollment.id,
+    const result = await new CancelTrainingEnrollment(training).run({
+      enrollmentId,
       viewerEmployeeId: toWorkforceEmployeeId(999),
       session: makeTestSession("member", 999),
     })
@@ -474,9 +485,9 @@ describe("CancelTrainingEnrollment", () => {
   })
 
   test("rejects unknown id with enrollment_not_found", async () => {
-    const { context } = await createTestContext()
+    const training = new FakeTraining()
 
-    const result = await new CancelTrainingEnrollment(context).run({
+    const result = await new CancelTrainingEnrollment(training).run({
       enrollmentId: 9999,
       viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),

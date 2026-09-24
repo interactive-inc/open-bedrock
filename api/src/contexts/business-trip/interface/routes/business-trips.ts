@@ -1,3 +1,4 @@
+import { BusinessTripRepository } from "@/contexts/business-trip/infrastructure/repositories/business-trip.repository"
 import { CreateBusinessTrip } from "@/contexts/business-trip/application/create-business-trip"
 import { ApplicationError } from "@/lib/errors"
 import { zAppBusinessTrip } from "@/contexts/business-trip/interface/http/response-schemas"
@@ -36,7 +37,9 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const businessTrip = await new CreateBusinessTrip(c).run({
+    const businessTrip = await new CreateBusinessTrip({
+      businessTripRepository: new BusinessTripRepository(c),
+    }).run({
       travelerId: viewer.employeeId,
       destination: json.destination,
       startDate: json.start_date,

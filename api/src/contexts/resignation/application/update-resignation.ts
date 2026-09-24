@@ -1,10 +1,13 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { Resignation } from "@/contexts/resignation/domain/entities/resignation.entity"
-import type { Context } from "@/env"
-import { ResignationRepository } from "@/contexts/resignation/infrastructure/repositories/resignation.repository"
+import type { ResignationRepository } from "@/contexts/resignation/infrastructure/repositories/resignation.repository"
 import { isResignationRecordSourceFrozenError } from "@/contexts/resignation/infrastructure/repositories/lib/is-resignation-record-source-frozen-error"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+
+type Context = Readonly<{
+  resignationRepository: Pick<ResignationRepository, "findById" | "update">
+}>
 
 export type Command = {
   resignationId: string
@@ -23,9 +26,7 @@ export class UpdateResignation {
   }
 
   async run(command: Command): Promise<Resignation | ApplicationError> {
-    const resignationRepository = new ResignationRepository(this.c)
-
-    const current = await resignationRepository.findById(command.resignationId)
+    const current = await this.c.resignationRepository.findById(command.resignationId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find resignation", { cause: current })
@@ -49,7 +50,7 @@ export class UpdateResignation {
       reason: command.reason,
     })
 
-    const saved = await resignationRepository.update(updated)
+    const saved = await this.c.resignationRepository.update(updated)
 
     if (saved instanceof Error) {
       if (isResignationRecordSourceFrozenError(saved))

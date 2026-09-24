@@ -1,3 +1,5 @@
+import { CareerApplicationRepository } from "@/contexts/career/infrastructure/repositories/career-application.repository"
+import { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
 import { ApplyToCareerPosting } from "@/contexts/career/application/apply-to-career-posting"
 import { factory } from "@/api/http/factory"
 import { validateIntParam } from "@/lib/http/validate-int-param"
@@ -29,7 +31,10 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const view = await new ApplyToCareerPosting(c).run({
+    const view = await new ApplyToCareerPosting({
+      postingRepository: new CareerPostingRepository(c),
+      applicationRepository: new CareerApplicationRepository(c),
+    }).run({
       postingId,
       applicantId: session.employeeId,
       message: json.message ?? null,

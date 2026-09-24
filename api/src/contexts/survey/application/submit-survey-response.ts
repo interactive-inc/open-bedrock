@@ -1,11 +1,17 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { SurveySubmissionView } from "@/contexts/survey/domain/definitions/survey-submission-view.definition"
 import { SurveyResponse } from "@/contexts/survey/domain/entities/survey-response.entity"
-import type { Context } from "@/env"
-import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
+import type { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { isSurveyRecordSourceFrozenError } from "@/contexts/survey/infrastructure/repositories/lib/is-survey-record-source-frozen-error"
 import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+
+type Context = Readonly<{
+  surveyRepository: Pick<
+    SurveyRepository,
+    "findById" | "findResponseBySurveyIdAndRespondentId" | "createResponse"
+  >
+}>
 
 export type Command = {
   surveyId: number
@@ -23,9 +29,7 @@ export class SubmitSurveyResponse {
   }
 
   async run(command: Command): Promise<SurveySubmissionView | ApplicationError> {
-    const surveyRepository = new SurveyRepository(this.c)
-
-    const survey = await surveyRepository.findById(command.surveyId)
+    const survey = await this.c.surveyRepository.findById(command.surveyId)
 
     if (survey instanceof Error) {
       return new UnexpectedError("failed to find survey", { cause: survey })
@@ -39,7 +43,7 @@ export class SubmitSurveyResponse {
       return new ConflictError("survey is not open", "survey_not_open")
     }
 
-    const existing = await surveyRepository.findResponseBySurveyIdAndRespondentId(
+    const existing = await this.c.surveyRepository.findResponseBySurveyIdAndRespondentId(
       command.surveyId,
       command.respondentId,
     )
@@ -59,7 +63,7 @@ export class SubmitSurveyResponse {
       submittedAt: command.submittedAt,
     })
 
-    const created = await surveyRepository.createResponse(surveyResponse)
+    const created = await this.c.surveyRepository.createResponse(surveyResponse)
 
     if (created instanceof Error) {
       if (isSurveyRecordSourceFrozenError(created)) {

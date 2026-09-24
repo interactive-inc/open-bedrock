@@ -3,8 +3,11 @@ import { canCompleteTask } from "@/contexts/onboarding/domain/policies/task-comp
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingTask } from "@/contexts/onboarding/domain/entities/onboarding-task.entity"
-import type { Context } from "@/env"
-import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
+import type { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
+
+type Context = Readonly<{
+  assignmentRepository: Pick<OnboardingAssignmentRepository, "findByTaskId" | "uncompleteTask">
+}>
 
 export type Command = {
   taskId: number
@@ -20,9 +23,7 @@ export class UncompleteOnboardingTask {
   }
 
   async run(command: Command): Promise<OnboardingTask | ApplicationError> {
-    const assignmentRepository = new OnboardingAssignmentRepository(this.c)
-
-    const assignment = await assignmentRepository.findByTaskId(command.taskId)
+    const assignment = await this.c.assignmentRepository.findByTaskId(command.taskId)
 
     if (assignment instanceof Error) {
       return new UnexpectedError("failed to find assignment", { cause: assignment })
@@ -49,7 +50,7 @@ export class UncompleteOnboardingTask {
       return new UnexpectedError("assignment has no id")
     }
 
-    const updated = await assignmentRepository.uncompleteTask(command.taskId, assignment.id)
+    const updated = await this.c.assignmentRepository.uncompleteTask(command.taskId, assignment.id)
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to update assignment", { cause: updated })
@@ -59,7 +60,7 @@ export class UncompleteOnboardingTask {
     // pre-lock snapshot, which may reflect state from before a concurrent write.
     let source = updated
     if (source === null) {
-      const current = await assignmentRepository.findByTaskId(command.taskId)
+      const current = await this.c.assignmentRepository.findByTaskId(command.taskId)
       if (current instanceof Error) {
         return new UnexpectedError("failed to re-fetch assignment after guard abort", {
           cause: current,

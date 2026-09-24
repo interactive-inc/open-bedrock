@@ -1,4 +1,5 @@
 import { UpdateContract } from "@/contexts/partner/application/contract/update-contract"
+import { ContractRepository } from "@/contexts/partner/infrastructure/repositories/contract/contract.repository"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
@@ -34,18 +35,20 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const updated = await new UpdateContract(c).run({
-      session: session,
-      id: validateIntParam(c.req.param("id"), "contract"),
-      details: {
-        title: json.title,
-        contractDate: json.contract_date,
-        startsOn: json.starts_on ?? null,
-        endsOn: json.ends_on ?? null,
-        renewalDeadline: json.renewal_deadline ?? null,
-        note: json.note ?? null,
+    const updated = await new UpdateContract({ contractRepository: new ContractRepository(c) }).run(
+      {
+        session: session,
+        id: validateIntParam(c.req.param("id"), "contract"),
+        details: {
+          title: json.title,
+          contractDate: json.contract_date,
+          startsOn: json.starts_on ?? null,
+          endsOn: json.ends_on ?? null,
+          renewalDeadline: json.renewal_deadline ?? null,
+          note: json.note ?? null,
+        },
       },
-    })
+    )
 
     if (updated instanceof ApplicationError) {
       throw toHttpException(updated)

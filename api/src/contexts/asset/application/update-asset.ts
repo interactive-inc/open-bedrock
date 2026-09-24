@@ -3,8 +3,7 @@ import type { Asset } from "@/contexts/asset/domain/entities/asset.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { isAssetRecordSourceFrozenError } from "@/contexts/asset/infrastructure/repositories/lib/is-asset-record-source-frozen-error"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
+import type { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
 
 export type Command = {
   session: CompanySessionValue
@@ -17,6 +16,10 @@ export type Command = {
   }
 }
 
+type Context = Readonly<{
+  assetRepository: Pick<AssetRepository, "findByCode" | "updateDetails">
+}>
+
 /**
  * 権限と存在を確認し、資産の名称・種別・シリアル・購入日を更新する。
  */
@@ -26,13 +29,11 @@ export class UpdateAsset {
   }
 
   async run(command: Command): Promise<Asset | ApplicationError> {
-    const assetRepository = new AssetRepository(this.c)
-
     if (command.session.hasPermission("asset:manage") === false) {
       return new ForbiddenError("cannot manage assets", "forbidden")
     }
 
-    const asset = await assetRepository.findByCode(command.code)
+    const asset = await this.c.assetRepository.findByCode(command.code)
 
     if (asset instanceof Error) {
       return new UnexpectedError("failed to find asset", { cause: asset })
@@ -42,7 +43,7 @@ export class UpdateAsset {
       return new NotFoundError("asset not found", "asset_not_found")
     }
 
-    const updated = await assetRepository.updateDetails(asset.withDetails(command.details))
+    const updated = await this.c.assetRepository.updateDetails(asset.withDetails(command.details))
 
     if (updated instanceof Error) {
       if (isAssetRecordSourceFrozenError(updated))

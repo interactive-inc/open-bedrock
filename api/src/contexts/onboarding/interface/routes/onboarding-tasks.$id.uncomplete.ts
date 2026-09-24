@@ -1,4 +1,5 @@
 import { UncompleteOnboardingTask } from "@/contexts/onboarding/application/uncomplete-onboarding-task"
+import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
@@ -18,7 +19,9 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
 
   const taskId = validateIntParam(c.req.param("id"), "task")
 
-  const task = await new UncompleteOnboardingTask(c).run({
+  const task = await new UncompleteOnboardingTask({
+    assignmentRepository: new OnboardingAssignmentRepository(c),
+  }).run({
     taskId,
     session: session,
   })

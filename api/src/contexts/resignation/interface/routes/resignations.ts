@@ -1,3 +1,4 @@
+import { ResignationRepository } from "@/contexts/resignation/infrastructure/repositories/resignation.repository"
 import { CreateResignation } from "@/contexts/resignation/application/create-resignation"
 import { factory } from "@/api/http/factory"
 import { isoDate } from "@/lib/validation/iso-date.schema"
@@ -45,7 +46,9 @@ export const POST = factory.createHandlers(
       )
     }
 
-    const result = await new CreateResignation(c).run({
+    const result = await new CreateResignation({
+      resignationRepository: new ResignationRepository(c),
+    }).run({
       employeeId: viewer.employeeId,
       resignationDate: json.resignation_date,
       lastWorkingDate: json.last_working_date ?? null,

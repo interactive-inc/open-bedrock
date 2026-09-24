@@ -1,11 +1,15 @@
 import { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { KnowledgeContext as Context } from "@/contexts/knowledge/configuration/knowledge-context"
-import { KnowledgeAuthorAuthorizationAdapter } from "@/contexts/knowledge/infrastructure/adapters/knowledge-author-authorization.adapter"
-import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/repositories/knowledge-article.repository"
+import type { KnowledgeAuthorAuthorizationAdapter } from "@/contexts/knowledge/infrastructure/adapters/knowledge-author-authorization.adapter"
+import type { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/repositories/knowledge-article.repository"
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { isKnowledgeRecordSourceFrozenError } from "@/contexts/knowledge/infrastructure/repositories/lib/is-knowledge-article-record-source-frozen-error"
+
+type Context = Readonly<{
+  articleRepository: Pick<KnowledgeArticleRepository, "createWithHistory">
+  authorAuthorization: Pick<KnowledgeAuthorAuthorizationAdapter, "prepare">
+}>
 
 export type Command = {
   title: string
@@ -26,11 +30,7 @@ export class CreateKnowledgeArticle {
   }
 
   async run(command: Command): Promise<KnowledgeArticle | ApplicationError> {
-    const articleRepository = new KnowledgeArticleRepository(this.c)
-
-    const authorization = await new KnowledgeAuthorAuthorizationAdapter(this.c).prepare(
-      command.authorId,
-    )
+    const authorization = await this.c.authorAuthorization.prepare(command.authorId)
     if (authorization instanceof Error) return authorization
     const requestJson = JSON.stringify({
       operation: "create",
@@ -50,7 +50,7 @@ export class CreateKnowledgeArticle {
       createdAt: authorization.now.toISOString(),
     })
 
-    const created = await articleRepository.createWithHistory(article, {
+    const created = await this.c.articleRepository.createWithHistory(article, {
       ...authorization,
       actorAccountId: authorization.accountId,
       commandId: command.commandId,

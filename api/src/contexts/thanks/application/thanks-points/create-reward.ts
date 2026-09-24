@@ -2,8 +2,11 @@ import { ThanksReward } from "@/contexts/thanks/domain/entities/thanks-reward.en
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
 import { isThanksRecordSourceFrozenError } from "@/contexts/thanks/infrastructure/repositories/lib/is-thanks-record-source-frozen-error"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
+import type { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
+
+type Context = Readonly<{
+  rewardRepository: Pick<ThanksRewardRepository, "create">
+}>
 
 export type Command = {
   name: string
@@ -32,9 +35,7 @@ export class CreateReward {
       return new ValidationError("invalid reward", "invalid_reward")
     }
 
-    const rewardRepository = new ThanksRewardRepository(this.c)
-
-    const created = await rewardRepository.create(reward)
+    const created = await this.c.rewardRepository.create(reward)
 
     if (created instanceof Error) {
       if (isThanksRecordSourceFrozenError(created))

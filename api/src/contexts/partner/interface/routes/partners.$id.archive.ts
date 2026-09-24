@@ -1,4 +1,5 @@
 import { ArchivePartner } from "@/contexts/partner/application/archive-partner"
+import { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
@@ -15,7 +16,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const result = await new ArchivePartner(c).run({
+  const result = await new ArchivePartner({ partnerRepository: new PartnerRepository(c) }).run({
     session: session,
     id: validateIntParam(c.req.param("id"), "partner"),
   })

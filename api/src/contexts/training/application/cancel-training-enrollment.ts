@@ -3,9 +3,12 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import { canModifyEnrollment } from "@/contexts/training/domain/policies/enrollment-modification.policy"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
+import type { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+
+type Context = Readonly<{
+  enrollmentRepository: Pick<TrainingEnrollmentRepository, "findById" | "delete">
+}>
 
 export type Command = {
   enrollmentId: number
@@ -24,9 +27,7 @@ export class CancelTrainingEnrollment {
   }
 
   async run(command: Command): Promise<Cancelled | ApplicationError> {
-    const enrollmentRepository = new TrainingEnrollmentRepository(this.c)
-
-    const enrollment = await enrollmentRepository.findById(command.enrollmentId)
+    const enrollment = await this.c.enrollmentRepository.findById(command.enrollmentId)
 
     if (enrollment instanceof Error) {
       return new UnexpectedError("failed to find training enrollment", { cause: enrollment })
@@ -46,7 +47,7 @@ export class CancelTrainingEnrollment {
       return new ForbiddenError("cannot cancel enrollment", "forbidden")
     }
 
-    const deleted = await enrollmentRepository.delete(command.enrollmentId)
+    const deleted = await this.c.enrollmentRepository.delete(command.enrollmentId)
 
     if (deleted instanceof Error) {
       if (isTrainingRecordSourceFrozenError(deleted))

@@ -2,9 +2,8 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { ApplicationError } from "@/lib/errors"
 import type { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-assignment.entity"
-import type { Context } from "@/env"
-import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
-import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/repositories/shift-pattern.repository"
+import type { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
+import type { ShiftPatternRepository } from "@/contexts/shift/infrastructure/repositories/shift-pattern.repository"
 
 export type Input = {
   session: CompanySessionValue
@@ -13,6 +12,11 @@ export type Input = {
   date: string
   note: string | null
 }
+
+type Context = Readonly<{
+  assignmentRepository: Pick<ShiftAssignmentRepository, "findById" | "update">
+  patternRepository: Pick<ShiftPatternRepository, "findByCode">
+}>
 
 type ResolvedPattern = { patternId: number | null }
 
@@ -29,9 +33,7 @@ export class UpdateShiftAssignment {
       return new ForbiddenError("cannot manage shift", "forbidden")
     }
 
-    const assignmentRepository = new ShiftAssignmentRepository(this.c)
-
-    const current = await assignmentRepository.findById(input.assignmentId)
+    const current = await this.c.assignmentRepository.findById(input.assignmentId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find shift assignment", { cause: current })
@@ -51,7 +53,7 @@ export class UpdateShiftAssignment {
       return resolved
     }
 
-    const saved = await assignmentRepository.update(
+    const saved = await this.c.assignmentRepository.update(
       current.withDetails({
         patternId: resolved.patternId,
         date: input.date,
@@ -65,7 +67,7 @@ export class UpdateShiftAssignment {
 
     // 0 行更新（null）は事前チェック後に並行 publish 等で状態が変わったケース。再取得して理由を判別する。
     if (saved === null) {
-      const latest = await assignmentRepository.findById(input.assignmentId)
+      const latest = await this.c.assignmentRepository.findById(input.assignmentId)
 
       if (latest instanceof Error) {
         return new UnexpectedError("failed to find shift assignment", { cause: latest })
@@ -93,9 +95,7 @@ export class UpdateShiftAssignment {
       return { patternId: null }
     }
 
-    const patternRepository = new ShiftPatternRepository(this.c)
-
-    const pattern = await patternRepository.findByCode(patternCode)
+    const pattern = await this.c.patternRepository.findByCode(patternCode)
 
     if (pattern instanceof Error) {
       return new UnexpectedError("failed to find shift pattern", { cause: pattern })

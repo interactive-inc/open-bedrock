@@ -1,3 +1,4 @@
+import { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
 import { resolveCompanyEmployeeRelation } from "@/contexts/company/interface/operations/resolve-company-employee-relation"
 import {
   ForbiddenError,
@@ -94,7 +95,10 @@ export const POST = factory.createHandlers(
       }
     }
 
-    const goal = await new CreateGoal(c).run({
+    const goal = await new CreateGoal({
+      goalRepository: new GoalRepository(c),
+      now: c.env.NOW ?? new Date().toISOString(),
+    }).run({
       employeeId: session.employeeId,
       period: json.period,
       title: json.title,

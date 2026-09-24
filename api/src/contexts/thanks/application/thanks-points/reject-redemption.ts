@@ -3,14 +3,18 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import type { ThanksRedemption } from "@/contexts/thanks/domain/entities/thanks-redemption.entity"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-redemption.repository"
+import type { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-redemption.repository"
 import { isCompanyWriteAbortedByGuard } from "@/contexts/company/interface/operations/is-company-write-aborted-by-guard"
-import {
+import type {
+  ThanksRedemptionDecisionAuthority,
   ThanksRedemptionDecisionAuthorityAdapter,
-  type ThanksRedemptionDecisionAuthority,
 } from "@/contexts/thanks/infrastructure/adapters/thanks-redemption-decision-authority.adapter"
 import { isThanksRecordSourceFrozenError } from "@/contexts/thanks/infrastructure/repositories/lib/is-thanks-record-source-frozen-error"
+
+type Context = Readonly<{
+  redemptionRepository: Pick<ThanksRedemptionRepository, "findById" | "rejectFromPending">
+  decisionAuthority: Pick<ThanksRedemptionDecisionAuthorityAdapter, "prepare">
+}>
 
 export type Command = {
   session: CompanySessionValue
@@ -30,9 +34,7 @@ export class RejectRedemption {
       return new ForbiddenError("cannot decide redemption", "forbidden")
     }
 
-    const redemptionRepository = new ThanksRedemptionRepository(this.c)
-
-    const existing = await redemptionRepository.findById(command.redemptionId)
+    const existing = await this.c.redemptionRepository.findById(command.redemptionId)
 
     if (existing instanceof Error) {
       return new UnexpectedError("failed to find redemption", { cause: existing })
@@ -47,7 +49,7 @@ export class RejectRedemption {
       return new ForbiddenError("cannot decide own redemption", "self_approval_forbidden")
     }
 
-    const authority = await new ThanksRedemptionDecisionAuthorityAdapter(this.c).prepare({
+    const authority = await this.c.decisionAuthority.prepare({
       session: command.session,
       subjectEmployeeIds: [existing.employeeId],
     })
@@ -56,16 +58,15 @@ export class RejectRedemption {
       return new ForbiddenError(authority.message, authority.code, { cause: authority })
     }
 
-    return this.reject(redemptionRepository, command, authority.guards)
+    return this.reject(command, authority.guards)
   }
 
   /** 却下。pending からの条件付き UPDATE で確定済みは弾く。0 行更新は already_decided。 */
   private async reject(
-    redemptionRepository: ThanksRedemptionRepository,
     command: Command,
     guards: ThanksRedemptionDecisionAuthority["guards"],
   ): Promise<ThanksRedemption | ApplicationError> {
-    const updated = await redemptionRepository.rejectFromPending({
+    const updated = await this.c.redemptionRepository.rejectFromPending({
       redemptionId: command.redemptionId,
       deciderId: command.deciderId,
       decidedAt: command.decidedAt,

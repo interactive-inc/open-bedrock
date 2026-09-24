@@ -1,10 +1,13 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { SurveyResponse } from "@/contexts/survey/domain/entities/survey-response.entity"
-import type { Context } from "@/env"
-import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
+import type { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { isSurveyRecordSourceFrozenError } from "@/contexts/survey/infrastructure/repositories/lib/is-survey-record-source-frozen-error"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+
+type Context = Readonly<{
+  surveyRepository: Pick<SurveyRepository, "findResponseById" | "findById" | "updateResponse">
+}>
 
 export type Command = {
   responseId: number
@@ -22,9 +25,7 @@ export class UpdateSurveyResponse {
   }
 
   async run(command: Command): Promise<SurveyResponse | ApplicationError> {
-    const surveyRepository = new SurveyRepository(this.c)
-
-    const current = await surveyRepository.findResponseById(command.responseId)
+    const current = await this.c.surveyRepository.findResponseById(command.responseId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find survey response", { cause: current })
@@ -38,7 +39,7 @@ export class UpdateSurveyResponse {
       return new ForbiddenError("not the respondent", "not_respondent")
     }
 
-    const survey = await surveyRepository.findById(current.surveyId)
+    const survey = await this.c.surveyRepository.findById(current.surveyId)
 
     if (survey instanceof Error) {
       return new UnexpectedError("failed to find survey", { cause: survey })
@@ -53,7 +54,7 @@ export class UpdateSurveyResponse {
       submittedAt: command.submittedAt,
     })
 
-    const result = await surveyRepository.updateResponse(updated)
+    const result = await this.c.surveyRepository.updateResponse(updated)
 
     if (result instanceof Error) {
       if (isSurveyRecordSourceFrozenError(result)) {

@@ -4,11 +4,13 @@ import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendan
 import { ClockIn } from "@/contexts/attendance/application/clock-in"
 import { ClockOut } from "@/contexts/attendance/application/clock-out"
 import { ApplicationError, ConflictError } from "@/lib/errors"
-import { createTestContext } from "@tests/api/support/create-test-context"
+import { createFakeAttendanceRecordRepository } from "@/contexts/attendance/test/fake-attendance-record-repository.test-support"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
-import type { Context } from "@/env"
 
-async function seedOpenRecord(context: Context, employeeId: number): Promise<AttendanceRecord> {
+async function seedOpenRecord(
+  context: ReturnType<typeof createFakeAttendanceRecordRepository>,
+  employeeId: number,
+): Promise<AttendanceRecord> {
   const result = await new ClockIn(context).run({
     employeeId: toWorkforceEmployeeId(employeeId),
     now: "2026-03-15T09:00:00.000Z",
@@ -24,7 +26,7 @@ async function seedOpenRecord(context: Context, employeeId: number): Promise<Att
 
 describe("ClockOut", () => {
   test("closes the open record and calculates work minutes", async () => {
-    const { context } = await createTestContext()
+    const context = createFakeAttendanceRecordRepository()
 
     await seedOpenRecord(context, 1)
 
@@ -45,7 +47,7 @@ describe("ClockOut", () => {
   })
 
   test("rejects when not clocked in with not_clocked_in", async () => {
-    const { context } = await createTestContext()
+    const context = createFakeAttendanceRecordRepository()
 
     const result = await new ClockOut(context).run({
       employeeId: toWorkforceEmployeeId(1),
@@ -56,7 +58,7 @@ describe("ClockOut", () => {
   })
 
   test("rejects double clock out with already_clocked_out", async () => {
-    const { context } = await createTestContext()
+    const context = createFakeAttendanceRecordRepository()
 
     await seedOpenRecord(context, 1)
 
@@ -78,7 +80,7 @@ describe("ClockOut", () => {
   })
 
   test("updates note on clock out", async () => {
-    const { context } = await createTestContext()
+    const context = createFakeAttendanceRecordRepository()
 
     await seedOpenRecord(context, 1)
 
@@ -93,5 +95,38 @@ describe("ClockOut", () => {
     }
 
     expect(result.note).toBe("left early")
+  })
+
+  test("maps a lost conditional close to already_clocked_out", async () => {
+    const context = createFakeAttendanceRecordRepository()
+
+    await seedOpenRecord(context, 1)
+
+    const result = await new ClockOut({
+      recordRepository: {
+        findOpenByEmployeeId: context.recordRepository.findOpenByEmployeeId,
+        update: async () => null,
+      },
+    }).run({
+      employeeId: toWorkforceEmployeeId(1),
+      now: "2026-03-15T18:00:00.000Z",
+    })
+
+    expectApplicationError(result, ConflictError, "already_clocked_out")
+  })
+
+  test("stores the closed record through the repository", async () => {
+    const context = createFakeAttendanceRecordRepository()
+
+    await seedOpenRecord(context, 1)
+
+    await new ClockOut(context).run({
+      employeeId: toWorkforceEmployeeId(1),
+      now: "2026-03-15T18:00:00.000Z",
+    })
+
+    expect(context.records.map((record) => [record.status, record.workMinutes])).toEqual([
+      ["closed", 540],
+    ])
   })
 })

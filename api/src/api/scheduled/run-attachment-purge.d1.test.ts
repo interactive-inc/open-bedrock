@@ -6,7 +6,7 @@ import { AttachmentAdapter } from "@system/infrastructure/adapters/attachments/a
 import { systemAttachmentSchema } from "@system/infrastructure/schema/system-attachment"
 import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-system-attachment-test-kek-environment.test-support"
 import { SystemAttachmentTestBucket } from "@system/test/system-attachment-test-bucket.test-support"
-import { type LocalD1, applyMigrations, startLocalD1 } from "@tests/d1/support/start-local-d1"
+import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
 
 const uploadedAt = new Date("2026-08-19T09:00:00.000Z")
 const purgeAt = new Date("2026-08-21T09:00:00.000Z")
@@ -17,7 +17,7 @@ let local: LocalD1
 setDefaultTimeout(120_000)
 
 beforeAll(async () => {
-  local = await startLocalD1(["purge"])
+  local = await startLocalD1({ migrated: ["purge"] })
 })
 
 afterAll(async () => {
@@ -26,7 +26,6 @@ afterAll(async () => {
 
 async function createFixture(name: string) {
   const db = await local.database(name)
-  await applyMigrations(db)
   const bucket = new SystemAttachmentTestBucket()
   const database = drizzle(db, { schema: systemAttachmentSchema })
   const store = async (now: Date) => {

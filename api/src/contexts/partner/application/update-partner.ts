@@ -2,8 +2,11 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import type { Partner } from "@/contexts/partner/domain/entities/partner.entity"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
+import type { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
+
+type Context = Readonly<{
+  partnerRepository: Pick<PartnerRepository, "findById" | "update">
+}>
 
 export type Command = {
   session: CompanySessionValue
@@ -25,13 +28,11 @@ export class UpdatePartner {
   }
 
   async run(command: Command): Promise<Partner | ApplicationError> {
-    const partnerRepository = new PartnerRepository(this.c)
-
     if (command.session.hasPermission("partner:manage") === false) {
       return new ForbiddenError("cannot manage partners", "forbidden")
     }
 
-    const partner = await partnerRepository.findById(command.id)
+    const partner = await this.c.partnerRepository.findById(command.id)
 
     if (partner instanceof Error) {
       return new UnexpectedError("failed to find partner", { cause: partner })
@@ -41,7 +42,7 @@ export class UpdatePartner {
       return new NotFoundError("partner not found", "partner_not_found")
     }
 
-    const updated = await partnerRepository.update(partner.withDetails(command.details))
+    const updated = await this.c.partnerRepository.update(partner.withDetails(command.details))
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to update partner", { cause: updated })

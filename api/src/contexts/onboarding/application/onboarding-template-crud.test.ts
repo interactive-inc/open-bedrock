@@ -4,20 +4,28 @@ import { DeleteOnboardingTemplate } from "@/contexts/onboarding/application/dele
 import { UpdateOnboardingTemplate } from "@/contexts/onboarding/application/update-onboarding-template"
 import { OnboardingAssignment } from "@/contexts/onboarding/domain/entities/onboarding-assignment.entity"
 import { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"
-import type { Context } from "@/env"
-import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
-import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-template.repository"
+import {
+  createFakeAssignmentRepository,
+  createFakeTemplateRepository,
+} from "@/contexts/onboarding/test/onboarding-repository-fakes.test-support"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 import { ConflictError, ForbiddenError, NotFoundError, ValidationError } from "@/lib/errors"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
 import { makeTestSession } from "@tests/api/support/make-test-session"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import { describe, expect, test } from "bun:test"
 
-async function seedTemplate(context: Context): Promise<void> {
-  const repository = new OnboardingTemplateRepository(context)
+/** テンプレートと割り当てのRepositoryを型付きfakeにして、DBなしで業務判断を検証する。 */
+function createTemplateTestContext(options: { lifecycleBoundCodes?: ReadonlyArray<string> } = {}) {
+  return {
+    templateRepository: createFakeTemplateRepository(options),
+    assignmentRepository: createFakeAssignmentRepository(),
+  }
+}
 
-  const created = await repository.create(
+type TemplateTestContext = ReturnType<typeof createTemplateTestContext>
+
+async function seedTemplate(context: TemplateTestContext): Promise<void> {
+  const created = await context.templateRepository.create(
     OnboardingTemplate.create({
       code: "join-default",
       name: "入社手続き",
@@ -31,19 +39,10 @@ async function seedTemplate(context: Context): Promise<void> {
   }
 }
 
-async function seedInProgressAssignment(context: Context, templateCode: string): Promise<void> {
-  await context.var.database.insert(employees).values({
-    id: toWorkforceEmployeeId(9001),
-    employeeCode: "E9001",
-    officialName: "Test User",
-    email: null,
-    phone: null,
-    createdAt: new Date(0),
-    updatedAt: new Date(0),
-  })
-
-  const assignmentRepository = new OnboardingAssignmentRepository(context)
-
+async function seedInProgressAssignment(
+  context: TemplateTestContext,
+  templateCode: string,
+): Promise<void> {
   const template = new OnboardingTemplate({
     id: 1,
     code: templateCode,
@@ -53,7 +52,7 @@ async function seedInProgressAssignment(context: Context, templateCode: string):
     tasks: [],
   })
 
-  const created = await assignmentRepository.create(
+  const created = await context.assignmentRepository.create(
     OnboardingAssignment.create({
       employeeId: toWorkforceEmployeeId(9001),
       template,
@@ -68,7 +67,7 @@ async function seedInProgressAssignment(context: Context, templateCode: string):
 
 describe("CreateOnboardingTemplate", () => {
   test("a privileged role creates a template", async () => {
-    const { context } = await createTestContext()
+    const context = createTemplateTestContext()
 
     const created = await new CreateOnboardingTemplate(context).run({
       session: makeTestSession("root"),
@@ -87,7 +86,7 @@ describe("CreateOnboardingTemplate", () => {
   })
 
   test("a non-privileged role is forbidden", async () => {
-    const { context } = await createTestContext()
+    const context = createTemplateTestContext()
 
     const created = await new CreateOnboardingTemplate(context).run({
       session: makeTestSession("member"),
@@ -103,7 +102,7 @@ describe("CreateOnboardingTemplate", () => {
   })
 
   test("a duplicate code conflicts", async () => {
-    const { context } = await createTestContext()
+    const context = createTemplateTestContext()
 
     await seedTemplate(context)
 
@@ -119,13 +118,33 @@ describe("CreateOnboardingTemplate", () => {
 
     expectApplicationError(created, ConflictError, "template_code_conflict")
   })
+
+  test("a unique constraint race on create conflicts", async () => {
+    const context = createTemplateTestContext()
+
+    const created = await new CreateOnboardingTemplate({
+      templateRepository: {
+        findByCode: async () => null,
+        create: async () => new UniqueConstraintError("onboarding template code already exists"),
+      },
+    }).run({
+      session: makeTestSession("root"),
+      code: "join-default",
+      name: "並行登録",
+      kind: "join",
+      description: null,
+    })
+
+    expectApplicationError(created, ConflictError, "template_code_conflict")
+    expect(context.templateRepository.templates.size).toBe(0)
+  })
 })
 
 describe("GetOnboardingTemplate", () => {})
 
 describe("UpdateOnboardingTemplate", () => {
   test("a privileged role updates name and kind", async () => {
-    const { context } = await createTestContext()
+    const context = createTemplateTestContext()
 
     await seedTemplate(context)
 
@@ -147,7 +166,7 @@ describe("UpdateOnboardingTemplate", () => {
   })
 
   test("an unknown code is not found", async () => {
-    const { context } = await createTestContext()
+    const context = createTemplateTestContext()
 
     const updated = await new UpdateOnboardingTemplate(context).run({
       session: makeTestSession("root"),
@@ -161,13 +180,8 @@ describe("UpdateOnboardingTemplate", () => {
   })
 
   test("does not change the kind of a lifecycle-bound template", async () => {
-    const { context } = await createTestContext()
+    const context = createTemplateTestContext({ lifecycleBoundCodes: ["join-default"] })
     await seedTemplate(context)
-    await context.env.DB.prepare(
-      `INSERT INTO onboarding_lifecycle_template_bindings
-         (effect_type, template_code, updated_at, updated_by_account_id)
-       VALUES ('hire', 'join-default', 1, NULL)`,
-    ).run()
 
     const updated = await new UpdateOnboardingTemplate(context).run({
       session: makeTestSession("root"),
@@ -183,7 +197,7 @@ describe("UpdateOnboardingTemplate", () => {
 
 describe("DeleteOnboardingTemplate", () => {
   test("a privileged role deletes a template", async () => {
-    const { context } = await createTestContext()
+    const context = createTemplateTestContext()
 
     await seedTemplate(context)
 
@@ -198,15 +212,13 @@ describe("DeleteOnboardingTemplate", () => {
       expect(result.reason).toBe("deleted")
     }
 
-    const repository = new OnboardingTemplateRepository(context)
-
-    const found = await repository.findByCode("join-default")
+    const found = await context.templateRepository.findByCode("join-default")
 
     expect(found).toBeNull()
   })
 
   test("an unknown code is not found", async () => {
-    const { context } = await createTestContext()
+    const context = createTemplateTestContext()
 
     const result = await new DeleteOnboardingTemplate(context).run({
       session: makeTestSession("root"),
@@ -217,13 +229,8 @@ describe("DeleteOnboardingTemplate", () => {
   })
 
   test("does not delete a lifecycle-bound template", async () => {
-    const { context } = await createTestContext()
+    const context = createTemplateTestContext({ lifecycleBoundCodes: ["join-default"] })
     await seedTemplate(context)
-    await context.env.DB.prepare(
-      `INSERT INTO onboarding_lifecycle_template_bindings
-         (effect_type, template_code, updated_at, updated_by_account_id)
-       VALUES ('hire', 'join-default', 1, NULL)`,
-    ).run()
 
     const result = await new DeleteOnboardingTemplate(context).run({
       session: makeTestSession("root"),
@@ -234,7 +241,7 @@ describe("DeleteOnboardingTemplate", () => {
   })
 
   test("a non-privileged role is forbidden", async () => {
-    const { context } = await createTestContext()
+    const context = createTemplateTestContext()
 
     await seedTemplate(context)
 
@@ -247,7 +254,7 @@ describe("DeleteOnboardingTemplate", () => {
   })
 
   test("returns template_in_use when in_progress assignments exist", async () => {
-    const { context } = await createTestContext()
+    const context = createTemplateTestContext()
 
     await seedTemplate(context)
     await seedInProgressAssignment(context, "join-default")

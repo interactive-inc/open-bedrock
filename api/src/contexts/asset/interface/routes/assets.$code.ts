@@ -1,3 +1,4 @@
+import { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
 import { DeleteAsset } from "@/contexts/asset/application/delete-asset"
 import { UpdateAsset } from "@/contexts/asset/application/update-asset"
 import { factory } from "@/api/http/factory"
@@ -59,7 +60,7 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const updated = await new UpdateAsset(c).run({
+    const updated = await new UpdateAsset({ assetRepository: new AssetRepository(c) }).run({
       session: session,
       code: validateCodeParam(c.req.param("code"), "asset"),
       details: {
@@ -97,7 +98,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const result = await new DeleteAsset(c).run({
+  const result = await new DeleteAsset({ assetRepository: new AssetRepository(c) }).run({
     session: session,
     code: validateCodeParam(c.req.param("code"), "asset"),
   })

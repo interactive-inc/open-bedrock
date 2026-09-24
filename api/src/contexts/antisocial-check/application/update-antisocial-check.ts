@@ -1,7 +1,6 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { AntisocialCheck } from "@/contexts/antisocial-check/domain/entities/antisocial-check.entity"
-import type { Context } from "@/env"
-import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/repositories/antisocial-check.repository"
+import type { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/repositories/antisocial-check.repository"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { isAntisocialCheckRecordSourceFrozenError } from "@/contexts/antisocial-check/infrastructure/repositories/lib/is-antisocial-check-record-source-frozen-error"
@@ -15,6 +14,10 @@ export type Command = {
   result: string | null
 }
 
+type Context = Readonly<{
+  antisocialCheckRepository: Pick<AntisocialCheckRepository, "findById" | "update">
+}>
+
 /**
  * 本人は未確定の取引先情報だけ、管理権限保持者は他者の判定結果だけを変更できる。
  * 自分の申請を自分で判定することと、確定済み申請の再変更を拒否する。
@@ -25,9 +28,7 @@ export class UpdateAntisocialCheck {
   }
 
   async run(command: Command): Promise<AntisocialCheck | ApplicationError> {
-    const antisocialCheckRepository = new AntisocialCheckRepository(this.c)
-
-    const current = await antisocialCheckRepository.findById(command.antisocialCheckId)
+    const current = await this.c.antisocialCheckRepository.findById(command.antisocialCheckId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find antisocial check", { cause: current })
@@ -71,7 +72,7 @@ export class UpdateAntisocialCheck {
       result: canManage && isOwner === false ? command.result : current.result,
     })
 
-    const result = await antisocialCheckRepository.update(updated)
+    const result = await this.c.antisocialCheckRepository.update(updated)
 
     if (result instanceof Error) {
       if (isAntisocialCheckRecordSourceFrozenError(result)) {

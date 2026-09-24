@@ -21,6 +21,7 @@ src/contexts/<context>/
 - `*.repository.ts` は集約ルートまたは Entity の永続化を担う、ファイル名と一致した単一の `XxxRepository` class だけに使う。照会、外部通信、通知、base64変換などは `adapters/` の単一 `XxxAdapter` class にする。
 - Application は Domain model を生成または更新する write class だけを1ファイル1クラスで置き、D1、Drizzle、Infrastructure schemaへ直接依存しない。
 - Application、Repository、Adapter の constructor は、必要な依存をまとめた `constructor(private readonly c: Context)` だけにする。
+- Application の `Context` は、HTTP runtime の `Context`（`@/env`）ではなく、利用する Repository と Adapter を port として並べた application 固有の `type Context = Readonly<{ ... }>` にしてよい。port は `Pick<XxxRepository, "findById" | "save">` のように実装 class から使うmethodだけを `import type` で切り出し、組み立ては interface（route、scheduled）が `new XxxRepository(c)` で行う。業務判断のテストは port へ型付きfakeを渡し、DBなしで検証する。fakeは D1、Drizzle、SQLのAPIを模倣せず、Repositoryのmethodが返す Domain model と失敗だけを返す。SQLの意味（upsert、条件付き更新、制約、transaction）は Repository の `*.d1.test.ts` でローカルD1に対して検証する。
 - 型のためだけの `contracts` 層は作らず、型の所有レイヤーから `import type` する。
 - `lib` は利用する最小のresourceまで下げる。`interface/lib`、`application/lib`、`http/utils`のようにlayer全体を覆う汎用bucketは作らない。
 - context直下の各libraryはresource直下に`CLAUDE.md`と直接テストを持ち、責務、対象外、公開入口、検証方法を固定する。配置だけを`lib`へ変えず、純粋な入力と出力、独立した変更理由、consumerが必要とする最小の公開面を維持する。

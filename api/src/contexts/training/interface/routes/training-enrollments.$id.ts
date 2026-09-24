@@ -94,7 +94,9 @@ export const PUT = factory.createHandlers(
 
     const body = c.req.valid("json")
 
-    const updated = await new RescheduleTrainingEnrollment(c).run({
+    const updated = await new RescheduleTrainingEnrollment({
+      enrollmentRepository: new TrainingEnrollmentRepository(c),
+    }).run({
       enrollmentId: enrollmentId,
       viewerEmployeeId: session.employeeId,
       session: session,
@@ -120,7 +122,9 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const enrollmentId = validateIntParam(c.req.param("id"), "enrollment")
 
-  const result = await new CancelTrainingEnrollment(c).run({
+  const result = await new CancelTrainingEnrollment({
+    enrollmentRepository: new TrainingEnrollmentRepository(c),
+  }).run({
     enrollmentId: enrollmentId,
     viewerEmployeeId: session.employeeId,
     session: session,

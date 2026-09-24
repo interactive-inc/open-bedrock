@@ -2,10 +2,13 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { LifeEvent } from "@/contexts/life-event/domain/entities/life-event.entity"
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { LifeEventRepository } from "@/contexts/life-event/infrastructure/repositories/life-event.repository"
+import type { LifeEventRepository } from "@/contexts/life-event/infrastructure/repositories/life-event.repository"
 import { isLifeEventRecordSourceFrozenError } from "@/contexts/life-event/infrastructure/repositories/lib/is-life-event-record-source-frozen-error"
 import type { LifeEventType } from "@/contexts/life-event/domain/definitions/life-event-type.definition"
+
+type Context = Readonly<{
+  lifeEventRepository: Pick<LifeEventRepository, "create">
+}>
 
 export type Command = {
   employeeId: EmployeeId
@@ -24,8 +27,6 @@ export class CreateLifeEvent {
   }
 
   async run(command: Command): Promise<LifeEvent | ApplicationError> {
-    const lifeEventRepository = new LifeEventRepository(this.c)
-
     const lifeEvent = LifeEvent.create({
       employeeId: command.employeeId,
       eventType: command.eventType,
@@ -34,7 +35,7 @@ export class CreateLifeEvent {
       createdAt: command.createdAt,
     })
 
-    const created = await lifeEventRepository.create(lifeEvent)
+    const created = await this.c.lifeEventRepository.create(lifeEvent)
 
     if (created instanceof Error) {
       if (isLifeEventRecordSourceFrozenError(created))

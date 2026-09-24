@@ -1,7 +1,6 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { AntisocialCheck } from "@/contexts/antisocial-check/domain/entities/antisocial-check.entity"
-import type { Context } from "@/env"
-import { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/repositories/antisocial-check.repository"
+import type { AntisocialCheckRepository } from "@/contexts/antisocial-check/infrastructure/repositories/antisocial-check.repository"
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { isAntisocialCheckRecordSourceFrozenError } from "@/contexts/antisocial-check/infrastructure/repositories/lib/is-antisocial-check-record-source-frozen-error"
@@ -14,6 +13,10 @@ export type Command = {
   createdAt: string
 }
 
+type Context = Readonly<{
+  antisocialCheckRepository: Pick<AntisocialCheckRepository, "create">
+}>
+
 /**
  * 反社チェック申請を作成する。status は "requested" で登録する。
  */
@@ -23,8 +26,6 @@ export class CreateAntisocialCheck {
   }
 
   async run(command: Command): Promise<AntisocialCheck | ApplicationError> {
-    const antisocialCheckRepository = new AntisocialCheckRepository(this.c)
-
     const antisocialCheck = AntisocialCheck.create({
       requesterId: command.requesterId,
       partnerName: command.partnerName,
@@ -33,7 +34,7 @@ export class CreateAntisocialCheck {
       createdAt: command.createdAt,
     })
 
-    const created = await antisocialCheckRepository.create(antisocialCheck)
+    const created = await this.c.antisocialCheckRepository.create(antisocialCheck)
 
     if (created instanceof Error) {
       if (isAntisocialCheckRecordSourceFrozenError(created)) {

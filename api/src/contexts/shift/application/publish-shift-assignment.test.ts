@@ -6,47 +6,61 @@ import { ConflictError } from "@/lib/errors"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
 import { makeTestSession } from "@tests/api/support/make-test-session"
 import { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-assignment.entity"
-import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
 
-async function createAssignment(repository: ShiftAssignmentRepository): Promise<ShiftAssignment> {
-  const created = await repository.create(
-    ShiftAssignment.create({
-      employeeId: toWorkforceEmployeeId(1),
-      patternId: null,
-      date: "2026-06-01",
-      note: null,
-    }),
-  )
+/**
+ * 割当Repositoryの型付きfake。未公開の割当だけを条件付きで更新する契約は
+ * shift-assignment.repository.test.ts がDB上で検証する。
+ */
+function createAssignmentRepository(initial: ShiftAssignment) {
+  const assignments = new Map<number, ShiftAssignment>([[1, initial]])
 
-  if (created instanceof Error || created.id === null) {
-    throw new Error("failed to create assignment")
+  return {
+    findById: async (id: number) => assignments.get(id) ?? null,
+    markPublished: async (id: number, publishedAt: string) => {
+      const current = assignments.get(id)
+      if (current === undefined || current.publishedAt !== null) return null
+      const published = current.withPublished(publishedAt)
+      assignments.set(id, published)
+      return published
+    },
+    update: async (assignment: ShiftAssignment) => {
+      if (assignment.id === null) return null
+      const current = assignments.get(assignment.id)
+      if (current === undefined || current.publishedAt !== null) return null
+      assignments.set(assignment.id, assignment)
+      return assignment
+    },
   }
+}
 
-  return created
+function draftAssignment(): ShiftAssignment {
+  return new ShiftAssignment({
+    id: 1,
+    employeeId: toWorkforceEmployeeId(1),
+    patternId: null,
+    date: "2026-06-01",
+    note: null,
+    publishedAt: null,
+  })
 }
 
 describe("PublishShiftAssignment", () => {
   test("publishing twice returns already_published on the second call", async () => {
-    const { context } = await createTestContext()
+    const assignmentRepository = createAssignmentRepository(draftAssignment())
 
-    const repository = new ShiftAssignmentRepository(context)
+    const publish = new PublishShiftAssignment({ assignmentRepository })
 
-    const assignment = await createAssignment(repository)
-
-    if (assignment.id === null) throw new Error("id should not be null")
-
-    const first = await new PublishShiftAssignment(context).run({
+    const first = await publish.run({
       session: makeTestSession("manager"),
-      assignmentId: assignment.id,
+      assignmentId: 1,
       publishedAt: "2026-06-01T00:00:00.000Z",
     })
 
     expect(first).toBeInstanceOf(ShiftAssignment)
 
-    const second = await new PublishShiftAssignment(context).run({
+    const second = await publish.run({
       session: makeTestSession("manager"),
-      assignmentId: assignment.id,
+      assignmentId: 1,
       publishedAt: "2026-06-02T00:00:00.000Z",
     })
 
@@ -56,23 +70,16 @@ describe("PublishShiftAssignment", () => {
 
 describe("UpdateShiftAssignment", () => {
   test("updating a published assignment returns already_published", async () => {
-    const { context } = await createTestContext()
+    const assignmentRepository = createAssignmentRepository(
+      draftAssignment().withPublished("2026-06-01T00:00:00.000Z"),
+    )
 
-    const repository = new ShiftAssignmentRepository(context)
-
-    const assignment = await createAssignment(repository)
-
-    if (assignment.id === null) throw new Error("id should not be null")
-
-    const published = await repository.markPublished(assignment.id, "2026-06-01T00:00:00.000Z")
-
-    if (published instanceof Error || published === null) {
-      throw new Error("markPublished failed")
-    }
-
-    const result = await new UpdateShiftAssignment(context).run({
+    const result = await new UpdateShiftAssignment({
+      assignmentRepository,
+      patternRepository: { findByCode: async () => null },
+    }).run({
       session: makeTestSession("manager"),
-      assignmentId: assignment.id,
+      assignmentId: 1,
       patternCode: null,
       date: "2026-06-05",
       note: "changed",

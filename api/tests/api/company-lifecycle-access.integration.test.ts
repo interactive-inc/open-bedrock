@@ -9,7 +9,7 @@ import {
   createLifecycleRouteDb,
   readOrganizationRevision,
 } from "@tests/api/support/lifecycle-route-fixture"
-import { createTestContextForDatabase } from "@tests/api/support/create-test-context"
+import { createTestContextForDatabase } from "@tests/api/support/create-context-for-database"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 

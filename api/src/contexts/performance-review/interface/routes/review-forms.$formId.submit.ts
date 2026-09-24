@@ -1,3 +1,5 @@
+import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-form.repository"
+import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
 import { SubmitReviewForm } from "@/contexts/performance-review/application/review/submit-review-form"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -48,7 +50,10 @@ export const POST = factory.createHandlers(
 
     const formId = validateIntParam(c.req.param("formId"), "review form")
 
-    const submitted = await new SubmitReviewForm(c).run({
+    const submitted = await new SubmitReviewForm({
+      reviewFormRepository: new ReviewFormRepository(c),
+      reviewCycleRepository: new ReviewCycleRepository(c),
+    }).run({
       viewerEmployeeId: session.employeeId,
       formId,
       score: json.score ?? null,

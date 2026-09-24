@@ -3,8 +3,11 @@ import { canCompleteTask } from "@/contexts/onboarding/domain/policies/task-comp
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { OnboardingTask } from "@/contexts/onboarding/domain/entities/onboarding-task.entity"
-import type { Context } from "@/env"
-import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
+import type { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
+
+type Context = Readonly<{
+  assignmentRepository: Pick<OnboardingAssignmentRepository, "findByTaskId" | "completeTask">
+}>
 
 export type Command = {
   taskId: number
@@ -21,9 +24,7 @@ export class CompleteOnboardingTask {
   }
 
   async run(command: Command): Promise<OnboardingTask | ApplicationError> {
-    const assignmentRepository = new OnboardingAssignmentRepository(this.c)
-
-    const assignment = await assignmentRepository.findByTaskId(command.taskId)
+    const assignment = await this.c.assignmentRepository.findByTaskId(command.taskId)
 
     if (assignment instanceof Error) {
       return new UnexpectedError("failed to find assignment", { cause: assignment })
@@ -50,7 +51,7 @@ export class CompleteOnboardingTask {
       return new UnexpectedError("assignment has no id")
     }
 
-    const updated = await assignmentRepository.completeTask(
+    const updated = await this.c.assignmentRepository.completeTask(
       command.taskId,
       assignment.id,
       command.completedAt,
@@ -64,7 +65,7 @@ export class CompleteOnboardingTask {
     // pre-lock snapshot, which may reflect state from before a concurrent write.
     let source = updated
     if (source === null) {
-      const current = await assignmentRepository.findByTaskId(command.taskId)
+      const current = await this.c.assignmentRepository.findByTaskId(command.taskId)
       if (current instanceof Error) {
         return new UnexpectedError("failed to re-fetch assignment after guard abort", {
           cause: current,

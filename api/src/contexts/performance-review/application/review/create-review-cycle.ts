@@ -1,14 +1,18 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
-import type { Context } from "@/env"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
+import type { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
 import {
   defaultReviewCyclePolicy,
   type ReviewCyclePolicy,
 } from "@/contexts/performance-review/domain/definitions/review-cycle-policy.definition"
-import { ReviewCyclePolicyAdapter } from "@/contexts/performance-review/infrastructure/adapters/review/review-cycle-policy.adapter"
+import type { ReviewCyclePolicyAdapter } from "@/contexts/performance-review/infrastructure/adapters/review/review-cycle-policy.adapter"
+
+type Context = Readonly<{
+  reviewCycleRepository: Pick<ReviewCycleRepository, "create" | "delete">
+  reviewCyclePolicyAdapter: Pick<ReviewCyclePolicyAdapter, "upsert">
+}>
 
 export type Input = {
   session: CompanySessionValue
@@ -37,7 +41,7 @@ export class CreateReviewCycle {
       dueDate: input.dueDate,
     })
 
-    const created = await new ReviewCycleRepository(this.c).create(reviewCycle)
+    const created = await this.c.reviewCycleRepository.create(reviewCycle)
 
     if (created instanceof Error) {
       return new UnexpectedError("failed to create review cycle", { cause: created })
@@ -47,13 +51,13 @@ export class CreateReviewCycle {
       return new UnexpectedError("review cycle id is not assigned")
     }
 
-    const savedPolicy = await new ReviewCyclePolicyAdapter(this.c).upsert(
+    const savedPolicy = await this.c.reviewCyclePolicyAdapter.upsert(
       created.id,
       input.policy ?? defaultReviewCyclePolicy,
     )
 
     if (savedPolicy instanceof Error) {
-      await new ReviewCycleRepository(this.c).delete(created.id)
+      await this.c.reviewCycleRepository.delete(created.id)
       return new UnexpectedError("failed to save review cycle policy", { cause: savedPolicy })
     }
 

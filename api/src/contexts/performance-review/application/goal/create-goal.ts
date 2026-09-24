@@ -1,10 +1,21 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { GoalOwnerType } from "@/contexts/performance-review/domain/entities/goal.entity"
 import { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
-import type { Context } from "@/env"
-import { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
+import type { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
 import type { ApplicationError } from "@/lib/errors"
 import { ConflictError, UnexpectedError, ValidationError } from "@/lib/errors"
+
+type Context = Readonly<{
+  goalRepository: Pick<
+    GoalRepository,
+    | "create"
+    | "findEvaluationSheetState"
+    | "totalWeightForEvaluationSheet"
+    | "createForEvaluationSheet"
+  >
+  /** 評価シート監査記録へ残す現在時刻（ISO）。 */
+  now: string
+}>
 
 export type Command = {
   employeeId: EmployeeId
@@ -31,7 +42,6 @@ export class CreateGoal {
   }
 
   async run(command: Command): Promise<Goal | ApplicationError> {
-    const repository = new GoalRepository(this.c)
     const goal = Goal.create({
       employeeId: command.employeeId,
       period: command.period,
@@ -46,7 +56,7 @@ export class CreateGoal {
 
     // evaluation_sheet_id が指定された場合、事前検証（親切なエラーメッセージ用）
     if (command.evaluationSheetId !== undefined && command.evaluationSheetId !== null) {
-      const sheet = await repository.findEvaluationSheetState(command.evaluationSheetId)
+      const sheet = await this.c.goalRepository.findEvaluationSheetState(command.evaluationSheetId)
 
       if (sheet instanceof Error) {
         return new UnexpectedError("failed to load evaluation sheet", { cause: sheet })
@@ -79,7 +89,9 @@ export class CreateGoal {
       }
 
       // weight 合計が 100% を超えないか事前検証（親切なエラーメッセージ用）
-      const currentTotal = await repository.totalWeightForEvaluationSheet(command.evaluationSheetId)
+      const currentTotal = await this.c.goalRepository.totalWeightForEvaluationSheet(
+        command.evaluationSheetId,
+      )
       if (currentTotal instanceof Error) {
         return new UnexpectedError("failed to load goal weights", { cause: currentTotal })
       }
@@ -94,10 +106,10 @@ export class CreateGoal {
       // Atomic INSERT: guard 条件（sheet status + period + owner + weight 合計）を
       // INSERT ... SELECT ... WHERE に埋め込み、TOCTOU 競合を防止する。
       // 事前検証をパスしても concurrent write で guard が失敗する場合は ConflictError を返す。
-      const created = await repository.createForEvaluationSheet(
+      const created = await this.c.goalRepository.createForEvaluationSheet(
         goal,
         command.employeeId,
-        this.c.env.NOW ?? new Date().toISOString(),
+        this.c.now,
       )
       if (created instanceof ConflictError) return created
       return created instanceof Error
@@ -106,7 +118,7 @@ export class CreateGoal {
     }
 
     // evaluation_sheet_id 未指定: 通常の Drizzle INSERT
-    const created = await repository.create(goal)
+    const created = await this.c.goalRepository.create(goal)
 
     if (created instanceof Error) {
       return new UnexpectedError("failed to create goal", { cause: created })

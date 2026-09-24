@@ -1,10 +1,13 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { Survey } from "@/contexts/survey/domain/entities/survey.entity"
-import type { Context } from "@/env"
-import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
+import type { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { isSurveyRecordSourceFrozenError } from "@/contexts/survey/infrastructure/repositories/lib/is-survey-record-source-frozen-error"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+
+type Context = Readonly<{
+  surveyRepository: Pick<SurveyRepository, "findById" | "updateIfNoResponses" | "update">
+}>
 
 export type Command = {
   session: CompanySessionValue
@@ -27,9 +30,7 @@ export class UpdateSurvey {
       return new ForbiddenError("cannot manage surveys", "forbidden")
     }
 
-    const surveyRepository = new SurveyRepository(this.c)
-
-    const current = await surveyRepository.findById(command.surveyId)
+    const current = await this.c.surveyRepository.findById(command.surveyId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find survey", { cause: current })
@@ -54,7 +55,7 @@ export class UpdateSurvey {
       JSON.stringify(command.questionsJson) !== JSON.stringify(current.questionsJson)
 
     if (questionsChanged) {
-      const result = await surveyRepository.updateIfNoResponses(updated)
+      const result = await this.c.surveyRepository.updateIfNoResponses(updated)
 
       if (result instanceof Error) {
         if (isSurveyRecordSourceFrozenError(result)) {
@@ -72,7 +73,7 @@ export class UpdateSurvey {
       return result
     }
 
-    const result = await surveyRepository.update(updated)
+    const result = await this.c.surveyRepository.update(updated)
 
     if (result instanceof Error) {
       if (isSurveyRecordSourceFrozenError(result)) {

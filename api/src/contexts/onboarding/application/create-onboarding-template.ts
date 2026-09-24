@@ -2,9 +2,12 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import { ConflictError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"
-import type { Context } from "@/env"
-import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-template.repository"
+import type { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-template.repository"
 import { UniqueConstraintError } from "@/lib/d1/errors"
+
+type Context = Readonly<{
+  templateRepository: Pick<OnboardingTemplateRepository, "findByCode" | "create">
+}>
 
 export type Command = {
   session: CompanySessionValue
@@ -23,13 +26,11 @@ export class CreateOnboardingTemplate {
   }
 
   async run(command: Command): Promise<OnboardingTemplate | ApplicationError> {
-    const templateRepository = new OnboardingTemplateRepository(this.c)
-
     if (command.session.hasPermission("onboarding:manage") === false) {
       return new ForbiddenError("cannot manage onboarding", "forbidden")
     }
 
-    const existing = await templateRepository.findByCode(command.code)
+    const existing = await this.c.templateRepository.findByCode(command.code)
 
     if (existing instanceof Error) {
       return new UnexpectedError("failed to find template", { cause: existing })
@@ -46,7 +47,7 @@ export class CreateOnboardingTemplate {
       description: command.description,
     })
 
-    const result = await templateRepository.create(template)
+    const result = await this.c.templateRepository.create(template)
 
     // TOCTOU: findByCode で未検出でも並行リクエストが先に INSERT した場合
     if (result instanceof UniqueConstraintError) {

@@ -93,7 +93,9 @@ export const PUT = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const lifeEvent = await new UpdateLifeEvent(c).run({
+    const lifeEvent = await new UpdateLifeEvent({
+      lifeEventRepository: new LifeEventRepository(c),
+    }).run({
       lifeEventId: validateUuidParam(c.req.param("id"), "life event"),
       employeeId: viewer.employeeId,
       eventType: json.event_type,

@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { EmployeeRelation } from "@/contexts/company/domain/definitions/employee-relation.definition"
 import { describe, expect, test } from "bun:test"
 import { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
 import { GoalEvaluation } from "@/contexts/performance-review/domain/entities/goal-evaluation.entity"
@@ -10,56 +11,116 @@ import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { ApplicationError } from "@/lib/errors"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
 import { makeTestSession } from "@tests/api/support/make-test-session"
-import { createTestContext } from "@tests/api/support/create-test-context"
-import { initializeCompanyTestFixture } from "@tests/api/support/initialize-company-test-fixture"
-import type { Context } from "@/env"
 
-/** 目標の所有者(id=owner)を、上長(id=manager)のレポートライン配下にする最小の org を仕込む。 */
-async function seedReportsTo(
-  db: D1Database,
-  props: { managerId: number; managerCode: string; ownerId: number; ownerCode: string },
-): Promise<void> {
-  const employees = [
-    {
-      id: props.managerId,
-      code: props.managerCode,
-      name: "Manager",
-      dept_id: 1,
-      status: "active",
-    },
-    { id: props.ownerId, code: props.ownerCode, name: "Owner", dept_id: 1, status: "active" },
-  ] as const
-  const memberships = [
-    { departmentCode: "D001", employeeCode: props.managerCode, managerEmployeeCode: null },
-    {
-      departmentCode: "D001",
-      employeeCode: props.ownerCode,
-      managerEmployeeCode: props.managerCode,
-    },
-  ] as const
+const now = "2026-01-01T00:00:00.000Z"
 
-  await initializeCompanyTestFixture({
-    db,
-    employees,
-    departments: [{ id: 1, code: "D001", name: "Team", managerEmployeeCode: props.managerCode }],
-    memberships,
-  })
+const reportRelation: EmployeeRelation = { isSelf: false, isReport: true, isSameDepartment: true }
+
+const unrelated: EmployeeRelation = { isSelf: false, isReport: false, isSameDepartment: true }
+
+/**
+ * 目標と目標評価のRepositoryを型付きfakeにする。採番、batch削除、評価シートのguard付きSQL、
+ * 組織関係の解決は goal.repository.test.ts と performance-review/test/goal-evaluation.d1.test.ts が検証する。
+ */
+function createGoalPorts(options: { relation?: EmployeeRelation } = {}) {
+  const goals = new Map<number, Goal>()
+  const evaluations: GoalEvaluation[] = []
+
+  const withId = (goal: Goal, id: number) =>
+    new Goal({
+      id,
+      employeeId: goal.employeeId,
+      period: goal.period,
+      title: goal.title,
+      kpi: goal.kpi,
+      weight: goal.weight,
+      status: goal.status,
+      ownerType: goal.ownerType,
+      parentGoalId: goal.parentGoalId,
+      departmentCode: goal.departmentCode,
+      evaluationSheetId: goal.evaluationSheetId,
+    })
+
+  const storeEvaluation = (evaluation: GoalEvaluation) => {
+    const stored = new GoalEvaluation({
+      id: evaluations.length + 1,
+      goalId: evaluation.goalId,
+      evaluatorId: evaluation.evaluatorId,
+      kind: evaluation.kind,
+      score: evaluation.score,
+      comment: evaluation.comment,
+      createdAt: evaluation.createdAt,
+    })
+    evaluations.push(stored)
+    return stored
+  }
+
+  const unused = async (): Promise<never> => {
+    throw new Error("evaluation sheet path is not used by these tests")
+  }
+
+  const goalRepository = {
+    findById: async (goalId: number) => goals.get(goalId) ?? null,
+    create: async (goal: Goal) => {
+      const created = withId(goal, goals.size + 1)
+      goals.set(goals.size + 1, created)
+      return created
+    },
+    update: async (goal: Goal) => {
+      if (goal.id === null || goals.get(goal.id)?.status === "done") return null
+      goals.set(goal.id, goal)
+      return goal
+    },
+    deleteWithEvaluations: async (goal: Goal) => {
+      if (goal.id !== null) goals.delete(goal.id)
+      return null
+    },
+    findEvaluationSheetState: async () => null,
+    totalWeightForEvaluationSheet: unused,
+    createForEvaluationSheet: unused,
+    updateForEvaluationSheet: unused,
+  }
+
+  const goalEvaluationRepository = {
+    findByGoalId: async (goalId: number) =>
+      evaluations.filter((evaluation) => evaluation.goalId === goalId),
+    create: async (evaluation: GoalEvaluation) => storeEvaluation(evaluation),
+    createWithGoalCompletion: async (evaluation: GoalEvaluation, goal: Goal) => {
+      if (goal.id !== null) goals.set(goal.id, goal.withStatus("done"))
+      return storeEvaluation(evaluation)
+    },
+  }
+
+  const ports = {
+    goalRepository,
+    goalEvaluationRepository,
+    resolveEmployeeRelation: async () => options.relation ?? unrelated,
+    now,
+  }
+
+  /** 確定評価済みの状態へ進める。status=done と final 評価を同時に持たせる。 */
+  const finalize = (goal: Goal) => {
+    if (goal.id === null) throw new Error("goal id is null")
+    goals.set(goal.id, goal.withStatus("done"))
+    storeEvaluation(
+      GoalEvaluation.create({
+        goalId: goal.id,
+        evaluatorId: toWorkforceEmployeeId(1),
+        kind: "final",
+        score: 5,
+        comment: "Good work",
+        createdAt: now,
+      }),
+    )
+  }
+
+  return { ports, goals, evaluations, finalize }
 }
 
-async function seedIndependentEmployees(db: D1Database): Promise<void> {
-  const employees = [
-    { id: 1, code: "E001", name: "Owner", dept_id: 1, status: "active" },
-    { id: 2, code: "E002", name: "Viewer", dept_id: 1, status: "active" },
-  ] as const
-  await initializeCompanyTestFixture({
-    db,
-    employees,
-    departments: [{ id: 1, code: "D001", name: "Team" }],
-  })
-}
+type GoalPorts = ReturnType<typeof createGoalPorts>["ports"]
 
-async function seedGoal(context: Context, employeeId: number): Promise<Goal> {
-  const result = await new CreateGoal(context).run({
+async function seedGoal(ports: GoalPorts, employeeId: number): Promise<Goal & { id: number }> {
+  const result = await new CreateGoal(ports).run({
     employeeId: toWorkforceEmployeeId(employeeId),
     period: "2026-H1",
     title: "Improve test coverage",
@@ -67,35 +128,18 @@ async function seedGoal(context: Context, employeeId: number): Promise<Goal> {
     weight: 50,
   })
 
-  if (result instanceof Error) {
+  if (result instanceof Error || result.id === null) {
     throw new Error("seed goal failed")
   }
 
-  return result
-}
-
-async function finalizeGoal(context: Context, goal: Goal): Promise<void> {
-  if (goal.id === null) {
-    throw new Error("goal id is null")
-  }
-
-  await context.env.DB.prepare("UPDATE performance_goals SET status = 'done' WHERE id = ?1")
-    .bind(goal.id)
-    .run()
-  await context.env.DB.prepare(
-    `INSERT INTO goal_evaluations
-       (goal_id, evaluator_id, kind, score, comment, created_at)
-     VALUES (?1, '1', 'final', 5, 'Good work', '2026-01-01T00:00:00.000Z')`,
-  )
-    .bind(goal.id)
-    .run()
+  return result as Goal & { id: number }
 }
 
 describe("CreateGoal", () => {
   test("creates a goal", async () => {
-    const { context } = await createTestContext()
+    const { ports } = createGoalPorts()
 
-    const result = await new CreateGoal(context).run({
+    const result = await new CreateGoal(ports).run({
       employeeId: toWorkforceEmployeeId(1),
       period: "2026-H1",
       title: "Learn TypeScript",
@@ -114,9 +158,9 @@ describe("CreateGoal", () => {
   })
 
   test("creates a goal with KPI", async () => {
-    const { context } = await createTestContext()
+    const { ports } = createGoalPorts()
 
-    const result = await new CreateGoal(context).run({
+    const result = await new CreateGoal(ports).run({
       employeeId: toWorkforceEmployeeId(1),
       period: "2026-H1",
       title: "Reduce bug count",
@@ -134,18 +178,12 @@ describe("CreateGoal", () => {
   })
 })
 
-describe("GetGoal", () => {})
-
 describe("UpdateGoal", () => {
   test("updates for the owner", async () => {
-    const { context } = await createTestContext()
-    const goal = await seedGoal(context, 1)
+    const { ports } = createGoalPorts()
+    const goal = await seedGoal(ports, 1)
 
-    if (goal.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new UpdateGoal(context).run({
+    const result = await new UpdateGoal(ports).run({
       goalId: goal.id,
       employeeId: toWorkforceEmployeeId(1),
       period: "2026-H2",
@@ -165,14 +203,10 @@ describe("UpdateGoal", () => {
   })
 
   test("rejects non-owner with not_owner", async () => {
-    const { context } = await createTestContext()
-    const goal = await seedGoal(context, 1)
+    const { ports, goals } = createGoalPorts()
+    const goal = await seedGoal(ports, 1)
 
-    if (goal.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new UpdateGoal(context).run({
+    const result = await new UpdateGoal(ports).run({
       goalId: goal.id,
       employeeId: toWorkforceEmployeeId(2),
       period: "2026-H1",
@@ -182,12 +216,13 @@ describe("UpdateGoal", () => {
     })
 
     expectApplicationError(result, ForbiddenError, "not_owner")
+    expect(goals.get(goal.id)?.title).toBe("Improve test coverage")
   })
 
   test("rejects unknown id with goal_not_found", async () => {
-    const { context } = await createTestContext()
+    const { ports } = createGoalPorts()
 
-    const result = await new UpdateGoal(context).run({
+    const result = await new UpdateGoal(ports).run({
       goalId: 9999,
       employeeId: toWorkforceEmployeeId(1),
       period: "2026-H1",
@@ -200,16 +235,12 @@ describe("UpdateGoal", () => {
   })
 
   test("rejects finalized goal with goal_finalized", async () => {
-    const { context } = await createTestContext()
-    const goal = await seedGoal(context, 1)
+    const { ports, finalize } = createGoalPorts()
+    const goal = await seedGoal(ports, 1)
 
-    await finalizeGoal(context, goal)
+    finalize(goal)
 
-    if (goal.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new UpdateGoal(context).run({
+    const result = await new UpdateGoal(ports).run({
       goalId: goal.id,
       employeeId: toWorkforceEmployeeId(1),
       period: "2026-H1",
@@ -224,41 +255,35 @@ describe("UpdateGoal", () => {
 
 describe("DeleteGoal", () => {
   test("deletes for the owner", async () => {
-    const { context } = await createTestContext()
-    const goal = await seedGoal(context, 1)
+    const { ports, goals } = createGoalPorts()
+    const goal = await seedGoal(ports, 1)
 
-    if (goal.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new DeleteGoal(context).run({
+    const result = await new DeleteGoal(ports).run({
       goalId: goal.id,
       employeeId: toWorkforceEmployeeId(1),
     })
 
     expect(result).toEqual({ reason: "deleted" })
+    expect(goals.has(goal.id)).toBe(false)
   })
 
   test("rejects non-owner with not_owner", async () => {
-    const { context } = await createTestContext()
-    const goal = await seedGoal(context, 1)
+    const { ports, goals } = createGoalPorts()
+    const goal = await seedGoal(ports, 1)
 
-    if (goal.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new DeleteGoal(context).run({
+    const result = await new DeleteGoal(ports).run({
       goalId: goal.id,
       employeeId: toWorkforceEmployeeId(2),
     })
 
     expectApplicationError(result, ForbiddenError, "not_owner")
+    expect(goals.has(goal.id)).toBe(true)
   })
 
   test("rejects unknown id with goal_not_found", async () => {
-    const { context } = await createTestContext()
+    const { ports } = createGoalPorts()
 
-    const result = await new DeleteGoal(context).run({
+    const result = await new DeleteGoal(ports).run({
       goalId: 9999,
       employeeId: toWorkforceEmployeeId(1),
     })
@@ -267,45 +292,34 @@ describe("DeleteGoal", () => {
   })
 
   test("rejects finalized goal with goal_finalized", async () => {
-    const { context } = await createTestContext()
-    const goal = await seedGoal(context, 1)
+    const { ports, goals, finalize } = createGoalPorts()
+    const goal = await seedGoal(ports, 1)
 
-    await finalizeGoal(context, goal)
+    finalize(goal)
 
-    if (goal.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new DeleteGoal(context).run({
+    const result = await new DeleteGoal(ports).run({
       goalId: goal.id,
       employeeId: toWorkforceEmployeeId(1),
     })
 
     expectApplicationError(result, ConflictError, "goal_finalized")
+    expect(goals.has(goal.id)).toBe(true)
   })
 })
 
-describe("ListMyGoals", () => {})
-
-describe("ListGoalEvaluations", () => {})
-
 describe("CreateGoalEvaluation", () => {
   test("creates a self evaluation for the owner", async () => {
-    const { context } = await createTestContext()
-    const goal = await seedGoal(context, 1)
+    const { ports } = createGoalPorts()
+    const goal = await seedGoal(ports, 1)
 
-    if (goal.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new CreateGoalEvaluation(context).run({
+    const result = await new CreateGoalEvaluation(ports).run({
       goalId: goal.id,
       kind: "self",
       score: 4,
       comment: "I did well",
       evaluatorId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
-      createdAt: "2026-01-01T00:00:00.000Z",
+      createdAt: now,
     })
 
     expect(result).toBeInstanceOf(GoalEvaluation)
@@ -319,112 +333,89 @@ describe("CreateGoalEvaluation", () => {
   })
 
   test("rejects self evaluation by non-owner with forbidden", async () => {
-    const { context } = await createTestContext()
-    const goal = await seedGoal(context, 1)
+    const { ports, evaluations } = createGoalPorts()
+    const goal = await seedGoal(ports, 1)
 
-    if (goal.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new CreateGoalEvaluation(context).run({
+    const result = await new CreateGoalEvaluation(ports).run({
       goalId: goal.id,
       kind: "self",
       score: 3,
       comment: null,
       evaluatorId: toWorkforceEmployeeId(2),
       session: makeTestSession("member"),
-      createdAt: "2026-01-01T00:00:00.000Z",
+      createdAt: now,
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
+    expect(evaluations).toEqual([])
   })
 
   test("creates a manager evaluation for the report's manager", async () => {
-    const { context, db } = await createTestContext()
-    const goal = await seedGoal(context, 1)
+    const { ports } = createGoalPorts({ relation: reportRelation })
+    const goal = await seedGoal(ports, 1)
 
-    await seedReportsTo(db, { managerId: 2, managerCode: "E002", ownerId: 1, ownerCode: "E001" })
-
-    if (goal.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new CreateGoalEvaluation(context).run({
+    const result = await new CreateGoalEvaluation(ports).run({
       goalId: goal.id,
       kind: "manager",
       score: 5,
       comment: "Excellent",
       evaluatorId: toWorkforceEmployeeId(2),
       session: makeTestSession("manager", 2),
-      createdAt: "2026-01-01T00:00:00.000Z",
+      createdAt: now,
     })
 
     expect(result).toBeInstanceOf(GoalEvaluation)
   })
 
   test("rejects a manager evaluation for a non-report", async () => {
-    const { context, db } = await createTestContext()
-    const goal = await seedGoal(context, 1)
-    await seedIndependentEmployees(db)
+    const { ports } = createGoalPorts({ relation: unrelated })
+    const goal = await seedGoal(ports, 1)
 
-    if (goal.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new CreateGoalEvaluation(context).run({
+    const result = await new CreateGoalEvaluation(ports).run({
       goalId: goal.id,
       kind: "manager",
       score: 5,
       comment: "Excellent",
       evaluatorId: toWorkforceEmployeeId(2),
       session: makeTestSession("manager", 2),
-      createdAt: "2026-01-01T00:00:00.000Z",
+      createdAt: now,
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects manager evaluation by member with forbidden", async () => {
-    const { context, db } = await createTestContext()
-    const goal = await seedGoal(context, 1)
-    await seedIndependentEmployees(db)
+    const { ports } = createGoalPorts({ relation: reportRelation })
+    const goal = await seedGoal(ports, 1)
 
-    if (goal.id === null) {
-      throw new Error("id is null")
-    }
-
-    const result = await new CreateGoalEvaluation(context).run({
+    const result = await new CreateGoalEvaluation(ports).run({
       goalId: goal.id,
       kind: "manager",
       score: 3,
       comment: null,
       evaluatorId: toWorkforceEmployeeId(2),
       session: makeTestSession("member"),
-      createdAt: "2026-01-01T00:00:00.000Z",
+      createdAt: now,
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
   test("rejects duplicate self evaluation with already_evaluated", async () => {
-    const { context } = await createTestContext()
-    const goal = await seedGoal(context, 1)
+    const { ports } = createGoalPorts()
+    const goal = await seedGoal(ports, 1)
 
-    if (goal.id === null) {
-      throw new Error("id is null")
-    }
-
-    await new CreateGoalEvaluation(context).run({
+    await new CreateGoalEvaluation(ports).run({
       goalId: goal.id,
       kind: "self",
       score: 4,
       comment: null,
       evaluatorId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
-      createdAt: "2026-01-01T00:00:00.000Z",
+      createdAt: now,
     })
 
-    const result = await new CreateGoalEvaluation(context).run({
+    const result = await new CreateGoalEvaluation(ports).run({
       goalId: goal.id,
       kind: "self",
       score: 3,
@@ -438,16 +429,16 @@ describe("CreateGoalEvaluation", () => {
   })
 
   test("rejects evaluation on non-existent goal with goal_not_found", async () => {
-    const { context } = await createTestContext()
+    const { ports } = createGoalPorts()
 
-    const result = await new CreateGoalEvaluation(context).run({
+    const result = await new CreateGoalEvaluation(ports).run({
       goalId: 9999,
       kind: "self",
       score: 3,
       comment: null,
       evaluatorId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
-      createdAt: "2026-01-01T00:00:00.000Z",
+      createdAt: now,
     })
 
     expectApplicationError(result, NotFoundError, "goal_not_found")

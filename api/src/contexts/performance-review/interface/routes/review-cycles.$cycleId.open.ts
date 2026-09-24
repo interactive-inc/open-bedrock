@@ -1,3 +1,6 @@
+import { ReviewFormGenerationAdapter } from "@/contexts/performance-review/infrastructure/adapters/review/review-form-generation.adapter"
+import { ReviewCyclePolicyAdapter } from "@/contexts/performance-review/infrastructure/adapters/review/review-cycle-policy.adapter"
+import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
 import { OpenReviewCycle } from "@/contexts/performance-review/application/review/open-review-cycle"
 import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
@@ -18,7 +21,11 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
 
   const cycleId = validateIntParam(c.req.param("cycleId"), "review cycle")
 
-  const updated = await new OpenReviewCycle(c).execute({
+  const updated = await new OpenReviewCycle({
+    reviewCycleRepository: new ReviewCycleRepository(c),
+    reviewCyclePolicyAdapter: new ReviewCyclePolicyAdapter(c),
+    reviewFormGenerationAdapter: new ReviewFormGenerationAdapter(c),
+  }).execute({
     session: session,
     cycleId,
   })

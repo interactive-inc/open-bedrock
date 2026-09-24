@@ -1,10 +1,13 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"
-import type { Context } from "@/env"
-import { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
+import type { OneOnOneRepository } from "@/contexts/one-on-one/infrastructure/repositories/oneonone/one-on-one.repository"
 import { isOneOnOneRecordSourceFrozenError } from "@/contexts/one-on-one/infrastructure/repositories/lib/is-one-on-one-record-source-frozen-error"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
+
+type Context = Readonly<{
+  oneOnOneRepository: Pick<OneOnOneRepository, "findById" | "update">
+}>
 
 export type Command = {
   oneOnOneId: string
@@ -23,9 +26,7 @@ export class UpdateOneOnOne {
   }
 
   async run(command: Command): Promise<OneOnOne | ApplicationError> {
-    const oneOnOneRepository = new OneOnOneRepository(this.c)
-
-    const current = await oneOnOneRepository.findById(command.oneOnOneId)
+    const current = await this.c.oneOnOneRepository.findById(command.oneOnOneId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find one-on-one", { cause: current })
@@ -45,7 +46,7 @@ export class UpdateOneOnOne {
       nextAction: command.nextAction,
     })
 
-    const result = await oneOnOneRepository.update(updated)
+    const result = await this.c.oneOnOneRepository.update(updated)
 
     if (result instanceof Error) {
       if (isOneOnOneRecordSourceFrozenError(result)) {

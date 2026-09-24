@@ -2,9 +2,12 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { RentalReservation } from "@/contexts/rental/domain/entities/rental-reservation.entity"
 import { ConflictError, ValidationError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { RentalReservationRepository } from "@/contexts/rental/infrastructure/repositories/rental-reservation.repository"
+import type { RentalReservationRepository } from "@/contexts/rental/infrastructure/repositories/rental-reservation.repository"
 import { isRentalReservationRecordSourceFrozenError } from "@/contexts/rental/infrastructure/repositories/lib/is-rental-reservation-record-source-frozen-error"
+
+type Context = Readonly<{
+  reservationRepository: Pick<RentalReservationRepository, "createIfNoOverlap">
+}>
 
 export type Command = {
   requesterId: EmployeeId
@@ -24,8 +27,6 @@ export class CreateRentalReservation {
   }
 
   async run(command: Command): Promise<RentalReservation | ApplicationError> {
-    const reservationRepository = new RentalReservationRepository(this.c)
-
     const reservation = RentalReservation.create({
       requesterId: command.requesterId,
       itemName: command.itemName,
@@ -40,7 +41,7 @@ export class CreateRentalReservation {
     }
 
     // 同一品名・重複期間の requested 予約があれば、条件付き INSERT が 0 行となり null を返す。
-    const created = await reservationRepository.createIfNoOverlap(reservation)
+    const created = await this.c.reservationRepository.createIfNoOverlap(reservation)
 
     if (created instanceof Error) {
       if (isRentalReservationRecordSourceFrozenError(created)) {

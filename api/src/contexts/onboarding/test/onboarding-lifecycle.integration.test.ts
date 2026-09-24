@@ -1,4 +1,4 @@
-import { createTestContextForDatabase } from "@tests/api/support/create-test-context"
+import { createTestContextForDatabase } from "@tests/api/support/create-context-for-database"
 import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
 import { featureGate } from "@/api/http/middlewares/feature-gate"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
@@ -19,6 +19,7 @@ import { runScheduledOnboarding } from "@/api/scheduled/run-onboarding"
 import { CompleteOnboardingTask } from "@/contexts/onboarding/application/complete-onboarding-task"
 import { UpdateOnboardingAssignment } from "@/contexts/onboarding/application/update-onboarding-assignment"
 import { ConflictError } from "@/lib/errors"
+import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { makeTestSession } from "@tests/api/support/make-test-session"
 
 async function fixture() {
@@ -200,7 +201,9 @@ test("生成後に退職が訂正されたら、元のチェックリストを�
     .bind(generated)
     .first<number>("id")
   if (taskId === null) throw new Error("superseded task missing")
-  const completed = await new CompleteOnboardingTask(context).run({
+  const completed = await new CompleteOnboardingTask({
+    assignmentRepository: new OnboardingAssignmentRepository(context),
+  }).run({
     taskId,
     session: makeTestSession("root"),
     completedAt: "2030-08-01",
@@ -208,7 +211,10 @@ test("生成後に退職が訂正されたら、元のチェックリストを�
   expect(completed).toBeInstanceOf(ConflictError)
   expect(completed).toMatchObject({ code: "assignment_superseded" })
   expect(
-    await new UpdateOnboardingAssignment(context).run({
+    await new UpdateOnboardingAssignment({
+      assignmentRepository: new OnboardingAssignmentRepository(context),
+      employeeDirectory: openCompanyEmployeeDirectory(context),
+    }).run({
       assignmentId: generated,
       assignedAt: "2030-08-02",
       session: makeTestSession("root"),

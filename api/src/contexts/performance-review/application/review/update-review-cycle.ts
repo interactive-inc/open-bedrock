@@ -1,9 +1,12 @@
 import type { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import type { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
-import type { Context } from "@/env"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
+import type { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
+
+type Context = Readonly<{
+  reviewCycleRepository: Pick<ReviewCycleRepository, "findById" | "updateDetails">
+}>
 
 export type Input = {
   session: CompanySessionValue
@@ -26,9 +29,7 @@ export class UpdateReviewCycle {
       return new ForbiddenError("cannot manage review cycles", "forbidden")
     }
 
-    const repository = new ReviewCycleRepository(this.c)
-
-    const reviewCycle = await repository.findById(input.cycleId)
+    const reviewCycle = await this.c.reviewCycleRepository.findById(input.cycleId)
 
     if (reviewCycle instanceof Error) {
       return new UnexpectedError("failed to find review cycle", { cause: reviewCycle })
@@ -42,7 +43,7 @@ export class UpdateReviewCycle {
       return new ConflictError("review cycle is not modifiable", "not_modifiable")
     }
 
-    const updated = await repository.updateDetails(
+    const updated = await this.c.reviewCycleRepository.updateDetails(
       reviewCycle.withDetails({
         title: input.title,
         period: input.period,

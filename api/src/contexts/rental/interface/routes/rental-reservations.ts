@@ -1,3 +1,4 @@
+import { RentalReservationRepository } from "@/contexts/rental/infrastructure/repositories/rental-reservation.repository"
 import { CreateRentalReservation } from "@/contexts/rental/application/create-rental-reservation"
 import { ApplicationError } from "@/lib/errors"
 import { factory } from "@/api/http/factory"
@@ -35,7 +36,9 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const reservation = await new CreateRentalReservation(c).run({
+    const reservation = await new CreateRentalReservation({
+      reservationRepository: new RentalReservationRepository(c),
+    }).run({
       requesterId: viewer.employeeId,
       itemName: json.item_name,
       startDate: json.start_date,

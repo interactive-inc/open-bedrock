@@ -2,8 +2,11 @@ import type { CompanySessionValue } from "@/contexts/company/domain/values/compa
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { Room } from "@/contexts/room/domain/entities/room.entity"
-import type { Context } from "@/env"
-import { RoomRepository } from "@/contexts/room/infrastructure/repositories/room.repository"
+import type { RoomRepository } from "@/contexts/room/infrastructure/repositories/room.repository"
+
+type Context = Readonly<{
+  roomRepository: Pick<RoomRepository, "findById" | "update">
+}>
 
 export type Command = {
   session: CompanySessionValue
@@ -24,13 +27,11 @@ export class UpdateRoom {
   }
 
   async run(command: Command): Promise<Room | ApplicationError> {
-    const roomRepository = new RoomRepository(this.c)
-
     if (command.session.hasPermission("room:manage") === false) {
       return new ForbiddenError("cannot manage rooms", "forbidden")
     }
 
-    const room = await roomRepository.findById(command.roomId)
+    const room = await this.c.roomRepository.findById(command.roomId)
 
     if (room instanceof Error) {
       return new UnexpectedError("failed to find room", { cause: room })
@@ -40,7 +41,7 @@ export class UpdateRoom {
       return new NotFoundError("room not found", "room_not_found")
     }
 
-    const updated = await roomRepository.update(room.withDetails(command.details))
+    const updated = await this.c.roomRepository.update(room.withDetails(command.details))
 
     if (updated instanceof Error) {
       return new UnexpectedError("failed to update room", { cause: updated })

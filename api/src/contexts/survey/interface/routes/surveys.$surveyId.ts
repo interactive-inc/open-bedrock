@@ -1,4 +1,5 @@
 import { DeleteSurvey } from "@/contexts/survey/application/delete-survey"
+import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { UpdateSurvey } from "@/contexts/survey/application/update-survey"
 import { Survey } from "@/contexts/survey/domain/entities/survey.entity"
 import { surveyQuestionSchema } from "@/contexts/survey/domain/definitions/survey-question.definition"
@@ -87,7 +88,7 @@ export const PUT = factory.createHandlers(
 
     const body = c.req.valid("json")
 
-    const updated = await new UpdateSurvey(c).run({
+    const updated = await new UpdateSurvey({ surveyRepository: new SurveyRepository(c) }).run({
       session: session,
       surveyId: surveyId,
       title: body.title,
@@ -114,7 +115,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
 
   const surveyId = validateIntParam(c.req.param("surveyId"), "survey")
 
-  const result = await new DeleteSurvey(c).run({
+  const result = await new DeleteSurvey({ surveyRepository: new SurveyRepository(c) }).run({
     session: session,
     surveyId: surveyId,
   })

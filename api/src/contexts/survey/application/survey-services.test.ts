@@ -3,64 +3,137 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { describe, expect, test } from "bun:test"
 import { CreateSurvey } from "@/contexts/survey/application/create-survey"
 import { DeleteSurvey } from "@/contexts/survey/application/delete-survey"
-import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
-import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { SubmitSurveyResponse } from "@/contexts/survey/application/submit-survey-response"
 import { UpdateSurvey } from "@/contexts/survey/application/update-survey"
 import { UpdateSurveyResponse } from "@/contexts/survey/application/update-survey-response"
 import { Survey } from "@/contexts/survey/domain/entities/survey.entity"
 import { SurveyResponse } from "@/contexts/survey/domain/entities/survey-response.entity"
-import type { Context } from "@/env"
-import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import { makeTestSession } from "@tests/api/support/make-test-session"
 
-async function seedSurvey(context: Context, status: "open" | "closed"): Promise<number> {
-  const created = await new SurveyRepository(context).create(
-    Survey.create({
-      title: "Test Survey",
-      status: status,
-      questionsJson: [{ q: "How are you?" }],
-    }),
-  )
+/**
+ * アンケート集約Repositoryの型付きfake。Domain modelだけを保持し、SQLは再現しない。
+ * 条件付き削除・条件付き更新のSQLは survey.repository.d1.test.ts がローカルD1で検証する。
+ */
+class FakeSurveyRepository {
+  readonly surveys = new Map<number, Survey>()
 
-  if (created instanceof Error || created.id === null) {
-    throw new Error("seed survey failed")
+  readonly responses = new Map<number, SurveyResponse>()
+
+  private nextSurveyId = 1
+
+  private nextResponseId = 1
+
+  seedSurvey(status: "open" | "closed"): number {
+    const id = this.nextSurveyId++
+    this.surveys.set(
+      id,
+      new Survey({ id, title: "Test Survey", status, questionsJson: [{ q: "How are you?" }] }),
+    )
+    return id
   }
 
-  return created.id
-}
-
-async function seedResponse(
-  context: Context,
-  surveyId: number,
-  respondentId: EmployeeId,
-): Promise<number> {
-  const surveyRepository = new SurveyRepository(context)
-
-  const created = await surveyRepository.createResponse(
-    SurveyResponse.create({
-      surveyId: surveyId,
-      respondentId: respondentId,
-      answersJson: { a: "fine" },
-      submittedAt: "2026-01-01T00:00:00.000Z",
-    }),
-  )
-
-  if (created instanceof Error || "reason" in created || created.id === null) {
-    throw new Error("seed response failed")
+  seedResponse(surveyId: number, respondentId: EmployeeId): number {
+    const id = this.nextResponseId++
+    this.responses.set(
+      id,
+      new SurveyResponse({
+        id,
+        surveyId,
+        respondentId,
+        answersJson: { a: "fine" },
+        submittedAt: "2026-01-01T00:00:00.000Z",
+      }),
+    )
+    return id
   }
 
-  return created.id
+  closeSurvey(surveyId: number): void {
+    const survey = this.surveys.get(surveyId)
+    if (survey === undefined) throw new Error("unknown survey")
+    this.surveys.set(surveyId, survey.withDetails({ ...survey, status: "closed" }))
+  }
+
+  private hasResponses(surveyId: number): boolean {
+    return [...this.responses.values()].some((response) => response.surveyId === surveyId)
+  }
+
+  findById = async (surveyId: number) => this.surveys.get(surveyId) ?? null
+
+  create = async (survey: Survey) => {
+    const id = this.nextSurveyId++
+    const created = new Survey({
+      id,
+      title: survey.title,
+      status: survey.status,
+      questionsJson: survey.questionsJson,
+    })
+    this.surveys.set(id, created)
+    return created
+  }
+
+  update = async (survey: Survey) => {
+    if (survey.id === null || !this.surveys.has(survey.id)) return null
+    this.surveys.set(survey.id, survey)
+    return survey
+  }
+
+  updateIfNoResponses = async (survey: Survey) => {
+    if (survey.id === null || this.hasResponses(survey.id)) return null
+    return this.update(survey)
+  }
+
+  deleteWithResponses = async (survey: Survey) => {
+    if (survey.id === null) return new Error("cannot delete unsaved survey")
+    const current = this.surveys.get(survey.id)
+    if (current === undefined) return { reason: "not_found" as const }
+    if (current.isOpen()) return { reason: "not_deletable" as const }
+    this.surveys.delete(survey.id)
+    for (const [id, response] of this.responses) {
+      if (response.surveyId === survey.id) this.responses.delete(id)
+    }
+    return true as const
+  }
+
+  findResponseById = async (responseId: number) => this.responses.get(responseId) ?? null
+
+  findResponseBySurveyIdAndRespondentId = async (surveyId: number, respondentId: EmployeeId) =>
+    [...this.responses.values()].find(
+      (response) => response.surveyId === surveyId && response.respondentId === respondentId,
+    ) ?? null
+
+  createResponse = async (response: SurveyResponse) => {
+    if (this.surveys.get(response.surveyId)?.isOpen() !== true) {
+      return { reason: "survey_not_open" as const }
+    }
+    const id = this.nextResponseId++
+    const created = new SurveyResponse({
+      id,
+      surveyId: response.surveyId,
+      respondentId: response.respondentId,
+      answersJson: response.answersJson,
+      submittedAt: response.submittedAt,
+    })
+    this.responses.set(id, created)
+    return created
+  }
+
+  updateResponse = async (response: SurveyResponse) => {
+    if (response.id === null || !this.responses.has(response.id)) return null
+    if (this.surveys.get(response.surveyId)?.isOpen() !== true) {
+      return { reason: "survey_not_open" as const }
+    }
+    this.responses.set(response.id, response)
+    return response
+  }
 }
 
 describe("CreateSurvey", () => {
   test("creates a survey with admin role", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const result = await new CreateSurvey(context).run({
+    const result = await new CreateSurvey({ surveyRepository }).run({
       session: makeTestSession("root"),
       title: "Engagement Survey",
       status: "open",
@@ -78,9 +151,9 @@ describe("CreateSurvey", () => {
   })
 
   test("creates a closed survey", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const result = await new CreateSurvey(context).run({
+    const result = await new CreateSurvey({ surveyRepository }).run({
       session: makeTestSession("hr"),
       title: "Draft Survey",
       status: "closed",
@@ -97,9 +170,9 @@ describe("CreateSurvey", () => {
   })
 
   test("returns forbidden for member role", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const result = await new CreateSurvey(context).run({
+    const result = await new CreateSurvey({ surveyRepository }).run({
       session: makeTestSession("member"),
       title: "Survey",
       status: "open",
@@ -107,16 +180,17 @@ describe("CreateSurvey", () => {
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
+    expect(surveyRepository.surveys.size).toBe(0)
   })
 })
 
 describe("DeleteSurvey", () => {
   test("deletes a closed survey", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const surveyId = await seedSurvey(context, "closed")
+    const surveyId = surveyRepository.seedSurvey("closed")
 
-    const result = await new DeleteSurvey(context).run({
+    const result = await new DeleteSurvey({ surveyRepository }).run({
       session: makeTestSession("root"),
       surveyId: surveyId,
     })
@@ -129,18 +203,15 @@ describe("DeleteSurvey", () => {
   })
 
   test("deletes a closed survey and its responses", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
     // open で回答を登録してから closed に変更して削除する
-    const surveyId = await seedSurvey(context, "open")
+    const surveyId = surveyRepository.seedSurvey("open")
 
-    await seedResponse(context, surveyId, toWorkforceEmployeeId(1))
+    surveyRepository.seedResponse(surveyId, toWorkforceEmployeeId(1))
+    surveyRepository.closeSurvey(surveyId)
 
-    const db = context.env.DB
-
-    await db.prepare("UPDATE surveys SET status = 'closed' WHERE id = ?1").bind(surveyId).run()
-
-    const result = await new DeleteSurvey(context).run({
+    const result = await new DeleteSurvey({ surveyRepository }).run({
       session: makeTestSession("root"),
       surveyId: surveyId,
     })
@@ -153,22 +224,38 @@ describe("DeleteSurvey", () => {
   })
 
   test("returns not_deletable for an open survey", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const surveyId = await seedSurvey(context, "open")
+    const surveyId = surveyRepository.seedSurvey("open")
 
-    const result = await new DeleteSurvey(context).run({
+    const result = await new DeleteSurvey({ surveyRepository }).run({
       session: makeTestSession("root"),
       surveyId: surveyId,
     })
 
     expectApplicationError(result, ConflictError, "not_deletable")
+    expect(surveyRepository.surveys.has(surveyId)).toBe(true)
+  })
+
+  test("returns not_deletable when the survey was reopened before the guarded delete", async () => {
+    const surveyRepository = new FakeSurveyRepository()
+
+    const surveyId = surveyRepository.seedSurvey("closed")
+
+    const result = await new DeleteSurvey({
+      surveyRepository: {
+        findById: surveyRepository.findById,
+        deleteWithResponses: async () => ({ reason: "not_deletable" }),
+      },
+    }).run({ session: makeTestSession("root"), surveyId })
+
+    expectApplicationError(result, ConflictError, "not_deletable")
   })
 
   test("returns survey_not_found for a missing survey", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const result = await new DeleteSurvey(context).run({
+    const result = await new DeleteSurvey({ surveyRepository }).run({
       session: makeTestSession("root"),
       surveyId: 9999,
     })
@@ -177,98 +264,24 @@ describe("DeleteSurvey", () => {
   })
 
   test("returns forbidden for member role", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const result = await new DeleteSurvey(context).run({
+    const result = await new DeleteSurvey({ surveyRepository }).run({
       session: makeTestSession("member"),
       surveyId: 1,
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
   })
-
-  test("removes the survey and its responses from the database", async () => {
-    const { context } = await createTestContext()
-
-    const surveyId = await seedSurvey(context, "open")
-
-    await seedResponse(context, surveyId, toWorkforceEmployeeId(1))
-
-    const db = context.env.DB
-
-    await db.prepare("UPDATE surveys SET status = 'closed' WHERE id = ?1").bind(surveyId).run()
-
-    const result = await new DeleteSurvey(context).run({
-      session: makeTestSession("root"),
-      surveyId: surveyId,
-    })
-
-    if (result instanceof Error) {
-      throw new Error("expected tagged result")
-    }
-
-    expect(result.reason).toBe("deleted")
-
-    const surveyRepository = new SurveyRepository(context)
-
-    const survey = await surveyRepository.findById(surveyId)
-
-    expect(survey).toBe(null)
-
-    const responseCount = await surveyRepository.countResponsesBySurveyId(surveyId)
-
-    expect(responseCount).toBe(0)
-  })
-
-  // D1 の json_extract('', '$') を使ったガード。
-  // 親 DELETE が 0 行のとき malformed JSON エラーでバッチを中断し、
-  // 後続の survey_responses 削除を防ぐ（レースコンディション対策）。
-  // open のまま batch を直接実行し、回答が残ることを検証する。
-  test("guard aborts batch so responses survive when survey delete matches no rows", async () => {
-    const { context } = await createTestContext()
-
-    const surveyId = await seedSurvey(context, "open")
-
-    await seedResponse(context, surveyId, toWorkforceEmployeeId(1))
-
-    const db = context.env.DB
-
-    // 修正後の DeleteSurvey と同一の 3 ステートメント列を直接実行する。
-    // 親 DELETE は status != 'open' に一致せず 0 行になり、ガードで中断される。
-    let aborted = false
-
-    try {
-      await db.batch([
-        db.prepare("DELETE FROM surveys WHERE id = ?1 AND status != 'open'").bind(surveyId),
-        abortWhenPreviousStatementChangedNoRows(db),
-        db.prepare("DELETE FROM survey_responses WHERE survey_id = ?1").bind(surveyId),
-      ])
-    } catch (error) {
-      aborted = isAbortedByGuard(error)
-    }
-
-    expect(aborted).toBe(true)
-
-    const surveyRepository = new SurveyRepository(context)
-
-    // アンケート本体も回答も残っている
-    const survey = await surveyRepository.findById(surveyId)
-
-    expect(survey).not.toBe(null)
-
-    const responseCount = await surveyRepository.countResponsesBySurveyId(surveyId)
-
-    expect(responseCount).toBe(1)
-  })
 })
 
 describe("UpdateSurvey", () => {
   test("updates title and status without changing questions", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const surveyId = await seedSurvey(context, "open")
+    const surveyId = surveyRepository.seedSurvey("open")
 
-    const result = await new UpdateSurvey(context).run({
+    const result = await new UpdateSurvey({ surveyRepository }).run({
       session: makeTestSession("root"),
       surveyId: surveyId,
       title: "Updated Title",
@@ -287,11 +300,11 @@ describe("UpdateSurvey", () => {
   })
 
   test("updates questions when no responses exist", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const surveyId = await seedSurvey(context, "open")
+    const surveyId = surveyRepository.seedSurvey("open")
 
-    const result = await new UpdateSurvey(context).run({
+    const result = await new UpdateSurvey({ surveyRepository }).run({
       session: makeTestSession("root"),
       surveyId: surveyId,
       title: "Test Survey",
@@ -303,13 +316,13 @@ describe("UpdateSurvey", () => {
   })
 
   test("returns questions_immutable when responses exist and questions changed", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const surveyId = await seedSurvey(context, "open")
+    const surveyId = surveyRepository.seedSurvey("open")
 
-    await seedResponse(context, surveyId, toWorkforceEmployeeId(1))
+    surveyRepository.seedResponse(surveyId, toWorkforceEmployeeId(1))
 
-    const result = await new UpdateSurvey(context).run({
+    const result = await new UpdateSurvey({ surveyRepository }).run({
       session: makeTestSession("root"),
       surveyId: surveyId,
       title: "Test Survey",
@@ -321,9 +334,9 @@ describe("UpdateSurvey", () => {
   })
 
   test("returns survey_not_found for a missing survey", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const result = await new UpdateSurvey(context).run({
+    const result = await new UpdateSurvey({ surveyRepository }).run({
       session: makeTestSession("root"),
       surveyId: 9999,
       title: "Missing",
@@ -335,9 +348,9 @@ describe("UpdateSurvey", () => {
   })
 
   test("returns forbidden for member role", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const result = await new UpdateSurvey(context).run({
+    const result = await new UpdateSurvey({ surveyRepository }).run({
       session: makeTestSession("member"),
       surveyId: 1,
       title: "Survey",
@@ -348,13 +361,13 @@ describe("UpdateSurvey", () => {
     expectApplicationError(result, ForbiddenError, "forbidden")
   })
 
-  // #910: closed → open の再開は回答済みデータとの整合性を壊すため禁止する。
+  // closed → open の再開は回答済みデータとの整合性を壊すため禁止する。
   test("returns survey_reopen_forbidden when reopening a closed survey", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const surveyId = await seedSurvey(context, "closed")
+    const surveyId = surveyRepository.seedSurvey("closed")
 
-    const result = await new UpdateSurvey(context).run({
+    const result = await new UpdateSurvey({ surveyRepository }).run({
       session: makeTestSession("root"),
       surveyId: surveyId,
       title: "Test Survey",
@@ -366,11 +379,11 @@ describe("UpdateSurvey", () => {
   })
 
   test("allows staying closed when updating a closed survey", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const surveyId = await seedSurvey(context, "closed")
+    const surveyId = surveyRepository.seedSurvey("closed")
 
-    const result = await new UpdateSurvey(context).run({
+    const result = await new UpdateSurvey({ surveyRepository }).run({
       session: makeTestSession("root"),
       surveyId: surveyId,
       title: "Updated Title",
@@ -390,11 +403,11 @@ describe("UpdateSurvey", () => {
 
 describe("SubmitSurveyResponse", () => {
   test("submits a response to an open survey", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const surveyId = await seedSurvey(context, "open")
+    const surveyId = surveyRepository.seedSurvey("open")
 
-    const result = await new SubmitSurveyResponse(context).run({
+    const result = await new SubmitSurveyResponse({ surveyRepository }).run({
       surveyId: surveyId,
       respondentId: toWorkforceEmployeeId(1),
       answersJson: { a: "great" },
@@ -410,9 +423,9 @@ describe("SubmitSurveyResponse", () => {
   })
 
   test("returns survey_not_found for a missing survey", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const result = await new SubmitSurveyResponse(context).run({
+    const result = await new SubmitSurveyResponse({ surveyRepository }).run({
       surveyId: 9999,
       respondentId: toWorkforceEmployeeId(1),
       answersJson: {},
@@ -423,11 +436,11 @@ describe("SubmitSurveyResponse", () => {
   })
 
   test("returns survey_not_open for a closed survey", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const surveyId = await seedSurvey(context, "closed")
+    const surveyId = surveyRepository.seedSurvey("closed")
 
-    const result = await new SubmitSurveyResponse(context).run({
+    const result = await new SubmitSurveyResponse({ surveyRepository }).run({
       surveyId: surveyId,
       respondentId: toWorkforceEmployeeId(1),
       answersJson: {},
@@ -438,13 +451,13 @@ describe("SubmitSurveyResponse", () => {
   })
 
   test("returns already_submitted for a duplicate response", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const surveyId = await seedSurvey(context, "open")
+    const surveyId = surveyRepository.seedSurvey("open")
 
-    await seedResponse(context, surveyId, toWorkforceEmployeeId(1))
+    surveyRepository.seedResponse(surveyId, toWorkforceEmployeeId(1))
 
-    const result = await new SubmitSurveyResponse(context).run({
+    const result = await new SubmitSurveyResponse({ surveyRepository }).run({
       surveyId: surveyId,
       respondentId: toWorkforceEmployeeId(1),
       answersJson: {},
@@ -455,18 +468,14 @@ describe("SubmitSurveyResponse", () => {
   })
 })
 
-describe("GetSurveyResponse", () => {})
-
-describe("ListMySurveyResponses", () => {})
-
 describe("UpdateSurveyResponse", () => {
   test("updates the response content", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const surveyId = await seedSurvey(context, "open")
-    const responseId = await seedResponse(context, surveyId, toWorkforceEmployeeId(1))
+    const surveyId = surveyRepository.seedSurvey("open")
+    const responseId = surveyRepository.seedResponse(surveyId, toWorkforceEmployeeId(1))
 
-    const result = await new UpdateSurveyResponse(context).run({
+    const result = await new UpdateSurveyResponse({ surveyRepository }).run({
       responseId: responseId,
       respondentId: toWorkforceEmployeeId(1),
       answersJson: { a: "updated" },
@@ -483,9 +492,9 @@ describe("UpdateSurveyResponse", () => {
   })
 
   test("returns response_not_found for a missing response", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const result = await new UpdateSurveyResponse(context).run({
+    const result = await new UpdateSurveyResponse({ surveyRepository }).run({
       responseId: 9999,
       respondentId: toWorkforceEmployeeId(1),
       answersJson: {},
@@ -496,12 +505,12 @@ describe("UpdateSurveyResponse", () => {
   })
 
   test("returns not_respondent when viewer is not the respondent", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
-    const surveyId = await seedSurvey(context, "open")
-    const responseId = await seedResponse(context, surveyId, toWorkforceEmployeeId(1))
+    const surveyId = surveyRepository.seedSurvey("open")
+    const responseId = surveyRepository.seedResponse(surveyId, toWorkforceEmployeeId(1))
 
-    const result = await new UpdateSurveyResponse(context).run({
+    const result = await new UpdateSurveyResponse({ surveyRepository }).run({
       responseId: responseId,
       respondentId: toWorkforceEmployeeId(99),
       answersJson: {},
@@ -512,16 +521,15 @@ describe("UpdateSurveyResponse", () => {
   })
 
   test("returns survey_not_open when survey is closed", async () => {
-    const { context } = await createTestContext()
+    const surveyRepository = new FakeSurveyRepository()
 
     // open で回答を登録してから closed に変更
-    const surveyId = await seedSurvey(context, "open")
-    const responseId = await seedResponse(context, surveyId, toWorkforceEmployeeId(1))
-    const db = context.env.DB
+    const surveyId = surveyRepository.seedSurvey("open")
+    const responseId = surveyRepository.seedResponse(surveyId, toWorkforceEmployeeId(1))
 
-    await db.prepare("UPDATE surveys SET status = 'closed' WHERE id = ?1").bind(surveyId).run()
+    surveyRepository.closeSurvey(surveyId)
 
-    const result = await new UpdateSurveyResponse(context).run({
+    const result = await new UpdateSurveyResponse({ surveyRepository }).run({
       responseId: responseId,
       respondentId: toWorkforceEmployeeId(1),
       answersJson: { a: "updated" },
@@ -531,5 +539,3 @@ describe("UpdateSurveyResponse", () => {
     expectApplicationError(result, ConflictError, "survey_not_open")
   })
 })
-
-describe("WithdrawSurveyResponse", () => {})

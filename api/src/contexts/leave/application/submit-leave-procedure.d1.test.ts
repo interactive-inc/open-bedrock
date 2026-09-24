@@ -1,16 +1,34 @@
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
-import { expect, test } from "bun:test"
+import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"
 import { SubmitLeaveProcedure } from "@/contexts/leave/application/submit-leave-procedure"
-import { createLeaveProcedureTestContext } from "@/contexts/leave/test/leave-procedure.test-support"
-import { createTestContextForDatabase } from "@tests/api/support/create-test-context"
+import { createLeaveProcedureLocalD1Context } from "@/contexts/leave/test/leave-procedure-local-d1.test-support"
+import { createTestContextForDatabase } from "@tests/api/support/create-context-for-database"
+import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(120_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({ migrated: ["submit"] })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 test("本人が確認した休暇を提出し、同じ再送で案件を増やさない", async () => {
-  const c = await createLeaveProcedureTestContext()
-  await c.database.exec(`INSERT INTO system_iam_roles
-    (id, key, kind, name, created_at, updated_at) VALUES ('leave-submit-role', 'test:leave-submit', 'custom', 'Leave submission', 0, 0);
-    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('leave-submit-role', 'leave:submit');`)
+  const c = await createLeaveProcedureLocalD1Context(local, "submit")
+  await c.database.batch([
+    c.database.prepare(`INSERT INTO system_iam_roles
+    (id, key, kind, name, created_at, updated_at) VALUES ('leave-submit-role', 'test:leave-submit', 'custom', 'Leave submission', 0, 0)`),
+    c.database.prepare(
+      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('leave-submit-role', 'leave:submit')",
+    ),
+  ])
   await c.database
     .prepare(
       "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('leave-submit-binding', ?1, 'leave-submit-role', 0)",

@@ -9,8 +9,13 @@ import {
 } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import type { RoomReservation } from "@/contexts/room/domain/entities/room-reservation.entity"
-import type { Context } from "@/env"
-import { RoomReservationRepository } from "@/contexts/room/infrastructure/repositories/room-reservation.repository"
+import type { RoomReservationRepository } from "@/contexts/room/infrastructure/repositories/room-reservation.repository"
+
+type Context = Readonly<{
+  reservationRepository: Pick<RoomReservationRepository, "findById" | "updateIfNoOverlap">
+  /** 開始時刻が過去かを判定する基準のISO時刻。 */
+  now: string
+}>
 
 export type Command = {
   reservationId: string
@@ -33,15 +38,11 @@ export class UpdateRoomReservation {
       return new ValidationError("invalid time range", "invalid_time_range")
     }
 
-    const now = this.c.env.NOW ?? new Date().toISOString()
-
-    if (command.startAt < now) {
+    if (command.startAt < this.c.now) {
       return new UnprocessableError("start_at must be in the future", "start_in_past")
     }
 
-    const reservationRepository = new RoomReservationRepository(this.c)
-
-    const current = await reservationRepository.findById(command.reservationId)
+    const current = await this.c.reservationRepository.findById(command.reservationId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find reservation", { cause: current })
@@ -66,7 +67,7 @@ export class UpdateRoomReservation {
 
     const updated = rescheduled.withPurpose(command.purpose)
 
-    const result = await reservationRepository.updateIfNoOverlap(updated)
+    const result = await this.c.reservationRepository.updateIfNoOverlap(updated)
 
     if (result instanceof Error) {
       return new UnexpectedError("failed to update reservation", { cause: result })
@@ -74,7 +75,7 @@ export class UpdateRoomReservation {
 
     // null は「重複予約」か「並行削除」のどちらか — findById で区別する
     if (result === null) {
-      const stillExists = await reservationRepository.findById(command.reservationId)
+      const stillExists = await this.c.reservationRepository.findById(command.reservationId)
 
       if (stillExists instanceof Error) {
         return new UnexpectedError("failed to find reservation", { cause: stillExists })

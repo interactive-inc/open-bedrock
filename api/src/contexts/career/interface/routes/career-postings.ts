@@ -1,3 +1,5 @@
+import { CareerOrganizationUnitAdapter } from "@/contexts/career/infrastructure/adapters/career-organization-unit.adapter"
+import { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
 import { CreateCareerPosting } from "@/contexts/career/application/create-career-posting"
 import { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
 import {
@@ -91,7 +93,10 @@ export const POST = factory.createHandlers(
 
     const body = c.req.valid("json")
 
-    const created = await new CreateCareerPosting(c).run({
+    const created = await new CreateCareerPosting({
+      postingRepository: new CareerPostingRepository(c),
+      organizationUnits: new CareerOrganizationUnitAdapter(c),
+    }).run({
       session: session,
       title: body.title,
       organizationUnitId: body.organization_unit_id ?? null,

@@ -1,12 +1,19 @@
-import { KnowledgeAuthorAuthorizationAdapter } from "@/contexts/knowledge/infrastructure/adapters/knowledge-author-authorization.adapter"
+import type { KnowledgeAuthorAuthorizationAdapter } from "@/contexts/knowledge/infrastructure/adapters/knowledge-author-authorization.adapter"
 import { ConflictError } from "@/lib/errors"
 import type { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { KnowledgeContext as Context } from "@/contexts/knowledge/configuration/knowledge-context"
-import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/repositories/knowledge-article.repository"
+import type { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/repositories/knowledge-article.repository"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 import { isKnowledgeRecordSourceFrozenError } from "@/contexts/knowledge/infrastructure/repositories/lib/is-knowledge-article-record-source-frozen-error"
+
+type Context = Readonly<{
+  articleRepository: Pick<
+    KnowledgeArticleRepository,
+    "readRecordedCommand" | "findById" | "appendRevision"
+  >
+  authorAuthorization: Pick<KnowledgeAuthorAuthorizationAdapter, "prepare">
+}>
 
 export type Command = {
   expectedRevision: number
@@ -29,11 +36,7 @@ export class UpdateKnowledgeArticle {
   }
 
   async run(command: Command): Promise<KnowledgeArticle | ApplicationError> {
-    const articleRepository = new KnowledgeArticleRepository(this.c)
-
-    const authorization = await new KnowledgeAuthorAuthorizationAdapter(this.c).prepare(
-      command.authorId,
-    )
+    const authorization = await this.c.authorAuthorization.prepare(command.authorId)
     if (authorization instanceof Error) return authorization
     const requestJson = JSON.stringify({
       articleId: command.articleId,
@@ -44,7 +47,7 @@ export class UpdateKnowledgeArticle {
       bodyMd: command.bodyMd,
       reason: command.reason,
     })
-    const recorded = await articleRepository.readRecordedCommand({
+    const recorded = await this.c.articleRepository.readRecordedCommand({
       ...authorization,
       actorAccountId: authorization.accountId,
       commandId: command.commandId,
@@ -58,7 +61,7 @@ export class UpdateKnowledgeArticle {
             "command key was used for different content",
             "knowledge_command_conflict",
           )
-    const current = await articleRepository.findById(command.articleId)
+    const current = await this.c.articleRepository.findById(command.articleId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find knowledge article", { cause: current })
@@ -81,7 +84,7 @@ export class UpdateKnowledgeArticle {
       bodyMd: command.bodyMd,
     })
 
-    const result = await articleRepository.appendRevision(updated, {
+    const result = await this.c.articleRepository.appendRevision(updated, {
       ...authorization,
       actorAccountId: authorization.accountId,
       at: authorization.now,

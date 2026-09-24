@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
 import { AssignOnboarding } from "@/contexts/onboarding/application/assign-onboarding"
 import { CancelOnboardingAssignment } from "@/contexts/onboarding/application/cancel-onboarding-assignment"
 import { CompleteOnboardingTask } from "@/contexts/onboarding/application/complete-onboarding-task"
@@ -7,23 +8,16 @@ import { UpdateOnboardingAssignment } from "@/contexts/onboarding/application/up
 import { OnboardingAssignment } from "@/contexts/onboarding/domain/entities/onboarding-assignment.entity"
 import { OnboardingTemplate } from "@/contexts/onboarding/domain/entities/onboarding-template.entity"
 import { OnboardingTemplateTask } from "@/contexts/onboarding/domain/entities/onboarding-template-task.entity"
-import type { Context } from "@/env"
-import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-assignment.repository"
+import {
+  createFakeAssignmentRepository,
+  createFakeEmployeeDirectory,
+  createFakeTemplateRepository,
+} from "@/contexts/onboarding/test/onboarding-repository-fakes.test-support"
+import { UniqueConstraintError } from "@/lib/d1/errors"
 import { ApplicationError, ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
-import { employees } from "@/contexts/company/infrastructure/schema/employee"
-import {
-  onboardingTemplates,
-  onboardingTemplateTasks,
-  onboardingTasks,
-} from "@/contexts/onboarding/infrastructure/schema/onboarding"
-import { eq } from "drizzle-orm"
-import { createTestContext } from "@tests/api/support/create-test-context"
-import { publishTestEmployeeResources } from "@tests/api/support/company/publish-test-employee-resources"
 import { makeTestSession } from "@tests/api/support/make-test-session"
 import { describe, expect, test } from "bun:test"
-
-let nextEmployeeId = 10_000
 
 const template = new OnboardingTemplate({
   id: 1,
@@ -42,38 +36,37 @@ const template = new OnboardingTemplate({
   ],
 })
 
-async function seedEmployee(context: Context, code: string): Promise<number> {
-  const id = nextEmployeeId
+const employeeId = 10_000
 
-  nextEmployeeId += 1
-
-  await context.var.database.insert(employees).values({
+function directoryEntry(id: number, code: string): CompanyEmployeeDirectoryEntry {
+  return {
     id: toWorkforceEmployeeId(id),
-    employeeCode: code,
     officialName: "You",
+    employeeCode: code,
     email: null,
     phone: null,
-    createdAt: new Date(0),
-    updatedAt: new Date(0),
-  })
-  await publishTestEmployeeResources(context.env.DB, {
-    employeeId: String(id),
-    employmentId: `test:onboarding:employment:${id}`,
-    officialName: "You",
-    employeeCode: code,
-    employmentType: "FULL_TIME",
-    employmentStatus: "ACTIVE",
-    effectiveFrom: "1970-01-01",
-    recordedAt: 0,
-  })
-
-  return id
+    employment: null,
+    primaryAssignment: null,
+  }
 }
 
-async function seedAssignment(context: Context, employeeId: number): Promise<number> {
-  const repository = new OnboardingAssignmentRepository(context)
+/** 従業員名簿、テンプレート、割り当てを型付きfakeにして、DBなしで業務判断を検証する。 */
+function createAssignmentTestContext() {
+  const templateRepository = createFakeTemplateRepository()
 
-  const created = await repository.create(
+  templateRepository.templates.set(template.code, template)
+
+  return {
+    employeeDirectory: createFakeEmployeeDirectory([directoryEntry(employeeId, "E201")]),
+    templateRepository,
+    assignmentRepository: createFakeAssignmentRepository(),
+  }
+}
+
+type AssignmentTestContext = ReturnType<typeof createAssignmentTestContext>
+
+async function seedAssignment(context: AssignmentTestContext): Promise<OnboardingAssignment> {
+  const created = await context.assignmentRepository.create(
     OnboardingAssignment.create({
       employeeId: toWorkforceEmployeeId(employeeId),
       template,
@@ -85,21 +78,29 @@ async function seedAssignment(context: Context, employeeId: number): Promise<num
     throw new Error("seed assignment failed")
   }
 
-  return created.id
+  return created
+}
+
+function firstTaskId(assignment: OnboardingAssignment): number {
+  const taskId = assignment.tasks[0]?.id
+
+  if (taskId === null || taskId === undefined) {
+    throw new Error("missing task id")
+  }
+
+  return taskId
 }
 
 describe("GetOnboardingAssignment", () => {})
 
 describe("UpdateOnboardingAssignment", () => {
   test("a privileged role reschedules the assignment", async () => {
-    const { context } = await createTestContext()
+    const context = createAssignmentTestContext()
 
-    const employeeId = await seedEmployee(context, "E103")
-
-    const assignmentId = await seedAssignment(context, employeeId)
+    const assignment = await seedAssignment(context)
 
     const result = await new UpdateOnboardingAssignment(context).run({
-      assignmentId,
+      assignmentId: assignment.id ?? 0,
       session: makeTestSession("hr"),
       assignedAt: "2026-06-15T00:00:00.000Z",
     })
@@ -109,17 +110,16 @@ describe("UpdateOnboardingAssignment", () => {
     }
 
     expect(result.assignment.assignedAt).toBe("2026-06-15T00:00:00.000Z")
+    expect(result.employee.employeeCode).toBe("E201")
   })
 
   test("a member is forbidden", async () => {
-    const { context } = await createTestContext()
+    const context = createAssignmentTestContext()
 
-    const employeeId = await seedEmployee(context, "E104")
-
-    const assignmentId = await seedAssignment(context, employeeId)
+    const assignment = await seedAssignment(context)
 
     const result = await new UpdateOnboardingAssignment(context).run({
-      assignmentId,
+      assignmentId: assignment.id ?? 0,
       session: makeTestSession("member"),
       assignedAt: "2026-06-15T00:00:00.000Z",
     })
@@ -129,58 +129,45 @@ describe("UpdateOnboardingAssignment", () => {
 })
 
 describe("CancelOnboardingAssignment", () => {
-  test("a privileged role deletes the assignment and its tasks", async () => {
-    const { context } = await createTestContext()
+  test("a privileged role deletes the assignment", async () => {
+    const context = createAssignmentTestContext()
 
-    const employeeId = await seedEmployee(context, "E105")
-
-    const assignmentId = await seedAssignment(context, employeeId)
+    const assignment = await seedAssignment(context)
 
     const result = await new CancelOnboardingAssignment(context).run({
-      assignmentId,
+      assignmentId: assignment.id ?? 0,
       session: makeTestSession("root"),
     })
 
     expect(result).toEqual({ reason: "cancelled" })
 
-    const repository = new OnboardingAssignmentRepository(context)
-
-    const found = await repository.findById(assignmentId)
+    const found = await context.assignmentRepository.findById(assignment.id ?? 0)
 
     expect(found).toBeNull()
   })
 
-  test("cancel removes orphaned onboarding_tasks for the assignment", async () => {
-    const { context } = await createTestContext()
+  test("a completed assignment is not modifiable", async () => {
+    const context = createAssignmentTestContext()
 
-    const employeeId = await seedEmployee(context, "E105B")
+    const assignment = await seedAssignment(context)
 
-    const assignmentId = await seedAssignment(context, employeeId)
+    await context.assignmentRepository.update(assignment.updateStatus("completed"))
 
     const result = await new CancelOnboardingAssignment(context).run({
-      assignmentId,
+      assignmentId: assignment.id ?? 0,
       session: makeTestSession("root"),
     })
 
-    expect(result).toEqual({ reason: "cancelled" })
-
-    const remainingTasks = await context.var.database
-      .select()
-      .from(onboardingTasks)
-      .where(eq(onboardingTasks.assignmentId, assignmentId))
-
-    expect(remainingTasks.length).toBe(0)
+    expectApplicationError(result, ConflictError, "not_modifiable")
   })
 
   test("a member is forbidden", async () => {
-    const { context } = await createTestContext()
+    const context = createAssignmentTestContext()
 
-    const employeeId = await seedEmployee(context, "E106")
-
-    const assignmentId = await seedAssignment(context, employeeId)
+    const assignment = await seedAssignment(context)
 
     const result = await new CancelOnboardingAssignment(context).run({
-      assignmentId,
+      assignmentId: assignment.id ?? 0,
       session: makeTestSession("member"),
     })
 
@@ -190,25 +177,9 @@ describe("CancelOnboardingAssignment", () => {
 
 describe("UncompleteOnboardingTask", () => {
   test("the owner reverts a completed task to pending", async () => {
-    const { context } = await createTestContext()
+    const context = createAssignmentTestContext()
 
-    const employeeId = await seedEmployee(context, "E107")
-
-    const assignmentId = await seedAssignment(context, employeeId)
-
-    const repository = new OnboardingAssignmentRepository(context)
-
-    const assignment = await repository.findById(assignmentId)
-
-    if (assignment === null || assignment instanceof Error) {
-      throw assignment ?? new Error("assignment not found")
-    }
-
-    const taskId = assignment.tasks[0]?.id
-
-    if (taskId === null || taskId === undefined) {
-      throw new Error("missing task id")
-    }
+    const taskId = firstTaskId(await seedAssignment(context))
 
     await new CompleteOnboardingTask(context).run({
       taskId,
@@ -230,25 +201,9 @@ describe("UncompleteOnboardingTask", () => {
   })
 
   test("a non-owner member is forbidden", async () => {
-    const { context } = await createTestContext()
+    const context = createAssignmentTestContext()
 
-    const employeeId = await seedEmployee(context, "E108")
-
-    const assignmentId = await seedAssignment(context, employeeId)
-
-    const repository = new OnboardingAssignmentRepository(context)
-
-    const assignment = await repository.findById(assignmentId)
-
-    if (assignment === null || assignment instanceof Error) {
-      throw assignment ?? new Error("assignment not found")
-    }
-
-    const taskId = assignment.tasks[0]?.id
-
-    if (taskId === null || taskId === undefined) {
-      throw new Error("missing task id")
-    }
+    const taskId = firstTaskId(await seedAssignment(context))
 
     const result = await new UncompleteOnboardingTask(context).run({
       taskId,
@@ -259,7 +214,7 @@ describe("UncompleteOnboardingTask", () => {
   })
 
   test("an unknown task is not found", async () => {
-    const { context } = await createTestContext()
+    const context = createAssignmentTestContext()
 
     const result = await new UncompleteOnboardingTask(context).run({
       taskId: 9999,
@@ -270,32 +225,9 @@ describe("UncompleteOnboardingTask", () => {
   })
 })
 
-async function seedTemplate(context: Context): Promise<void> {
-  await context.var.database.insert(onboardingTemplates).values({
-    id: template.id ?? undefined,
-    code: template.code,
-    name: template.name,
-    kind: template.kind,
-    description: template.description,
-  })
-
-  for (const task of template.tasks) {
-    await context.var.database.insert(onboardingTemplateTasks).values({
-      templateCode: template.code,
-      code: task.code,
-      title: task.title,
-      sortOrder: task.order,
-      ownerRole: task.ownerRole,
-    })
-  }
-}
-
 describe("AssignOnboarding duplicate check", () => {
   test("assigning the same template twice returns already_assigned", async () => {
-    const { context } = await createTestContext()
-
-    await seedEmployee(context, "E201")
-    await seedTemplate(context)
+    const context = createAssignmentTestContext()
 
     const firstResult = await new AssignOnboarding(context).run({
       session: makeTestSession("hr"),
@@ -308,6 +240,8 @@ describe("AssignOnboarding duplicate check", () => {
       throw new Error("first assignment failed")
     }
 
+    expect(firstResult.tasks.map((task) => task.templateTaskCode)).toEqual(["account", "pc"])
+
     const secondResult = await new AssignOnboarding(context).run({
       session: makeTestSession("hr"),
       employeeCode: "E201",
@@ -318,28 +252,35 @@ describe("AssignOnboarding duplicate check", () => {
     expectApplicationError(secondResult, ConflictError, "already_assigned")
   })
 
+  test("a unique constraint race on create returns already_assigned", async () => {
+    const context = createAssignmentTestContext()
+
+    const result = await new AssignOnboarding({
+      ...context,
+      assignmentRepository: {
+        findActiveByEmployeeAndTemplate: async () => null,
+        create: async () => new UniqueConstraintError("onboarding assignment already exists"),
+      },
+    }).run({
+      session: makeTestSession("hr"),
+      employeeCode: "E201",
+      templateCode: template.code,
+      assignedAt: "2026-05-01T00:00:00.000Z",
+    })
+
+    expectApplicationError(result, ConflictError, "already_assigned")
+  })
+
   test("allows assigning after the previous assignment is completed", async () => {
-    const { context } = await createTestContext()
+    const context = createAssignmentTestContext()
 
-    const employeeId = await seedEmployee(context, "E202")
-    await seedTemplate(context)
+    const firstAssignment = await seedAssignment(context)
 
-    const firstAssignmentId = await seedAssignment(context, employeeId)
-
-    // manually mark the assignment as completed
-    const repository = new OnboardingAssignmentRepository(context)
-
-    const firstAssignment = await repository.findById(firstAssignmentId)
-
-    if (firstAssignment === null || firstAssignment instanceof Error) {
-      throw new Error("seed assignment not found")
-    }
-
-    await repository.update(firstAssignment.updateStatus("completed"))
+    await context.assignmentRepository.update(firstAssignment.updateStatus("completed"))
 
     const secondResult = await new AssignOnboarding(context).run({
       session: makeTestSession("hr"),
-      employeeCode: "E202",
+      employeeCode: "E201",
       templateCode: template.code,
       assignedAt: "2026-06-01T00:00:00.000Z",
     })

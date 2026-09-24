@@ -1,10 +1,19 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { hasFinalEvaluation } from "@/contexts/performance-review/domain/policies/final-goal-evaluation.policy"
-import type { Context } from "@/env"
-import { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal-evaluation.repository"
-import { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
+import type { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal-evaluation.repository"
+import type { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
 import type { ApplicationError } from "@/lib/errors"
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
+
+type Context = Readonly<{
+  goalRepository: Pick<
+    GoalRepository,
+    "findById" | "findEvaluationSheetState" | "deleteWithEvaluations"
+  >
+  goalEvaluationRepository: Pick<GoalEvaluationRepository, "findByGoalId">
+  /** 評価シート監査記録へ残す現在時刻（ISO）。 */
+  now: string
+}>
 
 export type Command = {
   goalId: number
@@ -22,9 +31,7 @@ export class DeleteGoal {
   }
 
   async run(command: Command): Promise<Deleted | ApplicationError> {
-    const repository = new GoalRepository(this.c)
-
-    const current = await repository.findById(command.goalId)
+    const current = await this.c.goalRepository.findById(command.goalId)
 
     if (current instanceof Error) {
       return new UnexpectedError("failed to find goal", { cause: current })
@@ -40,7 +47,7 @@ export class DeleteGoal {
 
     // 評価シートに紐づく場合、シートが編集可能ステータスか確認
     if (current.evaluationSheetId !== null && current.evaluationSheetId !== undefined) {
-      const sheet = await repository.findEvaluationSheetState(current.evaluationSheetId)
+      const sheet = await this.c.goalRepository.findEvaluationSheetState(current.evaluationSheetId)
       if (sheet instanceof Error) {
         return new UnexpectedError("failed to load evaluation sheet", { cause: sheet })
       }
@@ -54,9 +61,7 @@ export class DeleteGoal {
       }
     }
 
-    const evalRepo = new GoalEvaluationRepository(this.c)
-
-    const evaluations = await evalRepo.findByGoalId(command.goalId)
+    const evaluations = await this.c.goalEvaluationRepository.findByGoalId(command.goalId)
 
     if (evaluations instanceof Error) {
       return new UnexpectedError("failed to find goal evaluations", {
@@ -71,8 +76,11 @@ export class DeleteGoal {
     // goal_evaluations と goals を D1 batch でアトミックに削除する。
     // goals の DELETE に status != 'done' + sheet status ガードを付け、
     // 確定済み目標の TOCTOU 競合およびシート提出と削除の競合を防ぐ。
-    const now = this.c.env.NOW ?? new Date().toISOString()
-    const deleted = await repository.deleteWithEvaluations(current, command.employeeId, now)
+    const deleted = await this.c.goalRepository.deleteWithEvaluations(
+      current,
+      command.employeeId,
+      this.c.now,
+    )
     if (deleted instanceof ConflictError) return deleted
     if (deleted instanceof Error) {
       return new UnexpectedError("failed to delete goal", { cause: deleted })

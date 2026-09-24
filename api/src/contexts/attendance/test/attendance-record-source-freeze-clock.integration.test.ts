@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
+import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/repositories/attendance-record.repository"
 import { createAttendanceRecordSourceFixture } from "@/contexts/attendance/test/create-attendance-record-source-fixture.test-support"
-import { createTestContextForDatabase } from "@tests/api/support/create-test-context"
+import { createTestContextForDatabase } from "@tests/api/support/create-context-for-database"
 import { ClockIn } from "@/contexts/attendance/application/clock-in"
 import { ClockOut } from "@/contexts/attendance/application/clock-out"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
@@ -37,8 +38,8 @@ test("実DBの書込み停止が通常の出勤と退勤で409になり、解除
     now: "2026-09-01T08:00:00Z",
   }
   for (const failure of [
-    await new ClockIn(context).run(clockIn),
-    await new ClockOut(context).run(clockOut),
+    await new ClockIn({ recordRepository: new AttendanceRecordRepository(context) }).run(clockIn),
+    await new ClockOut({ recordRepository: new AttendanceRecordRepository(context) }).run(clockOut),
   ]) {
     expect(failure).toBeInstanceOf(ConflictError)
     if (!(failure instanceof ConflictError)) throw new Error("Expected frozen source conflict")
@@ -59,6 +60,10 @@ test("実DBの書込み停止が通常の出勤と退勤で409になり、解除
       f.clock.now,
     ),
   ).toMatchObject({ kind: "released" })
-  expect(await new ClockIn(context).run(clockIn)).toMatchObject({ status: "open" })
-  expect(await new ClockOut(context).run(clockOut)).toMatchObject({ status: "closed" })
+  expect(
+    await new ClockIn({ recordRepository: new AttendanceRecordRepository(context) }).run(clockIn),
+  ).toMatchObject({ status: "open" })
+  expect(
+    await new ClockOut({ recordRepository: new AttendanceRecordRepository(context) }).run(clockOut),
+  ).toMatchObject({ status: "closed" })
 })

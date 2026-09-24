@@ -2,9 +2,12 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { CertificateRequest } from "@/contexts/certificate-request/domain/entities/certificate-request.entity"
 import { ConflictError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
-import type { Context } from "@/env"
-import { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/repositories/certificate-request.repository"
+import type { CertificateRequestRepository } from "@/contexts/certificate-request/infrastructure/repositories/certificate-request.repository"
 import { isCertificateRequestRecordSourceFrozenError } from "@/contexts/certificate-request/infrastructure/repositories/lib/is-certificate-request-record-source-frozen-error"
+
+type Context = Readonly<{
+  certificateRequestRepository: Pick<CertificateRequestRepository, "create">
+}>
 
 export type Command = {
   requesterId: EmployeeId
@@ -24,8 +27,6 @@ export class CreateCertificateRequest {
   }
 
   async run(command: Command): Promise<CertificateRequest | ApplicationError> {
-    const certificateRequestRepository = new CertificateRequestRepository(this.c)
-
     const certificateRequest = CertificateRequest.create({
       requesterId: command.requesterId,
       certificateType: command.certificateType,
@@ -35,7 +36,7 @@ export class CreateCertificateRequest {
       createdAt: command.createdAt,
     })
 
-    const created = await certificateRequestRepository.create(certificateRequest)
+    const created = await this.c.certificateRequestRepository.create(certificateRequest)
 
     if (created instanceof Error) {
       if (isCertificateRequestRecordSourceFrozenError(created)) {
