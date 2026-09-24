@@ -73,6 +73,7 @@ function createDelivery(
     recipientAccountId: "account-1",
     deliveredAt,
     readAt,
+    dismissedAt: null,
   })
   if (delivery instanceof Error) throw delivery
 

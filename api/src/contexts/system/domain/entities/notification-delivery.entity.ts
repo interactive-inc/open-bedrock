@@ -17,13 +17,13 @@ const propsSchema = z
     recipientAccountId: zAccountId,
     deliveredAt: z.date(),
     readAt: z.date().nullable(),
-    dismissedAt: z.date().nullable().optional(),
+    dismissedAt: z.date().nullable(),
   })
   .strict()
 
 type ParsedProps = z.output<typeof propsSchema>
 
-/** concreteなAccount宛ての配信と単調な既読状態だけを所有するSystem receipt。 */
+/** concreteなAccount宛ての配信と単調な既読・非表示状態だけを所有するSystem receipt。 */
 export class NotificationDeliveryEntity {
   readonly id: NotificationDeliveryId
   readonly messageId: NotificationMessageId
@@ -55,7 +55,7 @@ export class NotificationDeliveryEntity {
       return new InvalidNotificationDeliveryError("read_before_delivery")
     }
     if (
-      parsed.data.dismissedAt != null &&
+      parsed.data.dismissedAt !== null &&
       parsed.data.dismissedAt.getTime() < parsed.data.deliveredAt.getTime()
     ) {
       return new InvalidNotificationDeliveryError("dismiss_before_delivery")

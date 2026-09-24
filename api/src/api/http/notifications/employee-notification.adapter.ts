@@ -83,6 +83,7 @@ export class EmployeeNotificationAdapter {
       recipientAccountId: recipientAccountId.data,
       deliveredAt: createdAt,
       readAt: null,
+      dismissedAt: null,
     })
     if (delivery instanceof Error) return delivery
 

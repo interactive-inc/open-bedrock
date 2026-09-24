@@ -409,6 +409,7 @@ export class RingiRequestRepository {
         recipientAccountId: recipient,
         deliveredAt: at,
         readAt: null,
+        dismissedAt: null,
       })
       if (delivery instanceof Error) return delivery
       const deliveries = NotificationDeliveryBatchValue.create([delivery])

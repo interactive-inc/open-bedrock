@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import {
   SystemAccountConflictError,
   SystemAccountUnavailableError,
@@ -62,7 +63,7 @@ export const POST = systemFactory.createHandlers(
     }
     const auditEvent = SystemAuditEventEntity.create({
       actorAccountId: context.var.userId,
-      action: "system.account.created",
+      action: SYSTEM_AUDIT_ACTIONS.systemAccountCreated,
       targetType: "system:account",
       targetId: accountId.data,
       outcome: "succeeded",

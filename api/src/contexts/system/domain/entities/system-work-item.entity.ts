@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { SystemWorkItemError } from "@system/domain/errors"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemWorkDigestValue } from "@system/domain/values/work/system-work-digest.value"
@@ -11,6 +12,18 @@ import {
   type SystemWorkCommand,
   type SystemWorkItem,
 } from "@system/domain/schemas/work/system-work-item.schema"
+
+const systemWorkAuditActions = Object.freeze({
+  create: SYSTEM_AUDIT_ACTIONS.systemWorkCreate,
+  accept: SYSTEM_AUDIT_ACTIONS.systemWorkAccept,
+  submit: SYSTEM_AUDIT_ACTIONS.systemWorkSubmit,
+  approve: SYSTEM_AUDIT_ACTIONS.systemWorkApprove,
+  return: SYSTEM_AUDIT_ACTIONS.systemWorkReturn,
+  request_handover: SYSTEM_AUDIT_ACTIONS.systemWorkRequestHandover,
+  accept_handover: SYSTEM_AUDIT_ACTIONS.systemWorkAcceptHandover,
+  decline_handover: SYSTEM_AUDIT_ACTIONS.systemWorkDeclineHandover,
+  cancel: SYSTEM_AUDIT_ACTIONS.systemWorkCancel,
+})
 
 type Transition = Readonly<{
   command: unknown
@@ -354,7 +367,7 @@ export class SystemWorkItemEntity {
     return SystemAuditEventEntity.restore({
       eventId: value.auditEventId,
       actorAccountId: value.actor.accountId,
-      action: `system.work.${value.action}`,
+      action: systemWorkAuditActions[value.action],
       targetType: "system:work-item",
       targetId: value.id,
       outcome: "succeeded",

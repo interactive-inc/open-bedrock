@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { preservedRecordSearchSchema } from "@system/domain/schemas/records/preserved-record-search.schema"
 import type { DisclosePreservedRecordIndexPersistenceAdapter } from "@system/infrastructure/adapters/records/disclose-preserved-record-index-persistence.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
@@ -59,7 +60,7 @@ export class DisclosePreservedRecordIndex {
       page.permitted.length > search.limit ? (records.at(-1)?.recordId ?? null) : null
     const audit = SystemAuditEventEntity.create({
       actorAccountId: this.c.accountId,
-      action: "system.record.searched",
+      action: SYSTEM_AUDIT_ACTIONS.systemRecordSearched,
       targetType: "system:preserved-record-search",
       targetId: this.c.accountId,
       outcome: "succeeded",

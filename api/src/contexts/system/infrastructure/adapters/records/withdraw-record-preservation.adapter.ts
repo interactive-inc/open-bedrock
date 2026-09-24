@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import type { RecordPreservationDecisionContext } from "@system/configuration/record-preservation-decision-context"
 import type { SystemDatabaseContext } from "@system/configuration/system-context"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
@@ -87,7 +88,7 @@ export class WithdrawRecordPreservationAdapter {
 
     const audit = SystemAuditEventEntity.create({
       actorAccountId: authentication.accountId,
-      action: "system.record.preservation.withdrawn",
+      action: SYSTEM_AUDIT_ACTIONS.systemRecordPreservationWithdrawn,
       targetType: "system:case",
       targetId: proposal.caseId,
       outcome: "succeeded",

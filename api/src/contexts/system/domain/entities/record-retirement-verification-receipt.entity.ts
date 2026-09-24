@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { recordStorageKeyFingerprintsSchema } from "@system/domain/schemas/records/record-storage-key-fingerprint.schema"
 import { z } from "zod"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
@@ -88,7 +89,7 @@ export class RecordRetirementVerificationReceiptEntity {
     return SystemAuditEventEntity.restore({
       eventId: this.snapshot.auditEventId,
       actorAccountId: this.snapshot.actorAccountId,
-      action: "system.record.retirement.page.verified",
+      action: SYSTEM_AUDIT_ACTIONS.systemRecordRetirementPageVerified,
       targetType: "system:record-retirement-receipt",
       targetId: this.snapshot.id,
       outcome: "succeeded",

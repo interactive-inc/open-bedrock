@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import {
   SystemForbiddenError,
   SystemIAMUnavailableError,
@@ -146,7 +147,7 @@ export const PATCH = systemFactory.createHandlers(
     }
     const auditEvent = SystemAuditEventEntity.create({
       actorAccountId: actorAccountId.data,
-      action: "system.iam.role.updated",
+      action: SYSTEM_AUDIT_ACTIONS.systemIamRoleUpdated,
       targetType: "system:iam-role",
       targetId: current.id,
       outcome: "succeeded",
@@ -238,7 +239,7 @@ export const DELETE = systemFactory.createHandlers(
     }
     const auditEvent = SystemAuditEventEntity.create({
       actorAccountId: actorAccountId.data,
-      action: "system.iam.role.deleted",
+      action: SYSTEM_AUDIT_ACTIONS.systemIamRoleDeleted,
       targetType: "system:iam-role",
       targetId: role.id,
       outcome: "succeeded",

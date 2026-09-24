@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import {
   SystemForbiddenError,
   SystemIdentityNotFoundError,
@@ -100,7 +101,7 @@ export const DELETE = systemFactory.createHandlers(
     }
     const auditEvent = SystemAuditEventEntity.create({
       actorAccountId: actorAccountId.data,
-      action: "system.identity.revoked",
+      action: SYSTEM_AUDIT_ACTIONS.systemIdentityRevoked,
       targetType: "system:identity",
       targetId: identity.binding.id,
       outcome: "succeeded",

@@ -17,6 +17,7 @@ import { SystemSessionRepository } from "@system/infrastructure/repositories/aut
 import { decoySystemPasswordHash } from "@system/lib/auth/decoy-system-password-hash"
 import { LoginRateLimitAdapter } from "@system/infrastructure/adapters/auth/login-rate-limit.adapter"
 import { passwordHashNeedsRehash } from "@system/lib/auth/password-hash-needs-rehash"
+import { SystemPasswordLoginAuditAdapter } from "@system/infrastructure/adapters/audit/system-password-login-audit.adapter"
 import { SystemPasswordCredentialAdapter } from "@system/infrastructure/adapters/auth/system-password-credential.adapter"
 import { verifySystemPassword } from "@system/lib/auth/verify-system-password"
 import { systemCoreSchema } from "@system/infrastructure/schema/system-core"
@@ -36,51 +37,6 @@ export type SystemSessionHttpEnvironment = {
 }
 
 const factory = createFactory<SystemSessionHttpEnvironment>()
-
-// @authorization public - opaque Session token自体をcredentialとして検証する
-export const GET = factory.createHandlers(
-  zValidator("header", z.object({ authorization: z.string().optional() })),
-  async (context) => {
-    const database = context.env?.DB
-    if (database === undefined) {
-      throw new SystemSessionUnavailableError()
-    }
-
-    const authorization = context.req.valid("header").authorization
-    const token = authorization?.match(/^Bearer[ \t]+([0-9a-f]{64})$/iu)?.[1]
-    if (token === undefined) {
-      throw new SystemInvalidSessionError()
-    }
-
-    const now = new Date(context.env.NOW ?? Date.now())
-    const sessionTtlMilliseconds = Number(context.env.SYSTEM_SESSION_TTL_SECONDS ?? 604_800) * 1_000
-    if (!Number.isSafeInteger(now.getTime()) || !Number.isSafeInteger(sessionTtlMilliseconds)) {
-      throw new SystemSessionUnavailableError()
-    }
-
-    const systemContext = { env: { DB: database } }
-    const sessionRepository = new SystemSessionRepository({ context: systemContext })
-    const authentication = await sessionRepository.authenticate(
-      { rawToken: token, now },
-      new SystemSessionMaterialService(),
-    )
-    if (authentication instanceof Error) {
-      throw new SystemSessionUnavailableError()
-    }
-    if (authentication.kind === "rejected") {
-      throw new SystemInvalidSessionError()
-    }
-
-    return context.json(
-      {
-        account_id: authentication.accountId,
-        session_id: authentication.sessionId,
-        expires_at: authentication.expiresAt.toISOString(),
-      },
-      200,
-    )
-  },
-)
 
 // @authorization public - password credentialを検証しcanonical opaque Sessionを発行する
 export const POST = factory.createHandlers(
@@ -140,6 +96,13 @@ export const POST = factory.createHandlers(
       throw new SystemSessionUnavailableError()
     }
     if (authentication.kind === "rejected") {
+      // 未知subjectと誤passwordを同じreasonで監査し、監査不能ならfail closedにする。
+      const audited = await new SystemPasswordLoginAuditAdapter({
+        env: { DB: database },
+      }).recordDenied("invalid_credentials", now)
+      if (audited instanceof Error) {
+        throw new SystemSessionUnavailableError()
+      }
       throw new SystemCredentialsInvalidError()
     }
 
@@ -168,6 +131,13 @@ export const POST = factory.createHandlers(
       throw new SystemSessionUnavailableError()
     }
     if (issuance.kind === "rejected") {
+      // 未知subjectと誤passwordを同じreasonで監査し、監査不能ならfail closedにする。
+      const audited = await new SystemPasswordLoginAuditAdapter({
+        env: { DB: database },
+      }).recordDenied("invalid_credentials", now)
+      if (audited instanceof Error) {
+        throw new SystemSessionUnavailableError()
+      }
       throw new SystemCredentialsInvalidError()
     }
 

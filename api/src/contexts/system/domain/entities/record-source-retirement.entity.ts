@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { z } from "zod"
 import type { RecordRetirementProposalValue } from "@system/domain/values/records/record-retirement-proposal.value"
 import type { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
@@ -83,7 +84,7 @@ export class RecordSourceRetirementEntity {
     return SystemAuditEventEntity.restore({
       eventId: this.snapshot.auditEventId,
       actorAccountId: this.snapshot.actorAccountId,
-      action: "system.record.source.retired",
+      action: SYSTEM_AUDIT_ACTIONS.systemRecordSourceRetired,
       targetType: "system:record-source-retirement",
       targetId: this.snapshot.id,
       outcome: "succeeded",

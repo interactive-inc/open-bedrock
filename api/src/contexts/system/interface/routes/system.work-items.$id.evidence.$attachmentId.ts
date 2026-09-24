@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
@@ -81,7 +82,7 @@ export const GET = systemFactory.createHandlers(
     if (assertions instanceof Error) throw new SystemWorkItemHttpError(assertions)
     const audit = SystemAuditEventEntity.create({
       actorAccountId: prepared.authorization.actor.accountId,
-      action: "system.work.evidence.read",
+      action: SYSTEM_AUDIT_ACTIONS.systemWorkEvidenceRead,
       targetType: "system:work-item",
       targetId: parameters.id,
       outcome: "succeeded",

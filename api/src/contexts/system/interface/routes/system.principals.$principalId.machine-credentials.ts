@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemMachineCredentialEntity } from "@system/domain/entities/system-machine-credential.entity"
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
@@ -97,7 +98,7 @@ export const POST = systemFactory.createHandlers(
     if (after === null || after instanceof Error) throw new SystemPrincipalUnavailableError(after)
     const event = SystemAuditEventEntity.create({
       actorAccountId: context.var.userId,
-      action: "auth.machine_credential.created",
+      action: SYSTEM_AUDIT_ACTIONS.authMachineCredentialCreated,
       targetType: "system:machine_credential",
       targetId: credential.id,
       outcome: "succeeded",

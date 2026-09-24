@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import type { SystemSessionAuditContext } from "@system/domain/definitions/audit/system-session-audit-context.definition"
 import type { SystemSessionMaterial } from "@system/domain/definitions/auth/system-session-issuance.definition"
@@ -37,7 +38,7 @@ export class RevokeSystemSession {
 
     const audit = SystemAuditEventEntity.createSession({
       actorAccountId: session.accountId,
-      action: "auth.session.revoke",
+      action: SYSTEM_AUDIT_ACTIONS.authSessionRevoke,
       targetId: session.id,
       outcome: "succeeded",
       reasonCode: null,

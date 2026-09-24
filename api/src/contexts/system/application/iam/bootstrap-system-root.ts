@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import type { InvalidSystemPasswordReason } from "@system/domain/errors"
 import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { EmailValue } from "@system/domain/values/identity/email.value"
@@ -78,7 +79,7 @@ export class BootstrapSystemRoot {
 
     const auditEvent = SystemAuditEventEntity.create<AccountId>({
       actorAccountId: null,
-      action: "system.bootstrap.completed",
+      action: SYSTEM_AUDIT_ACTIONS.systemBootstrapCompleted,
       targetType: "system_account",
       targetId: accountId.data,
       outcome: "succeeded",
