@@ -215,6 +215,7 @@ export const systemSessions = sqliteTable(
     expiresAt: integer("expires_at", { mode: "timestamp_ms" }).notNull(),
     rotatedAt: integer("rotated_at", { mode: "timestamp_ms" }),
     revokedAt: integer("revoked_at", { mode: "timestamp_ms" }),
+    authenticatedAt: integer("authenticated_at", { mode: "timestamp_ms" }),
   },
   (table) => [
     uniqueIndex("system_sessions_token_hash_uniq").on(table.tokenHash),
@@ -239,6 +240,10 @@ export const systemSessions = sqliteTable(
         ${table.revokedAt} >= ${table.createdAt}
         AND (${table.rotatedAt} IS NULL OR ${table.revokedAt} >= ${table.rotatedAt})
       )`,
+    ),
+    check(
+      "system_sessions_authentication_chronology",
+      sql`${table.authenticatedAt} IS NULL OR ${table.authenticatedAt} <= ${table.createdAt}`,
     ),
   ],
 )

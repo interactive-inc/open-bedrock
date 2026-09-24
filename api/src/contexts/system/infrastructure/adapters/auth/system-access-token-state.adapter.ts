@@ -13,7 +13,7 @@ import {
   systemMachineCredentials,
   systemPrincipals,
 } from "@system/infrastructure/schema/system-principal"
-import { and, eq } from "drizzle-orm"
+import { and, eq, sql } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/d1"
 
 type Context = Readonly<{
@@ -33,10 +33,19 @@ export type SystemAccessTokenState =
     }>
   | Readonly<{
       kind: "rejected"
-      reason: AccountSessionRejection | "account_not_found" | "invalid_machine_credential"
+      reason:
+        | AccountSessionRejection
+        | "account_not_found"
+        | "invalid_machine_credential"
+        | "session_revoked"
     }>
 
-/** 検証済みtokenの発行元とAccount・機械credentialの現在状態を同じ読取で照合する。 */
+/**
+ * 検証済みtokenの発行元とAccount・機械credential・Session familyの現在状態を同じ読取で照合する。
+ * Sessionから発行したtokenは `sessionFamilyId` を持ち、logoutや再利用検知でfamilyが失効すると
+ * 有効期限内でも拒否する。familyの確認はAccountを読む同じqueryへ相関subqueryで載せ、
+ * bearer検証1回あたりのD1往復を増やさない。
+ */
 export class SystemAccessTokenStateAdapter {
   constructor(private readonly c: Context) {
     Object.freeze(this)
@@ -48,6 +57,7 @@ export class SystemAccessTokenStateAdapter {
       tokenVersion: number
       issuedAtMs: number
       machineCredentialId?: string
+      sessionFamilyId: string | null
       at: Date
     }>,
   ): Promise<SystemAccessTokenState | Error> {
@@ -59,6 +69,15 @@ export class SystemAccessTokenStateAdapter {
           principal: systemPrincipals,
           credential: systemMachineCredentials,
           connector: { id: systemConnectors.id, status: systemConnectors.status },
+          sessionActive:
+            input.sessionFamilyId === null
+              ? sql<number>`1`
+              : sql<number>`EXISTS (
+                  SELECT 1 FROM system_sessions AS session
+                  WHERE session.family_id = ${input.sessionFamilyId}
+                    AND session.account_id = ${systemAccounts.id}
+                    AND (session.revoked_at IS NULL OR session.revoked_at > ${input.at.getTime()})
+                )`,
         })
         .from(systemAccounts)
         .leftJoin(systemPrincipals, eq(systemPrincipals.accountId, systemAccounts.id))
@@ -82,6 +101,9 @@ export class SystemAccessTokenStateAdapter {
         sessionTokenVersion: input.tokenVersion,
       })
       if (rejection !== null) return { kind: "rejected", reason: rejection }
+      if (input.sessionFamilyId !== null && Number(row.sessionActive) !== 1) {
+        return { kind: "rejected", reason: "session_revoked" }
+      }
 
       const principal = row.principal === null ? null : SystemPrincipalEntity.create(row.principal)
       if (principal instanceof Error) return principal

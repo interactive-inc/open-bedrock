@@ -151,7 +151,7 @@ export class SystemAuditEventEntity<
         | typeof SYSTEM_AUDIT_ACTIONS.authSessionRotate
       targetId: SessionId | null
       outcome: "succeeded" | "denied"
-      reasonCode: "refresh_token_reused" | "session_invalid" | null
+      reasonCode: "refresh_token_reused" | "session_invalid" | "session_lifetime_exceeded" | null
       occurredAt: Date
       context: SystemSessionAuditContext
     }>,

@@ -16,6 +16,16 @@ identity token は Ed25519 の公開 JWKS で検証する。利用側は `alg=Ed
 
 API の access token は `JWT_SECRET` で検証し、request ごとに account の状態、token version、permission を解決する。外部 identity の署名鍵と API session の署名鍵を共有しない。
 
+## Session の寿命と失効
+
+- ログインで作る session family は、認証した時刻を `system_sessions.authenticated_at` に保存し、refresh で作る後継へ同じ値を引き継ぐ。
+- family の絶対寿命は `SYSTEM_SESSION_MAX_LIFETIME_SECONDS`（秒、既定 2592000）で決める。発行と refresh の `expires_at` はこの寿命の終わりを超えない。
+- 絶対寿命を過ぎた refresh は 401 で拒否し、family を失効させ、監査に `session_lifetime_exceeded` を残す。利用者は再ログインする。
+- `SYSTEM_SESSION_MAX_LIFETIME_SECONDS` が正の整数秒でない場合は、session の発行と refresh を 503 で止める。
+- `authenticated_at` を持たない行は、同じ family で最も早く作られた行の作成時刻を起点として扱う。
+- session から発行する access token は family ID を `sid` claim に持つ。bearer の検証は account を読む同じ D1 query で family の失効を確認し、logout または refresh token の再利用検知で失効した family の access token を有効期限内でも拒否する。
+- `sid` を持たない access token（機械 credential の token、外部 access token）は family の失効確認を行わない。
+
 ## Web の外部 identity ログイン
 
 ```mermaid
