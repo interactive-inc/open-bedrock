@@ -1,4 +1,5 @@
 import type { Miniflare } from "miniflare"
+import { runningWorkerdPids } from "@tests/d1/support/guard-workerd-stdio"
 
 /**
  * ローカルD1のworkerdへ載せるWorker。受け取ったSQLを本物のD1 bindingで実行し、
@@ -118,20 +119,31 @@ type Command =
  * Miniflareの`getD1Database`が返すproxyは、`prepare`や`bind`をworker threadの同期fetchで
  * workerdへ送る。Bunではこの同期fetchが接続を失ったまま戻らず、testが止まることがある。
  * ここでは`prepare`と`bind`を手元の値として組み立て、実行だけを非同期の`dispatchFetch`で送る。
+ * 処理中にworkerdが落ちると接続が切れ、要求はその場で失敗する（local-d1-fetch-client.d1.test.ts）。
+ * 応答が長く返らない要求は、どのSQLで止まっているかを追えるよう記録する。
  * SQLの実行はworkerd上のD1が行うため、D1のbind・batch・制約・triggerの挙動は変わらない。
  */
 export function createLocalD1FetchClient(runtime: Miniflare, binding: string): D1Database {
   const send = async (command: Command): Promise<unknown> => {
-    const response = await runtime.dispatchFetch("http://local-d1.invalid/", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ binding, ...command, ...encodeCommand(command) }),
-    })
-    const payload = (await response.json()) as
-      | { ok: true; value: unknown }
-      | { ok: false; error: SerializedError }
-    if (!payload.ok) throw restoreError(payload.error)
-    return decode(payload.value)
+    const pending = reportPending(binding, command)
+    try {
+      const response = await runtime
+        .dispatchFetch("http://local-d1.invalid/", {
+          method: "POST",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ binding, ...command, ...encodeCommand(command) }),
+        })
+        .catch((error: unknown) => {
+          throw new Error("local D1 request could not reach workerd", { cause: error })
+        })
+      const payload = (await response.json()) as
+        | { ok: true; value: unknown }
+        | { ok: false; error: SerializedError }
+      if (!payload.ok) throw restoreError(payload.error)
+      return decode(payload.value)
+    } finally {
+      clearTimeout(pending)
+    }
   }
 
   const createStatement = (input: StatementInput): D1PreparedStatement => {
@@ -160,6 +172,26 @@ export function createLocalD1FetchClient(runtime: Miniflare, binding: string): D
 }
 
 const STATEMENT = Symbol("local D1 statement")
+
+/** 応答を待つ要求を記録するまでの時間。要求は止めず、止まった場所を示すためだけに使う。 */
+const PENDING_REPORT_MS = 20_000
+
+/** 応答が長く返らない要求の種類とSQLの先頭、動いているworkerdを記録する。 */
+function reportPending(binding: string, command: Command): ReturnType<typeof setTimeout> {
+  const sql =
+    command.op === "batch"
+      ? command.statements.map((statement) => statement.sql).join("; ")
+      : command.op === "exec"
+        ? command.sql
+        : command.statement.sql
+  const timer = setTimeout(() => {
+    console.warn(
+      `local D1 request has been pending for ${PENDING_REPORT_MS}ms: ${binding} ${command.op} ${sql.replace(/\s+/g, " ").slice(0, 200)} (running workerd: ${runningWorkerdPids().join(", ") || "none"})`,
+    )
+  }, PENDING_REPORT_MS)
+  timer.unref?.()
+  return timer
+}
 
 function statementInput(statement: D1PreparedStatement): StatementInput {
   const input = (statement as unknown as { [STATEMENT]?: StatementInput })[STATEMENT]

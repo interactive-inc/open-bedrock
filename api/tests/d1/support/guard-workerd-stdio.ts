@@ -5,6 +5,9 @@ let installed = false
 
 const failures: unknown[] = []
 
+/** 動いているworkerdのpid。 */
+const running = new Set<number>()
+
 /**
  * Miniflareが起動するworkerdの子プロセスについて、起動とstdioの失敗を受け止める。
  *
@@ -34,6 +37,11 @@ export function takeWorkerdStdioFailures(): unknown[] {
   return failures.splice(0)
 }
 
+/** 動いているworkerdのpid。止まった要求の記録や、testがworkerdの終了を再現する時に使う。 */
+export function runningWorkerdPids(): ReadonlyArray<number> {
+  return [...running]
+}
+
 function isWorkerd(command: unknown): boolean {
   return typeof command === "string" && /[\\/]workerd(?:\.exe)?$/.test(command)
 }
@@ -41,6 +49,10 @@ function isWorkerd(command: unknown): boolean {
 function guard(child: ChildProcess): void {
   child.on("error", (error: unknown) => {
     failures.push(error)
+  })
+  if (child.pid !== undefined) running.add(child.pid)
+  child.on("exit", () => {
+    if (child.pid !== undefined) running.delete(child.pid)
   })
   for (const stream of child.stdio) {
     stream?.on("error", (error: unknown) => {
