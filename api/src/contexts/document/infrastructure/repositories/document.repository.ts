@@ -30,7 +30,7 @@ export class DocumentRepository {
           title: document.title,
           category: document.category,
           location: document.location,
-          partnerCode: document.partnerCode,
+          counterpartyReference: document.counterpartyReference,
           expiresOn: document.expiresOn,
           note: document.note,
           createdAt: document.createdAt,
@@ -57,7 +57,7 @@ export class DocumentRepository {
           title: document.title,
           category: document.category,
           location: document.location,
-          partnerCode: document.partnerCode,
+          counterpartyReference: document.counterpartyReference,
           expiresOn: document.expiresOn,
           note: document.note,
         })

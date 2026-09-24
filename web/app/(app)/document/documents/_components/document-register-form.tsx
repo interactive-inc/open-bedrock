@@ -43,9 +43,9 @@ export function DocumentRegisterForm() {
         </Field>
 
         <Field>
-          <FieldLabel htmlFor="document_partner_code">取引先コード（任意）</FieldLabel>
+          <FieldLabel htmlFor="document_counterparty_reference">相手先（任意）</FieldLabel>
 
-          <Input id="document_partner_code" name="partner_code" />
+          <Input id="document_counterparty_reference" name="counterparty_reference" />
         </Field>
 
         <Field>

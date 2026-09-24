@@ -11,7 +11,7 @@ export type Command = {
   title: string
   category: string | null
   location: string
-  partnerCode: string | null
+  counterpartyReference: string | null
   expiresOn: string | null
   note: string | null
   createdAt: string
@@ -37,7 +37,7 @@ export class RegisterDocument {
         title: command.title,
         category: command.category,
         location: command.location,
-        partnerCode: command.partnerCode,
+        counterpartyReference: command.counterpartyReference,
         expiresOn: command.expiresOn,
         note: command.note,
         createdAt: command.createdAt,

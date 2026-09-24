@@ -11,7 +11,8 @@ export const oneOnOnes = sqliteTable("one_on_ones", {
   topics: text("topics"),
   managerNote: text("manager_note"),
   nextAction: text("next_action"),
-  evaluationSheetId: integer("evaluation_sheet_id"),
+  /** 過去に連携していた外部記録の参照。1on1は解釈せず、書き込まず、保全のために値だけを保持する。 */
+  externalReference: integer("external_reference"),
 })
 
 export type OneOnOneRow = InferSelectModel<typeof oneOnOnes>

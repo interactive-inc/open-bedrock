@@ -45,7 +45,7 @@ test("11件の1on1記録を全件保全し、人の承認・取消・再提出�
     const index = oneOnOneIds.indexOf(id) + 1
     await database
       .prepare(`INSERT INTO one_on_ones
-      (id,member_id,manager_id,held_at,topics,manager_note,next_action,evaluation_sheet_id)
+      (id,member_id,manager_id,held_at,topics,manager_note,next_action,external_reference)
       VALUES (?1,?2,?3,?4,?5,?6,?7,NULL)`)
       .bind(
         id,
@@ -93,7 +93,7 @@ test("11件の1on1記録を全件保全し、人の承認・取消・再提出�
   ).toBe(201)
   const frozenInsert = await database
     .prepare(`INSERT INTO one_on_ones
-      (id,member_id,manager_id,held_at,topics,manager_note,next_action,evaluation_sheet_id)
+      (id,member_id,manager_id,held_at,topics,manager_note,next_action,external_reference)
       VALUES (?1,?2,?3,?4,NULL,NULL,NULL,NULL)`)
     .bind(
       crypto.randomUUID(),

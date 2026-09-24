@@ -2,6 +2,7 @@ import {
   canOwnerReference,
   canSourceQueryOwner,
   collectTableOwnershipViolations,
+  inspectSoftReferences,
   inspectTableReferences,
   resolveTableOwner,
 } from "./check-table-ownership-isolation"
@@ -107,6 +108,42 @@ describe("table の所有境界", () => {
         owners,
       ),
     ).toHaveLength(1)
+  })
+
+  test("別の業務の記録を指す列名だけの参照を拒否する", () => {
+    expect(
+      inspectSoftReferences(
+        "leave_requests",
+        "leave",
+        ["id", "attendance_record_id", "attendance_record_code"],
+        owners,
+      ),
+    ).toEqual([
+      {
+        file: "migrations",
+        reason:
+          "leave の leave_requests.attendance_record_id が attendance の attendance_records を列名で参照しています",
+      },
+      {
+        file: "migrations",
+        reason:
+          "leave の leave_requests.attendance_record_code が attendance の attendance_records を列名で参照しています",
+      },
+    ])
+  })
+
+  test("自分、Company、System の記録と不透明な参照は許可する", () => {
+    expect(
+      inspectSoftReferences(
+        "leave_requests",
+        "leave",
+        ["leave_request_id", "company_employee_id", "system_account_id", "external_reference"],
+        owners,
+      ),
+    ).toEqual([])
+    expect(
+      inspectSoftReferences("company_employees", "company", ["leave_request_id"], owners),
+    ).toEqual([])
   })
 
   test("現在の migration と production source に違反がない", async () => {

@@ -46,6 +46,43 @@ export function resolveTableOwner(
   return candidates[0] ?? null
 }
 
+const FOUNDATION_CONTEXTS: ReadonlySet<string> = new Set(["system", "company"])
+const SOFT_REFERENCE_COLUMN_PATTERN = /^([a-z][a-z0-9_]*)_(?:id|code|key|number)$/u
+
+function referencedTableNames(stem: string): string[] {
+  return [stem, `${stem}s`, `${stem}es`, stem.replace(/y$/u, "ies")]
+}
+
+/**
+ * 外部キーを持たない列名だけの参照も、別の業務の記録を指していれば直接依存として拒否する。
+ * `<記録>_id` や `<記録>_code` の記録名が、別の業務が所有するtable名と一致する列を検出する。
+ * 業務間の関連は所有contextが解釈しない不透明な参照か、API compositionのread modelで表す。
+ */
+export function inspectSoftReferences(
+  table: string,
+  owner: string,
+  columns: ReadonlyArray<string>,
+  owners: ReadonlyMap<string, string>,
+): TableOwnershipViolation[] {
+  if (FOUNDATION_CONTEXTS.has(owner)) return []
+  const violations: TableOwnershipViolation[] = []
+  for (const column of columns) {
+    const stem = SOFT_REFERENCE_COLUMN_PATTERN.exec(column)?.[1]
+    if (stem === undefined) continue
+    const names = referencedTableNames(stem)
+    const referenced = [...owners].find(
+      ([candidate, target]) =>
+        target !== owner && !FOUNDATION_CONTEXTS.has(target) && names.includes(candidate),
+    )
+    if (referenced === undefined) continue
+    violations.push({
+      file: "migrations",
+      reason: `${owner} の ${table}.${column} が ${referenced[1]} の ${referenced[0]} を列名で参照しています`,
+    })
+  }
+  return violations
+}
+
 const API_COMPOSITION = "api-composition"
 
 /**
@@ -172,6 +209,11 @@ export async function collectTableOwnershipViolations(): Promise<TableOwnershipV
         reason: `${owner} の ${table} が ${target} の ${foreignKey.table} へ外部キーで依存しています`,
       })
     }
+    const columns = database
+      .query<{ name: string }, []>(`PRAGMA table_info("${table}")`)
+      .all()
+      .map((column) => column.name)
+    violations.push(...inspectSoftReferences(table, owner, columns, owners))
   }
 
   for await (const file of new Glob("**/*.ts").scan(resolve(PROJECT_ROOT, "src", "api"))) {
