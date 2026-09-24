@@ -1,5 +1,5 @@
 import { PrepareRingiRetirementPlanAdapter } from "@/contexts/ringi/infrastructure/adapters/prepare-ringi-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { RingiRecordSystemAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { RingiRetirementConflictError } from "@/contexts/ringi/application/errors"
 
@@ -15,10 +15,10 @@ export class CreateRingiRetirementPlan {
     const prepared = await new PrepareRingiRetirementPlanAdapter(this.c).prepare(input, stepUpToken)
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new RingiRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

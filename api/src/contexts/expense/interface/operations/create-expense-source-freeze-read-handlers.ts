@@ -2,8 +2,8 @@ import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { expenseFactory } from "@/contexts/expense/interface/request-environment/expense-factory"
 import { zAppExpenseSourceFreeze } from "@/contexts/expense/interface/http/response-schemas"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { prepareSystemRecordSourceFreezeAuthorization } from "@system/interface/operations/prepare-system-record-source-freeze-authorization"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 import { SystemForbiddenError, SystemHTTPException } from "@system/interface/errors"
 
 /** 現在の人の管理権限で停止世代を確認する。読み取りは再認証を消費しない。 */
@@ -14,7 +14,7 @@ export function createExpenseSourceFreezeReadHandlers() {
       c.header("Cache-Control", "no-store")
       const authentication = c.var.bearerReadAuthentication
       if (authentication === undefined) throw new SystemForbiddenError()
-      const authorization = await new PrepareRecordSourceFreezeAuthorizationAdapter(c).prepare({
+      const authorization = await prepareSystemRecordSourceFreezeAuthorization(c, {
         authentication,
         now: c.var.now(),
         stepUpToken: null,
@@ -26,7 +26,7 @@ export function createExpenseSourceFreezeReadHandlers() {
           code: "record_source_freeze_unavailable",
           detail: "Source freeze authorization unavailable",
         })
-      const freeze = await new RecordSourceFreezeRepository({
+      const freeze = await openSystemRecordSourceFreezes({
         env: c.env,
         assertions: authorization.assertions,
       }).find(c.req.valid("param").freezeId)

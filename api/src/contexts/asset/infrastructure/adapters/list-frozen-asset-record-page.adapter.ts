@@ -6,7 +6,7 @@ import {
   decodeStocktakeItemRecordId,
   encodeStocktakeItemRecordId,
 } from "@/contexts/asset/domain/definitions/asset-record-kind.definition"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = AssetContext
 const inputSchema = z.strictObject({
@@ -29,7 +29,7 @@ export class ListFrozenAssetRecordPageAdapter {
     const request = parsed.data
     const actor = await new AssetActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

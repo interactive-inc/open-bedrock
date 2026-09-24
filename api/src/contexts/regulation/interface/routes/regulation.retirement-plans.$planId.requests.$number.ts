@@ -3,8 +3,8 @@ import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { regulationFactory } from "@/contexts/regulation/interface/request-environment/regulation-factory"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
-import { ReviewRecordRetirementAdapter } from "@system/infrastructure/adapters/records/review-record-retirement.adapter"
-import { RecordRetirementReviewError } from "@system/infrastructure/adapters/records/errors"
+import { reviewSystemRecordRetirement } from "@system/interface/operations/review-system-record-retirement"
+import { RecordRetirementReviewError } from "@system/application/records/errors"
 import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
 import { SystemForbiddenError, SystemHTTPException } from "@system/interface/errors"
 
@@ -20,23 +20,26 @@ export const GET = regulationFactory.createHandlers(
     c.header("Cache-Control", "no-store")
     const authentication = c.var.bearerReadAuthentication
     if (authentication === undefined) throw new SystemForbiddenError()
-    const reviewed = await new ReviewRecordRetirementAdapter({
-      env: c.env,
-      var: c.var,
-      source: {
-        planId: c.req.valid("param").planId,
-        sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
-        ownerContext: "regulation",
+    const reviewed = await reviewSystemRecordRetirement(
+      {
+        env: c.env,
+        var: c.var,
+        source: {
+          planId: c.req.valid("param").planId,
+          sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
+          ownerContext: "regulation",
+        },
+        prepareDecision: async (input) => {
+          const decision = await prepareCompanyRecordProcedureDecision(c, input)
+          if (decision instanceof CompanyConflictError)
+            return new RecordRetirementReviewError("conflict")
+          if (decision instanceof CompanyUnexpectedError)
+            return new RecordRetirementReviewError("unavailable")
+          return decision
+        },
       },
-      prepareDecision: async (input) => {
-        const decision = await prepareCompanyRecordProcedureDecision(c, input)
-        if (decision instanceof CompanyConflictError)
-          return new RecordRetirementReviewError("conflict")
-        if (decision instanceof CompanyUnexpectedError)
-          return new RecordRetirementReviewError("unavailable")
-        return decision
-      },
-    }).execute({ authentication, number: c.req.valid("param").number })
+      { authentication, number: c.req.valid("param").number },
+    )
     if (reviewed instanceof RecordRetirementReviewError) {
       const statuses: Readonly<
         Record<RecordRetirementReviewError["code"], 400 | 403 | 404 | 409 | 503>

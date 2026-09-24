@@ -6,7 +6,7 @@ import {
   ringiRecordKindSchema,
 } from "@/contexts/ringi/domain/definitions/ringi-record-kind.definition"
 import { RingiActorReadAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-actor-read.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = RingiContext
 
@@ -30,7 +30,7 @@ export class ListFrozenRingiRecordPageAdapter {
     const request = parsed.data
     const actor = await new RingiActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

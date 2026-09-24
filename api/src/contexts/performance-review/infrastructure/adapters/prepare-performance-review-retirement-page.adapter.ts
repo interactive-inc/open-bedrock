@@ -9,9 +9,9 @@ import type {
 import { PerformanceReviewActorReadAdapter } from "@/contexts/performance-review/infrastructure/adapters/performance-review-actor-read.adapter"
 import { CaptureFrozenPerformanceReviewRecordPageAdapter } from "@/contexts/performance-review/infrastructure/adapters/capture-frozen-performance-review-record-page.adapter"
 import { PreparePerformanceReviewCoverageRecordsAdapter } from "@/contexts/performance-review/infrastructure/adapters/prepare-performance-review-coverage-records.adapter"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
-import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
+import { prepareSystemRecordSourceFreezeAuthorization } from "@system/interface/operations/prepare-system-record-source-freeze-authorization"
+import { prepareSystemRecordKindCoverage } from "@system/interface/operations/prepare-system-record-kind-coverage"
+import { openSystemRecordCoveragePages } from "@system/interface/operations/open-system-record-coverage-pages"
 import { performanceReviewRecordKindSchema } from "@/contexts/performance-review/domain/definitions/performance-review-record-kind.definition"
 
 type Context = PerformanceReviewContext & SystemAttachmentStorageContext & SystemDatabaseContext
@@ -37,7 +37,7 @@ export class PreparePerformanceReviewRetirementPageAdapter {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new ForbiddenError("retirement authentication required", "forbidden")
-    const authority = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const authority = await prepareSystemRecordSourceFreezeAuthorization(this.c, {
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -45,23 +45,26 @@ export class PreparePerformanceReviewRetirementPageAdapter {
     if (authority instanceof Error) return authority
     if (authority === "forbidden")
       return new ForbiddenError("retirement authorization denied", "forbidden")
-    const chain = await new PrepareRecordKindCoverageAdapter({
-      env: this.c.env,
-      assertions: authority.assertions,
-    }).prepare({
-      freezeId: request.freezeId,
-      sourceNamespace: request.sourceNamespace,
-      purpose: request.purpose,
-      ownerContext: "performance-review",
-      recordKind: request.recordKind,
-    })
+    const chain = await prepareSystemRecordKindCoverage(
+      {
+        env: this.c.env,
+        assertions: authority.assertions,
+      },
+      {
+        freezeId: request.freezeId,
+        sourceNamespace: request.sourceNamespace,
+        purpose: request.purpose,
+        ownerContext: "performance-review",
+        recordKind: request.recordKind,
+      },
+    )
     if (chain instanceof Error) return chain
     if (
       chain.summary.terminalDigest !== request.terminalDigest ||
       request.sequence > chain.summary.pageCount
     )
       return new Error("retirement coverage target changed")
-    const stored = await new RecordCoveragePageRepository({
+    const stored = await openSystemRecordCoveragePages({
       env: this.c.env,
       assertions: chain.assertions,
     }).find({

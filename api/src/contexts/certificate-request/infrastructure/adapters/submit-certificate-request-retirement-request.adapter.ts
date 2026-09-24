@@ -1,7 +1,7 @@
 import { prepareCompanyRecordProcedureTask } from "@/contexts/company/interface/operations/prepare-company-record-procedure-task"
 import { certificateRequestRetirementSubmissionCommandSchema } from "@/contexts/certificate-request/domain/schemas/certificate-request-retirement-submission-command.schema"
 import { PrepareCertificateRequestRetirementCurrentStateAdapter } from "@/contexts/certificate-request/infrastructure/adapters/prepare-certificate-request-retirement-current-state.adapter"
-import { RecordRetirementVerificationReceiptRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
+import { openSystemRecordRetirementVerificationReceipts } from "@system/interface/operations/open-system-record-retirement-verification-receipts"
 import { RecordRetirementProposalValue } from "@system/domain/values/records/record-retirement-proposal.value"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
@@ -41,7 +41,7 @@ export class SubmitCertificateRequestRetirementRequestAdapter {
       stepUpToken,
     )
     if (current instanceof Error) return current
-    const receipt = await new RecordRetirementVerificationReceiptRepository({
+    const receipt = await openSystemRecordRetirementVerificationReceipts({
       env: this.c.env,
       assertions: current.assertions,
     }).find(current.terminalReceiptId)

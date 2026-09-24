@@ -2,7 +2,7 @@ import { z } from "zod"
 import type { ShiftContext } from "@/contexts/shift/configuration/shift-context"
 import { ShiftActorReadAdapter } from "@/contexts/shift/infrastructure/adapters/shift-actor-read.adapter"
 import { shiftRecordKindSchema } from "@/contexts/shift/domain/definitions/shift-record-kind.definition"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = ShiftContext
 const inputSchema = z.strictObject({
@@ -29,7 +29,7 @@ export class ListFrozenShiftRecordPageAdapter {
     const request = parsed.data
     const actor = await new ShiftActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

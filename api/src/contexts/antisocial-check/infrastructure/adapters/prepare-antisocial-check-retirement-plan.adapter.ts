@@ -3,8 +3,8 @@ import type { AntisocialCheckContext } from "@/contexts/antisocial-check/configu
 import { antisocialCheckRetirementPlanCommandSchema } from "@/contexts/antisocial-check/domain/schemas/antisocial-check-retirement-plan-command.schema"
 import { AntisocialCheckActorReadAdapter } from "@/contexts/antisocial-check/infrastructure/adapters/antisocial-check-actor-read.adapter"
 import { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
+import { prepareSystemRecordSourceFreezeAuthorization } from "@system/interface/operations/prepare-system-record-source-freeze-authorization"
+import { prepareSystemRecordKindCoverage } from "@system/interface/operations/prepare-system-record-kind-coverage"
 
 type Context = AntisocialCheckContext
 
@@ -21,7 +21,7 @@ export class PrepareAntisocialCheckRetirementPlanAdapter {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new ForbiddenError("retirement authentication required", "forbidden")
-    const authority = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const authority = await prepareSystemRecordSourceFreezeAuthorization(this.c, {
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -31,16 +31,19 @@ export class PrepareAntisocialCheckRetirementPlanAdapter {
       return new ForbiddenError("retirement authorization denied", "forbidden")
     const reader = await new AntisocialCheckActorReadAdapter(this.c).prepare()
     if (reader instanceof Error) return reader
-    const chain = await new PrepareRecordKindCoverageAdapter({
-      env: this.c.env,
-      assertions: [...authority.assertions, ...reader.assertions],
-    }).prepare({
-      freezeId: request.freezeId,
-      sourceNamespace: request.sourceNamespace,
-      purpose: request.purpose,
-      ownerContext: "antisocial-check",
-      recordKind: "antisocial-check-record",
-    })
+    const chain = await prepareSystemRecordKindCoverage(
+      {
+        env: this.c.env,
+        assertions: [...authority.assertions, ...reader.assertions],
+      },
+      {
+        freezeId: request.freezeId,
+        sourceNamespace: request.sourceNamespace,
+        purpose: request.purpose,
+        ownerContext: "antisocial-check",
+        recordKind: "antisocial-check-record",
+      },
+    )
     if (chain instanceof Error) return chain
     const currentReader = await new AntisocialCheckActorReadAdapter(this.c).prepare()
     if (currentReader instanceof Error) return currentReader

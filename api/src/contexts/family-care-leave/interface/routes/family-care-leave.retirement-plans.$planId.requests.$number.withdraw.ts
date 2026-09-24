@@ -3,8 +3,8 @@ import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { familyCareLeaveFactory } from "@/contexts/family-care-leave/interface/request-environment/family-care-leave-factory"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
-import { WithdrawRecordRetirementAdapter } from "@system/infrastructure/adapters/records/withdraw-record-retirement.adapter"
-import { RecordRetirementWithdrawalError } from "@system/infrastructure/adapters/records/errors"
+import { withdrawSystemRecordRetirement } from "@system/interface/operations/withdraw-system-record-retirement"
+import { RecordRetirementWithdrawalError } from "@system/application/records/errors"
 
 // @authorization owner - 認証された申請者だけが指定した未完了提案を理由とともに取り下げる
 export const POST = familyCareLeaveFactory.createHandlers(
@@ -28,21 +28,24 @@ export const POST = familyCareLeaveFactory.createHandlers(
     c.header("Cache-Control", "no-store")
     const authentication = c.var.bearerReadAuthentication
     if (authentication === undefined) throw new SystemForbiddenError()
-    const result = await new WithdrawRecordRetirementAdapter({
-      env: c.env,
-      var: c.var,
-      source: {
-        ownerContext: "family-care-leave",
-        planId: c.req.valid("param").planId,
-        sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
+    const result = await withdrawSystemRecordRetirement(
+      {
+        env: c.env,
+        var: c.var,
+        source: {
+          ownerContext: "family-care-leave",
+          planId: c.req.valid("param").planId,
+          sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
+        },
       },
-    }).execute({
-      authentication,
-      number: c.req.valid("param").number,
-      proposalVersion: c.req.valid("json").proposal_version,
-      proposalDigest: c.req.valid("json").proposal_digest,
-      reason: c.req.valid("json").reason,
-    })
+      {
+        authentication,
+        number: c.req.valid("param").number,
+        proposalVersion: c.req.valid("json").proposal_version,
+        proposalDigest: c.req.valid("json").proposal_digest,
+        reason: c.req.valid("json").reason,
+      },
+    )
     if (result instanceof RecordRetirementWithdrawalError) {
       const statuses: Readonly<
         Record<RecordRetirementWithdrawalError["code"], 400 | 403 | 404 | 409 | 503>

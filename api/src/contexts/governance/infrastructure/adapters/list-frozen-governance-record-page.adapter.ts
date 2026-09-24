@@ -7,7 +7,7 @@ import {
 } from "@/contexts/governance/domain/definitions/governance-record-kind.definition"
 import { governanceSourceTables } from "@/contexts/governance/infrastructure/adapters/lib/governance-snapshot-query"
 import { GovernanceActorReadAdapter } from "@/contexts/governance/infrastructure/adapters/governance-actor-read.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = GovernanceContext
 const inputSchema = z.strictObject({
@@ -30,7 +30,7 @@ export class ListFrozenGovernanceRecordPageAdapter {
     const request = parsed.data
     const actor = await new GovernanceActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

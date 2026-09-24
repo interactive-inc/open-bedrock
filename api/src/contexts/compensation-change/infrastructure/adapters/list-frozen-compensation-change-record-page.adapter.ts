@@ -1,7 +1,7 @@
 import type { CompensationChangeContext } from "@/contexts/compensation-change/configuration/compensation-change-context"
 import { compensationChangeRecordKindSchema } from "@/contexts/compensation-change/domain/definitions/compensation-change-record-kind.definition"
 import { CompensationChangeActorReadAdapter } from "@/contexts/compensation-change/infrastructure/adapters/compensation-change-actor-read.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 import { z } from "zod"
 
 type Context = CompensationChangeContext
@@ -24,7 +24,7 @@ export class ListFrozenCompensationChangeRecordPageAdapter {
     const request = parsed.data
     const actor = await new CompensationChangeActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

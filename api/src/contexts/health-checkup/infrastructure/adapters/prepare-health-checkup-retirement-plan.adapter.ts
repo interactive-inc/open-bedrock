@@ -3,8 +3,8 @@ import type { HealthCheckupContext } from "@/contexts/health-checkup/configurati
 import { healthCheckupRetirementPlanCommandSchema } from "@/contexts/health-checkup/domain/schemas/health-checkup-retirement-plan-command.schema"
 import { HealthCheckupActorReadAdapter } from "@/contexts/health-checkup/infrastructure/adapters/health-checkup-actor-read.adapter"
 import { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
+import { prepareSystemRecordSourceFreezeAuthorization } from "@system/interface/operations/prepare-system-record-source-freeze-authorization"
+import { prepareSystemRecordKindCoverage } from "@system/interface/operations/prepare-system-record-kind-coverage"
 
 type Context = HealthCheckupContext
 
@@ -21,7 +21,7 @@ export class PrepareHealthCheckupRetirementPlanAdapter {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new ForbiddenError("retirement authentication required", "forbidden")
-    const authority = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const authority = await prepareSystemRecordSourceFreezeAuthorization(this.c, {
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -31,16 +31,19 @@ export class PrepareHealthCheckupRetirementPlanAdapter {
       return new ForbiddenError("retirement authorization denied", "forbidden")
     const reader = await new HealthCheckupActorReadAdapter(this.c).prepare()
     if (reader instanceof Error) return reader
-    const chain = await new PrepareRecordKindCoverageAdapter({
-      env: this.c.env,
-      assertions: [...authority.assertions, ...reader.assertions],
-    }).prepare({
-      freezeId: request.freezeId,
-      sourceNamespace: request.sourceNamespace,
-      purpose: request.purpose,
-      ownerContext: "health-checkup",
-      recordKind: "health-checkup-record",
-    })
+    const chain = await prepareSystemRecordKindCoverage(
+      {
+        env: this.c.env,
+        assertions: [...authority.assertions, ...reader.assertions],
+      },
+      {
+        freezeId: request.freezeId,
+        sourceNamespace: request.sourceNamespace,
+        purpose: request.purpose,
+        ownerContext: "health-checkup",
+        recordKind: "health-checkup-record",
+      },
+    )
     if (chain instanceof Error) return chain
     const currentReader = await new HealthCheckupActorReadAdapter(this.c).prepare()
     if (currentReader instanceof Error) return currentReader

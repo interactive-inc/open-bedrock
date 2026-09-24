@@ -1,5 +1,5 @@
 import { PrepareShiftRetirementPlanAdapter } from "@/contexts/shift/infrastructure/adapters/prepare-shift-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { ShiftRecordSystemAdapter } from "@/contexts/shift/infrastructure/adapters/shift-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { ShiftRetirementConflictError } from "@/contexts/shift/application/errors"
 
@@ -15,10 +15,10 @@ export class CreateShiftRetirementPlan {
     const prepared = await new PrepareShiftRetirementPlanAdapter(this.c).prepare(input, stepUpToken)
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new ShiftRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

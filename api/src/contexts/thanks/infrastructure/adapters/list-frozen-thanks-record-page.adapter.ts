@@ -2,7 +2,7 @@ import { z } from "zod"
 import type { ThanksContext } from "@/contexts/thanks/configuration/thanks-context"
 import { ThanksActorReadAdapter } from "@/contexts/thanks/infrastructure/adapters/thanks-actor-read.adapter"
 import { thanksRecordKindSchema } from "@/contexts/thanks/domain/definitions/thanks-record-kind.definition"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = ThanksContext
 const inputSchema = z.strictObject({
@@ -30,7 +30,7 @@ export class ListFrozenThanksRecordPageAdapter {
     const request = parsed.data
     const actor = await new ThanksActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

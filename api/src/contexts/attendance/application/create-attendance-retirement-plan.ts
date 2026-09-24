@@ -1,5 +1,5 @@
 import { PrepareAttendanceRetirementPlanAdapter } from "@/contexts/attendance/infrastructure/adapters/prepare-attendance-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { AttendanceRecordSystemAdapter } from "@/contexts/attendance/infrastructure/adapters/attendance-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { AttendanceRetirementConflictError } from "@/contexts/attendance/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateAttendanceRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new AttendanceRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

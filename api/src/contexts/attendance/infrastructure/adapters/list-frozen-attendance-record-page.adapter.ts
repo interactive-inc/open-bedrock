@@ -1,7 +1,7 @@
 import { z } from "zod"
 import type { AttendanceRecordSourceContext } from "@/contexts/attendance/configuration/attendance-record-source-context"
 import { AttendanceRecordSourceAuthorizationAdapter } from "@/contexts/attendance/infrastructure/adapters/attendance-record-source-authorization.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = AttendanceRecordSourceContext
 const inputSchema = z.strictObject({
@@ -23,7 +23,7 @@ export class ListFrozenAttendanceRecordPageAdapter {
     const request = parsed.data
     const actor = await new AttendanceRecordSourceAuthorizationAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

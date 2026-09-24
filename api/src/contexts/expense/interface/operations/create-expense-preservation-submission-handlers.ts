@@ -9,8 +9,8 @@ import { CaptureExpenseSourceAdapter } from "@/contexts/expense/infrastructure/a
 import { SystemForbiddenError, SystemHTTPException } from "@system/interface/errors"
 import { recordPreservationRequestSchema } from "@system/domain/schemas/records/record-preservation-input.schema"
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
-import { SubmitRecordPreservationAdapter } from "@system/infrastructure/adapters/records/submit-record-preservation.adapter"
-import { RecordPreservationSubmissionError } from "@system/infrastructure/adapters/records/errors"
+import { submitSystemRecordPreservation } from "@system/interface/operations/submit-system-record-preservation"
+import { RecordPreservationSubmissionError } from "@system/application/records/errors"
 
 /** 経費原記録の取得と会社資格をSystemの共通提出処理へ接続する。 */
 export function createExpensePreservationSubmissionHandlers(mode: "create" | "resubmit") {
@@ -58,7 +58,7 @@ export function createExpensePreservationSubmissionHandlers(mode: "create" | "re
         })
       if (access instanceof Error) throw new SystemForbiddenError()
       const reader = { authentication, session: access.session }
-      const adapter = new SubmitRecordPreservationAdapter({
+      const adapterContext: Parameters<typeof submitSystemRecordPreservation>[0] = {
         env: c.env,
         var: c.var,
         source: {
@@ -81,7 +81,7 @@ export function createExpensePreservationSubmissionHandlers(mode: "create" | "re
             ),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
-      })
+      }
       const common = {
         authentication,
         procedureKey: request.procedure_key,
@@ -91,7 +91,10 @@ export function createExpensePreservationSubmissionHandlers(mode: "create" | "re
         if (mode === "create") {
           const idempotencyKey = c.req.valid("header")["idempotency-key"]
           if (idempotencyKey === undefined) return new RecordPreservationSubmissionError("invalid")
-          return adapter.execute({ ...common, revision: { mode: "create", idempotencyKey } })
+          return submitSystemRecordPreservation(adapterContext, {
+            ...common,
+            revision: { mode: "create", idempotencyKey },
+          })
         }
         const number = c.req.valid("param").number
         if (
@@ -100,7 +103,7 @@ export function createExpensePreservationSubmissionHandlers(mode: "create" | "re
           !("previous_digest" in request)
         )
           return new RecordPreservationSubmissionError("invalid")
-        return adapter.execute({
+        return submitSystemRecordPreservation(adapterContext, {
           ...common,
           revision: {
             mode: "resubmit",

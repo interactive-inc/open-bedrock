@@ -3,7 +3,7 @@ import type { LeaveContext } from "@/contexts/leave/configuration/leave-context"
 import { LeaveActorReadAdapter } from "@/contexts/leave/infrastructure/adapters/leave-actor-read.adapter"
 import { leaveRecordKindSchema } from "@/contexts/leave/domain/definitions/leave-record-kind.definition"
 import { leaveInventoryQuery } from "@/contexts/leave/infrastructure/adapters/lib/leave-inventory-query"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = LeaveContext
 const inputSchema = z.strictObject({
@@ -26,7 +26,7 @@ export class ListFrozenLeaveRecordPageAdapter {
     const request = parsed.data
     const actor = await new LeaveActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

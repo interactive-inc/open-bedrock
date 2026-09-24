@@ -2,7 +2,7 @@ import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit
 import type { RecordRetirementDecisionContext } from "@system/configuration/record-retirement-decision-context"
 import type { SystemDatabaseContext } from "@system/configuration/system-context"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
-import { RecordRetirementWithdrawalError } from "@system/infrastructure/adapters/records/errors"
+import { RecordRetirementWithdrawalError } from "@system/application/records/errors"
 import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { PrepareSystemCaseReadGuardAdapter } from "@system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter"

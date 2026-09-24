@@ -1,7 +1,7 @@
 import { z } from "zod"
 import type { OneOnOneContext } from "@/contexts/one-on-one/configuration/one-on-one-context"
 import { OneOnOneActorReadAdapter } from "@/contexts/one-on-one/infrastructure/adapters/one-on-one-actor-read.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = OneOnOneContext
 const inputSchema = z.strictObject({
@@ -23,7 +23,7 @@ export class ListFrozenOneOnOneRecordPageAdapter {
     const request = parsed.data
     const actor = await new OneOnOneActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

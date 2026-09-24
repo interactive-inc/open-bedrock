@@ -1,7 +1,7 @@
 import { z } from "zod"
 import type { ResignationContext } from "@/contexts/resignation/configuration/resignation-context"
 import { ResignationActorReadAdapter } from "@/contexts/resignation/infrastructure/adapters/resignation-actor-read.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = ResignationContext
 const inputSchema = z.strictObject({
@@ -23,7 +23,7 @@ export class ListFrozenResignationRecordPageAdapter {
     const request = parsed.data
     const actor = await new ResignationActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

@@ -1,5 +1,5 @@
 import { PrepareRoomRetirementPlanAdapter } from "@/contexts/room/infrastructure/adapters/prepare-room-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { RoomRecordSystemAdapter } from "@/contexts/room/infrastructure/adapters/room-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { RoomRetirementConflictError } from "@/contexts/room/application/errors"
 
@@ -15,10 +15,10 @@ export class CreateRoomRetirementPlan {
     const prepared = await new PrepareRoomRetirementPlanAdapter(this.c).prepare(input, stepUpToken)
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new RoomRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

@@ -6,7 +6,7 @@ import {
   onboardingRecordKindSchema,
 } from "@/contexts/onboarding/domain/definitions/onboarding-record-kind.definition"
 import { OnboardingActorReadAdapter } from "@/contexts/onboarding/infrastructure/adapters/onboarding-actor-read.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = OnboardingContext
 
@@ -48,7 +48,7 @@ export class ListFrozenOnboardingRecordPageAdapter {
     const request = parsed.data
     const actor = await new OnboardingActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

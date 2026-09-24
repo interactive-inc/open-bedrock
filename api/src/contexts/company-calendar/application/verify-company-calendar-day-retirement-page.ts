@@ -1,15 +1,11 @@
-import { PrepareRecordRetirementPageKeysAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-page-keys.adapter"
 import { PrepareCompanyCalendarDayRetirementPageAdapter } from "@/contexts/company-calendar/infrastructure/adapters/prepare-company-calendar-retirement-page.adapter"
+import { CompanyCalendarDayRecordSystemAdapter } from "@/contexts/company-calendar/infrastructure/adapters/company-calendar-day-record-system.adapter"
 import { companyCalendarDayRetirementVerificationCommandSchema } from "@/contexts/company-calendar/domain/schemas/company-calendar-retirement-verification-command.schema"
 import {
   CompanyCalendarDayRetirementForbiddenError,
   CompanyCalendarDayRetirementConflictError,
 } from "@/contexts/company-calendar/application/errors"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
-import { RecordRetirementVerificationReceiptRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
 import { RecordRetirementVerificationReceiptEntity } from "@system/domain/entities/record-retirement-verification-receipt.entity"
-import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
 
 type Context = ConstructorParameters<typeof PrepareCompanyCalendarDayRetirementPageAdapter>[0]
 
@@ -29,7 +25,9 @@ export class VerifyCompanyCalendarDayRetirementPage {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new CompanyCalendarDayRetirementForbiddenError("retirement authentication required")
-    const authority = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const authority = await new CompanyCalendarDayRecordSystemAdapter(
+      this.c,
+    ).prepareSourceFreezeAuthorization({
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -38,7 +36,9 @@ export class VerifyCompanyCalendarDayRetirementPage {
     if (authority === "forbidden")
       return new CompanyCalendarDayRetirementForbiddenError("retirement authorization denied")
     const context = { env: this.c.env, assertions: authority.assertions }
-    const plan = await new RecordRetirementVerificationPlanRepository(context).find(command.planId)
+    const plan = await new CompanyCalendarDayRecordSystemAdapter(context)
+      .retirementPlans()
+      .find(command.planId)
     if (plan instanceof Error) return plan
     if (
       plan === null ||
@@ -51,7 +51,7 @@ export class VerifyCompanyCalendarDayRetirementPage {
       return new CompanyCalendarDayRetirementConflictError(
         "retirement plan unavailable or capability changed",
       )
-    const repository = new RecordRetirementVerificationReceiptRepository(context)
+    const repository = new CompanyCalendarDayRecordSystemAdapter(context).retirementReceipts()
     const existing = await repository.find(command.id)
     if (existing instanceof Error) return existing
     if (
@@ -78,13 +78,13 @@ export class VerifyCompanyCalendarDayRetirementPage {
       stepUpToken,
     )
     if (checked instanceof Error) return checked
-    const keys = await new PrepareRecordRetirementPageKeysAdapter({
+    const keys = await new CompanyCalendarDayRecordSystemAdapter({
       env: this.c.env,
       assertions: checked.assertions,
-    }).prepare(checked.coveragePageId)
+    }).prepareRetirementPageKeys(checked.coveragePageId)
     if (keys instanceof Error) return keys
     const guardedContext = { env: this.c.env, assertions: keys.assertions }
-    const guarded = new RecordRetirementVerificationReceiptRepository(guardedContext)
+    const guarded = new CompanyCalendarDayRecordSystemAdapter(guardedContext).retirementReceipts()
     const matches = (receipt: RecordRetirementVerificationReceiptEntity) =>
       receipt.snapshot.planId === plan.snapshot.id &&
       receipt.snapshot.planDigest === plan.digest &&
@@ -100,7 +100,9 @@ export class VerifyCompanyCalendarDayRetirementPage {
         ? current
         : new CompanyCalendarDayRetirementConflictError("retirement receipt replay changed")
     }
-    const page = await new RecordCoveragePageRepository(guardedContext).find(checked.coveragePageId)
+    const page = await new CompanyCalendarDayRecordSystemAdapter(guardedContext)
+      .coveragePages()
+      .find(checked.coveragePageId)
     if (page instanceof Error) return page
     if (page === null) return new Error("retirement coverage page missing")
     const receipt = await RecordRetirementVerificationReceiptEntity.create(

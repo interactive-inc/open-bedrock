@@ -2,7 +2,7 @@ import { z } from "zod"
 import type { RegulationContext } from "@/contexts/regulation/configuration/regulation-context"
 import { RegulationActorReadAdapter } from "@/contexts/regulation/infrastructure/adapters/regulation-actor-read.adapter"
 import { regulationRecordKindSchema } from "@/contexts/regulation/domain/definitions/regulation-record-kind.definition"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = RegulationContext
 const inputSchema = z.strictObject({
@@ -28,7 +28,7 @@ export class ListFrozenRegulationRecordPageAdapter {
     const request = parsed.data
     const actor = await new RegulationActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

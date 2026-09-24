@@ -2,7 +2,7 @@ import { z } from "zod"
 import type { TrainingContext } from "@/contexts/training/configuration/training-context"
 import { TrainingActorReadAdapter } from "@/contexts/training/infrastructure/adapters/training-actor-read.adapter"
 import { trainingRecordKindSchema } from "@/contexts/training/domain/definitions/training-record-kind.definition"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = TrainingContext
 const inputSchema = z.strictObject({
@@ -25,7 +25,7 @@ export class ListFrozenTrainingRecordPageAdapter {
     const request = parsed.data
     const actor = await new TrainingActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

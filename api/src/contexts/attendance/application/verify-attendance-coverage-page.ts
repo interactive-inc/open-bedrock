@@ -1,4 +1,4 @@
-import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
+import { AttendanceRecordSystemAdapter } from "@/contexts/attendance/infrastructure/adapters/attendance-record-system.adapter"
 import {
   AttendanceCoverageForbiddenError,
   AttendanceCoverageConflictError,
@@ -9,9 +9,6 @@ import type {
   SystemDatabaseContext,
   SystemAttachmentStorageContext,
 } from "@system/configuration/system-context"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
-import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
 import { RecordCoveragePageEntity } from "@system/domain/entities/record-coverage-page.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { CaptureFrozenAttendanceRecordPageAdapter } from "@/contexts/attendance/infrastructure/adapters/capture-frozen-attendance-record-page.adapter"
@@ -34,7 +31,7 @@ export class VerifyAttendanceCoveragePage {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new AttendanceCoverageForbiddenError("coverage authentication required")
-    const proof = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const proof = await new AttendanceRecordSystemAdapter(this.c).prepareSourceFreezeAuthorization({
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -42,23 +39,25 @@ export class VerifyAttendanceCoveragePage {
     if (proof instanceof Error) return proof
     if (proof === "forbidden")
       return new AttendanceCoverageForbiddenError("coverage authorization denied")
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await new AttendanceRecordSystemAdapter({
       env: this.c.env,
       assertions: proof.assertions,
-    }).prepareActiveGeneration({
-      id: command.freezeId,
-      sourceNamespace: command.sourceNamespace,
-      ownerContext: "attendance",
     })
+      .sourceFreezes()
+      .prepareActiveGeneration({
+        id: command.freezeId,
+        sourceNamespace: command.sourceNamespace,
+        ownerContext: "attendance",
+      })
     if (generation instanceof Error) return generation
-    const completion = new PrepareRecordKindCoverageAdapter({
+    const completion = new AttendanceRecordSystemAdapter({
       env: this.c.env,
       assertions: generation.assertions,
     })
-    const repository = new RecordCoveragePageRepository({
+    const repository = new AttendanceRecordSystemAdapter({
       env: this.c.env,
       assertions: generation.assertions,
-    })
+    }).coveragePages()
     const existing = await repository.find(command.id)
     if (existing instanceof Error) return existing
     if (
@@ -157,10 +156,10 @@ export class VerifyAttendanceCoveragePage {
 
   private async confirmTerminal(
     page: RecordCoveragePageEntity,
-    completion: PrepareRecordKindCoverageAdapter,
+    completion: AttendanceRecordSystemAdapter,
   ) {
     if (page.snapshot.nextCursor !== null) return page
-    const verified = await completion.prepare({
+    const verified = await completion.prepareKindCoverage({
       freezeId: page.snapshot.freezeId,
       sourceNamespace: page.snapshot.sourceNamespace,
       ownerContext: page.snapshot.ownerContext,

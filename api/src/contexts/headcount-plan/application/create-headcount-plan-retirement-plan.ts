@@ -1,5 +1,5 @@
 import { PrepareHeadcountPlanRetirementPlanAdapter } from "@/contexts/headcount-plan/infrastructure/adapters/prepare-headcount-plan-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { HeadcountPlanRecordSystemAdapter } from "@/contexts/headcount-plan/infrastructure/adapters/headcount-plan-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { HeadcountPlanRetirementConflictError } from "@/contexts/headcount-plan/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateHeadcountPlanRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new HeadcountPlanRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

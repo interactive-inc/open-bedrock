@@ -1,4 +1,4 @@
-import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
+import { SoftwareLicenseRecordSystemAdapter } from "@/contexts/software-license/infrastructure/adapters/software-license-record-system.adapter"
 import {
   SoftwareLicenseCoverageForbiddenError,
   SoftwareLicenseCoverageConflictError,
@@ -9,9 +9,6 @@ import type {
   SystemDatabaseContext,
   SystemAttachmentStorageContext,
 } from "@system/configuration/system-context"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
-import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
 import { RecordCoveragePageEntity } from "@system/domain/entities/record-coverage-page.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { CaptureFrozenLicenseRecordPageAdapter } from "@/contexts/software-license/infrastructure/adapters/capture-frozen-license-record-page.adapter"
@@ -32,7 +29,9 @@ export class VerifySoftwareLicenseCoveragePage {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new SoftwareLicenseCoverageForbiddenError("coverage authentication required")
-    const proof = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const proof = await new SoftwareLicenseRecordSystemAdapter(
+      this.c,
+    ).prepareSourceFreezeAuthorization({
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -40,23 +39,25 @@ export class VerifySoftwareLicenseCoveragePage {
     if (proof instanceof Error) return proof
     if (proof === "forbidden")
       return new SoftwareLicenseCoverageForbiddenError("coverage authorization denied")
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await new SoftwareLicenseRecordSystemAdapter({
       env: this.c.env,
       assertions: proof.assertions,
-    }).prepareActiveGeneration({
-      id: command.freezeId,
-      sourceNamespace: command.sourceNamespace,
-      ownerContext: "software-license",
     })
+      .sourceFreezes()
+      .prepareActiveGeneration({
+        id: command.freezeId,
+        sourceNamespace: command.sourceNamespace,
+        ownerContext: "software-license",
+      })
     if (generation instanceof Error) return generation
-    const completion = new PrepareRecordKindCoverageAdapter({
+    const completion = new SoftwareLicenseRecordSystemAdapter({
       env: this.c.env,
       assertions: generation.assertions,
     })
-    const repository = new RecordCoveragePageRepository({
+    const repository = new SoftwareLicenseRecordSystemAdapter({
       env: this.c.env,
       assertions: generation.assertions,
-    })
+    }).coveragePages()
     const existing = await repository.find(command.id)
     if (existing instanceof Error) return existing
     if (
@@ -155,10 +156,10 @@ export class VerifySoftwareLicenseCoveragePage {
 
   private async confirmTerminal(
     page: RecordCoveragePageEntity,
-    completion: PrepareRecordKindCoverageAdapter,
+    completion: SoftwareLicenseRecordSystemAdapter,
   ) {
     if (page.snapshot.nextCursor !== null) return page
-    const verified = await completion.prepare({
+    const verified = await completion.prepareKindCoverage({
       freezeId: page.snapshot.freezeId,
       sourceNamespace: page.snapshot.sourceNamespace,
       ownerContext: page.snapshot.ownerContext,

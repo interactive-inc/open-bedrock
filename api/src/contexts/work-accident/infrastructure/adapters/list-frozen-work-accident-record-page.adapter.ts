@@ -1,7 +1,7 @@
 import { z } from "zod"
 import type { WorkAccidentContext } from "@/contexts/work-accident/configuration/work-accident-context"
 import { WorkAccidentActorReadAdapter } from "@/contexts/work-accident/infrastructure/adapters/work-accident-actor-read.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = WorkAccidentContext
 const inputSchema = z.strictObject({
@@ -23,7 +23,7 @@ export class ListFrozenWorkAccidentRecordPageAdapter {
     const request = parsed.data
     const actor = await new WorkAccidentActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

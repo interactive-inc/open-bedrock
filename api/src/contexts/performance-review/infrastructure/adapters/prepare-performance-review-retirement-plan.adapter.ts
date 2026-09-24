@@ -3,8 +3,8 @@ import type { PerformanceReviewContext } from "@/contexts/performance-review/con
 import { performanceReviewRetirementPlanCommandSchema } from "@/contexts/performance-review/domain/schemas/performance-review-retirement-plan-command.schema"
 import { PerformanceReviewActorReadAdapter } from "@/contexts/performance-review/infrastructure/adapters/performance-review-actor-read.adapter"
 import { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
+import { prepareSystemRecordSourceFreezeAuthorization } from "@system/interface/operations/prepare-system-record-source-freeze-authorization"
+import { prepareSystemRecordKindCoverage } from "@system/interface/operations/prepare-system-record-kind-coverage"
 import { performanceReviewRecordKinds } from "@/contexts/performance-review/domain/definitions/performance-review-record-kind.definition"
 
 type Context = PerformanceReviewContext
@@ -22,7 +22,7 @@ export class PreparePerformanceReviewRetirementPlanAdapter {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new ForbiddenError("retirement authentication required", "forbidden")
-    const authority = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const authority = await prepareSystemRecordSourceFreezeAuthorization(this.c, {
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -35,16 +35,19 @@ export class PreparePerformanceReviewRetirementPlanAdapter {
     const baseAssertions = [...authority.assertions, ...reader.assertions]
     const chains = []
     for (const recordKind of performanceReviewRecordKinds) {
-      const chain = await new PrepareRecordKindCoverageAdapter({
-        env: this.c.env,
-        assertions: baseAssertions,
-      }).prepare({
-        freezeId: request.freezeId,
-        sourceNamespace: request.sourceNamespace,
-        purpose: request.purpose,
-        ownerContext: "performance-review",
-        recordKind,
-      })
+      const chain = await prepareSystemRecordKindCoverage(
+        {
+          env: this.c.env,
+          assertions: baseAssertions,
+        },
+        {
+          freezeId: request.freezeId,
+          sourceNamespace: request.sourceNamespace,
+          purpose: request.purpose,
+          ownerContext: "performance-review",
+          recordKind,
+        },
+      )
       if (chain instanceof Error) return chain
       chains.push(chain)
     }

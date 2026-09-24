@@ -1,6 +1,6 @@
 import { revalidateCompanyRecordPreservationExecution } from "@/contexts/company/interface/operations/revalidate-company-record-preservation-execution"
-import { ExecuteRecordPreservationAdapter } from "@system/infrastructure/adapters/records/execute-record-preservation.adapter"
-import { RecordPreservationExecutionError } from "@system/infrastructure/adapters/records/errors"
+import { executeSystemRecordPreservation } from "@system/interface/operations/execute-system-record-preservation"
+import { RecordPreservationExecutionError } from "@system/application/records/errors"
 import {
   EmployeeWorkStyleForbiddenError,
   EmployeeWorkStyleInputError,
@@ -31,27 +31,30 @@ export const POST = employeeWorkStyleFactory.createHandlers(
     const authentication = c.var.bearerReadAuthentication
     if (authentication === undefined) throw new EmployeeWorkStyleForbiddenError()
     const sourceNamespace = c.env.RECORD_SOURCE_NAMESPACE ?? ""
-    const result = await new ExecuteRecordPreservationAdapter({
-      env: c.env,
-      var: c.var,
-      source: {
-        ownerContext: "work-style",
-        recordKind: "employee-work-style-record",
-        recordId: String(c.req.valid("param").id),
-        sourceNamespace,
-        revalidate: (source) =>
-          new RevalidateEmployeeWorkStyleRecordSourceAdapter({
-            env: c.env,
-            var: c.var,
-            sourceNamespace,
-          }).prepare(source),
+    const result = await executeSystemRecordPreservation(
+      {
+        env: c.env,
+        var: c.var,
+        source: {
+          ownerContext: "work-style",
+          recordKind: "employee-work-style-record",
+          recordId: String(c.req.valid("param").id),
+          sourceNamespace,
+          revalidate: (source) =>
+            new RevalidateEmployeeWorkStyleRecordSourceAdapter({
+              env: c.env,
+              var: c.var,
+              sourceNamespace,
+            }).prepare(source),
+        },
+        prepareExecution: (input) => revalidateCompanyRecordPreservationExecution(c, input),
       },
-      prepareExecution: (input) => revalidateCompanyRecordPreservationExecution(c, input),
-    }).execute({
-      authentication,
-      number: c.req.valid("param").number,
-      proposalDigest: c.req.valid("json").proposal_digest,
-    })
+      {
+        authentication,
+        number: c.req.valid("param").number,
+        proposalDigest: c.req.valid("json").proposal_digest,
+      },
+    )
     if (result instanceof RecordPreservationExecutionError) {
       switch (result.code) {
         case "invalid":

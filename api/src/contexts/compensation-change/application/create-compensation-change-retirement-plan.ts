@@ -1,5 +1,5 @@
 import { PrepareCompensationChangeRetirementPlanAdapter } from "@/contexts/compensation-change/infrastructure/adapters/prepare-compensation-change-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { CompensationChangeRecordSystemAdapter } from "@/contexts/compensation-change/infrastructure/adapters/compensation-change-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { CompensationChangeRetirementConflictError } from "@/contexts/compensation-change/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateCompensationChangeRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new CompensationChangeRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

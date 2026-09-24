@@ -2,7 +2,7 @@ import { z } from "zod"
 import type { PartnerContext } from "@/contexts/partner/configuration/partner-context"
 import { PartnerActorReadAdapter } from "@/contexts/partner/infrastructure/adapters/partner-actor-read.adapter"
 import { partnerRecordKindSchema } from "@/contexts/partner/domain/definitions/partner-record-kind.definition"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = PartnerContext
 const inputSchema = z.strictObject({
@@ -28,7 +28,7 @@ export class ListFrozenPartnerRecordPageAdapter {
     const request = parsed.data
     const actor = await new PartnerActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

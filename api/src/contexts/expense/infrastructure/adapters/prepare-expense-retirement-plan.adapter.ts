@@ -9,8 +9,8 @@ import type {
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
 import { expenseRecordKindSchema } from "@/contexts/expense/domain/schemas/expense-record-kind.schema"
 import { PrepareExpensePreservationReadAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-preservation-read.adapter"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
+import { prepareSystemRecordSourceFreezeAuthorization } from "@system/interface/operations/prepare-system-record-source-freeze-authorization"
+import { prepareSystemRecordKindCoverage } from "@system/interface/operations/prepare-system-record-kind-coverage"
 
 const requestSchema = z.strictObject({
   id: z.uuid(),
@@ -36,7 +36,7 @@ export class PrepareExpenseRetirementPlanAdapter {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new ForbiddenError("retirement authentication required", "forbidden")
-    const authority = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const authority = await prepareSystemRecordSourceFreezeAuthorization(this.c, {
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -56,16 +56,19 @@ export class PrepareExpenseRetirementPlanAdapter {
         })
         if (reader instanceof Error) return reader
         readers.push(reader)
-        const chain = await new PrepareRecordKindCoverageAdapter({
-          env: this.c.env,
-          assertions: authority.assertions,
-        }).prepare({
-          freezeId: request.freezeId,
-          sourceNamespace: request.sourceNamespace,
-          purpose: request.purpose,
-          ownerContext: "expense",
-          recordKind,
-        })
+        const chain = await prepareSystemRecordKindCoverage(
+          {
+            env: this.c.env,
+            assertions: authority.assertions,
+          },
+          {
+            freezeId: request.freezeId,
+            sourceNamespace: request.sourceNamespace,
+            purpose: request.purpose,
+            ownerContext: "expense",
+            recordKind,
+          },
+        )
         if (chain instanceof Error) return chain
         summaries.push(chain.summary)
         assertions.push(...chain.assertions)

@@ -3,8 +3,8 @@ import type { RingiContext } from "@/contexts/ringi/configuration/ringi-context"
 import { ringiRetirementPlanCommandSchema } from "@/contexts/ringi/domain/schemas/ringi-retirement-plan-command.schema"
 import { RingiActorReadAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-actor-read.adapter"
 import { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
+import { prepareSystemRecordSourceFreezeAuthorization } from "@system/interface/operations/prepare-system-record-source-freeze-authorization"
+import { prepareSystemRecordKindCoverage } from "@system/interface/operations/prepare-system-record-kind-coverage"
 import { ringiRecordKinds } from "@/contexts/ringi/domain/definitions/ringi-record-kind.definition"
 
 type Context = RingiContext
@@ -22,7 +22,7 @@ export class PrepareRingiRetirementPlanAdapter {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new ForbiddenError("retirement authentication required", "forbidden")
-    const authority = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const authority = await prepareSystemRecordSourceFreezeAuthorization(this.c, {
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -35,16 +35,19 @@ export class PrepareRingiRetirementPlanAdapter {
     const baseAssertions = [...authority.assertions, ...reader.assertions]
     const chains = []
     for (const recordKind of ringiRecordKinds) {
-      const chain = await new PrepareRecordKindCoverageAdapter({
-        env: this.c.env,
-        assertions: baseAssertions,
-      }).prepare({
-        freezeId: request.freezeId,
-        sourceNamespace: request.sourceNamespace,
-        purpose: request.purpose,
-        ownerContext: "ringi",
-        recordKind,
-      })
+      const chain = await prepareSystemRecordKindCoverage(
+        {
+          env: this.c.env,
+          assertions: baseAssertions,
+        },
+        {
+          freezeId: request.freezeId,
+          sourceNamespace: request.sourceNamespace,
+          purpose: request.purpose,
+          ownerContext: "ringi",
+          recordKind,
+        },
+      )
       if (chain instanceof Error) return chain
       chains.push(chain)
     }

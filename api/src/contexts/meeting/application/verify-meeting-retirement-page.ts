@@ -1,15 +1,11 @@
-import { PrepareRecordRetirementPageKeysAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-page-keys.adapter"
 import { PrepareMeetingRetirementPageAdapter } from "@/contexts/meeting/infrastructure/adapters/prepare-meeting-retirement-page.adapter"
+import { MeetingRecordSystemAdapter } from "@/contexts/meeting/infrastructure/adapters/meeting-record-system.adapter"
 import { meetingRetirementVerificationCommandSchema } from "@/contexts/meeting/domain/schemas/meeting-retirement-verification-command.schema"
 import {
   MeetingRetirementForbiddenError,
   MeetingRetirementConflictError,
 } from "@/contexts/meeting/application/errors"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
-import { RecordRetirementVerificationReceiptRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
 import { RecordRetirementVerificationReceiptEntity } from "@system/domain/entities/record-retirement-verification-receipt.entity"
-import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
 import { meetingRecordKinds } from "@/contexts/meeting/domain/definitions/meeting-record-kind.definition"
 
 type Context = ConstructorParameters<typeof PrepareMeetingRetirementPageAdapter>[0]
@@ -30,16 +26,20 @@ export class VerifyMeetingRetirementPage {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new MeetingRetirementForbiddenError("retirement authentication required")
-    const authority = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
-      authentication,
-      now: this.c.var.now(),
-      stepUpToken,
-    })
+    const authority = await new MeetingRecordSystemAdapter(this.c).prepareSourceFreezeAuthorization(
+      {
+        authentication,
+        now: this.c.var.now(),
+        stepUpToken,
+      },
+    )
     if (authority instanceof Error) return authority
     if (authority === "forbidden")
       return new MeetingRetirementForbiddenError("retirement authorization denied")
     const context = { env: this.c.env, assertions: authority.assertions }
-    const plan = await new RecordRetirementVerificationPlanRepository(context).find(command.planId)
+    const plan = await new MeetingRecordSystemAdapter(context)
+      .retirementPlans()
+      .find(command.planId)
     if (plan instanceof Error) return plan
     if (
       plan === null ||
@@ -49,7 +49,7 @@ export class VerifyMeetingRetirementPage {
       JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(meetingRecordKinds)
     )
       return new MeetingRetirementConflictError("retirement plan unavailable or capability changed")
-    const repository = new RecordRetirementVerificationReceiptRepository(context)
+    const repository = new MeetingRecordSystemAdapter(context).retirementReceipts()
     const existing = await repository.find(command.id)
     if (existing instanceof Error) return existing
     if (
@@ -76,13 +76,13 @@ export class VerifyMeetingRetirementPage {
       stepUpToken,
     )
     if (checked instanceof Error) return checked
-    const keys = await new PrepareRecordRetirementPageKeysAdapter({
+    const keys = await new MeetingRecordSystemAdapter({
       env: this.c.env,
       assertions: checked.assertions,
-    }).prepare(checked.coveragePageId)
+    }).prepareRetirementPageKeys(checked.coveragePageId)
     if (keys instanceof Error) return keys
     const guardedContext = { env: this.c.env, assertions: keys.assertions }
-    const guarded = new RecordRetirementVerificationReceiptRepository(guardedContext)
+    const guarded = new MeetingRecordSystemAdapter(guardedContext).retirementReceipts()
     const matches = (receipt: RecordRetirementVerificationReceiptEntity) =>
       receipt.snapshot.planId === plan.snapshot.id &&
       receipt.snapshot.planDigest === plan.digest &&
@@ -98,7 +98,9 @@ export class VerifyMeetingRetirementPage {
         ? current
         : new MeetingRetirementConflictError("retirement receipt replay changed")
     }
-    const page = await new RecordCoveragePageRepository(guardedContext).find(checked.coveragePageId)
+    const page = await new MeetingRecordSystemAdapter(guardedContext)
+      .coveragePages()
+      .find(checked.coveragePageId)
     if (page instanceof Error) return page
     if (page === null) return new Error("retirement coverage page missing")
     const receipt = await RecordRetirementVerificationReceiptEntity.create(

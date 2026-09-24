@@ -1,7 +1,7 @@
 import { z } from "zod"
 import type { HealthCheckupContext } from "@/contexts/health-checkup/configuration/health-checkup-context"
 import { HealthCheckupActorReadAdapter } from "@/contexts/health-checkup/infrastructure/adapters/health-checkup-actor-read.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = HealthCheckupContext
 const inputSchema = z.strictObject({
@@ -23,7 +23,7 @@ export class ListFrozenHealthCheckupRecordPageAdapter {
     const request = parsed.data
     const actor = await new HealthCheckupActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

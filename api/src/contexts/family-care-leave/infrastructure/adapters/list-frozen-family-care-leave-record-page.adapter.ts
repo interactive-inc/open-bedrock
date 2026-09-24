@@ -1,7 +1,7 @@
 import { z } from "zod"
 import type { FamilyCareLeaveContext } from "@/contexts/family-care-leave/configuration/family-care-leave-context"
 import { FamilyCareLeaveActorReadAdapter } from "@/contexts/family-care-leave/infrastructure/adapters/family-care-leave-actor-read.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = FamilyCareLeaveContext
 const inputSchema = z.strictObject({
@@ -23,7 +23,7 @@ export class ListFrozenFamilyCareLeaveRecordPageAdapter {
     const request = parsed.data
     const actor = await new FamilyCareLeaveActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

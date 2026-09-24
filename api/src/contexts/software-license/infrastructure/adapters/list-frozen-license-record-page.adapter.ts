@@ -1,7 +1,7 @@
 import { z } from "zod"
 import type { SoftwareLicenseContext } from "@/contexts/software-license/configuration/software-license-context"
 import { LicenseActorReadAdapter } from "@/contexts/software-license/infrastructure/adapters/license-actor-read.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = SoftwareLicenseContext
 const inputSchema = z.strictObject({
@@ -23,7 +23,7 @@ export class ListFrozenLicenseRecordPageAdapter {
     const request = parsed.data
     const actor = await new LicenseActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

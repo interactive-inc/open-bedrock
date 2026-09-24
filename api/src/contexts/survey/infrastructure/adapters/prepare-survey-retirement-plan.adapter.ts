@@ -3,8 +3,8 @@ import type { SurveyContext } from "@/contexts/survey/configuration/survey-conte
 import { surveyRetirementPlanCommandSchema } from "@/contexts/survey/domain/schemas/survey-retirement-plan-command.schema"
 import { SurveyActorReadAdapter } from "@/contexts/survey/infrastructure/adapters/survey-actor-read.adapter"
 import { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
+import { prepareSystemRecordSourceFreezeAuthorization } from "@system/interface/operations/prepare-system-record-source-freeze-authorization"
+import { prepareSystemRecordKindCoverage } from "@system/interface/operations/prepare-system-record-kind-coverage"
 import { surveyRecordKinds } from "@/contexts/survey/domain/definitions/survey-record-kind.definition"
 
 type Context = SurveyContext
@@ -22,7 +22,7 @@ export class PrepareSurveyRetirementPlanAdapter {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new ForbiddenError("retirement authentication required", "forbidden")
-    const authority = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const authority = await prepareSystemRecordSourceFreezeAuthorization(this.c, {
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -35,16 +35,19 @@ export class PrepareSurveyRetirementPlanAdapter {
     const baseAssertions = [...authority.assertions, ...reader.assertions]
     const chains = []
     for (const recordKind of surveyRecordKinds) {
-      const chain = await new PrepareRecordKindCoverageAdapter({
-        env: this.c.env,
-        assertions: baseAssertions,
-      }).prepare({
-        freezeId: request.freezeId,
-        sourceNamespace: request.sourceNamespace,
-        purpose: request.purpose,
-        ownerContext: "survey",
-        recordKind,
-      })
+      const chain = await prepareSystemRecordKindCoverage(
+        {
+          env: this.c.env,
+          assertions: baseAssertions,
+        },
+        {
+          freezeId: request.freezeId,
+          sourceNamespace: request.sourceNamespace,
+          purpose: request.purpose,
+          ownerContext: "survey",
+          recordKind,
+        },
+      )
       if (chain instanceof Error) return chain
       chains.push(chain)
     }

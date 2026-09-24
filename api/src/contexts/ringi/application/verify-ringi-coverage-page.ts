@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
+import { RingiRecordSystemAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-record-system.adapter"
 import {
   RingiCoverageForbiddenError,
   RingiCoverageConflictError,
@@ -10,9 +10,6 @@ import type {
   SystemDatabaseContext,
   SystemAttachmentStorageContext,
 } from "@system/configuration/system-context"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
-import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
 import { RecordCoveragePageEntity } from "@system/domain/entities/record-coverage-page.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { CaptureFrozenRingiRecordPageAdapter } from "@/contexts/ringi/infrastructure/adapters/capture-frozen-ringi-record-page.adapter"
@@ -33,7 +30,7 @@ export class VerifyRingiCoveragePage {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new RingiCoverageForbiddenError("coverage authentication required")
-    const proof = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const proof = await new RingiRecordSystemAdapter(this.c).prepareSourceFreezeAuthorization({
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -41,23 +38,25 @@ export class VerifyRingiCoveragePage {
     if (proof instanceof Error) return proof
     if (proof === "forbidden")
       return new RingiCoverageForbiddenError("coverage authorization denied")
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await new RingiRecordSystemAdapter({
       env: this.c.env,
       assertions: proof.assertions,
-    }).prepareActiveGeneration({
-      id: command.freezeId,
-      sourceNamespace: command.sourceNamespace,
-      ownerContext: "ringi",
     })
+      .sourceFreezes()
+      .prepareActiveGeneration({
+        id: command.freezeId,
+        sourceNamespace: command.sourceNamespace,
+        ownerContext: "ringi",
+      })
     if (generation instanceof Error) return generation
-    const completion = new PrepareRecordKindCoverageAdapter({
+    const completion = new RingiRecordSystemAdapter({
       env: this.c.env,
       assertions: generation.assertions,
     })
-    const repository = new RecordCoveragePageRepository({
+    const repository = new RingiRecordSystemAdapter({
       env: this.c.env,
       assertions: generation.assertions,
-    })
+    }).coveragePages()
     const existing = await repository.find(command.id)
     if (existing instanceof Error) return existing
     if (
@@ -155,10 +154,10 @@ export class VerifyRingiCoveragePage {
 
   private async confirmTerminal(
     page: RecordCoveragePageEntity,
-    completion: PrepareRecordKindCoverageAdapter,
+    completion: RingiRecordSystemAdapter,
   ) {
     if (page.snapshot.nextCursor !== null) return page
-    const verified = await completion.prepare({
+    const verified = await completion.prepareKindCoverage({
       freezeId: page.snapshot.freezeId,
       sourceNamespace: page.snapshot.sourceNamespace,
       ownerContext: page.snapshot.ownerContext,

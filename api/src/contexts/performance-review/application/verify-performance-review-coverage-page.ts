@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
+import { PerformanceReviewRecordSystemAdapter } from "@/contexts/performance-review/infrastructure/adapters/performance-review-record-system.adapter"
 import {
   PerformanceReviewCoverageForbiddenError,
   PerformanceReviewCoverageConflictError,
@@ -10,9 +10,6 @@ import type {
   SystemDatabaseContext,
   SystemAttachmentStorageContext,
 } from "@system/configuration/system-context"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
-import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
 import { RecordCoveragePageEntity } from "@system/domain/entities/record-coverage-page.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { CaptureFrozenPerformanceReviewRecordPageAdapter } from "@/contexts/performance-review/infrastructure/adapters/capture-frozen-performance-review-record-page.adapter"
@@ -33,7 +30,9 @@ export class VerifyPerformanceReviewCoveragePage {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new PerformanceReviewCoverageForbiddenError("coverage authentication required")
-    const proof = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const proof = await new PerformanceReviewRecordSystemAdapter(
+      this.c,
+    ).prepareSourceFreezeAuthorization({
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -41,23 +40,25 @@ export class VerifyPerformanceReviewCoveragePage {
     if (proof instanceof Error) return proof
     if (proof === "forbidden")
       return new PerformanceReviewCoverageForbiddenError("coverage authorization denied")
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await new PerformanceReviewRecordSystemAdapter({
       env: this.c.env,
       assertions: proof.assertions,
-    }).prepareActiveGeneration({
-      id: command.freezeId,
-      sourceNamespace: command.sourceNamespace,
-      ownerContext: "performance-review",
     })
+      .sourceFreezes()
+      .prepareActiveGeneration({
+        id: command.freezeId,
+        sourceNamespace: command.sourceNamespace,
+        ownerContext: "performance-review",
+      })
     if (generation instanceof Error) return generation
-    const completion = new PrepareRecordKindCoverageAdapter({
+    const completion = new PerformanceReviewRecordSystemAdapter({
       env: this.c.env,
       assertions: generation.assertions,
     })
-    const repository = new RecordCoveragePageRepository({
+    const repository = new PerformanceReviewRecordSystemAdapter({
       env: this.c.env,
       assertions: generation.assertions,
-    })
+    }).coveragePages()
     const existing = await repository.find(command.id)
     if (existing instanceof Error) return existing
     if (
@@ -155,10 +156,10 @@ export class VerifyPerformanceReviewCoveragePage {
 
   private async confirmTerminal(
     page: RecordCoveragePageEntity,
-    completion: PrepareRecordKindCoverageAdapter,
+    completion: PerformanceReviewRecordSystemAdapter,
   ) {
     if (page.snapshot.nextCursor !== null) return page
-    const verified = await completion.prepare({
+    const verified = await completion.prepareKindCoverage({
       freezeId: page.snapshot.freezeId,
       sourceNamespace: page.snapshot.sourceNamespace,
       ownerContext: page.snapshot.ownerContext,

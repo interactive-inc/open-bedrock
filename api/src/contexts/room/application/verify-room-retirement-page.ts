@@ -1,15 +1,11 @@
-import { PrepareRecordRetirementPageKeysAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-page-keys.adapter"
 import { PrepareRoomRetirementPageAdapter } from "@/contexts/room/infrastructure/adapters/prepare-room-retirement-page.adapter"
+import { RoomRecordSystemAdapter } from "@/contexts/room/infrastructure/adapters/room-record-system.adapter"
 import { roomRetirementVerificationCommandSchema } from "@/contexts/room/domain/schemas/room-retirement-verification-command.schema"
 import {
   RoomRetirementForbiddenError,
   RoomRetirementConflictError,
 } from "@/contexts/room/application/errors"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
-import { RecordRetirementVerificationReceiptRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
 import { RecordRetirementVerificationReceiptEntity } from "@system/domain/entities/record-retirement-verification-receipt.entity"
-import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
 import { roomRecordKinds } from "@/contexts/room/domain/definitions/room-record-kind.definition"
 
 type Context = ConstructorParameters<typeof PrepareRoomRetirementPageAdapter>[0]
@@ -30,7 +26,7 @@ export class VerifyRoomRetirementPage {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new RoomRetirementForbiddenError("retirement authentication required")
-    const authority = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const authority = await new RoomRecordSystemAdapter(this.c).prepareSourceFreezeAuthorization({
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -39,7 +35,7 @@ export class VerifyRoomRetirementPage {
     if (authority === "forbidden")
       return new RoomRetirementForbiddenError("retirement authorization denied")
     const context = { env: this.c.env, assertions: authority.assertions }
-    const plan = await new RecordRetirementVerificationPlanRepository(context).find(command.planId)
+    const plan = await new RoomRecordSystemAdapter(context).retirementPlans().find(command.planId)
     if (plan instanceof Error) return plan
     if (
       plan === null ||
@@ -49,7 +45,7 @@ export class VerifyRoomRetirementPage {
       JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(roomRecordKinds)
     )
       return new RoomRetirementConflictError("retirement plan unavailable or capability changed")
-    const repository = new RecordRetirementVerificationReceiptRepository(context)
+    const repository = new RoomRecordSystemAdapter(context).retirementReceipts()
     const existing = await repository.find(command.id)
     if (existing instanceof Error) return existing
     if (
@@ -76,13 +72,13 @@ export class VerifyRoomRetirementPage {
       stepUpToken,
     )
     if (checked instanceof Error) return checked
-    const keys = await new PrepareRecordRetirementPageKeysAdapter({
+    const keys = await new RoomRecordSystemAdapter({
       env: this.c.env,
       assertions: checked.assertions,
-    }).prepare(checked.coveragePageId)
+    }).prepareRetirementPageKeys(checked.coveragePageId)
     if (keys instanceof Error) return keys
     const guardedContext = { env: this.c.env, assertions: keys.assertions }
-    const guarded = new RecordRetirementVerificationReceiptRepository(guardedContext)
+    const guarded = new RoomRecordSystemAdapter(guardedContext).retirementReceipts()
     const matches = (receipt: RecordRetirementVerificationReceiptEntity) =>
       receipt.snapshot.planId === plan.snapshot.id &&
       receipt.snapshot.planDigest === plan.digest &&
@@ -98,7 +94,9 @@ export class VerifyRoomRetirementPage {
         ? current
         : new RoomRetirementConflictError("retirement receipt replay changed")
     }
-    const page = await new RecordCoveragePageRepository(guardedContext).find(checked.coveragePageId)
+    const page = await new RoomRecordSystemAdapter(guardedContext)
+      .coveragePages()
+      .find(checked.coveragePageId)
     if (page instanceof Error) return page
     if (page === null) return new Error("retirement coverage page missing")
     const receipt = await RecordRetirementVerificationReceiptEntity.create(

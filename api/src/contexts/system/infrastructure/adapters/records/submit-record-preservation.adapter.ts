@@ -18,7 +18,7 @@ import { StorePreservedRecordContent } from "@system/application/records/store-p
 import { VerifyPreservedRecordContentAdapter } from "@system/infrastructure/adapters/records/verify-preserved-record-content.adapter"
 import { PrepareAttachmentContentReadGuardAdapter } from "@system/infrastructure/adapters/attachments/prepare-attachment-content-read-guard.adapter"
 import { StartSystemProcedure } from "@system/application/workflow/start-system-procedure"
-import { RecordPreservationSubmissionError } from "@system/infrastructure/adapters/records/errors"
+import { RecordPreservationSubmissionError } from "@system/application/records/errors"
 
 type Context = RecordPreservationSubmissionContext
 type Reply = Readonly<{

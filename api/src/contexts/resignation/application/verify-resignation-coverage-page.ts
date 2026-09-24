@@ -1,5 +1,5 @@
 import { z } from "zod"
-import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
+import { ResignationRecordSystemAdapter } from "@/contexts/resignation/infrastructure/adapters/resignation-record-system.adapter"
 import {
   ResignationCoverageForbiddenError,
   ResignationCoverageConflictError,
@@ -10,9 +10,6 @@ import type {
   SystemDatabaseContext,
   SystemAttachmentStorageContext,
 } from "@system/configuration/system-context"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
-import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
 import { RecordCoveragePageEntity } from "@system/domain/entities/record-coverage-page.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { CaptureFrozenResignationRecordPageAdapter } from "@/contexts/resignation/infrastructure/adapters/capture-frozen-resignation-record-page.adapter"
@@ -33,31 +30,35 @@ export class VerifyResignationCoveragePage {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new ResignationCoverageForbiddenError("coverage authentication required")
-    const proof = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
-      authentication,
-      now: this.c.var.now(),
-      stepUpToken,
-    })
+    const proof = await new ResignationRecordSystemAdapter(this.c).prepareSourceFreezeAuthorization(
+      {
+        authentication,
+        now: this.c.var.now(),
+        stepUpToken,
+      },
+    )
     if (proof instanceof Error) return proof
     if (proof === "forbidden")
       return new ResignationCoverageForbiddenError("coverage authorization denied")
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await new ResignationRecordSystemAdapter({
       env: this.c.env,
       assertions: proof.assertions,
-    }).prepareActiveGeneration({
-      id: command.freezeId,
-      sourceNamespace: command.sourceNamespace,
-      ownerContext: "resignation",
     })
+      .sourceFreezes()
+      .prepareActiveGeneration({
+        id: command.freezeId,
+        sourceNamespace: command.sourceNamespace,
+        ownerContext: "resignation",
+      })
     if (generation instanceof Error) return generation
-    const completion = new PrepareRecordKindCoverageAdapter({
+    const completion = new ResignationRecordSystemAdapter({
       env: this.c.env,
       assertions: generation.assertions,
     })
-    const repository = new RecordCoveragePageRepository({
+    const repository = new ResignationRecordSystemAdapter({
       env: this.c.env,
       assertions: generation.assertions,
-    })
+    }).coveragePages()
     const existing = await repository.find(command.id)
     if (existing instanceof Error) return existing
     if (
@@ -156,10 +157,10 @@ export class VerifyResignationCoveragePage {
 
   private async confirmTerminal(
     page: RecordCoveragePageEntity,
-    completion: PrepareRecordKindCoverageAdapter,
+    completion: ResignationRecordSystemAdapter,
   ) {
     if (page.snapshot.nextCursor !== null) return page
-    const verified = await completion.prepare({
+    const verified = await completion.prepareKindCoverage({
       freezeId: page.snapshot.freezeId,
       sourceNamespace: page.snapshot.sourceNamespace,
       ownerContext: page.snapshot.ownerContext,

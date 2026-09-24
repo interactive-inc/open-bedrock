@@ -3,7 +3,7 @@ import type { RecordPreservationExecutionContext } from "@system/configuration/r
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
 import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
 import { SystemFeaturePermission } from "@system/domain/catalogs/iam/system-feature-permission.catalog"
-import { RecordPreservationExecutionError } from "@system/infrastructure/adapters/records/errors"
+import { RecordPreservationExecutionError } from "@system/application/records/errors"
 import { recordPreservationIntentSchema } from "@system/domain/schemas/records/record-preservation-input.schema"
 import { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
 import { RecordPreservationProposalValue } from "@system/domain/values/records/record-preservation-proposal.value"

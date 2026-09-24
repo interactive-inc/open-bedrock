@@ -2,7 +2,7 @@ import { z } from "zod"
 import type { RoomContext } from "@/contexts/room/configuration/room-context"
 import { RoomActorReadAdapter } from "@/contexts/room/infrastructure/adapters/room-actor-read.adapter"
 import { roomRecordKindSchema } from "@/contexts/room/domain/definitions/room-record-kind.definition"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = RoomContext
 const inputSchema = z.strictObject({
@@ -28,7 +28,7 @@ export class ListFrozenRoomRecordPageAdapter {
     const request = parsed.data
     const actor = await new RoomActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

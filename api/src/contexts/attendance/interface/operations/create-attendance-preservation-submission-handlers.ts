@@ -7,8 +7,8 @@ import { CaptureAttendanceRecordAdapter } from "@/contexts/attendance/infrastruc
 import { SystemForbiddenError, SystemHTTPException } from "@system/interface/errors"
 import { recordPreservationRequestSchema } from "@system/domain/schemas/records/record-preservation-input.schema"
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
-import { SubmitRecordPreservationAdapter } from "@system/infrastructure/adapters/records/submit-record-preservation.adapter"
-import { RecordPreservationSubmissionError } from "@system/infrastructure/adapters/records/errors"
+import { submitSystemRecordPreservation } from "@system/interface/operations/submit-system-record-preservation"
+import { RecordPreservationSubmissionError } from "@system/application/records/errors"
 
 /** 打刻原記録の取得と会社資格をSystemの共通提出処理へ接続する。 */
 export function createAttendancePreservationSubmissionHandlers(mode: "create" | "resubmit") {
@@ -35,7 +35,7 @@ export function createAttendancePreservationSubmissionHandlers(mode: "create" | 
       const request = c.req.valid("json")
       const recordId = c.req.valid("param").id
       const sourceNamespace = c.env.RECORD_SOURCE_NAMESPACE ?? ""
-      const adapter = new SubmitRecordPreservationAdapter({
+      const adapterContext: Parameters<typeof submitSystemRecordPreservation>[0] = {
         env: c.env,
         var: c.var,
         source: {
@@ -48,7 +48,7 @@ export function createAttendancePreservationSubmissionHandlers(mode: "create" | 
             new CaptureAttendanceRecordAdapter(c).prepare({ recordId, sourceNamespace }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
-      })
+      }
       const common = {
         authentication,
         procedureKey: request.procedure_key,
@@ -58,7 +58,10 @@ export function createAttendancePreservationSubmissionHandlers(mode: "create" | 
         if (mode === "create") {
           const idempotencyKey = c.req.valid("header")["idempotency-key"]
           if (idempotencyKey === undefined) return new RecordPreservationSubmissionError("invalid")
-          return adapter.execute({ ...common, revision: { mode: "create", idempotencyKey } })
+          return submitSystemRecordPreservation(adapterContext, {
+            ...common,
+            revision: { mode: "create", idempotencyKey },
+          })
         }
         const number = c.req.valid("param").number
         if (
@@ -67,7 +70,7 @@ export function createAttendancePreservationSubmissionHandlers(mode: "create" | 
           !("previous_digest" in request)
         )
           return new RecordPreservationSubmissionError("invalid")
-        return adapter.execute({
+        return submitSystemRecordPreservation(adapterContext, {
           ...common,
           revision: {
             mode: "resubmit",

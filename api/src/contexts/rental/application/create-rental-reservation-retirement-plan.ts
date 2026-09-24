@@ -1,5 +1,5 @@
 import { PrepareRentalReservationRetirementPlanAdapter } from "@/contexts/rental/infrastructure/adapters/prepare-rental-reservation-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { RentalReservationRecordSystemAdapter } from "@/contexts/rental/infrastructure/adapters/rental-reservation-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { RentalReservationRetirementConflictError } from "@/contexts/rental/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateRentalReservationRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new RentalReservationRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

@@ -1,5 +1,5 @@
 import { PrepareSkillRetirementPlanAdapter } from "@/contexts/skill/infrastructure/adapters/prepare-skill-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { SkillRecordSystemAdapter } from "@/contexts/skill/infrastructure/adapters/skill-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { SkillRetirementConflictError } from "@/contexts/skill/application/errors"
 
@@ -15,10 +15,10 @@ export class CreateSkillRetirementPlan {
     const prepared = await new PrepareSkillRetirementPlanAdapter(this.c).prepare(input, stepUpToken)
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new SkillRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

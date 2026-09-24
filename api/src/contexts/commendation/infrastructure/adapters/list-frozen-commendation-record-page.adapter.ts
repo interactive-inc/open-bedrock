@@ -1,7 +1,7 @@
 import { z } from "zod"
 import type { CommendationContext } from "@/contexts/commendation/configuration/commendation-context"
 import { CommendationActorReadAdapter } from "@/contexts/commendation/infrastructure/adapters/commendation-actor-read.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = CommendationContext
 const inputSchema = z.strictObject({
@@ -23,7 +23,7 @@ export class ListFrozenCommendationRecordPageAdapter {
     const request = parsed.data
     const actor = await new CommendationActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

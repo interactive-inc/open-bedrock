@@ -1,7 +1,7 @@
 import type { CareerContext } from "@/contexts/career/configuration/career-context"
 import { careerRecordKindSchema } from "@/contexts/career/domain/definitions/career-record-kind.definition"
 import { CareerActorReadAdapter } from "@/contexts/career/infrastructure/adapters/career-actor-read.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 import { z } from "zod"
 
 type Context = CareerContext
@@ -26,7 +26,7 @@ export class ListFrozenCareerRecordPageAdapter {
     const request = parsed.data
     const actor = await new CareerActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

@@ -18,7 +18,7 @@ import {
   SystemD1WorkflowAdapter,
   type SystemWorkflowWriter,
 } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
-import { SystemD1AuthorizedExecutionAdapter } from "@system/infrastructure/adapters/workflow/system-d1-authorized-execution.adapter"
+import { executeSystemAuthorizedOperation } from "@system/interface/operations/execute-system-authorized-operation"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { eq } from "drizzle-orm"
 
@@ -345,7 +345,7 @@ export class RingiRequestRepository {
       input.authorization.operationKey !== "ringi.request.authorize"
     )
       return new Error("ringi execution authorization does not match")
-    return new SystemD1AuthorizedExecutionAdapter(this.c).execute({
+    return executeSystemAuthorizedOperation(this.c, {
       authorization: input.authorization,
       proposalDigest: input.authorization.proposalDigest,
       executedAt: input.decidedAt,

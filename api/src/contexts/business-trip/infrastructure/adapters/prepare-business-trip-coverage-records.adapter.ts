@@ -5,8 +5,8 @@ import type {
 } from "@system/configuration/system-context"
 import type { BusinessTripContext } from "@/contexts/business-trip/configuration/business-trip-context"
 import type { PreservedRecordSourceValue } from "@system/domain/values/records/preserved-record-source.value"
-import { VerifyPreservedRecordSourceAdapter } from "@system/infrastructure/adapters/records/verify-preserved-record-source.adapter"
-import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
+import { verifySystemPreservedRecordSource } from "@system/interface/operations/verify-system-preserved-record-source"
+import { openSystemRecordCoveragePages } from "@system/interface/operations/open-system-record-coverage-pages"
 
 type Context = SystemD1Context &
   SystemDatabaseContext &
@@ -37,16 +37,16 @@ export class PrepareBusinessTripCoverageRecordsAdapter {
       return new Error("coverage mapping is incomplete or duplicated")
     const records = []
     const assertions = [...this.c.assertions]
-    const verifier = new VerifyPreservedRecordSourceAdapter({
+    const verifierContext: Parameters<typeof verifySystemPreservedRecordSource>[0] = {
       env: this.c.env,
       var: this.c.var,
       now: this.c.var.now,
       assertions: this.c.assertions,
-    })
+    }
     for (const record of input.records) {
       const preservedRecordId = mapping.get(record.source.props.recordId)
       if (preservedRecordId === undefined) return new Error("coverage source mapping missing")
-      const verified = await verifier.execute({
+      const verified = await verifySystemPreservedRecordSource(verifierContext, {
         authentication,
         recordId: preservedRecordId,
         purpose: input.purpose,
@@ -59,7 +59,7 @@ export class PrepareBusinessTripCoverageRecordsAdapter {
     return {
       records,
       assertions: Object.freeze(assertions),
-      repository: new RecordCoveragePageRepository({ env: this.c.env, assertions }),
+      repository: openSystemRecordCoveragePages({ env: this.c.env, assertions }),
     }
   }
 }
