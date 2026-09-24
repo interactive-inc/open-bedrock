@@ -75,14 +75,17 @@ export async function startLocalD1(databases: LocalD1Databases): Promise<LocalD1
     throw new Error(`declare at most ${MIGRATED_SLOT_COUNT} migrated local D1 databases per file`)
   }
 
-  const persist = join(scratchDirectory(), `run-${crypto.randomUUID()}`)
   const ids: Record<string, string> = {
     ...Object.fromEntries(empty.map((name) => [name, `local-d1-test-${name}`])),
     ...Object.fromEntries(migrated.map((name, index) => [name, slotIdFor(index)])),
   }
 
-  if (migrated.length > 0) {
-    const source = await buildTemplate()
+  const source = migrated.length > 0 ? await buildTemplate() : null
+
+  /** 起動のたびに新しいディレクトリへtemplateを複製し、失敗した起動とファイルを共有しない。 */
+  const preparePersist = (): string => {
+    const persist = join(scratchDirectory(), `run-${crypto.randomUUID()}`)
+    if (source === null) return persist
     mkdirSync(join(persist, D1_OBJECT_DIRECTORY), { recursive: true })
     migrated.forEach((_, index) => {
       const slotFile = source.slotFiles[index]
@@ -92,11 +95,10 @@ export async function startLocalD1(databases: LocalD1Databases): Promise<LocalD1
         join(persist, D1_OBJECT_DIRECTORY, slotFile),
       )
     })
+    return persist
   }
 
-  const runtime = createRuntime(persist, ids)
-
-  await runtime.ready
+  const { runtime, persist } = await startRuntime(preparePersist, ids)
 
   const migratedNames = new Set(migrated)
   const verified = new Set<string>()
@@ -123,6 +125,34 @@ function slotIdFor(index: number): string {
   return `local-d1-test-migrated-slot-${index}`
 }
 
+/** workerd の起動が失敗した時に作り直す回数。 */
+const RUNTIME_START_ATTEMPTS = 3
+
+/**
+ * 1プロセスで多数のファイルを流すと、Bunが workerd を起動する子プロセスのpipeで
+ * EBADF や ENOENT を返し、起動が失敗することがある。その失敗に限って起動を作り直す。
+ * 作り直しは毎回新しいディレクトリを使い、失敗した起動のworkerdとDBファイルを共有しない。
+ * 起動が遅いだけの場合は待ち続け、同じDBファイルへ2つのworkerdを向けない。
+ */
+async function startRuntime(
+  preparePersist: () => string,
+  d1Databases: Record<string, string>,
+): Promise<{ runtime: Miniflare; persist: string }> {
+  for (let attempt = 1; ; attempt++) {
+    const persist = preparePersist()
+    const runtime = createRuntime(persist, d1Databases)
+    try {
+      await runtime.ready
+      return { runtime, persist }
+    } catch (error) {
+      console.warn(`local D1 runtime failed to start (attempt ${attempt}):`, error)
+      await runtime.dispose().catch(() => undefined)
+      rmSync(persist, { recursive: true, force: true })
+      if (attempt >= RUNTIME_START_ATTEMPTS) throw error
+    }
+  }
+}
+
 function createRuntime(persist: string, d1Databases: Record<string, string>): Miniflare {
   return new Miniflare({
     modules: true,
@@ -130,6 +160,12 @@ function createRuntime(persist: string, d1Databases: Record<string, string>): Mi
     resourcePersistencePath: persist,
     d1Databases,
     outboundService: () => new Response("outbound is disabled in local D1 tests", { status: 503 }),
+    // 実行中にworkerdが落ちるとMiniflareは作り直し、それ以前に得たDBは使えなくなる。原因を追えるよう記録する。
+    unsafeHandleRuntimeRestart: () => {
+      console.warn(
+        "local D1 runtime restarted after an unexpected exit; earlier databases are invalid",
+      )
+    },
   })
 }
 

@@ -5,7 +5,7 @@ import { EmployeeSkillRepository } from "@/contexts/skill/infrastructure/reposit
 import { SkillRepository } from "@/contexts/skill/infrastructure/repositories/skill.repository"
 import { seedD1 } from "@tests/api/support/seed-d1"
 import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
-import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
 
 let local: LocalD1
 
@@ -13,7 +13,15 @@ let local: LocalD1
 setDefaultTimeout(30_000)
 
 beforeAll(async () => {
-  local = await startLocalD1({ migrated: ["upsert"] })
+  local = await startLocalD1({
+    migrated: [
+      "upsert",
+      "save-round-trips-the-employee-skill",
+      "delete-returns-null-for-non-existent-skill",
+      "delete-returns-true-for-existing-skill",
+      "delete-returns-null-on-second-delete-of-same",
+    ],
+  })
 })
 
 afterAll(async () => {
@@ -68,5 +76,113 @@ describe("EmployeeSkillRepository on local D1", () => {
       .all<{ level: number; years: number; note: string }>()
 
     expect(rows.results).toEqual([{ level: 8, years: 4, note: "advanced" }])
+  })
+})
+
+describe("EmployeeSkillRepository", () => {
+  test("save round-trips the employee skill", async () => {
+    const { context } = await createLocalD1Context(local, "save-round-trips-the-employee-skill")
+
+    const repository = new EmployeeSkillRepository(context)
+
+    const saved = await repository.save(
+      EmployeeSkill.create({
+        employeeId: toWorkforceEmployeeId(1),
+        skillCode: "TYPESCRIPT",
+        level: 3,
+        years: 2,
+        note: null,
+      }),
+    )
+
+    expect(saved).toBeInstanceOf(EmployeeSkill)
+
+    if (saved instanceof Error) {
+      throw saved
+    }
+
+    expect(saved.employeeId).toBe(toWorkforceEmployeeId(1))
+    expect(saved.skillCode).toBe("TYPESCRIPT")
+    expect(saved.level).toBe(3)
+  })
+
+  test("delete returns null for non-existent skill", async () => {
+    const { context } = await createLocalD1Context(
+      local,
+      "delete-returns-null-for-non-existent-skill",
+    )
+
+    const repository = new EmployeeSkillRepository(context)
+
+    const deleted = await repository.delete({
+      employeeId: toWorkforceEmployeeId(1),
+      skillCode: "UNKNOWN",
+    })
+
+    expect(deleted).toBeNull()
+  })
+
+  test("delete returns true for existing skill", async () => {
+    const { context } = await createLocalD1Context(local, "delete-returns-true-for-existing-skill")
+
+    const repository = new EmployeeSkillRepository(context)
+
+    const saved = await repository.save(
+      EmployeeSkill.create({
+        employeeId: toWorkforceEmployeeId(1),
+        skillCode: "TYPESCRIPT",
+        level: 3,
+        years: 2,
+        note: null,
+      }),
+    )
+
+    if (saved instanceof Error) {
+      throw saved
+    }
+
+    const deleted = await repository.delete({
+      employeeId: toWorkforceEmployeeId(1),
+      skillCode: "TYPESCRIPT",
+    })
+
+    expect(deleted).toBe(true)
+  })
+
+  test("delete returns null on second delete of same skill", async () => {
+    const { context } = await createLocalD1Context(
+      local,
+      "delete-returns-null-on-second-delete-of-same",
+    )
+
+    const repository = new EmployeeSkillRepository(context)
+
+    const saved = await repository.save(
+      EmployeeSkill.create({
+        employeeId: toWorkforceEmployeeId(1),
+        skillCode: "TYPESCRIPT",
+        level: 3,
+        years: 2,
+        note: null,
+      }),
+    )
+
+    if (saved instanceof Error) {
+      throw saved
+    }
+
+    const first = await repository.delete({
+      employeeId: toWorkforceEmployeeId(1),
+      skillCode: "TYPESCRIPT",
+    })
+
+    expect(first).toBe(true)
+
+    const second = await repository.delete({
+      employeeId: toWorkforceEmployeeId(1),
+      skillCode: "TYPESCRIPT",
+    })
+
+    expect(second).toBeNull()
   })
 })

@@ -2,9 +2,34 @@ import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { FamilyCareLeave } from "@/contexts/family-care-leave/domain/entities/family-care-leave.entity"
 import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/repositories/family-care-leave.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import { familyCareLeaves } from "@/contexts/family-care-leave/infrastructure/schema/family-care-leave"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: [
+      "creates-a-leave-when-there-is-no-overlap",
+      "returns-null-when-an-overlapping-requested",
+      "creates-a-leave-for-another-employee-even-with",
+      "creates-a-leave-when-the-only-overlapping-row",
+      "treats-a-shared-boundary-date-existing-end",
+      "returns-null-when-the-new-period-overlaps",
+      "succeeds-when-only-the-leave-itself-overlaps",
+      "returns-null-when-the-target-row-is-not-in",
+    ],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 describe("FamilyCareLeaveRepository", () => {
   /** 新規の休業申出ドメインを組み立てる。invalid_date_range は致命なので throw する。 */
@@ -31,7 +56,10 @@ describe("FamilyCareLeaveRepository", () => {
 
   describe("create", () => {
     test("creates a leave when there is no overlap", async () => {
-      const { context } = await createTestContext()
+      const { context } = await createLocalD1Context(
+        local,
+        "creates-a-leave-when-there-is-no-overlap",
+      )
 
       const repository = new FamilyCareLeaveRepository(context)
 
@@ -55,7 +83,10 @@ describe("FamilyCareLeaveRepository", () => {
     })
 
     test("returns null when an overlapping requested leave already exists for the same employee", async () => {
-      const { context } = await createTestContext()
+      const { context } = await createLocalD1Context(
+        local,
+        "returns-null-when-an-overlapping-requested",
+      )
 
       const repository = new FamilyCareLeaveRepository(context)
 
@@ -83,7 +114,10 @@ describe("FamilyCareLeaveRepository", () => {
     })
 
     test("creates a leave for another employee even with the same period", async () => {
-      const { context } = await createTestContext()
+      const { context } = await createLocalD1Context(
+        local,
+        "creates-a-leave-for-another-employee-even-with",
+      )
 
       const repository = new FamilyCareLeaveRepository(context)
 
@@ -111,7 +145,10 @@ describe("FamilyCareLeaveRepository", () => {
     })
 
     test("creates a leave when the only overlapping row is not in requested status", async () => {
-      const { context } = await createTestContext()
+      const { context } = await createLocalD1Context(
+        local,
+        "creates-a-leave-when-the-only-overlapping-row",
+      )
 
       const repository = new FamilyCareLeaveRepository(context)
 
@@ -139,7 +176,10 @@ describe("FamilyCareLeaveRepository", () => {
     })
 
     test("treats a shared boundary date (existing end_date == new start_date) as an overlap", async () => {
-      const { context } = await createTestContext()
+      const { context } = await createLocalD1Context(
+        local,
+        "treats-a-shared-boundary-date-existing-end",
+      )
 
       const repository = new FamilyCareLeaveRepository(context)
 
@@ -169,7 +209,10 @@ describe("FamilyCareLeaveRepository", () => {
 
   describe("updateIfNoOverlap", () => {
     test("returns null when the new period overlaps another requested leave of the same employee", async () => {
-      const { context } = await createTestContext()
+      const { context } = await createLocalD1Context(
+        local,
+        "returns-null-when-the-new-period-overlaps",
+      )
 
       const repository = new FamilyCareLeaveRepository(context)
 
@@ -211,7 +254,10 @@ describe("FamilyCareLeaveRepository", () => {
     })
 
     test("succeeds when only the leave itself overlaps (self-exclusion)", async () => {
-      const { context } = await createTestContext()
+      const { context } = await createLocalD1Context(
+        local,
+        "succeeds-when-only-the-leave-itself-overlaps",
+      )
 
       const repository = new FamilyCareLeaveRepository(context)
 
@@ -260,7 +306,10 @@ describe("FamilyCareLeaveRepository", () => {
     })
 
     test("returns null when the target row is not in requested status", async () => {
-      const { context } = await createTestContext()
+      const { context } = await createLocalD1Context(
+        local,
+        "returns-null-when-the-target-row-is-not-in",
+      )
 
       const repository = new FamilyCareLeaveRepository(context)
 

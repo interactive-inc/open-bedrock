@@ -3,9 +3,31 @@ import { TrainingCourse } from "@/contexts/training/domain/entities/training-cou
 import { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
 import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
 import { TrainingEnrollmentRepository } from "@/contexts/training/infrastructure/repositories/training-enrollment.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import type { Context } from "@/env"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: [
+      "create-then-findbyid-round-trips-the",
+      "create-returns-course-archived-when-course-is",
+      "completeenrollment-persists-the-completion",
+      "delete-returns-null-for-completed-enrollment",
+      "findbycourseandemployee-returns-null-when-none",
+    ],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 /** テスト用のアクティブなコースを作成してそのIDを返す。 */
 async function seedActiveCourse(context: Context) {
@@ -28,7 +50,7 @@ async function seedActiveCourse(context: Context) {
 
 describe("TrainingEnrollmentRepository", () => {
   test("create then findById round-trips the enrollment", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(local, "create-then-findbyid-round-trips-the")
 
     const courseId = await seedActiveCourse(context)
 
@@ -70,7 +92,10 @@ describe("TrainingEnrollmentRepository", () => {
   })
 
   test("create returns course_archived when course is archived", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "create-returns-course-archived-when-course-is",
+    )
 
     const courseRepo = new TrainingCourseRepository(context)
     const course = await courseRepo.create(
@@ -101,7 +126,10 @@ describe("TrainingEnrollmentRepository", () => {
   })
 
   test("completeEnrollment persists the completion", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "completeenrollment-persists-the-completion",
+    )
 
     const courseId = await seedActiveCourse(context)
 
@@ -142,7 +170,10 @@ describe("TrainingEnrollmentRepository", () => {
   })
 
   test("delete returns null for completed enrollment", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "delete-returns-null-for-completed-enrollment",
+    )
 
     const courseId = await seedActiveCourse(context)
 
@@ -168,7 +199,10 @@ describe("TrainingEnrollmentRepository", () => {
   })
 
   test("findByCourseAndEmployee returns null when none matches", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "findbycourseandemployee-returns-null-when-none",
+    )
 
     const repository = new TrainingEnrollmentRepository(context)
 

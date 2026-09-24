@@ -1,13 +1,36 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { ReviewForm } from "@/contexts/performance-review/domain/entities/review-form.entity"
 import { ReviewFormRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-form.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import { seedD1 } from "@tests/api/support/seed-d1"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: [
+      "findbyid-returns-the-seeded-review-form",
+      "update-persists-the-submission",
+      "update-returns-null-when-the-form-is-already",
+    ],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 describe("ReviewFormRepository", () => {
   test("findById returns the seeded review form", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(
+      local,
+      "findbyid-returns-the-seeded-review-form",
+    )
 
     await seedD1(db, "review_forms", [
       {
@@ -38,7 +61,7 @@ describe("ReviewFormRepository", () => {
   })
 
   test("update persists the submission", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(local, "update-persists-the-submission")
 
     await seedD1(db, "review_cycles", [
       { id: 1, title: "2026-H1", period: "2026-H1", status: "open", due_date: null },
@@ -81,7 +104,10 @@ describe("ReviewFormRepository", () => {
   })
 
   test("update returns null when the form is already submitted", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(
+      local,
+      "update-returns-null-when-the-form-is-already",
+    )
 
     await seedD1(db, "review_forms", [
       {

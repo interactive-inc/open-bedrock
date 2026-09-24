@@ -1,11 +1,30 @@
 import { ShiftPattern } from "@/contexts/shift/domain/entities/shift-pattern.entity"
 import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/repositories/shift-pattern.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: ["create-then-findbycode-round-trips-the-shift"],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 describe("ShiftPatternRepository", () => {
   test("create then findByCode round-trips the shift pattern", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "create-then-findbycode-round-trips-the-shift",
+    )
 
     const repository = new ShiftPatternRepository(context)
 

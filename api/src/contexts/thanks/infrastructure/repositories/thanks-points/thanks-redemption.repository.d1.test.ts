@@ -17,7 +17,7 @@ import { ConflictError } from "@/lib/errors"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
 import { makeTestSession } from "@tests/api/support/make-test-session"
 import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
-import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
 import { eq } from "drizzle-orm"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 
@@ -27,7 +27,17 @@ let local: LocalD1
 setDefaultTimeout(30_000)
 
 beforeAll(async () => {
-  local = await startLocalD1({ migrated: ["lifecycle", "stock-race", "balance-race"] })
+  local = await startLocalD1({
+    migrated: [
+      "lifecycle",
+      "stock-race",
+      "balance-race",
+      "creates-a-pending-redemption-when-balance-and-st",
+      "rejects-with-out-of-stock-when-the-reward-stock",
+      "treats-null-stock-as-unlimited",
+      "rejects-with-insufficient-balance-when-the-balan",
+    ],
+  })
 })
 
 afterAll(async () => {
@@ -219,5 +229,102 @@ describe("thanks redemption SQL on local D1", () => {
     )
 
     expect(inserted).toEqual({ reason: "reward_inactive" })
+  })
+})
+
+describe("ThanksRedemptionRepository.createIfSufficientBalance", () => {
+  test("creates a pending redemption when balance and stock are sufficient", async () => {
+    const { context } = await createLocalD1Context(
+      local,
+      "creates-a-pending-redemption-when-balance-and-st",
+    )
+
+    await seedBalance(context, toWorkforceEmployeeId(5), 100)
+
+    const rewardId = await seedReward(context, { pointCost: 50, stock: 1 })
+
+    const repository = new ThanksRedemptionRepository(context)
+
+    const created = await repository.createIfSufficientBalance(
+      ThanksRedemption.create({
+        employeeId: toWorkforceEmployeeId(5),
+        rewardId,
+        pointCost: 50,
+        createdAt: "2026-01-02T00:00:00.000Z",
+      }),
+    )
+
+    expect(created).toBeInstanceOf(ThanksRedemption)
+  })
+
+  // 在庫チェックは service の事前 SELECT だけでなく INSERT の WHERE にも畳み込まれている（TOCTOU 対策）。
+  // 事前チェックを通過した後に在庫が 0 になった競合状況を、リポジトリ直叩きで再現する。
+  test("rejects with out_of_stock when the reward stock is zero at INSERT time", async () => {
+    const { context } = await createLocalD1Context(
+      local,
+      "rejects-with-out-of-stock-when-the-reward-stock",
+    )
+
+    await seedBalance(context, toWorkforceEmployeeId(5), 100)
+
+    const rewardId = await seedReward(context, { pointCost: 50, stock: 0 })
+
+    const repository = new ThanksRedemptionRepository(context)
+
+    const created = await repository.createIfSufficientBalance(
+      ThanksRedemption.create({
+        employeeId: toWorkforceEmployeeId(5),
+        rewardId,
+        pointCost: 50,
+        createdAt: "2026-01-02T00:00:00.000Z",
+      }),
+    )
+
+    expect(created).toEqual({ reason: "out_of_stock" })
+  })
+
+  test("treats null stock as unlimited", async () => {
+    const { context } = await createLocalD1Context(local, "treats-null-stock-as-unlimited")
+
+    await seedBalance(context, toWorkforceEmployeeId(5), 100)
+
+    const rewardId = await seedReward(context, { pointCost: 50, stock: null })
+
+    const repository = new ThanksRedemptionRepository(context)
+
+    const created = await repository.createIfSufficientBalance(
+      ThanksRedemption.create({
+        employeeId: toWorkforceEmployeeId(5),
+        rewardId,
+        pointCost: 50,
+        createdAt: "2026-01-02T00:00:00.000Z",
+      }),
+    )
+
+    expect(created).toBeInstanceOf(ThanksRedemption)
+  })
+
+  test("rejects with insufficient_balance when the balance is short", async () => {
+    const { context } = await createLocalD1Context(
+      local,
+      "rejects-with-insufficient-balance-when-the-balan",
+    )
+
+    await seedBalance(context, toWorkforceEmployeeId(5), 30)
+
+    const rewardId = await seedReward(context, { pointCost: 50, stock: 1 })
+
+    const repository = new ThanksRedemptionRepository(context)
+
+    const created = await repository.createIfSufficientBalance(
+      ThanksRedemption.create({
+        employeeId: toWorkforceEmployeeId(5),
+        rewardId,
+        pointCost: 50,
+        createdAt: "2026-01-02T00:00:00.000Z",
+      }),
+    )
+
+    expect(created).toEqual({ reason: "insufficient_balance" })
   })
 })

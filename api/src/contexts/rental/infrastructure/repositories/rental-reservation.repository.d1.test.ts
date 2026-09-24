@@ -1,13 +1,50 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { RentalReservation } from "@/contexts/rental/domain/entities/rental-reservation.entity"
 import { RentalReservationRepository } from "@/contexts/rental/infrastructure/repositories/rental-reservation.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import { seedD1 } from "@tests/api/support/seed-d1"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: [
+      "create-then-findbyid-round-trips-the",
+      "findbyid-returns-null-for-an-unknown-id",
+      "findbyrequesterid-returns-only-the-requester",
+      "findbyrequesterid-returns-empty-array-when-no",
+      "update-succeeds-when-status-is-requested",
+      "update-returns-null-when-status-is-not",
+      "delete-removes-the-reservation-when-status-is",
+      "delete-does-not-remove-when-status-is-not",
+      "create-preserves-null-purpose",
+      "findoverlapping-returns-reservations-with-same",
+      "findoverlapping-excludes-the-reservation-by",
+      "findoverlapping-returns-empty-when-different",
+      "createifnooverlap-creates-the-reservation-when",
+      "createifnooverlap-returns-null-when-an",
+      "createifnooverlap-succeeds-for-the-same-period",
+      "createifnooverlap-ignores-non-requested",
+      "createifnooverlap-treats-touching-boundaries",
+      "updateifnooverlap-returns-null-when-it",
+      "updateifnooverlap-succeeds-when-only-the",
+      "updateifnooverlap-returns-null-when-the-row",
+    ],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 describe("RentalReservationRepository", () => {
   test("create then findById round-trips the reservation", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(local, "create-then-findbyid-round-trips-the")
 
     const repository = new RentalReservationRepository(context)
 
@@ -50,7 +87,7 @@ describe("RentalReservationRepository", () => {
   })
 
   test("findById returns null for an unknown id", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(local, "findbyid-returns-null-for-an-unknown-id")
 
     const repository = new RentalReservationRepository(context)
 
@@ -60,7 +97,10 @@ describe("RentalReservationRepository", () => {
   })
 
   test("findByRequesterId returns only the requester's reservations", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "findbyrequesterid-returns-only-the-requester",
+    )
 
     const repository = new RentalReservationRepository(context)
 
@@ -121,7 +161,10 @@ describe("RentalReservationRepository", () => {
   })
 
   test("findByRequesterId returns empty array when no reservations exist", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "findbyrequesterid-returns-empty-array-when-no",
+    )
 
     const repository = new RentalReservationRepository(context)
 
@@ -139,7 +182,10 @@ describe("RentalReservationRepository", () => {
   })
 
   test("update succeeds when status is requested", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "update-succeeds-when-status-is-requested",
+    )
 
     const repository = new RentalReservationRepository(context)
 
@@ -186,7 +232,10 @@ describe("RentalReservationRepository", () => {
   })
 
   test("update returns null when status is not requested", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(
+      local,
+      "update-returns-null-when-status-is-not",
+    )
 
     await seedD1(db, "rental_reservations", [
       {
@@ -220,7 +269,10 @@ describe("RentalReservationRepository", () => {
   })
 
   test("delete removes the reservation when status is requested", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "delete-removes-the-reservation-when-status-is",
+    )
 
     const repository = new RentalReservationRepository(context)
 
@@ -249,7 +301,10 @@ describe("RentalReservationRepository", () => {
   })
 
   test("delete does not remove when status is not requested", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(
+      local,
+      "delete-does-not-remove-when-status-is-not",
+    )
 
     await seedD1(db, "rental_reservations", [
       {
@@ -279,7 +334,7 @@ describe("RentalReservationRepository", () => {
   })
 
   test("create preserves null purpose", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(local, "create-preserves-null-purpose")
 
     const repository = new RentalReservationRepository(context)
 
@@ -312,7 +367,10 @@ describe("RentalReservationRepository", () => {
   })
 
   test("findOverlapping returns reservations with same itemName and overlapping dates", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "findoverlapping-returns-reservations-with-same",
+    )
 
     const repository = new RentalReservationRepository(context)
 
@@ -346,7 +404,10 @@ describe("RentalReservationRepository", () => {
   })
 
   test("findOverlapping excludes the reservation by excludeId", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "findoverlapping-excludes-the-reservation-by",
+    )
 
     const repository = new RentalReservationRepository(context)
 
@@ -380,7 +441,10 @@ describe("RentalReservationRepository", () => {
   })
 
   test("findOverlapping returns empty when different itemName", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "findoverlapping-returns-empty-when-different",
+    )
 
     const repository = new RentalReservationRepository(context)
 
@@ -413,7 +477,10 @@ describe("RentalReservationRepository", () => {
   })
 
   test("createIfNoOverlap creates the reservation when no overlap exists", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "createifnooverlap-creates-the-reservation-when",
+    )
 
     const repository = new RentalReservationRepository(context)
 
@@ -444,7 +511,7 @@ describe("RentalReservationRepository", () => {
   })
 
   test("createIfNoOverlap returns null when an overlapping requested reservation exists", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(local, "createifnooverlap-returns-null-when-an")
 
     const repository = new RentalReservationRepository(context)
 
@@ -486,7 +553,10 @@ describe("RentalReservationRepository", () => {
   })
 
   test("createIfNoOverlap succeeds for the same period when itemName differs", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "createifnooverlap-succeeds-for-the-same-period",
+    )
 
     const repository = new RentalReservationRepository(context)
 
@@ -524,7 +594,10 @@ describe("RentalReservationRepository", () => {
   })
 
   test("createIfNoOverlap ignores non-requested existing rows", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(
+      local,
+      "createifnooverlap-ignores-non-requested",
+    )
 
     await seedD1(db, "rental_reservations", [
       {
@@ -560,7 +633,10 @@ describe("RentalReservationRepository", () => {
   })
 
   test("createIfNoOverlap treats touching boundaries as overlap (inclusive)", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "createifnooverlap-treats-touching-boundaries",
+    )
 
     const repository = new RentalReservationRepository(context)
 
@@ -599,7 +675,7 @@ describe("RentalReservationRepository", () => {
   })
 
   test("updateIfNoOverlap returns null when it overlaps another reservation", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(local, "updateifnooverlap-returns-null-when-it")
 
     const repository = new RentalReservationRepository(context)
 
@@ -645,7 +721,10 @@ describe("RentalReservationRepository", () => {
   })
 
   test("updateIfNoOverlap succeeds when only the reservation itself overlaps", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "updateifnooverlap-succeeds-when-only-the",
+    )
 
     const repository = new RentalReservationRepository(context)
 
@@ -688,7 +767,10 @@ describe("RentalReservationRepository", () => {
   })
 
   test("updateIfNoOverlap returns null when the row status is not requested", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(
+      local,
+      "updateifnooverlap-returns-null-when-the-row",
+    )
 
     await seedD1(db, "rental_reservations", [
       {

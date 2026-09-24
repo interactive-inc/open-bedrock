@@ -1,13 +1,36 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { LeaveBalanceRepository } from "@/contexts/leave/infrastructure/repositories/leave-balance.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import { seedD1 } from "@tests/api/support/seed-d1"
 import { LeaveBalance } from "@/contexts/leave/domain/entities/leave-balance.entity"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: [
+      "findbykey-returns-the-seeded-balance",
+      "consumedays-atomically-decrements-the-balance",
+      "consumedays-returns-insufficient-when",
+    ],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 describe("LeaveBalanceRepository", () => {
   test("findByKey returns the seeded balance", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(
+      local,
+      "findbykey-returns-the-seeded-balance",
+    )
 
     await seedD1(db, "leave_balances", [
       {
@@ -39,7 +62,10 @@ describe("LeaveBalanceRepository", () => {
   })
 
   test("consumeDays atomically decrements the balance", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(
+      local,
+      "consumedays-atomically-decrements-the-balance",
+    )
 
     await seedD1(db, "leave_balances", [
       {
@@ -78,7 +104,10 @@ describe("LeaveBalanceRepository", () => {
   })
 
   test("consumeDays returns insufficient when remaining_days < days", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(
+      local,
+      "consumedays-returns-insufficient-when",
+    )
 
     await seedD1(db, "leave_balances", [
       {

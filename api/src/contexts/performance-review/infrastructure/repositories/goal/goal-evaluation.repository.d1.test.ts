@@ -1,13 +1,32 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { GoalEvaluation } from "@/contexts/performance-review/domain/entities/goal-evaluation.entity"
 import { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal-evaluation.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import { seedD1 } from "@tests/api/support/seed-d1"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: ["create-persists-the-evaluation-and-assigns-an"],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 describe("GoalEvaluationRepository", () => {
   test("create persists the evaluation and assigns an id", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(
+      local,
+      "create-persists-the-evaluation-and-assigns-an",
+    )
 
     await seedD1(db, "performance_goals", [
       {
