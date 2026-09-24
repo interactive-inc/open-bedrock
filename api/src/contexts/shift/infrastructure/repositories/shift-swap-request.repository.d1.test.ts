@@ -1,8 +1,28 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { ShiftSwapRequest } from "@/contexts/shift/domain/entities/shift-swap-request.entity"
 import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/repositories/shift-swap-request.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: [
+      "create-then-findbyid-round-trips-the-swap",
+      "create-returns-null-when-a-pending-request",
+      "create-allows-a-new-request-after-the-previous",
+    ],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 function createSwapRequest(props: Parameters<typeof ShiftSwapRequest.create>[0]): ShiftSwapRequest {
   const result = ShiftSwapRequest.create(props)
@@ -12,7 +32,10 @@ function createSwapRequest(props: Parameters<typeof ShiftSwapRequest.create>[0])
 
 describe("ShiftSwapRequestRepository", () => {
   test("create then findById round-trips the swap request", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "create-then-findbyid-round-trips-the-swap",
+    )
 
     const repository = new ShiftSwapRequestRepository(context)
 
@@ -48,7 +71,10 @@ describe("ShiftSwapRequestRepository", () => {
   })
 
   test("create returns null when a pending request already exists for the same pair and date", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "create-returns-null-when-a-pending-request",
+    )
 
     const repository = new ShiftSwapRequestRepository(context)
 
@@ -76,7 +102,10 @@ describe("ShiftSwapRequestRepository", () => {
   })
 
   test("create allows a new request after the previous one is no longer pending", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "create-allows-a-new-request-after-the-previous",
+    )
 
     const repository = new ShiftSwapRequestRepository(context)
 

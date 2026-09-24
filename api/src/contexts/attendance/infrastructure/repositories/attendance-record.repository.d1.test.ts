@@ -4,7 +4,7 @@ import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendan
 import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/repositories/attendance-record.repository"
 import { UniqueConstraintError } from "@/lib/d1/errors"
 import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
-import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
 
 let local: LocalD1
 
@@ -12,7 +12,9 @@ let local: LocalD1
 setDefaultTimeout(60_000)
 
 beforeAll(async () => {
-  local = await startLocalD1({ migrated: ["open-close"] })
+  local = await startLocalD1({
+    migrated: ["open-close", "create-then-findopenbyemployeeid-round-trips"],
+  })
 })
 
 afterAll(async () => {
@@ -64,5 +66,41 @@ describe("AttendanceRecordRepository on local D1", () => {
     const next = await repository.create(openRecord(1, "2026-03-16T09:00:00.000Z"))
 
     expect(next).toBeInstanceOf(AttendanceRecord)
+  })
+})
+
+describe("AttendanceRecordRepository", () => {
+  test("create then findOpenByEmployeeId round-trips the record", async () => {
+    const { context } = await createLocalD1Context(
+      local,
+      "create-then-findopenbyemployeeid-round-trips",
+    )
+
+    const repository = new AttendanceRecordRepository(context)
+
+    const created = await repository.create(
+      AttendanceRecord.create({
+        employeeId: toWorkforceEmployeeId(1),
+        clockInAt: "2026-01-01T09:00:00.000Z",
+        note: "出勤",
+      }),
+    )
+
+    expect(created).toBeInstanceOf(AttendanceRecord)
+
+    if (created instanceof Error || created.id === null) {
+      throw new Error("create failed")
+    }
+
+    const found = await repository.findOpenByEmployeeId(toWorkforceEmployeeId(1))
+
+    expect(found).toBeInstanceOf(AttendanceRecord)
+
+    if (found instanceof Error || found === null) {
+      throw new Error("findOpenByEmployeeId failed")
+    }
+
+    expect(found.id).toBe(created.id)
+    expect(found.status).toBe("open")
   })
 })

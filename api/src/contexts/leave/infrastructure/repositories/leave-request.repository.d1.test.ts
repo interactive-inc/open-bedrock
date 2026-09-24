@@ -2,12 +2,36 @@ import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
 import { LeaveRequestRepository } from "@/contexts/leave/infrastructure/repositories/leave-request.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: [
+      "round-trip",
+      "overlap-same-employee",
+      "overlap-exclude-id",
+      "overlap-ignores-rejected",
+      "overlap-other-employee",
+      "overlap-shared-boundary",
+      "overlap-adjacent-period",
+    ],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 describe("LeaveRequestRepository", () => {
   test("create then findById round-trips the leave request", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(local, "round-trip")
 
     const repository = new LeaveRequestRepository(context)
 
@@ -47,11 +71,12 @@ describe("LeaveRequestRepository", () => {
   describe("findOverlapping", () => {
     /** pending 申請を 1 件作成し、その repository（同一 DB）と採番 id を返す。 */
     async function createPending(props: {
+      database: string
       employeeId: EmployeeId
       startDate: string
       endDate: string
     }): Promise<{ repository: LeaveRequestRepository; id: number; db: D1Database }> {
-      const { context, db } = await createTestContext()
+      const { context, db } = await createLocalD1Context(local, props.database)
 
       const repository = new LeaveRequestRepository(context)
 
@@ -79,6 +104,7 @@ describe("LeaveRequestRepository", () => {
 
     test("matches an overlapping pending request for the same employee", async () => {
       const created = await createPending({
+        database: "overlap-same-employee",
         employeeId: toWorkforceEmployeeId(1),
         startDate: "2026-02-01",
         endDate: "2026-02-05",
@@ -99,6 +125,7 @@ describe("LeaveRequestRepository", () => {
 
     test("excludes the request identified by excludeId", async () => {
       const created = await createPending({
+        database: "overlap-exclude-id",
         employeeId: toWorkforceEmployeeId(1),
         startDate: "2026-02-01",
         endDate: "2026-02-05",
@@ -119,7 +146,7 @@ describe("LeaveRequestRepository", () => {
     })
 
     test("ignores rejected requests", async () => {
-      const { context, db } = await createTestContext()
+      const { context, db } = await createLocalD1Context(local, "overlap-ignores-rejected")
       const repository = new LeaveRequestRepository(context)
       await db
         .prepare(`INSERT INTO leave_requests
@@ -143,6 +170,7 @@ describe("LeaveRequestRepository", () => {
 
     test("ignores other employees' requests", async () => {
       const created = await createPending({
+        database: "overlap-other-employee",
         employeeId: toWorkforceEmployeeId(10),
         startDate: "2026-02-01",
         endDate: "2026-02-05",
@@ -163,6 +191,7 @@ describe("LeaveRequestRepository", () => {
 
     test("treats a shared boundary date as an overlap", async () => {
       const created = await createPending({
+        database: "overlap-shared-boundary",
         employeeId: toWorkforceEmployeeId(1),
         startDate: "2026-02-01",
         endDate: "2026-02-03",
@@ -183,6 +212,7 @@ describe("LeaveRequestRepository", () => {
 
     test("does not match an adjacent (non-overlapping) period", async () => {
       const created = await createPending({
+        database: "overlap-adjacent-period",
         employeeId: toWorkforceEmployeeId(1),
         startDate: "2026-02-01",
         endDate: "2026-02-03",

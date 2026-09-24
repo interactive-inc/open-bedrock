@@ -1,12 +1,28 @@
-import { expect, test } from "bun:test"
-import { createTestContext } from "@tests/api/support/create-test-context"
+import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"
 import { zApplicationWorkflow } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 import { validateApplicationWorkflowReferences } from "@/api/http/procedure-workflows/validate-application-workflow-references"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: ["legacy-approvers", "legacy-escalation_approvers", "governance-authority"],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 test.each(["approvers", "escalation_approvers"])(
   "旧責務指定を新しい定義へ保存できない: %s",
   async (field) => {
-    const fixture = await createTestContext()
+    const fixture = await createLocalD1Context(local, `legacy-${field}`)
     const workflow = zApplicationWorkflow.parse({
       version: 1,
       steps: [
@@ -31,7 +47,7 @@ test.each(["approvers", "escalation_approvers"])(
 )
 
 test("公開責務による定義は発行できる", async () => {
-  const fixture = await createTestContext()
+  const fixture = await createLocalD1Context(local, "governance-authority")
   const workflow = zApplicationWorkflow.parse({
     version: 1,
     steps: [

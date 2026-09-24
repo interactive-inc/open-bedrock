@@ -1,12 +1,35 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
 import { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: [
+      "create-then-findbyid-round-trips-the-goal",
+      "update-persists-the-status-change",
+      "findbyid-returns-null-for-an-unknown-id",
+    ],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 describe("GoalRepository", () => {
   test("create then findById round-trips the goal", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "create-then-findbyid-round-trips-the-goal",
+    )
 
     const repository = new GoalRepository(context)
 
@@ -39,7 +62,7 @@ describe("GoalRepository", () => {
   })
 
   test("update persists the status change", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(local, "update-persists-the-status-change")
 
     const repository = new GoalRepository(context)
 
@@ -69,7 +92,7 @@ describe("GoalRepository", () => {
   })
 
   test("findById returns null for an unknown id", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(local, "findbyid-returns-null-for-an-unknown-id")
 
     const repository = new GoalRepository(context)
 

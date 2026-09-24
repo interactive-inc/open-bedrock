@@ -6,7 +6,8 @@ import { OnboardingAssignmentRepository } from "@/contexts/onboarding/infrastruc
 import { OnboardingTemplateRepository } from "@/contexts/onboarding/infrastructure/repositories/onboarding-template.repository"
 import { UniqueConstraintError } from "@/lib/d1/errors"
 import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
-import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+import { seedD1 } from "@tests/api/support/seed-d1"
 
 let local: LocalD1
 
@@ -14,7 +15,14 @@ let local: LocalD1
 setDefaultTimeout(30_000)
 
 beforeAll(async () => {
-  local = await startLocalD1({ migrated: ["bound", "in-use"] })
+  local = await startLocalD1({
+    migrated: [
+      "bound",
+      "in-use",
+      "findbycode-returns-a-seeded-template-with-its",
+      "findbycode-returns-null-for-an-unknown-code",
+    ],
+  })
 })
 
 afterAll(async () => {
@@ -96,5 +104,61 @@ describe("OnboardingTemplateRepository on local D1", () => {
     expect(await assignments.countActiveByTemplateCode("join-default")).toBe(0)
     expect(await repository.delete(created)).toBe(true)
     expect(await repository.findByCode("join-default")).toBeNull()
+  })
+})
+
+describe("OnboardingTemplateRepository", () => {
+  test("findByCode returns a seeded template with its tasks", async () => {
+    const { context, db } = await createLocalD1Context(
+      local,
+      "findbycode-returns-a-seeded-template-with-its",
+    )
+
+    await seedD1(db, "onboarding_templates", [
+      {
+        id: 1,
+        code: "join-default",
+        name: "入社手続き",
+        kind: "join",
+        description: null,
+      },
+    ])
+
+    await seedD1(db, "onboarding_template_tasks", [
+      {
+        template_code: "join-default",
+        code: "account",
+        title: "アカウント発行",
+        sort_order: 1,
+        owner_role: null,
+      },
+    ])
+
+    const repository = new OnboardingTemplateRepository(context)
+
+    const found = await repository.findByCode("join-default")
+
+    expect(found).toBeInstanceOf(OnboardingTemplate)
+
+    if (found instanceof Error || found === null) {
+      throw new Error("findByCode failed")
+    }
+
+    expect(found.code).toBe("join-default")
+    expect(found.tasks.length).toBe(1)
+    expect(found.tasks[0]?.code).toBe("account")
+  })
+
+  test("findByCode returns null for an unknown code", async () => {
+    const { context } = await createLocalD1Context(
+      local,
+      "findbycode-returns-null-for-an-unknown-code",
+    )
+
+    const repository = new OnboardingTemplateRepository(context)
+
+    const found = await repository.findByCode("unknown")
+
+    expect(found).toBeNull()
   })
 })

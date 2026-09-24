@@ -1,11 +1,30 @@
 import { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
 import { ReviewCycleRepository } from "@/contexts/performance-review/infrastructure/repositories/review/review-cycle.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: ["create-then-findbyid-round-trips-the-review", "findmany-respects-limit-and-offset"],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 describe("ReviewCycleRepository", () => {
   test("create then findById round-trips the review cycle", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "create-then-findbyid-round-trips-the-review",
+    )
 
     const repository = new ReviewCycleRepository(context)
 
@@ -36,7 +55,7 @@ describe("ReviewCycleRepository", () => {
   })
 
   test("findMany respects limit and offset", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(local, "findmany-respects-limit-and-offset")
 
     const repository = new ReviewCycleRepository(context)
 

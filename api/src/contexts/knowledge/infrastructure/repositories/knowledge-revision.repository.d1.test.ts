@@ -1,12 +1,32 @@
 import { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
 import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
-import { expect, test } from "bun:test"
-import { createTestContext } from "@tests/api/support/create-test-context"
+import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"
 import { KnowledgeArticleRepository } from "@/contexts/knowledge/infrastructure/repositories/knowledge-article.repository"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: [
+      "knowledge-revision-append-preserves-replay",
+      "knowledge-creation-saves-its-first-revision",
+      "concurrent-knowledge-creation-preserves",
+    ],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 test("knowledge revision append preserves replay, rejects stale edits and rolls back an audit failure", async () => {
-  const f = await createTestContext()
+  const f = await createLocalD1Context(local, "knowledge-revision-append-preserves-replay")
   await seedIamForEmployees(f.db)
   await f.db
     .prepare(`INSERT INTO knowledge_articles (id,title,category,tags,body_md,author_id,created_at)
@@ -49,8 +69,10 @@ test("knowledge revision append preserves replay, rejects stale edits and rolls 
     await f.db.prepare("SELECT count(*) AS n FROM knowledge_article_revisions").first<number>("n"),
   ).toBe(1)
   const withdrawn = updated.withdraw()
-  await f.db.exec(`CREATE TRIGGER reject_knowledge_audit BEFORE INSERT ON system_audit_events
+  await f.db
+    .prepare(`CREATE TRIGGER reject_knowledge_audit BEFORE INSERT ON system_audit_events
     WHEN NEW.action='knowledge.withdraw' BEGIN SELECT RAISE(ABORT,'audit unavailable'); END;`)
+    .run()
   const withdrawal = {
     ...input,
     expectedRevision: 2,
@@ -65,8 +87,10 @@ test("knowledge revision append preserves replay, rejects stale edits and rolls 
     await f.db.prepare("SELECT count(*) AS n FROM knowledge_article_revisions").first<number>("n"),
   ).toBe(1)
   await f.db.exec("DROP TRIGGER reject_knowledge_audit")
-  await f.db.exec(`CREATE TRIGGER corrupt_knowledge_after_audit AFTER INSERT ON system_audit_events
+  await f.db
+    .prepare(`CREATE TRIGGER corrupt_knowledge_after_audit AFTER INSERT ON system_audit_events
     WHEN NEW.action='knowledge.withdraw' BEGIN UPDATE knowledge_articles SET body_md='Corrupted' WHERE id=1; END;`)
+    .run()
   expect(await repository.appendRevision(withdrawn, withdrawal)).toBeInstanceOf(Error)
   expect(
     await f.db
@@ -95,7 +119,7 @@ test("knowledge revision append preserves replay, rejects stale edits and rolls 
 })
 
 test("knowledge creation saves its first revision and audit atomically and preserves retry identity", async () => {
-  const fixture = await createTestContext()
+  const fixture = await createLocalD1Context(local, "knowledge-creation-saves-its-first-revision")
   await seedIamForEmployees(fixture.db)
   const repository = new KnowledgeArticleRepository(fixture.context)
   const article = KnowledgeArticle.create({
@@ -148,7 +172,7 @@ test("knowledge creation saves its first revision and audit atomically and prese
 })
 
 test("concurrent knowledge creation preserves separate commands and deduplicates the same command", async () => {
-  const fixture = await createTestContext()
+  const fixture = await createLocalD1Context(local, "concurrent-knowledge-creation-preserves")
   await seedIamForEmployees(fixture.db)
   const repository = new KnowledgeArticleRepository(fixture.context)
   const article = KnowledgeArticle.create({

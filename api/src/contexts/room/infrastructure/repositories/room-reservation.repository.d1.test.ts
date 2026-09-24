@@ -1,8 +1,30 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { RoomReservation } from "@/contexts/room/domain/entities/room-reservation.entity"
 import { RoomReservationRepository } from "@/contexts/room/infrastructure/repositories/room-reservation.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: [
+      "createifnooverlap-succeeds-when-no-overlapping",
+      "createifnooverlap-returns-null-when",
+      "updateifnooverlap-succeeds-when-no-overlapping",
+      "updateifnooverlap-returns-null-when",
+      "create-then-findoverlapping-returns-the-saved",
+    ],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 function createReservation(props: Parameters<typeof RoomReservation.create>[0]): RoomReservation {
   const result = RoomReservation.create(props)
@@ -12,7 +34,10 @@ function createReservation(props: Parameters<typeof RoomReservation.create>[0]):
 
 describe("RoomReservationRepository", () => {
   test("createIfNoOverlap succeeds when no overlapping reservation exists", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "createifnooverlap-succeeds-when-no-overlapping",
+    )
 
     const repository = new RoomReservationRepository(context)
 
@@ -37,7 +62,7 @@ describe("RoomReservationRepository", () => {
   })
 
   test("createIfNoOverlap returns null when overlapping reservation exists", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(local, "createifnooverlap-returns-null-when")
 
     const repository = new RoomReservationRepository(context)
 
@@ -69,7 +94,10 @@ describe("RoomReservationRepository", () => {
   })
 
   test("updateIfNoOverlap succeeds when no overlapping reservation exists", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "updateifnooverlap-succeeds-when-no-overlapping",
+    )
 
     const repository = new RoomReservationRepository(context)
 
@@ -109,7 +137,7 @@ describe("RoomReservationRepository", () => {
   })
 
   test("updateIfNoOverlap returns null when overlapping reservation exists", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(local, "updateifnooverlap-returns-null-when")
 
     const repository = new RoomReservationRepository(context)
 
@@ -154,7 +182,10 @@ describe("RoomReservationRepository", () => {
   })
 
   test("create then findOverlapping returns the saved reservation", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "create-then-findoverlapping-returns-the-saved",
+    )
 
     const repository = new RoomReservationRepository(context)
 

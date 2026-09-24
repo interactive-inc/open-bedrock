@@ -1,12 +1,28 @@
 import { Skill } from "@/contexts/skill/domain/entities/skill.entity"
 import { SkillRepository } from "@/contexts/skill/infrastructure/repositories/skill.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import { seedD1 } from "@tests/api/support/seed-d1"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: ["findbycode-returns-the-seeded-skill"],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 describe("SkillRepository", () => {
   test("findByCode returns the seeded skill", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(local, "findbycode-returns-the-seeded-skill")
 
     await seedD1(db, "skill_definitions", [
       {

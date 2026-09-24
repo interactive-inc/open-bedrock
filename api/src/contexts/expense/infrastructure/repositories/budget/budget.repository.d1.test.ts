@@ -1,10 +1,32 @@
 import { Budget } from "@/contexts/expense/domain/entities/budget.entity"
 import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
 import { BudgetRepository } from "@/contexts/expense/infrastructure/repositories/budget/budget.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import { seedD1 } from "@tests/api/support/seed-d1"
 import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: [
+      "create-then-findbyid-round-trips-the-budget",
+      "update-persists-amount-name-and-note-without",
+      "delete-removes-the-budget-and-returns-null",
+      "sumapprovedexpenses-sums-only-approved",
+      "sumapprovedexpenses-returns-0-when-nothing",
+    ],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 function budget(props: {
   organizationUnitCode: string
@@ -25,7 +47,11 @@ function budget(props: {
 
 describe("BudgetRepository", () => {
   test("create then findById round-trips the budget", async () => {
-    const { context } = await createTestContext({ withCompanyOrganization: true })
+    const { context } = await createLocalD1Context(
+      local,
+      "create-then-findbyid-round-trips-the-budget",
+      { withCompanyOrganization: true },
+    )
 
     const repository = new BudgetRepository(context)
 
@@ -50,7 +76,11 @@ describe("BudgetRepository", () => {
   })
 
   test("update persists amount, name and note without touching department or period", async () => {
-    const { context } = await createTestContext({ withCompanyOrganization: true })
+    const { context } = await createLocalD1Context(
+      local,
+      "update-persists-amount-name-and-note-without",
+      { withCompanyOrganization: true },
+    )
 
     const repository = new BudgetRepository(context)
 
@@ -78,7 +108,11 @@ describe("BudgetRepository", () => {
   })
 
   test("delete removes the budget and returns null when missing", async () => {
-    const { context } = await createTestContext({ withCompanyOrganization: true })
+    const { context } = await createLocalD1Context(
+      local,
+      "delete-removes-the-budget-and-returns-null",
+      { withCompanyOrganization: true },
+    )
 
     const repository = new BudgetRepository(context)
 
@@ -95,7 +129,11 @@ describe("BudgetRepository", () => {
   })
 
   test("sumApprovedExpenses sums only approved expenses of the department within the period", async () => {
-    const { context, db } = await createTestContext({ withCompanyOrganization: true })
+    const { context, db } = await createLocalD1Context(
+      local,
+      "sumapprovedexpenses-sums-only-approved",
+      { withCompanyOrganization: true },
+    )
 
     await seedCompanyEmployees(db, [
       {
@@ -181,7 +219,11 @@ describe("BudgetRepository", () => {
   })
 
   test("sumApprovedExpenses returns 0 when nothing matches", async () => {
-    const { context } = await createTestContext({ withCompanyOrganization: true })
+    const { context } = await createLocalD1Context(
+      local,
+      "sumapprovedexpenses-returns-0-when-nothing",
+      { withCompanyOrganization: true },
+    )
 
     const repository = new BudgetRepository(context)
 

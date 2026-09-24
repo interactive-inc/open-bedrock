@@ -2,12 +2,13 @@ import { RegisterEmployee } from "@/api/http/employees/register-employee"
 import { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { ApplicationError, ForbiddenError } from "@/lib/errors"
 import type { Context } from "@/env"
-import { createTestContext } from "@tests/api/support/create-test-context"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
 import { makeTestSession } from "@tests/api/support/make-test-session"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
-import { beforeEach, describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 
 /**
  * role割当ゲートの拒否文言。ゲート通過後の登録本体はIAM roleとorganization stateの
@@ -19,10 +20,19 @@ function isRoleAssignmentRejection(result: unknown): boolean {
   return result instanceof ApplicationError && result.message === ROLE_ASSIGNMENT_REJECTION
 }
 
-let context: Context
+let local: LocalD1
 
-beforeEach(async () => {
-  context = (await createTestContext()).context
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: ["baseline-role", "non-baseline-role-rejected", "non-baseline-role-allowed"],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
 })
 
 /**
@@ -43,7 +53,9 @@ function makeRegistrarWithoutRoleAssignment(): CompanySessionValue {
   })
 }
 
-function withSession(session: CompanySessionValue): Context {
+async function contextWithSession(name: string, session: CompanySessionValue): Promise<Context> {
+  const { context } = await createLocalD1Context(local, name)
+
   return { ...context, var: { ...context.var, session: session } }
 }
 
@@ -75,7 +87,9 @@ describe("RegisterEmployee role assignment authorization", () => {
 
     expect(session.hasPermission("employee:assign_role")).toBe(false)
 
-    const result = await new RegisterEmployee(withSession(session)).execute(makeInput("member"))
+    const result = await new RegisterEmployee(
+      await contextWithSession("baseline-role", session),
+    ).execute(makeInput("member"))
 
     expect(isRoleAssignmentRejection(result)).toBe(false)
   })
@@ -83,7 +97,9 @@ describe("RegisterEmployee role assignment authorization", () => {
   test("rejects a registrar without employee:assign_role on a non-baseline role", async () => {
     const session = makeRegistrarWithoutRoleAssignment()
 
-    const result = await new RegisterEmployee(withSession(session)).execute(makeInput("manager"))
+    const result = await new RegisterEmployee(
+      await contextWithSession("non-baseline-role-rejected", session),
+    ).execute(makeInput("manager"))
 
     expect(result).toBeInstanceOf(ForbiddenError)
     expect(isRoleAssignmentRejection(result)).toBe(true)
@@ -94,7 +110,9 @@ describe("RegisterEmployee role assignment authorization", () => {
 
     expect(session.hasPermission("employee:assign_role")).toBe(true)
 
-    const result = await new RegisterEmployee(withSession(session)).execute(makeInput("manager"))
+    const result = await new RegisterEmployee(
+      await contextWithSession("non-baseline-role-allowed", session),
+    ).execute(makeInput("manager"))
 
     expect(isRoleAssignmentRejection(result)).toBe(false)
   })

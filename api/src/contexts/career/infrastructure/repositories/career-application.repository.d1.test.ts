@@ -1,8 +1,32 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { CareerApplication } from "@/contexts/career/domain/entities/career-application.entity"
 import { CareerApplicationRepository } from "@/contexts/career/infrastructure/repositories/career-application.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: [
+      "create-then-findbypostingandapplicant-round",
+      "create-returns-posting-closed-when-the-posting",
+      "findbyapplicantid-returns-the-applicant",
+      "update-changes-the-message-and-findbyid-round",
+      "update-returns-application-decided-when-status",
+      "delete-removes-the-application",
+      "delete-returns-application-decided-when-status",
+    ],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 /** テスト用: career_postings に open な公募を挿入する。 */
 async function seedOpenPosting(db: D1Database, postingId: number): Promise<void> {
@@ -13,7 +37,10 @@ async function seedOpenPosting(db: D1Database, postingId: number): Promise<void>
 
 describe("CareerApplicationRepository", () => {
   test("create then findByPostingAndApplicant round-trips the application", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(
+      local,
+      "create-then-findbypostingandapplicant-round",
+    )
     await seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)
@@ -45,7 +72,10 @@ describe("CareerApplicationRepository", () => {
   })
 
   test("create returns posting_closed when the posting is not open", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(
+      local,
+      "create-returns-posting-closed-when-the-posting",
+    )
     await db.exec(
       "INSERT INTO career_postings (id, title, status) VALUES (1, 'Closed Posting', 'closed')",
     )
@@ -71,7 +101,10 @@ describe("CareerApplicationRepository", () => {
   })
 
   test("findByApplicantId returns the applicant's applications", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(
+      local,
+      "findbyapplicantid-returns-the-applicant",
+    )
     await seedOpenPosting(db, 1)
     await seedOpenPosting(db, 2)
 
@@ -109,7 +142,10 @@ describe("CareerApplicationRepository", () => {
   })
 
   test("update changes the message and findById round-trips it", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(
+      local,
+      "update-changes-the-message-and-findbyid-round",
+    )
     await seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)
@@ -138,7 +174,10 @@ describe("CareerApplicationRepository", () => {
   })
 
   test("update returns application_decided when status is not applied", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(
+      local,
+      "update-returns-application-decided-when-status",
+    )
     await seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)
@@ -171,7 +210,7 @@ describe("CareerApplicationRepository", () => {
   })
 
   test("delete removes the application", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(local, "delete-removes-the-application")
     await seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)
@@ -196,7 +235,10 @@ describe("CareerApplicationRepository", () => {
   })
 
   test("delete returns application_decided when status is not applied", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(
+      local,
+      "delete-returns-application-decided-when-status",
+    )
     await seedOpenPosting(db, 1)
 
     const repository = new CareerApplicationRepository(context)

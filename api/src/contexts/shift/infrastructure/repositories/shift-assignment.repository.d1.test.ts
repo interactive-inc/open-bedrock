@@ -1,12 +1,37 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-assignment.entity"
 import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: [
+      "create-then-findbyid-round-trips-the-shift",
+      "markpublished-publishes-an-unpublished",
+      "markpublished-returns-null-for-an-already",
+      "update-returns-null-and-leaves-a-published",
+      "update-succeeds-for-an-unpublished-assignment",
+    ],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 describe("ShiftAssignmentRepository", () => {
   test("create then findById round-trips the shift assignment", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "create-then-findbyid-round-trips-the-shift",
+    )
 
     const repository = new ShiftAssignmentRepository(context)
 
@@ -38,7 +63,7 @@ describe("ShiftAssignmentRepository", () => {
   })
 
   test("markPublished publishes an unpublished assignment", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(local, "markpublished-publishes-an-unpublished")
 
     const repository = new ShiftAssignmentRepository(context)
 
@@ -67,7 +92,10 @@ describe("ShiftAssignmentRepository", () => {
   })
 
   test("markPublished returns null for an already published assignment", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "markpublished-returns-null-for-an-already",
+    )
 
     const repository = new ShiftAssignmentRepository(context)
 
@@ -104,7 +132,10 @@ describe("ShiftAssignmentRepository", () => {
   })
 
   test("update returns null and leaves a published assignment unchanged", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "update-returns-null-and-leaves-a-published",
+    )
 
     const repository = new ShiftAssignmentRepository(context)
 
@@ -145,7 +176,10 @@ describe("ShiftAssignmentRepository", () => {
   })
 
   test("update succeeds for an unpublished assignment and keeps publishedAt null", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(
+      local,
+      "update-succeeds-for-an-unpublished-assignment",
+    )
 
     const repository = new ShiftAssignmentRepository(context)
 

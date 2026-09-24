@@ -1,12 +1,28 @@
 import { CareerPosting } from "@/contexts/career/domain/entities/career-posting.entity"
 import { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
-import { createTestContext } from "@tests/api/support/create-test-context"
 import { seedD1 } from "@tests/api/support/seed-d1"
-import { describe, expect, test } from "bun:test"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+
+let local: LocalD1
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  local = await startLocalD1({
+    migrated: ["findbyid-returns-the-seeded-posting", "findbyid-returns-null-for-an-unknown-id"],
+  })
+})
+
+afterAll(async () => {
+  await local.dispose()
+})
 
 describe("CareerPostingRepository", () => {
   test("findById returns the seeded posting", async () => {
-    const { context, db } = await createTestContext()
+    const { context, db } = await createLocalD1Context(local, "findbyid-returns-the-seeded-posting")
 
     await seedD1(db, "career_postings", [
       {
@@ -34,7 +50,7 @@ describe("CareerPostingRepository", () => {
   })
 
   test("findById returns null for an unknown id", async () => {
-    const { context } = await createTestContext()
+    const { context } = await createLocalD1Context(local, "findbyid-returns-null-for-an-unknown-id")
 
     const repository = new CareerPostingRepository(context)
 

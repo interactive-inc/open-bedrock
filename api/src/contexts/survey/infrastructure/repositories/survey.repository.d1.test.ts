@@ -7,7 +7,8 @@ import type { Context } from "@/env"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
-import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
+import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+import { seedD1 } from "@tests/api/support/seed-d1"
 
 let local: LocalD1
 
@@ -16,7 +17,15 @@ setDefaultTimeout(30_000)
 
 beforeAll(async () => {
   local = await startLocalD1({
-    migrated: ["delete-with-responses", "delete-guard", "update-if-no-responses"],
+    migrated: [
+      "delete-with-responses",
+      "delete-guard",
+      "update-if-no-responses",
+      "findbyid-returns-the-seeded-survey",
+      "findbyid-returns-null-for-an-unknown-id",
+      "createresponse-then",
+      "findresponsebysurveyidandrespondentid-returns",
+    ],
   })
 })
 
@@ -124,5 +133,103 @@ describe("SurveyRepository on local D1", () => {
     if (!(updated instanceof Survey)) throw new Error("expected Survey")
 
     expect(updated.questionsJson).toEqual([{ q: "New question" }])
+  })
+})
+
+describe("SurveyRepository", () => {
+  test("findById returns the seeded survey", async () => {
+    const { context, db } = await createLocalD1Context(local, "findbyid-returns-the-seeded-survey")
+
+    await seedD1(db, "surveys", [
+      {
+        id: 1,
+        title: "従業員満足度調査",
+        status: "open",
+        questions_json: JSON.stringify([{ id: "q1", label: "満足度" }]),
+      },
+    ])
+
+    const repository = new SurveyRepository(context)
+
+    const found = await repository.findById(1)
+
+    expect(found).toBeInstanceOf(Survey)
+
+    if (found instanceof Error || found === null) {
+      throw new Error("findById failed")
+    }
+
+    expect(found.title).toBe("従業員満足度調査")
+    expect(found.status).toBe("open")
+  })
+
+  test("findById returns null for an unknown id", async () => {
+    const { context } = await createLocalD1Context(local, "findbyid-returns-null-for-an-unknown-id")
+
+    const repository = new SurveyRepository(context)
+
+    const found = await repository.findById(9999)
+
+    expect(found).toBeNull()
+  })
+
+  test("createResponse then findResponseBySurveyIdAndRespondentId round-trips the response", async () => {
+    const { context, db } = await createLocalD1Context(local, "createresponse-then")
+
+    await seedD1(db, "surveys", [
+      {
+        id: 1,
+        title: "テスト調査",
+        status: "open",
+        questions_json: JSON.stringify([{ id: "q1", label: "満足度" }]),
+      },
+    ])
+
+    const repository = new SurveyRepository(context)
+
+    const created = await repository.createResponse(
+      SurveyResponse.create({
+        surveyId: 1,
+        respondentId: toWorkforceEmployeeId(2),
+        answersJson: { q1: 5 },
+        submittedAt: "2026-01-01T00:00:00.000Z",
+      }),
+    )
+
+    expect(created).toBeInstanceOf(SurveyResponse)
+
+    if (created instanceof Error || "reason" in created || created.id === null) {
+      throw new Error("createResponse failed")
+    }
+
+    const found = await repository.findResponseBySurveyIdAndRespondentId(
+      1,
+      toWorkforceEmployeeId(2),
+    )
+
+    expect(found).toBeInstanceOf(SurveyResponse)
+
+    if (found instanceof Error || found === null) {
+      throw new Error("findResponseBySurveyIdAndRespondentId failed")
+    }
+
+    expect(found.surveyId).toBe(1)
+    expect(found.respondentId).toBe(toWorkforceEmployeeId(2))
+  })
+
+  test("findResponseBySurveyIdAndRespondentId returns null when none matches", async () => {
+    const { context } = await createLocalD1Context(
+      local,
+      "findresponsebysurveyidandrespondentid-returns",
+    )
+
+    const repository = new SurveyRepository(context)
+
+    const found = await repository.findResponseBySurveyIdAndRespondentId(
+      9999,
+      toWorkforceEmployeeId(9999),
+    )
+
+    expect(found).toBeNull()
   })
 })

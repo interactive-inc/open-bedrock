@@ -94,9 +94,7 @@ export async function startLocalD1(databases: LocalD1Databases): Promise<LocalD1
     })
   }
 
-  const runtime = createRuntime(persist, ids)
-
-  await runtime.ready
+  const runtime = await startRuntime(persist, ids)
 
   const migratedNames = new Set(migrated)
   const verified = new Set<string>()
@@ -121,6 +119,43 @@ export async function startLocalD1(databases: LocalD1Databases): Promise<LocalD1
 
 function slotIdFor(index: number): string {
   return `local-d1-test-migrated-slot-${index}`
+}
+
+/** workerd の起動をやり直す回数と、1回の起動を待つ上限。通常の起動は1秒未満で終わる。 */
+const RUNTIME_START_ATTEMPTS = 3
+const RUNTIME_START_TIMEOUT_MS = 10_000
+
+/**
+ * 多数のtestファイルを1プロセスで流すと、Bunが workerd を起動する子プロセスのpipeで
+ * EBADF や ENOENT を返し、起動が失敗または停止することがある。
+ * 起動が終わるまでDBへは触れていないため、起動だけを同じ設定で作り直す。
+ * 作り直しても起動しない場合は、最後の失敗をそのまま投げる。
+ */
+async function startRuntime(
+  persist: string,
+  d1Databases: Record<string, string>,
+): Promise<Miniflare> {
+  for (let attempt = 1; ; attempt++) {
+    const runtime = createRuntime(persist, d1Databases)
+    let timer: ReturnType<typeof setTimeout> | undefined
+    try {
+      await Promise.race([
+        runtime.ready,
+        new Promise((_, reject) => {
+          timer = setTimeout(
+            () => reject(new Error("local D1 runtime did not start in time")),
+            RUNTIME_START_TIMEOUT_MS,
+          )
+        }),
+      ])
+      return runtime
+    } catch (error) {
+      await runtime.dispose().catch(() => undefined)
+      if (attempt >= RUNTIME_START_ATTEMPTS) throw error
+    } finally {
+      clearTimeout(timer)
+    }
+  }
 }
 
 function createRuntime(persist: string, d1Databases: Record<string, string>): Miniflare {
