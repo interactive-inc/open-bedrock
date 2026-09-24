@@ -1,15 +1,11 @@
-import { PrepareRecordRetirementPageKeysAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-page-keys.adapter"
 import { PrepareAntisocialCheckRetirementPageAdapter } from "@/contexts/antisocial-check/infrastructure/adapters/prepare-antisocial-check-retirement-page.adapter"
+import { AntisocialCheckRecordSystemAdapter } from "@/contexts/antisocial-check/infrastructure/adapters/antisocial-check-record-system.adapter"
 import { antisocialCheckRetirementVerificationCommandSchema } from "@/contexts/antisocial-check/domain/schemas/antisocial-check-retirement-verification-command.schema"
 import {
   AntisocialCheckRetirementForbiddenError,
   AntisocialCheckRetirementConflictError,
 } from "@/contexts/antisocial-check/application/errors"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
-import { RecordRetirementVerificationReceiptRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
 import { RecordRetirementVerificationReceiptEntity } from "@system/domain/entities/record-retirement-verification-receipt.entity"
-import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
 
 type Context = ConstructorParameters<typeof PrepareAntisocialCheckRetirementPageAdapter>[0]
 
@@ -29,7 +25,9 @@ export class VerifyAntisocialCheckRetirementPage {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new AntisocialCheckRetirementForbiddenError("retirement authentication required")
-    const authority = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const authority = await new AntisocialCheckRecordSystemAdapter(
+      this.c,
+    ).prepareSourceFreezeAuthorization({
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -38,7 +36,9 @@ export class VerifyAntisocialCheckRetirementPage {
     if (authority === "forbidden")
       return new AntisocialCheckRetirementForbiddenError("retirement authorization denied")
     const context = { env: this.c.env, assertions: authority.assertions }
-    const plan = await new RecordRetirementVerificationPlanRepository(context).find(command.planId)
+    const plan = await new AntisocialCheckRecordSystemAdapter(context)
+      .retirementPlans()
+      .find(command.planId)
     if (plan instanceof Error) return plan
     if (
       plan === null ||
@@ -51,7 +51,7 @@ export class VerifyAntisocialCheckRetirementPage {
       return new AntisocialCheckRetirementConflictError(
         "retirement plan unavailable or capability changed",
       )
-    const repository = new RecordRetirementVerificationReceiptRepository(context)
+    const repository = new AntisocialCheckRecordSystemAdapter(context).retirementReceipts()
     const existing = await repository.find(command.id)
     if (existing instanceof Error) return existing
     if (
@@ -78,13 +78,13 @@ export class VerifyAntisocialCheckRetirementPage {
       stepUpToken,
     )
     if (checked instanceof Error) return checked
-    const keys = await new PrepareRecordRetirementPageKeysAdapter({
+    const keys = await new AntisocialCheckRecordSystemAdapter({
       env: this.c.env,
       assertions: checked.assertions,
-    }).prepare(checked.coveragePageId)
+    }).prepareRetirementPageKeys(checked.coveragePageId)
     if (keys instanceof Error) return keys
     const guardedContext = { env: this.c.env, assertions: keys.assertions }
-    const guarded = new RecordRetirementVerificationReceiptRepository(guardedContext)
+    const guarded = new AntisocialCheckRecordSystemAdapter(guardedContext).retirementReceipts()
     const matches = (receipt: RecordRetirementVerificationReceiptEntity) =>
       receipt.snapshot.planId === plan.snapshot.id &&
       receipt.snapshot.planDigest === plan.digest &&
@@ -100,7 +100,9 @@ export class VerifyAntisocialCheckRetirementPage {
         ? current
         : new AntisocialCheckRetirementConflictError("retirement receipt replay changed")
     }
-    const page = await new RecordCoveragePageRepository(guardedContext).find(checked.coveragePageId)
+    const page = await new AntisocialCheckRecordSystemAdapter(guardedContext)
+      .coveragePages()
+      .find(checked.coveragePageId)
     if (page instanceof Error) return page
     if (page === null) return new Error("retirement coverage page missing")
     const receipt = await RecordRetirementVerificationReceiptEntity.create(

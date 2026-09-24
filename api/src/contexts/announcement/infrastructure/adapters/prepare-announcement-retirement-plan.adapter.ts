@@ -3,8 +3,8 @@ import type { AnnouncementContext } from "@/contexts/announcement/configuration/
 import { announcementRetirementPlanCommandSchema } from "@/contexts/announcement/domain/schemas/announcement-retirement-plan-command.schema"
 import { AnnouncementActorReadAdapter } from "@/contexts/announcement/infrastructure/adapters/announcement-actor-read.adapter"
 import { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
+import { prepareSystemRecordSourceFreezeAuthorization } from "@system/interface/operations/prepare-system-record-source-freeze-authorization"
+import { prepareSystemRecordKindCoverage } from "@system/interface/operations/prepare-system-record-kind-coverage"
 
 type Context = AnnouncementContext
 
@@ -21,7 +21,7 @@ export class PrepareAnnouncementRetirementPlanAdapter {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new ForbiddenError("retirement authentication required", "forbidden")
-    const authority = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const authority = await prepareSystemRecordSourceFreezeAuthorization(this.c, {
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -31,16 +31,19 @@ export class PrepareAnnouncementRetirementPlanAdapter {
       return new ForbiddenError("retirement authorization denied", "forbidden")
     const reader = await new AnnouncementActorReadAdapter(this.c).prepare()
     if (reader instanceof Error) return reader
-    const chain = await new PrepareRecordKindCoverageAdapter({
-      env: this.c.env,
-      assertions: [...authority.assertions, ...reader.assertions],
-    }).prepare({
-      freezeId: request.freezeId,
-      sourceNamespace: request.sourceNamespace,
-      purpose: request.purpose,
-      ownerContext: "announcement",
-      recordKind: "announcement-record",
-    })
+    const chain = await prepareSystemRecordKindCoverage(
+      {
+        env: this.c.env,
+        assertions: [...authority.assertions, ...reader.assertions],
+      },
+      {
+        freezeId: request.freezeId,
+        sourceNamespace: request.sourceNamespace,
+        purpose: request.purpose,
+        ownerContext: "announcement",
+        recordKind: "announcement-record",
+      },
+    )
     if (chain instanceof Error) return chain
     const currentReader = await new AnnouncementActorReadAdapter(this.c).prepare()
     if (currentReader instanceof Error) return currentReader

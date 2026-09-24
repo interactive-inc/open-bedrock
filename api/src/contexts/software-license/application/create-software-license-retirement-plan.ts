@@ -1,5 +1,5 @@
 import { PrepareSoftwareLicenseRetirementPlanAdapter } from "@/contexts/software-license/infrastructure/adapters/prepare-software-license-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { SoftwareLicenseRecordSystemAdapter } from "@/contexts/software-license/infrastructure/adapters/software-license-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { SoftwareLicenseRetirementConflictError } from "@/contexts/software-license/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateSoftwareLicenseRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new SoftwareLicenseRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

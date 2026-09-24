@@ -1,5 +1,5 @@
 import { PrepareWorkAccidentRetirementPlanAdapter } from "@/contexts/work-accident/infrastructure/adapters/prepare-work-accident-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { WorkAccidentRecordSystemAdapter } from "@/contexts/work-accident/infrastructure/adapters/work-accident-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { WorkAccidentRetirementConflictError } from "@/contexts/work-accident/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateWorkAccidentRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new WorkAccidentRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

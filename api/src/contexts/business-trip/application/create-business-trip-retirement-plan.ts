@@ -1,5 +1,5 @@
 import { PrepareBusinessTripRetirementPlanAdapter } from "@/contexts/business-trip/infrastructure/adapters/prepare-business-trip-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { BusinessTripRecordSystemAdapter } from "@/contexts/business-trip/infrastructure/adapters/business-trip-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { BusinessTripRetirementConflictError } from "@/contexts/business-trip/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateBusinessTripRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new BusinessTripRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

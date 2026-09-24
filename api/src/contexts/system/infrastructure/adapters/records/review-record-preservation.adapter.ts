@@ -5,7 +5,7 @@ import type {
   SystemAttachmentStorageContext,
 } from "@system/configuration/system-context"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
-import { RecordPreservationReviewError } from "@system/infrastructure/adapters/records/errors"
+import { RecordPreservationReviewError } from "@system/application/records/errors"
 import { RecordPreservationProposalValue } from "@system/domain/values/records/record-preservation-proposal.value"
 import { VerifyPreservedRecordContentAdapter } from "@system/infrastructure/adapters/records/verify-preserved-record-content.adapter"
 import { PrepareAttachmentContentReadGuardAdapter } from "@system/infrastructure/adapters/attachments/prepare-attachment-content-read-guard.adapter"

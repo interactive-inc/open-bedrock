@@ -3,8 +3,8 @@ import type { TrainingContext } from "@/contexts/training/configuration/training
 import { trainingRetirementPlanCommandSchema } from "@/contexts/training/domain/schemas/training-retirement-plan-command.schema"
 import { TrainingActorReadAdapter } from "@/contexts/training/infrastructure/adapters/training-actor-read.adapter"
 import { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
+import { prepareSystemRecordSourceFreezeAuthorization } from "@system/interface/operations/prepare-system-record-source-freeze-authorization"
+import { prepareSystemRecordKindCoverage } from "@system/interface/operations/prepare-system-record-kind-coverage"
 import { trainingRecordKinds } from "@/contexts/training/domain/definitions/training-record-kind.definition"
 
 type Context = TrainingContext
@@ -22,7 +22,7 @@ export class PrepareTrainingRetirementPlanAdapter {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new ForbiddenError("retirement authentication required", "forbidden")
-    const authority = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const authority = await prepareSystemRecordSourceFreezeAuthorization(this.c, {
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -35,16 +35,19 @@ export class PrepareTrainingRetirementPlanAdapter {
     const baseAssertions = [...authority.assertions, ...reader.assertions]
     const chains = []
     for (const recordKind of trainingRecordKinds) {
-      const chain = await new PrepareRecordKindCoverageAdapter({
-        env: this.c.env,
-        assertions: baseAssertions,
-      }).prepare({
-        freezeId: request.freezeId,
-        sourceNamespace: request.sourceNamespace,
-        purpose: request.purpose,
-        ownerContext: "training",
-        recordKind,
-      })
+      const chain = await prepareSystemRecordKindCoverage(
+        {
+          env: this.c.env,
+          assertions: baseAssertions,
+        },
+        {
+          freezeId: request.freezeId,
+          sourceNamespace: request.sourceNamespace,
+          purpose: request.purpose,
+          ownerContext: "training",
+          recordKind,
+        },
+      )
       if (chain instanceof Error) return chain
       chains.push(chain)
     }

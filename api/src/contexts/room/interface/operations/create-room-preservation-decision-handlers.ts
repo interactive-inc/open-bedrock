@@ -4,8 +4,8 @@ import { zValidator } from "@hono/zod-validator"
 import { roomFactory } from "@/contexts/room/interface/request-environment/room-factory"
 import { roomRecordRouteSchema } from "@/contexts/room/interface/http/room-input-schemas"
 import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
-import { DecideRecordPreservationAdapter } from "@system/infrastructure/adapters/records/decide-record-preservation.adapter"
-import { RecordPreservationDecisionError } from "@system/infrastructure/adapters/records/errors"
+import { decideSystemRecordPreservation } from "@system/interface/operations/decide-system-record-preservation"
+import { RecordPreservationDecisionError } from "@system/application/records/errors"
 import {
   RoomForbiddenError,
   RoomInputError,
@@ -37,29 +37,32 @@ export function createRoomPreservationDecisionHandlers(action: "approve" | "reje
       c.header("Cache-Control", "no-store")
       const authentication = c.var.bearerReadAuthentication
       if (authentication === undefined) throw new RoomForbiddenError()
-      const result = await new DecideRecordPreservationAdapter({
-        env: c.env,
-        var: c.var,
-        source: {
-          ownerContext: "room",
-          recordKind: c.req.valid("param").recordKind,
-          recordId: c.req.valid("param").recordId,
-          sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
+      const result = await decideSystemRecordPreservation(
+        {
+          env: c.env,
+          var: c.var,
+          source: {
+            ownerContext: "room",
+            recordKind: c.req.valid("param").recordKind,
+            recordId: c.req.valid("param").recordId,
+            sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
+          },
+          prepareDecision: async (input) => {
+            const decision = await prepareCompanyRecordProcedureDecision(c, input)
+            if (decision instanceof CompanyConflictError)
+              return new RecordPreservationDecisionError("conflict")
+            if (decision instanceof CompanyUnexpectedError)
+              return new RecordPreservationDecisionError("unavailable")
+            return decision
+          },
         },
-        prepareDecision: async (input) => {
-          const decision = await prepareCompanyRecordProcedureDecision(c, input)
-          if (decision instanceof CompanyConflictError)
-            return new RecordPreservationDecisionError("conflict")
-          if (decision instanceof CompanyUnexpectedError)
-            return new RecordPreservationDecisionError("unavailable")
-          return decision
+        {
+          authentication,
+          number: c.req.valid("param").number,
+          action,
+          body: c.req.valid("json"),
         },
-      }).execute({
-        authentication,
-        number: c.req.valid("param").number,
-        action,
-        body: c.req.valid("json"),
-      })
+      )
       if (result instanceof RecordPreservationDecisionError) {
         switch (result.code) {
           case "invalid":

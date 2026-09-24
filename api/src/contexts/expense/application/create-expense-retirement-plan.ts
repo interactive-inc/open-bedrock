@@ -1,5 +1,5 @@
 import { PrepareExpenseRetirementPlanAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { ExpenseRecordSystemAdapter } from "@/contexts/expense/infrastructure/adapters/expense-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { ExpenseRetirementConflictError } from "@/contexts/expense/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateExpenseRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new ExpenseRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

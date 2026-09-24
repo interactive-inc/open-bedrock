@@ -1,5 +1,5 @@
 import { PrepareCompanyCalendarDayRetirementPlanAdapter } from "@/contexts/company-calendar/infrastructure/adapters/prepare-company-calendar-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { CompanyCalendarDayRecordSystemAdapter } from "@/contexts/company-calendar/infrastructure/adapters/company-calendar-day-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { CompanyCalendarDayRetirementConflictError } from "@/contexts/company-calendar/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateCompanyCalendarDayRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new CompanyCalendarDayRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

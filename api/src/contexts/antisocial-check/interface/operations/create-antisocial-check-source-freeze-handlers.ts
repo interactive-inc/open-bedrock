@@ -4,8 +4,8 @@ import { antisocialCheckFactory } from "@/contexts/antisocial-check/interface/re
 import { CreateRecordSourceFreeze } from "@system/application/records/create-record-source-freeze"
 import { ReleaseRecordSourceFreeze } from "@system/application/records/release-record-source-freeze"
 import { recordSourceFreezeCommandSchema } from "@system/domain/schemas/records/record-source-freeze.schema"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { prepareSystemRecordSourceFreezeAuthorization } from "@system/interface/operations/prepare-system-record-source-freeze-authorization"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 import {
   SystemForbiddenError,
   SystemHTTPException,
@@ -27,7 +27,7 @@ export function createAntisocialCheckSourceFreezeHandlers(mode: "create" | "rele
       const stepUpToken = c.req.header("x-system-step-up")
       if (stepUpToken === undefined) throw new SystemStepUpRequiredError()
       const now = c.var.now()
-      const authorization = await new PrepareRecordSourceFreezeAuthorizationAdapter(c).prepare({
+      const authorization = await prepareSystemRecordSourceFreezeAuthorization(c, {
         authentication,
         now,
         stepUpToken,
@@ -55,7 +55,7 @@ export function createAntisocialCheckSourceFreezeHandlers(mode: "create" | "rele
           code: "record_source_freeze_invalid",
           detail: "Source namespace and operation identifier are required",
         })
-      const repository = new RecordSourceFreezeRepository({
+      const repository = openSystemRecordSourceFreezes({
         env: c.env,
         assertions: authorization.assertions,
       })

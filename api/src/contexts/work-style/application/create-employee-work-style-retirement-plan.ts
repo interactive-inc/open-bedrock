@@ -1,5 +1,5 @@
 import { PrepareEmployeeWorkStyleRetirementPlanAdapter } from "@/contexts/work-style/infrastructure/adapters/prepare-work-style-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { EmployeeWorkStyleRecordSystemAdapter } from "@/contexts/work-style/infrastructure/adapters/employee-work-style-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { EmployeeWorkStyleRetirementConflictError } from "@/contexts/work-style/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateEmployeeWorkStyleRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new EmployeeWorkStyleRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

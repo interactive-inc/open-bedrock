@@ -1,5 +1,5 @@
 import { PreparePerformanceReviewRetirementPlanAdapter } from "@/contexts/performance-review/infrastructure/adapters/prepare-performance-review-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { PerformanceReviewRecordSystemAdapter } from "@/contexts/performance-review/infrastructure/adapters/performance-review-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { PerformanceReviewRetirementConflictError } from "@/contexts/performance-review/application/errors"
 
@@ -18,10 +18,10 @@ export class CreatePerformanceReviewRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new PerformanceReviewRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

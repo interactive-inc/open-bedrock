@@ -3,8 +3,8 @@ import { zValidator } from "@hono/zod-validator"
 import { itIncidentFactory } from "@/contexts/it-incident/interface/request-environment/it-incident-factory"
 import { itIncidentIdSchema } from "@/contexts/it-incident/interface/http/it-incident-input-schemas"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
-import { WithdrawRecordPreservationAdapter } from "@system/infrastructure/adapters/records/withdraw-record-preservation.adapter"
-import { RecordPreservationWithdrawalError } from "@system/infrastructure/adapters/records/errors"
+import { withdrawSystemRecordPreservation } from "@system/interface/operations/withdraw-system-record-preservation"
+import { RecordPreservationWithdrawalError } from "@system/application/records/errors"
 import {
   ItIncidentForbiddenError,
   ItIncidentInputError,
@@ -31,21 +31,24 @@ export const POST = itIncidentFactory.createHandlers(
     c.header("Cache-Control", "no-store")
     const authentication = c.var.bearerReadAuthentication
     if (authentication === undefined) throw new ItIncidentForbiddenError()
-    const result = await new WithdrawRecordPreservationAdapter({
-      env: c.env,
-      var: c.var,
-      source: {
-        ownerContext: "it-incident",
-        recordKind: "it-incident-record",
-        recordId: String(c.req.valid("param").id),
-        sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
+    const result = await withdrawSystemRecordPreservation(
+      {
+        env: c.env,
+        var: c.var,
+        source: {
+          ownerContext: "it-incident",
+          recordKind: "it-incident-record",
+          recordId: String(c.req.valid("param").id),
+          sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
+        },
       },
-    }).execute({
-      authentication,
-      number: c.req.valid("param").number,
-      proposalDigest: c.req.valid("json").proposal_digest,
-      reason: c.req.valid("json").reason,
-    })
+      {
+        authentication,
+        number: c.req.valid("param").number,
+        proposalDigest: c.req.valid("json").proposal_digest,
+        reason: c.req.valid("json").reason,
+      },
+    )
     if (result instanceof RecordPreservationWithdrawalError) {
       switch (result.code) {
         case "invalid":

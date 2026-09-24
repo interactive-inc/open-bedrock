@@ -2,7 +2,7 @@ import { z } from "zod"
 import type { SurveyContext } from "@/contexts/survey/configuration/survey-context"
 import { SurveyActorReadAdapter } from "@/contexts/survey/infrastructure/adapters/survey-actor-read.adapter"
 import { surveyRecordKindSchema } from "@/contexts/survey/domain/definitions/survey-record-kind.definition"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = SurveyContext
 const inputSchema = z.strictObject({
@@ -23,7 +23,7 @@ export class ListFrozenSurveyRecordPageAdapter {
     const request = parsed.data
     const actor = await new SurveyActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

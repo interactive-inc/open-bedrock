@@ -4,8 +4,8 @@ import { zValidator } from "@hono/zod-validator"
 import { workAccidentFactory } from "@/contexts/work-accident/interface/request-environment/work-accident-factory"
 import { workAccidentIdSchema } from "@/contexts/work-accident/interface/http/work-accident-input-schemas"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
-import { ReviewRecordPreservationAdapter } from "@system/infrastructure/adapters/records/review-record-preservation.adapter"
-import { RecordPreservationReviewError } from "@system/infrastructure/adapters/records/errors"
+import { reviewSystemRecordPreservation } from "@system/interface/operations/review-system-record-preservation"
+import { RecordPreservationReviewError } from "@system/application/records/errors"
 import {
   WorkAccidentForbiddenError,
   WorkAccidentInputError,
@@ -30,28 +30,31 @@ export const GET = workAccidentFactory.createHandlers(
     c.header("Cache-Control", "no-store")
     const authentication = c.var.bearerReadAuthentication
     if (authentication === undefined) throw new WorkAccidentForbiddenError()
-    const result = await new ReviewRecordPreservationAdapter({
-      env: c.env,
-      var: c.var,
-      source: {
-        ownerContext: "work-accident",
-        recordKind: "work-accident-record",
-        recordId: String(c.req.valid("param").id),
-        sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
+    const result = await reviewSystemRecordPreservation(
+      {
+        env: c.env,
+        var: c.var,
+        source: {
+          ownerContext: "work-accident",
+          recordKind: "work-accident-record",
+          recordId: String(c.req.valid("param").id),
+          sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
+        },
+        prepareDecision: async (input) => {
+          const decision = await prepareCompanyRecordProcedureDecision(c, input)
+          if (decision instanceof CompanyConflictError)
+            return new RecordPreservationReviewError("conflict")
+          if (decision instanceof CompanyUnexpectedError)
+            return new RecordPreservationReviewError("unavailable")
+          return decision
+        },
       },
-      prepareDecision: async (input) => {
-        const decision = await prepareCompanyRecordProcedureDecision(c, input)
-        if (decision instanceof CompanyConflictError)
-          return new RecordPreservationReviewError("conflict")
-        if (decision instanceof CompanyUnexpectedError)
-          return new RecordPreservationReviewError("unavailable")
-        return decision
+      {
+        authentication,
+        number: c.req.valid("param").number,
+        includeOriginal: c.req.valid("query").include_original === "true",
       },
-    }).execute({
-      authentication,
-      number: c.req.valid("param").number,
-      includeOriginal: c.req.valid("query").include_original === "true",
-    })
+    )
     if (result instanceof RecordPreservationReviewError) {
       switch (result.code) {
         case "invalid":

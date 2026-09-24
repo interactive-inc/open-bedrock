@@ -1,7 +1,7 @@
 import { z } from "zod"
 import type { DisciplinaryActionContext } from "@/contexts/disciplinary-action/configuration/disciplinary-action-context"
 import { DisciplinaryActionActorReadAdapter } from "@/contexts/disciplinary-action/infrastructure/adapters/disciplinary-action-actor-read.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = DisciplinaryActionContext
 const inputSchema = z.strictObject({
@@ -23,7 +23,7 @@ export class ListFrozenDisciplinaryActionRecordPageAdapter {
     const request = parsed.data
     const actor = await new DisciplinaryActionActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

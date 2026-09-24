@@ -1,5 +1,5 @@
 import { PrepareCertificateRequestRetirementPlanAdapter } from "@/contexts/certificate-request/infrastructure/adapters/prepare-certificate-request-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { CertificateRequestRecordSystemAdapter } from "@/contexts/certificate-request/infrastructure/adapters/certificate-request-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { CertificateRequestRetirementConflictError } from "@/contexts/certificate-request/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateCertificateRequestRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new CertificateRequestRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

@@ -4,8 +4,8 @@ import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { documentFactory } from "@/contexts/document/interface/request-environment/document-factory"
 import { CompanyConflictError, CompanyUnexpectedError } from "@/contexts/company/domain/errors"
-import { DecideRecordRetirementAdapter } from "@system/infrastructure/adapters/records/decide-record-retirement.adapter"
-import { RecordRetirementDecisionError } from "@system/infrastructure/adapters/records/errors"
+import { decideSystemRecordRetirement } from "@system/interface/operations/decide-system-record-retirement"
+import { RecordRetirementDecisionError } from "@system/application/records/errors"
 import { SystemForbiddenError, SystemHTTPException } from "@system/interface/errors"
 
 /** 撤去の肯定・否定判断に同じ認証、会社資格、対象照合を適用する。 */
@@ -34,29 +34,32 @@ export function createDocumentRetirementDecisionHandlers(action: "approve" | "re
       c.header("Cache-Control", "no-store")
       const authentication = c.var.bearerReadAuthentication
       if (authentication === undefined) throw new SystemForbiddenError()
-      const result = await new DecideRecordRetirementAdapter({
-        env: c.env,
-        var: c.var,
-        source: {
-          ownerContext: "document",
-          planId: c.req.valid("param").planId,
-          sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
+      const result = await decideSystemRecordRetirement(
+        {
+          env: c.env,
+          var: c.var,
+          source: {
+            ownerContext: "document",
+            planId: c.req.valid("param").planId,
+            sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
+          },
+          prepareReplay: (input) => prepareCompanyRecordDecisionReplay(c, input),
+          prepareDecision: async (input) => {
+            const decision = await prepareCompanyRecordProcedureDecision(c, input)
+            if (decision instanceof CompanyConflictError)
+              return new RecordRetirementDecisionError("conflict")
+            if (decision instanceof CompanyUnexpectedError)
+              return new RecordRetirementDecisionError("unavailable")
+            return decision
+          },
         },
-        prepareReplay: (input) => prepareCompanyRecordDecisionReplay(c, input),
-        prepareDecision: async (input) => {
-          const decision = await prepareCompanyRecordProcedureDecision(c, input)
-          if (decision instanceof CompanyConflictError)
-            return new RecordRetirementDecisionError("conflict")
-          if (decision instanceof CompanyUnexpectedError)
-            return new RecordRetirementDecisionError("unavailable")
-          return decision
+        {
+          authentication,
+          number: c.req.valid("param").number,
+          action,
+          body: c.req.valid("json"),
         },
-      }).execute({
-        authentication,
-        number: c.req.valid("param").number,
-        action,
-        body: c.req.valid("json"),
-      })
+      )
       if (result instanceof RecordRetirementDecisionError) {
         const statuses: Readonly<
           Record<RecordRetirementDecisionError["code"], 400 | 403 | 404 | 409 | 503>

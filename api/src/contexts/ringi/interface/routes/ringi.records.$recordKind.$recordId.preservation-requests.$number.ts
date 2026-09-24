@@ -4,8 +4,8 @@ import { zValidator } from "@hono/zod-validator"
 import { ringiFactory } from "@/contexts/ringi/interface/request-environment/ringi-factory"
 import { ringiRecordRouteSchema } from "@/contexts/ringi/interface/http/ringi-input-schemas"
 import { authenticateSystemAccessToken } from "@system/interface/middlewares/authenticate-system-access-token"
-import { ReviewRecordPreservationAdapter } from "@system/infrastructure/adapters/records/review-record-preservation.adapter"
-import { RecordPreservationReviewError } from "@system/infrastructure/adapters/records/errors"
+import { reviewSystemRecordPreservation } from "@system/interface/operations/review-system-record-preservation"
+import { RecordPreservationReviewError } from "@system/application/records/errors"
 import {
   RingiForbiddenError,
   RingiInputError,
@@ -30,28 +30,31 @@ export const GET = ringiFactory.createHandlers(
     c.header("Cache-Control", "no-store")
     const authentication = c.var.bearerReadAuthentication
     if (authentication === undefined) throw new RingiForbiddenError()
-    const result = await new ReviewRecordPreservationAdapter({
-      env: c.env,
-      var: c.var,
-      source: {
-        ownerContext: "ringi",
-        recordKind: c.req.valid("param").recordKind,
-        recordId: c.req.valid("param").recordId,
-        sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
+    const result = await reviewSystemRecordPreservation(
+      {
+        env: c.env,
+        var: c.var,
+        source: {
+          ownerContext: "ringi",
+          recordKind: c.req.valid("param").recordKind,
+          recordId: c.req.valid("param").recordId,
+          sourceNamespace: c.env.RECORD_SOURCE_NAMESPACE ?? "",
+        },
+        prepareDecision: async (input) => {
+          const decision = await prepareCompanyRecordProcedureDecision(c, input)
+          if (decision instanceof CompanyConflictError)
+            return new RecordPreservationReviewError("conflict")
+          if (decision instanceof CompanyUnexpectedError)
+            return new RecordPreservationReviewError("unavailable")
+          return decision
+        },
       },
-      prepareDecision: async (input) => {
-        const decision = await prepareCompanyRecordProcedureDecision(c, input)
-        if (decision instanceof CompanyConflictError)
-          return new RecordPreservationReviewError("conflict")
-        if (decision instanceof CompanyUnexpectedError)
-          return new RecordPreservationReviewError("unavailable")
-        return decision
+      {
+        authentication,
+        number: c.req.valid("param").number,
+        includeOriginal: c.req.valid("query").include_original === "true",
       },
-    }).execute({
-      authentication,
-      number: c.req.valid("param").number,
-      includeOriginal: c.req.valid("query").include_original === "true",
-    })
+    )
     if (result instanceof RecordPreservationReviewError) {
       switch (result.code) {
         case "invalid":

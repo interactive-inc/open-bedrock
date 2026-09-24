@@ -7,12 +7,12 @@ import type {
 } from "@system/configuration/system-context"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
 import { HealthCheckupActorReadAdapter } from "@/contexts/health-checkup/infrastructure/adapters/health-checkup-actor-read.adapter"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
-import { PrepareRecordRetirementRetentionAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-retention.adapter"
-import { PrepareRecordRetirementDisclosureAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-disclosure.adapter"
-import { PrepareRecordRetirementSourceAttachmentsAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-source-attachments.adapter"
-import { PrepareRecordRetirementStorageKeysAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-storage-keys.adapter"
+import { prepareSystemRecordSourceFreezeAuthorization } from "@system/interface/operations/prepare-system-record-source-freeze-authorization"
+import { openSystemRecordRetirementVerificationPlans } from "@system/interface/operations/open-system-record-retirement-verification-plans"
+import { prepareSystemRecordRetirementRetention } from "@system/interface/operations/prepare-system-record-retirement-retention"
+import { prepareSystemRecordRetirementDisclosure } from "@system/interface/operations/prepare-system-record-retirement-disclosure"
+import { prepareSystemRecordRetirementSourceAttachments } from "@system/interface/operations/prepare-system-record-retirement-source-attachments"
+import { prepareSystemRecordRetirementStorageKeys } from "@system/interface/operations/prepare-system-record-retirement-storage-keys"
 import { ForbiddenError } from "@/lib/errors"
 
 const requestSchema = z.strictObject({
@@ -39,7 +39,7 @@ export class PrepareHealthCheckupRetirementCurrentStateAdapter {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new ForbiddenError("retirement authentication required", "forbidden")
-    const authority = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const authority = await prepareSystemRecordSourceFreezeAuthorization(this.c, {
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -48,7 +48,7 @@ export class PrepareHealthCheckupRetirementCurrentStateAdapter {
     if (authority === "forbidden")
       return new ForbiddenError("retirement authorization denied", "forbidden")
     const context = { env: this.c.env, assertions: authority.assertions }
-    const plan = await new RecordRetirementVerificationPlanRepository(context).find(request.planId)
+    const plan = await openSystemRecordRetirementVerificationPlans(context).find(request.planId)
     if (plan instanceof Error) return plan
     if (
       plan === null ||
@@ -61,21 +61,24 @@ export class PrepareHealthCheckupRetirementCurrentStateAdapter {
     )
       return new Error("retirement plan or source capability differs")
     const target = { planId: plan.snapshot.id, planDigest: plan.digest }
-    const retention = await new PrepareRecordRetirementRetentionAdapter(context).prepare(
+    const retention = await prepareSystemRecordRetirementRetention(
+      context,
       target,
       this.c.var.now(),
     )
     if (retention instanceof Error) return retention
-    const disclosure = await new PrepareRecordRetirementDisclosureAdapter({
-      ...context,
-      now: this.c.var.now,
-    }).prepare(target, authentication)
-    if (disclosure instanceof Error) return disclosure
-    const originals = await new PrepareRecordRetirementSourceAttachmentsAdapter(context).prepare(
+    const disclosure = await prepareSystemRecordRetirementDisclosure(
+      {
+        ...context,
+        now: this.c.var.now,
+      },
       target,
+      authentication,
     )
+    if (disclosure instanceof Error) return disclosure
+    const originals = await prepareSystemRecordRetirementSourceAttachments(context, target)
     if (originals instanceof Error) return originals
-    const keys = await new PrepareRecordRetirementStorageKeysAdapter(context).prepare(target)
+    const keys = await prepareSystemRecordRetirementStorageKeys(context, target)
     if (keys instanceof Error) return keys
     const assertions = [
       ...retention.assertions,

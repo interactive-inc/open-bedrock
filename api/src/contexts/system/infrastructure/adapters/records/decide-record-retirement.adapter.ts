@@ -1,6 +1,6 @@
 import type { RecordRetirementDecisionContext } from "@system/configuration/record-retirement-decision-context"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
-import { RecordRetirementDecisionError } from "@system/infrastructure/adapters/records/errors"
+import { RecordRetirementDecisionError } from "@system/application/records/errors"
 import { VerifyRecordProcedureReplayAdapter } from "@system/infrastructure/adapters/records/verify-record-procedure-replay.adapter"
 import { PrepareSystemCaseReadGuardAdapter } from "@system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter"
 import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"

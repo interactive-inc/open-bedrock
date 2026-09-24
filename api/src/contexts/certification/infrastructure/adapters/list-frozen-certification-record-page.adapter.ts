@@ -2,7 +2,7 @@ import { z } from "zod"
 import type { CertificationContext } from "@/contexts/certification/configuration/certification-context"
 import { CertificationActorReadAdapter } from "@/contexts/certification/infrastructure/adapters/certification-actor-read.adapter"
 import { certificationRecordKindSchema } from "@/contexts/certification/domain/definitions/certification-record-kind.definition"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = CertificationContext
 const inputSchema = z.strictObject({
@@ -25,7 +25,7 @@ export class ListFrozenCertificationRecordPageAdapter {
     const request = parsed.data
     const actor = await new CertificationActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

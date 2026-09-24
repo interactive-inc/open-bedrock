@@ -1,5 +1,5 @@
 import { PrepareKnowledgeRetirementPlanAdapter } from "@/contexts/knowledge/infrastructure/adapters/prepare-knowledge-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { KnowledgeRecordSystemAdapter } from "@/contexts/knowledge/infrastructure/adapters/knowledge-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { KnowledgeRetirementConflictError } from "@/contexts/knowledge/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateKnowledgeRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new KnowledgeRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

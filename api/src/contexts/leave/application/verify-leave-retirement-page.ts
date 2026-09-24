@@ -1,15 +1,11 @@
-import { PrepareRecordRetirementPageKeysAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-page-keys.adapter"
 import { PrepareLeaveRetirementPageAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-retirement-page.adapter"
+import { LeaveRecordSystemAdapter } from "@/contexts/leave/infrastructure/adapters/leave-record-system.adapter"
 import { leaveRetirementVerificationCommandSchema } from "@/contexts/leave/domain/schemas/leave-retirement-verification-command.schema"
 import {
   LeaveRetirementForbiddenError,
   LeaveRetirementConflictError,
 } from "@/contexts/leave/application/errors"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
-import { RecordRetirementVerificationReceiptRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
 import { RecordRetirementVerificationReceiptEntity } from "@system/domain/entities/record-retirement-verification-receipt.entity"
-import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
 import { leaveRecordKinds } from "@/contexts/leave/domain/definitions/leave-record-kind.definition"
 
 type Context = ConstructorParameters<typeof PrepareLeaveRetirementPageAdapter>[0]
@@ -30,7 +26,7 @@ export class VerifyLeaveRetirementPage {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new LeaveRetirementForbiddenError("retirement authentication required")
-    const authority = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const authority = await new LeaveRecordSystemAdapter(this.c).prepareSourceFreezeAuthorization({
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -39,7 +35,7 @@ export class VerifyLeaveRetirementPage {
     if (authority === "forbidden")
       return new LeaveRetirementForbiddenError("retirement authorization denied")
     const context = { env: this.c.env, assertions: authority.assertions }
-    const plan = await new RecordRetirementVerificationPlanRepository(context).find(command.planId)
+    const plan = await new LeaveRecordSystemAdapter(context).retirementPlans().find(command.planId)
     if (plan instanceof Error) return plan
     if (
       plan === null ||
@@ -49,7 +45,7 @@ export class VerifyLeaveRetirementPage {
       JSON.stringify(plan.snapshot.capability.recordKinds) !== JSON.stringify(leaveRecordKinds)
     )
       return new LeaveRetirementConflictError("retirement plan unavailable or capability changed")
-    const repository = new RecordRetirementVerificationReceiptRepository(context)
+    const repository = new LeaveRecordSystemAdapter(context).retirementReceipts()
     const existing = await repository.find(command.id)
     if (existing instanceof Error) return existing
     if (
@@ -76,13 +72,13 @@ export class VerifyLeaveRetirementPage {
       stepUpToken,
     )
     if (checked instanceof Error) return checked
-    const keys = await new PrepareRecordRetirementPageKeysAdapter({
+    const keys = await new LeaveRecordSystemAdapter({
       env: this.c.env,
       assertions: checked.assertions,
-    }).prepare(checked.coveragePageId)
+    }).prepareRetirementPageKeys(checked.coveragePageId)
     if (keys instanceof Error) return keys
     const guardedContext = { env: this.c.env, assertions: keys.assertions }
-    const guarded = new RecordRetirementVerificationReceiptRepository(guardedContext)
+    const guarded = new LeaveRecordSystemAdapter(guardedContext).retirementReceipts()
     const matches = (receipt: RecordRetirementVerificationReceiptEntity) =>
       receipt.snapshot.planId === plan.snapshot.id &&
       receipt.snapshot.planDigest === plan.digest &&
@@ -98,7 +94,9 @@ export class VerifyLeaveRetirementPage {
         ? current
         : new LeaveRetirementConflictError("retirement receipt replay changed")
     }
-    const page = await new RecordCoveragePageRepository(guardedContext).find(checked.coveragePageId)
+    const page = await new LeaveRecordSystemAdapter(guardedContext)
+      .coveragePages()
+      .find(checked.coveragePageId)
     if (page instanceof Error) return page
     if (page === null) return new Error("retirement coverage page missing")
     const receipt = await RecordRetirementVerificationReceiptEntity.create(

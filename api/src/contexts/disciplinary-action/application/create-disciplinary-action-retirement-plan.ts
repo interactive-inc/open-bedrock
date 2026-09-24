@@ -1,5 +1,5 @@
 import { PrepareDisciplinaryActionRetirementPlanAdapter } from "@/contexts/disciplinary-action/infrastructure/adapters/prepare-disciplinary-action-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { DisciplinaryActionRecordSystemAdapter } from "@/contexts/disciplinary-action/infrastructure/adapters/disciplinary-action-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { DisciplinaryActionRetirementConflictError } from "@/contexts/disciplinary-action/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateDisciplinaryActionRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new DisciplinaryActionRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

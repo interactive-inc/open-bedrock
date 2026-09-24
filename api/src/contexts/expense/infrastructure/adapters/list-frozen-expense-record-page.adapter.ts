@@ -7,7 +7,7 @@ import {
 } from "@/contexts/expense/domain/schemas/expense-record-kind.schema"
 import { PrepareExpensePreservationReadAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-preservation-read.adapter"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = CompanyContext & Readonly<{ now: () => Date }>
 const inputSchema = z.strictObject({
@@ -61,7 +61,7 @@ export class ListFrozenExpenseRecordPageAdapter {
     if (authorized instanceof Error) return authorized
     const initial = authorized.assertions(this.c.now())
     if (initial instanceof Error) return initial
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: initial,
     }).prepareActiveGeneration({

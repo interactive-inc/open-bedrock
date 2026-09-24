@@ -1,15 +1,11 @@
-import { PrepareRecordRetirementPageKeysAdapter } from "@system/infrastructure/adapters/records/prepare-record-retirement-page-keys.adapter"
 import { PrepareTrainingRetirementPageAdapter } from "@/contexts/training/infrastructure/adapters/prepare-training-retirement-page.adapter"
+import { TrainingRecordSystemAdapter } from "@/contexts/training/infrastructure/adapters/training-record-system.adapter"
 import { trainingRetirementVerificationCommandSchema } from "@/contexts/training/domain/schemas/training-retirement-verification-command.schema"
 import {
   TrainingRetirementForbiddenError,
   TrainingRetirementConflictError,
 } from "@/contexts/training/application/errors"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
-import { RecordRetirementVerificationReceiptRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-receipt.repository"
 import { RecordRetirementVerificationReceiptEntity } from "@system/domain/entities/record-retirement-verification-receipt.entity"
-import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
 import { trainingRecordKinds } from "@/contexts/training/domain/definitions/training-record-kind.definition"
 
 type Context = ConstructorParameters<typeof PrepareTrainingRetirementPageAdapter>[0]
@@ -30,7 +26,9 @@ export class VerifyTrainingRetirementPage {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new TrainingRetirementForbiddenError("retirement authentication required")
-    const authority = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const authority = await new TrainingRecordSystemAdapter(
+      this.c,
+    ).prepareSourceFreezeAuthorization({
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -39,7 +37,9 @@ export class VerifyTrainingRetirementPage {
     if (authority === "forbidden")
       return new TrainingRetirementForbiddenError("retirement authorization denied")
     const context = { env: this.c.env, assertions: authority.assertions }
-    const plan = await new RecordRetirementVerificationPlanRepository(context).find(command.planId)
+    const plan = await new TrainingRecordSystemAdapter(context)
+      .retirementPlans()
+      .find(command.planId)
     if (plan instanceof Error) return plan
     if (
       plan === null ||
@@ -51,7 +51,7 @@ export class VerifyTrainingRetirementPage {
       return new TrainingRetirementConflictError(
         "retirement plan unavailable or capability changed",
       )
-    const repository = new RecordRetirementVerificationReceiptRepository(context)
+    const repository = new TrainingRecordSystemAdapter(context).retirementReceipts()
     const existing = await repository.find(command.id)
     if (existing instanceof Error) return existing
     if (
@@ -78,13 +78,13 @@ export class VerifyTrainingRetirementPage {
       stepUpToken,
     )
     if (checked instanceof Error) return checked
-    const keys = await new PrepareRecordRetirementPageKeysAdapter({
+    const keys = await new TrainingRecordSystemAdapter({
       env: this.c.env,
       assertions: checked.assertions,
-    }).prepare(checked.coveragePageId)
+    }).prepareRetirementPageKeys(checked.coveragePageId)
     if (keys instanceof Error) return keys
     const guardedContext = { env: this.c.env, assertions: keys.assertions }
-    const guarded = new RecordRetirementVerificationReceiptRepository(guardedContext)
+    const guarded = new TrainingRecordSystemAdapter(guardedContext).retirementReceipts()
     const matches = (receipt: RecordRetirementVerificationReceiptEntity) =>
       receipt.snapshot.planId === plan.snapshot.id &&
       receipt.snapshot.planDigest === plan.digest &&
@@ -100,7 +100,9 @@ export class VerifyTrainingRetirementPage {
         ? current
         : new TrainingRetirementConflictError("retirement receipt replay changed")
     }
-    const page = await new RecordCoveragePageRepository(guardedContext).find(checked.coveragePageId)
+    const page = await new TrainingRecordSystemAdapter(guardedContext)
+      .coveragePages()
+      .find(checked.coveragePageId)
     if (page instanceof Error) return page
     if (page === null) return new Error("retirement coverage page missing")
     const receipt = await RecordRetirementVerificationReceiptEntity.create(

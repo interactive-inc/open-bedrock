@@ -1,7 +1,7 @@
 import { z } from "zod"
 import type { LifeEventContext } from "@/contexts/life-event/configuration/life-event-context"
 import { LifeEventActorReadAdapter } from "@/contexts/life-event/infrastructure/adapters/life-event-actor-read.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = LifeEventContext
 const inputSchema = z.strictObject({
@@ -23,7 +23,7 @@ export class ListFrozenLifeEventRecordPageAdapter {
     const request = parsed.data
     const actor = await new LifeEventActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

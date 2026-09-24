@@ -14,8 +14,8 @@ import {
 } from "@/contexts/resignation/interface/errors"
 import { recordPreservationRequestSchema } from "@system/domain/schemas/records/record-preservation-input.schema"
 import { procedureKeySchema } from "@system/domain/schemas/workflow/procedure-key.schema"
-import { SubmitRecordPreservationAdapter } from "@system/infrastructure/adapters/records/submit-record-preservation.adapter"
-import { RecordPreservationSubmissionError } from "@system/infrastructure/adapters/records/errors"
+import { submitSystemRecordPreservation } from "@system/interface/operations/submit-system-record-preservation"
+import { RecordPreservationSubmissionError } from "@system/application/records/errors"
 
 /** resignation記録の取得と会社資格をSystemの共通提出処理へ接続する。 */
 export function createResignationPreservationSubmissionHandlers(mode: "create" | "resubmit") {
@@ -47,7 +47,7 @@ export function createResignationPreservationSubmissionHandlers(mode: "create" |
       const request = c.req.valid("json")
       const resignationId = c.req.valid("param").id
       const sourceNamespace = c.env.RECORD_SOURCE_NAMESPACE ?? ""
-      const adapter = new SubmitRecordPreservationAdapter({
+      const adapterContext: Parameters<typeof submitSystemRecordPreservation>[0] = {
         env: c.env,
         var: c.var,
         source: {
@@ -60,7 +60,7 @@ export function createResignationPreservationSubmissionHandlers(mode: "create" |
             new CaptureResignationRecordAdapter(c).prepare({ resignationId, sourceNamespace }),
         },
         prepareTask: (input) => prepareCompanyRecordProcedureTask(c, input),
-      })
+      }
       const common = {
         authentication,
         procedureKey: request.procedure_key,
@@ -71,7 +71,10 @@ export function createResignationPreservationSubmissionHandlers(mode: "create" |
           const idempotencyKey = c.req.valid("header")["idempotency-key"]
           if (idempotencyKey === undefined)
             throw new ResignationInputError({ message: "invalid preservation request" })
-          return adapter.execute({ ...common, revision: { mode: "create", idempotencyKey } })
+          return submitSystemRecordPreservation(adapterContext, {
+            ...common,
+            revision: { mode: "create", idempotencyKey },
+          })
         }
         const number = c.req.valid("param").number
         if (
@@ -80,7 +83,7 @@ export function createResignationPreservationSubmissionHandlers(mode: "create" |
           !("previous_digest" in request)
         )
           throw new ResignationInputError({ message: "invalid preservation request" })
-        return adapter.execute({
+        return submitSystemRecordPreservation(adapterContext, {
           ...common,
           revision: {
             mode: "resubmit",

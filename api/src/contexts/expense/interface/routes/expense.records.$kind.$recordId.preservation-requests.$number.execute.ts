@@ -2,8 +2,8 @@ import { revalidateCompanyRecordPreservationExecution } from "@/contexts/company
 import { UnexpectedError } from "@/lib/errors"
 import { PrepareExpensePreservationReadAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-preservation-read.adapter"
 import { expenseRecordKindSchema } from "@/contexts/expense/domain/schemas/expense-record-kind.schema"
-import { ExecuteRecordPreservationAdapter } from "@system/infrastructure/adapters/records/execute-record-preservation.adapter"
-import { RecordPreservationExecutionError } from "@system/infrastructure/adapters/records/errors"
+import { executeSystemRecordPreservation } from "@system/interface/operations/execute-system-record-preservation"
+import { RecordPreservationExecutionError } from "@system/application/records/errors"
 import { SystemForbiddenError, SystemHTTPException } from "@system/interface/errors"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
@@ -41,28 +41,31 @@ export const POST = expenseFactory.createHandlers(
         detail: "保全対象の参照資格を確認できません",
       })
     if (access instanceof Error) throw new SystemForbiddenError()
-    const result = await new ExecuteRecordPreservationAdapter({
-      env: c.env,
-      var: c.var,
-      source: {
-        ownerContext: "expense",
-        recordKind: c.req.valid("param").kind,
-        recordId: c.req.valid("param").recordId,
-        sourceNamespace,
-        revalidate: (source) =>
-          new RevalidateExpenseRecordSourceAdapter({
-            env: c.env,
-            var: c.var,
-            now: c.var.now,
-            sourceNamespace,
-          }).prepare(source, { authentication, session: access.session }),
+    const result = await executeSystemRecordPreservation(
+      {
+        env: c.env,
+        var: c.var,
+        source: {
+          ownerContext: "expense",
+          recordKind: c.req.valid("param").kind,
+          recordId: c.req.valid("param").recordId,
+          sourceNamespace,
+          revalidate: (source) =>
+            new RevalidateExpenseRecordSourceAdapter({
+              env: c.env,
+              var: c.var,
+              now: c.var.now,
+              sourceNamespace,
+            }).prepare(source, { authentication, session: access.session }),
+        },
+        prepareExecution: (input) => revalidateCompanyRecordPreservationExecution(c, input),
       },
-      prepareExecution: (input) => revalidateCompanyRecordPreservationExecution(c, input),
-    }).execute({
-      authentication,
-      number: c.req.valid("param").number,
-      proposalDigest: c.req.valid("json").proposal_digest,
-    })
+      {
+        authentication,
+        number: c.req.valid("param").number,
+        proposalDigest: c.req.valid("json").proposal_digest,
+      },
+    )
     if (result instanceof RecordPreservationExecutionError) {
       const statuses: Readonly<
         Record<RecordPreservationExecutionError["code"], 400 | 403 | 404 | 409 | 503>

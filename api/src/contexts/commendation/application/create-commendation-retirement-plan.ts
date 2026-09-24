@@ -1,5 +1,5 @@
 import { PrepareCommendationRetirementPlanAdapter } from "@/contexts/commendation/infrastructure/adapters/prepare-commendation-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { CommendationRecordSystemAdapter } from "@/contexts/commendation/infrastructure/adapters/commendation-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { CommendationRetirementConflictError } from "@/contexts/commendation/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateCommendationRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new CommendationRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

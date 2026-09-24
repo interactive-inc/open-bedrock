@@ -2,7 +2,7 @@ import { z } from "zod"
 import type { RecruitmentContext } from "@/contexts/recruitment/configuration/recruitment-context"
 import { RecruitmentActorReadAdapter } from "@/contexts/recruitment/infrastructure/adapters/recruitment-actor-read.adapter"
 import { recruitmentRecordKindSchema } from "@/contexts/recruitment/domain/definitions/recruitment-record-kind.definition"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = RecruitmentContext
 const inputSchema = z.strictObject({
@@ -28,7 +28,7 @@ export class ListFrozenRecruitmentRecordPageAdapter {
     const request = parsed.data
     const actor = await new RecruitmentActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

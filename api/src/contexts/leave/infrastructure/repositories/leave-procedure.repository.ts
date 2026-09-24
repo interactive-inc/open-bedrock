@@ -1,5 +1,5 @@
 import type { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
-import { SystemD1AuthorizedExecutionAdapter } from "@system/infrastructure/adapters/workflow/system-d1-authorized-execution.adapter"
+import { executeSystemAuthorizedOperation } from "@system/interface/operations/execute-system-authorized-operation"
 import type { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { HumanAttestationEntity } from "@system/domain/entities/human-attestation.entity"
@@ -380,7 +380,7 @@ export class LeaveProcedureRepository {
               ),
             abortWhenPreviousStatementChangedNoRows(database),
           ]
-    return new SystemD1AuthorizedExecutionAdapter(this.c).execute({
+    return executeSystemAuthorizedOperation(this.c, {
       authorization: input.authorization,
       proposalDigest: input.authorization.proposalDigest,
       executedAt: input.authorization.grantedAt,

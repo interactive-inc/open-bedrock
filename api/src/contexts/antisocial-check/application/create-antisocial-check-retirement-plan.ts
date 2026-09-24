@@ -1,5 +1,5 @@
 import { PrepareAntisocialCheckRetirementPlanAdapter } from "@/contexts/antisocial-check/infrastructure/adapters/prepare-antisocial-check-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { AntisocialCheckRecordSystemAdapter } from "@/contexts/antisocial-check/infrastructure/adapters/antisocial-check-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { AntisocialCheckRetirementConflictError } from "@/contexts/antisocial-check/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateAntisocialCheckRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new AntisocialCheckRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

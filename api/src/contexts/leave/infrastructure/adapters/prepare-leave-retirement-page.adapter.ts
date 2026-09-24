@@ -9,9 +9,9 @@ import type {
 import { LeaveActorReadAdapter } from "@/contexts/leave/infrastructure/adapters/leave-actor-read.adapter"
 import { CaptureFrozenLeaveRecordPageAdapter } from "@/contexts/leave/infrastructure/adapters/capture-frozen-leave-record-page.adapter"
 import { PrepareLeaveCoverageRecordsAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-coverage-records.adapter"
-import { PrepareRecordSourceFreezeAuthorizationAdapter } from "@system/infrastructure/adapters/records/prepare-record-source-freeze-authorization.adapter"
-import { PrepareRecordKindCoverageAdapter } from "@system/infrastructure/adapters/records/prepare-record-kind-coverage.adapter"
-import { RecordCoveragePageRepository } from "@system/infrastructure/repositories/records/record-coverage-page.repository"
+import { prepareSystemRecordSourceFreezeAuthorization } from "@system/interface/operations/prepare-system-record-source-freeze-authorization"
+import { prepareSystemRecordKindCoverage } from "@system/interface/operations/prepare-system-record-kind-coverage"
+import { openSystemRecordCoveragePages } from "@system/interface/operations/open-system-record-coverage-pages"
 import { leaveRecordKindSchema } from "@/contexts/leave/domain/definitions/leave-record-kind.definition"
 
 type Context = LeaveContext & SystemAttachmentStorageContext & SystemDatabaseContext
@@ -37,7 +37,7 @@ export class PrepareLeaveRetirementPageAdapter {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined)
       return new ForbiddenError("retirement authentication required", "forbidden")
-    const authority = await new PrepareRecordSourceFreezeAuthorizationAdapter(this.c).prepare({
+    const authority = await prepareSystemRecordSourceFreezeAuthorization(this.c, {
       authentication,
       now: this.c.var.now(),
       stepUpToken,
@@ -45,23 +45,26 @@ export class PrepareLeaveRetirementPageAdapter {
     if (authority instanceof Error) return authority
     if (authority === "forbidden")
       return new ForbiddenError("retirement authorization denied", "forbidden")
-    const chain = await new PrepareRecordKindCoverageAdapter({
-      env: this.c.env,
-      assertions: authority.assertions,
-    }).prepare({
-      freezeId: request.freezeId,
-      sourceNamespace: request.sourceNamespace,
-      purpose: request.purpose,
-      ownerContext: "leave",
-      recordKind: request.recordKind,
-    })
+    const chain = await prepareSystemRecordKindCoverage(
+      {
+        env: this.c.env,
+        assertions: authority.assertions,
+      },
+      {
+        freezeId: request.freezeId,
+        sourceNamespace: request.sourceNamespace,
+        purpose: request.purpose,
+        ownerContext: "leave",
+        recordKind: request.recordKind,
+      },
+    )
     if (chain instanceof Error) return chain
     if (
       chain.summary.terminalDigest !== request.terminalDigest ||
       request.sequence > chain.summary.pageCount
     )
       return new Error("retirement coverage target changed")
-    const stored = await new RecordCoveragePageRepository({
+    const stored = await openSystemRecordCoveragePages({
       env: this.c.env,
       assertions: chain.assertions,
     }).find({

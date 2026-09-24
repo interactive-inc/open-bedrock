@@ -5,7 +5,7 @@ import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflo
 import { RecordRetirementProposalValue } from "@system/domain/values/records/record-retirement-proposal.value"
 import { RecordSourceRetirementEntity } from "@system/domain/entities/record-source-retirement.entity"
 import { ExecutionAuthorizationEntity } from "@system/domain/entities/execution-authorization.entity"
-import { RecordSourceRetirementRepository } from "@system/infrastructure/repositories/records/record-source-retirement.repository"
+import { openSystemRecordSourceRetirements } from "@system/interface/operations/open-system-record-source-retirements"
 import {
   AntisocialCheckRetirementConflictError,
   AntisocialCheckRetirementForbiddenError,
@@ -69,7 +69,7 @@ export class ExecuteAntisocialCheckRetirementAdapter {
       value.props.terminalReceipt.digest !== current.terminalReceiptDigest
     )
       return new AntisocialCheckRetirementConflictError("retirement verified scope differs")
-    const repository = new RecordSourceRetirementRepository({
+    const repository = openSystemRecordSourceRetirements({
       env: this.c.env,
       assertions: current.assertions,
     })

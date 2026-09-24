@@ -1,5 +1,5 @@
 import { PrepareHealthCheckupRetirementPlanAdapter } from "@/contexts/health-checkup/infrastructure/adapters/prepare-health-checkup-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { HealthCheckupRecordSystemAdapter } from "@/contexts/health-checkup/infrastructure/adapters/health-checkup-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { HealthCheckupRetirementConflictError } from "@/contexts/health-checkup/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateHealthCheckupRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new HealthCheckupRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

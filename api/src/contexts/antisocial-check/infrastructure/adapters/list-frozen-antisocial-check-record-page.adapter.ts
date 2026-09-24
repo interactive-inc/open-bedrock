@@ -1,7 +1,7 @@
 import { z } from "zod"
 import type { AntisocialCheckContext } from "@/contexts/antisocial-check/configuration/antisocial-check-context"
 import { AntisocialCheckActorReadAdapter } from "@/contexts/antisocial-check/infrastructure/adapters/antisocial-check-actor-read.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = AntisocialCheckContext
 const inputSchema = z.strictObject({
@@ -23,7 +23,7 @@ export class ListFrozenAntisocialCheckRecordPageAdapter {
     const request = parsed.data
     const actor = await new AntisocialCheckActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

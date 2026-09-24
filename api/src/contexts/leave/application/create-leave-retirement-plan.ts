@@ -1,5 +1,5 @@
 import { PrepareLeaveRetirementPlanAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { LeaveRecordSystemAdapter } from "@/contexts/leave/infrastructure/adapters/leave-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { LeaveRetirementConflictError } from "@/contexts/leave/application/errors"
 
@@ -15,10 +15,10 @@ export class CreateLeaveRetirementPlan {
     const prepared = await new PrepareLeaveRetirementPlanAdapter(this.c).prepare(input, stepUpToken)
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new LeaveRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

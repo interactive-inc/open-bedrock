@@ -1,5 +1,5 @@
 import { PrepareOnboardingRetirementPlanAdapter } from "@/contexts/onboarding/infrastructure/adapters/prepare-onboarding-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { OnboardingRecordSystemAdapter } from "@/contexts/onboarding/infrastructure/adapters/onboarding-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { OnboardingRetirementConflictError } from "@/contexts/onboarding/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateOnboardingRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new OnboardingRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&

@@ -1,7 +1,7 @@
 import { z } from "zod"
 import type { RentalReservationContext } from "@/contexts/rental/configuration/rental-context"
 import { RentalReservationActorReadAdapter } from "@/contexts/rental/infrastructure/adapters/rental-reservation-actor-read.adapter"
-import { RecordSourceFreezeRepository } from "@system/infrastructure/repositories/records/record-source-freeze.repository"
+import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 
 type Context = RentalReservationContext
 const inputSchema = z.strictObject({
@@ -23,7 +23,7 @@ export class ListFrozenRentalReservationRecordPageAdapter {
     const request = parsed.data
     const actor = await new RentalReservationActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
-    const generation = await new RecordSourceFreezeRepository({
+    const generation = await openSystemRecordSourceFreezes({
       env: this.c.env,
       assertions: actor.assertions,
     }).prepareActiveGeneration({

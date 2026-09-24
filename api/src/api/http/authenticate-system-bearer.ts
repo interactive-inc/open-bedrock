@@ -1,7 +1,6 @@
 import type { HonoEnv } from "@/env"
-import { ResolveBearerAccountAdapter } from "@system/infrastructure/adapters/auth/resolve-bearer-account.adapter"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { SystemD1AuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-authorization.adapter"
+import { resolveSystemBearerPrincipal } from "@system/interface/operations/resolve-system-bearer-principal"
 import { readBearerAuthorization } from "@system/interface/authorization/lib/bearer-authorization"
 import type { Context } from "hono"
 
@@ -17,29 +16,25 @@ export async function authenticateSystemBearer(c: Context<HonoEnv>): Promise<voi
   const authorization = readBearerAuthorization(c.req.header("authorization"))
   if (authorization.kind !== "token") throw new UnauthorizedError(INVALID_TOKEN_MESSAGE)
 
-  const bearerAccount = await new ResolveBearerAccountAdapter({ env: c.env }).resolve({
-    token: authorization.token,
-    now,
-  })
-  if (bearerAccount.kind === "unavailable") {
-    throw new UnauthorizedError("account authentication is unavailable")
+  const principal = await resolveSystemBearerPrincipal(
+    { env: c.env },
+    { token: authorization.token, now },
+  )
+  if (principal.kind === "unavailable") {
+    throw new UnauthorizedError(
+      principal.stage === "authentication"
+        ? "account authentication is unavailable"
+        : "account authorization is unavailable",
+    )
   }
-  // System adapterの拒否理由（Account不在、非active、失効）は応答へ出さず、Account状態の推測を防ぐ。
-  if (bearerAccount.kind === "rejected") throw new UnauthorizedError(INVALID_TOKEN_MESSAGE)
+  // System operationの拒否理由（Account不在、非active、失効）は応答へ出さず、Account状態の推測を防ぐ。
+  if (principal.kind === "rejected") throw new UnauthorizedError(INVALID_TOKEN_MESSAGE)
 
-  const accountAuthorization = await new SystemD1AuthorizationAdapter({
-    env: { DB: c.env.DB },
-  }).resolveForAccount({ accountId: bearerAccount.accountId, resource: null, at: now })
-  if (accountAuthorization instanceof Error) {
-    throw new UnauthorizedError("account authorization is unavailable")
-  }
-  if (accountAuthorization === null) throw new UnauthorizedError(INVALID_TOKEN_MESSAGE)
-
-  c.set("userId", bearerAccount.accountId)
-  c.set("accountTokenVersion", bearerAccount.tokenVersion)
-  c.set("bearerReadAuthentication", bearerAccount.readAuthentication)
-  c.set("permissions", accountAuthorization.permissionKeys)
-  c.set("scopedPermissions", accountAuthorization.scopedPermissionKeys)
-  c.set("role", accountAuthorization.roleKeys[0] ?? "authenticated")
-  c.set("roleKeys", accountAuthorization.roleKeys)
+  c.set("userId", principal.accountId)
+  c.set("accountTokenVersion", principal.tokenVersion)
+  c.set("bearerReadAuthentication", principal.readAuthentication)
+  c.set("permissions", principal.permissionKeys)
+  c.set("scopedPermissions", principal.scopedPermissionKeys)
+  c.set("role", principal.roleKeys[0] ?? "authenticated")
+  c.set("roleKeys", principal.roleKeys)
 }

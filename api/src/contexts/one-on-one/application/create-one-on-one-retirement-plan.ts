@@ -1,5 +1,5 @@
 import { PrepareOneOnOneRetirementPlanAdapter } from "@/contexts/one-on-one/infrastructure/adapters/prepare-one-on-one-retirement-plan.adapter"
-import { RecordRetirementVerificationPlanRepository } from "@system/infrastructure/repositories/records/record-retirement-verification-plan.repository"
+import { OneOnOneRecordSystemAdapter } from "@/contexts/one-on-one/infrastructure/adapters/one-on-one-record-system.adapter"
 import type { RecordRetirementVerificationPlanEntity } from "@system/domain/entities/record-retirement-verification-plan.entity"
 import { OneOnOneRetirementConflictError } from "@/contexts/one-on-one/application/errors"
 
@@ -18,10 +18,10 @@ export class CreateOneOnOneRetirementPlan {
     )
     if (prepared instanceof Error) return prepared
     const plan = prepared.plan
-    const repository = new RecordRetirementVerificationPlanRepository({
+    const repository = new OneOnOneRecordSystemAdapter({
       env: this.c.env,
       assertions: prepared.assertions,
-    })
+    }).retirementPlans()
     const matches = (existing: RecordRetirementVerificationPlanEntity) =>
       existing.snapshot.freezeId === plan.snapshot.freezeId &&
       existing.snapshot.sourceNamespace === plan.snapshot.sourceNamespace &&
