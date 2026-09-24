@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { prepareSystemAuditDisclosure } from "@system/interface/audit/prepare-system-audit-disclosure"
 import { systemAuditEventResponseSchema } from "@system/interface/http/audit-disclosure-response-schemas"
 import { SystemAuditUnavailableError, SystemForbiddenError } from "@system/interface/errors"
@@ -49,7 +50,7 @@ export const GET = systemFactory.createHandlers(
     ) {
       const deniedAudit = SystemAuditEventEntity.create({
         actorAccountId: context.var.userId,
-        action: "system.audit.list",
+        action: SYSTEM_AUDIT_ACTIONS.systemAuditList,
         targetType: "system:audit-event",
         targetId: null,
         outcome: "denied",
@@ -74,7 +75,7 @@ export const GET = systemFactory.createHandlers(
       permission: SystemFeaturePermission.AUDIT_READ.key,
       purpose: query.purpose ?? null,
       now,
-      action: "system.audit.list",
+      action: SYSTEM_AUDIT_ACTIONS.systemAuditList,
       targetId: null,
     })
     const page = await new SystemAuditEventQueryAdapter({ env: { DB: context.env.DB } }).list(
@@ -109,7 +110,7 @@ export const GET = systemFactory.createHandlers(
     }
     const succeededAudit = SystemAuditEventEntity.create({
       actorAccountId: context.var.userId,
-      action: "system.audit.list",
+      action: SYSTEM_AUDIT_ACTIONS.systemAuditList,
       targetType: "system:audit-event",
       targetId: null,
       outcome: "succeeded",

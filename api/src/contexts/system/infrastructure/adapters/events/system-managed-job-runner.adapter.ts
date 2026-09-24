@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { SystemDeliveryEntity } from "@system/domain/entities/system-delivery.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
@@ -5,6 +6,13 @@ import { SystemDeliveryRepository } from "@system/infrastructure/repositories/ev
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
 import { SystemServiceOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-service-operation-authorization.adapter"
 import { SystemPrincipalSecretService } from "@system/lib/auth/system-principal-secret-service"
+
+const systemManagedJobAuditActions = Object.freeze({
+  claimed: SYSTEM_AUDIT_ACTIONS.systemManagedJobClaimed,
+  succeeded: SYSTEM_AUDIT_ACTIONS.systemManagedJobSucceeded,
+  failed: SYSTEM_AUDIT_ACTIONS.systemManagedJobFailed,
+  recovered: SYSTEM_AUDIT_ACTIONS.systemManagedJobRecovered,
+})
 
 type Context = Readonly<{
   env: Readonly<{ DB: D1Database }>
@@ -163,10 +171,10 @@ export class SystemManagedJobRunnerAdapter {
     return { status: "queued" as const, job: recovered }
   }
 
-  private audit(id: string, action: string, at: Date) {
+  private audit(id: string, action: keyof typeof systemManagedJobAuditActions, at: Date) {
     const event = SystemAuditEventEntity.create({
       actorAccountId: this.c.workerAccountId,
-      action: `system.managed_job.${action}`,
+      action: systemManagedJobAuditActions[action],
       targetType: "system:job",
       targetId: id,
       outcome: action === "failed" ? "failed" : "succeeded",

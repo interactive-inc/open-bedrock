@@ -113,8 +113,14 @@ describe("POST /system/browser-sessions", () => {
     expect(body.access_token.length > 0).toBe(true)
     expect(body.refresh_token.length > 0).toBe(true)
 
-    // セッション発行の成功監査はここ(token 消費時)で初めて記録される。
-    expect(await auditRows(db)).toEqual([{ action: "auth.session.create", reason_code: null }])
+    // code の発行・消費と、消費時に初めて確定するセッション発行を監査する。
+    expect(
+      (await auditRows(db)).toSorted((left, right) => left.action.localeCompare(right.action)),
+    ).toEqual([
+      { action: "auth.browser_login_code.consumed", reason_code: null },
+      { action: "auth.browser_login_code.created", reason_code: null },
+      { action: "auth.session.create", reason_code: null },
+    ])
 
     const remaining = await db
       .prepare("SELECT COUNT(*) AS count FROM system_browser_login_codes")
@@ -169,7 +175,10 @@ describe("POST /system/browser-sessions", () => {
     const response = await postBrowserToken(db, { code: "raw-code-suspended" })
 
     expect(response.status).toBe(401)
-    expect(await auditRows(db)).toEqual([])
+    // code は消費済みとして監査し、停止中Accountへセッションは発行しない。
+    expect(await auditRows(db)).toEqual([
+      { action: "auth.browser_login_code.consumed", reason_code: null },
+    ])
   })
 
   test("rejects an empty code with a 400", async () => {

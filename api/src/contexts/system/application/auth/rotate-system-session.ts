@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemAccountRepository } from "@system/infrastructure/repositories/auth/system-account.repository"
 import type { SystemSessionAuditContext } from "@system/domain/definitions/audit/system-session-audit-context.definition"
@@ -146,7 +147,7 @@ export class RotateSystemSession {
   ): Promise<RotateSystemSessionResult | Error> {
     const audit = SystemAuditEventEntity.createSession({
       actorAccountId: null,
-      action: "auth.session.rotate",
+      action: SYSTEM_AUDIT_ACTIONS.authSessionRotate,
       targetId: null,
       outcome: "denied",
       reasonCode: "session_invalid",
@@ -168,7 +169,7 @@ export class RotateSystemSession {
   ): Promise<RotateSystemSessionResult | Error> {
     const audit = SystemAuditEventEntity.createSession({
       actorAccountId: current.accountId,
-      action: "auth.session.rotate",
+      action: SYSTEM_AUDIT_ACTIONS.authSessionRotate,
       targetId: current.id,
       outcome: "denied",
       reasonCode: reason === "reused" ? "refresh_token_reused" : "session_invalid",

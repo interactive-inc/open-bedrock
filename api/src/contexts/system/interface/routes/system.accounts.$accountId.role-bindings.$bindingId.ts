@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import {
   SystemForbiddenError,
   SystemIAMUnavailableError,
@@ -72,7 +73,7 @@ export const DELETE = systemFactory.createHandlers(
     }
     const auditEvent = SystemAuditEventEntity.create({
       actorAccountId: actorAccountId.data,
-      action: "system.iam.role_binding.revoked",
+      action: SYSTEM_AUDIT_ACTIONS.systemIamRoleBindingRevoked,
       targetType: "system:role-binding",
       targetId: binding.id,
       outcome: "succeeded",

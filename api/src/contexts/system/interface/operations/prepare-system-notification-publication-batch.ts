@@ -38,6 +38,7 @@ export function prepareSystemNotificationPublicationBatch(
         ...candidate,
         messageId: message.id,
         readAt: null,
+        dismissedAt: null,
       })
       if (delivery instanceof Error) return delivery
       deliveries.push(delivery)

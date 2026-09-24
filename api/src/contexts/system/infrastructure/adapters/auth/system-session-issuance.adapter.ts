@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import type {
   IssueSystemSessionCommand,
   IssueSystemSessionResult,
@@ -73,7 +74,7 @@ export class SystemSessionIssuanceAdapter {
 
     const audit = SystemAuditEventEntity.createSession({
       actorAccountId: session.accountId,
-      action: "auth.session.create",
+      action: SYSTEM_AUDIT_ACTIONS.authSessionCreate,
       targetId: session.id,
       outcome: "succeeded",
       reasonCode: null,

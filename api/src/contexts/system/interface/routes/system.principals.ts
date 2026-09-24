@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemPrincipalEntity } from "@system/domain/entities/system-principal.entity"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
@@ -69,7 +70,7 @@ export const POST = systemFactory.createHandlers(
     if (after === null || after instanceof Error) throw new SystemPrincipalUnavailableError(after)
     const event = SystemAuditEventEntity.create({
       actorAccountId: context.var.userId,
-      action: "system.principal.created",
+      action: SYSTEM_AUDIT_ACTIONS.systemPrincipalCreated,
       targetType: "system:principal",
       targetId: principal.id,
       outcome: "succeeded",

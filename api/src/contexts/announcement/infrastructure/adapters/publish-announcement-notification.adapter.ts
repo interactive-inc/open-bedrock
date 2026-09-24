@@ -55,6 +55,7 @@ export class PublishAnnouncementNotificationAdapter {
             recipientAccountId: String(recipient.accountId),
             deliveredAt: createdAt,
             readAt: null,
+            dismissedAt: null,
           }),
         ),
       )

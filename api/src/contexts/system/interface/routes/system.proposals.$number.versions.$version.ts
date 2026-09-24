@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
@@ -71,7 +72,7 @@ export const GET = systemFactory.createHandlers(
     if (assertions instanceof Error) throw new SystemProposalHistoryUnavailableError()
     const record = SystemAuditEventEntity.create({
       actorAccountId: authentication.accountId,
-      action: "system.proposal.history.read",
+      action: SYSTEM_AUDIT_ACTIONS.systemProposalHistoryRead,
       targetType: "system:proposal",
       targetId: proposal.proposalId,
       outcome: allowed ? "succeeded" : "denied",

@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
@@ -53,6 +54,23 @@ const body = z.discriminatedUnion("action", [
     .strict(),
   z.object({ kind: z.enum(["job", "outbox"]), action: z.literal("recover") }).strict(),
 ])
+
+const systemDeliveryAuditActions = Object.freeze({
+  job: Object.freeze({
+    claim: SYSTEM_AUDIT_ACTIONS.systemJobClaim,
+    heartbeat: SYSTEM_AUDIT_ACTIONS.systemJobHeartbeat,
+    succeed: SYSTEM_AUDIT_ACTIONS.systemJobSucceed,
+    fail: SYSTEM_AUDIT_ACTIONS.systemJobFail,
+    recover: SYSTEM_AUDIT_ACTIONS.systemJobRecover,
+  }),
+  outbox: Object.freeze({
+    claim: SYSTEM_AUDIT_ACTIONS.systemOutboxClaim,
+    heartbeat: SYSTEM_AUDIT_ACTIONS.systemOutboxHeartbeat,
+    succeed: SYSTEM_AUDIT_ACTIONS.systemOutboxSucceed,
+    fail: SYSTEM_AUDIT_ACTIONS.systemOutboxFail,
+    recover: SYSTEM_AUDIT_ACTIONS.systemOutboxRecover,
+  }),
+})
 
 // @authorization permission batch:execute - 機械Principalのlease tokenでjob・outboxを単調遷移する
 export const PATCH = systemFactory.createHandlers(
@@ -113,7 +131,7 @@ export const PATCH = systemFactory.createHandlers(
     }
     const event = SystemAuditEventEntity.create({
       actorAccountId: accountId.data,
-      action: `system.${input.kind}.${input.action}`,
+      action: systemDeliveryAuditActions[input.kind][input.action],
       targetType: input.kind === "job" ? "system:job" : "system:outbox_message",
       targetId: current.id,
       outcome: "succeeded",

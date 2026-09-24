@@ -150,6 +150,7 @@ export const POST = systemFactory.createHandlers(
         recipientAccountId,
         deliveredAt: now,
         readAt: null,
+        dismissedAt: null,
       }),
     )
     const invalidDelivery = deliveries.find((delivery) => delivery instanceof Error)

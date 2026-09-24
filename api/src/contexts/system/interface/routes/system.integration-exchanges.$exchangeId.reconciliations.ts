@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 /** /system/integration-exchanges/:exchangeId/reconciliations */
 import { ReconcileIntegrationExchange } from "@system/application/integration/reconcile-integration-exchange"
 import { ReconciliationRunEntity } from "@system/domain/entities/reconciliation-run.entity"
@@ -140,7 +141,7 @@ export const POST = systemFactory.createHandlers(
     }
     const event = SystemAuditEventEntity.create({
       actorAccountId: context.var.userId,
-      action: "system.integration_reconciliation.recorded",
+      action: SYSTEM_AUDIT_ACTIONS.systemIntegrationReconciliationRecorded,
       targetType: "system:integration_reconciliation",
       targetId: reconciliation.id,
       outcome: "succeeded",

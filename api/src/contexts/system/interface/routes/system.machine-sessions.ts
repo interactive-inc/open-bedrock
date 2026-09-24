@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 import { LoginRateLimitAdapter } from "@system/infrastructure/adapters/auth/login-rate-limit.adapter"
@@ -70,7 +71,7 @@ export const POST = factory.createHandlers(
       (accountId) => {
         const event = SystemAuditEventEntity.create({
           actorAccountId: accountId,
-          action: "auth.machine_token.issued",
+          action: SYSTEM_AUDIT_ACTIONS.authMachineTokenIssued,
           targetType: "system:machine_credential",
           targetId: body.credential_id,
           outcome: "succeeded",

@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import {
   SystemAccountNotFoundError,
   SystemAccountUnavailableError,
@@ -106,7 +107,7 @@ export const PATCH = systemFactory.createHandlers(
     }
     const auditEvent = SystemAuditEventEntity.create({
       actorAccountId: actorAccountId.data,
-      action: "system.account.status_updated",
+      action: SYSTEM_AUDIT_ACTIONS.systemAccountStatusUpdated,
       targetType: "system:account",
       targetId: targetAccountId.data,
       outcome: "succeeded",

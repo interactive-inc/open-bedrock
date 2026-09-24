@@ -1,9 +1,9 @@
 import { hashPassword } from "@system/lib/auth/hash-password"
 import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import { SystemHTTPException } from "@system/interface/errors"
+import * as systemSessionsRoute from "@system/interface/routes/system.sessions"
 import {
   DELETE,
-  GET,
   PATCH,
   POST,
   type SystemSessionHttpEnvironment,
@@ -23,7 +23,6 @@ const jwtSecret = "system-session-route-test-secret"
 
 function createApp() {
   const app = new Hono<SystemSessionHttpEnvironment>()
-    .get("/system/sessions", ...GET)
     .post("/system/sessions", ...POST)
     .patch("/system/sessions", ...PATCH)
     .delete("/system/sessions", ...DELETE)
@@ -107,15 +106,6 @@ describe("System Session HTTP", () => {
     if (!("access_token" in issuedBody) || !("refresh_token" in issuedBody)) return
     expect(issuedBody).toMatchObject({ account_id: accountId })
 
-    const authenticated = await issueClient.system.sessions.$get({
-      header: { authorization: `Bearer ${issuedBody.refresh_token}` },
-    })
-    expect(authenticated.status).toBe(200)
-    expect(await authenticated.json()).toMatchObject({
-      account_id: accountId,
-      session_id: issuedBody.session_id,
-    })
-
     const rotated = await rotationClient.system.sessions.$patch({
       json: { refresh_token: issuedBody.refresh_token },
     })
@@ -132,8 +122,8 @@ describe("System Session HTTP", () => {
     })
     expect(Number(reused.status)).toBe(401)
 
-    const familyRevoked = await revocationClient.system.sessions.$get({
-      header: { authorization: `Bearer ${rotatedBody.refresh_token}` },
+    const familyRevoked = await revocationClient.system.sessions.$patch({
+      json: { refresh_token: rotatedBody.refresh_token },
     })
     expect(Number(familyRevoked.status)).toBe(401)
 
@@ -179,7 +169,6 @@ describe("System Session HTTP", () => {
         )
       ).status,
     ).toBe(503)
-    expect((await app.request("/system/sessions")).status).toBe(503)
     expect(
       (
         await app.request(
@@ -193,5 +182,93 @@ describe("System Session HTTP", () => {
         )
       ).status,
     ).toBe(400)
+  })
+  test("refresh tokenをBearer credentialとして受け付けるGETを公開しない", () => {
+    expect("GET" in systemSessionsRoute).toBe(false)
+  })
+
+  test("未知subjectと誤passwordを同じdenied監査として記録しsubjectを残さない", async () => {
+    const fixture = new SystemSessionTestContext()
+    const passwordHash = await hashPassword(password, pepper)
+    fixture.sqlite
+      .query(
+        `INSERT INTO system_accounts
+           (id, status, token_version, created_at, updated_at)
+         VALUES (?1, 'active', 0, ?2, ?2)`,
+      )
+      .run(accountId, issuedAt.getTime())
+    fixture.sqlite
+      .query(
+        `INSERT INTO system_identity_bindings
+           (id, account_id, provider, subject, created_at, activated_at, revoked_at)
+         VALUES ('password-identity', ?1, 'password', ?2, ?3, ?3, NULL)`,
+      )
+      .run(accountId, subject, issuedAt.getTime())
+    fixture.sqlite
+      .query(
+        `INSERT INTO system_password_credentials
+           (identity_id, password_hash, changed_at, created_at, updated_at)
+         VALUES ('password-identity', ?1, ?2, ?2, ?2)`,
+      )
+      .run(passwordHash, issuedAt.getTime())
+    const app = createApp()
+    const client = hc<typeof app>("http://system.test", {
+      fetch: (input: Parameters<typeof app.request>[0], init?: Parameters<typeof app.request>[1]) =>
+        app.request(input, init, {
+          DB: fixture.context.env.DB,
+          JWT_SECRET: jwtSecret,
+          NOW: issuedAt.toISOString(),
+          PEPPER_SECRET: pepper,
+        }),
+    })
+
+    const unknown = await client.system.sessions.$post({
+      json: { subject: "unknown@example.com", password },
+    })
+    const wrong = await client.system.sessions.$post({
+      json: { subject, password: "wrong-password" },
+    })
+    expect(Number(unknown.status)).toBe(401)
+    expect(Number(wrong.status)).toBe(401)
+    expect(await unknown.json()).toEqual(await wrong.json())
+
+    const audits = fixture.sqlite
+      .query(
+        `SELECT actor_account_id, action, target_type, target_id, outcome, reason_code,
+                authorization_json, before_json, after_json, metadata_json, occurred_at
+         FROM system_audit_events
+         ORDER BY rowid`,
+      )
+      .all()
+    const denied = {
+      actor_account_id: null,
+      action: "auth.session.password_login_denied",
+      target_type: "session",
+      target_id: null,
+      outcome: "denied",
+      reason_code: "invalid_credentials",
+      authorization_json: null,
+      before_json: null,
+      after_json: null,
+      metadata_json: null,
+      occurred_at: issuedAt.getTime(),
+    }
+    expect(audits).toEqual([denied, denied])
+  })
+
+  test("denied監査を記録できないpassword拒否はfail closedにする", async () => {
+    const fixture = new SystemSessionTestContext()
+    fixture.sqlite.exec("DROP TABLE system_audit_events")
+    const app = createApp()
+    const response = await app.request(
+      "/system/sessions",
+      {
+        method: "POST",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify({ subject: "unknown@example.com", password }),
+      },
+      { DB: fixture.context.env.DB, NOW: issuedAt.toISOString(), PEPPER_SECRET: pepper },
+    )
+    expect(response.status).toBe(503)
   })
 })

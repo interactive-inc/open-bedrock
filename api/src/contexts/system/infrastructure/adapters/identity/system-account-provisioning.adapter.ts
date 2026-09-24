@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
@@ -74,7 +75,7 @@ export class SystemAccountProvisioningAdapter {
     if (afterJson instanceof Error) return afterJson
     const auditEvent = SystemAuditEventEntity.create({
       actorAccountId: input.actorAccountId,
-      action: "system.account.provisioned",
+      action: SYSTEM_AUDIT_ACTIONS.systemAccountProvisioned,
       targetType: "system:account",
       targetId: accountId.data,
       outcome: "succeeded",

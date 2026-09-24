@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import type { RecordProcedureDecisionContext } from "@system/configuration/record-procedure-decision-context"
 import type { SystemDatabaseContext } from "@system/configuration/system-context"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
@@ -125,7 +126,7 @@ export class ReviewRecordRetirementAdapter {
     if (technical instanceof Error) return new RecordRetirementReviewError("forbidden")
     const audit = SystemAuditEventEntity.create({
       actorAccountId: authentication.accountId,
-      action: "system.proposal.review.read",
+      action: SYSTEM_AUDIT_ACTIONS.systemProposalReviewRead,
       targetType: "system:proposal",
       targetId: proposal.proposalId,
       outcome: "succeeded",

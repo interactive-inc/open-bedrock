@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import {
   attachmentPreservationCommandSchema,
   attachmentPreservationSnapshotSchema,
@@ -72,8 +73,8 @@ export class AttachmentPreservationEntity {
       actorAccountId: release?.actorAccountId ?? this.snapshot.actorAccountId,
       action:
         release === null
-          ? "system.attachment.preservation.created"
-          : "system.attachment.preservation.released",
+          ? SYSTEM_AUDIT_ACTIONS.systemAttachmentPreservationCreated
+          : SYSTEM_AUDIT_ACTIONS.systemAttachmentPreservationReleased,
       targetType: "system:attachment-preservation",
       targetId: this.snapshot.id,
       outcome: "succeeded",

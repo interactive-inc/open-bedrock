@@ -4879,7 +4879,6 @@ const routePart51 = createRouteApp()
 
 const routePart52 = createRouteApp()
   .delete("/system/roles/:roleId", ...systemRolesRoleIdRoute.DELETE)
-  .get("/system/sessions", ...systemSessionsRoute.GET)
   .post("/system/sessions", ...systemSessionsRoute.POST)
   .patch("/system/sessions", ...systemSessionsRoute.PATCH)
   .delete("/system/sessions", ...systemSessionsRoute.DELETE)
@@ -4983,9 +4982,9 @@ const routePart52 = createRouteApp()
   .get("/thanks/thanks-redemptions/admin", ...thanksRedemptionsAdminRoute.GET)
   .get("/thanks/thanks-redemptions/inbox", ...thanksRedemptionsInboxRoute.GET)
   .get("/thanks/thanks-redemptions/me", ...thanksRedemptionsMeRoute.GET)
+  .post("/thanks/thanks-redemptions/:id/approve", ...thanksRedemptionsIdApproveRoute.POST)
 
 const routePart53 = createRouteApp()
-  .post("/thanks/thanks-redemptions/:id/approve", ...thanksRedemptionsIdApproveRoute.POST)
   .post("/thanks/thanks-redemptions/:id/reject", ...thanksRedemptionsIdRejectRoute.POST)
   .get("/thanks/thanks-rewards", ...thanksRewardsRoute.GET)
   .post("/thanks/thanks-rewards", ...thanksRewardsRoute.POST)
@@ -5117,12 +5116,12 @@ const routePart53 = createRouteApp()
     "/work-accident/retirement-plans/:planId/requests/:number/resubmit",
     ...workAccidentRetirementPlansPlanIdRequestsNumberResubmitRoute.POST,
   )
-
-const routePart54 = createRouteApp()
   .post(
     "/work-accident/retirement-plans/:planId/requests/:number/withdraw",
     ...workAccidentRetirementPlansPlanIdRequestsNumberWithdrawRoute.POST,
   )
+
+const routePart54 = createRouteApp()
   .post(
     "/work-accident/retirement-plans/:planId/verification-receipts",
     ...workAccidentRetirementPlansPlanIdVerificationReceiptsRoute.POST,

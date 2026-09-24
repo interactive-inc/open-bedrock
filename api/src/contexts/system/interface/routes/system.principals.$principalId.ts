@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { StableSystemAuditJsonValue } from "@system/domain/values/audit/stable-system-audit-json.value"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
@@ -74,7 +75,7 @@ export const PATCH = systemFactory.createHandlers(
     }
     const event = SystemAuditEventEntity.create({
       actorAccountId: context.var.userId,
-      action: "system.principal.renamed",
+      action: SYSTEM_AUDIT_ACTIONS.systemPrincipalRenamed,
       targetType: "system:principal",
       targetId: changed.id,
       outcome: "succeeded",

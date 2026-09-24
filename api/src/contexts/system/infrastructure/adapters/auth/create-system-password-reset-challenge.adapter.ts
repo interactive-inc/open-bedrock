@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import type { PasswordResetTokenHash } from "@system/domain/schemas/auth/password-reset-token-hash.schema"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
@@ -24,7 +25,7 @@ export class CreateSystemPasswordResetChallengeAdapter {
   async createSystemPasswordResetChallenge(props: Props): Promise<void | Error> {
     const audit = SystemAuditEventEntity.create({
       actorAccountId: props.actorAccountId,
-      action: "auth.password_reset.requested",
+      action: SYSTEM_AUDIT_ACTIONS.authPasswordResetRequested,
       targetType: "account",
       targetId: props.accountId,
       outcome: "succeeded",

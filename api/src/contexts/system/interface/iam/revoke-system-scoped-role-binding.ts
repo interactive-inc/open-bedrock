@@ -1,3 +1,4 @@
+import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { roleBindingIdSchema } from "@system/domain/schemas/iam/role-binding.schema"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
@@ -82,7 +83,7 @@ export async function revokeSystemScopedRoleBinding(
   if (before instanceof Error) return before
   const audit = SystemAuditEventEntity.create({
     actorAccountId: actor.data,
-    action: "system.iam.role_binding.revoked",
+    action: SYSTEM_AUDIT_ACTIONS.systemIamRoleBindingRevoked,
     targetType: "system:role-binding",
     targetId: binding.id,
     outcome: "succeeded",
