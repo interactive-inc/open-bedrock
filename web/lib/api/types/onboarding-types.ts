@@ -3,7 +3,7 @@ export type OnboardingKind = "join" | "leave"
 
 export type OnboardingTaskStatus = "pending" | "done"
 
-export type OnboardingAssignmentStatus = "in_progress" | "completed"
+export type OnboardingAssignmentStatus = "in_progress" | "completed" | "superseded"
 
 /**
  * GET /onboarding-templates の各要素。

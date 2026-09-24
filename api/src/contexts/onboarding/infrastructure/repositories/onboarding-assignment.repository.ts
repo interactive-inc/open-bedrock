@@ -10,7 +10,7 @@ import {
   onboardingAssignments,
   onboardingTasks,
 } from "@/contexts/onboarding/infrastructure/schema/onboarding"
-import { and, asc, count, eq, inArray, ne } from "drizzle-orm"
+import { and, asc, count, eq, inArray, notInArray } from "drizzle-orm"
 
 export class OnboardingAssignmentRepository {
   constructor(private readonly c: Context) {}
@@ -212,7 +212,7 @@ export class OnboardingAssignmentRepository {
     }
   }
 
-  /** employee_id と templateCode の組み合わせで completed 以外の割り当てを探す。 */
+  /** employee_id と templateCode の組み合わせで進行中の割り当てを探す。 */
   async findActiveByEmployeeAndTemplate(
     employeeId: EmployeeId,
     templateCode: string,
@@ -225,7 +225,7 @@ export class OnboardingAssignmentRepository {
           and(
             eq(onboardingAssignments.employeeId, employeeId),
             eq(onboardingAssignments.templateCode, templateCode),
-            ne(onboardingAssignments.status, "completed"),
+            notInArray(onboardingAssignments.status, ["completed", "superseded"]),
           ),
         )
         .limit(1)
@@ -278,7 +278,7 @@ export class OnboardingAssignmentRepository {
       await db.batch([
         db
           .prepare(
-            "UPDATE onboarding_tasks SET status = 'done', completed_at = ?1 WHERE id = ?2 AND status = 'pending'",
+            "UPDATE onboarding_tasks SET status = 'done', completed_at = ?1 WHERE id = ?2 AND status = 'pending' AND EXISTS (SELECT 1 FROM onboarding_assignments WHERE id = onboarding_tasks.assignment_id AND status <> 'superseded')",
           )
           .bind(completedAt, taskId),
         abortWhenPreviousStatementChangedNoRows(db),
@@ -318,7 +318,7 @@ export class OnboardingAssignmentRepository {
       await db.batch([
         db
           .prepare(
-            "UPDATE onboarding_tasks SET status = 'pending', completed_at = NULL WHERE id = ?1 AND status = 'done'",
+            "UPDATE onboarding_tasks SET status = 'pending', completed_at = NULL WHERE id = ?1 AND status = 'done' AND EXISTS (SELECT 1 FROM onboarding_assignments WHERE id = onboarding_tasks.assignment_id AND status <> 'superseded')",
           )
           .bind(taskId),
         abortWhenPreviousStatementChangedNoRows(db),

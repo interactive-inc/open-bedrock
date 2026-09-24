@@ -1,4 +1,7 @@
-import { openCompanyPersonnelEvents } from "@/contexts/company/interface/operations/open-company-personnel-events"
+import {
+  openCompanyPersonnelEvents,
+  type CompanyPersonnelEvents,
+} from "@/contexts/company/interface/operations/open-company-personnel-events"
 import { ListUndeliveredLifecycleActionsAdapter } from "@/contexts/onboarding/infrastructure/adapters/list-undelivered-lifecycle-actions.adapter"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
@@ -20,7 +23,9 @@ type Context = Readonly<{
   recordedSince: Date
   clock: () => Date
 }>
+type Replaceable = Readonly<{ assignmentId: number; actionId: string }>
 const handlerKey = "onboarding.lifecycle"
+const MAX_CORRECTION_DEPTH = 20
 const templateSelection = `SELECT template.id, template.code, template.name, template.kind, template.description,
  binding.updated_at AS binding_updated_at,
  (SELECT json_group_array(json_object('code', code, 'title', title, 'order', sort_order, 'ownerRole', owner_role))
@@ -179,10 +184,28 @@ export class OnboardingLifecycleDeliveryAdapter {
     if (source.event.props.fingerprint !== job.payloadDigest)
       return new Error("lifecycle source digest changed")
     const guards = [...authorization.assertions, company.prepareGuard(source)]
-    if (source.status === "obsolete" || source.status === "superseded") {
+    if (source.status === "superseded") {
       const audit = this.audit(job.id, source.status, { actionId }, at)
       if (audit instanceof Error) return audit
       return [...guards, ...this.receipt(job.id, source.status, at), ...audit]
+    }
+    // 訂正後の発令が配送されるとき、訂正元から生成した進行中のチェックリストを置換済みにする。
+    const replaced =
+      source.status === "obsolete" || source.status === "ready"
+        ? await this.findReplaceable(company, source.event.props.correctsActionId, observedOn)
+        : null
+    if (replaced instanceof Error) return replaced
+    const supersede = replaced === null ? [] : this.supersede(job.id, actionId, replaced, at)
+    if (supersede instanceof Error) return supersede
+    if (source.status === "obsolete") {
+      const audit = this.audit(
+        job.id,
+        source.status,
+        { actionId, replacedAssignmentId: replaced?.assignmentId ?? null },
+        at,
+      )
+      if (audit instanceof Error) return audit
+      return [...guards, ...supersede, ...this.receipt(job.id, source.status, at), ...audit]
     }
     if (source.status !== "ready" || source.effect === null)
       return new Error("lifecycle effect is not ready")
@@ -214,12 +237,14 @@ export class OnboardingLifecycleDeliveryAdapter {
         employeeId: assignment.employeeId,
         templateCode: template.code,
         employmentId: source.period?.period_id,
+        replacedAssignmentId: replaced?.assignmentId ?? null,
       },
       at,
     )
     if (audit instanceof Error) return audit
     return [
       ...guards,
+      ...supersede,
       this.c.env.DB.prepare(`SELECT CASE WHEN EXISTS (SELECT 1 FROM (${templateSelection}) current
         WHERE current.code = ?2 AND current.kind = ?3 AND current.binding_updated_at = ?4 AND current.tasks_json = ?5)
         THEN 1 ELSE json_extract('{}', 'onboarding_lifecycle_template_changed') END AS ok`).bind(
@@ -252,6 +277,67 @@ export class OnboardingLifecycleDeliveryAdapter {
       ),
       ...this.receipt(job.id, "assigned", at),
       ...audit,
+    ]
+  }
+
+  /**
+   * 訂正元の発令を遡り、最も近い発令から生成した進行中の割当を探す。
+   * 完了済みの割当は作業記録として残し、置換しない。
+   */
+  private async findReplaceable(
+    company: CompanyPersonnelEvents,
+    correctsActionId: string | null,
+    observedOn: string,
+  ): Promise<Replaceable | null | Error> {
+    let predecessor = correctsActionId
+    for (let depth = 0; predecessor !== null; depth += 1) {
+      if (depth >= MAX_CORRECTION_DEPTH) return new Error("lifecycle correction chain is too long")
+      const row = await this.c.env.DB.prepare(
+        "SELECT id, status FROM onboarding_assignments WHERE lifecycle_action_id = ?1",
+      )
+        .bind(predecessor)
+        .first<{ id: number; status: string }>()
+      if (row !== null)
+        return row.status === "in_progress" ? { assignmentId: row.id, actionId: predecessor } : null
+      const previous = await company.findEmploymentEffect(predecessor, observedOn)
+      if (previous === null || previous instanceof Error)
+        return new Error("lifecycle correction source cannot be verified", { cause: previous })
+      predecessor = previous.event.props.correctsActionId
+    }
+    return null
+  }
+
+  private supersede(jobId: string, actionId: string, replaced: Replaceable, at: Date) {
+    const event = SystemAuditEventEntity.create({
+      actorAccountId: this.c.accountId,
+      action: "onboarding.lifecycle.assignment_superseded",
+      targetType: "onboarding:assignment",
+      targetId: String(replaced.assignmentId),
+      outcome: "succeeded",
+      reasonCode: "personnel_action.corrected",
+      authorizationJson: JSON.stringify({
+        permissions: ["batch:execute", "employee:read", "onboarding:manage"],
+      }),
+      beforeJson: JSON.stringify({ status: "in_progress" }),
+      afterJson: JSON.stringify({ status: "superseded" }),
+      metadataJson: JSON.stringify({
+        jobId,
+        actionId,
+        replacedActionId: replaced.actionId,
+      }),
+      occurredAt: at,
+    })
+    if (event instanceof Error) return event
+    return [
+      this.c.env.DB.prepare(`UPDATE onboarding_assignments SET status = 'superseded'
+        WHERE id = ?1 AND lifecycle_action_id = ?2 AND status = 'in_progress'`).bind(
+        replaced.assignmentId,
+        replaced.actionId,
+      ),
+      this.c.env.DB.prepare(
+        "SELECT CASE WHEN changes() = 1 THEN 1 ELSE json_extract('{}', 'onboarding_lifecycle_replacement_changed') END AS ok",
+      ),
+      ...new SystemAuditEventRepository(this.c).prepareAppend(event),
     ]
   }
 
