@@ -13,7 +13,7 @@ import type { HumanAttestationEntity } from "@system/domain/entities/human-attes
 import type { SystemDecisionTaskBundle } from "@system/domain/definitions/workflow/system-decision-task-bundle.definition"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
+import { prepareSystemAuditEventAppend } from "@system/interface/operations/prepare-system-audit-event-append"
 import {
   SystemD1WorkflowAdapter,
   type SystemWorkflowWriter,
@@ -55,7 +55,7 @@ export class RingiRequestRepository {
           input.taskRound,
         ),
       ],
-      cancelEffects: new SystemAuditEventRepository(this.c).prepareAppend(input.audit),
+      cancelEffects: prepareSystemAuditEventAppend({ database: this.c.env.DB, event: input.audit }),
     }).cancel({
       number: input.binding.applicationId,
       createdByAccountId: input.actorAccountId,
@@ -148,7 +148,7 @@ export class RingiRequestRepository {
             input.attestation.comment,
             input.attestation.caseId,
           ),
-        ...new SystemAuditEventRepository(this.c).prepareAppend(input.audit),
+        ...prepareSystemAuditEventAppend({ database: this.c.env.DB, event: input.audit }),
         ...notification,
       ],
     }).decide({
@@ -304,7 +304,7 @@ export class RingiRequestRepository {
               input.previousRingiId ?? null,
             ),
           abortWhenPreviousStatementChangedNoRows(database),
-          ...new SystemAuditEventRepository(this.c).prepareAppend(input.audit),
+          ...prepareSystemAuditEventAppend({ database: this.c.env.DB, event: input.audit }),
           database
             .prepare("SELECT ringi_id AS id FROM ringi_procedure_bindings WHERE request_key = ?1")
             .bind(input.requestKey),
@@ -368,7 +368,7 @@ export class RingiRequestRepository {
             input.binding.requestKey,
           ),
         abortWhenPreviousStatementChangedNoRows(database),
-        ...new SystemAuditEventRepository(this.c).prepareAppend(input.audit),
+        ...prepareSystemAuditEventAppend({ database: this.c.env.DB, event: input.audit }),
         ...notification,
       ],
     })

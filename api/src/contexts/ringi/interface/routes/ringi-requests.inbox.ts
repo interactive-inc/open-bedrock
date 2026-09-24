@@ -13,7 +13,7 @@ import {
 import { RingiProcedureReadAdapter } from "@/contexts/ringi/infrastructure/adapters/ringi-procedure-read.adapter"
 import { ApplicationError, ForbiddenError as ReadForbiddenError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { prepareSystemHumanOperationAuthorization } from "@system/interface/operations/prepare-system-human-operation-authorization"
 
 // @authorization service - 現在の判断・実行資格を持つ案件だけを返す
 export const GET = factory.createHandlers(
@@ -23,7 +23,8 @@ export const GET = factory.createHandlers(
     const session = c.var.session
     if (session === null || c.var.accountTokenVersion === null) throw new UnauthorizedError()
     const at = new Date(c.env.NOW ?? Date.now())
-    const human = await new SystemHumanOperationAuthorizationAdapter(c).prepare({
+    const human = await prepareSystemHumanOperationAuthorization({
+      database: c.env.DB,
       accountId: session.accountId,
       tokenVersion: c.var.accountTokenVersion,
       permissions: ["ringi:approve"],

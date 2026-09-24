@@ -3,7 +3,7 @@ import type { SoftwareLicenseContext } from "@/contexts/software-license/configu
 import { LicenseError } from "@/contexts/software-license/domain/errors"
 import { isSoftwareLicenseRecordSourceFrozenError } from "@/contexts/software-license/infrastructure/repositories/lib/is-software-license-record-source-frozen-error"
 import type { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
+import { prepareSystemAuditEventAppend } from "@system/interface/operations/prepare-system-audit-event-append"
 
 type Context = Pick<SoftwareLicenseContext, "env">
 
@@ -109,7 +109,9 @@ export class LicenseAssignmentRepository {
         ),
       )
     }
-    statements.push(...new SystemAuditEventRepository(this.c).prepareAppend(input.audit))
+    statements.push(
+      ...prepareSystemAuditEventAppend({ database: this.c.env.DB, event: input.audit }),
+    )
     try {
       const writes = await database.batch(statements)
       if (writes.length !== statements.length || writes.some((write) => !write.success))

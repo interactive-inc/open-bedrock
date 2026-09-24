@@ -1,7 +1,7 @@
 import type { Context } from "@/env"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { LeaveProcedureReadAdapter } from "@/contexts/leave/infrastructure/adapters/leave-procedure-read.adapter"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { prepareSystemHumanOperationAuthorization } from "@system/interface/operations/prepare-system-human-operation-authorization"
 import { ApplicationError, ForbiddenError, UnexpectedError } from "@/lib/errors"
 
 /** 現在の判断・実行資格を持つ休暇を上限付きで読む。 */
@@ -22,7 +22,8 @@ export class LeaveProcedureInboxAdapter {
       at = input.at,
       limit = input.limit,
       offset = input.offset
-    const human = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+    const human = await prepareSystemHumanOperationAuthorization({
+      database: this.c.env.DB,
       accountId: session.accountId,
       tokenVersion: input.tokenVersion,
       permissions: ["leave:approve"],

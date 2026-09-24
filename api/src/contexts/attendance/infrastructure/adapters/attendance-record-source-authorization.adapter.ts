@@ -1,5 +1,5 @@
 import type { AttendanceRecordSourceContext } from "@/contexts/attendance/configuration/attendance-record-source-context"
-import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
+import { prepareSystemReadAuthorization } from "@system/interface/operations/prepare-system-read-authorization"
 
 type Context = AttendanceRecordSourceContext
 
@@ -13,10 +13,11 @@ export class AttendanceRecordSourceAuthorizationAdapter {
     const authentication = this.c.var.bearerReadAuthentication
     if (authentication === undefined) return new Error("attendance source authentication required")
     const now = this.c.var.now()
-    const proof = await new PrepareSystemReadAuthorizationAdapter(this.c).prepare(
-      authentication,
-      now,
-    )
+    const proof = await prepareSystemReadAuthorization({
+      database: this.c.env.DB,
+      authentication: authentication,
+      at: now,
+    })
     if (proof instanceof Error) return proof
     if (
       proof === null ||

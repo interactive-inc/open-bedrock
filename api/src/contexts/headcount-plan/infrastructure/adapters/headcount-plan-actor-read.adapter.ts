@@ -2,7 +2,7 @@ import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/opera
 import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import type { HeadcountPlanContext } from "@/contexts/headcount-plan/configuration/headcount-plan-context"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { prepareSystemHumanOperationAuthorization } from "@system/interface/operations/prepare-system-human-operation-authorization"
 import { HeadcountPlanError } from "@/contexts/headcount-plan/domain/errors"
 
 type Context = HeadcountPlanContext
@@ -18,7 +18,8 @@ export class HeadcountPlanActorReadAdapter {
     const accountId = this.c.var.userId
     if (!Number.isSafeInteger(now.getTime()) || now.getTime() < 0)
       return new HeadcountPlanError("forbidden", "invalid headcount-plan actor")
-    const authorization = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+    const authorization = await prepareSystemHumanOperationAuthorization({
+      database: this.c.env.DB,
       accountId,
       tokenVersion: this.c.var.accountTokenVersion,
       permissions: ["headcount_plan:manage"],

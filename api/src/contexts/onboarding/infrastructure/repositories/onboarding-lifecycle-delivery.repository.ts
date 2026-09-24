@@ -1,8 +1,8 @@
 import { SystemDeliveryEntity } from "@system/domain/entities/system-delivery.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemDeliveryRepository } from "@system/infrastructure/repositories/events/system-delivery.repository"
-import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { prepareSystemAuditEventAppend } from "@system/interface/operations/prepare-system-audit-event-append"
+import { prepareSystemHumanOperationAuthorization } from "@system/interface/operations/prepare-system-human-operation-authorization"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 type Context = Readonly<{ env: Readonly<{ DB: D1Database }> }>
@@ -65,7 +65,8 @@ export class OnboardingLifecycleDeliveryRepository {
       now: Date
     }>,
   ) {
-    const proof = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+    const proof = await prepareSystemHumanOperationAuthorization({
+      database: this.c.env.DB,
       accountId: input.accountId,
       tokenVersion: input.tokenVersion,
       permissions: ["onboarding:manage", "batch:write", "system:admin"],
@@ -106,7 +107,7 @@ export class OnboardingLifecycleDeliveryRepository {
         this.c.env.DB.prepare(
           "SELECT CASE WHEN changes() = 1 THEN 1 ELSE json_extract('{}', 'onboarding_lifecycle_source_changed') END AS ok",
         ),
-        ...new SystemAuditEventRepository(this.c).prepareAppend(event),
+        ...prepareSystemAuditEventAppend({ database: this.c.env.DB, event: event }),
       ],
     )
   }

@@ -5,7 +5,7 @@ import { AttachmentObjectAdapter } from "@system/infrastructure/adapters/attachm
 import { UnprocessableError } from "@/lib/errors"
 import { PrepareExpenseAttachmentReadAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-attachment-read.adapter"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
+import { appendSystemAuditEvent } from "@system/interface/operations/append-system-audit-event"
 import { factory } from "@/api/http/factory"
 import { ApplicationError, ForbiddenError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
@@ -137,11 +137,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw toHttpException(
       new ForbiddenError("閲覧資格が変わりました", "read_authorization_changed"),
     )
-  const savedAudit = await new SystemAuditEventRepository({ env: { DB: c.env.DB } }).append(
-    audit,
+  const savedAudit = await appendSystemAuditEvent({
+    database: c.env.DB,
+    event: audit,
     assertions,
-    assertions,
-  )
+    completionAssertions: assertions,
+  })
   if (savedAudit instanceof Error) {
     const visited = new Set<Error>()
     for (

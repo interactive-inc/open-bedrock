@@ -3,7 +3,7 @@ import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interfa
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
-import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
+import { prepareSystemReadAuthorization } from "@system/interface/operations/prepare-system-read-authorization"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { ForbiddenError, UnexpectedError } from "@/lib/errors"
 
@@ -23,10 +23,11 @@ export class PrepareExpensePreservationReadAdapter {
       at: Date
     }>,
   ) {
-    const authorization = await new PrepareSystemReadAuthorizationAdapter(this.c).prepare(
-      input.authentication,
-      input.at,
-    )
+    const authorization = await prepareSystemReadAuthorization({
+      database: this.c.env.DB,
+      authentication: input.authentication,
+      at: input.at,
+    })
     if (authorization instanceof Error)
       return new UnexpectedError("閲覧資格を確認できません", { cause: authorization })
     if (

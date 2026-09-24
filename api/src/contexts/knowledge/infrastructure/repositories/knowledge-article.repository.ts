@@ -1,5 +1,5 @@
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
-import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
+import { prepareSystemAuditEventAppend } from "@system/interface/operations/prepare-system-audit-event-append"
 import { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
 import type { Context } from "@/env"
 import { knowledgeArticles } from "@/contexts/knowledge/infrastructure/schema/knowledge"
@@ -103,7 +103,7 @@ export class KnowledgeArticleRepository {
               input.commandId,
               input.requestJson,
             ),
-          ...new SystemAuditEventRepository(this.c).prepareAppend(audit),
+          ...prepareSystemAuditEventAppend({ database: this.c.env.DB, event: audit }),
           db
             .prepare(`SELECT CASE WHEN EXISTS(SELECT 1 FROM knowledge_articles WHERE id=?1 AND revision=1 AND status='active'
             AND title=?2 AND category=?3 AND tags IS ?4 AND body_md=?5 AND author_id=?6 AND created_at=?7)
@@ -258,7 +258,7 @@ export class KnowledgeArticleRepository {
             input.expectedRevision,
           ),
         changed(),
-        ...new SystemAuditEventRepository(this.c).prepareAppend(audit),
+        ...prepareSystemAuditEventAppend({ database: this.c.env.DB, event: audit }),
         db
           .prepare(`SELECT CASE WHEN EXISTS (
           SELECT 1 FROM knowledge_articles article JOIN knowledge_article_revisions history

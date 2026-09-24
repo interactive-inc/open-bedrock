@@ -4,8 +4,8 @@ import { LeaveDecisionNotificationValue } from "@/contexts/leave/domain/values/l
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { toSha256Hex } from "@/lib/crypto/to-sha256-hex"
 import { SystemManagedJobRunnerAdapter } from "@system/infrastructure/adapters/events/system-managed-job-runner.adapter"
+import { prepareSystemServiceOperationAuthorization } from "@system/interface/operations/prepare-system-service-operation-authorization"
 import { prepareSystemNotificationPublicationBatch } from "@system/interface/operations/prepare-system-notification-publication-batch"
-import { SystemServiceOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-service-operation-authorization.adapter"
 import type { SystemDeliveryEntity } from "@system/domain/entities/system-delivery.entity"
 import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
@@ -47,7 +47,8 @@ export class LeaveDecisionNotificationDeliveryAdapter {
       .bind(this.c.accountId)
       .first<number>("token_version")
     if (tokenVersion === null) return new Error("notification Service is unavailable")
-    const authorization = await new SystemServiceOperationAuthorizationAdapter(this.c).prepare({
+    const authorization = await prepareSystemServiceOperationAuthorization({
+      database: this.c.env.DB,
       accountId: this.c.accountId,
       tokenVersion,
       permissions: ["batch:execute", "employee:read", "leave:read:all"],

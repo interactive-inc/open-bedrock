@@ -11,9 +11,9 @@ import { OnboardingTemplateTask } from "@/contexts/onboarding/domain/entities/on
 import { SystemDeliveryEntity } from "@system/domain/entities/system-delivery.entity"
 import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-event.entity"
 import { SystemDeliveryRepository } from "@system/infrastructure/repositories/events/system-delivery.repository"
-import { SystemAuditEventRepository } from "@system/infrastructure/repositories/audit/system-audit-event.repository"
+import { prepareSystemAuditEventAppend } from "@system/interface/operations/prepare-system-audit-event-append"
 import { SystemManagedJobRunnerAdapter } from "@system/infrastructure/adapters/events/system-managed-job-runner.adapter"
-import { SystemServiceOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-service-operation-authorization.adapter"
+import { prepareSystemServiceOperationAuthorization } from "@system/interface/operations/prepare-system-service-operation-authorization"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { z } from "zod"
 
@@ -113,7 +113,8 @@ export class OnboardingLifecycleDeliveryAdapter {
       .bind(this.c.accountId)
       .first<number>("token_version")
     if (tokenVersion === null) return new Error("lifecycle Service is unavailable")
-    const proof = await new SystemServiceOperationAuthorizationAdapter(this.c).prepare({
+    const proof = await prepareSystemServiceOperationAuthorization({
+      database: this.c.env.DB,
       accountId: this.c.accountId,
       tokenVersion,
       permissions: ["batch:execute", "employee:read", "onboarding:manage"],
@@ -337,7 +338,7 @@ export class OnboardingLifecycleDeliveryAdapter {
       this.c.env.DB.prepare(
         "SELECT CASE WHEN changes() = 1 THEN 1 ELSE json_extract('{}', 'onboarding_lifecycle_replacement_changed') END AS ok",
       ),
-      ...new SystemAuditEventRepository(this.c).prepareAppend(event),
+      ...prepareSystemAuditEventAppend({ database: this.c.env.DB, event: event }),
     ]
   }
 
@@ -369,6 +370,6 @@ export class OnboardingLifecycleDeliveryAdapter {
       occurredAt: at,
     })
     if (event instanceof Error) return event
-    return new SystemAuditEventRepository(this.c).prepareAppend(event)
+    return prepareSystemAuditEventAppend({ database: this.c.env.DB, event: event })
   }
 }

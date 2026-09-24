@@ -3,7 +3,7 @@ import { findCompanyPersonnelActionRequest } from "@/contexts/company/interface/
 import { revalidateCompanyProcedureAuthority } from "@/contexts/company/interface/operations/revalidate-company-procedure-authority"
 import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/operations/open-company-employee-directory"
 import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
-import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
+import { prepareSystemReadAuthorization } from "@system/interface/operations/prepare-system-read-authorization"
 import { PrepareSystemCaseReadGuardAdapter } from "@system/infrastructure/adapters/workflow/prepare-system-case-read-guard.adapter"
 import { RecordPreservationProposalValue } from "@system/domain/values/records/record-preservation-proposal.value"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
@@ -282,10 +282,11 @@ export async function decideSystemApplication(
         attestation.comment === input.comment,
     )
     if (original !== undefined) {
-      const proof = await new PrepareSystemReadAuthorizationAdapter(c).prepare(
-        authentication,
-        input.decidedAt,
-      )
+      const proof = await prepareSystemReadAuthorization({
+        database: c.env.DB,
+        authentication: authentication,
+        at: input.decidedAt,
+      })
       if (proof instanceof Error)
         return new UnexpectedError("failed to verify replay authorization", { cause: proof })
       if (proof === null) return new ForbiddenError("replay authorization changed", "forbidden")

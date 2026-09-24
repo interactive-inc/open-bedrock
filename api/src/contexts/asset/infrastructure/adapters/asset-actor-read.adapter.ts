@@ -2,7 +2,7 @@ import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/opera
 import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import type { AssetContext } from "@/contexts/asset/configuration/asset-context"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { SystemHumanOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-human-operation-authorization.adapter"
+import { prepareSystemHumanOperationAuthorization } from "@system/interface/operations/prepare-system-human-operation-authorization"
 import { AssetError } from "@/contexts/asset/domain/errors"
 
 type Context = AssetContext
@@ -18,7 +18,8 @@ export class AssetActorReadAdapter {
     const accountId = this.c.var.userId
     if (!Number.isSafeInteger(now.getTime()) || now.getTime() < 0)
       return new AssetError("forbidden", "invalid asset actor")
-    const authorization = await new SystemHumanOperationAuthorizationAdapter(this.c).prepare({
+    const authorization = await prepareSystemHumanOperationAuthorization({
+      database: this.c.env.DB,
       accountId,
       tokenVersion: this.c.var.accountTokenVersion,
       permissions: ["system:record:preserve"],
