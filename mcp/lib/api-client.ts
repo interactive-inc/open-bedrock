@@ -68,7 +68,7 @@ async function readTokens(baseUrl: string): Promise<EndpointTokens> {
 async function tryRefresh(
   baseUrl: string,
   refreshToken: string,
-): Promise<{ access_token: string } | null> {
+): Promise<{ access_token: string; refresh_token: string | null } | null> {
   try {
     const url = new URL("/system/sessions", baseUrl)
 
@@ -83,7 +83,19 @@ async function tryRefresh(
       return null
     }
 
-    return (await res.json()) as { access_token: string }
+    const body = (await res.json()) as { access_token?: unknown; refresh_token?: unknown }
+
+    if (typeof body.access_token !== "string" || body.access_token === "") {
+      return null
+    }
+
+    return {
+      access_token: body.access_token,
+      refresh_token:
+        typeof body.refresh_token === "string" && body.refresh_token !== ""
+          ? body.refresh_token
+          : null,
+    }
   } catch {
     return null
   }
@@ -209,7 +221,12 @@ export async function apiRequest<T = unknown>(
         cachedToken = refreshed.access_token
         headers.Authorization = `Bearer ${refreshed.access_token}`
 
-        await writeTokens(baseUrl, refreshed.access_token, tokens.refresh_token).catch(() => {})
+        // 更新で refresh token も入れ替わる。使い終えた古い token を保存し直すと、次の更新が必ず失敗する。
+        await writeTokens(
+          baseUrl,
+          refreshed.access_token,
+          refreshed.refresh_token ?? tokens.refresh_token,
+        ).catch(() => {})
 
         res = await fetch(url, {
           method: options.method ?? "GET",
