@@ -18,7 +18,7 @@
       "polymorphic": 18,
       "same-context": 79
     },
-    "triggers": 607,
+    "triggers": 614,
     "views": 25,
     "indexes": 291
   },
@@ -5058,7 +5058,14 @@
         "onboarding_assignments_lifecycle_immutable",
         "onboarding_assignments_source_freeze_delete",
         "onboarding_assignments_source_freeze_insert",
-        "onboarding_assignments_source_freeze_update"
+        "onboarding_assignments_source_freeze_update",
+        "onboarding_assignments_supersede_lifecycle_only",
+        "onboarding_assignments_superseded_immutable",
+        "onboarding_assignments_superseded_insert",
+        "onboarding_assignments_superseded_no_delete",
+        "onboarding_tasks_superseded_insert",
+        "onboarding_tasks_superseded_no_delete",
+        "onboarding_tasks_superseded_update"
       ],
       "views": [],
       "indexes": [
@@ -5181,7 +5188,10 @@
       "triggers": [
         "onboarding_tasks_source_freeze_delete",
         "onboarding_tasks_source_freeze_insert",
-        "onboarding_tasks_source_freeze_update"
+        "onboarding_tasks_source_freeze_update",
+        "onboarding_tasks_superseded_insert",
+        "onboarding_tasks_superseded_no_delete",
+        "onboarding_tasks_superseded_update"
       ],
       "views": [],
       "indexes": ["idx_onboarding_tasks_assignment"]
