@@ -1,5 +1,4 @@
 import { resolveCompanyGovernanceTask } from "@/contexts/company/interface/operations/resolve-company-governance-task"
-import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
 import { RingiRequestRepository } from "@/contexts/ringi/infrastructure/repositories/ringi-request.repository"
@@ -14,17 +13,22 @@ import { createProposalId } from "@system/domain/schemas/workflow/proposal-id.sc
 import { createSystemCaseId } from "@system/domain/schemas/workflow/system-case.schema"
 import { createSystemDecisionTask } from "@system/domain/policies/decision-task.policy"
 import { ApproveSystemTask } from "@system/application/workflow/approve-system-task"
+import { createLocalD1Governance } from "@tests/d1/support/create-local-d1-governance"
+import { execSql } from "@tests/d1/support/exec-sql"
 
-/** 実migrationと公開Companyの責務を使い、業務稟議とSystem案件を一緒に保存する。 */
-export async function createRingiProcedureTestContext() {
-  const c = await createGovernanceTaskTestContext()
+/** migration済みのローカルD1と公開Companyの責務を使い、業務稟議とSystem案件を一緒に保存する。 */
+export async function createRingiProcedureTestContext(database: D1Database) {
+  const c = await createLocalD1Governance(database)
   const requester = c.creator
   const first = c.people[1]
   const second = c.people[2]
   if (first === undefined || second === undefined) throw new Error("approvers are missing")
-  await c.database.exec(`INSERT INTO system_iam_roles
+  await execSql(
+    c.database,
+    `INSERT INTO system_iam_roles
     (id, key, kind, name, created_at, updated_at) VALUES ('ringi-test-role', 'test:ringi', 'custom', 'Ringi approval', 0, 0);
-    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('ringi-test-role', 'ringi:approve'), ('ringi-test-role', 'ringi:submit');`)
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('ringi-test-role', 'ringi:approve'), ('ringi-test-role', 'ringi:submit');`,
+  )
   for (const person of [requester, first, second])
     await c.database
       .prepare(`INSERT INTO system_role_bindings

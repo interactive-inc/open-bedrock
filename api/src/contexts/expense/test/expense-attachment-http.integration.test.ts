@@ -36,6 +36,8 @@ import { expect, spyOn, test } from "bun:test"
 import { app } from "@/api/app"
 import type { Bindings } from "@/env"
 import { createExpenseProcedureTestContext } from "@/contexts/expense/test/expense-procedure.test-support"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { loadSchema } from "@tests/api/support/load-schema"
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
 import { SystemAttachmentTestBucket } from "@system/test/system-attachment-test-bucket.test-support"
 import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-system-attachment-test-kek-environment.test-support"
@@ -48,7 +50,11 @@ import { CancelExpenseProcedure } from "@/contexts/expense/application/cancel-ex
 import { RecordExpenseDecision } from "@/contexts/expense/application/record-expense-decision"
 
 async function fixture(rejectionBehavior: "reject" | "return" = "reject") {
-  const c = await createExpenseProcedureTestContext(rejectionBehavior)
+  // System infrastructureのprototypeを差し替えて失敗を注入するため、System公開操作で置き換えられるまで互換DBで検証する。
+  const c = await createExpenseProcedureTestContext(
+    createD1TestDatabase(loadSchema()),
+    rejectionBehavior,
+  )
   const bucket = new SystemAttachmentTestBucket()
   const secret = "expense-attachment-http-test-secret"
   const bindings: Bindings = {
