@@ -4,11 +4,7 @@ import type { Context } from "@/env"
 import { resolveCompanyAccountEmployeeLink } from "@/contexts/company/interface/operations/resolve-company-account-employee-link"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { SystemAccountEligibilityAdapter } from "@/api/http/accounts/system-account-eligibility.adapter"
-import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"
-import { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
-import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
-import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
-import { SystemNotificationRepository } from "@system/infrastructure/repositories/notifications/system-notification.repository"
+import { prepareSystemNotificationPublicationBatch } from "@system/interface/operations/prepare-system-notification-publication-batch"
 import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 export type EmployeeNotification = Readonly<{
@@ -64,40 +60,44 @@ export class EmployeeNotificationAdapter {
     const words = crypto.getRandomValues(new Uint32Array(2))
     const notificationId = ((words[0] ?? 0) & 0x000f_ffff) * 0x1_0000_0000 + (words[1] ?? 0) || 1
     const canonicalId = String(notificationId)
-    const message = NotificationMessageEntity.create({
-      id: canonicalId,
-      kind: `company:${props.kind}`,
-      title: props.title,
-      body: props.body,
-      source: {
-        type: "company:notification.source",
-        id: JSON.stringify({ domain: props.sourceDomain, id: props.sourceId }),
-      },
-      createdAt,
+    const statements = prepareSystemNotificationPublicationBatch({
+      database: this.c.env.DB,
+      publications: [
+        {
+          message: {
+            id: canonicalId,
+            kind: `company:${props.kind}`,
+            title: props.title,
+            body: props.body,
+            source: {
+              type: "company:notification.source",
+              id: JSON.stringify({ domain: props.sourceDomain, id: props.sourceId }),
+            },
+            action: null,
+            resourceScope: null,
+            priority: "normal",
+            publicationKey: null,
+            createdAt,
+          },
+          deliveries: [
+            {
+              id: canonicalId,
+              recipientAccountId: recipientAccountId.data,
+              deliveredAt: createdAt,
+            },
+          ],
+        },
+      ],
     })
-    if (message instanceof Error) return message
+    if (statements instanceof Error) return statements
 
-    const delivery = NotificationDeliveryEntity.create({
-      id: canonicalId,
-      messageId: message.id,
-      recipientAccountId: recipientAccountId.data,
-      deliveredAt: createdAt,
-      readAt: null,
-      dismissedAt: null,
-    })
-    if (delivery instanceof Error) return delivery
-
-    const deliveries = NotificationDeliveryBatchValue.create([delivery])
-    if (deliveries instanceof Error) return deliveries
-
-    const result = await new PublishSystemNotification({
-      notificationRepository: new SystemNotificationRepository({
-        context: { env: { DB: this.c.env.DB } },
-      }),
-    }).execute({ message, deliveries })
-    if (result instanceof Error) return result
-    if (result.kind === "rejected") {
-      return new Error(`notification publication rejected: ${result.reason}`)
+    try {
+      const results = await this.c.env.DB.batch([...statements])
+      if (results.length !== statements.length || !results.every((result) => result.success)) {
+        return new Error("notification publication did not succeed")
+      }
+    } catch (caught) {
+      return caught instanceof Error ? caught : new Error("failed to publish notification")
     }
 
     return Object.freeze({

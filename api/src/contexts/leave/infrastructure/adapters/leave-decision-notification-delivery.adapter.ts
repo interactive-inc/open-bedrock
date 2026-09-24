@@ -4,12 +4,9 @@ import { LeaveDecisionNotificationValue } from "@/contexts/leave/domain/values/l
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { toSha256Hex } from "@/lib/crypto/to-sha256-hex"
 import { SystemManagedJobRunnerAdapter } from "@system/infrastructure/adapters/events/system-managed-job-runner.adapter"
-import { SystemNotificationRepository } from "@system/infrastructure/repositories/notifications/system-notification.repository"
+import { prepareSystemNotificationPublicationBatch } from "@system/interface/operations/prepare-system-notification-publication-batch"
 import { SystemServiceOperationAuthorizationAdapter } from "@system/infrastructure/adapters/iam/system-service-operation-authorization.adapter"
 import type { SystemDeliveryEntity } from "@system/domain/entities/system-delivery.entity"
-import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
-import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
-import { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
 import { zAccountId, type AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 type Context = Readonly<{
@@ -118,29 +115,30 @@ export class LeaveDecisionNotificationDeliveryAdapter {
     recipient: AccountId,
     at: Date,
   ) {
-    const message = NotificationMessageEntity.create({
-      id: notification.deliveryId,
-      kind: "company:approval_result",
-      title: notification.title,
-      body: null,
-      source: {
-        type: "company:notification.source",
-        id: JSON.stringify({ domain: "leave", id: notification.props.leaveRequestId }),
-      },
-      createdAt: new Date(notification.props.decidedAt),
+    return prepareSystemNotificationPublicationBatch({
+      database: this.c.env.DB,
+      publications: [
+        {
+          message: {
+            id: notification.deliveryId,
+            kind: "company:approval_result",
+            title: notification.title,
+            body: null,
+            source: {
+              type: "company:notification.source",
+              id: JSON.stringify({ domain: "leave", id: notification.props.leaveRequestId }),
+            },
+            action: null,
+            resourceScope: null,
+            priority: "normal",
+            publicationKey: null,
+            createdAt: new Date(notification.props.decidedAt),
+          },
+          deliveries: [
+            { id: notification.deliveryId, recipientAccountId: recipient, deliveredAt: at },
+          ],
+        },
+      ],
     })
-    if (message instanceof Error) return message
-    const delivery = NotificationDeliveryEntity.create({
-      id: notification.deliveryId,
-      messageId: message.id,
-      recipientAccountId: recipient,
-      deliveredAt: at,
-      readAt: null,
-      dismissedAt: null,
-    })
-    if (delivery instanceof Error) return delivery
-    const deliveries = NotificationDeliveryBatchValue.create([delivery])
-    if (deliveries instanceof Error) return deliveries
-    return new SystemNotificationRepository({ context: this.c }).preparePublish(message, deliveries)
   }
 }

@@ -3,11 +3,7 @@ import { openCompanyEmployeeDirectory } from "@/contexts/company/interface/opera
 import type { Announcement } from "@/contexts/announcement/domain/entities/announcement.entity"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { Context } from "@/env"
-import { NotificationDeliveryEntity } from "@system/domain/entities/notification-delivery.entity"
-import { NotificationMessageEntity } from "@system/domain/entities/notification-message.entity"
-import { NotificationDeliveryBatchValue } from "@system/domain/values/notifications/notification-delivery-batch.value"
-import { PublishSystemNotification } from "@system/application/notifications/publish-system-notification"
-import { SystemNotificationRepository } from "@system/infrastructure/repositories/notifications/system-notification.repository"
+import { prepareSystemNotificationPublicationBatch } from "@system/interface/operations/prepare-system-notification-publication-batch"
 
 export class PublishAnnouncementNotificationAdapter {
   constructor(private readonly c: Context) {
@@ -34,41 +30,38 @@ export class PublishAnnouncementNotificationAdapter {
       if (recipients.length === 0) return null
 
       const createdAt = new Date(createdAtValue)
-      const message = NotificationMessageEntity.create({
-        id: crypto.randomUUID(),
-        kind: "company:announcement",
-        title: announcement.title,
-        body: null,
-        source: {
-          type: "company:notification.source",
-          id: JSON.stringify({ domain: "announcement", id: announcement.id }),
-        },
-        createdAt,
+      const statements = prepareSystemNotificationPublicationBatch({
+        database: this.c.env.DB,
+        publications: [
+          {
+            message: {
+              id: crypto.randomUUID(),
+              kind: "company:announcement",
+              title: announcement.title,
+              body: null,
+              source: {
+                type: "company:notification.source",
+                id: JSON.stringify({ domain: "announcement", id: announcement.id }),
+              },
+              action: null,
+              resourceScope: null,
+              priority: "normal",
+              publicationKey: null,
+              createdAt,
+            },
+            deliveries: recipients.map((recipient) => ({
+              id: crypto.randomUUID(),
+              recipientAccountId: String(recipient.accountId),
+              deliveredAt: createdAt,
+            })),
+          },
+        ],
       })
-      if (message instanceof Error) return message
+      if (statements instanceof Error) return statements
 
-      const deliveries = NotificationDeliveryBatchValue.create(
-        recipients.map((recipient) =>
-          NotificationDeliveryEntity.create({
-            id: crypto.randomUUID(),
-            messageId: message.id,
-            recipientAccountId: String(recipient.accountId),
-            deliveredAt: createdAt,
-            readAt: null,
-            dismissedAt: null,
-          }),
-        ),
-      )
-      if (deliveries instanceof Error) return deliveries
-
-      const published = await new PublishSystemNotification({
-        notificationRepository: new SystemNotificationRepository({
-          context: { env: { DB: this.c.env.DB } },
-        }),
-      }).execute({ message, deliveries })
-      if (published instanceof Error) return published
-      if (published.kind === "rejected") {
-        return new Error(`announcement notification rejected: ${published.reason}`)
+      const results = await this.c.env.DB.batch([...statements])
+      if (results.length !== statements.length || !results.every((result) => result.success)) {
+        return new Error("announcement notification publication did not succeed")
       }
 
       return null
