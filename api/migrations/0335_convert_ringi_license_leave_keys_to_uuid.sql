@@ -188,13 +188,13 @@ WHEN EXISTS (SELECT 1 FROM ringi_procedure_bindings WHERE ringi_id = OLD.id)
 BEGIN
   SELECT RAISE(ABORT, 'ringi_procedure_execution_required');
 END;
-CREATE TRIGGER ringi_requests_source_freeze_delete BEFORE DELETE ON ringi_requests
-WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'ringi' AND revision = 1)
-BEGIN SELECT RAISE(ABORT, 'ringi_record_source_frozen'); END;
 CREATE TRIGGER ringi_requests_source_freeze_insert BEFORE INSERT ON ringi_requests
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'ringi' AND revision = 1)
 BEGIN SELECT RAISE(ABORT, 'ringi_record_source_frozen'); END;
 CREATE TRIGGER ringi_requests_source_freeze_update BEFORE UPDATE ON ringi_requests
+WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'ringi' AND revision = 1)
+BEGIN SELECT RAISE(ABORT, 'ringi_record_source_frozen'); END;
+CREATE TRIGGER ringi_requests_source_freeze_delete BEFORE DELETE ON ringi_requests
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'ringi' AND revision = 1)
 BEGIN SELECT RAISE(ABORT, 'ringi_record_source_frozen'); END;
 CREATE TRIGGER ringi_requests_legacy_id_insert
@@ -239,13 +239,13 @@ SELECT 'ringi_procedure_bindings',
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'ringi' AND revision = 1);
 DROP TABLE "_stage_ringi_procedure_bindings";
 CREATE UNIQUE INDEX ringi_resubmission_once ON ringi_procedure_bindings(previous_ringi_id) WHERE previous_ringi_id IS NOT NULL;
-CREATE TRIGGER ringi_procedure_binding_immutable_delete
-BEFORE DELETE ON ringi_procedure_bindings
+CREATE TRIGGER ringi_procedure_binding_immutable_update
+BEFORE UPDATE ON ringi_procedure_bindings
 BEGIN
   SELECT RAISE(ABORT, 'ringi_procedure_binding_immutable');
 END;
-CREATE TRIGGER ringi_procedure_binding_immutable_update
-BEFORE UPDATE ON ringi_procedure_bindings
+CREATE TRIGGER ringi_procedure_binding_immutable_delete
+BEFORE DELETE ON ringi_procedure_bindings
 BEGIN
   SELECT RAISE(ABORT, 'ringi_procedure_binding_immutable');
 END;
@@ -285,13 +285,13 @@ WHEN NOT EXISTS (
 BEGIN
   SELECT RAISE(ABORT, 'ringi_procedure_proposal_mismatch');
 END;
-CREATE TRIGGER ringi_procedure_bindings_source_freeze_delete BEFORE DELETE ON ringi_procedure_bindings
-WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'ringi' AND revision = 1)
-BEGIN SELECT RAISE(ABORT, 'ringi_record_source_frozen'); END;
 CREATE TRIGGER ringi_procedure_bindings_source_freeze_insert BEFORE INSERT ON ringi_procedure_bindings
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'ringi' AND revision = 1)
 BEGIN SELECT RAISE(ABORT, 'ringi_record_source_frozen'); END;
 CREATE TRIGGER ringi_procedure_bindings_source_freeze_update BEFORE UPDATE ON ringi_procedure_bindings
+WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'ringi' AND revision = 1)
+BEGIN SELECT RAISE(ABORT, 'ringi_record_source_frozen'); END;
+CREATE TRIGGER ringi_procedure_bindings_source_freeze_delete BEFORE DELETE ON ringi_procedure_bindings
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'ringi' AND revision = 1)
 BEGIN SELECT RAISE(ABORT, 'ringi_record_source_frozen'); END;
 CREATE TRIGGER ringi_procedure_bindings_identity_update
@@ -344,16 +344,16 @@ CREATE TRIGGER software_license_active_assignments_guard BEFORE UPDATE ON softwa
 WHEN (NEW.status <> 'active' AND EXISTS (SELECT 1 FROM software_license_assignments WHERE license_id = OLD.id AND released_at IS NULL))
   OR (NEW.seats IS NOT NULL AND NEW.seats < (SELECT count(*) FROM software_license_assignments WHERE license_id = OLD.id AND released_at IS NULL))
 BEGIN SELECT RAISE(ABORT, 'software_license_capacity_conflict'); END;
-CREATE TRIGGER software_licenses_source_freeze_delete
-BEFORE DELETE ON software_licenses
-WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'software-license' AND revision = 1)
-BEGIN SELECT RAISE(ABORT, 'software_license_record_source_frozen'); END;
 CREATE TRIGGER software_licenses_source_freeze_insert
 BEFORE INSERT ON software_licenses
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'software-license' AND revision = 1)
 BEGIN SELECT RAISE(ABORT, 'software_license_record_source_frozen'); END;
 CREATE TRIGGER software_licenses_source_freeze_update
 BEFORE UPDATE ON software_licenses
+WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'software-license' AND revision = 1)
+BEGIN SELECT RAISE(ABORT, 'software_license_record_source_frozen'); END;
+CREATE TRIGGER software_licenses_source_freeze_delete
+BEFORE DELETE ON software_licenses
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'software-license' AND revision = 1)
 BEGIN SELECT RAISE(ABORT, 'software_license_record_source_frozen'); END;
 CREATE TRIGGER software_licenses_legacy_id_insert
@@ -412,8 +412,8 @@ SELECT 'software_license_assignments',
              OR EXISTS (SELECT 1 FROM system_cases workflow_case WHERE workflow_case.subject_id = _software_license_assignments_id_map.old_id)
              OR EXISTS (SELECT 1 FROM system_audit_events audit WHERE audit.target_id = _software_license_assignments_id_map.old_id)));
 DROP TABLE "_stage_software_license_assignments";
-CREATE UNIQUE INDEX software_license_active_account ON software_license_assignments(license_id, account_reference) WHERE released_at IS NULL AND account_reference IS NOT NULL;
 CREATE UNIQUE INDEX software_license_active_employee ON software_license_assignments(license_id, employee_id) WHERE released_at IS NULL;
+CREATE UNIQUE INDEX software_license_active_account ON software_license_assignments(license_id, account_reference) WHERE released_at IS NULL AND account_reference IS NOT NULL;
 CREATE INDEX software_license_employee_history ON software_license_assignments(employee_id, assigned_at, id);
 CREATE TRIGGER software_license_assignment_capacity BEFORE INSERT ON software_license_assignments
 BEGIN
@@ -424,8 +424,6 @@ BEGIN
       ))
   );
 END;
-CREATE TRIGGER software_license_assignment_history_delete BEFORE DELETE ON software_license_assignments
-BEGIN SELECT RAISE(ABORT, 'software_license_history_immutable'); END;
 CREATE TRIGGER software_license_assignment_history_update BEFORE UPDATE ON software_license_assignments
 WHEN OLD.released_at IS NOT NULL OR NEW.released_at IS NULL
   OR NEW.id IS NOT OLD.id OR NEW.license_id IS NOT OLD.license_id OR NEW.employee_id IS NOT OLD.employee_id
@@ -433,16 +431,18 @@ WHEN OLD.released_at IS NOT NULL OR NEW.released_at IS NULL
   OR NEW.account_reference IS NOT OLD.account_reference OR NEW.assigned_at IS NOT OLD.assigned_at
   OR NEW.assigned_by IS NOT OLD.assigned_by OR NEW.assigned_reason IS NOT OLD.assigned_reason
 BEGIN SELECT RAISE(ABORT, 'software_license_history_immutable'); END;
-CREATE TRIGGER software_license_assignments_source_freeze_delete
-BEFORE DELETE ON software_license_assignments
-WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'software-license' AND revision = 1)
-BEGIN SELECT RAISE(ABORT, 'software_license_record_source_frozen'); END;
+CREATE TRIGGER software_license_assignment_history_delete BEFORE DELETE ON software_license_assignments
+BEGIN SELECT RAISE(ABORT, 'software_license_history_immutable'); END;
 CREATE TRIGGER software_license_assignments_source_freeze_insert
 BEFORE INSERT ON software_license_assignments
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'software-license' AND revision = 1)
 BEGIN SELECT RAISE(ABORT, 'software_license_record_source_frozen'); END;
 CREATE TRIGGER software_license_assignments_source_freeze_update
 BEFORE UPDATE ON software_license_assignments
+WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'software-license' AND revision = 1)
+BEGIN SELECT RAISE(ABORT, 'software_license_record_source_frozen'); END;
+CREATE TRIGGER software_license_assignments_source_freeze_delete
+BEFORE DELETE ON software_license_assignments
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'software-license' AND revision = 1)
 BEGIN SELECT RAISE(ABORT, 'software_license_record_source_frozen'); END;
 
@@ -485,12 +485,10 @@ SELECT 'software_license_changes',
              OR EXISTS (SELECT 1 FROM system_audit_events audit WHERE audit.target_id = _software_license_changes_id_map.old_id)));
 DROP TABLE "_stage_software_license_changes";
 CREATE INDEX software_license_change_history ON software_license_changes(license_id, recorded_at, id);
+CREATE TRIGGER software_license_changes_update BEFORE UPDATE ON software_license_changes
+BEGIN SELECT RAISE(ABORT, 'software_license_history_immutable'); END;
 CREATE TRIGGER software_license_changes_delete BEFORE DELETE ON software_license_changes
 BEGIN SELECT RAISE(ABORT, 'software_license_history_immutable'); END;
-CREATE TRIGGER software_license_changes_source_freeze_delete
-BEFORE DELETE ON software_license_changes
-WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'software-license' AND revision = 1)
-BEGIN SELECT RAISE(ABORT, 'software_license_record_source_frozen'); END;
 CREATE TRIGGER software_license_changes_source_freeze_insert
 BEFORE INSERT ON software_license_changes
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'software-license' AND revision = 1)
@@ -499,8 +497,10 @@ CREATE TRIGGER software_license_changes_source_freeze_update
 BEFORE UPDATE ON software_license_changes
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'software-license' AND revision = 1)
 BEGIN SELECT RAISE(ABORT, 'software_license_record_source_frozen'); END;
-CREATE TRIGGER software_license_changes_update BEFORE UPDATE ON software_license_changes
-BEGIN SELECT RAISE(ABORT, 'software_license_history_immutable'); END;
+CREATE TRIGGER software_license_changes_source_freeze_delete
+BEFORE DELETE ON software_license_changes
+WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'software-license' AND revision = 1)
+BEGIN SELECT RAISE(ABORT, 'software_license_record_source_frozen'); END;
 
 -- leave_requests
 CREATE TABLE leave_requests (
@@ -552,25 +552,6 @@ SELECT 'leave_requests',
 DROP TABLE "_stage_leave_requests";
 CREATE INDEX idx_leave_requests_employee ON leave_requests (employee_id);
 CREATE INDEX idx_leave_requests_status ON leave_requests (status);
-CREATE TRIGGER leave_draft_source_immutable
-BEFORE UPDATE OF previous_leave_request_id ON leave_requests
-WHEN NEW.previous_leave_request_id IS NOT OLD.previous_leave_request_id
-BEGIN
-  SELECT RAISE(ABORT, 'leave_draft_source_immutable');
-END;
-CREATE TRIGGER leave_draft_source_valid
-BEFORE INSERT ON leave_requests
-WHEN NEW.previous_leave_request_id IS NOT NULL AND NOT EXISTS (
-  SELECT 1 FROM leave_requests original
-  JOIN leave_procedure_bindings binding ON binding.leave_request_id = original.id
-  JOIN system_cases workflow_case ON workflow_case.id = binding.case_id
-  WHERE original.id = NEW.previous_leave_request_id
-    AND original.employee_id = NEW.employee_id AND workflow_case.status = 'returned'
-    AND NOT EXISTS (SELECT 1 FROM leave_procedure_bindings next WHERE next.previous_leave_request_id = original.id)
-)
-BEGIN
-  SELECT RAISE(ABORT, 'leave_draft_source_invalid');
-END;
 CREATE TRIGGER leave_procedure_request_immutable
 BEFORE UPDATE ON leave_requests
 WHEN EXISTS (SELECT 1 FROM leave_procedure_bindings WHERE leave_request_id = OLD.id)
@@ -615,13 +596,32 @@ WHEN OLD.status = 'pending' AND NEW.status <> 'pending'
 BEGIN
   SELECT RAISE(ABORT, 'leave_procedure_required');
 END;
-CREATE TRIGGER leave_requests_source_freeze_delete BEFORE DELETE ON leave_requests
-WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
-BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
+CREATE TRIGGER leave_draft_source_valid
+BEFORE INSERT ON leave_requests
+WHEN NEW.previous_leave_request_id IS NOT NULL AND NOT EXISTS (
+  SELECT 1 FROM leave_requests original
+  JOIN leave_procedure_bindings binding ON binding.leave_request_id = original.id
+  JOIN system_cases workflow_case ON workflow_case.id = binding.case_id
+  WHERE original.id = NEW.previous_leave_request_id
+    AND original.employee_id = NEW.employee_id AND workflow_case.status = 'returned'
+    AND NOT EXISTS (SELECT 1 FROM leave_procedure_bindings next WHERE next.previous_leave_request_id = original.id)
+)
+BEGIN
+  SELECT RAISE(ABORT, 'leave_draft_source_invalid');
+END;
+CREATE TRIGGER leave_draft_source_immutable
+BEFORE UPDATE OF previous_leave_request_id ON leave_requests
+WHEN NEW.previous_leave_request_id IS NOT OLD.previous_leave_request_id
+BEGIN
+  SELECT RAISE(ABORT, 'leave_draft_source_immutable');
+END;
 CREATE TRIGGER leave_requests_source_freeze_insert BEFORE INSERT ON leave_requests
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
 BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
 CREATE TRIGGER leave_requests_source_freeze_update BEFORE UPDATE ON leave_requests
+WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
+BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
+CREATE TRIGGER leave_requests_source_freeze_delete BEFORE DELETE ON leave_requests
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
 BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
 CREATE TRIGGER leave_requests_legacy_id_insert
@@ -667,16 +667,6 @@ SELECT 'leave_procedure_bindings',
 DROP TABLE "_stage_leave_procedure_bindings";
 CREATE UNIQUE INDEX leave_procedure_resubmission_once
   ON leave_procedure_bindings(previous_leave_request_id) WHERE previous_leave_request_id IS NOT NULL;
-CREATE TRIGGER leave_procedure_binding_immutable_delete
-BEFORE DELETE ON leave_procedure_bindings
-BEGIN
-  SELECT RAISE(ABORT, 'leave_procedure_binding_immutable');
-END;
-CREATE TRIGGER leave_procedure_binding_immutable_update
-BEFORE UPDATE ON leave_procedure_bindings
-BEGIN
-  SELECT RAISE(ABORT, 'leave_procedure_binding_immutable');
-END;
 CREATE TRIGGER leave_procedure_binding_matches_proposal
 BEFORE INSERT ON leave_procedure_bindings
 WHEN NOT EXISTS (
@@ -717,15 +707,16 @@ WHEN NOT EXISTS (
 BEGIN
   SELECT RAISE(ABORT, 'leave_procedure_proposal_mismatch');
 END;
-CREATE TRIGGER leave_procedure_bindings_source_freeze_delete BEFORE DELETE ON leave_procedure_bindings
-WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
-BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
-CREATE TRIGGER leave_procedure_bindings_source_freeze_insert BEFORE INSERT ON leave_procedure_bindings
-WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
-BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
-CREATE TRIGGER leave_procedure_bindings_source_freeze_update BEFORE UPDATE ON leave_procedure_bindings
-WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
-BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
+CREATE TRIGGER leave_procedure_binding_immutable_update
+BEFORE UPDATE ON leave_procedure_bindings
+BEGIN
+  SELECT RAISE(ABORT, 'leave_procedure_binding_immutable');
+END;
+CREATE TRIGGER leave_procedure_binding_immutable_delete
+BEFORE DELETE ON leave_procedure_bindings
+BEGIN
+  SELECT RAISE(ABORT, 'leave_procedure_binding_immutable');
+END;
 CREATE TRIGGER leave_procedure_source_matches_draft
 BEFORE INSERT ON leave_procedure_bindings
 WHEN NOT EXISTS (
@@ -735,6 +726,15 @@ WHEN NOT EXISTS (
 BEGIN
   SELECT RAISE(ABORT, 'leave_procedure_source_mismatch');
 END;
+CREATE TRIGGER leave_procedure_bindings_source_freeze_insert BEFORE INSERT ON leave_procedure_bindings
+WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
+BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
+CREATE TRIGGER leave_procedure_bindings_source_freeze_update BEFORE UPDATE ON leave_procedure_bindings
+WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
+BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
+CREATE TRIGGER leave_procedure_bindings_source_freeze_delete BEFORE DELETE ON leave_procedure_bindings
+WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
+BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
 CREATE TRIGGER leave_procedure_bindings_identity_update
 BEFORE UPDATE OF id ON leave_procedure_bindings
 WHEN NEW.id IS NOT OLD.id
@@ -766,23 +766,23 @@ SELECT 'leave_decision_notifications',
        (SELECT count(*) FROM leave_decision_notifications WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1);
 DROP TABLE "_stage_leave_decision_notifications";
-CREATE TRIGGER leave_decision_notifications_immutable_delete
-BEFORE DELETE ON leave_decision_notifications
-BEGIN
-  SELECT RAISE(ABORT, 'leave decision notification is immutable');
-END;
 CREATE TRIGGER leave_decision_notifications_immutable_update
 BEFORE UPDATE ON leave_decision_notifications
 BEGIN
   SELECT RAISE(ABORT, 'leave decision notification is immutable');
 END;
-CREATE TRIGGER leave_decision_notifications_source_freeze_delete BEFORE DELETE ON leave_decision_notifications
-WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
-BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
+CREATE TRIGGER leave_decision_notifications_immutable_delete
+BEFORE DELETE ON leave_decision_notifications
+BEGIN
+  SELECT RAISE(ABORT, 'leave decision notification is immutable');
+END;
 CREATE TRIGGER leave_decision_notifications_source_freeze_insert BEFORE INSERT ON leave_decision_notifications
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
 BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
 CREATE TRIGGER leave_decision_notifications_source_freeze_update BEFORE UPDATE ON leave_decision_notifications
+WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
+BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
+CREATE TRIGGER leave_decision_notifications_source_freeze_delete BEFORE DELETE ON leave_decision_notifications
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
 BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
 CREATE TRIGGER leave_decision_notifications_identity_update
@@ -820,13 +820,13 @@ SELECT 'leave_balances',
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1);
 DROP TABLE "_stage_leave_balances";
 CREATE INDEX idx_leave_balances_employee ON leave_balances (employee_id, fiscal_year);
-CREATE TRIGGER leave_balances_source_freeze_delete BEFORE DELETE ON leave_balances
-WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
-BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
 CREATE TRIGGER leave_balances_source_freeze_insert BEFORE INSERT ON leave_balances
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
 BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
 CREATE TRIGGER leave_balances_source_freeze_update BEFORE UPDATE ON leave_balances
+WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
+BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
+CREATE TRIGGER leave_balances_source_freeze_delete BEFORE DELETE ON leave_balances
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'leave' AND revision = 1)
 BEGIN SELECT RAISE(ABORT, 'leave_record_source_frozen'); END;
 CREATE TRIGGER leave_balances_identity_update
