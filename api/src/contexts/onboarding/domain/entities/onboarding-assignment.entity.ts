@@ -6,7 +6,7 @@ import type { OnboardingAssignmentRow } from "@/contexts/onboarding/infrastructu
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   employeeId: zEmployeeId,
   templateCode: z.string(),
   kind: z.enum(["join", "leave"]),
@@ -87,14 +87,14 @@ export class OnboardingAssignment implements Props {
   }
 
   /** 指定タスクを完了済みにした割り当てを返す。 */
-  completeTask(taskId: number, completedAt: string) {
+  completeTask(taskId: string, completedAt: string) {
     const tasks = this.tasks.map((task) => (task.id === taskId ? task.complete(completedAt) : task))
 
     return new OnboardingAssignment({ ...this.props, tasks }).withRecomputedStatus()
   }
 
   /** 指定タスクの完了を取り消した割り当てを返す。 */
-  uncompleteTask(taskId: number) {
+  uncompleteTask(taskId: string) {
     const tasks = this.tasks.map((task) => (task.id === taskId ? task.uncomplete() : task))
 
     return new OnboardingAssignment({ ...this.props, tasks }).withRecomputedStatus()

@@ -166,6 +166,9 @@ const PROCEDURE_REQUEST_KEY = external(
 )
 
 export const SOFT_REFERENCES: Readonly<Record<string, SoftReference>> = {
+  "onboarding_assignments.legacy_id": LEGACY_PRIMARY_KEY,
+  "onboarding_tasks.legacy_id": LEGACY_PRIMARY_KEY,
+  "onboarding_templates.legacy_id": LEGACY_PRIMARY_KEY,
   "evaluation_sheet_audit_logs.legacy_id": LEGACY_PRIMARY_KEY,
   "evaluation_sheets.legacy_id": LEGACY_PRIMARY_KEY,
   "evaluation_templates.legacy_id": LEGACY_PRIMARY_KEY,

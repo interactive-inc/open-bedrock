@@ -12,26 +12,34 @@ import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-dig
 import { z } from "zod"
 
 type Context = SkillContext
-type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string | number> }>
+type SnapshotQuery = Readonly<{
+  sql: string
+  values: ReadonlyArray<string | number>
+  formatVersion: number
+}>
 
 function snapshotQuery(recordKind: SkillRecordKind, recordId: string): SnapshotQuery | Error {
   if (recordKind === "skill-record") {
     if (!z.string().trim().min(1).max(255).safeParse(recordId).success)
       return new Error("invalid skill record id")
     return {
-      sql: `SELECT json_object('format','skill-record','version',1,'skill',json_object(
-        'code',code,'name',name,'category',category))
+      // 版 2 は業務コードの主キーを一意な属性へ移し、新しい UUID の id を含める。
+      sql: `SELECT json_object('format','skill-record','version',2,'skill',json_object(
+        'id',id,'code',code,'name',name,'category',category))
         AS snapshot_json FROM skill_definitions WHERE code=?1`,
       values: [recordId],
+      formatVersion: 2,
     }
   }
   const key = decodeEmployeeSkillRecordId(recordId)
   if (key === null) return new Error("invalid employee skill record id")
   return {
-    sql: `SELECT json_object('format','employee-skill-record','version',1,'employeeSkill',json_object(
-      'employee_id',employee_id,'skill_code',skill_code,'level',level,'years',years,'note',note))
+    // 版 2 は複合の主キーを一意な属性へ移し、新しい UUID の id を含める。
+    sql: `SELECT json_object('format','employee-skill-record','version',2,'employeeSkill',json_object(
+      'id',id,'employee_id',employee_id,'skill_code',skill_code,'level',level,'years',years,'note',note))
       AS snapshot_json FROM employee_skills WHERE employee_id=?1 AND skill_code=?2`,
     values: [key.employeeId, key.skillCode],
+    formatVersion: 2,
   }
 }
 
@@ -71,7 +79,7 @@ export class CaptureSkillRecordAdapter {
         recordKind: kind.data,
         recordId: input.recordId,
         formatId: kind.data,
-        formatVersion: 1,
+        formatVersion: query.formatVersion,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

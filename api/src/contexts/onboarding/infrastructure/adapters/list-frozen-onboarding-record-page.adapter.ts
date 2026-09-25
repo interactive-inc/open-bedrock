@@ -18,7 +18,7 @@ const inputSchema = z.strictObject({
   limit: z.number().int().min(1).max(100),
 })
 
-const numericTables = {
+const uuidTables = {
   "onboarding-template-record": "onboarding_templates",
   "onboarding-assignment-record": "onboarding_assignments",
   "onboarding-task-record": "onboarding_tasks",
@@ -58,18 +58,17 @@ export class ListFrozenOnboardingRecordPageAdapter {
     })
     if (generation instanceof Error) return generation
     const after = request.afterCursor
-    const numericTable = numericTables[request.recordKind as keyof typeof numericTables]
+    const uuidTable = uuidTables[request.recordKind as keyof typeof uuidTables]
     const textTable = textTables[request.recordKind as keyof typeof textTables]
     const textKey = textKeys[request.recordKind as keyof typeof textKeys]
-    const numericCursor = numericTable && after !== null ? Number(after) : null
     const taskCursor =
       request.recordKind === "onboarding-template-task-record" && after !== null
         ? decodeOnboardingTemplateTaskRecordId(after)
         : null
     if (
       after !== null &&
-      (numericTable
-        ? !Number.isSafeInteger(numericCursor) || String(numericCursor) !== after
+      (uuidTable
+        ? !z.uuid().safeParse(after).success
         : request.recordKind === "onboarding-template-task-record"
           ? taskCursor === null
           : after.length === 0)
@@ -77,16 +76,18 @@ export class ListFrozenOnboardingRecordPageAdapter {
       return new Error("invalid onboarding cursor")
     try {
       const db = this.c.env.DB
-      const page = numericTable
+      const page = uuidTable
         ? after === null
           ? db
-              .prepare(`SELECT id AS record_id FROM ${numericTable} ORDER BY id LIMIT ?1`)
+              .prepare(
+                `SELECT id AS record_id FROM ${uuidTable} ORDER BY id COLLATE BINARY LIMIT ?1`,
+              )
               .bind(request.limit + 1)
           : db
               .prepare(
-                `SELECT id AS record_id FROM ${numericTable} WHERE id>?1 ORDER BY id LIMIT ?2`,
+                `SELECT id AS record_id FROM ${uuidTable} WHERE id COLLATE BINARY>?1 ORDER BY id COLLATE BINARY LIMIT ?2`,
               )
-              .bind(numericCursor, request.limit + 1)
+              .bind(after, request.limit + 1)
         : request.recordKind === "onboarding-template-task-record"
           ? taskCursor === null
             ? db
@@ -106,7 +107,7 @@ export class ListFrozenOnboardingRecordPageAdapter {
                 .bind(after, request.limit + 1)
       const statements = [...generation.assertions, page, ...generation.assertions]
       const reads = await db.batch<{
-        record_id?: number | string
+        record_id?: string
         template_code?: string
         code?: string
       }>(statements)

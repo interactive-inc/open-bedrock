@@ -26,6 +26,7 @@ describe("SkillRepository", () => {
 
     await seedD1(db, "skill_definitions", [
       {
+        id: crypto.randomUUID(),
         code: "TYPESCRIPT",
         name: "TypeScript",
         category: "language",

@@ -42,7 +42,7 @@ export function createFakeTemplateRepository(
     findByCode: async (code) => templates.get(code) ?? null,
     create: async (template) => {
       const created = new OnboardingTemplate({
-        id: templates.size + 1,
+        id: crypto.randomUUID(),
         code: template.code,
         name: template.name,
         kind: template.kind,
@@ -69,15 +69,11 @@ export function createFakeTemplateRepository(
 
 /** OnboardingAssignmentRepository の型付きfake。taskのidを採番し、完了状態を Domain model で再計算する。 */
 export function createFakeAssignmentRepository(): AssignmentRepositoryPort & {
-  assignments: Map<number, OnboardingAssignment>
+  assignments: Map<string, OnboardingAssignment>
 } {
-  const assignments = new Map<number, OnboardingAssignment>()
+  const assignments = new Map<string, OnboardingAssignment>()
 
-  let nextAssignmentId = 1
-
-  let nextTaskId = 1
-
-  const findByTaskId = async (taskId: number) =>
+  const findByTaskId = async (taskId: string) =>
     [...assignments.values()].find((assignment) =>
       assignment.tasks.some((task) => task.id === taskId),
     ) ?? null
@@ -104,11 +100,9 @@ export function createFakeAssignmentRepository(): AssignmentRepositoryPort & {
           assignment.templateCode === templateCode && assignment.status === "in_progress",
       ).length,
     create: async (assignment) => {
-      const id = nextAssignmentId
-      nextAssignmentId += 1
+      const id = crypto.randomUUID()
       const tasks = assignment.tasks.map((task) => {
-        const taskId = nextTaskId
-        nextTaskId += 1
+        const taskId = crypto.randomUUID()
         return new OnboardingTask({
           id: taskId,
           assignmentId: id,

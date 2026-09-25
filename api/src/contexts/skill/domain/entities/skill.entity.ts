@@ -26,7 +26,7 @@ export class Skill implements Props {
   }
 
   /** 永続化された行から復元する。 */
-  static fromRow(row: SkillRow): Skill {
+  static fromRow(row: Omit<SkillRow, "id">): Skill {
     return new Skill({
       code: row.code,
       name: row.name,

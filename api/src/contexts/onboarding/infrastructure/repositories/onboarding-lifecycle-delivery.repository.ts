@@ -25,7 +25,7 @@ export class OnboardingLifecycleDeliveryRepository {
           job_id: string
           action_id: string
           outcome: string | null
-          assignment_id: number | null
+          assignment_id: string | null
           processed_at: number | null
           status: string
           attempt: number

@@ -2,27 +2,27 @@
 -- スキルマスタと従業員ごとの登録スキル。
 -- 値は src/infrastructure/seed/seed-skills.ts と src/infrastructure/seed/seed-employee-skills.ts に一致させること。
 
-INSERT INTO skill_definitions (code, name, category) VALUES
-('typescript', 'TypeScript', 'プログラミング'),
-('react', 'React', 'フロントエンド'),
-('nodejs', 'Node.js', 'バックエンド'),
-('cloudflare', 'Cloudflare Workers', 'インフラ'),
-('sql', 'SQL', 'データベース'),
-('ui_design', 'UIデザイン', 'デザイン'),
-('project_mgmt', 'プロジェクトマネジメント', 'マネジメント'),
-('sales', '法人営業', 'ビジネス'),
-('customer_success', 'カスタマーサクセス', 'ビジネス'),
-('recruiting', '採用', '人事'),
-('accounting', '経理', '総務'),
-('english', 'ビジネス英語', '語学');
+INSERT INTO skill_definitions (id, code, name, category) VALUES
+('0190003a-0000-7000-8000-000000000001', 'typescript', 'TypeScript', 'プログラミング'),
+('0190003a-0000-7000-8000-000000000002', 'react', 'React', 'フロントエンド'),
+('0190003a-0000-7000-8000-000000000003', 'nodejs', 'Node.js', 'バックエンド'),
+('0190003a-0000-7000-8000-000000000004', 'cloudflare', 'Cloudflare Workers', 'インフラ'),
+('0190003a-0000-7000-8000-000000000005', 'sql', 'SQL', 'データベース'),
+('0190003a-0000-7000-8000-000000000006', 'ui_design', 'UIデザイン', 'デザイン'),
+('0190003a-0000-7000-8000-000000000007', 'project_mgmt', 'プロジェクトマネジメント', 'マネジメント'),
+('0190003a-0000-7000-8000-000000000008', 'sales', '法人営業', 'ビジネス'),
+('0190003a-0000-7000-8000-000000000009', 'customer_success', 'カスタマーサクセス', 'ビジネス'),
+('0190003a-0000-7000-8000-00000000000a', 'recruiting', '採用', '人事'),
+('0190003a-0000-7000-8000-00000000000b', 'accounting', '経理', '総務'),
+('0190003a-0000-7000-8000-00000000000c', 'english', 'ビジネス英語', '語学');
 
-INSERT INTO employee_skills (employee_id, skill_code, level, years, note) VALUES
-(5, 'typescript', 5, 8, 'テックリード'),
-(5, 'cloudflare', 4, 3, NULL),
-(6, 'typescript', 4, 4, NULL),
-(6, 'react', 4, 4, NULL),
-(4, 'project_mgmt', 5, 10, NULL),
-(10, 'sales', 4, 6, NULL),
-(15, 'customer_success', 4, 5, NULL),
-(3, 'recruiting', 3, 3, NULL),
-(17, 'accounting', 4, 9, NULL);
+INSERT INTO employee_skills (id, employee_id, skill_code, level, years, note) VALUES
+('0190003b-0000-7000-8000-000000000001', 5, 'typescript', 5, 8, 'テックリード'),
+('0190003b-0000-7000-8000-000000000002', 5, 'cloudflare', 4, 3, NULL),
+('0190003b-0000-7000-8000-000000000003', 6, 'typescript', 4, 4, NULL),
+('0190003b-0000-7000-8000-000000000004', 6, 'react', 4, 4, NULL),
+('0190003b-0000-7000-8000-000000000005', 4, 'project_mgmt', 5, 10, NULL),
+('0190003b-0000-7000-8000-000000000006', 10, 'sales', 4, 6, NULL),
+('0190003b-0000-7000-8000-000000000007', 15, 'customer_success', 4, 5, NULL),
+('0190003b-0000-7000-8000-000000000008', 3, 'recruiting', 3, 3, NULL),
+('0190003b-0000-7000-8000-000000000009', 17, 'accounting', 4, 9, NULL);
