@@ -285,7 +285,10 @@ test("経費保全は再送で原記録を差し替えず、承認後の変更�
       })
     ).status,
   ).toBe(200)
-  await execSql(f.database, "UPDATE expense_budgets SET amount=100001 WHERE id='01900050-0000-7000-8000-000000000001'")
+  await execSql(
+    f.database,
+    "UPDATE expense_budgets SET amount=100001 WHERE id='01900050-0000-7000-8000-000000000001'",
+  )
   const replay = await f.request(f.path, f.command)
   expect(replay.status).toBe(200)
   expect(receiptSchema.parse(await replay.json())).toEqual(receipt)
@@ -307,7 +310,10 @@ test("経費保全は再送で原記録を差し替えず、承認後の変更�
       )
     ).status,
   ).toBe(404)
-  await execSql(f.database, "UPDATE expense_budgets SET amount=100000 WHERE id='01900050-0000-7000-8000-000000000001'")
+  await execSql(
+    f.database,
+    "UPDATE expense_budgets SET amount=100000 WHERE id='01900050-0000-7000-8000-000000000001'",
+  )
   await execSql(
     f.database,
     "DELETE FROM system_iam_role_permissions WHERE role_id='role:expense-archive' AND permission_key='budget:manage'",
