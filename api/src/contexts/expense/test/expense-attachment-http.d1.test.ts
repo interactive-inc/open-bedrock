@@ -1665,4 +1665,5 @@ test("経費の全6種別を実認証で保全し、業務全テーブル撤去�
       expect(content.record).toEqual(record.original)
     }
   }
-})
+  // ローカルD1は問い合わせごとにworkerdへ往復するため、6種別の保全と取得に手元で10秒ほどかかる。
+}, 90_000)

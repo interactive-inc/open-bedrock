@@ -1,5 +1,5 @@
 import { createLicenseFixture } from "@/contexts/software-license/test/create-license-fixture.test-support"
-import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
+import { createLocalD1Governance } from "@tests/d1/support/create-local-d1-governance"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
@@ -7,11 +7,12 @@ import { SystemAttachmentTestBucket } from "@system/test/system-attachment-test-
 import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-system-attachment-test-kek-environment.test-support"
 
 export async function createLicensePreservationFixture(
+  database: D1Database,
   rejectionBehavior: "reject" | "return" = "reject",
   hasSecondStep = false,
 ) {
-  const governance = await createGovernanceTaskTestContext()
-  const f = await createLicenseFixture(governance.database)
+  const governance = await createLocalD1Governance(database)
+  const f = await createLicenseFixture(database)
   const reviewer = governance.people.find((person) => person.accountId !== "account:manager")
   const assignment = governance.resources.find(
     (resource) => resource.type === "responsibility-assignment",

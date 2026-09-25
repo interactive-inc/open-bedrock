@@ -1,6 +1,7 @@
 import { app } from "@/api/app"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
-import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
+import { createLocalD1Governance } from "@tests/d1/support/create-local-d1-governance"
+import { execSql } from "@tests/d1/support/exec-sql"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
@@ -9,8 +10,8 @@ import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-sy
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
 
 /** 実認証、会社の期間付き責務、暗号化した保全本文を使う経費予算APIのfixture。 */
-export async function createExpensePreservationFixture() {
-  const governance = await createGovernanceTaskTestContext()
+export async function createExpensePreservationFixture(database: D1Database) {
+  const governance = await createLocalD1Governance(database)
   const reviewer = governance.people[1]
   const assignment = governance.resources.find(
     (resource) => resource.type === "responsibility-assignment",
@@ -61,19 +62,24 @@ export async function createExpensePreservationFixture() {
   if (definition instanceof Error) throw definition
   const published = await openSystemProcedures(governance.context).publish(definition, 0)
   if (published !== true) throw published
-  const database = governance.database
-  await database.exec(`INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
+  await execSql(
+    database,
+    `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
     VALUES ('role:expense-archive','expense:archive','custom','Archive operator',0,0);
-    INSERT INTO system_iam_role_permissions VALUES ('role:expense-archive','budget:manage');`)
+    INSERT INTO system_iam_role_permissions VALUES ('role:expense-archive','budget:manage');`,
+  )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
     VALUES ('binding:expense-archive',?1,'role:expense-archive',0)`)
     .bind(governance.creator.accountId)
     .run()
-  await database.exec(`INSERT INTO expense_budgets
+  await execSql(
+    database,
+    `INSERT INTO expense_budgets
     (id,organization_unit_id,fiscal_period,period_start,period_end,amount,name,note,created_at)
     SELECT '01900050-0000-7000-8000-000000000001',id,'2026','2026-04-01','2027-03-31',100000,'Annual budget','Original note','2026-09-01T00:00:00Z'
-    FROM company_organization_units LIMIT 1`)
+    FROM company_organization_units LIMIT 1`,
+  )
   const bucket = new SystemAttachmentTestBucket()
   const secret = "expense-preservation-test-secret"
   const settings = { sourceNamespace: "example-source", disabledDefaultApps: "" }
