@@ -48,6 +48,7 @@ export class SalaryRevisionRepository {
       const rows = await this.c.var.database
         .insert(salaryRevisions)
         .values({
+          id: crypto.randomUUID(),
           employeeId: revision.employeeId,
           effectiveDate: revision.effectiveDate,
           previousBaseSalary: revision.previousBaseSalary,

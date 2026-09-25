@@ -23,7 +23,7 @@ export class RevalidateCommendationRecordSourceAdapter {
       )
 
     const current = await new CaptureCommendationRecordAdapter(this.c).prepare({
-      commendationId: Number(source.props.recordId),
+      commendationId: source.props.recordId,
       sourceNamespace: this.c.sourceNamespace,
     })
     if (current instanceof Error) return current

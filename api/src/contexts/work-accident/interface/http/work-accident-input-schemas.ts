@@ -1,3 +1,3 @@
-import { z } from "zod"
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 
-export const workAccidentIdSchema = z.coerce.number().int().safe()
+export const workAccidentIdSchema = uuidSchema

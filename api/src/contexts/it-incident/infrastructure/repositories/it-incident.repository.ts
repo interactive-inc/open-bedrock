@@ -41,7 +41,7 @@ export class ItIncidentRepository {
     }
   }
 
-  async findById(id: number): Promise<ItIncident | null | Error> {
+  async findById(id: string): Promise<ItIncident | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -62,6 +62,7 @@ export class ItIncidentRepository {
       const rows = await this.c.var.database
         .insert(itIncidents)
         .values({
+          id: crypto.randomUUID(),
           occurredAt: incident.occurredAt,
           title: incident.title,
           summary: incident.summary,

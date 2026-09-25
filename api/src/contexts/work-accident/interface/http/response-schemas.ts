@@ -4,7 +4,7 @@ import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records
 
 /** 労災・事故の発生記録 1 件のレスポンス。 */
 export const zAppWorkAccident = z.object({
-  id: z.number(),
+  id: z.uuid(),
   occurred_on: z.string(),
   employee_id: zEmployeeId.nullable(),
   location: z.string().nullable(),

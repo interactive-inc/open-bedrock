@@ -4,7 +4,7 @@ import type { SalaryRevisionRow } from "@/contexts/compensation-change/infrastru
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   employeeId: zEmployeeId,
   effectiveDate: z.string(),
   previousBaseSalary: z.number().int(),

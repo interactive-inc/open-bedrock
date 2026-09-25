@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { CommendationContext } from "@/contexts/commendation/configuration/commendation-context"
 import { CommendationActorReadAdapter } from "@/contexts/commendation/infrastructure/adapters/commendation-actor-read.adapter"
 import { CommendationError } from "@/contexts/commendation/domain/errors"
@@ -6,9 +7,10 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
 const snapshotSql = `SELECT json_object(
-  'format', 'commendation-record', 'version', 1,
+  'format', 'commendation-record', 'version', 2,
   'commendation', json_object(
     'id', id,
+    'legacy_id', legacy_id,
     'employee_id', employee_id,
     'title', title,
     'reason', reason,
@@ -25,8 +27,8 @@ export class CaptureCommendationRecordAdapter {
     Object.freeze(this)
   }
 
-  async prepare(input: Readonly<{ commendationId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.commendationId))
+  async prepare(input: Readonly<{ commendationId: string; sourceNamespace: string }>) {
+    if (!z.uuid().safeParse(input.commendationId).success)
       return new CommendationError("forbidden", "invalid source record")
     const actor = await new CommendationActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
@@ -49,7 +51,7 @@ export class CaptureCommendationRecordAdapter {
         recordKind: "commendation-record",
         recordId: String(input.commendationId),
         formatId: "commendation-record",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

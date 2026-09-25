@@ -4,7 +4,7 @@ import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records
 
 /** 懲戒の記録 1 件のレスポンス（非公開。本人にも見せない設計）。 */
 export const zAppDisciplinaryAction = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   kind: z.string(),
   summary: z.string(),

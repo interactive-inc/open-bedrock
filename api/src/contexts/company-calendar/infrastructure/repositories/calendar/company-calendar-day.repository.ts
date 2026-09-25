@@ -53,7 +53,7 @@ export class CompanyCalendarDayRepository {
     }
   }
 
-  async findById(id: number): Promise<CompanyCalendarDay | null | Error> {
+  async findById(id: string): Promise<CompanyCalendarDay | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -74,6 +74,7 @@ export class CompanyCalendarDayRepository {
       const rows = await this.c.var.database
         .insert(companyCalendarDays)
         .values({
+          id: crypto.randomUUID(),
           calendarDate: day.calendarDate,
           kind: day.kind,
           name: day.name,

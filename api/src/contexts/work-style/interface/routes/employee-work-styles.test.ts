@@ -15,7 +15,7 @@ import { initializeStandardCompanyTestState } from "@tests/api/support/initializ
 const jwtSecret = "work-style-route-test-secret"
 
 const workStyleResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   style: z.enum(["regular", "flextime", "discretionary", "shift"]),
   starts_on: z.string(),
@@ -44,7 +44,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "employee_work_styles", [
     {
-      id: 1,
+      id: "01900010-0000-7000-8000-000000000001",
       employee_id: "5",
       style: "flextime",
       starts_on: "2026-04-01",

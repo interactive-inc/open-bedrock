@@ -74,12 +74,12 @@ export class PrepareDisciplinaryActionRetirementPageAdapter {
     if (stored instanceof Error) return stored
     if (stored === null) return new Error("coverage page disappeared")
     const cursor = stored.snapshot.afterCursor
-    if (cursor !== null && !/^(0|-?[1-9][0-9]*)$/.test(cursor))
+    if (cursor !== null && !z.uuid().safeParse(cursor).success)
       return new Error("invalid coverage cursor")
     const captured = await new CaptureFrozenDisciplinaryActionRecordPageAdapter(this.c).prepare({
       freezeId: request.freezeId,
       sourceNamespace: request.sourceNamespace,
-      afterId: cursor === null ? null : Number(cursor),
+      afterId: cursor,
       limit: 10,
     })
     if (captured instanceof Error) return captured
@@ -89,7 +89,7 @@ export class PrepareDisciplinaryActionRetirementPageAdapter {
     for (const record of stored.snapshot.records) {
       const source = PreservedRecordSourceValue.create(record.source)
       if (source instanceof Error) return source
-      const id = z.coerce.number().int().safe().safeParse(source.props.recordId)
+      const id = z.uuid().safeParse(source.props.recordId)
       if (!id.success) return id.error
       mappings.push({ sourceRecordId: id.data, preservedRecordId: record.preservedRecordId })
     }

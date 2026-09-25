@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { HealthCheckupContext } from "@/contexts/health-checkup/configuration/health-checkup-context"
 import { HealthCheckupActorReadAdapter } from "@/contexts/health-checkup/infrastructure/adapters/health-checkup-actor-read.adapter"
 import { HealthCheckupError } from "@/contexts/health-checkup/domain/errors"
@@ -6,9 +7,10 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
 const snapshotSql = `SELECT json_object(
-  'format', 'health-checkup-record', 'version', 1,
+  'format', 'health-checkup-record', 'version', 2,
   'health-checkup', json_object(
     'id', id,
+    'legacy_id', legacy_id,
     'employee_id', employee_id,
     'fiscal_year', fiscal_year,
     'checkup_kind', checkup_kind,
@@ -27,8 +29,8 @@ export class CaptureHealthCheckupRecordAdapter {
     Object.freeze(this)
   }
 
-  async prepare(input: Readonly<{ healthCheckupId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.healthCheckupId))
+  async prepare(input: Readonly<{ healthCheckupId: string; sourceNamespace: string }>) {
+    if (!z.uuid().safeParse(input.healthCheckupId).success)
       return new HealthCheckupError("forbidden", "invalid source record")
     const actor = await new HealthCheckupActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
@@ -51,7 +53,7 @@ export class CaptureHealthCheckupRecordAdapter {
         recordKind: "health-checkup-record",
         recordId: String(input.healthCheckupId),
         formatId: "health-checkup-record",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

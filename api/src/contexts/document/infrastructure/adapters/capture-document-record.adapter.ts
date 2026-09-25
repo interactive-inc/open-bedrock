@@ -10,6 +10,7 @@ const snapshotSql = `SELECT json_object(
   'format', 'document-record', 'version', 2,
   'document', json_object(
     'id', id,
+    'legacy_id', legacy_id,
     'title', title,
     'category', category,
     'location', location,
@@ -28,8 +29,8 @@ export class CaptureDocumentRecordAdapter {
     Object.freeze(this)
   }
 
-  async prepare(input: Readonly<{ documentId: number; sourceNamespace: string }>) {
-    if (!z.number().int().safe().safeParse(input.documentId).success)
+  async prepare(input: Readonly<{ documentId: string; sourceNamespace: string }>) {
+    if (!z.uuid().safeParse(input.documentId).success)
       return new DocumentError("forbidden", "invalid source record")
     const actor = await new DocumentActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor

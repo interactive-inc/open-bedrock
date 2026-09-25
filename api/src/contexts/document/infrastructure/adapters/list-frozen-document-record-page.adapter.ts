@@ -7,7 +7,7 @@ type Context = DocumentContext
 const inputSchema = z.strictObject({
   freezeId: z.uuid(),
   sourceNamespace: z.string().min(1).max(255).regex(/^\S+$/),
-  afterId: z.number().int().safe().nullable(),
+  afterId: z.uuid().nullable(),
   limit: z.number().int().min(1).max(100),
 })
 
@@ -36,18 +36,18 @@ export class ListFrozenDocumentRecordPageAdapter {
       const page =
         request.afterId === null
           ? this.c.env.DB.prepare(
-              "SELECT id FROM document_ledger_entries ORDER BY id LIMIT ?1",
+              "SELECT id FROM document_ledger_entries ORDER BY id COLLATE BINARY LIMIT ?1",
             ).bind(request.limit + 1)
           : this.c.env.DB.prepare(
-              "SELECT id FROM document_ledger_entries WHERE id>?1 ORDER BY id LIMIT ?2",
+              "SELECT id FROM document_ledger_entries WHERE id COLLATE BINARY>?1 ORDER BY id COLLATE BINARY LIMIT ?2",
             ).bind(request.afterId, request.limit + 1)
       const statements = [...generation.assertions, page, ...generation.assertions]
-      const reads = await this.c.env.DB.batch<{ id: number }>(statements)
+      const reads = await this.c.env.DB.batch<{ id: string }>(statements)
       if (reads.length !== statements.length || reads.some((read) => !read.success))
         return new Error("frozen document inventory unavailable")
       const rows = reads[generation.assertions.length]?.results
       const ids = z
-        .array(z.strictObject({ id: z.number().int().safe() }))
+        .array(z.strictObject({ id: z.uuid() }))
         .max(request.limit + 1)
         .safeParse(rows)
       if (!ids.success) return ids.error

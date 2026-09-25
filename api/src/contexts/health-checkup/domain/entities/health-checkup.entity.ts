@@ -3,7 +3,7 @@ import type { HealthCheckupRow } from "@/contexts/health-checkup/infrastructure/
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number(),
+  id: z.string(),
   employeeId: zEmployeeId,
   fiscalYear: z.number(),
   checkupKind: z.enum(["regular", "stress_check"]),

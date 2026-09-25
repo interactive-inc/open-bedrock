@@ -5,7 +5,7 @@ import { workStyleSchema } from "@/contexts/work-style/domain/definitions/work-s
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   employeeId: zEmployeeId,
   style: workStyleSchema,
   startsOn: z.string(),

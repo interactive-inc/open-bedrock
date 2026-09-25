@@ -8,7 +8,7 @@ import { isHeadcountPlanRecordSourceFrozenError } from "@/contexts/headcount-pla
 
 export type Command = {
   session: CompanySessionValue
-  id: number
+  id: string
   plannedCount: number
   note: string | null
 }

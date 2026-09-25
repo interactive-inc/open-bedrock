@@ -23,7 +23,7 @@ export class RevalidateEmployeeWorkStyleRecordSourceAdapter {
       )
 
     const current = await new CaptureEmployeeWorkStyleRecordAdapter(this.c).prepare({
-      employeeWorkStyleId: Number(source.props.recordId),
+      employeeWorkStyleId: source.props.recordId,
       sourceNamespace: this.c.sourceNamespace,
     })
     if (current instanceof Error) return current

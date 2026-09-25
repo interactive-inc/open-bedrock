@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { EmployeeWorkStyleContext } from "@/contexts/work-style/configuration/work-style-context"
 import { EmployeeWorkStyleActorReadAdapter } from "@/contexts/work-style/infrastructure/adapters/work-style-actor-read.adapter"
 import { EmployeeWorkStyleError } from "@/contexts/work-style/domain/errors"
@@ -6,9 +7,10 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
 const snapshotSql = `SELECT json_object(
-  'format', 'employee-work-style-record', 'version', 1,
+  'format', 'employee-work-style-record', 'version', 2,
   'employee-work-style', json_object(
     'id', id,
+    'legacy_id', legacy_id,
     'employee_id', employee_id,
     'style', style,
     'starts_on', starts_on,
@@ -26,8 +28,8 @@ export class CaptureEmployeeWorkStyleRecordAdapter {
     Object.freeze(this)
   }
 
-  async prepare(input: Readonly<{ employeeWorkStyleId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.employeeWorkStyleId))
+  async prepare(input: Readonly<{ employeeWorkStyleId: string; sourceNamespace: string }>) {
+    if (!z.uuid().safeParse(input.employeeWorkStyleId).success)
       return new EmployeeWorkStyleError("forbidden", "invalid source record")
     const actor = await new EmployeeWorkStyleActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
@@ -50,7 +52,7 @@ export class CaptureEmployeeWorkStyleRecordAdapter {
         recordKind: "employee-work-style-record",
         recordId: String(input.employeeWorkStyleId),
         formatId: "employee-work-style-record",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

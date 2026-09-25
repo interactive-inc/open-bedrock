@@ -2,7 +2,7 @@ import type { ItIncidentRow } from "@/contexts/it-incident/infrastructure/schema
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   occurredAt: z.string(),
   title: z.string(),
   summary: z.string(),

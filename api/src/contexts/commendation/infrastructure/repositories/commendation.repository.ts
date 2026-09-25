@@ -42,7 +42,7 @@ export class CommendationRepository {
     }
   }
 
-  async findById(id: number): Promise<Commendation | null | Error> {
+  async findById(id: string): Promise<Commendation | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -61,6 +61,7 @@ export class CommendationRepository {
       const rows = await this.c.var.database
         .insert(commendations)
         .values({
+          id: crypto.randomUUID(),
           employeeId: commendation.employeeId,
           title: commendation.title,
           reason: commendation.reason,

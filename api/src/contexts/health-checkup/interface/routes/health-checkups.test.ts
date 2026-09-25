@@ -12,7 +12,7 @@ import { initializeStandardCompanyTestState } from "@tests/api/support/initializ
 const jwtSecret = "health-checkup-route-test-secret"
 
 const healthCheckupSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   employee_id: zEmployeeId,
   fiscal_year: z.number(),
   checkup_kind: z.string(),
@@ -38,7 +38,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "health_checkups", [
     {
-      id: 1,
+      id: "0190000d-0000-7000-8000-000000000001",
       employee_id: "5",
       fiscal_year: 2026,
       checkup_kind: "regular",
@@ -48,7 +48,7 @@ async function createTestDb(): Promise<D1Database> {
       created_at: "2026-01-01T00:00:00.000Z",
     },
     {
-      id: 2,
+      id: "0190000d-0000-7000-8000-000000000002",
       employee_id: "5",
       fiscal_year: 2025,
       checkup_kind: "stress_check",
@@ -280,7 +280,7 @@ describe("POST /health-checkups", () => {
 describe("POST /health-checkups/:id/complete", () => {
   test("completes a scheduled record for admin", async () => {
     const response = await request({
-      path: "/health-checkup/health-checkups/1/complete",
+      path: "/health-checkup/health-checkups/0190000d-0000-7000-8000-000000000001/complete",
       token: await tokenFor(1),
       method: "POST",
       body: { conducted_on: "2026-06-15" },
@@ -300,7 +300,7 @@ describe("POST /health-checkups/:id/complete", () => {
 
   test("returns 409 when already completed", async () => {
     const response = await request({
-      path: "/health-checkup/health-checkups/2/complete",
+      path: "/health-checkup/health-checkups/0190000d-0000-7000-8000-000000000002/complete",
       token: await tokenFor(1),
       method: "POST",
       body: { conducted_on: "2026-06-15" },
@@ -311,7 +311,7 @@ describe("POST /health-checkups/:id/complete", () => {
 
   test("returns 403 for a member", async () => {
     const response = await request({
-      path: "/health-checkup/health-checkups/1/complete",
+      path: "/health-checkup/health-checkups/0190000d-0000-7000-8000-000000000001/complete",
       token: await tokenFor(5),
       method: "POST",
       body: { conducted_on: "2026-06-15" },

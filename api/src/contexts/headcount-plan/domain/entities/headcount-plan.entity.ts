@@ -2,7 +2,7 @@ import type { HeadcountPlanRow } from "@/contexts/headcount-plan/infrastructure/
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   fiscalYear: z.number(),
   departmentCode: z.string().nullable(),
   plannedCount: z.number(),

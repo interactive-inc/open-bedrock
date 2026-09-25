@@ -30,7 +30,11 @@ export class HealthCheckupRepository {
         .select()
         .from(healthCheckups)
         .where(where)
-        .orderBy(desc(healthCheckups.fiscalYear), desc(healthCheckups.id))
+        .orderBy(
+          desc(healthCheckups.fiscalYear),
+          desc(healthCheckups.createdAt),
+          desc(healthCheckups.id),
+        )
 
       return rows.map((row) => HealthCheckup.fromRow(row))
     } catch (error) {
@@ -39,7 +43,7 @@ export class HealthCheckupRepository {
   }
 
   /** id で 1 件取得する。存在しなければ null。 */
-  async findById(id: number): Promise<HealthCheckup | null | Error> {
+  async findById(id: string): Promise<HealthCheckup | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -68,6 +72,7 @@ export class HealthCheckupRepository {
       const rows = await this.c.var.database
         .insert(healthCheckups)
         .values({
+          id: crypto.randomUUID(),
           employeeId: props.employeeId,
           fiscalYear: props.fiscalYear,
           checkupKind: props.checkupKind,
@@ -90,7 +95,7 @@ export class HealthCheckupRepository {
 
   /** status を completed へ遷移し conducted_on を記録する。対象が scheduled でなければ null。 */
   async complete(props: {
-    id: number
+    id: string
     conductedOn: string
   }): Promise<HealthCheckup | null | Error> {
     try {

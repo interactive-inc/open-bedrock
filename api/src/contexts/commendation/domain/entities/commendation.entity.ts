@@ -4,7 +4,7 @@ import type { CommendationRow } from "@/contexts/commendation/infrastructure/sch
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   employeeId: zEmployeeId,
   title: z.string(),
   reason: z.string(),

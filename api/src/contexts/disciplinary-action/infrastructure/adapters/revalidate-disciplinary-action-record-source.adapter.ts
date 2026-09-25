@@ -23,7 +23,7 @@ export class RevalidateDisciplinaryActionRecordSourceAdapter {
       )
 
     const current = await new CaptureDisciplinaryActionRecordAdapter(this.c).prepare({
-      disciplinaryActionId: Number(source.props.recordId),
+      disciplinaryActionId: source.props.recordId,
       sourceNamespace: this.c.sourceNamespace,
     })
     if (current instanceof Error) return current

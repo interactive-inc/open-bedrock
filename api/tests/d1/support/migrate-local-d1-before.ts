@@ -20,6 +20,23 @@ const SEED_ORDER = [
 ]
 
 /**
+ * 整数の主キーから UUID へ移した table の seed の ID。seed の UUID は
+ * `<prefix>-0000-7000-8000-<連番の16進>` の形で、prefix が table を、末尾が移行前の整数の主キーを表す。
+ * 移行前の schema に seed を入れるときは、主キーがまだ整数の table の ID を連番へ戻す。
+ */
+const LEGACY_INTEGER_SEED_PREFIXES: Readonly<Record<string, string>> = {
+  "0190000a": "commendations",
+  "0190000b": "disciplinary_actions",
+  "0190000c": "work_accidents",
+  "0190000d": "health_checkups",
+  "0190000e": "it_incidents",
+  "0190000f": "headcount_plans",
+  "01900010": "employee_work_styles",
+  "01900011": "company_calendar_days",
+  "01900012": "document_ledger_entries",
+}
+
+/**
  * 空のローカルD1へ、対象より前の migration を1ファイルずつ当てる。
  * wrangler と同じく1ファイルを1つの batch として送り、ファイルの途中で止まれば全体を戻す。
  */
@@ -34,8 +51,23 @@ export async function applyLocalD1Migration(database: D1Database, file: string):
   await execSql(database, readFileSync(join(migrationsDirectory, file), "utf8"))
 }
 
-/** 開発用 seed を入れる。本番に近い行数と参照関係の上で migration を確かめるために使う。 */
+async function integerKeyedPrefixes(database: D1Database): Promise<ReadonlySet<string>> {
+  const prefixes = new Set<string>()
+  for (const [prefix, table] of Object.entries(LEGACY_INTEGER_SEED_PREFIXES)) {
+    const column = await database
+      .prepare(`SELECT type FROM pragma_table_info('${table}') WHERE name = 'id'`)
+      .first<{ type: string }>()
+    if (column?.type.toUpperCase() === "INTEGER") prefixes.add(prefix)
+  }
+  return prefixes
+}
+
+/**
+ * 開発用 seed を入れる。本番に近い行数と参照関係の上で migration を確かめるために使う。
+ * seed は最新の schema に合わせて書いてあるため、主キーがまだ整数の table の ID は連番へ戻して入れる。
+ */
 export async function seedLocalD1(database: D1Database): Promise<void> {
+  const legacy = await integerKeyedPrefixes(database)
   const files = readdirSync(seedsDirectory)
     .filter((file) => file.endsWith(".sql"))
     .sort()
@@ -44,7 +76,11 @@ export async function seedLocalD1(database: D1Database): Promise<void> {
     ...files.filter((file) => !SEED_ORDER.includes(file.replace(".sql", ""))),
   ]
   for (const file of ordered) {
-    const sql = readFileSync(join(seedsDirectory, file), "utf8")
+    const sql = readFileSync(join(seedsDirectory, file), "utf8").replaceAll(
+      /'([0-9a-f]{8})-0000-7000-8000-([0-9a-f]{12})'/gu,
+      (literal, prefix: string, serial: string) =>
+        legacy.has(prefix) ? String(Number.parseInt(serial, 16)) : literal,
+    )
     if (sql.includes("INSERT INTO")) await execSql(database, sql)
   }
 }

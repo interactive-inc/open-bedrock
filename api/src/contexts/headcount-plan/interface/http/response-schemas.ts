@@ -3,7 +3,7 @@ import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records
 
 /** 人員計画 1 件のレスポンス。actual_count は同部署の active 在籍数。 */
 export const zAppHeadcountPlan = z.object({
-  id: z.number(),
+  id: z.uuid(),
   fiscal_year: z.number(),
   department_code: z.string().nullable(),
   planned_count: z.number(),
