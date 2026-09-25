@@ -190,6 +190,7 @@ async function reserve(migrated: number, empty: number): Promise<SharedRuntime> 
     // Miniflareが作り直すが、作り直す前の要求は届かないため、次のファイルからは新しいworkerdを使う。
     current.pid === undefined ||
     !runningWorkerdPids().includes(current.pid) ||
+    !(await answers(current.runtime)) ||
     current.nextMigrated + migrated > RUNTIME_MIGRATED_SLOT_COUNT ||
     current.nextEmpty + empty > RUNTIME_EMPTY_SLOT_COUNT
   ) {
@@ -211,6 +212,20 @@ async function reserve(migrated: number, empty: number): Promise<SharedRuntime> 
   current.nextMigrated += migrated
   current.nextEmpty += empty
   return current
+}
+
+/**
+ * 共有workerdが要求に応えるかを確かめる。止められた直後はpidの記録より先に次のファイルが
+ * 始まることがあるため、実際に要求を送って届かなければ使わない。
+ */
+async function answers(runtime: Miniflare): Promise<boolean> {
+  return runtime.dispatchFetch("http://local-d1.invalid/", { method: "POST", body: "{}" }).then(
+    async (response) => {
+      await response.arrayBuffer()
+      return true
+    },
+    () => false,
+  )
 }
 
 async function createSharedRuntime(): Promise<SharedRuntime> {

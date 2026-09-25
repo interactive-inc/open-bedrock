@@ -17,6 +17,7 @@ afterAll(async () => {
 
 test("registration requires a caller-owned retry key without recording a contract", async () => {
   const fixture = await createLicenseFixture(await pool.next())
+  // 実D1の結果はmetaに実行時間を含むため、行だけを比べる。
   const before = await fixture.database.prepare("SELECT * FROM software_licenses").all()
   const response = await fixture.request("/software-licenses", {
     method: "POST",
@@ -24,7 +25,9 @@ test("registration requires a caller-owned retry key without recording a contrac
   })
 
   expect(response.status).toBe(400)
-  expect(await fixture.database.prepare("SELECT * FROM software_licenses").all()).toEqual(before)
+  expect((await fixture.database.prepare("SELECT * FROM software_licenses").all()).results).toEqual(
+    before.results,
+  )
 })
 
 test.each(["update", "cancel"])(
@@ -39,7 +42,9 @@ test.each(["update", "cancel"])(
     })
 
     expect(response.status).toBe(400)
-    expect(await fixture.database.prepare("SELECT * FROM software_licenses").all()).toEqual(before)
+    expect(
+      (await fixture.database.prepare("SELECT * FROM software_licenses").all()).results,
+    ).toEqual(before.results)
   },
 )
 
@@ -57,5 +62,7 @@ test("a reviewed contract cannot be cancelled after another person changes it", 
 
   const cancelled = await fixture.request(`${path}/cancel`, { method: "POST", headers })
   expect(cancelled.status).toBe(409)
-  expect(await fixture.database.prepare("SELECT * FROM software_licenses").all()).toEqual(before)
+  expect((await fixture.database.prepare("SELECT * FROM software_licenses").all()).results).toEqual(
+    before.results,
+  )
 })
