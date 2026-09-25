@@ -10,6 +10,9 @@ import { GET as preservedDossier } from "@system/interface/routes/system.preserv
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
 
+const regulationId = (n: number) => `0190001f-0000-7000-8000-${n.toString(16).padStart(12, "0")}`
+const versionId = "01900020-0000-7000-8000-000000000001"
+
 test("規程11件と改定版を分割照合し撤去確定する", async () => {
   const { database, governance, creator, reviewer, definition, bindings, tokenFor, request } =
     await createRegulationPreservationFixture()
@@ -18,12 +21,12 @@ test("規程11件と改定版を分割照合し撤去確定する", async () => 
       .prepare(`INSERT INTO regulations
       (id,code,title,category,status,created_at)
       VALUES (?1,?2,?3,'policy','active','2026-09-01T00:00:00.000Z')`)
-      .bind(id, `policy-${id}`, `Policy ${id}`)
+      .bind(regulationId(id), `policy-${id}`, `Policy ${id}`)
       .run()
   }
   await database.exec(`INSERT INTO regulation_versions
     (id,regulation_id,version,body_md,effective_on,note,created_at)
-    VALUES (1,1,1,'# Policy','2026-09-15','First version','2026-09-15T12:00:00.000Z')`)
+    VALUES ('${versionId}','${regulationId(1)}',1,'# Policy','2026-09-15','First version','2026-09-15T12:00:00.000Z')`)
   const token = await tokenFor(creator.accountId)
   const stepUpToken = "f".repeat(64)
   const hash = await new SystemPrincipalSecretService().hashRawSecret(stepUpToken)
@@ -71,9 +74,9 @@ test("規程11件と改定版を分割照合し撤去確定する", async () => 
   const sources = [
     ...Array.from({ length: 11 }, (_, index) => ({
       kind: "regulation-record" as const,
-      id: String(index + 1),
+      id: regulationId(index + 1),
     })),
-    { kind: "regulation-version-record" as const, id: "1" },
+    { kind: "regulation-version-record" as const, id: versionId },
   ]
   for (const source of sources) {
     const path = `/regulation/records/${source.kind}/${encodeURIComponent(source.id)}/preservation-requests`
@@ -135,7 +138,11 @@ test("規程11件と改定版を分割照合し撤去確定する", async () => 
     post(coveragePath, { purpose: "archive", recordKind, records })
   const first = await cover("regulation-record", regulationMappings.slice(0, 10))
   if (first.status !== 200) throw new Error(await first.text())
-  expect(await first.json()).toMatchObject({ sequence: 1, nextCursor: "10", recordCount: 10 })
+  expect(await first.json()).toMatchObject({
+    sequence: 1,
+    nextCursor: regulationId(10),
+    recordCount: 10,
+  })
   expect((await cover("regulation-record", regulationMappings.slice(0, 1))).status).toBe(409)
   const second = await cover("regulation-record", regulationMappings.slice(10))
   if (second.status !== 200) throw new Error(await second.text())

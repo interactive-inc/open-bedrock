@@ -6,7 +6,7 @@ export const regulationStatusSchema = z.enum(["active", "archived"])
 export type RegulationStatus = z.infer<typeof regulationStatusSchema>
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   code: z.string(),
   title: z.string(),
   category: z.string().nullable(),

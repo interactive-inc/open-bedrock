@@ -18,7 +18,7 @@ export class CreateEmployeeCertification {
 
   async run(props: {
     employeeId: EmployeeId
-    certificationId: number
+    certificationId: string
     acquiredOn: string
     expiresOn: string | null
     note: string | null

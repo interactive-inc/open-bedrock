@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { AnnouncementContext } from "@/contexts/announcement/configuration/announcement-context"
 import { AnnouncementActorReadAdapter } from "@/contexts/announcement/infrastructure/adapters/announcement-actor-read.adapter"
 import { AnnouncementError } from "@/contexts/announcement/domain/errors"
@@ -6,9 +7,10 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
 const snapshotSql = `SELECT json_object(
-  'format', 'announcement-record', 'version', 1,
+  'format', 'announcement-record', 'version', 2,
   'announcement', json_object(
     'id', id,
+    'legacy_id', legacy_id,
     'title', title,
     'body_md', body_md,
     'published_on', published_on,
@@ -26,8 +28,8 @@ export class CaptureAnnouncementRecordAdapter {
     Object.freeze(this)
   }
 
-  async prepare(input: Readonly<{ announcementId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.announcementId))
+  async prepare(input: Readonly<{ announcementId: string; sourceNamespace: string }>) {
+    if (!z.uuid().safeParse(input.announcementId).success)
       return new AnnouncementError("forbidden", "invalid source record")
     const actor = await new AnnouncementActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
@@ -50,7 +52,7 @@ export class CaptureAnnouncementRecordAdapter {
         recordKind: "announcement-record",
         recordId: String(input.announcementId),
         formatId: "announcement-record",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

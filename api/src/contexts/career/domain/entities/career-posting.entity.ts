@@ -4,7 +4,7 @@ import type { CareerPostingRow } from "@/contexts/career/infrastructure/schema/c
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   title: z.string(),
   organizationUnitId: zOrganizationUnitId.nullable(),
   legacyDeptName: z.string().nullable(),

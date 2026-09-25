@@ -54,7 +54,7 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
   }
   await database
     .prepare(`INSERT INTO asset_lendings
-    (id,asset_code,employee_id,lent_at,returned_at) VALUES (1,'A0001',?1,'2026-01-02T00:00:00Z','2026-01-03T00:00:00Z')`)
+    (id,asset_code,employee_id,lent_at,returned_at) VALUES ('01900015-0000-7000-8000-000000000001','A0001',?1,'2026-01-02T00:00:00Z','2026-01-03T00:00:00Z')`)
     .bind(creatorPerson.employeeId)
     .run()
   const stocktakeId = "a1b2c3d4-e5f6-4a1b-8c2d-000000000001"
@@ -125,7 +125,7 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
     database
       .prepare(`INSERT INTO asset_lendings
       (id,asset_code,employee_id,lent_at,returned_at)
-      VALUES (2,'A0002',?1,'2026-01-04T00:00:00Z',NULL)`)
+      VALUES ('01900015-0000-7000-8000-000000000002','A0002',?1,'2026-01-04T00:00:00Z',NULL)`)
       .bind(creatorPerson.employeeId)
       .run(),
   ).rejects.toThrow("asset_record_source_frozen")
@@ -159,7 +159,7 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
         recordKind: "asset-record" as const,
         recordId: `A${String(index + 1).padStart(4, "0")}`,
       })),
-      { recordKind: "asset-lending-record", recordId: "1" },
+      { recordKind: "asset-lending-record", recordId: "01900015-0000-7000-8000-000000000001" },
       { recordKind: "stocktake-record", recordId: stocktakeId },
       {
         recordKind: "stocktake-item-record",

@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { AttendanceRecordSourceContext } from "@/contexts/attendance/configuration/attendance-record-source-context"
 import { AttendanceRecordSourceAuthorizationAdapter } from "@/contexts/attendance/infrastructure/adapters/attendance-record-source-authorization.adapter"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
@@ -6,15 +7,22 @@ import { toSha256Hex } from "@system/application/attachments/lib/to-sha256-hex"
 
 type Context = AttendanceRecordSourceContext
 
-const snapshotSql = `SELECT json_object(
+/**
+ * 版1と版2は主キーが整数だった頃の本文で、既存の承認対象の再検査だけに使う。
+ * 版3は主キーを UUID へ移す前の整数の主キー（legacy_id）を本文に含める。
+ */
+function snapshotSql(formatVersion: 1 | 2 | 3): string {
+  const legacy = formatVersion === 3 ? "'legacy_id', legacy_id, " : ""
+  return `SELECT json_object(
   'format', 'attendance-record', 'version', ?2,
-  'record', json_object('id', id, 'employee_id', employee_id, 'work_date', work_date,
+  'record', json_object('id', id, ${legacy}'employee_id', employee_id, 'work_date', work_date,
     'clock_in_at', clock_in_at, 'clock_out_at', clock_out_at, 'work_minutes', work_minutes,
     'note', note, 'status', status)
 ) AS snapshot_json,
   (typeof(work_minutes) != 'integer' OR work_minutes BETWEEN -9007199254740991 AND 9007199254740991)
     AS legacy_lossless
 FROM attendance_records WHERE id = ?1`
+}
 
 /** 元行の全項目を取得し、存在しない改訂番号や記録日時を生成しない。 */
 export class CaptureAttendanceRecordAdapter {
@@ -24,19 +32,20 @@ export class CaptureAttendanceRecordAdapter {
 
   async prepare(
     input: Readonly<{
-      recordId: number
+      recordId: string
       sourceNamespace: string
-      formatVersion?: 1 | 2
+      formatVersion?: 1 | 2 | 3
     }>,
   ) {
-    const formatVersion = input.formatVersion ?? 2
-    if (!Number.isSafeInteger(input.recordId)) return new Error("invalid attendance source record")
+    const formatVersion = input.formatVersion ?? 3
+    if (!z.uuid().safeParse(input.recordId).success)
+      return new Error("invalid attendance source record")
     const actor = await new AttendanceRecordSourceAuthorizationAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
     try {
       const reads = await this.c.env.DB.batch<{ snapshot_json: string; legacy_lossless: number }>([
         ...actor.assertions,
-        this.c.env.DB.prepare(snapshotSql).bind(input.recordId, formatVersion),
+        this.c.env.DB.prepare(snapshotSql(formatVersion)).bind(input.recordId, formatVersion),
       ])
       if (reads.length !== actor.assertions.length + 1 || reads.some((read) => !read.success))
         return new Error("attendance source is unavailable")
@@ -77,7 +86,7 @@ export class CaptureAttendanceRecordAdapter {
         assertions: Object.freeze([
           ...actor.assertions,
           this.c.env.DB.prepare(`SELECT CASE WHEN
-            (SELECT snapshot_json FROM (${snapshotSql})) IS ?3
+            (SELECT snapshot_json FROM (${snapshotSql(formatVersion)})) IS ?3
             THEN 1 ELSE json_extract('{}', 'attendance_source_changed') END`).bind(
             input.recordId,
             formatVersion,

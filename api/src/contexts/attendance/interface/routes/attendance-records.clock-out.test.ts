@@ -16,7 +16,7 @@ import { initializeStandardCompanyTestState } from "@tests/api/support/initializ
 const jwtSecret = "attendance-clock-out-route-test-secret"
 
 const attendanceRecordResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   work_date: z.string(),
   clock_in_at: z.string().nullable(),
@@ -149,7 +149,7 @@ describe("POST /attendance-records/clock-out", () => {
       .prepare(
         "INSERT INTO attendance_records (id, employee_id, work_date, clock_in_at, clock_out_at, work_minutes, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
       )
-      .bind(999, 10, "2026-05-30", null, null, null, "open")
+      .bind("01900016-0000-7000-8000-0000000003e7", 10, "2026-05-30", null, null, null, "open")
       .run()
 
     const response = await send({

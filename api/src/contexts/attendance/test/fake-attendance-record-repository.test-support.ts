@@ -22,7 +22,7 @@ export function createFakeAttendanceRecordRepository(): {
     findOpenByEmployeeId: async (employeeId) => findOpen(employeeId),
     create: async (attendanceRecord) => {
       const saved = new AttendanceRecord({
-        id: records.length + 1,
+        id: crypto.randomUUID(),
         employeeId: attendanceRecord.employeeId,
         workDate: attendanceRecord.workDate,
         clockInAt: attendanceRecord.clockInAt,

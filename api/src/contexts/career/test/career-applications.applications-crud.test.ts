@@ -15,8 +15,8 @@ import { z } from "zod"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const careerApplicationResponseSchema = z.object({
-  id: z.number(),
-  posting_id: z.number(),
+  id: z.uuid(),
+  posting_id: z.uuid(),
   applicant_id: zEmployeeId,
   message: z.string().nullable(),
   status: z.enum(["applied", "accepted", "rejected"]),
@@ -25,9 +25,9 @@ const careerApplicationResponseSchema = z.object({
 const jwtSecret = "career-applications-crud-test-secret"
 
 /** 応募 id 1: 応募者 6・status applied / 応募 id 2: 応募者 15・status accepted。 */
-const appliedApplicationId = 1
+const appliedApplicationId = "01900018-0000-7000-8000-000000000001"
 
-const decidedApplicationId = 2
+const decidedApplicationId = "01900018-0000-7000-8000-000000000002"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
@@ -155,7 +155,7 @@ describe("GET /career-applications/:id", () => {
 
   test("returns 404 for an unknown application", async () => {
     const response = await request({
-      path: "/career/career-applications/9999",
+      path: "/career/career-applications/01900018-0000-7000-8000-00000000270f",
       token: await tokenForEmployee(6),
     })
 
@@ -216,7 +216,7 @@ describe("PUT /career-applications/:id", () => {
 
   test("returns 404 for an unknown application", async () => {
     const response = await request({
-      path: "/career/career-applications/9999",
+      path: "/career/career-applications/01900018-0000-7000-8000-00000000270f",
       token: await tokenForEmployee(6),
       method: "PUT",
       body: { message: "ghost" },
@@ -259,7 +259,7 @@ describe("DELETE /career-applications/:id", () => {
 
   test("returns 404 for an unknown application", async () => {
     const response = await request({
-      path: "/career/career-applications/9999",
+      path: "/career/career-applications/01900018-0000-7000-8000-00000000270f",
       token: await tokenForEmployee(6),
       method: "DELETE",
     })

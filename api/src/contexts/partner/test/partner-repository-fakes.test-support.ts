@@ -11,22 +11,19 @@ type PartnerRepositoryPort = Pick<
 type ContractRepositoryPort = Pick<ContractRepository, "findById" | "create" | "update">
 
 /**
- * PartnerRepository の型付きfake。Domain model を採番付きで保持するだけで、SQLやD1を模倣しない。
+ * PartnerRepository の型付きfake。Domain model を UUID の採番付きで保持するだけで、SQLやD1を模倣しない。
  * code の一意性とDBの採番は partner.repository.d1.test.ts がローカルD1で検証する。
  */
 export function createFakePartnerRepository(): PartnerRepositoryPort {
-  const partners = new Map<number, Partner>()
-
-  let nextId = 1
+  const partners = new Map<string, Partner>()
 
   return {
     findByCode: async (code) =>
       [...partners.values()].find((partner) => partner.code === code) ?? null,
     findById: async (id) => partners.get(id) ?? null,
     create: async (partner) => {
-      const created = new Partner({ ...partnerProps(partner), id: nextId })
-      nextId += 1
-      partners.set(created.id ?? 0, created)
+      const created = new Partner({ ...partnerProps(partner), id: crypto.randomUUID() })
+      partners.set(created.id ?? "", created)
       return created
     },
     update: async (partner) => {
@@ -39,16 +36,13 @@ export function createFakePartnerRepository(): PartnerRepositoryPort {
 
 /** ContractRepository の型付きfake。 */
 export function createFakeContractRepository(): ContractRepositoryPort {
-  const contracts = new Map<number, Contract>()
-
-  let nextId = 1
+  const contracts = new Map<string, Contract>()
 
   return {
     findById: async (id) => contracts.get(id) ?? null,
     create: async (contract) => {
-      const created = new Contract({ ...contractProps(contract), id: nextId })
-      nextId += 1
-      contracts.set(created.id ?? 0, created)
+      const created = new Contract({ ...contractProps(contract), id: crypto.randomUUID() })
+      contracts.set(created.id ?? "", created)
       return created
     },
     update: async (contract) => {

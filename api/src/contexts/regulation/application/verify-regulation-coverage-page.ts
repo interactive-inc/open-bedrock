@@ -1,4 +1,3 @@
-import { z } from "zod"
 import { RegulationRecordSystemAdapter } from "@/contexts/regulation/infrastructure/adapters/regulation-record-system.adapter"
 import {
   RegulationCoverageForbiddenError,

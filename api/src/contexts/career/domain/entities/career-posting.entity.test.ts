@@ -24,7 +24,9 @@ describe("CareerPosting.create", () => {
 describe("CareerPosting.fromRow", () => {
   test("keeps the legacy department name without exposing the legacy numeric id", () => {
     const posting = CareerPosting.fromRow({
-      id: 1,
+      id: "01900017-0000-7000-8000-000000000001",
+      legacyId: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
       title: "Backend Engineer",
       deptId: 3,
       deptName: "Engineering",
@@ -42,7 +44,9 @@ describe("CareerPosting.fromRow", () => {
 describe("CareerPosting.withDetails", () => {
   test("returns new with changed title, organization unit, skills, and status", () => {
     const posting = CareerPosting.fromRow({
-      id: 7,
+      id: "01900017-0000-7000-8000-000000000007",
+      legacyId: null,
+      createdAt: "2026-01-01T00:00:00.000Z",
       title: "Backend Engineer",
       deptId: 10,
       deptName: "Engineering",
@@ -64,6 +68,6 @@ describe("CareerPosting.withDetails", () => {
     expect(updated.legacyDeptName).toBe("Engineering")
     expect(updated.requiredSkills).toBe("React, CSS")
     expect(updated.status).toBe("closed")
-    expect(updated.id).toBe(7)
+    expect(updated.id).toBe("01900017-0000-7000-8000-000000000007")
   })
 })

@@ -47,7 +47,7 @@ export const zAppRegulationRetirementExecution = z.strictObject({
 
 /** 規程集一覧の 1 件（最新版のメタ情報を含む）。 */
 export const zAppRegulationListItem = z.object({
-  id: z.number(),
+  id: z.uuid(),
   code: z.string(),
   title: z.string(),
   category: z.string().nullable(),
@@ -65,7 +65,7 @@ export const zAppRegulationList = z.object({
 
 /** 規程の改定版 1 件。 */
 export const zAppRegulationVersion = z.object({
-  id: z.number(),
+  id: z.uuid(),
   version: z.number(),
   body_md: z.string(),
   effective_on: z.string(),
@@ -75,7 +75,7 @@ export const zAppRegulationVersion = z.object({
 
 /** 規程 1 件の詳細（最新版＋版一覧）。 */
 export const zAppRegulationDetail = z.object({
-  id: z.number(),
+  id: z.uuid(),
   code: z.string(),
   title: z.string(),
   category: z.string().nullable(),
@@ -87,7 +87,7 @@ export const zAppRegulationDetail = z.object({
 
 /** 規程の新規登録・新版追加・アーカイブのレスポンス（規程本体のメタ）。 */
 export const zAppRegulation = z.object({
-  id: z.number(),
+  id: z.uuid(),
   code: z.string(),
   title: z.string(),
   category: z.string().nullable(),

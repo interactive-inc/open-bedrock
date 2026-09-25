@@ -2,7 +2,7 @@ import { UpdateMeetingMinutes } from "@/contexts/meeting/application/update-meet
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { NotFoundError, UnauthorizedError } from "@/lib/http/errors"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppMeetingMinutes } from "@/contexts/meeting/interface/http/response-schemas"
@@ -18,7 +18,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const minutesId = validateIntParam(c.req.param("id"), "minutes")
+  const minutesId = validateUuidParam(c.req.param("id"), "minutes")
 
   const rows = await c.var.database
     .select()
@@ -66,7 +66,7 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const minutesId = validateIntParam(c.req.param("id"), "minutes")
+    const minutesId = validateUuidParam(c.req.param("id"), "minutes")
 
     const json = c.req.valid("json")
 

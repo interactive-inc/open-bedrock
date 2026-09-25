@@ -5,7 +5,7 @@ import type { AttendanceRecordRow } from "@/contexts/attendance/infrastructure/s
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   employeeId: zEmployeeId,
   workDate: z.string(),
   clockInAt: z.string().nullable(),

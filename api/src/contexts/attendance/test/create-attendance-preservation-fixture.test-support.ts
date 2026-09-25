@@ -81,7 +81,7 @@ export async function createAttendancePreservationFixture() {
     .run()
   await database
     .prepare(`INSERT INTO attendance_records
-    (id,employee_id,work_date,clock_in_at,note,status) VALUES (1,?1,'2026-09-01','2026-09-01T00:00:00Z','Original note','open')`)
+    (id,employee_id,work_date,clock_in_at,note,status) VALUES ('01900016-0000-7000-8000-000000000001',?1,'2026-09-01','2026-09-01T00:00:00Z','Original note','open')`)
     .bind(governance.creator.employeeId)
     .run()
   const bucket = new SystemAttachmentTestBucket()
@@ -158,7 +158,7 @@ export async function createAttendancePreservationFixture() {
     settings,
     request,
     conditions,
-    path: "/attendance-records/1/preservation-requests",
+    path: "/attendance-records/01900016-0000-7000-8000-000000000001/preservation-requests",
     command: { key: crypto.randomUUID(), body: { procedure_key: definition.key, conditions } },
   }
 }

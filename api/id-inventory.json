@@ -4,10 +4,10 @@
     "primaryKeyKinds": {
       "allocator-singleton-secret": 11,
       "composite": 35,
-      "integer": 56,
+      "integer": 42,
       "text-business-code": 6,
       "text-prefixed": 13,
-      "text-uuid": 20,
+      "text-uuid": 34,
       "text-uuid-candidate": 65
     },
     "declaredForeignKeys": 272,
@@ -15,11 +15,11 @@
       "cross-context": 17,
       "external": 32,
       "historical": 10,
-      "not-reference": 43,
+      "not-reference": 57,
       "polymorphic": 18,
       "same-context": 79
     },
-    "triggers": 634,
+    "triggers": 662,
     "views": 25,
     "indexes": 290
   },
@@ -30,11 +30,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -47,8 +47,15 @@
         ],
         "incoming": []
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "announcements_identity_update",
+        "announcements_legacy_id_insert",
         "announcements_source_freeze_delete",
         "announcements_source_freeze_insert",
         "announcements_source_freeze_update"
@@ -94,11 +101,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -113,12 +120,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "asset_code",
           "classification": "same-context",
           "target": "assets"
         }
       ],
       "triggers": [
+        "asset_lendings_identity_update",
+        "asset_lendings_legacy_id_insert",
         "asset_lendings_source_freeze_delete",
         "asset_lendings_source_freeze_insert",
         "asset_lendings_source_freeze_update"
@@ -164,11 +177,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -181,8 +194,15 @@
         ],
         "incoming": []
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "attendance_records_identity_update",
+        "attendance_records_legacy_id_insert",
         "attendance_records_source_freeze_delete",
         "attendance_records_source_freeze_insert",
         "attendance_records_source_freeze_update"
@@ -233,11 +253,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -252,12 +272,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "posting_id",
           "classification": "same-context",
           "target": "career_postings"
         }
       ],
       "triggers": [
+        "career_applications_identity_update",
+        "career_applications_legacy_id_insert",
         "career_applications_source_freeze_delete",
         "career_applications_source_freeze_insert",
         "career_applications_source_freeze_update"
@@ -275,11 +301,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -294,12 +320,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "dept_id",
           "classification": "historical",
           "target": "company_organization_units"
         }
       ],
       "triggers": [
+        "career_postings_identity_update",
+        "career_postings_legacy_id_insert",
         "career_postings_source_freeze_delete",
         "career_postings_source_freeze_insert",
         "career_postings_source_freeze_update"
@@ -378,18 +410,25 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
         "incoming": []
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "certification_definitions_identity_update",
+        "certification_definitions_legacy_id_insert",
         "certification_definitions_source_freeze_delete",
         "certification_definitions_source_freeze_insert",
         "certification_definitions_source_freeze_update"
@@ -3522,11 +3561,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -3534,12 +3573,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "superseded_by_id",
           "classification": "same-context",
           "target": "decision_records"
         }
       ],
       "triggers": [
+        "decision_records_identity_update",
+        "decision_records_legacy_id_insert",
         "decision_records_source_freeze_delete",
         "decision_records_source_freeze_insert",
         "decision_records_source_freeze_update"
@@ -3624,11 +3669,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -3643,12 +3688,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "certification_id",
           "classification": "same-context",
           "target": "certification_definitions"
         }
       ],
       "triggers": [
+        "employee_certifications_identity_update",
+        "employee_certifications_legacy_id_insert",
         "employee_certifications_source_freeze_delete",
         "employee_certifications_source_freeze_insert",
         "employee_certifications_source_freeze_update"
@@ -5004,11 +5055,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -5023,12 +5074,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "meeting_id",
           "classification": "same-context",
           "target": "meetings"
         }
       ],
       "triggers": [
+        "meeting_minutes_records_identity_update",
+        "meeting_minutes_records_legacy_id_insert",
         "meeting_minutes_records_source_freeze_delete",
         "meeting_minutes_records_source_freeze_insert",
         "meeting_minutes_records_source_freeze_update"
@@ -5042,18 +5099,25 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
         "incoming": []
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "meetings_identity_update",
+        "meetings_legacy_id_insert",
         "meetings_source_freeze_delete",
         "meetings_source_freeze_insert",
         "meetings_source_freeze_update"
@@ -5350,11 +5414,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -5362,12 +5426,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "partner_id",
           "classification": "same-context",
           "target": "partners"
         }
       ],
       "triggers": [
+        "partner_contracts_identity_update",
+        "partner_contracts_legacy_id_insert",
         "partner_contracts_source_freeze_delete",
         "partner_contracts_source_freeze_insert",
         "partner_contracts_source_freeze_update"
@@ -5381,18 +5451,25 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
         "incoming": []
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "partners_identity_update",
+        "partners_legacy_id_insert",
         "partners_source_freeze_delete",
         "partners_source_freeze_insert",
         "partners_source_freeze_update"
@@ -5492,11 +5569,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -5504,12 +5581,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "regulation_id",
           "classification": "same-context",
           "target": "regulations"
         }
       ],
       "triggers": [
+        "regulation_versions_identity_update",
+        "regulation_versions_legacy_id_insert",
         "regulation_versions_source_freeze_delete",
         "regulation_versions_source_freeze_insert",
         "regulation_versions_source_freeze_update"
@@ -5523,18 +5606,25 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
         "incoming": []
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "regulations_identity_update",
+        "regulations_legacy_id_insert",
         "regulations_source_freeze_delete",
         "regulations_source_freeze_insert",
         "regulations_source_freeze_update"

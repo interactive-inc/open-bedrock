@@ -33,6 +33,7 @@ export class RegulationRepository {
       const rows = await this.c.var.database
         .insert(regulations)
         .values({
+          id: crypto.randomUUID(),
           code: regulation.code,
           title: regulation.title,
           category: regulation.category,
@@ -74,7 +75,7 @@ export class RegulationRepository {
   }
 
   /** 規程の改定版一覧を version 降順（新しい版が先）で返す。 */
-  async listVersions(regulationId: number): Promise<ReadonlyArray<RegulationVersion> | Error> {
+  async listVersions(regulationId: string): Promise<ReadonlyArray<RegulationVersion> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -95,6 +96,7 @@ export class RegulationRepository {
       const rows = await this.c.var.database
         .insert(regulationVersions)
         .values({
+          id: crypto.randomUUID(),
           regulationId: version.regulationId,
           version: version.version,
           bodyMd: version.bodyMd,

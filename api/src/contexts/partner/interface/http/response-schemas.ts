@@ -47,7 +47,7 @@ export const zAppPartnerRetirementExecution = z.strictObject({
 
 /** 取引先 1 件のレスポンス。 */
 export const zAppPartner = z.object({
-  id: z.number(),
+  id: z.uuid(),
   code: z.string(),
   name: z.string(),
   category: z.string().nullable(),
@@ -65,8 +65,8 @@ export const zAppPartnerList = z.object({
 
 /** 契約記録 1 件のレスポンス。 */
 export const zAppContract = z.object({
-  id: z.number(),
-  partner_id: z.number(),
+  id: z.uuid(),
+  partner_id: z.uuid(),
   title: z.string(),
   contract_date: z.string(),
   starts_on: z.string().nullable(),

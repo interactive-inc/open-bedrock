@@ -5,7 +5,7 @@ import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records
 
 /** ===== career ===== */
 export const zAppCareerPosting = z.object({
-  id: z.number().nullable(),
+  id: z.uuid().nullable(),
   title: z.string(),
   /** 募集部署として参照する Company の組織単位。未設定は null。 */
   organization_unit_id: z.string().nullable(),
@@ -23,8 +23,8 @@ export const zAppCareerPostingList = z.object({
 })
 
 export const zAppCareerApplication = z.object({
-  id: z.number().nullable(),
-  posting_id: z.number(),
+  id: z.uuid().nullable(),
+  posting_id: z.uuid(),
   applicant_id: zEmployeeId,
   message: z.string().nullable(),
   status: z.enum(["applied", "accepted", "rejected"]),

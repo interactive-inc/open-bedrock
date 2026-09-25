@@ -4,8 +4,8 @@ import type { CareerApplicationRow } from "@/contexts/career/infrastructure/sche
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
-  postingId: z.number(),
+  id: z.string().nullable(),
+  postingId: z.string(),
   applicantId: zEmployeeId,
   message: z.string().nullable(),
   status: z.enum(["applied", "accepted", "rejected"]),
@@ -36,7 +36,7 @@ export class CareerApplication implements Props {
 
   /** 新規の応募を組み立てる。id は未採番、初期状態は applied。 */
   static create(props: {
-    postingId: number
+    postingId: string
     applicantId: EmployeeId
     message: string | null
   }): CareerApplication {

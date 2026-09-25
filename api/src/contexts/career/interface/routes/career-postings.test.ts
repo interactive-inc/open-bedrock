@@ -13,7 +13,7 @@ import { z } from "zod"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const careerPostingResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   organization_unit_id: z.string().nullable(),
   organization_unit_name: z.string().nullable(),
@@ -99,14 +99,18 @@ describe("GET /career-postings", () => {
     if (parsed.success) {
       expect(parsed.data.data.every((posting) => posting.status === "open")).toBe(true)
 
-      const first = parsed.data.data.find((posting) => posting.id === 1)
+      const first = parsed.data.data.find(
+        (posting) => posting.id === "01900017-0000-7000-8000-000000000001",
+      )
 
       expect(first?.title).toBe("プロダクト開発リード")
       expect(first?.legacy_dept_name).toBe("開発部")
       expect(first?.organization_unit_id).toBeNull()
       expect(first?.required_skills).toBe("typescript,project_mgmt")
 
-      const closed = parsed.data.data.find((posting) => posting.id === 3)
+      const closed = parsed.data.data.find(
+        (posting) => posting.id === "01900017-0000-7000-8000-000000000003",
+      )
 
       expect(closed).toBeUndefined()
     }

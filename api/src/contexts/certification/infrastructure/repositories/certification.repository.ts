@@ -21,7 +21,7 @@ export class CertificationRepository {
   }
 
   /** id で 1 件取得する。存在しなければ null。 */
-  async findById(id: number): Promise<Certification | null | Error> {
+  async findById(id: string): Promise<Certification | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -64,6 +64,7 @@ export class CertificationRepository {
       const rows = await this.c.var.database
         .insert(certifications)
         .values({
+          id: crypto.randomUUID(),
           code: props.code,
           name: props.name,
           issuer: props.issuer,

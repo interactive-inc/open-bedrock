@@ -13,10 +13,10 @@ test("規程2台帳を停止中に人の承認で保全し、業務コードを�
     await createRegulationPreservationFixture()
   await database.exec(`INSERT INTO regulations
     (id,code,title,category,status,created_at)
-    VALUES (1,'work-rules','Work Rules','personnel','active','2026-09-01T00:00:00.000Z')`)
+    VALUES ('0190001f-0000-7000-8000-000000000001','work-rules','Work Rules','personnel','active','2026-09-01T00:00:00.000Z')`)
   await database.exec(`INSERT INTO regulation_versions
     (id,regulation_id,version,body_md,effective_on,note,created_at)
-    VALUES (2,1,3,'# Work Rules','2026-10-01','Approved revision',
+    VALUES ('01900020-0000-7000-8000-000000000002','0190001f-0000-7000-8000-000000000001',3,'# Work Rules','2026-10-01','Approved revision',
       '2026-09-15T12:00:00.000Z')`)
   const token = await tokenFor(creator.accountId)
   const stepUpToken = "e".repeat(64)
@@ -53,8 +53,8 @@ test("規程2台帳を停止中に人の承認で保全し、業務コードを�
     )
   }
   const sources = [
-    ["regulation-record", "1"],
-    ["regulation-version-record", "2"],
+    ["regulation-record", "0190001f-0000-7000-8000-000000000001"],
+    ["regulation-version-record", "01900020-0000-7000-8000-000000000002"],
   ] as const
   const preservedIds: string[] = []
   for (const [recordKind, recordId] of sources) {

@@ -21,7 +21,7 @@ import { z } from "zod"
 const jwtSecret = "attendance-list-route-test-secret"
 
 const attendanceRecordResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   work_date: z.string(),
   clock_in_at: z.string().nullable(),
@@ -208,7 +208,7 @@ async function createScopeTestDb(): Promise<D1Database> {
 
   await seedD1(db, "attendance_records", [
     {
-      id: 100,
+      id: "01900016-0000-7000-8000-000000000064",
       employee_id: "20",
       work_date: "2026-06-01",
       clock_in_at: "2026-06-01T09:00:00Z",
@@ -217,7 +217,7 @@ async function createScopeTestDb(): Promise<D1Database> {
       status: "closed",
     },
     {
-      id: 101,
+      id: "01900016-0000-7000-8000-000000000065",
       employee_id: "21",
       work_date: "2026-06-01",
       clock_in_at: "2026-06-01T09:00:00Z",

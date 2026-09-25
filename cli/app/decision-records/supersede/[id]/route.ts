@@ -26,10 +26,7 @@ export default factory.createHandlers(
 
     if (!query.by) throw new UsageError("--by <new_id> が必要です")
 
-    const supersededById = Number(query.by)
-
-    if (!Number.isInteger(supersededById) || supersededById <= 0)
-      throw new UsageError("--by は正の整数で指定してください")
+    const supersededById = query.by
 
     const client = await createClient()
 

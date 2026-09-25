@@ -35,18 +35,9 @@ export class ListFrozenCareerRecordPageAdapter {
       ownerContext: "career",
     })
     if (generation instanceof Error) return generation
-    const numeric = request.recordKind !== "career-sheet-record"
-    const after =
-      request.afterCursor === null
-        ? null
-        : numeric
-          ? Number(request.afterCursor)
-          : request.afterCursor
-    if (
-      numeric &&
-      after !== null &&
-      (!Number.isSafeInteger(after) || String(after) !== request.afterCursor)
-    )
+    const keyedByUuid = request.recordKind !== "career-sheet-record"
+    const after = request.afterCursor
+    if (keyedByUuid && after !== null && !z.uuid().safeParse(after).success)
       return new Error("invalid career cursor")
     const [table, column] =
       request.recordKind === "career-posting-record"
@@ -58,13 +49,13 @@ export class ListFrozenCareerRecordPageAdapter {
       const page =
         after === null
           ? this.c.env.DB.prepare(
-              `SELECT ${column} AS record_id FROM ${table} ORDER BY ${column} LIMIT ?1`,
+              `SELECT ${column} AS record_id FROM ${table} ORDER BY ${column} COLLATE BINARY LIMIT ?1`,
             ).bind(request.limit + 1)
           : this.c.env.DB.prepare(
-              `SELECT ${column} AS record_id FROM ${table} WHERE ${column}>?1 ORDER BY ${column} LIMIT ?2`,
+              `SELECT ${column} AS record_id FROM ${table} WHERE ${column} COLLATE BINARY>?1 ORDER BY ${column} COLLATE BINARY LIMIT ?2`,
             ).bind(after, request.limit + 1)
       const statements = [...generation.assertions, page, ...generation.assertions]
-      const reads = await this.c.env.DB.batch<{ record_id: string | number }>(statements)
+      const reads = await this.c.env.DB.batch<{ record_id: string }>(statements)
       if (reads.length !== statements.length || reads.some((read) => !read.success))
         return new Error("frozen career inventory unavailable")
       const ids = (reads[generation.assertions.length]?.results ?? []).map((row) =>

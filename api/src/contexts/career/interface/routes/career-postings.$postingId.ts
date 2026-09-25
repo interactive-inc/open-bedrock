@@ -7,7 +7,7 @@ import { toCareerPostingResponse } from "@/contexts/career/interface/http/career
 import { zOrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
@@ -23,7 +23,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const postingId = validateIntParam(c.req.param("postingId"), "posting")
+  const postingId = validateUuidParam(c.req.param("postingId"), "posting")
 
   const posting = await (async () => {
     const command = {
@@ -74,7 +74,7 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const postingId = validateIntParam(c.req.param("postingId"), "posting")
+    const postingId = validateUuidParam(c.req.param("postingId"), "posting")
 
     const body = c.req.valid("json")
 
@@ -109,7 +109,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const postingId = validateIntParam(c.req.param("postingId"), "posting")
+  const postingId = validateUuidParam(c.req.param("postingId"), "posting")
 
   const result = await new DeleteCareerPosting({
     postingRepository: new CareerPostingRepository(c),

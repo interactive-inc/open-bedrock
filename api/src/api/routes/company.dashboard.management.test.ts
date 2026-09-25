@@ -189,9 +189,24 @@ async function createTestDb(): Promise<D1Database> {
 
   // 当月の打刻 2 件、前月 1 件(数えない)。
   await seedD1(db, "attendance_records", [
-    { id: 1, employee_id: "2", work_date: "2026-06-02", status: "closed" },
-    { id: 2, employee_id: "2", work_date: "2026-06-03", status: "closed" },
-    { id: 3, employee_id: "2", work_date: "2026-05-30", status: "closed" },
+    {
+      id: "01900016-0000-7000-8000-000000000001",
+      employee_id: "2",
+      work_date: "2026-06-02",
+      status: "closed",
+    },
+    {
+      id: "01900016-0000-7000-8000-000000000002",
+      employee_id: "2",
+      work_date: "2026-06-03",
+      status: "closed",
+    },
+    {
+      id: "01900016-0000-7000-8000-000000000003",
+      employee_id: "2",
+      work_date: "2026-05-30",
+      status: "closed",
+    },
   ])
 
   // 休暇: 当月2件、前月1件。案件のないpendingは未提出なので判断待ち件数に含めない。

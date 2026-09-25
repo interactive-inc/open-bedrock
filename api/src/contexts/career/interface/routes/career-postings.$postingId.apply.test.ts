@@ -15,8 +15,8 @@ import { z } from "zod"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 
 const careerApplicationResponseSchema = z.object({
-  id: z.number(),
-  posting_id: z.number(),
+  id: z.uuid(),
+  posting_id: z.uuid(),
   applicant_id: zEmployeeId,
   message: z.string().nullable(),
   status: z.enum(["applied", "accepted", "rejected"]),
@@ -96,7 +96,7 @@ async function request(props: {
 describe("POST /career-postings/:postingId/apply", () => {
   test("returns 201 with the created application", async () => {
     const response = await request({
-      path: "/career/career-postings/1/apply",
+      path: "/career/career-postings/01900017-0000-7000-8000-000000000001/apply",
       token: await tokenForEmployee(2),
       method: "POST",
       body: { message: "I would like to apply" },
@@ -109,7 +109,7 @@ describe("POST /career-postings/:postingId/apply", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.posting_id).toBe(1)
+      expect(parsed.data.posting_id).toBe("01900017-0000-7000-8000-000000000001")
       expect(parsed.data.applicant_id).toBe(toWorkforceEmployeeId(2))
       expect(parsed.data.message).toBe("I would like to apply")
       expect(parsed.data.status).toBe("applied")
@@ -118,7 +118,7 @@ describe("POST /career-postings/:postingId/apply", () => {
 
   test("returns 201 with a null message when omitted", async () => {
     const response = await request({
-      path: "/career/career-postings/1/apply",
+      path: "/career/career-postings/01900017-0000-7000-8000-000000000001/apply",
       token: await tokenForEmployee(2),
       method: "POST",
       body: { message: null },
@@ -137,7 +137,7 @@ describe("POST /career-postings/:postingId/apply", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/career/career-postings/1/apply",
+      path: "/career/career-postings/01900017-0000-7000-8000-000000000001/apply",
       token: null,
       method: "POST",
       body: { message: null },
@@ -159,7 +159,7 @@ describe("POST /career-postings/:postingId/apply", () => {
 
   test("returns 404 when the posting does not exist", async () => {
     const response = await request({
-      path: "/career/career-postings/9999/apply",
+      path: "/career/career-postings/01900017-0000-7000-8000-00000000270f/apply",
       token: await tokenForEmployee(2),
       method: "POST",
       body: { message: null },
@@ -170,7 +170,7 @@ describe("POST /career-postings/:postingId/apply", () => {
 
   test("returns 404 when the posting is closed", async () => {
     const response = await request({
-      path: "/career/career-postings/3/apply",
+      path: "/career/career-postings/01900017-0000-7000-8000-000000000003/apply",
       token: await tokenForEmployee(2),
       method: "POST",
       body: { message: null },
@@ -181,7 +181,7 @@ describe("POST /career-postings/:postingId/apply", () => {
 
   test("returns 409 when the applicant already applied", async () => {
     const response = await request({
-      path: "/career/career-postings/1/apply",
+      path: "/career/career-postings/01900017-0000-7000-8000-000000000001/apply",
       token: await tokenForEmployee(6),
       method: "POST",
       body: { message: "Duplicate application" },

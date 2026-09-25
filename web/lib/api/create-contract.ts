@@ -7,7 +7,7 @@ export async function createContract(request: ContractCreateRequest) {
   const client = await createClient()
 
   const response = await client["partner"]["partner-contracts"].$post({
-    json: { ...request, partner_id: Number(request.partner_id) },
+    json: { ...request, partner_id: String(request.partner_id) },
   })
 
   if (response.status >= 400) {

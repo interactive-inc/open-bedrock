@@ -21,7 +21,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { factory } from "@/api/http/factory"
 import { careerPostings } from "@/contexts/career/infrastructure/schema/career"
 import { zValidator } from "@hono/zod-validator"
-import { count, desc, eq } from "drizzle-orm"
+import { count, desc, eq, sql } from "drizzle-orm"
 import { z } from "zod"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ
@@ -51,7 +51,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select()
     .from(careerPostings)
     .where(eq(careerPostings.status, "open"))
-    .orderBy(desc(careerPostings.id))
+    // 移行前の公募は作成日時が同じなので、旧来の整数の主キーの順で並べる。
+    .orderBy(
+      desc(careerPostings.createdAt),
+      desc(sql`CAST(${careerPostings.legacyId} AS INTEGER)`),
+      desc(careerPostings.id),
+    )
     .limit(limit)
     .offset(offset)
 

@@ -7,7 +7,7 @@ import { MeetingMinutesRepository } from "@/contexts/meeting/infrastructure/repo
 
 export type Command = {
   session: CompanySessionValue
-  minutesId: number
+  minutesId: string
   heldOn: string
   title: string
   attendees: string | null

@@ -7,25 +7,25 @@ test("取引先と契約の全列を原記録に残す", () => {
   const database = new Database(":memory:")
   database.exec(`
     CREATE TABLE partners (
-      id INTEGER PRIMARY KEY, code TEXT, name TEXT, category TEXT, corporate_number TEXT,
+      id TEXT PRIMARY KEY, legacy_id TEXT, code TEXT, name TEXT, category TEXT, corporate_number TEXT,
       note TEXT, status TEXT, created_at TEXT
     );
     CREATE TABLE partner_contracts (
-      id INTEGER PRIMARY KEY, partner_id INTEGER, title TEXT, contract_date TEXT,
+      id TEXT PRIMARY KEY, legacy_id TEXT, partner_id TEXT, title TEXT, contract_date TEXT,
       starts_on TEXT, ends_on TEXT, renewal_deadline TEXT, note TEXT, created_at TEXT
     );
     INSERT INTO partners VALUES (
-      1,'vendor-1','Vendor One','supplier','1234567890123','Preferred','active',
+      '0190001d-0000-7000-8000-000000000001','1','vendor-1','Vendor One','supplier','1234567890123','Preferred','active',
       '2026-09-01T00:00:00.000Z'
     );
     INSERT INTO partner_contracts VALUES (
-      2,1,'Service Agreement','2026-09-15','2026-10-01','2027-09-30',
+      '0190001e-0000-7000-8000-000000000002',NULL,'0190001d-0000-7000-8000-000000000001','Service Agreement','2026-09-15','2026-10-01','2027-09-30',
       '2027-08-31','Annual renewal','2026-09-15T12:00:00.000Z'
     );
   `)
   const sources: ReadonlyArray<readonly [PartnerRecordKind, string]> = [
-    ["partner-record", "1"],
-    ["partner-contract-record", "2"],
+    ["partner-record", "0190001d-0000-7000-8000-000000000001"],
+    ["partner-contract-record", "0190001e-0000-7000-8000-000000000002"],
   ]
   const snapshots = sources.map(([kind, id]) => {
     const query = partnerSnapshotQuery(kind, id)
@@ -35,7 +35,8 @@ test("取引先と契約の全列を原記録に残す", () => {
     return JSON.parse(row.snapshot_json)
   })
   expect(snapshots[0].partner).toMatchObject({
-    id: 1,
+    id: "0190001d-0000-7000-8000-000000000001",
+    legacy_id: "1",
     code: "vendor-1",
     name: "Vendor One",
     category: "supplier",
@@ -44,8 +45,9 @@ test("取引先と契約の全列を原記録に残す", () => {
     status: "active",
   })
   expect(snapshots[1].contract).toMatchObject({
-    id: 2,
-    partner_id: 1,
+    id: "0190001e-0000-7000-8000-000000000002",
+    legacy_id: null,
+    partner_id: "0190001d-0000-7000-8000-000000000001",
     title: "Service Agreement",
     contract_date: "2026-09-15",
     starts_on: "2026-10-01",
@@ -53,6 +55,6 @@ test("取引先と契約の全列を原記録に残す", () => {
     renewal_deadline: "2027-08-31",
     note: "Annual renewal",
   })
-  expect(partnerSnapshotQuery("partner-record", "01")).toBeInstanceOf(Error)
+  expect(partnerSnapshotQuery("partner-record", "1")).toBeInstanceOf(Error)
   database.close()
 })

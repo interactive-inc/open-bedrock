@@ -16,7 +16,7 @@ import { initializeStandardCompanyTestState } from "@tests/api/support/initializ
 const jwtSecret = "attendance-me-route-test-secret"
 
 const attendanceRecordResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   work_date: z.string(),
   clock_in_at: z.string().nullable(),
@@ -113,7 +113,7 @@ describe("GET /attendance-records/me", () => {
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
       expect(parsed.data.total).toBe(1)
-      expect(parsed.data.data[0]?.id).toBe(2)
+      expect(parsed.data.data[0]?.id).toBe("01900016-0000-7000-8000-000000000002")
     }
   })
 

@@ -8,7 +8,7 @@ import { eq } from "drizzle-orm"
 export class CareerPostingRepository {
   constructor(private readonly c: Context) {}
 
-  async findById(postingId: number): Promise<CareerPosting | null | Error> {
+  async findById(postingId: string): Promise<CareerPosting | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -24,12 +24,13 @@ export class CareerPostingRepository {
     }
   }
 
-  /** 新規公募を保存する。id は省略し DB の autoincrement に任せ、採番後の行を返す。 */
+  /** 新規公募を UUID の主キーで保存し、保存後の行を返す。 */
   async create(careerPosting: CareerPosting): Promise<CareerPosting | Error> {
     try {
       const rows = await this.c.var.database
         .insert(careerPostings)
         .values({
+          id: crypto.randomUUID(),
           title: careerPosting.title,
           organizationUnitId: careerPosting.organizationUnitId,
           requiredSkills: careerPosting.requiredSkills,

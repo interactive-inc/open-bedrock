@@ -14,7 +14,7 @@ import { initializeStandardCompanyTestState } from "@tests/api/support/initializ
 const jwtSecret = "meetings-route-test-secret"
 
 const meetingResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   code: z.string(),
   name: z.string(),
   cadence: z.string().nullable(),
@@ -48,7 +48,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "meetings", [
     {
-      id: 1,
+      id: "0190001b-0000-7000-8000-000000000001",
       code: "board",
       name: "取締役会",
       cadence: "月次",

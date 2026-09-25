@@ -3,7 +3,6 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
-import { toFiniteNumber } from "@/lib/to-finite-number"
 
 export const help = `bedrock partner-contracts create --partner-id <id> --title <t> --contract-date <d> [--starts-on <d>] [--ends-on <d>] [--renewal-deadline <d>] [--note <t>]`
 
@@ -29,7 +28,7 @@ export default factory.createHandlers(
     if (!query["partner-id"] || !query.title || !query["contract-date"])
       throw new UsageError("--partner-id と --title と --contract-date が必要です")
 
-    const partnerId = toFiniteNumber(query["partner-id"], "--partner-id")
+    const partnerId = query["partner-id"]
 
     const client = await createClient()
 

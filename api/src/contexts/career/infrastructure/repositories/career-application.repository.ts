@@ -20,9 +20,9 @@ export class CareerApplicationRepository {
     careerApplication: CareerApplication,
   ): Promise<CareerApplication | AlreadyAppliedError | PostingClosedError | Error> {
     try {
-      const inserted = await this.c.var.database.all<{ id: number }>(
-        sql`INSERT INTO career_applications (posting_id, applicant_id, message, status)
-            SELECT ${careerApplication.postingId}, ${careerApplication.applicantId},
+      const inserted = await this.c.var.database.all<{ id: string }>(
+        sql`INSERT INTO career_applications (id, posting_id, applicant_id, message, status)
+            SELECT ${crypto.randomUUID()}, ${careerApplication.postingId}, ${careerApplication.applicantId},
                    ${careerApplication.message}, ${careerApplication.status}
             WHERE EXISTS (
               SELECT 1 FROM career_postings
@@ -57,7 +57,7 @@ export class CareerApplicationRepository {
     }
   }
 
-  /** 応募者本人の応募を id の昇順で返す。 */
+  /** 応募者本人の応募を作成順に返す。 */
   async findByApplicantId(props: {
     applicantId: EmployeeId
     limit: number
@@ -68,7 +68,12 @@ export class CareerApplicationRepository {
         .select()
         .from(careerApplications)
         .where(eq(careerApplications.applicantId, props.applicantId))
-        .orderBy(asc(careerApplications.id))
+        // 移行前の応募は作成日時が同じなので、旧来の整数の主キーの順で並べる。
+        .orderBy(
+          asc(careerApplications.createdAt),
+          asc(sql`CAST(${careerApplications.legacyId} AS INTEGER)`),
+          asc(careerApplications.id),
+        )
         .limit(props.limit)
         .offset(props.offset)
 
@@ -79,7 +84,7 @@ export class CareerApplicationRepository {
   }
 
   /** 応募 id で1件取得する。存在しなければ null。 */
-  async findById(id: number): Promise<CareerApplication | null | Error> {
+  async findById(id: string): Promise<CareerApplication | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -128,7 +133,7 @@ export class CareerApplicationRepository {
    * 応募を削除する。status = 'applied' のときだけ削除を許可し、
    * 選考確定済み（accepted/rejected）の応募は application_decided を返す。
    */
-  async delete(id: number): Promise<null | ApplicationDecidedError | Error> {
+  async delete(id: string): Promise<null | ApplicationDecidedError | Error> {
     try {
       const result = await this.c.var.database.run(
         sql`DELETE FROM career_applications
@@ -148,7 +153,7 @@ export class CareerApplicationRepository {
 
   /** 指定した求人に対して指定ステータスの応募件数を返す。 */
   async countByPostingIdAndStatus(
-    postingId: number,
+    postingId: string,
     status: CareerApplication["status"],
   ): Promise<number | Error> {
     try {
@@ -166,7 +171,7 @@ export class CareerApplicationRepository {
   }
 
   async findByPostingAndApplicant(
-    postingId: number,
+    postingId: string,
     applicantId: EmployeeId,
   ): Promise<CareerApplication | null | Error> {
     try {

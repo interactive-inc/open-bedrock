@@ -5,7 +5,7 @@ import { z } from "zod"
 type Context = AttendanceRecordSourceContext
 
 const inventorySql =
-  "SELECT json_group_array(id) AS ids_json FROM (SELECT id FROM attendance_records ORDER BY id)"
+  "SELECT json_group_array(id) AS ids_json FROM (SELECT id FROM attendance_records ORDER BY id COLLATE BINARY)"
 
 /** 状態で除外せず全打刻IDを取得し、対象の追加と削除を検出する。 */
 export class ListAttendanceRecordInventoryAdapter {
@@ -25,7 +25,7 @@ export class ListAttendanceRecordInventoryAdapter {
         return new Error("attendance inventory is unavailable")
       const snapshot = reads.at(-1)?.results[0]?.ids_json
       if (snapshot === undefined) return new Error("attendance inventory is unavailable")
-      const ids = z.array(z.number().int().safe()).readonly().safeParse(JSON.parse(snapshot))
+      const ids = z.array(z.uuid()).readonly().safeParse(JSON.parse(snapshot))
       if (!ids.success) return ids.error
       return Object.freeze({
         recordIds: ids.data,

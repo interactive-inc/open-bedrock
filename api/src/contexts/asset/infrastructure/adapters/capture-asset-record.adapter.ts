@@ -13,7 +13,7 @@ import { z } from "zod"
 
 type Context = AssetContext
 
-type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string | number> }>
+type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string>; formatVersion: number }>
 
 function snapshotQuery(recordKind: AssetRecordKind, recordId: string): SnapshotQuery | Error {
   if (recordKind === "asset-record") {
@@ -25,16 +25,18 @@ function snapshotQuery(recordKind: AssetRecordKind, recordId: string): SnapshotQ
         'status',status,'holder_employee_id',holder_employee_id,'disposed_on',disposed_on,
         'disposal_reason',disposal_reason)) AS snapshot_json FROM assets WHERE code=?1`,
       values: [recordId],
+      formatVersion: 1,
     }
   }
   if (recordKind === "asset-lending-record") {
-    const id = z.coerce.number().int().safe().safeParse(recordId)
-    if (!id.success || String(id.data) !== recordId) return new Error("invalid lending id")
+    if (!z.uuid().safeParse(recordId).success) return new Error("invalid lending id")
+    // 版 2 は主キーを UUID へ移し、移行前の整数の主キーを legacy_id として含める。
     return {
-      sql: `SELECT json_object('format','asset-lending-record','version',1,'lending',json_object(
-        'id',id,'asset_code',asset_code,'employee_id',employee_id,'lent_at',lent_at,
+      sql: `SELECT json_object('format','asset-lending-record','version',2,'lending',json_object(
+        'id',id,'legacy_id',legacy_id,'asset_code',asset_code,'employee_id',employee_id,'lent_at',lent_at,
         'returned_at',returned_at)) AS snapshot_json FROM asset_lendings WHERE id=?1`,
-      values: [id.data],
+      values: [recordId],
+      formatVersion: 2,
     }
   }
   if (recordKind === "stocktake-record") {
@@ -44,6 +46,7 @@ function snapshotQuery(recordKind: AssetRecordKind, recordId: string): SnapshotQ
         'id',id,'name',name,'target_date',target_date,'status',status,'created_at',created_at,
         'closed_at',closed_at)) AS snapshot_json FROM stocktakes WHERE id=?1`,
       values: [recordId],
+      formatVersion: 1,
     }
   }
   const item = decodeStocktakeItemRecordId(recordId)
@@ -55,6 +58,7 @@ function snapshotQuery(recordKind: AssetRecordKind, recordId: string): SnapshotQ
       'checker_employee_id',checker_employee_id,'location_note',location_note)) AS snapshot_json
       FROM stocktake_items WHERE stocktake_id=?1 AND asset_code=?2`,
     values: [item.stocktakeId, item.assetCode],
+    formatVersion: 1,
   }
 }
 
@@ -94,7 +98,7 @@ export class CaptureAssetRecordAdapter {
         recordKind: kind.data,
         recordId: input.recordId,
         formatId: kind.data,
-        formatVersion: 1,
+        formatVersion: query.formatVersion,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

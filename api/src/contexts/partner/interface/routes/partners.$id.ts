@@ -6,7 +6,7 @@ import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppPartner } from "@/contexts/partner/interface/http/response-schemas"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -34,7 +34,7 @@ export const PUT = factory.createHandlers(
 
     const updated = await new UpdatePartner({ partnerRepository: new PartnerRepository(c) }).run({
       session: session,
-      id: validateIntParam(c.req.param("id"), "partner"),
+      id: validateUuidParam(c.req.param("id"), "partner"),
       details: {
         name: json.name,
         category: json.category ?? null,

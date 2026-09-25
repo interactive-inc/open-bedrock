@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { SystemForbiddenError, SystemHTTPException } from "@system/interface/errors"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
@@ -12,7 +13,7 @@ export const POST = attendanceFactory.createHandlers(
   zValidator(
     "param",
     z.strictObject({
-      id: z.coerce.number().int().positive().safe(),
+      id: uuidSchema,
       number: z.coerce.number().int().positive().safe(),
     }),
   ),
