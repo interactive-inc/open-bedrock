@@ -60,6 +60,7 @@ async function createTestDb(): Promise<D1Database> {
     db,
     "assets",
     seedAssets.map((asset) => ({
+      id: crypto.randomUUID(),
       code: asset.code,
       name: asset.name,
       kind: asset.kind,

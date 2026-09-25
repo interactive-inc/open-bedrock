@@ -4,7 +4,7 @@ import { WithdrawKnowledgeArticle } from "@/contexts/knowledge/application/withd
 import { UpdateKnowledgeArticle } from "@/contexts/knowledge/application/update-knowledge-article"
 import { factory } from "@/api/http/factory"
 import { knowledgeArticles } from "@/contexts/knowledge/infrastructure/schema/knowledge"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
@@ -23,7 +23,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const articleId = validateIntParam(c.req.param("id"), "knowledge")
+  const articleId = validateUuidParam(c.req.param("id"), "knowledge")
 
   const rows = await c.var.database
     .select()
@@ -85,7 +85,7 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const articleId = validateIntParam(c.req.param("id"), "knowledge")
+    const articleId = validateUuidParam(c.req.param("id"), "knowledge")
 
     const json = c.req.valid("json")
 
@@ -142,7 +142,7 @@ export const DELETE = factory.createHandlers(
     const viewer = c.var.session
     if (viewer === null) throw new UnauthorizedError()
     const result = await new WithdrawKnowledgeArticle(c).run({
-      articleId: validateIntParam(c.req.param("id"), "knowledge"),
+      articleId: validateUuidParam(c.req.param("id"), "knowledge"),
       authorId: viewer.employeeId,
       expectedRevision: c.req.valid("header")["if-match"],
       commandId: c.req.valid("header")["idempotency-key"],

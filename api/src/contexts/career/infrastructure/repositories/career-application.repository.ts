@@ -72,7 +72,7 @@ export class CareerApplicationRepository {
         .orderBy(
           asc(careerApplications.createdAt),
           asc(sql`CAST(${careerApplications.legacyId} AS INTEGER)`),
-          asc(careerApplications.id),
+          asc(sql`${careerApplications}.rowid`),
         )
         .limit(props.limit)
         .offset(props.offset)

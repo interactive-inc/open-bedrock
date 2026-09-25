@@ -54,7 +54,7 @@ export class EmployeeSkill implements Props {
   }
 
   /** 永続化された行から復元する。 */
-  static fromRow(row: EmployeeSkillRow): EmployeeSkill {
+  static fromRow(row: Omit<EmployeeSkillRow, "id">): EmployeeSkill {
     return new EmployeeSkill({
       employeeId: row.employeeId,
       skillCode: row.skillCode,

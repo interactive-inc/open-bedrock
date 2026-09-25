@@ -14,6 +14,11 @@ import { GET as preservedDossier } from "@system/interface/routes/system.preserv
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
 
+/** 旧来の整数の並び（-9..1）と同じ辞書順になる固定の UUID。 */
+function templateId(serial: number): string {
+  return `0190003c-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
+}
+
 test("入退社手続き6台帳を分割照合し撤去確定する", async () => {
   const { database, governance, creator, reviewer, definition, bindings, tokenFor, request } =
     await createOnboardingPreservationFixture()
@@ -21,21 +26,21 @@ test("入退社手続き6台帳を分割照合し撤去確定する", async () =
     await database
       .prepare(`INSERT INTO onboarding_templates
       (id,code,name,kind,description) VALUES (?1,?2,?3,'hire','Checklist')`)
-      .bind(id, `template-${id}`, `Template ${id}`)
+      .bind(templateId(id + 10), `template-${id}`, `Template ${id}`)
       .run()
   }
   await database.exec(`INSERT INTO onboarding_template_tasks
-    (template_code,code,title,sort_order,owner_role)
-    VALUES ('template--9','task:a','Prepare',1,NULL)`)
+    (id,template_code,code,title,sort_order,owner_role)
+    VALUES ('01900038-0000-7000-8000-000000000001','template--9','task:a','Prepare',1,NULL)`)
   await database
     .prepare(`INSERT INTO onboarding_assignments
     (id,employee_id,template_code,kind,status,assigned_at)
-    VALUES (0,?1,'template--9','hire','pending','2026-09-15T00:00:00.000Z')`)
+    VALUES ('0190003d-0000-7000-8000-000000000001',?1,'template--9','hire','pending','2026-09-15T00:00:00.000Z')`)
     .bind(creator.employeeId)
     .run()
   await database.exec(`INSERT INTO onboarding_tasks
     (id,assignment_id,template_task_code,title,sort_order,status,completed_at)
-    VALUES (0,0,'task:a','Prepare',1,'pending',NULL)`)
+    VALUES ('0190003e-0000-7000-8000-000000000001','0190003d-0000-7000-8000-000000000001','task:a','Prepare',1,'pending',NULL)`)
   const actionId = await database
     .prepare("SELECT id FROM company_personnel_actions LIMIT 1")
     .first<string>("id")
@@ -44,19 +49,19 @@ test("入退社手続き6台帳を分割照合し撤去確定する", async () =
     .prepare(`INSERT INTO system_jobs
     (id,operation_key,payload_digest,idempotency_key,created_by_account_id,status,attempt,max_attempts,
       available_at,created_at,updated_at)
-    VALUES ('job:onboarding-test','onboarding.lifecycle','${"a".repeat(64)}','onboarding-test',?1,'queued',0,3,1,1,1)`)
+    VALUES ('01900041-0000-4000-8000-000000000001','onboarding.lifecycle','${"a".repeat(64)}','onboarding-test',?1,'queued',0,3,1,1,1)`)
     .bind(creator.accountId)
     .run()
   await database
     .prepare(`INSERT INTO onboarding_lifecycle_deliveries
     (job_id,action_id,created_at,outcome,assignment_id,processed_at)
-    VALUES ('job:onboarding-test',?1,1,'assigned',0,2)`)
+    VALUES ('01900041-0000-4000-8000-000000000001',?1,1,'assigned','0190003d-0000-7000-8000-000000000001',2)`)
     .bind(actionId)
     .run()
   await database
     .prepare(`INSERT INTO onboarding_lifecycle_template_bindings
-    (effect_type,template_code,updated_at,updated_by_account_id)
-    VALUES ('hire','template--9',3,?1)`)
+    (id,effect_type,template_code,updated_at,updated_by_account_id)
+    VALUES ('01900040-0000-7000-8000-000000000001','hire','template--9',3,?1)`)
     .bind(creator.accountId)
     .run()
   const token = await tokenFor(creator.accountId)
@@ -110,15 +115,18 @@ test("入退社手続き6台帳を分割照合し撤去確定する", async () =
   const sources = [
     ...Array.from({ length: 11 }, (_, index) => ({
       kind: "onboarding-template-record" as const,
-      id: String(index - 9),
+      id: templateId(index + 1),
     })),
     {
       kind: "onboarding-template-task-record" as const,
       id: encodeOnboardingTemplateTaskRecordId("template--9", "task:a"),
     },
-    { kind: "onboarding-assignment-record" as const, id: "0" },
-    { kind: "onboarding-task-record" as const, id: "0" },
-    { kind: "onboarding-lifecycle-delivery-record" as const, id: "job:onboarding-test" },
+    { kind: "onboarding-assignment-record" as const, id: "0190003d-0000-7000-8000-000000000001" },
+    { kind: "onboarding-task-record" as const, id: "0190003e-0000-7000-8000-000000000001" },
+    {
+      kind: "onboarding-lifecycle-delivery-record" as const,
+      id: "01900041-0000-4000-8000-000000000001",
+    },
     { kind: "onboarding-lifecycle-template-binding-record" as const, id: "hire" },
   ]
   for (const source of sources) {
@@ -188,7 +196,11 @@ test("入退社手続き6台帳を分割照合し撤去確定する", async () =
     post(coveragePath, { purpose: "archive", recordKind, records })
   const first = await cover("onboarding-template-record", templateMappings.slice(0, 10))
   if (first.status !== 200) throw new Error(await first.text())
-  expect(await first.json()).toMatchObject({ sequence: 1, nextCursor: "0", recordCount: 10 })
+  expect(await first.json()).toMatchObject({
+    sequence: 1,
+    nextCursor: templateId(10),
+    recordCount: 10,
+  })
   expect((await cover("onboarding-template-record", templateMappings.slice(0, 1))).status).toBe(409)
   const second = await cover("onboarding-template-record", templateMappings.slice(10))
   if (second.status !== 200) throw new Error(await second.text())

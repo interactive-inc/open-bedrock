@@ -25,12 +25,12 @@ const SORT_OPTIONS = {
   id_desc: [
     desc(shiftSwapRequests.createdAt),
     desc(sql`CAST(${shiftSwapRequests.legacyId} AS INTEGER)`),
-    desc(shiftSwapRequests.id),
+    desc(sql`${shiftSwapRequests}.rowid`),
   ],
   id_asc: [
     asc(shiftSwapRequests.createdAt),
     asc(sql`CAST(${shiftSwapRequests.legacyId} AS INTEGER)`),
-    asc(shiftSwapRequests.id),
+    asc(sql`${shiftSwapRequests}.rowid`),
   ],
 } as const
 

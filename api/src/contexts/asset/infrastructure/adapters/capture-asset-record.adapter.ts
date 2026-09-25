@@ -20,12 +20,13 @@ function snapshotQuery(recordKind: AssetRecordKind, recordId: string): SnapshotQ
     if (!z.string().trim().min(1).max(255).safeParse(recordId).success)
       return new Error("invalid asset id")
     return {
-      sql: `SELECT json_object('format','asset-record','version',1,'asset',json_object(
-        'code',code,'name',name,'kind',kind,'serial',serial,'purchased_on',purchased_on,
+      // 版 2 は業務コードの主キーを一意な属性へ移し、新しい UUID の id を含める。
+      sql: `SELECT json_object('format','asset-record','version',2,'asset',json_object(
+        'id',id,'code',code,'name',name,'kind',kind,'serial',serial,'purchased_on',purchased_on,
         'status',status,'holder_employee_id',holder_employee_id,'disposed_on',disposed_on,
         'disposal_reason',disposal_reason)) AS snapshot_json FROM assets WHERE code=?1`,
       values: [recordId],
-      formatVersion: 1,
+      formatVersion: 2,
     }
   }
   if (recordKind === "asset-lending-record") {
@@ -53,12 +54,13 @@ function snapshotQuery(recordKind: AssetRecordKind, recordId: string): SnapshotQ
   if (item === null || !z.uuid().safeParse(item.stocktakeId).success)
     return new Error("invalid stocktake item id")
   return {
-    sql: `SELECT json_object('format','stocktake-item-record','version',1,'item',json_object(
-      'stocktake_id',stocktake_id,'asset_code',asset_code,'checked_at',checked_at,
+    // 版 2 は複合の主キーを一意な属性へ移し、新しい UUID の id を含める。
+    sql: `SELECT json_object('format','stocktake-item-record','version',2,'item',json_object(
+      'id',id,'stocktake_id',stocktake_id,'asset_code',asset_code,'checked_at',checked_at,
       'checker_employee_id',checker_employee_id,'location_note',location_note)) AS snapshot_json
       FROM stocktake_items WHERE stocktake_id=?1 AND asset_code=?2`,
     values: [item.stocktakeId, item.assetCode],
-    formatVersion: 1,
+    formatVersion: 2,
   }
 }
 

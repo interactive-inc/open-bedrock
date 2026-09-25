@@ -278,9 +278,9 @@ export class GovernanceAdapter {
         ).bind(props.versionId),
         ...props.references.map((reference) =>
           this.c.env.DB.prepare(
-            `INSERT INTO governance_document_references (version_id, kind, code)
-             VALUES (?1, ?2, ?3)`,
-          ).bind(props.versionId, reference.kind, reference.code),
+            `INSERT INTO governance_document_references (id, version_id, kind, code)
+             VALUES (?4, ?1, ?2, ?3)`,
+          ).bind(props.versionId, reference.kind, reference.code, crypto.randomUUID()),
         ),
         this.c.env.DB.prepare(
           "DELETE FROM governance_publication_approvals WHERE version_id = ?1",
@@ -308,11 +308,11 @@ export class GovernanceAdapter {
         ...props.approverOrgRoles.map((orgRoleCode) =>
           this.c.env.DB.prepare(
             `INSERT INTO governance_publication_approvals
-              (version_id, org_role_code, status, decided_by_employee_id, decided_at, comment)
-             VALUES (?1, ?2, 'pending', NULL, NULL, NULL)
+              (id, version_id, org_role_code, status, decided_by_employee_id, decided_at, comment)
+             VALUES (?3, ?1, ?2, 'pending', NULL, NULL, NULL)
              ON CONFLICT(version_id, org_role_code) DO UPDATE SET
                status = 'pending', decided_by_employee_id = NULL, decided_at = NULL, comment = NULL`,
-          ).bind(props.versionId, orgRoleCode),
+          ).bind(props.versionId, orgRoleCode, crypto.randomUUID()),
         ),
         ...props.auditStatements,
       ])
@@ -423,11 +423,17 @@ export class GovernanceAdapter {
       await this.c.env.DB.batch([
         this.c.env.DB.prepare(
           `INSERT INTO governance_acknowledgements
-            (version_id, employee_id, content_hash, acknowledged_at)
-           VALUES (?1, ?2, ?3, ?4)
+            (id, version_id, employee_id, content_hash, acknowledged_at)
+           VALUES (?5, ?1, ?2, ?3, ?4)
            ON CONFLICT(version_id, employee_id) DO UPDATE SET
              content_hash = excluded.content_hash, acknowledged_at = excluded.acknowledged_at`,
-        ).bind(props.versionId, props.employeeId, props.contentHash, props.acknowledgedAt),
+        ).bind(
+          props.versionId,
+          props.employeeId,
+          props.contentHash,
+          props.acknowledgedAt,
+          crypto.randomUUID(),
+        ),
         ...props.auditStatements,
       ])
       return null

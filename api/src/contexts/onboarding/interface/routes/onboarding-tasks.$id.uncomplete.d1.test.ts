@@ -27,7 +27,7 @@ afterAll(async () => {
 })
 
 const onboardingTaskResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   template_task_code: z.string(),
   title: z.string(),
   order: z.number(),
@@ -72,6 +72,7 @@ async function createTestDb(): Promise<D1Database> {
   for (const template of seedOnboardingTemplates) {
     for (const task of template.tasks) {
       templateTaskRows.push({
+        id: crypto.randomUUID(),
         template_code: template.code,
         code: task.code,
         title: task.title,
@@ -129,7 +130,7 @@ describe("POST /onboarding-tasks/:id/uncomplete", () => {
     await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding/onboarding-tasks/200/complete",
+      path: "/onboarding/onboarding-tasks/0190003e-0000-7000-8000-0000000000c8/complete",
       token: ownerToken,
       method: "POST",
     })
@@ -137,7 +138,7 @@ describe("POST /onboarding-tasks/:id/uncomplete", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding/onboarding-tasks/200/uncomplete",
+      path: "/onboarding/onboarding-tasks/0190003e-0000-7000-8000-0000000000c8/uncomplete",
       token: ownerToken,
       method: "POST",
     })
@@ -158,7 +159,7 @@ describe("POST /onboarding-tasks/:id/uncomplete", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/onboarding/onboarding-tasks/200/uncomplete",
+      path: "/onboarding/onboarding-tasks/0190003e-0000-7000-8000-0000000000c8/uncomplete",
       token: await token(6),
       method: "POST",
     })
@@ -170,7 +171,7 @@ describe("POST /onboarding-tasks/:id/uncomplete", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/onboarding/onboarding-tasks/9999/uncomplete",
+      path: "/onboarding/onboarding-tasks/0190003e-0000-7000-8000-00000000270f/uncomplete",
       token: await token(1),
       method: "POST",
     })
@@ -194,7 +195,7 @@ describe("POST /onboarding-tasks/:id/uncomplete", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/onboarding/onboarding-tasks/200/uncomplete",
+      path: "/onboarding/onboarding-tasks/0190003e-0000-7000-8000-0000000000c8/uncomplete",
       token: null,
       method: "POST",
     })
@@ -213,7 +214,7 @@ describe("POST /onboarding-tasks/:id/uncomplete", () => {
     await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding/onboarding-tasks/200/complete",
+      path: "/onboarding/onboarding-tasks/0190003e-0000-7000-8000-0000000000c8/complete",
       token: ownerToken,
       method: "POST",
     })
@@ -222,7 +223,7 @@ describe("POST /onboarding-tasks/:id/uncomplete", () => {
     const first = await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding/onboarding-tasks/200/uncomplete",
+      path: "/onboarding/onboarding-tasks/0190003e-0000-7000-8000-0000000000c8/uncomplete",
       token: ownerToken,
       method: "POST",
     })
@@ -234,7 +235,7 @@ describe("POST /onboarding-tasks/:id/uncomplete", () => {
     const second = await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding/onboarding-tasks/200/uncomplete",
+      path: "/onboarding/onboarding-tasks/0190003e-0000-7000-8000-0000000000c8/uncomplete",
       token: ownerToken,
       method: "POST",
     })

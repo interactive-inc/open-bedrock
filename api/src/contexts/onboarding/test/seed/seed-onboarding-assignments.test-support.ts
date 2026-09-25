@@ -2,7 +2,7 @@ import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 type SeedOnboardingAssignment = {
-  id: number
+  id: string
   employeeId: EmployeeId
   templateCode: string
   kind: "join" | "leave"
@@ -12,7 +12,7 @@ type SeedOnboardingAssignment = {
 
 export const seedOnboardingAssignments: ReadonlyArray<SeedOnboardingAssignment> = [
   {
-    id: 100,
+    id: "0190003d-0000-7000-8000-000000000064",
     employeeId: toWorkforceEmployeeId(5),
     templateCode: "engineer_join",
     kind: "join",

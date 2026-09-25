@@ -14,7 +14,7 @@ import {
 } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -32,7 +32,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       new ForbiddenError("組織責任を移行する権限がありません", "governance_role_forbidden"),
     )
   }
-  const assignmentId = validateIntParam(c.req.param("id"), "governance assignment adoption")
+  const assignmentId = validateUuidParam(c.req.param("id"), "governance assignment adoption")
   const snapshot = await new GovernanceRoleAssignmentAdoptionSnapshotAdapter({
     database: c.env.DB,
     now: c.env.NOW,
@@ -66,7 +66,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 export const POST = factory.createHandlers(verifyBearer, zValidator("json", request), async (c) => {
   const session = c.var.session
   if (session === null) throw new UnauthorizedError()
-  const assignmentId = validateIntParam(c.req.param("id"), "governance assignment adoption")
+  const assignmentId = validateUuidParam(c.req.param("id"), "governance assignment adoption")
   const commandId = c.req.header("idempotency-key")
   const expectedRevision = Number(c.req.header("if-match"))
   if (

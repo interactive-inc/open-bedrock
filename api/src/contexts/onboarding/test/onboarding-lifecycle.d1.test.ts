@@ -45,9 +45,9 @@ async function fixture() {
     INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES ('role:lifecycle','onboarding:worker','custom','Worker',0,0);
     INSERT INTO system_iam_role_permissions VALUES ('role:lifecycle','batch:execute'),('role:lifecycle','employee:read'),('role:lifecycle','onboarding:manage');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('binding:lifecycle','worker:lifecycle','role:lifecycle',0);
-    INSERT INTO onboarding_templates (id,code,name,kind) VALUES (90001,'auto-join','Join','join'),(90002,'auto-leave','Leave','leave');
-    INSERT INTO onboarding_template_tasks (template_code,code,title,sort_order) VALUES ('auto-join','join-task','Prepare access',1),('auto-leave','leave-task','Confirm return',1);
-    INSERT INTO onboarding_lifecycle_template_bindings (effect_type,template_code,updated_at) VALUES ('hire','auto-join',0),('retired','auto-leave',0);`,
+    INSERT INTO onboarding_templates (id,code,name,kind) VALUES ('0190003c-0000-7000-8000-000000015f91','auto-join','Join','join'),('0190003c-0000-7000-8000-000000015f92','auto-leave','Leave','leave');
+    INSERT INTO onboarding_template_tasks (id,template_code,code,title,sort_order) VALUES ('01900038-0000-7000-8000-000000000101','auto-join','join-task','Prepare access',1),('01900038-0000-7000-8000-000000000102','auto-leave','leave-task','Confirm return',1);
+    INSERT INTO onboarding_lifecycle_template_bindings (id,effect_type,template_code,updated_at) VALUES ('01900040-0000-7000-8000-000000000001','hire','auto-join',0),('01900040-0000-7000-8000-000000000002','retired','auto-leave',0);`,
   )
   const clock = { at: new Date("2030-06-30T14:59:59.999Z") }
   const env = {
@@ -61,7 +61,7 @@ async function fixture() {
   const assignments = () =>
     f.database
       .prepare(
-        "SELECT id,kind,status,lifecycle_action_id FROM onboarding_assignments WHERE lifecycle_action_id IS NOT NULL ORDER BY id",
+        "SELECT id,kind,status,lifecycle_action_id FROM onboarding_assignments WHERE lifecycle_action_id IS NOT NULL ORDER BY rowid",
       )
       .all()
   const retire = async () => {
@@ -101,7 +101,7 @@ async function fixture() {
     const generated = await f.database
       .prepare("SELECT id FROM onboarding_assignments WHERE lifecycle_action_id = ?1")
       .bind(original)
-      .first<number>("id")
+      .first<string>("id")
     if (generated === null) throw new Error("generated assignment missing")
     return { original, generated }
   }
@@ -134,7 +134,7 @@ test("定期起動は会社の日付で退職翌日から手続きを一度だ�
   const assignmentId = await f.database
     .prepare("SELECT id FROM onboarding_assignments WHERE lifecycle_action_id = ?1")
     .bind(actionId)
-    .first<number>("id")
+    .first<string>("id")
   if (assignmentId === null) throw new Error("generated assignment missing")
   const repository = new OnboardingAssignmentRepository(createTestContextForDatabase(f.database))
   const assignment = await repository.findById(assignmentId)
@@ -214,7 +214,7 @@ test("生成後に退職が訂正されたら、元のチェックリストを�
   const taskId = await f.database
     .prepare("SELECT id FROM onboarding_tasks WHERE assignment_id = ?1")
     .bind(generated)
-    .first<number>("id")
+    .first<string>("id")
   if (taskId === null) throw new Error("superseded task missing")
   const completed = await new CompleteOnboardingTask({
     assignmentRepository: new OnboardingAssignmentRepository(context),
@@ -550,7 +550,7 @@ test("dead letterを人のstep-upと管理権限で一度だけ再投入し、�
   expect((await list()).status).toBe(403)
   await execSql(
     f.database,
-    "INSERT INTO onboarding_template_tasks (template_code,code,title,sort_order) VALUES ('auto-leave','leave-task','Confirm return',1)",
+    "INSERT INTO onboarding_template_tasks (id,template_code,code,title,sort_order) VALUES ('01900038-0000-7000-8000-000000000102','auto-leave','leave-task','Confirm return',1)",
   )
   expect(await f.run()).toMatchObject([{ status: "succeeded" }])
   expect((await f.assignments()).results).toHaveLength(1)

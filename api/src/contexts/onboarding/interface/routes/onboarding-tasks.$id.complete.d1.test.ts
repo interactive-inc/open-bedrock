@@ -27,7 +27,7 @@ afterAll(async () => {
 })
 
 const onboardingTaskResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   template_task_code: z.string(),
   title: z.string(),
   order: z.number(),
@@ -36,7 +36,7 @@ const onboardingTaskResponseSchema = z.object({
 })
 
 const onboardingAssignmentResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_code: z.string(),
   employee_name: z.string(),
   template_code: z.string(),
@@ -86,6 +86,7 @@ async function createTestDb(): Promise<D1Database> {
   for (const template of seedOnboardingTemplates) {
     for (const task of template.tasks) {
       templateTaskRows.push({
+        id: crypto.randomUUID(),
         template_code: template.code,
         code: task.code,
         title: task.title,
@@ -153,7 +154,7 @@ async function request(props: {
 describe("POST /onboarding-tasks/:id/complete", () => {
   test("owner completes a task and gets 200 with done status", async () => {
     const response = await request({
-      path: "/onboarding/onboarding-tasks/200/complete",
+      path: "/onboarding/onboarding-tasks/0190003e-0000-7000-8000-0000000000c8/complete",
       token: await token(5),
       method: "POST",
     })
@@ -178,7 +179,7 @@ describe("POST /onboarding-tasks/:id/complete", () => {
     await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding/onboarding-tasks/200/complete",
+      path: "/onboarding/onboarding-tasks/0190003e-0000-7000-8000-0000000000c8/complete",
       token: ownerToken,
       method: "POST",
     })
@@ -186,7 +187,7 @@ describe("POST /onboarding-tasks/:id/complete", () => {
     await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding/onboarding-tasks/201/complete",
+      path: "/onboarding/onboarding-tasks/0190003e-0000-7000-8000-0000000000c9/complete",
       token: ownerToken,
       method: "POST",
     })
@@ -211,7 +212,7 @@ describe("POST /onboarding-tasks/:id/complete", () => {
 
   test("a non-owner member is forbidden", async () => {
     const response = await request({
-      path: "/onboarding/onboarding-tasks/200/complete",
+      path: "/onboarding/onboarding-tasks/0190003e-0000-7000-8000-0000000000c8/complete",
       token: await token(6),
       method: "POST",
     })
@@ -221,7 +222,7 @@ describe("POST /onboarding-tasks/:id/complete", () => {
 
   test("returns 404 for an unknown task", async () => {
     const response = await request({
-      path: "/onboarding/onboarding-tasks/9999/complete",
+      path: "/onboarding/onboarding-tasks/0190003e-0000-7000-8000-00000000270f/complete",
       token: await token(1),
       method: "POST",
     })
@@ -241,7 +242,7 @@ describe("POST /onboarding-tasks/:id/complete", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/onboarding/onboarding-tasks/200/complete",
+      path: "/onboarding/onboarding-tasks/0190003e-0000-7000-8000-0000000000c8/complete",
       token: null,
       method: "POST",
     })
@@ -260,7 +261,7 @@ describe("POST /onboarding-tasks/:id/complete", () => {
     const first = await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding/onboarding-tasks/200/complete",
+      path: "/onboarding/onboarding-tasks/0190003e-0000-7000-8000-0000000000c8/complete",
       token: ownerToken,
       method: "POST",
     })
@@ -272,7 +273,7 @@ describe("POST /onboarding-tasks/:id/complete", () => {
     const second = await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding/onboarding-tasks/200/complete",
+      path: "/onboarding/onboarding-tasks/0190003e-0000-7000-8000-0000000000c8/complete",
       token: ownerToken,
       method: "POST",
     })

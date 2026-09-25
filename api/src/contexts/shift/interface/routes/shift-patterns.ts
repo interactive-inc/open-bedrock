@@ -107,7 +107,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .orderBy(
       asc(shiftPatterns.createdAt),
       asc(sql`CAST(${shiftPatterns.legacyId} AS INTEGER)`),
-      asc(shiftPatterns.id),
+      asc(sql`${shiftPatterns}.rowid`),
     )
     .limit(limit)
     .offset(offset)

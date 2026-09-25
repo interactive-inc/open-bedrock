@@ -1,6 +1,6 @@
 type SeedOnboardingTask = {
-  id: number
-  assignmentId: number
+  id: string
+  assignmentId: string
   templateTaskCode: string
   title: string
   order: number
@@ -10,8 +10,8 @@ type SeedOnboardingTask = {
 
 export const seedOnboardingTasks: ReadonlyArray<SeedOnboardingTask> = [
   {
-    id: 200,
-    assignmentId: 100,
+    id: "0190003e-0000-7000-8000-0000000000c8",
+    assignmentId: "0190003d-0000-7000-8000-000000000064",
     templateTaskCode: "issue_pc",
     title: "PCを貸与する",
     order: 1,
@@ -19,8 +19,8 @@ export const seedOnboardingTasks: ReadonlyArray<SeedOnboardingTask> = [
     completedAt: null,
   },
   {
-    id: 201,
-    assignmentId: 100,
+    id: "0190003e-0000-7000-8000-0000000000c9",
+    assignmentId: "0190003d-0000-7000-8000-000000000064",
     templateTaskCode: "create_account",
     title: "各種アカウントを作成する",
     order: 2,

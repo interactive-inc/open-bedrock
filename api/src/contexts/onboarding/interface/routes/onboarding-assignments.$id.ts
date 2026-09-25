@@ -9,7 +9,7 @@ import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { zAppOnboardingAssignment } from "@/contexts/onboarding/interface/http/response-schemas"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
@@ -45,7 +45,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const assignmentId = validateIntParam(c.req.param("id"), "assignment")
+  const assignmentId = validateUuidParam(c.req.param("id"), "assignment")
 
   const result = await (async () => {
     const command = {
@@ -106,7 +106,7 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const assignmentId = validateIntParam(c.req.param("id"), "assignment")
+    const assignmentId = validateUuidParam(c.req.param("id"), "assignment")
 
     const json = c.req.valid("json")
 
@@ -136,7 +136,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const assignmentId = validateIntParam(c.req.param("id"), "assignment")
+  const assignmentId = validateUuidParam(c.req.param("id"), "assignment")
 
   const result = await new CancelOnboardingAssignment({
     assignmentRepository: new OnboardingAssignmentRepository(c),

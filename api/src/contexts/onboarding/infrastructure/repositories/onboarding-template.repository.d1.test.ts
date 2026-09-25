@@ -53,8 +53,8 @@ describe("OnboardingTemplateRepository on local D1", () => {
     await db
       .prepare(
         `INSERT INTO onboarding_lifecycle_template_bindings
-           (effect_type, template_code, updated_at, updated_by_account_id)
-         VALUES ('hire', 'join-default', 1, NULL)`,
+           (id, effect_type, template_code, updated_at, updated_by_account_id)
+         VALUES ('01900040-0000-7000-8000-000000000001', 'hire', 'join-default', 1, NULL)`,
       )
       .run()
 
@@ -116,7 +116,7 @@ describe("OnboardingTemplateRepository", () => {
 
     await seedD1(db, "onboarding_templates", [
       {
-        id: 1,
+        id: "0190003c-0000-7000-8000-000000000001",
         code: "join-default",
         name: "入社手続き",
         kind: "join",
@@ -126,6 +126,7 @@ describe("OnboardingTemplateRepository", () => {
 
     await seedD1(db, "onboarding_template_tasks", [
       {
+        id: "01900038-0000-7000-8000-000000000001",
         template_code: "join-default",
         code: "account",
         title: "アカウント発行",

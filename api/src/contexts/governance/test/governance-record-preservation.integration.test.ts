@@ -13,8 +13,8 @@ test("規程機能を停止中に人の承認で保全し、業務コードを�
   const { database, creator, reviewer, definition, bindings, tokenFor, request } =
     await createGovernancePreservationFixture()
   await database.exec(`INSERT INTO governance_capabilities
-    (code,name,description,owner_org_role_code,status,created_at,updated_at)
-    VALUES ('cap:a','Capability',NULL,NULL,'active','2026-09-01','2026-09-01')`)
+    (id,code,name,description,owner_org_role_code,status,created_at,updated_at)
+    VALUES ('01900047-0000-7000-8000-000000000001','cap:a','Capability',NULL,NULL,'active','2026-09-01','2026-09-01')`)
   const token = await tokenFor(creator.accountId)
   const stepUpToken = "e".repeat(64)
   const hash = await new SystemPrincipalSecretService().hashRawSecret(stepUpToken)

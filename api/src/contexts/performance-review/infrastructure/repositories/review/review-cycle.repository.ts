@@ -20,7 +20,7 @@ export class ReviewCycleRepository {
         .orderBy(
           asc(reviewCycles.createdAt),
           asc(sql`CAST(${reviewCycles.legacyId} AS INTEGER)`),
-          asc(reviewCycles.id),
+          asc(sql`${reviewCycles}.rowid`),
         )
         .limit(props.limit)
         .offset(props.offset)

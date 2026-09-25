@@ -15,7 +15,7 @@ import {
   onboardingTasks,
   onboardingTemplates,
 } from "@/contexts/onboarding/infrastructure/schema/onboarding"
-import { asc, count, eq, inArray } from "drizzle-orm"
+import { asc, count, eq, inArray, sql } from "drizzle-orm"
 
 // @authorization permission - 権限キーで判定する
 /** GET /onboarding-assignments/employees/:employeeCode — 指定社員の手続き一覧（特権ロールのみ） */
@@ -58,7 +58,12 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .from(onboardingAssignments)
     .leftJoin(onboardingTemplates, eq(onboardingTemplates.code, onboardingAssignments.templateCode))
     .where(eq(onboardingAssignments.employeeId, employee.id))
-    .orderBy(asc(onboardingAssignments.id))
+    // 移行前の割当は割当日時と旧来の整数の主キーの順で並べる。
+    .orderBy(
+      asc(onboardingAssignments.assignedAt),
+      asc(sql`CAST(${onboardingAssignments.legacyId} AS INTEGER)`),
+      asc(sql`${onboardingAssignments}.rowid`),
+    )
     .limit(limit)
     .offset(offset)
 

@@ -45,6 +45,7 @@ export class OnboardingTemplateRepository {
       const rows = await this.c.var.database
         .insert(onboardingTemplates)
         .values({
+          id: crypto.randomUUID(),
           code: template.code,
           name: template.name,
           kind: template.kind,
@@ -137,8 +138,8 @@ export class OnboardingTemplateRepository {
     try {
       const saved = await this.c.env.DB.prepare(
         `INSERT INTO onboarding_lifecycle_template_bindings
-           (effect_type, template_code, updated_at, updated_by_account_id)
-         SELECT ?1, ?2, ?3, ?4
+           (id, effect_type, template_code, updated_at, updated_by_account_id)
+         SELECT ?6, ?1, ?2, ?3, ?4
          FROM onboarding_templates
          WHERE code = ?2 AND kind = ?5
          ON CONFLICT(effect_type) DO UPDATE SET
@@ -153,6 +154,8 @@ export class OnboardingTemplateRepository {
           props.updatedAt,
           props.updatedByAccountId,
           props.template.kind,
+          // 既存の設定を更新するときは ON CONFLICT が主キーを変えないため、この ID は新規作成時だけ使われる。
+          crypto.randomUUID(),
         )
         .first<string>("effect_type")
 

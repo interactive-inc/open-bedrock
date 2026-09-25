@@ -33,7 +33,12 @@ describe("EmployeeSkillRepository on local D1", () => {
     const { context, db } = await createLocalD1Context(local, "upsert")
 
     await seedD1(db, "skill_definitions", [
-      { code: "typescript", name: "Skill typescript", category: "engineering" },
+      {
+        id: crypto.randomUUID(),
+        code: "typescript",
+        name: "Skill typescript",
+        category: "engineering",
+      },
     ])
 
     const skill = await new SkillRepository(context).findByCode("typescript")

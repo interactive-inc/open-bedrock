@@ -47,8 +47,8 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
     const code = `A${String(id).padStart(4, "0")}`
     await database
       .prepare(`INSERT INTO assets
-      (code,name,kind,serial,purchased_on,status,holder_employee_id,disposed_on,disposal_reason)
-      VALUES (?1,?2,'pc',?3,'2026-01-01','in_stock',NULL,NULL,NULL)`)
+      (id,code,name,kind,serial,purchased_on,status,holder_employee_id,disposed_on,disposal_reason)
+      VALUES ('${crypto.randomUUID()}',?1,?2,'pc',?3,'2026-01-01','in_stock',NULL,NULL,NULL)`)
       .bind(code, `Asset ${id}`, `SERIAL-${id}`)
       .run()
   }
@@ -65,8 +65,8 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
     .run()
   await database
     .prepare(`INSERT INTO stocktake_items
-    (stocktake_id,asset_code,checked_at,checker_employee_id,location_note)
-    VALUES (?1,'A0001','2026-04-01T01:00:00Z',?2,'Office')`)
+    (id,stocktake_id,asset_code,checked_at,checker_employee_id,location_note)
+    VALUES ('${crypto.randomUUID()}',?1,'A0001','2026-04-01T01:00:00Z',?2,'Office')`)
     .bind(stocktakeId, creatorPerson.employeeId)
     .run()
   const at = clock()

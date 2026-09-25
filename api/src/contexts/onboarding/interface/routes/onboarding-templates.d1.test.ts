@@ -72,6 +72,7 @@ async function createTestDb(): Promise<D1Database> {
   for (const template of seedOnboardingTemplates) {
     for (const task of template.tasks) {
       templateTaskRows.push({
+        id: crypto.randomUUID(),
         template_code: template.code,
         code: task.code,
         title: task.title,
@@ -112,6 +113,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "onboarding_lifecycle_template_bindings", [
     {
+      id: crypto.randomUUID(),
       effect_type: "hire",
       template_code: "engineer_join",
       updated_at: 1,

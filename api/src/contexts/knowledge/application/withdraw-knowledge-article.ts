@@ -12,7 +12,7 @@ export type Command = {
   expectedRevision: number
   commandId: string
   reason: string
-  articleId: number
+  articleId: string
   authorId: EmployeeId
 }
 

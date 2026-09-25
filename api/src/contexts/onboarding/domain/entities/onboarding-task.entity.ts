@@ -2,8 +2,8 @@ import type { OnboardingTaskRow } from "@/contexts/onboarding/infrastructure/sch
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
-  assignmentId: z.number().nullable(),
+  id: z.string().nullable(),
+  assignmentId: z.string().nullable(),
   templateTaskCode: z.string(),
   title: z.string(),
   order: z.number(),

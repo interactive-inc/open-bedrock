@@ -27,7 +27,7 @@ afterAll(async () => {
 })
 
 const onboardingTaskResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   template_task_code: z.string(),
   title: z.string(),
   order: z.number(),
@@ -36,7 +36,7 @@ const onboardingTaskResponseSchema = z.object({
 })
 
 const onboardingAssignmentResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_code: z.string(),
   employee_name: z.string(),
   template_code: z.string(),
@@ -83,6 +83,7 @@ async function createTestDb(): Promise<D1Database> {
   for (const template of seedOnboardingTemplates) {
     for (const task of template.tasks) {
       templateTaskRows.push({
+        id: crypto.randomUUID(),
         template_code: template.code,
         code: task.code,
         title: task.title,
@@ -150,7 +151,7 @@ async function request(props: {
 describe("GET /onboarding-assignments/:id", () => {
   test("the owner sees their own assignment", async () => {
     const response = await request({
-      path: "/onboarding/onboarding-assignments/100",
+      path: "/onboarding/onboarding-assignments/0190003d-0000-7000-8000-000000000064",
       token: await token(5),
     })
 
@@ -161,14 +162,14 @@ describe("GET /onboarding-assignments/:id", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.id).toBe(100)
+      expect(parsed.data.id).toBe("0190003d-0000-7000-8000-000000000064")
       expect(parsed.data.tasks.length).toBe(2)
     }
   })
 
   test("a privileged role sees another employee's assignment", async () => {
     const response = await request({
-      path: "/onboarding/onboarding-assignments/100",
+      path: "/onboarding/onboarding-assignments/0190003d-0000-7000-8000-000000000064",
       token: await token(1),
     })
 
@@ -177,7 +178,7 @@ describe("GET /onboarding-assignments/:id", () => {
 
   test("a non-owner member is forbidden", async () => {
     const response = await request({
-      path: "/onboarding/onboarding-assignments/100",
+      path: "/onboarding/onboarding-assignments/0190003d-0000-7000-8000-000000000064",
       token: await token(6),
     })
 
@@ -186,7 +187,7 @@ describe("GET /onboarding-assignments/:id", () => {
 
   test("returns 404 for an unknown assignment", async () => {
     const response = await request({
-      path: "/onboarding/onboarding-assignments/9999",
+      path: "/onboarding/onboarding-assignments/0190003d-0000-7000-8000-00000000270f",
       token: await token(1),
     })
 
@@ -203,7 +204,10 @@ describe("GET /onboarding-assignments/:id", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/onboarding/onboarding-assignments/100", token: null })
+    const response = await request({
+      path: "/onboarding/onboarding-assignments/0190003d-0000-7000-8000-000000000064",
+      token: null,
+    })
 
     expect(response.status).toBe(401)
   })
@@ -212,7 +216,7 @@ describe("GET /onboarding-assignments/:id", () => {
 describe("PUT /onboarding-assignments/:id", () => {
   test("a privileged role reschedules the assignment", async () => {
     const response = await request({
-      path: "/onboarding/onboarding-assignments/100",
+      path: "/onboarding/onboarding-assignments/0190003d-0000-7000-8000-000000000064",
       token: await token(1),
       method: "PUT",
       body: { assigned_at: "2026-06-01T00:00:00Z" },
@@ -231,7 +235,7 @@ describe("PUT /onboarding-assignments/:id", () => {
 
   test("the owner without a privileged role is forbidden", async () => {
     const response = await request({
-      path: "/onboarding/onboarding-assignments/100",
+      path: "/onboarding/onboarding-assignments/0190003d-0000-7000-8000-000000000064",
       token: await token(5),
       method: "PUT",
       body: { assigned_at: "2026-06-01T00:00:00Z" },
@@ -242,7 +246,7 @@ describe("PUT /onboarding-assignments/:id", () => {
 
   test("returns 404 for an unknown assignment", async () => {
     const response = await request({
-      path: "/onboarding/onboarding-assignments/9999",
+      path: "/onboarding/onboarding-assignments/0190003d-0000-7000-8000-00000000270f",
       token: await token(1),
       method: "PUT",
       body: { assigned_at: "2026-06-01T00:00:00Z" },
@@ -253,7 +257,7 @@ describe("PUT /onboarding-assignments/:id", () => {
 
   test("rejects a non-ISO-datetime assigned_at with 400", async () => {
     const response = await request({
-      path: "/onboarding/onboarding-assignments/100",
+      path: "/onboarding/onboarding-assignments/0190003d-0000-7000-8000-000000000064",
       token: await token(1),
       method: "PUT",
       body: { assigned_at: "2026-06-01" },
@@ -264,7 +268,7 @@ describe("PUT /onboarding-assignments/:id", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/onboarding/onboarding-assignments/100",
+      path: "/onboarding/onboarding-assignments/0190003d-0000-7000-8000-000000000064",
       token: null,
       method: "PUT",
       body: { assigned_at: "2026-06-01T00:00:00Z" },
@@ -277,7 +281,7 @@ describe("PUT /onboarding-assignments/:id", () => {
 describe("DELETE /onboarding-assignments/:id", () => {
   test("returns 403 for non-privileged role", async () => {
     const response = await request({
-      path: "/onboarding/onboarding-assignments/100",
+      path: "/onboarding/onboarding-assignments/0190003d-0000-7000-8000-000000000064",
       token: await token(6),
       method: "DELETE",
     })
@@ -291,7 +295,7 @@ describe("DELETE /onboarding-assignments/:id", () => {
     const deleteResponse = await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding/onboarding-assignments/100",
+      path: "/onboarding/onboarding-assignments/0190003d-0000-7000-8000-000000000064",
       token: await token(1),
       method: "DELETE",
     })
@@ -301,7 +305,7 @@ describe("DELETE /onboarding-assignments/:id", () => {
     const getResponse = await requestWithContext({
       db,
       jwtSecret,
-      path: "/onboarding/onboarding-assignments/100",
+      path: "/onboarding/onboarding-assignments/0190003d-0000-7000-8000-000000000064",
       token: await token(1),
     })
 
@@ -310,7 +314,7 @@ describe("DELETE /onboarding-assignments/:id", () => {
 
   test("the owner without a privileged role is forbidden", async () => {
     const response = await request({
-      path: "/onboarding/onboarding-assignments/100",
+      path: "/onboarding/onboarding-assignments/0190003d-0000-7000-8000-000000000064",
       token: await token(5),
       method: "DELETE",
     })
@@ -320,7 +324,7 @@ describe("DELETE /onboarding-assignments/:id", () => {
 
   test("returns 404 for an unknown assignment", async () => {
     const response = await request({
-      path: "/onboarding/onboarding-assignments/9999",
+      path: "/onboarding/onboarding-assignments/0190003d-0000-7000-8000-00000000270f",
       token: await token(1),
       method: "DELETE",
     })
@@ -330,7 +334,7 @@ describe("DELETE /onboarding-assignments/:id", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/onboarding/onboarding-assignments/100",
+      path: "/onboarding/onboarding-assignments/0190003d-0000-7000-8000-000000000064",
       token: null,
       method: "DELETE",
     })

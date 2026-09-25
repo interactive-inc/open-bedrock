@@ -58,6 +58,7 @@ async function createTestDb(): Promise<D1Database> {
     db,
     "skill_definitions",
     seedSkills.map((skill) => ({
+      id: crypto.randomUUID(),
       code: skill.code,
       name: skill.name,
       category: skill.category,
@@ -68,6 +69,7 @@ async function createTestDb(): Promise<D1Database> {
     db,
     "employee_skills",
     seedEmployeeSkills.map((employeeSkill) => ({
+      id: crypto.randomUUID(),
       employee_id: employeeSkill.employeeId,
       skill_code: employeeSkill.skillCode,
       level: employeeSkill.level,

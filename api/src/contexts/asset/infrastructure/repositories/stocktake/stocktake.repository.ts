@@ -58,10 +58,10 @@ export class StocktakeRepository {
         ...targetCodes.map((code) =>
           this.c.env.DB.prepare(
             `
-            INSERT INTO stocktake_items (stocktake_id, asset_code, checked_at, checker_employee_id, location_note)
-            VALUES (?1, ?2, NULL, NULL, NULL)
+            INSERT INTO stocktake_items (id, stocktake_id, asset_code, checked_at, checker_employee_id, location_note)
+            VALUES (?1, ?2, ?3, NULL, NULL, NULL)
             `,
-          ).bind(stocktake.id, code),
+          ).bind(crypto.randomUUID(), stocktake.id, code),
         ),
       ]
 

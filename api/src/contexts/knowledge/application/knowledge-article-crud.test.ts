@@ -15,7 +15,7 @@ const now = new Date("2026-01-01T00:00:00.000Z")
  * 認可の再検査（失効・日付境界）と保存のtransactionは knowledge-article.repository.d1.test.ts が検証する。
  */
 function createFakes(options: { forbidden?: boolean } = {}) {
-  const articles = new Map<number, KnowledgeArticle>()
+  const articles = new Map<string, KnowledgeArticle>()
   const commands = new Map<string, { article: KnowledgeArticle; requestJson: string }>()
   const authorizations: EmployeeId[] = []
 
@@ -36,14 +36,17 @@ function createFakes(options: { forbidden?: boolean } = {}) {
       article: KnowledgeArticle,
       input: Readonly<{ commandId: string; requestJson: string }>,
     ) => {
-      const saved = KnowledgeArticle.restore({ ...article.toJSON(), id: articles.size + 1 })
-      articles.set(saved.id ?? 0, saved)
+      const saved = KnowledgeArticle.restore({
+        ...article.toJSON(),
+        id: `01900042-0000-7000-8000-${String(articles.size + 1).padStart(12, "0")}`,
+      })
+      articles.set(saved.id ?? "", saved)
       commands.set(input.commandId, { article: saved, requestJson: input.requestJson })
       return saved
     },
     readRecordedCommand: async (input: Readonly<{ commandId: string }>) =>
       commands.get(input.commandId) ?? null,
-    findById: async (id: number) => articles.get(id) ?? null,
+    findById: async (id: string) => articles.get(id) ?? null,
     appendRevision: async (
       article: KnowledgeArticle,
       input: Readonly<{ expectedRevision: number; commandId: string; requestJson: string }>,
@@ -79,7 +82,7 @@ async function seedArticle(fakes: Fakes, authorId: number): Promise<KnowledgeArt
   return result
 }
 
-function updateCommand(articleId: number, authorId: number) {
+function updateCommand(articleId: string, authorId: number) {
   return {
     expectedRevision: 1,
     commandId: "update:test",
@@ -154,7 +157,9 @@ describe("CreateKnowledgeArticle", () => {
     })
 
     expectApplicationError(result, ForbiddenError, "knowledge_author_forbidden")
-    expect(await fakes.articleRepository.findById(1)).toBeNull()
+    expect(
+      await fakes.articleRepository.findById("01900042-0000-7000-8000-000000000001"),
+    ).toBeNull()
   })
 })
 
@@ -218,7 +223,9 @@ describe("UpdateKnowledgeArticle", () => {
   test("rejects unknown id with article_not_found", async () => {
     const fakes = createFakes()
 
-    const result = await new UpdateKnowledgeArticle(fakes).run(updateCommand(9999, 1))
+    const result = await new UpdateKnowledgeArticle(fakes).run(
+      updateCommand("01900042-0000-7000-8000-00000000270f", 1),
+    )
 
     expectApplicationError(result, NotFoundError, "article_not_found")
   })
