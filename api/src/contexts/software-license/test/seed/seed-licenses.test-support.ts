@@ -2,7 +2,7 @@ import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 type SeedLicense = {
-  id: number
+  id: string
   name: string
   vendor: string | null
   category: string | null
@@ -16,7 +16,7 @@ type SeedLicense = {
 
 export const seedLicenses: ReadonlyArray<SeedLicense> = [
   {
-    id: 1,
+    id: "0190004b-0000-7000-8000-000000000001",
     name: "プロジェクト管理ツール",
     vendor: "サンプルSaaS株式会社",
     category: "saas",
@@ -28,7 +28,7 @@ export const seedLicenses: ReadonlyArray<SeedLicense> = [
     createdAt: "2026-01-05T00:00:00Z",
   },
   {
-    id: 2,
+    id: "0190004b-0000-7000-8000-000000000002",
     name: "デザイン制作ソフト",
     vendor: null,
     category: "software",

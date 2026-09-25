@@ -166,7 +166,7 @@ test("うるう年の2月29日は有効", () => {
 
 test("休暇の提案は申請内容を固定し、承認結果によって変わらない", () => {
   const request = new LeaveRequest({
-    id: 1,
+    id: "01900049-0000-7000-8000-000000000001",
     employeeId: toWorkforceEmployeeId(7),
     leaveType: "annual",
     startDate: "2026-07-01",
@@ -183,7 +183,7 @@ test("休暇の提案は申請内容を固定し、承認結果によって変�
   })
   const approved = new LeaveRequest({
     ...request.toProposalBody(),
-    id: 1,
+    id: "01900049-0000-7000-8000-000000000001",
     createdAt: request.createdAt,
     status: "approved",
     approverId: toWorkforceEmployeeId(2),

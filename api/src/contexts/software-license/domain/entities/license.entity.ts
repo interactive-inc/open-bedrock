@@ -3,7 +3,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   name: z.string().trim().min(1).max(300),
   planName: z.string().trim().min(1).max(300).nullable(),
   revision: z.number().int().nonnegative(),

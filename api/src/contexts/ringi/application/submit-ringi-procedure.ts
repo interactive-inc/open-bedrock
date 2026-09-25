@@ -28,8 +28,8 @@ import {
 type Context = CompanyContext
 type Command = Readonly<{
   requestKey: string
-  existingRingiId?: number | null
-  previousRingiId?: number | null
+  existingRingiId?: string | null
+  previousRingiId?: string | null
   session: CompanyPersonnelSession
   tokenVersion: number
   approverId: EmployeeId

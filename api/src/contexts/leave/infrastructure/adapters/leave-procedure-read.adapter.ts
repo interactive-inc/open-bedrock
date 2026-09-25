@@ -14,7 +14,7 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 
 type Input = Readonly<{
-  leaveRequestId: number
+  leaveRequestId: string
   session: CompanyPersonnelSession
   tokenVersion: number
   at: Date
@@ -44,7 +44,7 @@ export class LeaveProcedureReadAdapter {
             "SELECT leave_request_id FROM leave_procedure_bindings WHERE previous_leave_request_id = ?1",
           )
             .bind(input.leaveRequestId)
-            .first<number>("leave_request_id")
+            .first<string>("leave_request_id")
     const query = openSystemProposals(this.c)
     const proposal = binding === null ? null : await query.findByNumber(binding.applicationId)
     if (proposal instanceof Error)

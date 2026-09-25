@@ -28,7 +28,7 @@ export const GET = softwareLicenseFactory.createHandlers(
       .array(
         z.object({
           id: z.string(),
-          license_id: z.number(),
+          license_id: z.uuid(),
           actor_account_id: z.string(),
           recorded_at: z.number(),
           before_json: z.string().nullable(),

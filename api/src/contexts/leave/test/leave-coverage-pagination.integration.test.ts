@@ -11,6 +11,9 @@ import { GET as preservedDossier } from "@system/interface/routes/system.preserv
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
 
+const requestId = (serial: number) =>
+  `01900049-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
+
 test("休暇申請11件と残数を停止世代ごとに分割照合し、空の台帳も完了させる", async () => {
   const { database, governance, creator, reviewer, definition, bindings, tokenFor, request } =
     await createLeavePreservationFixture()
@@ -20,13 +23,13 @@ test("休暇申請11件と残数を停止世代ごとに分割照合し、空の
         (id,employee_id,leave_type,start_date,end_date,days,reason,status,created_at,unit,consumed_days)
         VALUES (?1,?2,'annual','2026-10-01','2026-10-01',1,?3,'pending',
           '2026-09-01T00:00:00.000Z','full_day',1)`)
-      .bind(id, creator.employeeId, `Request ${id}`)
+      .bind(requestId(id), creator.employeeId, `Request ${id}`)
       .run()
   }
   await database
     .prepare(`INSERT INTO leave_balances
-      (employee_id,fiscal_year,leave_type,granted_days,used_days,remaining_days)
-      VALUES (?1,'2026','annual',20,0,20)`)
+      (id,employee_id,fiscal_year,leave_type,granted_days,used_days,remaining_days)
+      VALUES ('0190004c-0000-7000-8000-000000000001',?1,'2026','annual',20,0,20)`)
     .bind(creator.employeeId)
     .run()
   const token = await tokenFor(creator.accountId)
@@ -77,7 +80,7 @@ test("休暇申請11件と残数を停止世代ごとに分割照合し、空の
   const sources = [
     ...Array.from({ length: 11 }, (_, index) => ({
       kind: "leave-request-record" as const,
-      id: String(index + 1),
+      id: requestId(index + 1),
     })),
     { kind: "leave-balance-record" as const, id: balanceId },
   ]
@@ -145,7 +148,7 @@ test("休暇申請11件と残数を停止世代ごとに分割照合し、空の
   if (first.status !== 200) throw new Error(await first.text())
   expect(await first.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "10",
+    nextCursor: requestId(10),
     recordCount: 10,
   })
   expect((await cover("leave-request-record", requestMappings.slice(0, 1))).status).toBe(409)

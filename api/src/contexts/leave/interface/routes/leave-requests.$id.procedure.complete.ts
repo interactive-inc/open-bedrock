@@ -8,7 +8,7 @@ import { CompleteApprovedLeaveProcedure } from "@/contexts/leave/application/com
 import { CompleteRejectedLeaveProcedure } from "@/contexts/leave/application/complete-rejected-leave-procedure"
 import { ApplicationError, ConflictError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { UnauthorizedError } from "@/lib/http/errors"
 
 // @authorization service - 確認済みの最終判断と現在の確定資格を照合する
@@ -18,7 +18,7 @@ export const POST = factory.createHandlers(
   async (c) => {
     const session = c.var.session
     if (session === null || c.var.accountTokenVersion === null) throw new UnauthorizedError()
-    const leaveRequestId = validateIntParam(c.req.param("id"), "leave request")
+    const leaveRequestId = validateUuidParam(c.req.param("id"), "leave request")
     const at = new Date(c.env.NOW ?? Date.now())
     const view = await new LeaveProcedureReadAdapter(c).find({
       leaveRequestId,

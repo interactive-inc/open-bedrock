@@ -35,7 +35,7 @@ test.each(["approve", "reject"] as const)(
     ])
     await c.database
       .prepare(
-        "INSERT INTO leave_balances (employee_id, fiscal_year, leave_type, granted_days, used_days, remaining_days) VALUES (?1, '2026', 'annual', 10, 0, 10)",
+        "INSERT INTO leave_balances (id, employee_id, fiscal_year, leave_type, granted_days, used_days, remaining_days) VALUES ('0190004c-0000-7000-8000-0000000000f1', ?1, '2026', 'annual', 10, 0, 10)",
       )
       .bind(c.creator.employeeId)
       .run()

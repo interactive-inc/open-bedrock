@@ -16,7 +16,7 @@ export async function createLeaveRequest(
   const response = await client["leave"]["leave-requests"].$post({
     json: {
       ...request,
-      previous_leave_request_id: previousId == null ? previousId : Number(previousId),
+      previous_leave_request_id: previousId == null ? previousId : String(previousId),
     },
   })
 

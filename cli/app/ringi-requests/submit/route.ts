@@ -45,13 +45,9 @@ export default factory.createHandlers(
       json: {
         request_key: query["request-key"],
         existing_ringi_id:
-          query["existing-ringi-id"] === undefined
-            ? null
-            : toFiniteNumber(query["existing-ringi-id"], "--existing-ringi-id"),
+          query["existing-ringi-id"] === undefined ? null : query["existing-ringi-id"],
         previous_ringi_id:
-          query["previous-ringi-id"] === undefined
-            ? null
-            : toFiniteNumber(query["previous-ringi-id"], "--previous-ringi-id"),
+          query["previous-ringi-id"] === undefined ? null : query["previous-ringi-id"],
         approver_id: approverId,
         title,
         amount: toFiniteNumber(amount, "--amount"),

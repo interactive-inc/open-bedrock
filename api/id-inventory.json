@@ -3,23 +3,23 @@
     "tables": 206,
     "primaryKeyKinds": {
       "allocator-singleton-secret": 11,
-      "composite": 28,
-      "integer": 15,
+      "composite": 27,
+      "integer": 12,
       "text-business-code": 1,
       "text-prefixed": 13,
-      "text-uuid": 76,
-      "text-uuid-candidate": 62
+      "text-uuid": 85,
+      "text-uuid-candidate": 57
     },
     "declaredForeignKeys": 272,
     "softReferences": {
       "cross-context": 17,
       "external": 32,
       "historical": 10,
-      "not-reference": 83,
+      "not-reference": 86,
       "polymorphic": 18,
       "same-context": 79
     },
-    "triggers": 726,
+    "triggers": 736,
     "views": 25,
     "indexes": 290
   },
@@ -4818,20 +4818,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "employee_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "fiscal_year",
-            "type": "TEXT"
-          },
-          {
-            "name": "leave_type",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -4846,6 +4838,7 @@
       },
       "softReferences": [],
       "triggers": [
+        "leave_balances_identity_update",
         "leave_balances_source_freeze_delete",
         "leave_balances_source_freeze_insert",
         "leave_balances_source_freeze_update"
@@ -4858,13 +4851,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "job_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false,
-        "inheritsFrom": "system_jobs"
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -4891,6 +4883,7 @@
       },
       "softReferences": [],
       "triggers": [
+        "leave_decision_notifications_identity_update",
         "leave_decision_notifications_immutable_delete",
         "leave_decision_notifications_immutable_update",
         "leave_decision_notifications_source_freeze_delete",
@@ -4905,12 +4898,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "request_key",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -4958,6 +4951,7 @@
         "leave_procedure_binding_immutable_delete",
         "leave_procedure_binding_immutable_update",
         "leave_procedure_binding_matches_proposal",
+        "leave_procedure_bindings_identity_update",
         "leave_procedure_bindings_source_freeze_delete",
         "leave_procedure_bindings_source_freeze_insert",
         "leave_procedure_bindings_source_freeze_update",
@@ -4975,11 +4969,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -5029,7 +5023,12 @@
           }
         ]
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
         "leave_draft_source_immutable",
         "leave_draft_source_valid",
@@ -5038,6 +5037,8 @@
         "leave_procedure_request_requires_execution",
         "leave_procedure_source_matches_draft",
         "leave_request_decision_requires_procedure",
+        "leave_requests_identity_update",
+        "leave_requests_legacy_id_insert",
         "leave_requests_source_freeze_delete",
         "leave_requests_source_freeze_insert",
         "leave_requests_source_freeze_update"
@@ -5876,12 +5877,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "request_key",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -5928,6 +5929,7 @@
         "ringi_procedure_binding_immutable_delete",
         "ringi_procedure_binding_immutable_update",
         "ringi_procedure_binding_matches_proposal",
+        "ringi_procedure_bindings_identity_update",
         "ringi_procedure_bindings_source_freeze_delete",
         "ringi_procedure_bindings_source_freeze_insert",
         "ringi_procedure_bindings_source_freeze_update",
@@ -5943,11 +5945,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -5979,11 +5981,18 @@
           }
         ]
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
         "ringi_procedure_binding_matches_proposal",
         "ringi_procedure_request_immutable",
         "ringi_procedure_request_requires_execution",
+        "ringi_requests_identity_update",
+        "ringi_requests_legacy_id_insert",
         "ringi_requests_source_freeze_delete",
         "ringi_requests_source_freeze_insert",
         "ringi_requests_source_freeze_update"
@@ -6269,8 +6278,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -6327,8 +6336,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -6369,11 +6378,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -6399,10 +6408,17 @@
           }
         ]
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
         "software_license_active_assignments_guard",
         "software_license_assignment_capacity",
+        "software_licenses_identity_update",
+        "software_licenses_legacy_id_insert",
         "software_licenses_source_freeze_delete",
         "software_licenses_source_freeze_insert",
         "software_licenses_source_freeze_update"

@@ -16,14 +16,14 @@ test("休暇の停止中に申請と残数の原文を人の承認後にSystem�
     .prepare(`INSERT INTO leave_requests
       (id,employee_id,leave_type,start_date,end_date,days,reason,status,approver_id,
        decided_comment,created_at,unit,hours,consumed_days)
-      VALUES (1,?1,'annual','2026-10-01','2026-10-02',2,'family','pending',NULL,NULL,
+      VALUES ('01900049-0000-7000-8000-000000000001',?1,'annual','2026-10-01','2026-10-02',2,'family','pending',NULL,NULL,
        '2026-09-01T00:00:00.000Z','full_day',NULL,2)`)
     .bind(creator.employeeId)
     .run()
   await database
     .prepare(`INSERT INTO leave_balances
-      (employee_id,fiscal_year,leave_type,granted_days,used_days,remaining_days)
-      VALUES (?1,'2026','annual',20,2,18)`)
+      (id,employee_id,fiscal_year,leave_type,granted_days,used_days,remaining_days)
+      VALUES ('0190004c-0000-7000-8000-000000000001',?1,'2026','annual',20,2,18)`)
     .bind(creator.employeeId)
     .run()
   const token = await tokenFor(creator.accountId)
@@ -53,7 +53,11 @@ test("休暇の停止中に申請と残数の原文を人の承認後にSystem�
   )
   if (freeze.status !== 201) throw new Error(await freeze.text())
   await expect(
-    database.prepare("UPDATE leave_requests SET reason='changed' WHERE id=1").run(),
+    database
+      .prepare(
+        "UPDATE leave_requests SET reason='changed' WHERE id='01900049-0000-7000-8000-000000000001'",
+      )
+      .run(),
   ).rejects.toThrow("leave_record_source_frozen")
   await expect(
     database
@@ -62,7 +66,7 @@ test("休暇の停止中に申請と残数の原文を人の承認後にSystem�
       .run(),
   ).rejects.toThrow("leave_record_source_frozen")
   const sources = [
-    ["leave-request-record", "1"],
+    ["leave-request-record", "01900049-0000-7000-8000-000000000001"],
     ["leave-balance-record", encodeLeaveBalanceRecordId(creator.employeeId, "2026", "annual")],
   ] as const
   const preservedIds: string[] = []

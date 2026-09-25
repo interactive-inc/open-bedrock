@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { SoftwareLicenseContext } from "@/contexts/software-license/configuration/software-license-context"
 import { LicenseActorReadAdapter } from "@/contexts/software-license/infrastructure/adapters/license-actor-read.adapter"
 import { LicenseError } from "@/contexts/software-license/domain/errors"
@@ -6,8 +7,8 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
 const snapshotSql = `SELECT json_object(
-  'format', 'software-license-record', 'version', 1,
-  'license', json_object('id', id, 'name', name, 'vendor', vendor, 'plan_name', plan_name,
+  'format', 'software-license-record', 'version', 2,
+  'license', json_object('id', id, 'legacy_id', legacy_id, 'name', name, 'vendor', vendor, 'plan_name', plan_name,
     'revision', revision, 'category', category, 'seats', seats, 'renewal_deadline', renewal_deadline,
     'owner_employee_id', owner_employee_id, 'note', note, 'status', status, 'created_at', created_at),
   'changes', (SELECT json_group_array(json_object('id',id,'license_id',license_id,
@@ -29,8 +30,8 @@ export class CaptureLicenseRecordAdapter {
     Object.freeze(this)
   }
 
-  async prepare(input: Readonly<{ licenseId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.licenseId))
+  async prepare(input: Readonly<{ licenseId: string; sourceNamespace: string }>) {
+    if (!z.uuid().safeParse(input.licenseId).success)
       return new LicenseError("forbidden", "invalid source record")
     const actor = await new LicenseActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
@@ -53,7 +54,7 @@ export class CaptureLicenseRecordAdapter {
         recordKind: "license-record",
         recordId: String(input.licenseId),
         formatId: "software-license-record",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

@@ -3,7 +3,7 @@ import { LeaveDecisionNotificationValue } from "@/contexts/leave/domain/values/l
 
 const input = {
   decisionAuditId: "decision-1",
-  leaveRequestId: 12,
+  leaveRequestId: "01900049-0000-7000-8000-00000000000c",
   recipientEmployeeId: "employee-1",
   outcome: "approved",
   decidedAt: 1000,
@@ -38,7 +38,7 @@ test("未確定の判断と休暇理由などの余分な内容を配送用デ�
     LeaveDecisionNotificationValue.create({ ...input, reason: "private leave reason" }),
   ).toBeInstanceOf(Error)
   expect(LeaveDecisionNotificationValue.create({ ...input, decidedAt: -1 })).toBeInstanceOf(Error)
-  expect(LeaveDecisionNotificationValue.create({ ...input, leaveRequestId: 1.5 })).toBeInstanceOf(
+  expect(LeaveDecisionNotificationValue.create({ ...input, leaveRequestId: 12 })).toBeInstanceOf(
     Error,
   )
 })

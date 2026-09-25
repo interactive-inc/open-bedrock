@@ -34,6 +34,7 @@ describe("LeaveBalanceRepository", () => {
 
     await seedD1(db, "leave_balances", [
       {
+        id: crypto.randomUUID(),
         employee_id: "1",
         fiscal_year: "2026",
         leave_type: "annual",
@@ -69,6 +70,7 @@ describe("LeaveBalanceRepository", () => {
 
     await seedD1(db, "leave_balances", [
       {
+        id: crypto.randomUUID(),
         employee_id: "1",
         fiscal_year: "2026",
         leave_type: "annual",
@@ -111,6 +113,7 @@ describe("LeaveBalanceRepository", () => {
 
     await seedD1(db, "leave_balances", [
       {
+        id: crypto.randomUUID(),
         employee_id: "1",
         fiscal_year: "2026",
         leave_type: "annual",

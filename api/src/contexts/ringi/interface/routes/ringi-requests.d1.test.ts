@@ -134,9 +134,17 @@ describe("既存稟議の参照と承認経路の切替", () => {
       .object({ data: z.array(zRingiProcedureView), total: z.number() })
       .parse(await response.json())
     expect(rows.total).toBe(2)
-    expect(rows.data.map((row) => row.id)).toEqual([2, 1])
-    expect(rows.data.find((row) => row.id === 2)?.status).toBe("approved")
-    expect(rows.data.find((row) => row.id === 1)?.procedure_required).toBe(true)
+    expect(rows.data.map((row) => row.id)).toEqual([
+      "0190004a-0000-7000-8000-000000000002",
+      "0190004a-0000-7000-8000-000000000001",
+    ])
+    expect(rows.data.find((row) => row.id === "0190004a-0000-7000-8000-000000000002")?.status).toBe(
+      "approved",
+    )
+    expect(
+      rows.data.find((row) => row.id === "0190004a-0000-7000-8000-000000000001")
+        ?.procedure_required,
+    ).toBe(true)
   })
 
   test("全社閲覧権限と本人の範囲を別に検査する", async () => {
@@ -157,13 +165,18 @@ describe("既存稟議の参照と承認経路の切替", () => {
 
   test("保存された提出先や管理権限だけで旧稟議を決裁できない", async () => {
     expect(
-      (await request({ path: "/ringi/ringi-requests/1", token: await tokenFor(4) })).status,
+      (
+        await request({
+          path: "/ringi/ringi-requests/0190004a-0000-7000-8000-000000000001",
+          token: await tokenFor(4),
+        })
+      ).status,
     ).toBe(403)
     for (const action of ["approve", "reject"])
       expect(
         (
           await request({
-            path: `/ringi/ringi-requests/1/${action}`,
+            path: `/ringi/ringi-requests/0190004a-0000-7000-8000-000000000001/${action}`,
             token: await tokenFor(1),
             method: "POST",
             body: {

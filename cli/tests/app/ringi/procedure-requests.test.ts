@@ -72,7 +72,7 @@ describe("稟議CLIの確認対象と再送", () => {
     const key = "12345678-1234-4234-8234-123456789abc"
     const args = {
       "request-key": key,
-      "previous-ringi-id": "41",
+      "previous-ringi-id": "0190004a-0000-7000-8000-000000000029",
       "approver-id": "reviewer",
       title: "備品購入",
       amount: "1000",
@@ -85,7 +85,7 @@ describe("稟議CLIの確認対象と再送", () => {
       expect(new URL(request.url).pathname).toBe("/ringi/ringi-requests")
       expect(await request.json()).toEqual({
         request_key: key,
-        previous_ringi_id: 41,
+        previous_ringi_id: "0190004a-0000-7000-8000-000000000029",
         existing_ringi_id: null,
         approver_id: "reviewer",
         title: "備品購入",

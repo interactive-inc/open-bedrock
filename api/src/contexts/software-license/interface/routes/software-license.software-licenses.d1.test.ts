@@ -28,7 +28,7 @@ afterAll(async () => {
 const jwtSecret = "license-route-test-secret"
 
 const licenseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   name: z.string(),
   vendor: z.string().nullable(),
   category: z.string().nullable(),
@@ -175,7 +175,7 @@ describe("POST /software-licenses", () => {
 describe("PUT /software-licenses/:id", () => {
   test("updates a license as admin", async () => {
     const response = await request(
-      "/software-license/software-licenses/1",
+      "/software-license/software-licenses/0190004b-0000-7000-8000-000000000001",
       await tokenFor(1),
       "PUT",
       {
@@ -199,7 +199,7 @@ describe("PUT /software-licenses/:id", () => {
 
   test("returns 404 for unknown id", async () => {
     const response = await request(
-      "/software-license/software-licenses/9999",
+      "/software-license/software-licenses/0190004b-0000-7000-8000-00000000270f",
       await tokenFor(1),
       "PUT",
       {
@@ -214,7 +214,7 @@ describe("PUT /software-licenses/:id", () => {
 describe("POST /software-licenses/:id/cancel", () => {
   test("cancels a license as admin", async () => {
     const response = await request(
-      "/software-license/software-licenses/1/cancel",
+      "/software-license/software-licenses/0190004b-0000-7000-8000-000000000001/cancel",
       await tokenFor(1),
       "POST",
     )
@@ -232,7 +232,7 @@ describe("POST /software-licenses/:id/cancel", () => {
 
   test("returns 403 for a member", async () => {
     const response = await request(
-      "/software-license/software-licenses/1/cancel",
+      "/software-license/software-licenses/0190004b-0000-7000-8000-000000000001/cancel",
       await tokenFor(5),
       "POST",
     )

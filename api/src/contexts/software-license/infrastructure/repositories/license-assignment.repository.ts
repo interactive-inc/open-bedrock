@@ -32,7 +32,7 @@ export class LicenseAssignmentRepository {
 
   async findMany(
     input: Readonly<{
-      licenseId: number | null
+      licenseId: string | null
       employeeId: string | null
       state: "assigned" | "released" | null
       limit: number

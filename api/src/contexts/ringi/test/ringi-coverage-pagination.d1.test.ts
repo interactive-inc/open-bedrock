@@ -32,7 +32,14 @@ test("稟議起案11件と実System案件対応を分割照合し撤去確定す
   if (created instanceof Error) throw created
   const { database, governance, creator, reviewer, definition, bindings, tokenFor, request } =
     await createRingiPreservationFixture(procedure)
-  for (let id = -9; id <= 0; id++) {
+  // 10 件を固定の UUID で入れ、手続きで作った 1 件と合わせて主キーの順に照合する。
+  const insertedIds = Array.from(
+    { length: 10 },
+    (_, index) => `0190004a-0000-7000-8000-${(index + 1).toString(16).padStart(12, "0")}`,
+  )
+  if (created.id === null) throw new Error("created ringi ID is missing")
+  const requestIds = [...insertedIds, created.id].toSorted()
+  for (const id of insertedIds) {
     await database
       .prepare(`INSERT INTO ringi_requests
       (id,applicant_id,approver_id,title,amount,reason,status,decided_at,decision_comment,created_at)
@@ -85,10 +92,7 @@ test("稟議起案11件と実System案件対応を分割照合し撤去確定す
   const requestMappings: Array<{ sourceRecordId: string; preservedRecordId: string }> = []
   const bindingMappings: Array<{ sourceRecordId: string; preservedRecordId: string }> = []
   const sources = [
-    ...Array.from({ length: 11 }, (_, index) => ({
-      kind: "ringi-request-record" as const,
-      id: String(index - 9),
-    })),
+    ...requestIds.map((id) => ({ kind: "ringi-request-record" as const, id })),
     {
       kind: "ringi-procedure-binding-record" as const,
       id: `key:${procedure.submission.requestKey}`,
@@ -154,7 +158,11 @@ test("稟議起案11件と実System案件対応を分割照合し撤去確定す
     post(coveragePath, { purpose: "archive", recordKind, records })
   const first = await cover("ringi-request-record", requestMappings.slice(0, 10))
   if (first.status !== 200) throw new Error(await first.text())
-  expect(await first.json()).toMatchObject({ sequence: 1, nextCursor: "0", recordCount: 10 })
+  expect(await first.json()).toMatchObject({
+    sequence: 1,
+    nextCursor: requestIds[9],
+    recordCount: 10,
+  })
   expect((await cover("ringi-request-record", requestMappings.slice(0, 1))).status).toBe(409)
   const second = await cover("ringi-request-record", requestMappings.slice(10))
   if (second.status !== 200) throw new Error(await second.text())

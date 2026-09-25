@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { LeaveSystemWorkflowAdapter } from "@/contexts/leave/infrastructure/adapters/leave-system-workflow.adapter"
 import { resolveCompanyProcedureTask } from "@/contexts/company/interface/operations/resolve-company-procedure-task"
 import { PrepareLeaveHumanEmployeeAdapter } from "@/contexts/leave/infrastructure/adapters/prepare-leave-human-employee.adapter"
@@ -31,8 +32,8 @@ import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-dig
 
 type Command = Readonly<{
   requestKey: string
-  leaveRequestId: number
-  previousLeaveRequestId: number | null
+  leaveRequestId: string
+  previousLeaveRequestId: string | null
   confirmedContentDigest: string
   session: CompanyPersonnelSession
   tokenVersion: number
@@ -49,9 +50,8 @@ export class SubmitLeaveProcedure {
   async run(command: Command): Promise<Result | ApplicationError> {
     if (
       !z.string().uuid().safeParse(command.requestKey).success ||
-      !z.number().int().positive().safe().safeParse(command.leaveRequestId).success ||
-      !z.number().int().positive().safe().nullable().safeParse(command.previousLeaveRequestId)
-        .success ||
+      !uuidSchema.safeParse(command.leaveRequestId).success ||
+      !uuidSchema.nullable().safeParse(command.previousLeaveRequestId).success ||
       !/^[a-f0-9]{64}$/.test(command.confirmedContentDigest) ||
       !Number.isSafeInteger(command.createdAt.getTime())
     )

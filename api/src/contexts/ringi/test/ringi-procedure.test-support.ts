@@ -141,7 +141,7 @@ export async function createRingiProcedureTestContext(database: D1Database) {
     if (approved instanceof Error) throw approved
     return approved
   }
-  const command = (ringiId: number) => ({
+  const command = (ringiId: string) => ({
     ringiId,
     session: {
       accountId: second.accountId,

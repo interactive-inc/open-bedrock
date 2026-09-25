@@ -14,7 +14,7 @@ import { z } from "zod"
 
 /** D1 batch の結果行を安全にパースする。fromRow の引数型に対応する。 */
 export const leaveRequestRowSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   employeeId: zEmployeeId,
   leaveType: leaveTypeSchema,
   startDate: z.string(),
@@ -31,7 +31,7 @@ export const leaveRequestRowSchema = z.object({
 })
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   employeeId: zEmployeeId,
   leaveType: leaveTypeSchema,
   startDate: z.string(),

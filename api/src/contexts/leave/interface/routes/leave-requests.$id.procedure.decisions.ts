@@ -8,7 +8,7 @@ import { CompleteApprovedLeaveProcedure } from "@/contexts/leave/application/com
 import { CompleteRejectedLeaveProcedure } from "@/contexts/leave/application/complete-rejected-leave-procedure"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { UnauthorizedError } from "@/lib/http/errors"
 
 // @authorization service - 確認した案件と現在の判断資格を照合し、最終判断を業務へ反映する
@@ -28,7 +28,7 @@ export const POST = factory.createHandlers(
     const session = c.var.session
     if (session === null || c.var.accountTokenVersion === null) throw new UnauthorizedError()
     const body = c.req.valid("json")
-    const leaveRequestId = validateIntParam(c.req.param("id"), "leave request")
+    const leaveRequestId = validateUuidParam(c.req.param("id"), "leave request")
     const at = new Date(c.env.NOW ?? Date.now())
     const saved = await new RecordLeaveDecision(c).run({
       leaveRequestId,

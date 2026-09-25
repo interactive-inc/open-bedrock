@@ -10,7 +10,7 @@ export class LeaveProcedureStatusReadAdapter {
     Object.freeze(this)
   }
 
-  async find(id: number) {
+  async find(id: string) {
     try {
       const rows = await this.c.var.database
         .select({ status: leaveProcedureStatusSql })

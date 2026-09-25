@@ -44,11 +44,12 @@ export class PrepareLeaveDecisionNotificationAdapter {
     return [
       ...queued,
       this.c.env.DB.prepare(`INSERT INTO leave_decision_notifications
-        (job_id, leave_request_id, decision_audit_id, payload_json) VALUES (?1, ?2, ?3, ?4)`).bind(
+        (job_id, leave_request_id, decision_audit_id, payload_json, id) VALUES (?1, ?2, ?3, ?4, ?5)`).bind(
         notification.deliveryId,
         notification.props.leaveRequestId,
         notification.props.decisionAuditId,
         payload,
+        crypto.randomUUID(),
       ),
       this.c.env.DB.prepare(`SELECT CASE WHEN changes() = 1 AND EXISTS (
         SELECT 1 FROM leave_decision_notifications

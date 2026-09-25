@@ -1,9 +1,9 @@
 import { z } from "zod"
 
 export const ringiProcedureBindingSchema = z.object({
-  previousRingiId: z.number().int().positive().safe().nullable().default(null),
+  previousRingiId: z.uuid().nullable().default(null),
   requestKey: z.string().min(1).max(255),
-  ringiId: z.number().int().positive().safe(),
+  ringiId: z.uuid(),
   applicationId: z.number().int().positive().safe(),
   seriesId: z.string().min(1),
   caseId: z.string().min(1),

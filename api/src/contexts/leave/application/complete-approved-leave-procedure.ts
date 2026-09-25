@@ -24,7 +24,7 @@ import {
 } from "@/lib/errors"
 
 type Command = Readonly<{
-  leaveRequestId: number
+  leaveRequestId: string
   session: CompanyPersonnelSession
   tokenVersion: number
   completedAt: Date

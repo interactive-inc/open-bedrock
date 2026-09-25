@@ -58,15 +58,15 @@ export class LeaveProcedureRepository {
     })
   }
 
-  async findDraftSource(leaveRequestId: number): Promise<number | null> {
+  async findDraftSource(leaveRequestId: string): Promise<string | null> {
     return this.c.env.DB.prepare(
       "SELECT previous_leave_request_id FROM leave_requests WHERE id = ?1",
     )
       .bind(leaveRequestId)
-      .first<number>("previous_leave_request_id")
+      .first<string>("previous_leave_request_id")
   }
 
-  async findForRequest(leaveRequestId: number): Promise<LeaveProcedureBinding | null | Error> {
+  async findForRequest(leaveRequestId: string): Promise<LeaveProcedureBinding | null | Error> {
     try {
       const row = await this.c.env.DB.prepare(`SELECT request_key AS requestKey,
         leave_request_id AS leaveRequestId, previous_leave_request_id AS previousLeaveRequestId,
@@ -116,8 +116,8 @@ export class LeaveProcedureRepository {
 
   async submit(
     input: Readonly<{
-      leaveRequestId: number
-      previousLeaveRequestId: number | null
+      leaveRequestId: string
+      previousLeaveRequestId: string | null
       requestKey: string
       workflow: Parameters<SystemWorkflowWriter["start"]>[0]
       guards: ReadonlyArray<D1PreparedStatement>
@@ -132,9 +132,9 @@ export class LeaveProcedureRepository {
         database
           .prepare(`INSERT INTO leave_procedure_bindings
           (request_key, leave_request_id, previous_leave_request_id, application_id,
-           series_id, case_id, proposal_digest, created_at)
+           series_id, case_id, proposal_digest, created_at, id)
           VALUES (?1, ?2, ?3, (SELECT number FROM system_proposal_numbers WHERE series_id = ?4),
-            ?4, ?5, ?6, ?7)`)
+            ?4, ?5, ?6, ?7, ?8)`)
           .bind(
             input.requestKey,
             input.leaveRequestId,
@@ -143,6 +143,7 @@ export class LeaveProcedureRepository {
             input.workflow.workflowCase.id,
             input.workflow.proposal.digest,
             input.workflow.proposal.createdAt.getTime(),
+            crypto.randomUUID(),
           ),
         abortWhenPreviousStatementChangedNoRows(database),
         ...prepareSystemAuditEventAppend({ database: this.c.env.DB, event: input.audit }),

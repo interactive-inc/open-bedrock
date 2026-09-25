@@ -12,7 +12,7 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 import { ConflictError, ForbiddenError, UnexpectedError, type ApplicationError } from "@/lib/errors"
 
 type Command = Readonly<{
-  leaveRequestId: number
+  leaveRequestId: string
   session: CompanyPersonnelSession
   tokenVersion: number
   completedAt: Date
