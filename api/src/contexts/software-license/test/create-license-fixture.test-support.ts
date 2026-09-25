@@ -7,11 +7,8 @@ import { POST as executePreservation } from "@/contexts/software-license/interfa
 import { POST as preserveRecord } from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests"
 import type { SystemAttachmentStorageContext } from "@system/configuration/system-context"
 import { DirectPersonnelActionAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/direct-personnel-action.adapter"
-import { readFileSync, readdirSync } from "node:fs"
-import { join } from "node:path"
 import { drizzle } from "drizzle-orm/d1"
-import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
-import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-database.test-support"
+import { execSql } from "@tests/d1/support/exec-sql"
 import { prepareUnpublishedEmployment } from "@/contexts/company/test/unpublished-employment.test-support"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
@@ -36,16 +33,10 @@ import { HTTPException } from "hono/http-exception"
 import { publishTestEmployeeResources } from "@tests/api/support/company/publish-test-employee-resources"
 import { publishTestAccountEmployeeLink } from "@tests/api/support/company/publish-test-account-employee-link"
 
-const schema = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
-  .filter((file) => file.endsWith(".sql"))
-  .sort()
-  .map((file) => readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8"))
-  .join("\n")
 const secret = "software-license-integration-test-secret"
 
-/** 両製品のmigrationと実認証・Company履歴を使う台帳fixture。 */
-export async function createLicenseFixture(databaseOverride?: D1Database) {
-  const database = databaseOverride ?? createSystemD1TestDatabase(schema)
+/** migration済みのローカルD1と実認証・Company履歴を使う台帳fixture。 */
+export async function createLicenseFixture(database: D1Database) {
   const settings: {
     enabled?: string
     hiddenBindings?: boolean
@@ -55,13 +46,16 @@ export async function createLicenseFixture(databaseOverride?: D1Database) {
   } = {}
   const clock = { now: new Date("2026-09-08T01:00:00Z") }
   const env = { DB: database, JWT_SECRET: secret, COMPANY_TIME_ZONE: "Asia/Tokyo" }
-  await database.exec(`PRAGMA foreign_keys=ON;
-    INSERT OR IGNORE INTO company_organizations (id,revision,name,representative_name,created_at,updated_at)
+  // D1は外部キーを常に検査するため、PRAGMA foreign_keys は要らない。
+  await execSql(
+    database,
+    `INSERT OR IGNORE INTO company_organizations (id,revision,name,representative_name,created_at,updated_at)
     VALUES ('organization:default',0,'Example',NULL,0,0);
     INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
     VALUES ('license-test-manager','license:test-manager','custom','LicenseEntity Manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('license-test-manager','license:manage'),('license-test-manager','license:read:all');`)
+      ('license-test-manager','license:manage'),('license-test-manager','license:read:all');`,
+  )
   for (const suffix of ["manager", "member", "other"]) {
     await database
       .prepare(`INSERT INTO system_accounts (id,status,token_version,created_at,updated_at)
@@ -115,8 +109,11 @@ export async function createLicenseFixture(databaseOverride?: D1Database) {
       recordedAt: 0,
     })
   }
-  await database.exec(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('license-test-binding','account:manager','license-test-manager',0);`)
+  await execSql(
+    database,
+    `INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
+    VALUES ('license-test-binding','account:manager','license-test-manager',0);`,
+  )
   const app = softwareLicenseFactory
     .createApp()
     .use("*", async (c, next) => {
