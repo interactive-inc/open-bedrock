@@ -36,8 +36,8 @@ import { z } from "zod"
 type Context = CompanyContext
 type Command = Readonly<{
   requestKey: string
-  existingExpenseId?: number | null
-  previousExpenseId?: number | null
+  existingExpenseId?: string | null
+  previousExpenseId?: string | null
   session: CompanyPersonnelSession
   tokenVersion: number
   category: ExpenseCategory

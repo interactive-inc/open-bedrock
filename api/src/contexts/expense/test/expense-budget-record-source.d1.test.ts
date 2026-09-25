@@ -24,13 +24,13 @@ test("部署予算は実際の管理権限で全保存列を取得し、権限�
   await c.database
     .prepare(`INSERT INTO expense_budgets
     (id,organization_unit_id,fiscal_period,period_start,period_end,amount,name,note,created_at)
-    SELECT 901,organization_unit_id,'2026','2026-04-01','2027-03-31',100000,'Annual budget',NULL,created_at
+    SELECT '0190004d-0000-7000-8000-000000000385',organization_unit_id,'2026','2026-04-01','2027-03-31',100000,'Annual budget',NULL,created_at
     FROM expenses WHERE id=?1`)
     .bind(submitted.request.id)
     .run()
   const source = new CaptureExpenseBudgetRecordAdapter({ ...c.context, now: () => c.at })
   const input = {
-    budgetId: 901,
+    budgetId: "0190004d-0000-7000-8000-000000000385",
     sourceNamespace: "example-source",
     session: c.session(c.requester),
     authentication: {
@@ -54,30 +54,42 @@ test("部署予算は実際の管理権限で全保存列を取得し、権限�
     .run()
   const captured = await source.prepare(input)
   if (captured instanceof Error) throw captured
-  const original = await c.database.prepare("SELECT * FROM expense_budgets WHERE id=901").first()
+  const original = await c.database
+    .prepare("SELECT * FROM expense_budgets WHERE id='0190004d-0000-7000-8000-000000000385'")
+    .first()
   expect(JSON.parse(new TextDecoder().decode(captured.content))).toEqual({
     format: "expense-budget",
-    version: 1,
+    version: 2,
     record: original,
   })
   expect(captured.source.props).toMatchObject({
     recordKind: "expense-budget",
-    recordId: "901",
+    recordId: "0190004d-0000-7000-8000-000000000385",
     sourceRevision: null,
     sourceRecordedAt: null,
   })
-  expect(await source.prepare({ ...input, budgetId: 902 })).toBeInstanceOf(Error)
+  expect(
+    await source.prepare({ ...input, budgetId: "0190004d-0000-7000-8000-000000000386" }),
+  ).toBeInstanceOf(Error)
   expect(await source.prepare({ ...input, session: c.session(c.first) })).toBeInstanceOf(Error)
-  await execSql(c.database, "UPDATE expense_budgets SET amount=9007199254740993 WHERE id=901")
+  await execSql(
+    c.database,
+    "UPDATE expense_budgets SET amount=9007199254740993 WHERE id='0190004d-0000-7000-8000-000000000385'",
+  )
   const largeAmount = await source.prepare(input)
   if (largeAmount instanceof Error) throw largeAmount
   const amountText = await c.database
-    .prepare("SELECT CAST(amount AS TEXT) AS amount FROM expense_budgets WHERE id=901")
+    .prepare(
+      "SELECT CAST(amount AS TEXT) AS amount FROM expense_budgets WHERE id='0190004d-0000-7000-8000-000000000385'",
+    )
     .first<string>("amount")
   expect(amountText).toBe("9007199254740993")
   expect(new TextDecoder().decode(largeAmount.content)).toContain('"amount":9007199254740993')
   expect(largeAmount.source.props.contentDigest).not.toBe(captured.source.props.contentDigest)
-  await execSql(c.database, "UPDATE expense_budgets SET amount=100000 WHERE id=901")
+  await execSql(
+    c.database,
+    "UPDATE expense_budgets SET amount=100000 WHERE id='0190004d-0000-7000-8000-000000000385'",
+  )
   await execSql(
     c.database,
     "DELETE FROM system_iam_role_permissions WHERE permission_key='budget:manage'",

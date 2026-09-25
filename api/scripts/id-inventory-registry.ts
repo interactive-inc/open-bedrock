@@ -164,6 +164,9 @@ const PROCEDURE_REQUEST_KEY = external(
 )
 
 export const SOFT_REFERENCES: Readonly<Record<string, SoftReference>> = {
+  "expense_approvals.legacy_id": LEGACY_PRIMARY_KEY,
+  "expense_budgets.legacy_id": LEGACY_PRIMARY_KEY,
+  "expenses.legacy_id": LEGACY_PRIMARY_KEY,
   "leave_requests.legacy_id": LEGACY_PRIMARY_KEY,
   "ringi_requests.legacy_id": LEGACY_PRIMARY_KEY,
   "software_licenses.legacy_id": LEGACY_PRIMARY_KEY,

@@ -1,7 +1,7 @@
 import { zExpenseProcedureView } from "@/contexts/expense/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
@@ -12,7 +12,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
   if (session === null || c.var.accountTokenVersion === null) throw new UnauthorizedError()
   const view = await new ExpenseProcedureReadAdapter(c).find({
-    expenseId: validateIntParam(c.req.param("id"), "expense"),
+    expenseId: validateUuidParam(c.req.param("id"), "expense"),
     session,
     tokenVersion: c.var.accountTokenVersion,
     at: new Date(c.env.NOW ?? Date.now()),

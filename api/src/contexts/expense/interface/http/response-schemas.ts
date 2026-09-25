@@ -9,7 +9,7 @@ import {
 import { z } from "zod"
 
 export const zAppExpense = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   category: expenseCategory,
   amount: z.number(),
@@ -21,7 +21,7 @@ export const zAppExpense = z.object({
 
 /** 経費詳細のレスポンス（申請者名を含む）。 */
 export const zAppExpenseDetail = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   applicant_name: z.string(),
   category: expenseCategory,
@@ -42,7 +42,7 @@ export const zAppExpenseDetail = z.object({
 
 /** 本人の経費一覧の 1 件。 */
 export const zAppExpenseMineItem = z.object({
-  id: z.number(),
+  id: z.uuid(),
   category: expenseCategory,
   amount: z.number(),
   spent_at: z.string(),
@@ -58,7 +58,7 @@ export const zAppExpenseMineList = z.object({
 
 /** 承認待ち経費一覧の 1 件（申請者名を含む）。 */
 export const zAppExpenseInboxItem = z.object({
-  id: z.number(),
+  id: z.uuid(),
   applicant_name: z.string(),
   category: expenseCategory,
   amount: z.number(),
@@ -80,7 +80,7 @@ export const zAppExpenseDecision = z.object({
 
 /** 全社経費申請一覧（GET /expenses/admin）の 1 件。 */
 export const zAppExpenseAdminItem = z.object({
-  id: z.number(),
+  id: z.uuid(),
   applicant_id: zEmployeeId,
   applicant_name: z.string(),
   applicant_dept_name: z.string().nullable(),
@@ -99,7 +99,7 @@ export const zAppExpenseAdminList = z.object({
 
 /** 部署予算 1 件のレスポンス。 */
 export const zAppBudget = z.object({
-  id: z.number(),
+  id: z.uuid(),
   organization_unit_id: zOrganizationUnitId,
   fiscal_period: z.string(),
   period_start: z.string(),
@@ -112,7 +112,7 @@ export const zAppBudget = z.object({
 
 /** 部署予算一覧（GET /expense-budgets）の 1 件。部署名を含む。 */
 export const zAppBudgetListItem = z.object({
-  id: z.number(),
+  id: z.uuid(),
   organization_unit_id: zOrganizationUnitId,
   organization_unit_name: z.string().nullable(),
   fiscal_period: z.string(),
@@ -132,7 +132,7 @@ export const zAppBudgetList = z.object({
 
 /** 部署予算の詳細（GET /expense-budgets/:id）。承認済み経費の消化額・残額を含む。 */
 export const zAppBudgetDetail = z.object({
-  id: z.number(),
+  id: z.uuid(),
   organization_unit_id: zOrganizationUnitId,
   organization_unit_name: z.string().nullable(),
   fiscal_period: z.string(),
@@ -190,7 +190,7 @@ export const zExpenseProcedureView = zAppExpenseDetail.extend({
   ),
   procedure_required: z.boolean(),
   application_id: z.number().int().positive().nullable(),
-  previous_expense_id: z.number().int().positive().nullable(),
+  previous_expense_id: z.uuid().nullable(),
   decision_target: z
     .object({
       proposal_version: z.number().int().positive(),
@@ -199,7 +199,7 @@ export const zExpenseProcedureView = zAppExpenseDetail.extend({
       task_round: z.number().int().positive(),
     })
     .nullable(),
-  next_expense_id: z.number().int().positive().nullable(),
+  next_expense_id: z.uuid().nullable(),
   can_submit_legacy: z.boolean(),
   can_decide: z.boolean(),
   can_execute: z.boolean(),

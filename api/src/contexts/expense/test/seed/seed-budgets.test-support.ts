@@ -2,7 +2,7 @@ import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definit
 import type { OrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 type SeedBudget = {
-  id: number
+  id: string
   organizationUnitId: OrganizationUnitId
   fiscalPeriod: string
   periodStart: string
@@ -19,7 +19,7 @@ type SeedBudget = {
  */
 export const seedBudgets: ReadonlyArray<SeedBudget> = [
   {
-    id: 1,
+    id: "0190004d-0000-7000-8000-000000000001",
     organizationUnitId: toWorkforceOrganizationUnitId("D003"),
     fiscalPeriod: "2026",
     periodStart: "2026-04-01",
@@ -30,7 +30,7 @@ export const seedBudgets: ReadonlyArray<SeedBudget> = [
     createdAt: "2026-04-01T00:00:00Z",
   },
   {
-    id: 2,
+    id: "0190004d-0000-7000-8000-000000000002",
     organizationUnitId: toWorkforceOrganizationUnitId("D004"),
     fiscalPeriod: "2026",
     periodStart: "2026-04-01",

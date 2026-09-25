@@ -11,7 +11,7 @@ import type { AttachmentEvidence } from "@system/domain/definitions/attachments/
 
 /** D1 batch の結果行を安全にパースする。fromRow の引数型に対応する。 */
 export const expenseRowSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   employeeId: zEmployeeId,
   organizationUnitId: zOrganizationUnitId,
   category: z.enum(["transport", "supplies", "entertainment", "books", "other"]),
@@ -23,7 +23,7 @@ export const expenseRowSchema = z.object({
 })
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   employeeId: zEmployeeId,
   organizationUnitId: zOrganizationUnitId,
   category: expenseCategorySchema,

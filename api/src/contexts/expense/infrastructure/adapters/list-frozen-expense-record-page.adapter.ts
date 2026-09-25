@@ -19,7 +19,7 @@ const inputSchema = z.strictObject({
 })
 const rowSchema = z.strictObject({
   record_id: z.string().min(1).max(512),
-  expense_id: z.number().int().safe().nullable(),
+  expense_id: z.uuid().nullable(),
   attachment_id: z.string().min(1).max(255).nullable(),
 })
 const sources: Readonly<Record<ExpenseRecordKind, string>> = {
@@ -33,8 +33,9 @@ const sources: Readonly<Record<ExpenseRecordKind, string>> = {
     "SELECT CAST(expense_id AS TEXT)||':'||attachment_id AS record_id,expense_id,attachment_id FROM expense_attachments",
   "expense-budget":
     "SELECT CAST(id AS TEXT) AS record_id,NULL AS expense_id,NULL AS attachment_id FROM expense_budgets",
+  // 同じ原添付を複数の経費が指すときは、最初に結び付けた経費を持ち主にする。UUID の大小は作成順を表さない。
   "expense-attachment":
-    "SELECT attachment_id AS record_id,MIN(expense_id) AS expense_id,attachment_id FROM expense_attachments GROUP BY attachment_id",
+    "SELECT link.attachment_id AS record_id,(SELECT first.expense_id FROM expense_attachments first WHERE first.attachment_id=link.attachment_id ORDER BY first.created_at,first.rowid LIMIT 1) AS expense_id,link.attachment_id FROM expense_attachments link GROUP BY link.attachment_id",
 }
 
 /** 同じ停止世代の全保存行を種類ごとに列挙する。IDの一覧だけで保全完了とは判定しない。 */

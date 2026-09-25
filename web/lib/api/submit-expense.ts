@@ -13,11 +13,11 @@ export async function submitExpense(request: ExpenseSubmitRequest) {
         existing_expense_id:
           request.existing_expense_id == null
             ? request.existing_expense_id
-            : Number(request.existing_expense_id),
+            : String(request.existing_expense_id),
         previous_expense_id:
           request.previous_expense_id == null
             ? request.previous_expense_id
-            : Number(request.previous_expense_id),
+            : String(request.previous_expense_id),
       },
     })
 

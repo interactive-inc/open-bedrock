@@ -14,7 +14,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 
 type Context = CompanyContext
 type Input = Readonly<{
-  expenseId: number
+  expenseId: string
   session: CompanyPersonnelSession
   tokenVersion: number
   at: Date

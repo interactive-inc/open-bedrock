@@ -14,7 +14,7 @@ export type BudgetListFilter = {
 export class BudgetRepository {
   constructor(private readonly c: Context) {}
 
-  async findById(budgetId: number): Promise<Budget | null | Error> {
+  async findById(budgetId: string): Promise<Budget | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -61,6 +61,7 @@ export class BudgetRepository {
       const rows = await this.c.var.database
         .insert(budgets)
         .values({
+          id: crypto.randomUUID(),
           organizationUnitId: budget.organizationUnitId,
           fiscalPeriod: budget.fiscalPeriod,
           periodStart: budget.periodStart,
@@ -104,7 +105,7 @@ export class BudgetRepository {
     }
   }
 
-  async delete(budgetId: number): Promise<true | null | Error> {
+  async delete(budgetId: string): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database
         .delete(budgets)

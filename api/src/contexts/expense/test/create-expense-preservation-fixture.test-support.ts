@@ -72,7 +72,7 @@ export async function createExpensePreservationFixture() {
     .run()
   await database.exec(`INSERT INTO expense_budgets
     (id,organization_unit_id,fiscal_period,period_start,period_end,amount,name,note,created_at)
-    SELECT 1,id,'2026','2026-04-01','2027-03-31',100000,'Annual budget','Original note','2026-09-01T00:00:00Z'
+    SELECT '01900050-0000-7000-8000-000000000001',id,'2026','2026-04-01','2027-03-31',100000,'Annual budget','Original note','2026-09-01T00:00:00Z'
     FROM company_organization_units LIMIT 1`)
   const bucket = new SystemAttachmentTestBucket()
   const secret = "expense-preservation-test-secret"
@@ -134,7 +134,7 @@ export async function createExpensePreservationFixture() {
     settings,
     request,
     conditions,
-    path: "/expense/records/expense-budget/1/preservation-requests",
+    path: "/expense/records/expense-budget/01900050-0000-7000-8000-000000000001/preservation-requests",
     command: { key: crypto.randomUUID(), body: { procedure_key: definition.key, conditions } },
   }
 }

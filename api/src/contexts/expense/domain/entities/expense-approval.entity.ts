@@ -5,8 +5,8 @@ import type { ExpenseApprovalRow } from "@/contexts/expense/infrastructure/schem
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
-  expenseId: z.number(),
+  id: z.string().nullable(),
+  expenseId: z.string(),
   approverId: zEmployeeId,
   action: expenseApprovalActionSchema,
   comment: z.string().nullable(),
@@ -40,7 +40,7 @@ export class ExpenseApproval implements Props {
 
   /** 新規作成する承認記録を組み立てる。id は未採番。 */
   static create(props: {
-    expenseId: number
+    expenseId: string
     approverId: EmployeeId
     action: Props["action"]
     comment: string | null

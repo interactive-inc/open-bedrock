@@ -70,14 +70,14 @@ test("経費の停止は5表すべての追加・更新・削除・置換を拒�
   await c.database
     .prepare(`INSERT INTO expense_approvals
     (id,expense_id,approver_id,action,comment,created_at)
-    SELECT 901,id,?1,'approve',NULL,created_at FROM expenses LIMIT 1`)
+    SELECT '01900050-0000-7000-8000-000000000385',id,?1,'approve',NULL,created_at FROM expenses LIMIT 1`)
     .bind(c.first.employeeId)
     .run()
   await execSql(
     c.database,
     `INSERT INTO expense_budgets
     (id,organization_unit_id,fiscal_period,period_start,period_end,amount,name,note,created_at)
-    SELECT 901,organization_unit_id,'2026','2026-04-01','2027-03-31',100000,'Annual budget',NULL,created_at
+    SELECT '01900050-0000-7000-8000-000000000385',organization_unit_id,'2026','2026-04-01','2027-03-31',100000,'Annual budget',NULL,created_at
     FROM expenses LIMIT 1`,
   )
   const freeze = RecordSourceFreezeEntity.create({
@@ -92,7 +92,9 @@ test("経費の停止は5表すべての追加・更新・削除・置換を拒�
     release: null,
   })
   if (freeze instanceof Error) throw freeze
-  const queued = c.database.prepare("UPDATE expense_budgets SET amount=200000 WHERE id=901")
+  const queued = c.database.prepare(
+    "UPDATE expense_budgets SET amount=200000 WHERE id='01900050-0000-7000-8000-000000000385'",
+  )
   await saveFreeze(c.database, freeze)
   const tables = [
     { table: "expenses", column: "note" },
@@ -143,7 +145,7 @@ test("経費の停止は5表すべての追加・更新・削除・置換を拒�
   expect(await queued.run()).toMatchObject({ success: true })
   expect(
     await c.database
-      .prepare("SELECT amount FROM expense_budgets WHERE id=901")
+      .prepare("SELECT amount FROM expense_budgets WHERE id='01900050-0000-7000-8000-000000000385'")
       .first<number>("amount"),
   ).toBe(200000)
 })

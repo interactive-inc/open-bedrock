@@ -105,8 +105,11 @@ test("Company cutover preserves records and matches every shared Company table",
       .get(),
   ).toEqual({ employee_id: "7", status: "ACTIVE" })
   expect(database.query("SELECT id FROM company_personnel_annotations").get()).toEqual({ id: 11 })
-  expect(database.query("SELECT id, organization_unit_id FROM expense_budgets").get()).toEqual({
-    id: 13,
+  // 予算の主キーは UUID へ移り、移行前の整数の主キーは legacy_id に残る。
+  expect(
+    database.query("SELECT legacy_id AS id, organization_unit_id FROM expense_budgets").get(),
+  ).toEqual({
+    id: "13",
     organization_unit_id: "department:D001",
   })
 

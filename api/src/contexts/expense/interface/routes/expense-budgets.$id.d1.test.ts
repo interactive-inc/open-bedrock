@@ -28,7 +28,7 @@ afterAll(async () => {
 const jwtSecret = "budget-detail-route-test-secret"
 
 const budgetDetailSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   organization_unit_id: z.string(),
   organization_unit_name: z.string().nullable(),
   fiscal_period: z.string(),
@@ -130,7 +130,7 @@ describe("GET /expense-budgets/:id", () => {
   test("aggregates approved expenses of the department within the period", async () => {
     // dept 3(Engineering)は seed-expenses の approved 経費(id:2, 3300)のみが消化に入る。
     const response = await request({
-      path: "/expense/expense-budgets/1",
+      path: "/expense/expense-budgets/0190004d-0000-7000-8000-000000000001",
       token: await tokenFor(1),
     })
 
@@ -151,7 +151,7 @@ describe("GET /expense-budgets/:id", () => {
   test("returns zero consumption when no approved expenses match", async () => {
     // dept 4(Sales)の seed-expenses は id:3 のみで status は pending → 消化 0。
     const response = await request({
-      path: "/expense/expense-budgets/2",
+      path: "/expense/expense-budgets/0190004d-0000-7000-8000-000000000002",
       token: await tokenFor(1),
     })
 
@@ -169,7 +169,7 @@ describe("GET /expense-budgets/:id", () => {
 
   test("returns 404 for a missing budget", async () => {
     const response = await request({
-      path: "/expense/expense-budgets/999",
+      path: "/expense/expense-budgets/0190004d-0000-7000-8000-0000000003e7",
       token: await tokenFor(1),
     })
 
@@ -178,7 +178,7 @@ describe("GET /expense-budgets/:id", () => {
 
   test("returns 403 without budget:manage", async () => {
     const response = await request({
-      path: "/expense/expense-budgets/1",
+      path: "/expense/expense-budgets/0190004d-0000-7000-8000-000000000001",
       token: await tokenFor(2),
     })
 
@@ -189,7 +189,7 @@ describe("GET /expense-budgets/:id", () => {
 describe("PATCH /expense-budgets/:id", () => {
   test("updates amount, name and note", async () => {
     const response = await request({
-      path: "/expense/expense-budgets/1",
+      path: "/expense/expense-budgets/0190004d-0000-7000-8000-000000000001",
       token: await tokenFor(1),
       method: "PATCH",
       body: { amount: 1200000, name: "Engineering FY2026 (revised)", note: "raised" },
@@ -207,7 +207,7 @@ describe("PATCH /expense-budgets/:id", () => {
 
   test("returns 404 for a missing budget", async () => {
     const response = await request({
-      path: "/expense/expense-budgets/999",
+      path: "/expense/expense-budgets/0190004d-0000-7000-8000-0000000003e7",
       token: await tokenFor(1),
       method: "PATCH",
       body: { amount: 1, name: "x" },
@@ -218,7 +218,7 @@ describe("PATCH /expense-budgets/:id", () => {
 
   test("returns 403 without budget:manage", async () => {
     const response = await request({
-      path: "/expense/expense-budgets/1",
+      path: "/expense/expense-budgets/0190004d-0000-7000-8000-000000000001",
       token: await tokenFor(2),
       method: "PATCH",
       body: { amount: 1, name: "x" },
@@ -231,7 +231,7 @@ describe("PATCH /expense-budgets/:id", () => {
 describe("DELETE /expense-budgets/:id", () => {
   test("returns 204 and removes the budget", async () => {
     const response = await request({
-      path: "/expense/expense-budgets/1",
+      path: "/expense/expense-budgets/0190004d-0000-7000-8000-000000000001",
       token: await tokenFor(1),
       method: "DELETE",
     })
@@ -241,7 +241,7 @@ describe("DELETE /expense-budgets/:id", () => {
 
   test("returns 404 for a missing budget", async () => {
     const response = await request({
-      path: "/expense/expense-budgets/999",
+      path: "/expense/expense-budgets/0190004d-0000-7000-8000-0000000003e7",
       token: await tokenFor(1),
       method: "DELETE",
     })
@@ -251,7 +251,7 @@ describe("DELETE /expense-budgets/:id", () => {
 
   test("returns 403 without budget:manage", async () => {
     const response = await request({
-      path: "/expense/expense-budgets/1",
+      path: "/expense/expense-budgets/0190004d-0000-7000-8000-000000000001",
       token: await tokenFor(2),
       method: "DELETE",
     })

@@ -27,7 +27,7 @@ export class PrepareExpenseRecordReadAdapter {
 
   async prepare(
     input: Readonly<{
-      expenseId: number
+      expenseId: string
       authentication: SystemReadAuthentication
       session: CompanyPersonnelSession
       at: Date

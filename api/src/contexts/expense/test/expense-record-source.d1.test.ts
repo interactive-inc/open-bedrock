@@ -39,7 +39,7 @@ test("添付なしの申請も元行の全列を取得し、案件取消後の�
       machineCredentialId: null,
     },
   }
-  expect(await source.prepare({ ...input, expenseId: expenseId + 1000 })).toBeInstanceOf(Error)
+  expect(await source.prepare({ ...input, expenseId: crypto.randomUUID() })).toBeInstanceOf(Error)
   expect(await source.prepare({ ...input, session: c.session(c.requester) })).toBeInstanceOf(Error)
   const captured = await source.prepare(input)
   if (captured instanceof Error) throw captured
@@ -49,7 +49,7 @@ test("添付なしの申請も元行の全列を取得し、案件取消後の�
     .first()
   expect(JSON.parse(new TextDecoder().decode(captured.content))).toEqual({
     format: "expense-record",
-    version: 1,
+    version: 2,
     record: original,
   })
   expect(captured.source.props).toMatchObject({
@@ -99,21 +99,21 @@ test("旧承認を元行のまま取得し、別申請への付替えや取得�
   if (originalId === null) throw new Error("経費の作成を確認できません")
   const legacyId = await c.database
     .prepare(`INSERT INTO expenses
-    (employee_id,organization_unit_id,category,amount,spent_at,note,status,created_at)
-    SELECT employee_id,organization_unit_id,category,amount,spent_at,note,'approved',created_at
+    (id,employee_id,organization_unit_id,category,amount,spent_at,note,status,created_at)
+    SELECT ?2,employee_id,organization_unit_id,category,amount,spent_at,note,'approved',created_at
     FROM expenses WHERE id=?1 RETURNING id`)
-    .bind(originalId)
-    .first<number>("id")
+    .bind(originalId, crypto.randomUUID())
+    .first<string>("id")
   if (legacyId === null) throw new Error("旧経費fixtureを作成できません")
   await c.database
     .prepare(`INSERT INTO expense_approvals
-    (id,expense_id,approver_id,action,comment,created_at) VALUES (901,?1,?2,'approve',NULL,?3)`)
+    (id,expense_id,approver_id,action,comment,created_at) VALUES ('0190004f-0000-7000-8000-000000000385',?1,?2,'approve',NULL,?3)`)
     .bind(legacyId, c.first.employeeId, c.at.toISOString())
     .run()
   const source = new CaptureExpenseApprovalRecordAdapter({ ...c.context, now: () => c.at })
   const input = {
     expenseId: legacyId,
-    approvalId: 901,
+    approvalId: "0190004f-0000-7000-8000-000000000385",
     sourceNamespace: "example-source",
     session: c.session(c.requester),
     authentication: {
@@ -128,21 +128,23 @@ test("旧承認を元行のまま取得し、別申請への付替えや取得�
   expect(await source.prepare({ ...input, expenseId: originalId })).toBeInstanceOf(Error)
   const captured = await source.prepare(input)
   if (captured instanceof Error) throw captured
-  const original = await c.database.prepare("SELECT * FROM expense_approvals WHERE id=901").first()
+  const original = await c.database
+    .prepare("SELECT * FROM expense_approvals WHERE id='0190004f-0000-7000-8000-000000000385'")
+    .first()
   expect(JSON.parse(new TextDecoder().decode(captured.content))).toEqual({
     format: "expense-approval",
-    version: 1,
+    version: 2,
     record: original,
   })
   expect(captured.source.props).toMatchObject({
     recordKind: "expense-approval",
-    recordId: "901",
+    recordId: "0190004f-0000-7000-8000-000000000385",
     sourceRevision: null,
     sourceRecordedAt: null,
   })
   await execSql(
     c.database,
-    "UPDATE expense_approvals SET comment='Corrected legacy comment' WHERE id=901",
+    "UPDATE expense_approvals SET comment='Corrected legacy comment' WHERE id='0190004f-0000-7000-8000-000000000385'",
   )
   await execSql(c.database, "CREATE TABLE legacy_approval_capture_receipts (id TEXT PRIMARY KEY)")
   expect(

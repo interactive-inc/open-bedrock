@@ -3,23 +3,23 @@
     "tables": 206,
     "primaryKeyKinds": {
       "allocator-singleton-secret": 11,
-      "composite": 27,
-      "integer": 12,
+      "composite": 26,
+      "integer": 9,
       "text-business-code": 1,
       "text-prefixed": 13,
-      "text-uuid": 85,
-      "text-uuid-candidate": 57
+      "text-uuid": 90,
+      "text-uuid-candidate": 56
     },
     "declaredForeignKeys": 272,
     "softReferences": {
       "cross-context": 17,
       "external": 32,
       "historical": 10,
-      "not-reference": 86,
+      "not-reference": 89,
       "polymorphic": 18,
       "same-context": 79
     },
-    "triggers": 736,
+    "triggers": 744,
     "views": 25,
     "indexes": 290
   },
@@ -3940,11 +3940,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -3959,12 +3959,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "expense_id",
           "classification": "same-context",
           "target": "expenses"
         }
       ],
       "triggers": [
+        "expense_approvals_identity_update",
+        "expense_approvals_legacy_id_insert",
         "expense_approvals_source_freeze_delete",
         "expense_approvals_source_freeze_insert",
         "expense_approvals_source_freeze_update"
@@ -3977,16 +3983,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "expense_id",
-            "type": "INTEGER"
-          },
-          {
-            "name": "attachment_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -4005,6 +4007,7 @@
         }
       ],
       "triggers": [
+        "expense_attachments_identity_update",
         "expense_attachments_source_freeze_delete",
         "expense_attachments_source_freeze_insert",
         "expense_attachments_source_freeze_update",
@@ -4021,11 +4024,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -4038,8 +4041,15 @@
         ],
         "incoming": []
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "expense_budgets_identity_update",
+        "expense_budgets_legacy_id_insert",
         "expense_budgets_source_freeze_delete",
         "expense_budgets_source_freeze_insert",
         "expense_budgets_source_freeze_update"
@@ -4052,12 +4062,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "request_key",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -4107,6 +4117,7 @@
         "expense_procedure_binding_immutable_delete",
         "expense_procedure_binding_immutable_update",
         "expense_procedure_binding_matches_proposal",
+        "expense_procedure_bindings_identity_update",
         "expense_procedure_bindings_source_freeze_delete",
         "expense_procedure_bindings_source_freeze_insert",
         "expense_procedure_bindings_source_freeze_update",
@@ -4122,11 +4133,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -4158,11 +4169,18 @@
           }
         ]
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
         "expense_procedure_binding_matches_proposal",
         "expense_procedure_request_immutable",
         "expense_procedure_request_requires_execution",
+        "expenses_identity_update",
+        "expenses_legacy_id_insert",
         "expenses_source_freeze_delete",
         "expenses_source_freeze_insert",
         "expenses_source_freeze_update"

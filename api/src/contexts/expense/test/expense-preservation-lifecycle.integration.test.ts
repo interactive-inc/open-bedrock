@@ -78,7 +78,9 @@ test("経費予算の取下げ・否決・再提出・承認・確定後、業�
   ).toBe(403)
   expect((await f.request(`${path}/withdraw`, withdrawal)).status).toBe(200)
   expect((await f.request(`${path}/withdraw`, withdrawal)).status).toBe(409)
-  await f.database.exec("UPDATE expense_budgets SET note='Corrected before approval' WHERE id=1")
+  await f.database.exec(
+    "UPDATE expense_budgets SET note='Corrected before approval' WHERE id='01900050-0000-7000-8000-000000000001'",
+  )
   const secondResponse = await f.request(`${path}/resubmit`, {
     body: {
       ...body,
@@ -128,8 +130,8 @@ test("経費予算の取下げ・否決・再提出・承認・確定後、業�
   const original = JSON.parse(Buffer.from(final.original.contentBase64, "base64").toString("utf8"))
   expect(original).toMatchObject({
     format: "expense-budget",
-    version: 1,
-    record: { id: 1, note: "Corrected before approval" },
+    version: 2,
+    record: { id: "01900050-0000-7000-8000-000000000001", note: "Corrected before approval" },
   })
   const approved = await f.request(`${finalPath}/approve`, {
     accountId: f.reviewer.accountId,
@@ -259,7 +261,9 @@ test("経費保全は再送で原記録を差し替えず、承認後の変更�
       })
     ).status,
   ).toBe(200)
-  await f.database.exec("UPDATE expense_budgets SET amount=100001 WHERE id=1")
+  await f.database.exec(
+    "UPDATE expense_budgets SET amount=100001 WHERE id='01900050-0000-7000-8000-000000000001'",
+  )
   const replay = await f.request(f.path, f.command)
   expect(replay.status).toBe(200)
   expect(receiptSchema.parse(await replay.json())).toEqual(receipt)
@@ -270,12 +274,20 @@ test("経費保全は再送で原記録を差し替えず、承認後の変更�
   ).toBe(403)
   expect(
     (
-      await f.request(path.replace("/expense-budget/1/", "/expense-budget/2/"), {
-        accountId: f.reviewer.accountId,
-      })
+      await f.request(
+        path.replace(
+          "/expense-budget/01900050-0000-7000-8000-000000000001/",
+          "/expense-budget/01900050-0000-7000-8000-000000000002/",
+        ),
+        {
+          accountId: f.reviewer.accountId,
+        },
+      )
     ).status,
   ).toBe(404)
-  await f.database.exec("UPDATE expense_budgets SET amount=100000 WHERE id=1")
+  await f.database.exec(
+    "UPDATE expense_budgets SET amount=100000 WHERE id='01900050-0000-7000-8000-000000000001'",
+  )
   await f.database.exec(
     "DELETE FROM system_iam_role_permissions WHERE role_id='role:expense-archive' AND permission_key='budget:manage'",
   )

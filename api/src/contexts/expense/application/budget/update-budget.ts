@@ -6,7 +6,7 @@ import { NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  budgetId: number
+  budgetId: string
   amount: number
   name: string
   note: string | null

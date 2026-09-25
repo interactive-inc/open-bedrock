@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { PrepareExpenseRecordReadAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-record-read.adapter"
@@ -7,8 +8,8 @@ import { toSha256Hex } from "@system/application/attachments/lib/to-sha256-hex"
 
 type Context = CompanyContext & Readonly<{ now: () => Date }>
 const snapshotSql = `SELECT json_object(
-  'format','expense-approval','version',1,
-  'record',json_object('id',id,'expense_id',expense_id,'approver_id',approver_id,
+  'format','expense-approval','version',2,
+  'record',json_object('id',id,'legacy_id',legacy_id,'expense_id',expense_id,'approver_id',approver_id,
     'action',action,'comment',comment,'created_at',created_at)
 ) AS snapshot_json FROM expense_approvals WHERE expense_id=?1 AND id=?2`
 
@@ -20,15 +21,16 @@ export class CaptureExpenseApprovalRecordAdapter {
 
   async prepare(
     input: Readonly<{
-      expenseId: number
-      approvalId: number
+      expenseId: string
+      approvalId: string
       sourceNamespace: string
       authentication: SystemReadAuthentication
       session: CompanyPersonnelSession
     }>,
   ) {
-    if (!Number.isSafeInteger(input.expenseId)) return new Error("invalid expense record")
-    if (!Number.isSafeInteger(input.approvalId)) return new Error("invalid expense approval record")
+    if (!z.uuid().safeParse(input.expenseId).success) return new Error("invalid expense record")
+    if (!z.uuid().safeParse(input.approvalId).success)
+      return new Error("invalid expense approval record")
     const now = this.c.now()
     const authorized = await new PrepareExpenseRecordReadAdapter(this.c).prepare({
       ...input,
@@ -55,7 +57,7 @@ export class CaptureExpenseApprovalRecordAdapter {
         recordKind: "expense-approval",
         recordId,
         formatId: "expense-approval",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: now.toISOString(),

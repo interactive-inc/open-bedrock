@@ -4,7 +4,7 @@ import { z } from "zod"
 
 /** D1 batch の結果行を安全にパースする。fromRow の引数型に対応する。 */
 export const budgetRowSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   organizationUnitId: zOrganizationUnitId,
   fiscalPeriod: z.string(),
   periodStart: z.string(),
@@ -16,7 +16,7 @@ export const budgetRowSchema = z.object({
 })
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   organizationUnitId: zOrganizationUnitId,
   fiscalPeriod: z.string(),
   periodStart: z.string(),
