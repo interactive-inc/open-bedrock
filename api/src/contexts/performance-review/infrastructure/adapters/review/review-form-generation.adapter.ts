@@ -83,7 +83,7 @@ export class ReviewFormGenerationAdapter {
     Object.freeze(this)
   }
 
-  async generate(props: { cycleId: number; policy: ReviewCyclePolicy }): Promise<number | Error> {
+  async generate(props: { cycleId: string; policy: ReviewCyclePolicy }): Promise<number | Error> {
     try {
       const { employeeRows, membershipRows } = await loadReviewPopulation(this.c)
 

@@ -10,12 +10,13 @@ import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppRoom } from "@/contexts/room/interface/http/response-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 
-/** :id を整数に変換する。数値でなければ null。 */
-function toRoomId(value: string): number | null {
-  const parsed = Number.parseInt(value, 10)
+/** :id を会議室の UUID として検査する。UUID でなければ null。 */
+function toRoomId(value: string): string | null {
+  const parsed = uuidSchema.safeParse(value)
 
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
+  return parsed.success ? parsed.data : null
 }
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ

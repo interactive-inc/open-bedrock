@@ -1,4 +1,3 @@
-import { z } from "zod"
 import { ThanksRecordSystemAdapter } from "@/contexts/thanks/infrastructure/adapters/thanks-record-system.adapter"
 import {
   ThanksCoverageForbiddenError,

@@ -24,9 +24,9 @@ export type Command = {
   kpi: string | null
   weight: number
   ownerType?: GoalOwnerType
-  parentGoalId?: number | null
+  parentGoalId?: string | null
   departmentCode?: string | null
-  evaluationSheetId?: number | null
+  evaluationSheetId?: string | null
 }
 
 /**

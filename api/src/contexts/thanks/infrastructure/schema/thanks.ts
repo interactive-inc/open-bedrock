@@ -1,18 +1,25 @@
+import { uuidCheckPredicate } from "@/lib/validation/uuid.schema"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { RedemptionStatus } from "@/contexts/thanks/domain/definitions/redemption-status.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { sql } from "drizzle-orm"
-import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import { check, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
 /** 感謝（サンクス）。送り手が受け手へ送る感謝メッセージ。points は将来のポイント付与用で本 Task では常に 0。 */
-export const thanks = sqliteTable("thanks_messages", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  senderEmployeeId: text("sender_employee_id").$type<EmployeeId>().notNull(),
-  recipientEmployeeId: text("recipient_employee_id").$type<EmployeeId>().notNull(),
-  message: text("message").notNull(),
-  points: integer("points").notNull().default(0),
-  createdAt: text("created_at").notNull(),
-})
+export const thanks = sqliteTable(
+  "thanks_messages",
+  {
+    id: text("id").primaryKey().notNull(),
+    senderEmployeeId: text("sender_employee_id").$type<EmployeeId>().notNull(),
+    recipientEmployeeId: text("recipient_employee_id").$type<EmployeeId>().notNull(),
+    message: text("message").notNull(),
+    points: integer("points").notNull().default(0),
+    createdAt: text("created_at").notNull(),
+    /** 主キーを UUID へ移す前の整数の主キー。移行前の証跡を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
+  },
+  () => [check("thanks_messages_id_uuid", sql.raw(uuidCheckPredicate("id")))],
+)
 
 export type ThanksRow = InferSelectModel<typeof thanks>
 
@@ -24,14 +31,17 @@ export type ThanksRow = InferSelectModel<typeof thanks>
 export const thanksPointBudgets = sqliteTable(
   "thanks_point_budgets",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: text("id").primaryKey().notNull(),
     employeeId: text("employee_id").$type<EmployeeId>().notNull(),
     period: text("period").notNull(),
     grantedPoints: integer("granted_points").notNull(),
     consumedPoints: integer("consumed_points").notNull().default(0),
     createdAt: text("created_at").notNull(),
+    /** 主キーを UUID へ移す前の整数の主キー。移行前の証跡を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
   },
   (table) => [
+    check("thanks_point_budgets_id_uuid", sql.raw(uuidCheckPredicate("id"))),
     uniqueIndex("uq_thanks_point_budgets_employee_period").on(table.employeeId, table.period),
   ],
 )
@@ -39,14 +49,20 @@ export const thanksPointBudgets = sqliteTable(
 export type ThanksPointBudgetRow = InferSelectModel<typeof thanksPointBudgets>
 
 /** サンクスポイントの交換カタログ。stock が null は在庫無制限。is_active は 0/1 を boolean で持つ。 */
-export const thanksRewards = sqliteTable("thanks_rewards", {
-  id: integer("id").primaryKey({ autoIncrement: true }),
-  name: text("name").notNull(),
-  pointCost: integer("point_cost").notNull(),
-  isActive: integer("is_active", { mode: "boolean" }).notNull(),
-  stock: integer("stock"),
-  createdAt: text("created_at").notNull(),
-})
+export const thanksRewards = sqliteTable(
+  "thanks_rewards",
+  {
+    id: text("id").primaryKey().notNull(),
+    name: text("name").notNull(),
+    pointCost: integer("point_cost").notNull(),
+    isActive: integer("is_active", { mode: "boolean" }).notNull(),
+    stock: integer("stock"),
+    createdAt: text("created_at").notNull(),
+    /** 主キーを UUID へ移す前の整数の主キー。移行前の証跡を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
+  },
+  () => [check("thanks_rewards_id_uuid", sql.raw(uuidCheckPredicate("id")))],
+)
 
 export type ThanksRewardRow = InferSelectModel<typeof thanksRewards>
 
@@ -57,17 +73,20 @@ export type ThanksRewardRow = InferSelectModel<typeof thanksRewards>
 export const thanksRedemptions = sqliteTable(
   "thanks_redemptions",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: text("id").primaryKey().notNull(),
     employeeId: text("employee_id").$type<EmployeeId>().notNull(),
-    rewardId: integer("reward_id").notNull(),
+    rewardId: text("reward_id").notNull(),
     pointCost: integer("point_cost").notNull(),
     status: text("status").notNull().$type<RedemptionStatus>(),
     createdAt: text("created_at").notNull(),
     decidedAt: text("decided_at"),
     deciderId: text("decider_id").$type<EmployeeId>(),
+    /** 主キーを UUID へ移す前の整数の主キー。移行前の証跡を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
   },
   // 1 社員につき pending の交換申請は 1 件まで（二重申請・残高の二重引当を防ぐ）。
   (table) => [
+    check("thanks_redemptions_id_uuid", sql.raw(uuidCheckPredicate("id"))),
     uniqueIndex("idx_thanks_redemptions_employee_pending")
       .on(table.employeeId)
       .where(sql`status = 'pending'`),

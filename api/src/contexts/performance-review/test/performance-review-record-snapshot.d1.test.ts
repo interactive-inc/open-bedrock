@@ -2,9 +2,12 @@ import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"
 import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
 import { performanceReviewRecordKinds } from "@/contexts/performance-review/domain/definitions/performance-review-record-kind.definition"
 import {
+  PERFORMANCE_REVIEW_SNAPSHOT_FORMAT_VERSION,
   performanceReviewSnapshotQuery,
   performanceReviewSourceTables,
 } from "@/contexts/performance-review/infrastructure/adapters/lib/performance-review-snapshot-query"
+
+const RECORD_ID = "01900032-0000-7000-8000-000000000001"
 
 let local: LocalD1
 
@@ -30,11 +33,11 @@ test("評価8台帳の現行全列を形式付き原記録に保持し、元に�
     expect(actual.results.map((column) => column.name)).toEqual([...source.columns])
     await database
       .prepare(
-        `CREATE TABLE ${source.table} (${source.columns.map((column) => `${column} ${column === source.key ? "INTEGER PRIMARY KEY" : "TEXT"}`).join(",")})`,
+        `CREATE TABLE ${source.table} (${source.columns.map((column) => `${column} ${column === source.key ? "TEXT PRIMARY KEY" : "TEXT"}`).join(",")})`,
       )
       .run()
     const values = source.columns.map((column) =>
-      column === source.key ? 0 : `${source.table}:${column}`,
+      column === source.key ? RECORD_ID : `${source.table}:${column}`,
     )
     await database
       .prepare(
@@ -42,7 +45,7 @@ test("評価8台帳の現行全列を形式付き原記録に保持し、元に�
       )
       .bind(...values)
       .run()
-    const query = performanceReviewSnapshotQuery(kind, "0")
+    const query = performanceReviewSnapshotQuery(kind, RECORD_ID)
     if (query instanceof Error) throw query
     const row = await database
       .prepare(query.sql)
@@ -52,9 +55,9 @@ test("評価8台帳の現行全列を形式付き原記録に保持し、元に�
     const snapshot = JSON.parse(row.snapshot_json)
     expect(snapshot).toEqual({
       format: kind,
-      version: 1,
+      version: PERFORMANCE_REVIEW_SNAPSHOT_FORMAT_VERSION,
       source: Object.fromEntries(source.columns.map((column, index) => [column, values[index]])),
     })
-    expect(performanceReviewSnapshotQuery(kind, "00")).toBeInstanceOf(Error)
+    expect(performanceReviewSnapshotQuery(kind, "1")).toBeInstanceOf(Error)
   }
 })

@@ -13,7 +13,7 @@ type Context = Readonly<{
 
 export type Command = {
   employeeId: EmployeeId
-  rewardId: number
+  rewardId: string
   createdAt: string
 }
 

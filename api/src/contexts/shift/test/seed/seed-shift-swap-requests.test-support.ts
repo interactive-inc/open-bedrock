@@ -2,7 +2,7 @@ import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 type SeedShiftSwapRequest = {
-  id: number
+  id: string
   requesterEmployeeId: EmployeeId
   targetEmployeeId: EmployeeId
   date: string
@@ -14,7 +14,7 @@ type SeedShiftSwapRequest = {
 /** status は "pending" か "approved"。approvedAt は承認済みのみ文字列。 */
 export const seedShiftSwapRequests: ReadonlyArray<SeedShiftSwapRequest> = [
   {
-    id: 1,
+    id: "01900025-0000-7000-8000-000000000001",
     requesterEmployeeId: toWorkforceEmployeeId(5),
     targetEmployeeId: toWorkforceEmployeeId(4),
     date: "2026-06-01",
@@ -23,7 +23,7 @@ export const seedShiftSwapRequests: ReadonlyArray<SeedShiftSwapRequest> = [
     approvedAt: null,
   },
   {
-    id: 2,
+    id: "01900025-0000-7000-8000-000000000002",
     requesterEmployeeId: toWorkforceEmployeeId(4),
     targetEmployeeId: toWorkforceEmployeeId(5),
     date: "2026-06-03",

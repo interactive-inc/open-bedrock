@@ -28,7 +28,7 @@ afterAll(async () => {
 const jwtSecret = "shift-pattern-crud-test-secret"
 
 const shiftPatternResponseSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   code: z.string(),
   name: z.string(),
   start_time: z.string(),
@@ -109,7 +109,7 @@ async function request(props: {
 describe("GET /shift-patterns/:id", () => {
   test("privileged role reads a pattern and returns 200", async () => {
     const response = await request({
-      path: "/shift/shift-patterns/1",
+      path: "/shift/shift-patterns/01900023-0000-7000-8000-000000000001",
       token: await tokenFor(1),
     })
 
@@ -126,7 +126,7 @@ describe("GET /shift-patterns/:id", () => {
 
   test("member is forbidden", async () => {
     const response = await request({
-      path: "/shift/shift-patterns/1",
+      path: "/shift/shift-patterns/01900023-0000-7000-8000-000000000001",
       token: await tokenFor(5),
     })
 
@@ -135,7 +135,7 @@ describe("GET /shift-patterns/:id", () => {
 
   test("returns 404 for an unknown pattern", async () => {
     const response = await request({
-      path: "/shift/shift-patterns/9999",
+      path: "/shift/shift-patterns/01900023-0000-7000-8000-00000000270f",
       token: await tokenFor(1),
     })
 
@@ -143,7 +143,10 @@ describe("GET /shift-patterns/:id", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/shift/shift-patterns/1", token: null })
+    const response = await request({
+      path: "/shift/shift-patterns/01900023-0000-7000-8000-000000000001",
+      token: null,
+    })
 
     expect(response.status).toBe(401)
   })
@@ -152,7 +155,7 @@ describe("GET /shift-patterns/:id", () => {
 describe("PUT /shift-patterns/:id", () => {
   test("privileged role updates a pattern and returns 200", async () => {
     const response = await request({
-      path: "/shift/shift-patterns/1",
+      path: "/shift/shift-patterns/01900023-0000-7000-8000-000000000001",
       token: await tokenFor(1),
       method: "PUT",
       body: {
@@ -179,7 +182,7 @@ describe("PUT /shift-patterns/:id", () => {
 
   test("returns 409 when renaming to an existing code", async () => {
     const response = await request({
-      path: "/shift/shift-patterns/1",
+      path: "/shift/shift-patterns/01900023-0000-7000-8000-000000000001",
       token: await tokenFor(1),
       method: "PUT",
       body: {
@@ -196,7 +199,7 @@ describe("PUT /shift-patterns/:id", () => {
 
   test("member is forbidden", async () => {
     const response = await request({
-      path: "/shift/shift-patterns/1",
+      path: "/shift/shift-patterns/01900023-0000-7000-8000-000000000001",
       token: await tokenFor(5),
       method: "PUT",
       body: {
@@ -213,7 +216,7 @@ describe("PUT /shift-patterns/:id", () => {
 
   test("returns 404 for an unknown pattern", async () => {
     const response = await request({
-      path: "/shift/shift-patterns/9999",
+      path: "/shift/shift-patterns/01900023-0000-7000-8000-00000000270f",
       token: await tokenFor(1),
       method: "PUT",
       body: {
@@ -232,7 +235,7 @@ describe("PUT /shift-patterns/:id", () => {
 describe("DELETE /shift-patterns/:id", () => {
   test("deletes an unreferenced pattern and returns 204", async () => {
     const response = await request({
-      path: "/shift/shift-patterns/3",
+      path: "/shift/shift-patterns/01900023-0000-7000-8000-000000000003",
       token: await tokenFor(1),
       method: "DELETE",
     })
@@ -242,7 +245,7 @@ describe("DELETE /shift-patterns/:id", () => {
 
   test("returns 409 for a pattern referenced by assignments", async () => {
     const response = await request({
-      path: "/shift/shift-patterns/1",
+      path: "/shift/shift-patterns/01900023-0000-7000-8000-000000000001",
       token: await tokenFor(1),
       method: "DELETE",
     })
@@ -252,7 +255,7 @@ describe("DELETE /shift-patterns/:id", () => {
 
   test("member is forbidden", async () => {
     const response = await request({
-      path: "/shift/shift-patterns/3",
+      path: "/shift/shift-patterns/01900023-0000-7000-8000-000000000003",
       token: await tokenFor(5),
       method: "DELETE",
     })
@@ -262,7 +265,7 @@ describe("DELETE /shift-patterns/:id", () => {
 
   test("returns 404 for an unknown pattern", async () => {
     const response = await request({
-      path: "/shift/shift-patterns/9999",
+      path: "/shift/shift-patterns/01900023-0000-7000-8000-00000000270f",
       token: await tokenFor(1),
       method: "DELETE",
     })

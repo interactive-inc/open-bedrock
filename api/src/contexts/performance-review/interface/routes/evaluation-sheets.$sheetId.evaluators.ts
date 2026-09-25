@@ -7,7 +7,7 @@ import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { z } from "zod"
 
 // @authorization permission - evaluation:administer で判定する
@@ -35,7 +35,7 @@ export const PUT = factory.createHandlers(
       throw new ForbiddenError()
     }
 
-    const sheetId = validateIntParam(c.req.param("sheetId"), "evaluation sheet")
+    const sheetId = validateUuidParam(c.req.param("sheetId"), "evaluation sheet")
     const json = c.req.valid("json")
 
     const sheet = await new ChangeEvaluators(c).run({

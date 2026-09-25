@@ -54,7 +54,7 @@ const app = factory
   .delete("/room/rooms/:id", ...roomDetailRoute.DELETE)
 
 const roomResponseSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   name: z.string(),
   capacity: z.number(),
   location: z.string().nullable(),
@@ -195,7 +195,10 @@ describe("GET /rooms", () => {
 
 describe("GET /rooms/:id", () => {
   test("returns a single room", async () => {
-    const response = await request({ path: "/room/rooms/1", token: await memberToken() })
+    const response = await request({
+      path: "/room/rooms/01900022-0000-7000-8000-000000000001",
+      token: await memberToken(),
+    })
 
     expect(response.status).toBe(200)
 
@@ -204,12 +207,15 @@ describe("GET /rooms/:id", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.id).toBe(1)
+      expect(parsed.data.id).toBe("01900022-0000-7000-8000-000000000001")
     }
   })
 
   test("returns 404 for an unknown room", async () => {
-    const response = await request({ path: "/room/rooms/9999", token: await memberToken() })
+    const response = await request({
+      path: "/room/rooms/01900022-0000-7000-8000-00000000270f",
+      token: await memberToken(),
+    })
 
     expect(response.status).toBe(404)
   })
@@ -239,7 +245,7 @@ describe("POST /rooms", () => {
     if (parsed.success) {
       expect(parsed.data.name).toBe("New Project Room")
       expect(parsed.data.capacity).toBe(12)
-      expect(parsed.data.id).toBeGreaterThan(0)
+      expect(parsed.data.id).toMatch(/^[0-9a-f-]{36}$/)
     }
   })
 
@@ -288,7 +294,7 @@ describe("POST /rooms", () => {
 describe("PUT /rooms/:id", () => {
   test("updates a room for an admin", async () => {
     const response = await request({
-      path: "/room/rooms/1",
+      path: "/room/rooms/01900022-0000-7000-8000-000000000001",
       token: await adminToken(),
       method: "PUT",
       body: { name: "Large Meeting Room A (renovated)", capacity: 24, location: "5F" },
@@ -308,7 +314,7 @@ describe("PUT /rooms/:id", () => {
 
   test("returns 403 for a non-privileged member", async () => {
     const response = await request({
-      path: "/room/rooms/1",
+      path: "/room/rooms/01900022-0000-7000-8000-000000000001",
       token: await memberToken(),
       method: "PUT",
       body: { name: "Hacked Room", capacity: 1, location: null },
@@ -319,7 +325,7 @@ describe("PUT /rooms/:id", () => {
 
   test("returns 404 for an unknown room", async () => {
     const response = await request({
-      path: "/room/rooms/9999",
+      path: "/room/rooms/01900022-0000-7000-8000-00000000270f",
       token: await adminToken(),
       method: "PUT",
       body: { name: "Ghost Room", capacity: 5, location: null },
@@ -332,7 +338,7 @@ describe("PUT /rooms/:id", () => {
 describe("DELETE /rooms/:id", () => {
   test("deletes a room for an admin and returns 204", async () => {
     const response = await request({
-      path: "/room/rooms/1",
+      path: "/room/rooms/01900022-0000-7000-8000-000000000001",
       token: await adminToken(),
       method: "DELETE",
     })
@@ -342,7 +348,7 @@ describe("DELETE /rooms/:id", () => {
 
   test("returns 403 for a non-privileged member", async () => {
     const response = await request({
-      path: "/room/rooms/1",
+      path: "/room/rooms/01900022-0000-7000-8000-000000000001",
       token: await memberToken(),
       method: "DELETE",
     })
@@ -352,7 +358,7 @@ describe("DELETE /rooms/:id", () => {
 
   test("returns 404 for an unknown room", async () => {
     const response = await request({
-      path: "/room/rooms/9999",
+      path: "/room/rooms/01900022-0000-7000-8000-00000000270f",
       token: await adminToken(),
       method: "DELETE",
     })
@@ -361,7 +367,11 @@ describe("DELETE /rooms/:id", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/room/rooms/1", token: null, method: "DELETE" })
+    const response = await request({
+      path: "/room/rooms/01900022-0000-7000-8000-000000000001",
+      token: null,
+      method: "DELETE",
+    })
 
     expect(response.status).toBe(401)
   })
@@ -372,13 +382,15 @@ describe("DELETE /rooms/:id", () => {
 
     // room 1 has 2 reservations in seed data (ids ...0001 and ...0003)
     const before = await db
-      .prepare("SELECT COUNT(*) as cnt FROM room_reservations WHERE room_id = 1")
+      .prepare(
+        "SELECT COUNT(*) as cnt FROM room_reservations WHERE room_id = '01900022-0000-7000-8000-000000000001'",
+      )
       .first<{ cnt: number }>()
 
     expect(before?.cnt).toBe(2)
 
     const response = await app.request(
-      "/room/rooms/1",
+      "/room/rooms/01900022-0000-7000-8000-000000000001",
       {
         method: "DELETE",
         headers: { Authorization: `Bearer ${token}` },
@@ -395,14 +407,18 @@ describe("DELETE /rooms/:id", () => {
     expect(response.status).toBe(204)
 
     const after = await db
-      .prepare("SELECT COUNT(*) as cnt FROM room_reservations WHERE room_id = 1")
+      .prepare(
+        "SELECT COUNT(*) as cnt FROM room_reservations WHERE room_id = '01900022-0000-7000-8000-000000000001'",
+      )
       .first<{ cnt: number }>()
 
     expect(after?.cnt).toBe(0)
 
     // reservations for other rooms remain intact
     const otherRoom = await db
-      .prepare("SELECT COUNT(*) as cnt FROM room_reservations WHERE room_id = 2")
+      .prepare(
+        "SELECT COUNT(*) as cnt FROM room_reservations WHERE room_id = '01900022-0000-7000-8000-000000000002'",
+      )
       .first<{ cnt: number }>()
 
     expect(otherRoom?.cnt).toBe(1)

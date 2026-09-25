@@ -1,7 +1,7 @@
 import { Room } from "@/contexts/room/domain/entities/room.entity"
 import type { Context } from "@/env"
 import { rooms } from "@/contexts/room/infrastructure/schema/room"
-import { asc, eq } from "drizzle-orm"
+import { asc, eq, sql } from "drizzle-orm"
 
 type NewRoom = {
   name: string
@@ -12,13 +12,13 @@ type NewRoom = {
 export class RoomRepository {
   constructor(private readonly c: Context) {}
 
-  /** 会議室マスタを id の昇順で返す。 */
+  /** 会議室マスタを登録順に返す。移行前の会議室は旧来の整数の主キーの順に並ぶ。 */
   async findAll(props: { limit: number; offset: number }): Promise<ReadonlyArray<Room> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
         .from(rooms)
-        .orderBy(asc(rooms.id))
+        .orderBy(asc(rooms.createdAt), asc(sql`CAST(${rooms.legacyId} AS INTEGER)`), asc(rooms.id))
         .limit(props.limit)
         .offset(props.offset)
 
@@ -29,7 +29,7 @@ export class RoomRepository {
   }
 
   /** 会議室 id で1件取得する。存在しなければ null。 */
-  async findById(id: number): Promise<Room | null | Error> {
+  async findById(id: string): Promise<Room | null | Error> {
     try {
       const rows = await this.c.var.database.select().from(rooms).where(eq(rooms.id, id)).limit(1)
 
@@ -41,12 +41,17 @@ export class RoomRepository {
     }
   }
 
-  /** id を渡さず insert し、DB autoincrement が採番した行から復元する。 */
+  /** UUID を採番して insert し、書き込んだ行から復元する。 */
   async create(room: NewRoom): Promise<Room | Error> {
     try {
       const rows = await this.c.var.database
         .insert(rooms)
-        .values({ name: room.name, capacity: room.capacity, location: room.location })
+        .values({
+          id: crypto.randomUUID(),
+          name: room.name,
+          capacity: room.capacity,
+          location: room.location,
+        })
         .returning()
 
       const row = rows.at(0)
@@ -75,7 +80,7 @@ export class RoomRepository {
   }
 
   /** 会議室を削除する。 */
-  async delete(id: number): Promise<null | Error> {
+  async delete(id: string): Promise<null | Error> {
     try {
       await this.c.var.database.delete(rooms).where(eq(rooms.id, id))
 

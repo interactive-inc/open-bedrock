@@ -7,8 +7,8 @@ import type { ReviewFormRow } from "@/contexts/performance-review/infrastructure
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number(),
-  cycleId: z.number(),
+  id: z.string(),
+  cycleId: z.string(),
   subjectEmployeeId: zEmployeeId,
   reviewerEmployeeId: zEmployeeId,
   reviewerType: z.enum(["self", "manager", "peer", "subordinate"]),
@@ -43,7 +43,7 @@ export class ReviewForm implements Props {
     Object.freeze(this)
   }
 
-  static fromRow(row: ReviewFormRow): ReviewForm {
+  static fromRow(row: Omit<ReviewFormRow, "legacyId" | "createdAt">): ReviewForm {
     return new ReviewForm({
       id: row.id,
       cycleId: row.cycleId,

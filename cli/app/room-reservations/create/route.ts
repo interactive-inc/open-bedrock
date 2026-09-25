@@ -1,11 +1,10 @@
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
-import { toFiniteNumber } from "@/lib/to-finite-number"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
 
-export const help = `bedrock room-reservations create --room-id <n> --start <iso> --end <iso> [--purpose <p>]`
+export const help = `bedrock room-reservations create --room-id <id> --start <iso> --end <iso> [--purpose <p>]`
 
 export default factory.createHandlers(
   zValidator(
@@ -30,7 +29,7 @@ export default factory.createHandlers(
 
     const response = await client["room"]["rooms"].reservations.$post({
       json: {
-        room_id: toFiniteNumber(query["room-id"], "--room-id"),
+        room_id: query["room-id"],
         start_at: query.start,
         end_at: query.end,
         purpose: query.purpose ?? null,

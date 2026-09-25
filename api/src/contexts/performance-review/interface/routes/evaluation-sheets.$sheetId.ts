@@ -4,7 +4,7 @@ import { evaluationSheets } from "@/contexts/performance-review/infrastructure/s
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { eq } from "drizzle-orm"
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 
 // @authorization service - session を application service に渡して判定する
 /**
@@ -18,7 +18,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const sheetId = validateIntParam(c.req.param("sheetId"), "evaluation sheet")
+  const sheetId = validateUuidParam(c.req.param("sheetId"), "evaluation sheet")
 
   const rows = await c.var.database
     .select()

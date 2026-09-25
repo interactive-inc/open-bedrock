@@ -6,7 +6,7 @@ import { zAppReviewCycle } from "@/contexts/performance-review/interface/http/re
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /review-cycles/:cycleId/close — 管理者が評価サイクルを closed にする */
@@ -17,7 +17,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const cycleId = validateIntParam(c.req.param("cycleId"), "review cycle")
+  const cycleId = validateUuidParam(c.req.param("cycleId"), "review cycle")
 
   const updated = await new CloseReviewCycle({
     reviewCycleRepository: new ReviewCycleRepository(c),

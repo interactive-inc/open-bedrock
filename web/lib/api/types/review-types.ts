@@ -69,7 +69,8 @@ export type ReviewFormSubmitRequest = {
 
 /** GET /review-cycles/:cycle_id/results/:employee_code のレスポンス（集計済みの評価結果）。 */
 export type ReviewResultResponse = {
-  cycle_id: EntityId
+  /** 評価期間を指定しない集計では null。 */
+  cycle_id: EntityId | null
   subject_employee_id: string
   form_count: number
   submitted_count: number

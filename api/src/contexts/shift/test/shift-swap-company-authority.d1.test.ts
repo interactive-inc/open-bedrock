@@ -13,7 +13,7 @@ const jwtSecret = "shift-swap-company-authority-test-secret"
 
 // E005（上長 E004）と E010（上長 E009）の交代。E001 は両者の管理系列の上位にいる。
 // E004 は E005 だけを管理し、E099 は技術的権限を持つがどちらの管理系列にも属さない。
-const swapRequestId = 1
+const swapRequestId = "01900025-0000-7000-8000-000000000001"
 const manager = 1
 const managerOfOneParty = 4
 const unrelatedManagerWithPermission = 99
@@ -47,7 +47,7 @@ async function createTestDb(name: string, cycle = false): Promise<D1Database> {
   ])
   await seedD1(db, "shift_patterns", [
     {
-      id: 1,
+      id: "01900023-0000-7000-8000-000000000001",
       code: "EARLY",
       name: "Early",
       start_time: "09:00",
@@ -55,7 +55,7 @@ async function createTestDb(name: string, cycle = false): Promise<D1Database> {
       break_minutes: 60,
     },
     {
-      id: 2,
+      id: "01900023-0000-7000-8000-000000000002",
       code: "LATE",
       name: "Late",
       start_time: "13:00",
@@ -64,8 +64,22 @@ async function createTestDb(name: string, cycle = false): Promise<D1Database> {
     },
   ])
   await seedD1(db, "shift_assignments", [
-    { id: 1, employee_id: "5", pattern_id: 1, date: "2026-06-01", note: null, published_at: null },
-    { id: 2, employee_id: "10", pattern_id: 2, date: "2026-06-01", note: null, published_at: null },
+    {
+      id: "01900024-0000-7000-8000-000000000001",
+      employee_id: "5",
+      pattern_id: "01900023-0000-7000-8000-000000000001",
+      date: "2026-06-01",
+      note: null,
+      published_at: null,
+    },
+    {
+      id: "01900024-0000-7000-8000-000000000002",
+      employee_id: "10",
+      pattern_id: "01900023-0000-7000-8000-000000000002",
+      date: "2026-06-01",
+      note: null,
+      published_at: null,
+    },
   ])
   await seedD1(db, "shift_swap_requests", [
     {
@@ -110,8 +124,8 @@ async function persisted(db: D1Database) {
 const untouched = {
   request: "pending",
   assignments: [
-    { employee_id: "5", pattern_id: 1 },
-    { employee_id: "10", pattern_id: 2 },
+    { employee_id: "5", pattern_id: "01900023-0000-7000-8000-000000000001" },
+    { employee_id: "10", pattern_id: "01900023-0000-7000-8000-000000000002" },
   ],
 }
 
@@ -125,8 +139,8 @@ describe("shift swap approval composes technical permission with Company authori
     expect(await persisted(db)).toEqual({
       request: "approved",
       assignments: [
-        { employee_id: "5", pattern_id: 2 },
-        { employee_id: "10", pattern_id: 1 },
+        { employee_id: "5", pattern_id: "01900023-0000-7000-8000-000000000002" },
+        { employee_id: "10", pattern_id: "01900023-0000-7000-8000-000000000001" },
       ],
     })
   })

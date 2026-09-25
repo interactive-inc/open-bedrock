@@ -5,7 +5,7 @@ import { zAppReviewDiscloseResult } from "@/contexts/performance-review/interfac
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /review-cycles/:cycleId/disclose — 管理者がサイクル内の全フォームを一括開示 */
@@ -16,7 +16,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const cycleId = validateIntParam(c.req.param("cycleId"), "review cycle")
+  const cycleId = validateUuidParam(c.req.param("cycleId"), "review cycle")
 
   const result = await new DiscloseReviewCycle(c).run({ session, cycleId })
 

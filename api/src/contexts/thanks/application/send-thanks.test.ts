@@ -37,7 +37,7 @@ function createSendThanks(employees: ReadonlyArray<CompanyEmployeeDirectoryEntry
     thanksRepository: {
       consumeBudgetAndCreate: async ({ thanksRecord }) => {
         const saved = new Thanks({
-          id: created.length + 1,
+          id: `01900028-0000-7000-8000-${String(created.length + 1).padStart(12, "0")}`,
           senderEmployeeId: thanksRecord.senderEmployeeId,
           recipientEmployeeId: thanksRecord.recipientEmployeeId,
           message: thanksRecord.message,

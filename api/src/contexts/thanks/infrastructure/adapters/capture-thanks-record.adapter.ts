@@ -11,39 +11,38 @@ import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-dig
 import { z } from "zod"
 
 type Context = ThanksContext
-type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string | number> }>
+type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string> }>
 
 function snapshotQuery(recordKind: ThanksRecordKind, recordId: string): SnapshotQuery | Error {
-  const parsed = z.coerce.number().int().safe().safeParse(recordId)
-  if (!parsed.success || String(parsed.data) !== recordId)
-    return new Error("invalid thanks record id")
+  const parsed = z.uuid().safeParse(recordId)
+  if (!parsed.success) return new Error("invalid thanks record id")
   const id = parsed.data
   if (recordKind === "thanks-message-record")
     return {
-      sql: `SELECT json_object('format','thanks-message-record','version',1,'message',json_object(
-      'id',id,'sender_employee_id',sender_employee_id,'recipient_employee_id',recipient_employee_id,
+      sql: `SELECT json_object('format','thanks-message-record','version',2,'message',json_object(
+      'id',id,'legacy_id',legacy_id,'sender_employee_id',sender_employee_id,'recipient_employee_id',recipient_employee_id,
       'message',message,'points',points,'created_at',created_at)) AS snapshot_json
       FROM thanks_messages WHERE id=?1`,
       values: [id],
     }
   if (recordKind === "thanks-point-budget-record")
     return {
-      sql: `SELECT json_object('format','thanks-point-budget-record','version',1,'budget',json_object(
-      'id',id,'employee_id',employee_id,'period',period,'granted_points',granted_points,
+      sql: `SELECT json_object('format','thanks-point-budget-record','version',2,'budget',json_object(
+      'id',id,'legacy_id',legacy_id,'employee_id',employee_id,'period',period,'granted_points',granted_points,
       'consumed_points',consumed_points,'created_at',created_at)) AS snapshot_json
       FROM thanks_point_budgets WHERE id=?1`,
       values: [id],
     }
   if (recordKind === "thanks-reward-record")
     return {
-      sql: `SELECT json_object('format','thanks-reward-record','version',1,'reward',json_object(
-      'id',id,'name',name,'point_cost',point_cost,'is_active',is_active,'stock',stock,'created_at',created_at))
+      sql: `SELECT json_object('format','thanks-reward-record','version',2,'reward',json_object(
+      'id',id,'legacy_id',legacy_id,'name',name,'point_cost',point_cost,'is_active',is_active,'stock',stock,'created_at',created_at))
       AS snapshot_json FROM thanks_rewards WHERE id=?1`,
       values: [id],
     }
   return {
-    sql: `SELECT json_object('format','thanks-redemption-record','version',1,'redemption',json_object(
-      'id',id,'employee_id',employee_id,'reward_id',reward_id,'point_cost',point_cost,'status',status,
+    sql: `SELECT json_object('format','thanks-redemption-record','version',2,'redemption',json_object(
+      'id',id,'legacy_id',legacy_id,'employee_id',employee_id,'reward_id',reward_id,'point_cost',point_cost,'status',status,
       'created_at',created_at,'decided_at',decided_at,'decider_id',decider_id)) AS snapshot_json
       FROM thanks_redemptions WHERE id=?1`,
     values: [id],
@@ -85,7 +84,7 @@ export class CaptureThanksRecordAdapter {
         recordKind: kind.data,
         recordId: input.recordId,
         formatId: kind.data,
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

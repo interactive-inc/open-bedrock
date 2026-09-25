@@ -7,11 +7,11 @@ import {
   reviewCycles,
   reviewForms,
 } from "@/contexts/performance-review/infrastructure/schema/performance-review"
-import { and, asc, eq, inArray, ne } from "drizzle-orm"
+import { and, asc, eq, inArray, ne, sql } from "drizzle-orm"
 
 /** 一括作成する評価フォームの下書き（未採番）。 */
 export type ReviewFormDraft = {
-  cycleId: number
+  cycleId: string
   subjectEmployeeId: EmployeeId
   reviewerEmployeeId: EmployeeId
   reviewerType: "self" | "manager" | "peer" | "subordinate"
@@ -22,7 +22,7 @@ export class ReviewFormRepository {
 
   /** サイクル内の被評価者のフォームを id 昇順で返す。集計・本人開示の判定に使う。 */
   async findByCycleAndSubject(props: {
-    cycleId: number
+    cycleId: string
     subjectEmployeeId: EmployeeId
   }): Promise<ReadonlyArray<ReviewForm> | Error> {
     try {
@@ -35,7 +35,11 @@ export class ReviewFormRepository {
             eq(reviewForms.subjectEmployeeId, props.subjectEmployeeId),
           ),
         )
-        .orderBy(asc(reviewForms.id))
+        .orderBy(
+          asc(reviewForms.createdAt),
+          asc(sql`CAST(${reviewForms.legacyId} AS INTEGER)`),
+          asc(reviewForms.id),
+        )
 
       return rows.map((row) => ReviewForm.fromRow(row))
     } catch (error) {
@@ -46,7 +50,7 @@ export class ReviewFormRepository {
   /** 被評価者のフォームを id 昇順で返す。cycleId 指定時はそのサイクルに絞る。 */
   async findBySubject(props: {
     subjectEmployeeId: EmployeeId
-    cycleId: number | null
+    cycleId: string | null
     limit: number
     offset: number
   }): Promise<ReadonlyArray<ReviewForm> | Error> {
@@ -63,7 +67,11 @@ export class ReviewFormRepository {
         .select()
         .from(reviewForms)
         .where(condition)
-        .orderBy(asc(reviewForms.id))
+        .orderBy(
+          asc(reviewForms.createdAt),
+          asc(sql`CAST(${reviewForms.legacyId} AS INTEGER)`),
+          asc(reviewForms.id),
+        )
         .limit(props.limit)
         .offset(props.offset)
 
@@ -86,6 +94,7 @@ export class ReviewFormRepository {
         .insert(reviewForms)
         .values(
           drafts.map((draft) => ({
+            id: crypto.randomUUID(),
             cycleId: draft.cycleId,
             subjectEmployeeId: draft.subjectEmployeeId,
             reviewerEmployeeId: draft.reviewerEmployeeId,
@@ -122,7 +131,7 @@ export class ReviewFormRepository {
     }
   }
 
-  async findById(formId: number): Promise<ReviewForm | null | Error> {
+  async findById(formId: string): Promise<ReviewForm | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -138,7 +147,7 @@ export class ReviewFormRepository {
     }
   }
 
-  async deleteByCycleId(cycleId: number): Promise<null | Error> {
+  async deleteByCycleId(cycleId: string): Promise<null | Error> {
     try {
       await this.c.var.database.delete(reviewForms).where(eq(reviewForms.cycleId, cycleId))
 

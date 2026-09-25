@@ -6,12 +6,12 @@ import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppShiftSwapRequest } from "@/contexts/shift/interface/http/response-schemas"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /shift-swap-requests/:id/approve — 特権ロールが保留中の交代申請を承認する */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
-  const swapRequestId = validateIntParam(c.req.param("id"), "swap request")
+  const swapRequestId = validateUuidParam(c.req.param("id"), "swap request")
 
   const session = c.var.session
 

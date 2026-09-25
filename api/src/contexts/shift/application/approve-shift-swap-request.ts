@@ -12,7 +12,7 @@ import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/repo
 export type Input = {
   session: CompanySessionValue
   approverId: EmployeeId
-  swapRequestId: number
+  swapRequestId: string
   approvedAt: string
 }
 
@@ -24,7 +24,7 @@ type Context = Readonly<{
     title: string
     body: string | null
     sourceDomain: string
-    sourceId: number | null
+    sourceId: string | null
     createdAt: string
   }) => Promise<unknown>
 }>

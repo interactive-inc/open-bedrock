@@ -17,7 +17,7 @@ export type SurveyDeleteConflict = { reason: "not_deletable" | "not_found" }
 export class SurveyRepository {
   constructor(private readonly c: Context) {}
 
-  async findById(surveyId: number): Promise<Survey | null | Error> {
+  async findById(surveyId: string): Promise<Survey | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -34,7 +34,7 @@ export class SurveyRepository {
   }
 
   /** 指定アンケートに紐づく回答件数を返す。 */
-  async countResponsesBySurveyId(surveyId: number): Promise<number | Error> {
+  async countResponsesBySurveyId(surveyId: string): Promise<number | Error> {
     try {
       const rows = await this.c.var.database
         .select({ value: count() })
@@ -47,12 +47,13 @@ export class SurveyRepository {
     }
   }
 
-  /** アンケートを新規登録する。id は DB が採番し、登録後の行を返す。 */
+  /** アンケートを新規登録する。id は UUID を採番し、登録後の行を返す。 */
   async create(survey: Survey): Promise<Survey | Error> {
     try {
       const rows = await this.c.var.database
         .insert(surveys)
         .values({
+          id: crypto.randomUUID(),
           title: survey.title,
           status: survey.status,
           questionsJson: JSON.stringify(survey.questionsJson),
@@ -138,7 +139,7 @@ export class SurveyRepository {
   }
 
   /** アンケートを削除する。該当行がなければ null を返す。 */
-  async delete(surveyId: number): Promise<true | null | Error> {
+  async delete(surveyId: string): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database
         .delete(surveys)
@@ -152,7 +153,7 @@ export class SurveyRepository {
   }
 
   /** 指定アンケートに紐づく回答をすべて削除する。 */
-  async deleteResponsesBySurveyId(surveyId: number): Promise<null | Error> {
+  async deleteResponsesBySurveyId(surveyId: string): Promise<null | Error> {
     try {
       await this.c.var.database
         .delete(surveyResponses)
@@ -198,9 +199,9 @@ export class SurveyRepository {
     try {
       const answersJsonStr = JSON.stringify(response.answersJson)
 
-      const inserted = await this.c.var.database.all<{ id: number }>(
-        sql`INSERT INTO survey_responses (survey_id, respondent_id, answers_json, submitted_at)
-            SELECT ${response.surveyId}, ${response.respondentId}, ${answersJsonStr}, ${response.submittedAt}
+      const inserted = await this.c.var.database.all<{ id: string }>(
+        sql`INSERT INTO survey_responses (id, survey_id, respondent_id, answers_json, submitted_at)
+            SELECT ${crypto.randomUUID()}, ${response.surveyId}, ${response.respondentId}, ${answersJsonStr}, ${response.submittedAt}
             WHERE EXISTS (SELECT 1 FROM surveys WHERE id = ${response.surveyId} AND status = 'open')
             RETURNING id`,
       )
@@ -233,7 +234,7 @@ export class SurveyRepository {
   }
 
   /** 回答 id で1件取得する。存在しなければ null。 */
-  async findResponseById(responseId: number): Promise<SurveyResponse | null | Error> {
+  async findResponseById(responseId: string): Promise<SurveyResponse | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -343,7 +344,7 @@ export class SurveyRepository {
    * survey が open のときのみ DELETE する条件付き DELETE で TOCTOU 競合を防ぐ。
    * survey が open でなく 0 行削除の場合は survey_not_open を返す。
    */
-  async deleteResponse(responseId: number): Promise<true | null | SurveyNotOpenError | Error> {
+  async deleteResponse(responseId: string): Promise<true | null | SurveyNotOpenError | Error> {
     try {
       const result = await this.c.var.database.run(
         sql`DELETE FROM survey_responses
@@ -377,7 +378,7 @@ export class SurveyRepository {
   }
 
   async findResponseBySurveyIdAndRespondentId(
-    surveyId: number,
+    surveyId: string,
     respondentId: EmployeeId,
   ): Promise<SurveyResponse | null | Error> {
     try {

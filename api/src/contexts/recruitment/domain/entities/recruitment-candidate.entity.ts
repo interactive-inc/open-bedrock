@@ -4,8 +4,8 @@ import { z } from "zod"
 const zStage = z.enum(["applied", "screening", "interview", "offer", "hired", "rejected"])
 
 const zProps = z.object({
-  id: z.number().nullable(),
-  positionId: z.number(),
+  id: z.string().nullable(),
+  positionId: z.string(),
   name: z.string(),
   email: z.string().nullable(),
   source: z.string().nullable(),
@@ -59,7 +59,7 @@ export class RecruitmentCandidate implements Props {
 
   /** 新規登録する応募者を組み立てる。id は未採番、初期ステージは applied。 */
   static create(props: {
-    positionId: number
+    positionId: string
     name: string
     email: string | null
     source: string | null

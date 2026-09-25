@@ -25,7 +25,7 @@ const now = "2026-01-01T00:00:00.000Z"
  * room.repository.d1.test.tsとroom-reservation.repository.test.tsが検証する。
  */
 function createRepositories() {
-  const rooms = new Map<number, Room>()
+  const rooms = new Map<string, Room>()
   const reservations = new Map<string, RoomReservation>()
 
   const overlaps = (candidate: RoomReservation) =>
@@ -38,9 +38,9 @@ function createRepositories() {
     )
 
   const roomRepository = {
-    findById: async (id: number) => rooms.get(id) ?? null,
+    findById: async (id: string) => rooms.get(id) ?? null,
     create: async (room: { name: string; capacity: number; location: string | null }) => {
-      const created = new Room({ id: rooms.size + 1, ...room })
+      const created = new Room({ id: crypto.randomUUID(), ...room })
       rooms.set(created.id, created)
       return created
     },
@@ -91,7 +91,7 @@ async function seedRoom(repositories: Repositories): Promise<Room> {
 
 async function seedReservation(
   repositories: Repositories,
-  roomId: number,
+  roomId: string,
   reserverId: EmployeeId,
 ): Promise<RoomReservation> {
   const result = await new CreateRoomReservation({ ...repositories, now }).run({
@@ -181,7 +181,7 @@ describe("UpdateRoom", () => {
 
     const result = await new UpdateRoom(repositories).run({
       session: makeTestSession("root"),
-      roomId: 9999,
+      roomId: "01900022-0000-7000-8000-00000000270f",
       details: { name: "Missing", capacity: 1, location: null },
     })
 
@@ -221,7 +221,7 @@ describe("DeleteRoom", () => {
 
     const result = await new DeleteRoom(repositories).run({
       session: makeTestSession("root"),
-      roomId: 9999,
+      roomId: "01900022-0000-7000-8000-00000000270f",
     })
 
     expectApplicationError(result, NotFoundError, "room_not_found")
@@ -284,7 +284,7 @@ describe("CreateRoomReservation", () => {
     const repositories = createRepositories()
 
     const result = await new CreateRoomReservation({ ...repositories, now }).run({
-      roomId: 9999,
+      roomId: "01900022-0000-7000-8000-00000000270f",
       reserverId: toWorkforceEmployeeId(1),
       startAt: "2026-06-01T10:00:00.000Z",
       endAt: "2026-06-01T11:00:00.000Z",

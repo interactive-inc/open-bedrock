@@ -7,7 +7,7 @@ import type { ShiftPattern } from "@/contexts/shift/domain/entities/shift-patter
 
 export type Input = {
   session: CompanySessionValue
-  patternId: number
+  patternId: string
 }
 
 export type Deleted = { reason: "deleted" }

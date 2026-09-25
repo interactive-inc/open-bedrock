@@ -9,6 +9,7 @@ import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppRoomReservation } from "@/contexts/room/interface/http/response-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 
 // @authorization owner - 本人のリソースに限定する
 export const POST = factory.createHandlers(
@@ -17,7 +18,7 @@ export const POST = factory.createHandlers(
     "json",
     z
       .object({
-        room_id: z.number().int().positive(),
+        room_id: uuidSchema,
         start_at: z.string().datetime(),
         end_at: z.string().datetime(),
         purpose: z.string().max(3_000).nullable().optional(),

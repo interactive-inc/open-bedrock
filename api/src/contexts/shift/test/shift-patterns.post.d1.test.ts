@@ -27,7 +27,7 @@ afterAll(async () => {
 const jwtSecret = "shift-patterns-create-route-test-secret"
 
 const shiftPatternResponseSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   code: z.string(),
   name: z.string(),
   start_time: z.string(),

@@ -24,7 +24,7 @@ export class TrainingCourseRepository {
     }
   }
 
-  async findById(courseId: number): Promise<TrainingCourse | null | Error> {
+  async findById(courseId: string): Promise<TrainingCourse | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -45,6 +45,7 @@ export class TrainingCourseRepository {
       const rows = await this.c.var.database
         .insert(trainingCourses)
         .values({
+          id: crypto.randomUUID(),
           code: trainingCourse.code,
           title: trainingCourse.title,
           description: trainingCourse.description,

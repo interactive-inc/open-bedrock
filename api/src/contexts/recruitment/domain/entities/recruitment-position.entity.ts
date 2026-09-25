@@ -2,7 +2,7 @@ import type { RecruitmentPositionRow } from "@/contexts/recruitment/infrastructu
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   title: z.string(),
   departmentCode: z.string().nullable(),
   status: z.enum(["open", "closed"]),

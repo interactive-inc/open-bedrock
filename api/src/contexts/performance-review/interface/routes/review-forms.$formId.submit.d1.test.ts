@@ -31,8 +31,8 @@ const jwtSecret = "review-forms-submit-route-test-secret"
 const fixedNow = "2026-01-01T00:00:00.000Z"
 
 const reviewFormResponseSchema = z.object({
-  id: z.number(),
-  cycle_id: z.number(),
+  id: z.uuid(),
+  cycle_id: z.uuid(),
   subject_employee_id: zEmployeeId,
   reviewer_employee_id: zEmployeeId,
   reviewer_type: z.enum(["self", "manager", "peer", "subordinate"]),
@@ -118,7 +118,7 @@ async function request(
 describe("POST /review-forms/:formId/submit", () => {
   test("the assigned reviewer submits an open-cycle form and returns 200", async () => {
     const response = await request(
-      "/performance-review/review-forms/1/submit",
+      "/performance-review/review-forms/01900033-0000-7000-8000-000000000001/submit",
       await memberToken(),
       "POST",
       {
@@ -142,7 +142,7 @@ describe("POST /review-forms/:formId/submit", () => {
 
   test("comment is saved and returned in the response", async () => {
     const response = await request(
-      "/performance-review/review-forms/1/submit",
+      "/performance-review/review-forms/01900033-0000-7000-8000-000000000001/submit",
       await memberToken(),
       "POST",
       {
@@ -166,7 +166,7 @@ describe("POST /review-forms/:formId/submit", () => {
 
   test("comment defaults to null when omitted", async () => {
     const response = await request(
-      "/performance-review/review-forms/1/submit",
+      "/performance-review/review-forms/01900033-0000-7000-8000-000000000001/submit",
       await memberToken(),
       "POST",
       {
@@ -188,7 +188,7 @@ describe("POST /review-forms/:formId/submit", () => {
 
   test("a non-assigned reviewer is forbidden", async () => {
     const response = await request(
-      "/performance-review/review-forms/1/submit",
+      "/performance-review/review-forms/01900033-0000-7000-8000-000000000001/submit",
       await managerToken(),
       "POST",
       {
@@ -201,7 +201,7 @@ describe("POST /review-forms/:formId/submit", () => {
 
   test("returns 404 for a missing form", async () => {
     const response = await request(
-      "/performance-review/review-forms/9999/submit",
+      "/performance-review/review-forms/01900033-0000-7000-8000-00000000270f/submit",
       await memberToken(),
       "POST",
       {
@@ -214,7 +214,7 @@ describe("POST /review-forms/:formId/submit", () => {
 
   test("returns 409 when the cycle is not open", async () => {
     const response = await request(
-      "/performance-review/review-forms/3/submit",
+      "/performance-review/review-forms/01900033-0000-7000-8000-000000000003/submit",
       await managerToken(),
       "POST",
       {
@@ -227,7 +227,7 @@ describe("POST /review-forms/:formId/submit", () => {
 
   test("rejects a negative score with 400", async () => {
     const response = await request(
-      "/performance-review/review-forms/1/submit",
+      "/performance-review/review-forms/01900033-0000-7000-8000-000000000001/submit",
       await memberToken(),
       "POST",
       {
@@ -240,7 +240,7 @@ describe("POST /review-forms/:formId/submit", () => {
 
   test("rejects a score above 100 with 400", async () => {
     const response = await request(
-      "/performance-review/review-forms/1/submit",
+      "/performance-review/review-forms/01900033-0000-7000-8000-000000000001/submit",
       await memberToken(),
       "POST",
       {
@@ -253,7 +253,7 @@ describe("POST /review-forms/:formId/submit", () => {
 
   test("rejects a non-integer score with 400", async () => {
     const response = await request(
-      "/performance-review/review-forms/1/submit",
+      "/performance-review/review-forms/01900033-0000-7000-8000-000000000001/submit",
       await memberToken(),
       "POST",
       {
@@ -265,16 +265,21 @@ describe("POST /review-forms/:formId/submit", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/performance-review/review-forms/1/submit", null, "POST", {
-      score: 75,
-    })
+    const response = await request(
+      "/performance-review/review-forms/01900033-0000-7000-8000-000000000001/submit",
+      null,
+      "POST",
+      {
+        score: 75,
+      },
+    )
 
     expect(response.status).toBe(401)
   })
 
   test("rejects answers exceeding the serialized size limit with 400", async () => {
     const response = await request(
-      "/performance-review/review-forms/1/submit",
+      "/performance-review/review-forms/01900033-0000-7000-8000-000000000001/submit",
       await memberToken(),
       "POST",
       {
@@ -288,7 +293,7 @@ describe("POST /review-forms/:formId/submit", () => {
 
   test("accepts answers within the serialized size limit", async () => {
     const response = await request(
-      "/performance-review/review-forms/1/submit",
+      "/performance-review/review-forms/01900033-0000-7000-8000-000000000001/submit",
       await memberToken(),
       "POST",
       {

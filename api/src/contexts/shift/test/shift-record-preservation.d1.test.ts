@@ -30,18 +30,18 @@ test("シフト3台帳を停止中に人の承認で保全し、業務コード�
     database,
     `INSERT INTO shift_patterns
     (id,code,name,start_time,end_time,break_minutes)
-    VALUES (1,'day','Day','09:00','18:00',60)`,
+    VALUES ('01900023-0000-7000-8000-000000000001','day','Day','09:00','18:00',60)`,
   )
   await database
     .prepare(`INSERT INTO shift_assignments
     (id,employee_id,pattern_id,date,note,published_at)
-    VALUES (2,?1,1,'2026-09-15','Front desk','2026-09-01T12:00:00.000Z')`)
+    VALUES ('01900024-0000-7000-8000-000000000002',?1,'01900023-0000-7000-8000-000000000001','2026-09-15','Front desk','2026-09-01T12:00:00.000Z')`)
     .bind(creator.employeeId)
     .run()
   await database
     .prepare(`INSERT INTO shift_swap_requests
     (id,requester_employee_id,target_employee_id,date,note,status,approved_at)
-    VALUES (3,?1,?2,'2026-09-15','Trade','approved','2026-09-10T12:00:00.000Z')`)
+    VALUES ('01900025-0000-7000-8000-000000000003',?1,?2,'2026-09-15','Trade','approved','2026-09-10T12:00:00.000Z')`)
     .bind(creator.employeeId, reviewer.employeeId)
     .run()
   const token = await tokenFor(creator.accountId)
@@ -80,9 +80,9 @@ test("シフト3台帳を停止中に人の承認で保全し、業務コード�
     )
   }
   const sources = [
-    ["shift-pattern-record", "1"],
-    ["shift-assignment-record", "2"],
-    ["shift-swap-request-record", "3"],
+    ["shift-pattern-record", "01900023-0000-7000-8000-000000000001"],
+    ["shift-assignment-record", "01900024-0000-7000-8000-000000000002"],
+    ["shift-swap-request-record", "01900025-0000-7000-8000-000000000003"],
   ] as const
   const preservedIds: string[] = []
   for (const [recordKind, recordId] of sources) {

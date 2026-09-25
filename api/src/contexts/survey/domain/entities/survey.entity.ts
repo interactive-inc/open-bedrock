@@ -2,7 +2,7 @@ import type { SurveyRow } from "@/contexts/survey/infrastructure/schema/survey"
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   title: z.string(),
   status: z.enum(["open", "closed"]),
   questionsJson: z.array(z.unknown()).readonly(),

@@ -1,6 +1,9 @@
 import type { PerformanceReviewContext } from "@/contexts/performance-review/configuration/performance-review-context"
 import { PerformanceReviewActorReadAdapter } from "@/contexts/performance-review/infrastructure/adapters/performance-review-actor-read.adapter"
-import { performanceReviewSnapshotQuery } from "@/contexts/performance-review/infrastructure/adapters/lib/performance-review-snapshot-query"
+import {
+  performanceReviewSnapshotQuery,
+  PERFORMANCE_REVIEW_SNAPSHOT_FORMAT_VERSION,
+} from "@/contexts/performance-review/infrastructure/adapters/lib/performance-review-snapshot-query"
 import { PerformanceReviewError } from "@/contexts/performance-review/domain/errors"
 import {
   performanceReviewRecordKindSchema,
@@ -52,7 +55,7 @@ export class CapturePerformanceReviewRecordAdapter {
         recordKind: kind.data,
         recordId: input.recordId,
         formatId: kind.data,
-        formatVersion: 1,
+        formatVersion: PERFORMANCE_REVIEW_SNAPSHOT_FORMAT_VERSION,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

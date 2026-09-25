@@ -30,6 +30,12 @@ afterAll(async () => {
   await pool.dispose()
 })
 
+/** 移行前の整数の主キーの順に並ぶ固定の UUID。頁の続き位置を旧来の順と同じにする。 */
+const surveyId = (serial: number) =>
+  `01900026-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
+const responseId = (serial: number) =>
+  `01900027-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
+
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("アンケート・回答記録を全件保全し、人の承認を経て2台帳を撤去確定する", async () => {
   const {
@@ -64,14 +70,14 @@ test("アンケート・回答記録を全件保全し、人の承認を経て2�
     await database
       .prepare(`INSERT INTO surveys (id,title,status,questions_json)
         VALUES (?1,?2,?3,'[]')`)
-      .bind(id, `Survey ${id}`, id === 11 ? "closed" : "open")
+      .bind(surveyId(id), `Survey ${id}`, id === 11 ? "closed" : "open")
       .run()
   }
   await database
     .prepare(`INSERT INTO survey_responses
       (id,survey_id,respondent_id,answers_json,submitted_at)
-      VALUES (1,1,?1,'{}','2026-01-02T00:00:00.000Z')`)
-    .bind(creatorPerson.employeeId)
+      VALUES (?2,?3,?1,'{}','2026-01-02T00:00:00.000Z')`)
+    .bind(creatorPerson.employeeId, responseId(1), surveyId(1))
     .run()
   const at = clock()
   const token = await tokenFor(creator)
@@ -109,14 +115,17 @@ test("アンケート・回答記録を全件保全し、人の承認を経て2�
       .first<number>("n"),
   ).toBe(1)
   await expect(
-    database.prepare("UPDATE surveys SET title='Must not change' WHERE id=1").run(),
+    database
+      .prepare("UPDATE surveys SET title='Must not change' WHERE id=?1")
+      .bind(surveyId(1))
+      .run(),
   ).rejects.toThrow("survey_record_source_frozen")
   await expect(
     database
       .prepare(`INSERT INTO survey_responses
-      (survey_id,respondent_id,answers_json,submitted_at)
-      VALUES (2,?1,'{}','2026-01-03T00:00:00.000Z')`)
-      .bind(creatorPerson.employeeId)
+      (id,survey_id,respondent_id,answers_json,submitted_at)
+      VALUES (?2,?3,?1,'{}','2026-01-03T00:00:00.000Z')`)
+      .bind(creatorPerson.employeeId, responseId(2), surveyId(2))
       .run(),
   ).rejects.toThrow("survey_record_source_frozen")
   const blockedWrites = [
@@ -124,20 +133,22 @@ test("アンケート・回答記録を全件保全し、人の承認を経て2�
       method: "POST",
       body: { title: "Blocked survey", status: "open", questions_json: [] },
     }),
-    await apiRequest("/survey/surveys/1", {
+    await apiRequest("/survey/surveys/01900026-0000-7000-8000-000000000001", {
       method: "PUT",
       body: { title: "Must not change", status: "open", questions_json: [] },
     }),
-    await apiRequest("/survey/surveys/11", { method: "DELETE" }),
-    await apiRequest("/survey/surveys/2/responses", {
+    await apiRequest("/survey/surveys/01900026-0000-7000-8000-00000000000b", { method: "DELETE" }),
+    await apiRequest("/survey/surveys/01900026-0000-7000-8000-000000000002/responses", {
       method: "POST",
       body: { answers_json: {} },
     }),
-    await apiRequest("/survey/surveys/responses/1", {
+    await apiRequest("/survey/surveys/responses/01900027-0000-7000-8000-000000000001", {
       method: "PUT",
       body: { answers_json: { changed: true } },
     }),
-    await apiRequest("/survey/surveys/responses/1", { method: "DELETE" }),
+    await apiRequest("/survey/surveys/responses/01900027-0000-7000-8000-000000000001", {
+      method: "DELETE",
+    }),
   ]
   expect(blockedWrites.map((response) => response.status)).toEqual([409, 409, 409, 409, 409, 409])
   for (const response of blockedWrites) {
@@ -147,9 +158,9 @@ test("アンケート・回答記録を全件保全し、人の承認を経て2�
     [
       ...Array.from({ length: 11 }, (_, index) => ({
         recordKind: "survey-record" as const,
-        recordId: String(index + 1),
+        recordId: surveyId(index + 1),
       })),
-      { recordKind: "survey-response-record", recordId: "1" },
+      { recordKind: "survey-response-record", recordId: responseId(1) },
     ]
   const mappings: Array<{
     recordKind: SurveyRecordKind
@@ -233,7 +244,7 @@ test("アンケート・回答記録を全件保全し、人の承認を経て2�
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "10",
+    nextCursor: surveyId(10),
     recordCount: 10,
   })
   expect(

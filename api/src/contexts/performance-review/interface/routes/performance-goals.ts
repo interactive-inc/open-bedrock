@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
 import { resolveCompanyEmployeeRelation } from "@/contexts/company/interface/operations/resolve-company-employee-relation"
 import {
@@ -28,7 +29,7 @@ import {
 } from "@/contexts/performance-review/interface/http/response-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"
-import { and, count, eq, inArray, type SQL } from "drizzle-orm"
+import { and, asc, count, eq, inArray, sql, type SQL } from "drizzle-orm"
 import { z } from "zod"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 
@@ -48,9 +49,9 @@ export const POST = factory.createHandlers(
       weight: z.number().int().min(1).max(100).default(10),
       kpi: z.string().max(3_000).optional(),
       owner_type: z.enum(["individual", "department", "company"]).default("individual"),
-      parent_goal_id: z.number().int().positive().nullable().optional(),
+      parent_goal_id: uuidSchema.nullable().optional(),
       department_code: z.string().min(1).max(100).nullable().optional(),
-      evaluation_sheet_id: z.number().int().positive().nullable().optional(),
+      evaluation_sheet_id: uuidSchema.nullable().optional(),
     }),
   ),
   async (c) => {
@@ -260,7 +261,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select()
     .from(goals)
     .where(and(...conditions))
-    .orderBy(goals.id)
+    .orderBy(asc(goals.createdAt), asc(sql`CAST(${goals.legacyId} AS INTEGER)`), asc(goals.id))
     .limit(limit)
     .offset(offset)
 

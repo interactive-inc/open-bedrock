@@ -10,7 +10,7 @@ type Context = Readonly<{
 
 export type Input = {
   session: CompanySessionValue
-  cycleId: number
+  cycleId: string
 }
 
 /** 評価サイクルを終了する。 */

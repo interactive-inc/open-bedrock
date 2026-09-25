@@ -10,7 +10,7 @@ export async function createRoomReservation(request: RoomReservationCreateReques
   const client = await createClient()
 
   const response = await client["room"]["rooms"].reservations.$post({
-    json: { ...request, room_id: Number(request.room_id) },
+    json: { ...request, room_id: String(request.room_id) },
   })
 
   if (response.status >= 400) {

@@ -10,7 +10,7 @@ import {
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
 import { roomReservations, rooms } from "@/contexts/room/infrastructure/schema/room"
-import { and, count, gt, gte, inArray, lt } from "drizzle-orm"
+import { and, asc, count, gt, gte, inArray, lt, sql } from "drizzle-orm"
 
 // @authorization authenticated - ログインしていれば誰でも読める共有データ
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -48,7 +48,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select()
     .from(rooms)
     .where(gte(rooms.capacity, query.capacity))
-    .orderBy(rooms.id)
+    .orderBy(asc(rooms.createdAt), asc(sql`CAST(${rooms.legacyId} AS INTEGER)`), asc(rooms.id))
     .limit(limit)
     .offset(offset)
 
@@ -82,9 +82,9 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   // 会議室 id ごとにグループ化する。Map の挿入順を保つので元実装と同じ並びを保つ。
   const grouped = new Map<
-    number,
+    string,
     {
-      room: { id: number; name: string; capacity: number }
+      room: { id: string; name: string; capacity: number }
       conflicts: Array<{ startAt: string; endAt: string; purpose: string | null }>
     }
   >()

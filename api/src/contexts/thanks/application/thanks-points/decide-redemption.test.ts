@@ -12,7 +12,7 @@ import { describe, expect, test } from "bun:test"
 function seedPendingRedemption(points: FakeThanksPoints): ThanksRedemption {
   return points.seedRedemption({
     employeeId: toWorkforceEmployeeId(5),
-    rewardId: 1,
+    rewardId: "0190002a-0000-7000-8000-000000000001",
     pointCost: 10,
     status: "pending",
   })
@@ -26,7 +26,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
 
     const result = await new ApproveRedemption(points).execute({
       session: makeTestSession("member"),
-      redemptionId: redemption.id ?? 0,
+      redemptionId: redemption.id ?? "",
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-06-02T00:00:00.000Z",
     })
@@ -41,7 +41,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
 
     const result = await new RejectRedemption(points).execute({
       session: makeTestSession("root"),
-      redemptionId: redemption.id ?? 0,
+      redemptionId: redemption.id ?? "",
       deciderId: toWorkforceEmployeeId(5),
       decidedAt: "2026-06-02T00:00:00.000Z",
     })
@@ -62,7 +62,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
 
       const command = {
         session: makeTestSession("root"),
-        redemptionId: redemption.id ?? 0,
+        redemptionId: redemption.id ?? "",
         deciderId: toWorkforceEmployeeId(2),
         decidedAt: "2026-06-02T00:00:00.000Z",
       }
@@ -73,7 +73,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
           : await new RejectRedemption(points).execute(command)
 
       expectApplicationError(result, ForbiddenError, "company_authority_required")
-      expect(points.redemptions.get(redemption.id ?? 0)?.status).toBe("pending")
+      expect(points.redemptions.get(redemption.id ?? "")?.status).toBe("pending")
     }
   })
 
@@ -84,7 +84,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
 
     const result = await new RejectRedemption(points).execute({
       session: makeTestSession("root"),
-      redemptionId: redemption.id ?? 0,
+      redemptionId: redemption.id ?? "",
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-06-02T00:00:00.000Z",
     })
@@ -103,7 +103,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
 
     const result = await new RejectRedemption(points).execute({
       session: makeTestSession("hr"),
-      redemptionId: redemption.id ?? 0,
+      redemptionId: redemption.id ?? "",
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-06-02T00:00:00.000Z",
     })

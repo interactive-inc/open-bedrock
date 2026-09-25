@@ -7,7 +7,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from "@/lib/http/errors"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { factory } from "@/api/http/factory"
 import { reviewCycles } from "@/contexts/performance-review/infrastructure/schema/performance-review"
@@ -24,7 +24,7 @@ function authorize(c: Context) {
 // @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
   authorize(c)
-  const cycleId = validateIntParam(c.req.param("cycleId"), "review cycle")
+  const cycleId = validateUuidParam(c.req.param("cycleId"), "review cycle")
   const cycle = await c.var.database
     .select({ id: reviewCycles.id })
     .from(reviewCycles)
@@ -43,7 +43,7 @@ export const PUT = factory.createHandlers(
   zValidator("json", zReviewCyclePolicy),
   async (c) => {
     authorize(c)
-    const cycleId = validateIntParam(c.req.param("cycleId"), "review cycle")
+    const cycleId = validateUuidParam(c.req.param("cycleId"), "review cycle")
     const cycle = await c.var.database
       .select({ status: reviewCycles.status })
       .from(reviewCycles)

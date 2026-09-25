@@ -1,5 +1,5 @@
 type SeedSurvey = {
-  id: number
+  id: string
   title: string
   status: "open" | "closed"
   questionsJson: ReadonlyArray<unknown>
@@ -7,7 +7,7 @@ type SeedSurvey = {
 
 export const seedSurveys: ReadonlyArray<SeedSurvey> = [
   {
-    id: 1,
+    id: "01900026-0000-7000-8000-000000000001",
     title: "2026年度 従業員エンゲージメント調査",
     status: "open",
     questionsJson: [
@@ -23,7 +23,7 @@ export const seedSurveys: ReadonlyArray<SeedSurvey> = [
     ],
   },
   {
-    id: 2,
+    id: "01900026-0000-7000-8000-000000000002",
     title: "リモートワーク満足度調査",
     status: "open",
     questionsJson: [
@@ -43,7 +43,7 @@ export const seedSurveys: ReadonlyArray<SeedSurvey> = [
     ],
   },
   {
-    id: 3,
+    id: "01900026-0000-7000-8000-000000000003",
     title: "2025年度下期 振り返り調査",
     status: "closed",
     questionsJson: [{ id: "q1", type: "scale", text: "目標を達成できた", min: 1, max: 5 }],

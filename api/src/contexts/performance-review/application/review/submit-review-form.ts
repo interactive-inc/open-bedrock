@@ -13,7 +13,7 @@ type Context = Readonly<{
 
 export type Input = {
   viewerEmployeeId: EmployeeId
-  formId: number
+  formId: string
   score: number | null
   answers: ReadonlyArray<unknown>
   comment: string | null

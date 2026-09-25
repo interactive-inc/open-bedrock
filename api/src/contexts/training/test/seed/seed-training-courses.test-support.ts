@@ -1,5 +1,5 @@
 type SeedTrainingCourse = {
-  id: number
+  id: string
   code: string
   title: string
   description: string | null
@@ -11,7 +11,7 @@ type SeedTrainingCourse = {
 
 export const seedTrainingCourses: ReadonlyArray<SeedTrainingCourse> = [
   {
-    id: 1,
+    id: "0190002c-0000-7000-8000-000000000001",
     code: "TR-SEC-01",
     title: "情報セキュリティ基礎",
     description: "全従業員必須のセキュリティ研修",
@@ -21,7 +21,7 @@ export const seedTrainingCourses: ReadonlyArray<SeedTrainingCourse> = [
     status: "active",
   },
   {
-    id: 2,
+    id: "0190002c-0000-7000-8000-000000000002",
     code: "TR-MGR-01",
     title: "新任管理職研修",
     description: null,
@@ -31,7 +31,7 @@ export const seedTrainingCourses: ReadonlyArray<SeedTrainingCourse> = [
     status: "active",
   },
   {
-    id: 3,
+    id: "0190002c-0000-7000-8000-000000000003",
     code: "TR-OLD-01",
     title: "旧システム運用",
     description: null,

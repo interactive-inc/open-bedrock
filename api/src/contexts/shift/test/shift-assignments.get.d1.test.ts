@@ -28,9 +28,9 @@ afterAll(async () => {
 const jwtSecret = "shift-assignments-list-route-test-secret"
 
 const shiftAssignmentResponseSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   employee_id: zEmployeeId,
-  pattern_id: z.number().nullable(),
+  pattern_id: z.string().nullable(),
   date: z.string(),
   note: z.string().nullable(),
   published_at: z.string().nullable(),

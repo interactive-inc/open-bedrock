@@ -25,6 +25,11 @@ afterAll(async () => {
   await pool.dispose()
 })
 
+/** 募集の固定 UUID。末尾の連番を 16 進 12 桁にし、辞書順を連番の順と一致させる。 */
+function positionId(serial: number): string {
+  return `0190002e-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
+}
+
 test("募集11件と応募者記録を分割照合し撤去確定する", async () => {
   const { database, governance, creator, reviewer, definition, bindings, tokenFor, request } =
     await createRecruitmentPreservationFixture(await pool.next())
@@ -33,14 +38,14 @@ test("募集11件と応募者記録を分割照合し撤去確定する", async 
       .prepare(`INSERT INTO job_openings
       (id,title,department_code,status,note,created_at)
       VALUES (?1,?2,NULL,'open',NULL,'2026-09-01T00:00:00.000Z')`)
-      .bind(id, `Position ${id}`)
+      .bind(positionId(id), `Position ${id}`)
       .run()
   }
   await execSql(
     database,
     `INSERT INTO recruitment_candidates
     (id,position_id,name,email,source,stage,note,created_at)
-    VALUES (1,0,'Applicant','applicant@example.invalid','referral','applied',NULL,
+    VALUES ('0190002f-0000-7000-8000-000000000001','0190002e-0000-7000-8000-000000000000','Applicant','applicant@example.invalid','referral','applied',NULL,
       '2026-09-15T12:00:00.000Z')`,
   )
   const token = await tokenFor(creator.accountId)
@@ -90,9 +95,9 @@ test("募集11件と応募者記録を分割照合し撤去確定する", async 
   const sources = [
     ...Array.from({ length: 11 }, (_, index) => ({
       kind: "recruitment-position-record" as const,
-      id: String(index),
+      id: positionId(index),
     })),
-    { kind: "recruitment-candidate-record" as const, id: "1" },
+    { kind: "recruitment-candidate-record" as const, id: "0190002f-0000-7000-8000-000000000001" },
   ]
   for (const source of sources) {
     const path = `/recruitment/records/${source.kind}/${encodeURIComponent(source.id)}/preservation-requests`
@@ -155,7 +160,11 @@ test("募集11件と応募者記録を分割照合し撤去確定する", async 
     post(coveragePath, { purpose: "archive", recordKind, records })
   const first = await cover("recruitment-position-record", positionMappings.slice(0, 10))
   if (first.status !== 200) throw new Error(await first.text())
-  expect(await first.json()).toMatchObject({ sequence: 1, nextCursor: "9", recordCount: 10 })
+  expect(await first.json()).toMatchObject({
+    sequence: 1,
+    nextCursor: positionId(9),
+    recordCount: 10,
+  })
   expect((await cover("recruitment-position-record", positionMappings.slice(0, 1))).status).toBe(
     409,
   )

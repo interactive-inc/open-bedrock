@@ -17,7 +17,7 @@ import { describe, expect, test } from "bun:test"
 async function requestPending(
   points: FakeThanksPoints,
   employeeId: number,
-  rewardId: number,
+  rewardId: string,
 ): Promise<ThanksRedemption> {
   const pending = await new RequestRedemption(points).run({
     employeeId: toWorkforceEmployeeId(employeeId),
@@ -101,7 +101,7 @@ describe("UpdateReward", () => {
     const points = new FakeThanksPoints()
 
     const result = await new UpdateReward(points).run({
-      rewardId: 9999,
+      rewardId: "0190002a-0000-7000-8000-00000000270f",
       name: "景品",
       pointCost: 50,
       isActive: true,
@@ -150,7 +150,7 @@ describe("RequestRedemption", () => {
 
     const result = await new RequestRedemption(points).run({
       employeeId: toWorkforceEmployeeId(5),
-      rewardId: 9999,
+      rewardId: "0190002a-0000-7000-8000-00000000270f",
       createdAt: "2026-02-01T00:00:00.000Z",
     })
 
@@ -262,7 +262,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
 
     const result = await new ApproveRedemption(points).execute({
       session: makeTestSession("root"),
-      redemptionId: pending.id ?? 0,
+      redemptionId: pending.id ?? "",
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
@@ -289,7 +289,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
 
     const first = await new ApproveRedemption(points).execute({
       session: makeTestSession("root"),
-      redemptionId: firstPending.id ?? 0,
+      redemptionId: firstPending.id ?? "",
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
@@ -298,7 +298,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
 
     const second = await new ApproveRedemption(points).execute({
       session: makeTestSession("root"),
-      redemptionId: secondPending.id ?? 0,
+      redemptionId: secondPending.id ?? "",
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-02-02T00:01:00.000Z",
     })
@@ -322,7 +322,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
 
     const result = await new RejectRedemption(points).execute({
       session: makeTestSession("root"),
-      redemptionId: pending.id ?? 0,
+      redemptionId: pending.id ?? "",
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
@@ -345,7 +345,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
 
     const result = await new ApproveRedemption(points).execute({
       session: makeTestSession("root", 5),
-      redemptionId: pending.id ?? 0,
+      redemptionId: pending.id ?? "",
       deciderId: toWorkforceEmployeeId(5),
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
@@ -358,7 +358,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
 
     const result = await new ApproveRedemption(points).execute({
       session: makeTestSession("root"),
-      redemptionId: 9999,
+      redemptionId: "0190002b-0000-7000-8000-00000000270f",
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
@@ -377,7 +377,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
 
     const first = await new ApproveRedemption(points).execute({
       session: makeTestSession("root"),
-      redemptionId: pending.id ?? 0,
+      redemptionId: pending.id ?? "",
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
@@ -386,7 +386,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
 
     const second = await new RejectRedemption(points).execute({
       session: makeTestSession("root"),
-      redemptionId: pending.id ?? 0,
+      redemptionId: pending.id ?? "",
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-02-03T00:00:00.000Z",
     })
@@ -414,7 +414,7 @@ describe("ApproveRedemption / RejectRedemption", () => {
 
     const result = await new ApproveRedemption(points).execute({
       session: makeTestSession("root"),
-      redemptionId: pending.id ?? 0,
+      redemptionId: pending.id ?? "",
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-02-02T00:00:00.000Z",
     })

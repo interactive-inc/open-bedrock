@@ -29,7 +29,7 @@ test("評価テンプレートを停止中に人の承認で保全し、業務�
   await database
     .prepare(`INSERT INTO evaluation_templates
     (id,title,period,items,status,created_by,created_at,updated_at)
-    VALUES (0,'Quarterly review','2026-Q3','[]','draft',?1,'2026-09-01','2026-09-01')`)
+    VALUES ('01900034-0000-7000-8000-000000000001','Quarterly review','2026-Q3','[]','draft',?1,'2026-09-01','2026-09-01')`)
     .bind(creator.employeeId)
     .run()
   const token = await tokenFor(creator.accountId)
@@ -59,9 +59,13 @@ test("評価テンプレートを停止中に人の承認で保全し、業務�
   )
   if (frozen.status !== 201) throw new Error(await frozen.text())
   await expect(
-    database.prepare("UPDATE evaluation_templates SET title='changed' WHERE id=0").run(),
+    database
+      .prepare(
+        "UPDATE evaluation_templates SET title='changed' WHERE id='01900034-0000-7000-8000-000000000001'",
+      )
+      .run(),
   ).rejects.toThrow("performance_review_record_source_frozen")
-  const sources = [["evaluation-template-record", "0"]] as const
+  const sources = [["evaluation-template-record", "01900034-0000-7000-8000-000000000001"]] as const
   const preservedIds: string[] = []
   for (const [recordKind, recordId] of sources) {
     const path = `/performance-review/records/${recordKind}/${recordId}/preservation-requests`

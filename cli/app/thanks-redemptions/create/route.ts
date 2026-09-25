@@ -21,11 +21,7 @@ export default factory.createHandlers(
 
     if (!query.reward) throw new UsageError("--reward <id> が必要です")
 
-    const rewardId = Number(query.reward)
-
-    if (Number.isInteger(rewardId) === false || rewardId <= 0) {
-      throw new UsageError("--reward は正の整数で指定してください")
-    }
+    const rewardId = query.reward
 
     const client = await createClient()
 

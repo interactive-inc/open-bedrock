@@ -16,7 +16,7 @@ import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/lib/http/err
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { factory } from "@/api/http/factory"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { zAppEvaluationSheet } from "@/contexts/performance-review/interface/http/response-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { evaluationSheets } from "@/contexts/performance-review/infrastructure/schema/performance-review"
@@ -55,7 +55,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const sheetId = validateIntParam(c.req.param("sheetId"), "evaluation sheet")
+    const sheetId = validateUuidParam(c.req.param("sheetId"), "evaluation sheet")
     const json = c.req.valid("json")
 
     // シートを先読みして権限判定

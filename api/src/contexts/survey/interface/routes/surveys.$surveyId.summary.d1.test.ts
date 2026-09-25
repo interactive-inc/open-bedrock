@@ -34,7 +34,7 @@ const surveyQuestionSummaryResponseSchema = z.object({
 })
 
 const surveySummaryResponseSchema = z.object({
-  survey_id: z.number(),
+  survey_id: z.uuid(),
   title: z.string(),
   response_count: z.number(),
   is_truncated: z.boolean(),
@@ -118,7 +118,10 @@ async function request(props: {
 
 describe("GET /surveys/:surveyId/summary", () => {
   test("returns 200 with an aggregated snake_case summary", async () => {
-    const response = await request({ path: "/survey/surveys/1/summary", token: await adminToken() })
+    const response = await request({
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000001/summary",
+      token: await adminToken(),
+    })
 
     expect(response.status).toBe(200)
 
@@ -127,7 +130,7 @@ describe("GET /surveys/:surveyId/summary", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.survey_id).toBe(1)
+      expect(parsed.data.survey_id).toBe("01900026-0000-7000-8000-000000000001")
       expect(parsed.data.response_count).toBe(3)
       expect(parsed.data.is_truncated).toBe(false)
       expect(parsed.data.questions.length).toBe(3)
@@ -145,14 +148,17 @@ describe("GET /surveys/:surveyId/summary", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/survey/surveys/1/summary", token: null })
+    const response = await request({
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000001/summary",
+      token: null,
+    })
 
     expect(response.status).toBe(401)
   })
 
   test("returns 403 for a non-privileged role (free-text answers are not exposed)", async () => {
     const response = await request({
-      path: "/survey/surveys/1/summary",
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000001/summary",
       token: await memberToken(),
     })
 
@@ -161,7 +167,7 @@ describe("GET /surveys/:surveyId/summary", () => {
 
   test("returns 404 when the survey does not exist", async () => {
     const response = await request({
-      path: "/survey/surveys/9999/summary",
+      path: "/survey/surveys/01900026-0000-7000-8000-00000000270f/summary",
       token: await adminToken(),
     })
 

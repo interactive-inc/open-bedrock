@@ -10,7 +10,7 @@ import { evaluationTemplates } from "@/contexts/performance-review/infrastructur
 import { eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { ForbiddenError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { z } from "zod"
 
 function toResponseItem(row: { title: string; defaultWeight: number; kpiExample?: string | null }) {
@@ -32,7 +32,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const templateId = validateIntParam(c.req.param("templateId"), "evaluation template")
+  const templateId = validateUuidParam(c.req.param("templateId"), "evaluation template")
 
   const rows = await c.var.database
     .select()
@@ -99,7 +99,7 @@ export const PUT = factory.createHandlers(
       throw new ForbiddenError()
     }
 
-    const templateId = validateIntParam(c.req.param("templateId"), "evaluation template")
+    const templateId = validateUuidParam(c.req.param("templateId"), "evaluation template")
     const json = c.req.valid("json")
 
     const template = await new UpdateEvaluationTemplate(c).run({
@@ -156,7 +156,7 @@ export const PATCH = factory.createHandlers(
       throw new ForbiddenError()
     }
 
-    const templateId = validateIntParam(c.req.param("templateId"), "evaluation template")
+    const templateId = validateUuidParam(c.req.param("templateId"), "evaluation template")
     const json = c.req.valid("json")
 
     const input = { templateId, now: new Date().toISOString() }

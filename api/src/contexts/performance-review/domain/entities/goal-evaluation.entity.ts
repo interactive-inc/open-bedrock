@@ -8,8 +8,8 @@ export const goalEvaluationKindSchema = z.enum(["self", "manager", "final"])
 export type GoalEvaluationKind = z.infer<typeof goalEvaluationKindSchema>
 
 const zProps = z.object({
-  id: z.number().nullable(),
-  goalId: z.number(),
+  id: z.string().nullable(),
+  goalId: z.string(),
   evaluatorId: zEmployeeId,
   kind: goalEvaluationKindSchema,
   score: z.number().nullable(),
@@ -46,7 +46,7 @@ export class GoalEvaluation implements Props {
 
   /** 新規作成する評価を組み立てる。id は未採番。 */
   static create(props: {
-    goalId: number
+    goalId: string
     evaluatorId: EmployeeId
     kind: GoalEvaluationKind
     score: number | null
@@ -64,7 +64,7 @@ export class GoalEvaluation implements Props {
     })
   }
 
-  static fromRow(row: GoalEvaluationRow): GoalEvaluation {
+  static fromRow(row: Omit<GoalEvaluationRow, "legacyId">): GoalEvaluation {
     return new GoalEvaluation({
       id: row.id,
       goalId: row.goalId,

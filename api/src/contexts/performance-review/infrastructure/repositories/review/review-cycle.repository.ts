@@ -1,7 +1,7 @@
 import { ReviewCycle } from "@/contexts/performance-review/domain/entities/review-cycle.entity"
 import type { Context } from "@/env"
 import { reviewCycles } from "@/contexts/performance-review/infrastructure/schema/performance-review"
-import { and, asc, eq, ne } from "drizzle-orm"
+import { and, asc, eq, ne, sql } from "drizzle-orm"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
 import { ConflictError } from "@/lib/errors"
@@ -17,7 +17,11 @@ export class ReviewCycleRepository {
       const rows = await this.c.var.database
         .select()
         .from(reviewCycles)
-        .orderBy(asc(reviewCycles.id))
+        .orderBy(
+          asc(reviewCycles.createdAt),
+          asc(sql`CAST(${reviewCycles.legacyId} AS INTEGER)`),
+          asc(reviewCycles.id),
+        )
         .limit(props.limit)
         .offset(props.offset)
 
@@ -27,7 +31,7 @@ export class ReviewCycleRepository {
     }
   }
 
-  async findById(cycleId: number): Promise<ReviewCycle | null | Error> {
+  async findById(cycleId: string): Promise<ReviewCycle | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -48,6 +52,7 @@ export class ReviewCycleRepository {
       const rows = await this.c.var.database
         .insert(reviewCycles)
         .values({
+          id: crypto.randomUUID(),
           title: reviewCycle.title,
           period: reviewCycle.period,
           status: reviewCycle.status,
@@ -113,7 +118,7 @@ export class ReviewCycleRepository {
     }
   }
 
-  async delete(cycleId: number): Promise<null | Error> {
+  async delete(cycleId: string): Promise<null | Error> {
     try {
       await this.c.var.database.delete(reviewCycles).where(eq(reviewCycles.id, cycleId))
 

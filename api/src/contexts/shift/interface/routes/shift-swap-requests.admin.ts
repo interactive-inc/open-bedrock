@@ -3,7 +3,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { readCompanyEmployeeProfiles } from "@/contexts/company/interface/operations/read-company-employee-profiles"
 import { shiftSwapRequests } from "@/contexts/shift/infrastructure/schema/shift"
 import { zValidator } from "@hono/zod-validator"
-import { and, asc, count, desc, eq, gte, lte } from "drizzle-orm"
+import { and, asc, count, desc, eq, gte, lte, sql } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { zAppShiftSwapRequestAdminList } from "@/contexts/shift/interface/http/response-schemas"
@@ -19,10 +19,19 @@ import { loadCurrentEmployeeDepartmentNames } from "@/api/http/company-employees
 import { InternalError } from "@/lib/http/errors"
 
 const SORT_OPTIONS = {
-  date_desc: desc(shiftSwapRequests.date),
-  date_asc: asc(shiftSwapRequests.date),
-  id_desc: desc(shiftSwapRequests.id),
-  id_asc: asc(shiftSwapRequests.id),
+  date_desc: [desc(shiftSwapRequests.date)],
+  date_asc: [asc(shiftSwapRequests.date)],
+  // id_* は申請の登録順。UUID は順序を持たないので作成日時と旧来の整数の主キーで並べる。
+  id_desc: [
+    desc(shiftSwapRequests.createdAt),
+    desc(sql`CAST(${shiftSwapRequests.legacyId} AS INTEGER)`),
+    desc(shiftSwapRequests.id),
+  ],
+  id_asc: [
+    asc(shiftSwapRequests.createdAt),
+    asc(sql`CAST(${shiftSwapRequests.legacyId} AS INTEGER)`),
+    asc(shiftSwapRequests.id),
+  ],
 } as const
 
 type SortKey = keyof typeof SORT_OPTIONS
@@ -117,7 +126,7 @@ export const GET = factory.createHandlers(
       })
       .from(shiftSwapRequests)
       .where(where)
-      .orderBy(SORT_OPTIONS[sortKey])
+      .orderBy(...SORT_OPTIONS[sortKey])
       .limit(limit)
       .offset(offset)
 

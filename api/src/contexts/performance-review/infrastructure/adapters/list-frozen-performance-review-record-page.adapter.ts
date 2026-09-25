@@ -36,21 +36,21 @@ export class ListFrozenPerformanceReviewRecordPageAdapter {
     })
     if (generation instanceof Error) return generation
     const after = request.afterCursor
-    const cursor = after === null ? null : Number(after)
-    if (after !== null && (!Number.isSafeInteger(cursor) || String(cursor) !== after))
+    const cursor = after
+    if (after !== null && !z.uuid().safeParse(after).success)
       return new Error("invalid performance review cursor")
     const source = performanceReviewSourceTables[request.recordKind]
     try {
       const page =
         after === null
           ? this.c.env.DB.prepare(
-              `SELECT ${source.key} AS record_id FROM ${source.table} ORDER BY ${source.key} LIMIT ?1`,
+              `SELECT ${source.key} AS record_id FROM ${source.table} ORDER BY ${source.key} COLLATE BINARY LIMIT ?1`,
             ).bind(request.limit + 1)
           : this.c.env.DB.prepare(
-              `SELECT ${source.key} AS record_id FROM ${source.table} WHERE ${source.key}>?1 ORDER BY ${source.key} LIMIT ?2`,
+              `SELECT ${source.key} AS record_id FROM ${source.table} WHERE ${source.key} COLLATE BINARY>?1 ORDER BY ${source.key} COLLATE BINARY LIMIT ?2`,
             ).bind(cursor, request.limit + 1)
       const statements = [...generation.assertions, page, ...generation.assertions]
-      const reads = await this.c.env.DB.batch<{ record_id: number }>(statements)
+      const reads = await this.c.env.DB.batch<{ record_id: string }>(statements)
       if (reads.length !== statements.length || reads.some((read) => !read.success))
         return new Error("frozen performance review inventory unavailable")
       const ids = (reads[generation.assertions.length]?.results ?? []).map((row) =>

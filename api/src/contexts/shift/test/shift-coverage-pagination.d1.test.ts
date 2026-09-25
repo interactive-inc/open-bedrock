@@ -25,28 +25,37 @@ afterAll(async () => {
   await pool.dispose()
 })
 
+/** 連番の記録 ID。UUID の辞書順が連番の順と一致する。 */
+function recordId(prefix: string, serial: number): string {
+  return `${prefix}-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
+}
+
+const patternId = (serial: number) => recordId("01900023", serial)
+const assignmentId = recordId("01900024", 1)
+const swapRequestId = recordId("01900025", 1)
+
 test("勤務パターン11件と割当・交代申請を分割照合し撤去確定する", async () => {
   const { database, governance, creator, reviewer, definition, bindings, tokenFor, request } =
     await createShiftPreservationFixture(await pool.next())
-  for (let id = -9; id <= 1; id++) {
+  for (let serial = 1; serial <= 11; serial++) {
     await database
       .prepare(`INSERT INTO shift_patterns
       (id,code,name,start_time,end_time,break_minutes)
       VALUES (?1,?2,?3,'09:00','18:00',60)`)
-      .bind(id, `day-${id}`, `Day ${id}`)
+      .bind(patternId(serial), `day-${serial}`, `Day ${serial}`)
       .run()
   }
   await database
     .prepare(`INSERT INTO shift_assignments
     (id,employee_id,pattern_id,date,note,published_at)
-    VALUES (1,?1,-9,'2026-09-15','Front desk','2026-09-01T12:00:00.000Z')`)
-    .bind(creator.employeeId)
+    VALUES (?2,?1,?3,'2026-09-15','Front desk','2026-09-01T12:00:00.000Z')`)
+    .bind(creator.employeeId, assignmentId, patternId(1))
     .run()
   await database
     .prepare(`INSERT INTO shift_swap_requests
     (id,requester_employee_id,target_employee_id,date,note,status,approved_at)
-    VALUES (1,?1,?2,'2026-09-15','Trade','approved','2026-09-10T12:00:00.000Z')`)
-    .bind(creator.employeeId, reviewer.employeeId)
+    VALUES (?3,?1,?2,'2026-09-15','Trade','approved','2026-09-10T12:00:00.000Z')`)
+    .bind(creator.employeeId, reviewer.employeeId, swapRequestId)
     .run()
   const token = await tokenFor(creator.accountId)
   const stepUpToken = "f".repeat(64)
@@ -96,10 +105,10 @@ test("勤務パターン11件と割当・交代申請を分割照合し撤去確
   const sources = [
     ...Array.from({ length: 11 }, (_, index) => ({
       kind: "shift-pattern-record" as const,
-      id: String(index - 9),
+      id: patternId(index + 1),
     })),
-    { kind: "shift-assignment-record" as const, id: "1" },
-    { kind: "shift-swap-request-record" as const, id: "1" },
+    { kind: "shift-assignment-record" as const, id: assignmentId },
+    { kind: "shift-swap-request-record" as const, id: swapRequestId },
   ]
   for (const source of sources) {
     const path = `/shift/records/${source.kind}/${encodeURIComponent(source.id)}/preservation-requests`
@@ -166,7 +175,11 @@ test("勤務パターン11件と割当・交代申請を分割照合し撤去確
     post(coveragePath, { purpose: "archive", recordKind, records })
   const first = await cover("shift-pattern-record", shiftMappings.slice(0, 10))
   if (first.status !== 200) throw new Error(await first.text())
-  expect(await first.json()).toMatchObject({ sequence: 1, nextCursor: "0", recordCount: 10 })
+  expect(await first.json()).toMatchObject({
+    sequence: 1,
+    nextCursor: patternId(10),
+    recordCount: 10,
+  })
   expect((await cover("shift-pattern-record", shiftMappings.slice(0, 1))).status).toBe(409)
   const second = await cover("shift-pattern-record", shiftMappings.slice(10))
   if (second.status !== 200) throw new Error(await second.text())

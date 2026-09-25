@@ -12,7 +12,7 @@ import { and, eq, ne, sql } from "drizzle-orm"
 export class TrainingEnrollmentRepository {
   constructor(private readonly c: Context) {}
 
-  async findById(enrollmentId: number): Promise<TrainingEnrollment | null | Error> {
+  async findById(enrollmentId: string): Promise<TrainingEnrollment | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -29,7 +29,7 @@ export class TrainingEnrollmentRepository {
   }
 
   async findByCourseAndEmployee(
-    courseId: number,
+    courseId: string,
     employeeId: EmployeeId,
   ): Promise<TrainingEnrollment | null | Error> {
     try {
@@ -61,9 +61,9 @@ export class TrainingEnrollmentRepository {
     trainingEnrollment: TrainingEnrollment,
   ): Promise<TrainingEnrollment | AlreadyEnrolledError | CourseArchivedError | Error> {
     try {
-      const inserted = await this.c.var.database.all<{ id: number }>(
-        sql`INSERT INTO training_enrollments (course_id, employee_id, status, completed_at, score, due_date)
-            SELECT ${trainingEnrollment.courseId}, ${trainingEnrollment.employeeId},
+      const inserted = await this.c.var.database.all<{ id: string }>(
+        sql`INSERT INTO training_enrollments (id, course_id, employee_id, status, completed_at, score, due_date)
+            SELECT ${crypto.randomUUID()}, ${trainingEnrollment.courseId}, ${trainingEnrollment.employeeId},
                    ${trainingEnrollment.status}, ${trainingEnrollment.completedAt},
                    ${trainingEnrollment.score}, ${trainingEnrollment.dueDate}
             WHERE EXISTS (
@@ -162,7 +162,7 @@ export class TrainingEnrollmentRepository {
   }
 
   /** 完了・失敗以外の受講登録を削除する。完了・失敗済みは履歴保全のため削除不可（null）。 */
-  async delete(enrollmentId: number): Promise<true | null | Error> {
+  async delete(enrollmentId: string): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database
         .delete(trainingEnrollments)

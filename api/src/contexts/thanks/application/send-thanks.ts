@@ -33,7 +33,7 @@ type Context = Readonly<{
     title: string
     body: string | null
     sourceDomain: string
-    sourceId: number | null
+    sourceId: string | null
     createdAt: string
   }) => Promise<unknown>
 }>

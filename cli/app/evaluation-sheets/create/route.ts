@@ -3,7 +3,6 @@ import { z } from "zod"
 import { createClient } from "@/lib/http/hc-client"
 import { factory } from "@/factory"
 import { UsageError } from "@/lib/errors"
-import { toFiniteNumber } from "@/lib/to-finite-number"
 
 export const help = `bedrock evaluation-sheets create --employee-id <id> --period <p> [--template-id <id>] [--primary-evaluator-id <id>] [--secondary-evaluator-id <id>]`
 
@@ -34,9 +33,7 @@ export default factory.createHandlers(
       json: {
         employee_id: query["employee-id"],
         period: query.period,
-        template_id: query["template-id"]
-          ? toFiniteNumber(query["template-id"], "--template-id")
-          : undefined,
+        template_id: query["template-id"],
         primary_evaluator_id: query["primary-evaluator-id"],
         secondary_evaluator_id: query["secondary-evaluator-id"],
       },

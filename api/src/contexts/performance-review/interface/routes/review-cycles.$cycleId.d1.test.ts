@@ -27,7 +27,7 @@ afterAll(async () => {
 const jwtSecret = "review-cycles-edit-route-test-secret"
 
 const reviewCycleResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   period: z.string(),
   status: z.enum(["draft", "open", "closed"]),
@@ -92,7 +92,7 @@ async function request(
 describe("PUT /review-cycles/:cycleId", () => {
   test("admin updates title/period/dueDate and returns 200", async () => {
     const response = await request(
-      "/performance-review/review-cycles/3",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000003",
       await adminToken(),
       "PUT",
       {
@@ -117,7 +117,7 @@ describe("PUT /review-cycles/:cycleId", () => {
 
   test("admin can null out dueDate", async () => {
     const response = await request(
-      "/performance-review/review-cycles/1",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000001",
       await adminToken(),
       "PUT",
       {
@@ -140,7 +140,7 @@ describe("PUT /review-cycles/:cycleId", () => {
 
   test("returns 404 for a missing cycle", async () => {
     const response = await request(
-      "/performance-review/review-cycles/9999",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-00000000270f",
       await adminToken(),
       "PUT",
       {
@@ -154,7 +154,7 @@ describe("PUT /review-cycles/:cycleId", () => {
 
   test("member updating a cycle is forbidden", async () => {
     const response = await request(
-      "/performance-review/review-cycles/1",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000001",
       await memberToken(),
       "PUT",
       {
@@ -168,7 +168,7 @@ describe("PUT /review-cycles/:cycleId", () => {
 
   test("missing title is rejected with 400", async () => {
     const response = await request(
-      "/performance-review/review-cycles/1",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000001",
       await adminToken(),
       "PUT",
       {
@@ -183,7 +183,7 @@ describe("PUT /review-cycles/:cycleId", () => {
 describe("DELETE /review-cycles/:cycleId", () => {
   test("admin deletes the cycle and returns 204", async () => {
     const response = await request(
-      "/performance-review/review-cycles/3",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000003",
       await adminToken(),
       "DELETE",
     )
@@ -193,7 +193,7 @@ describe("DELETE /review-cycles/:cycleId", () => {
 
   test("returns 409 when deleting an open cycle", async () => {
     const response = await request(
-      "/performance-review/review-cycles/1",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000001",
       await adminToken(),
       "DELETE",
     )
@@ -203,7 +203,7 @@ describe("DELETE /review-cycles/:cycleId", () => {
 
   test("returns 409 when deleting a closed cycle", async () => {
     const response = await request(
-      "/performance-review/review-cycles/2",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000002",
       await adminToken(),
       "DELETE",
     )
@@ -213,7 +213,7 @@ describe("DELETE /review-cycles/:cycleId", () => {
 
   test("returns 404 for a missing cycle", async () => {
     const response = await request(
-      "/performance-review/review-cycles/9999",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-00000000270f",
       await adminToken(),
       "DELETE",
     )
@@ -223,7 +223,7 @@ describe("DELETE /review-cycles/:cycleId", () => {
 
   test("member deleting a cycle is forbidden", async () => {
     const response = await request(
-      "/performance-review/review-cycles/1",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000001",
       await memberToken(),
       "DELETE",
     )
@@ -233,7 +233,7 @@ describe("DELETE /review-cycles/:cycleId", () => {
 
   test("open cycle cannot be deleted (409)", async () => {
     const response = await request(
-      "/performance-review/review-cycles/1",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000001",
       await adminToken(),
       "DELETE",
     )
@@ -243,7 +243,7 @@ describe("DELETE /review-cycles/:cycleId", () => {
 
   test("closed cycle cannot be deleted (409)", async () => {
     const response = await request(
-      "/performance-review/review-cycles/2",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000002",
       await adminToken(),
       "DELETE",
     )

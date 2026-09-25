@@ -1,4 +1,3 @@
-import { z } from "zod"
 import { RoomRecordSystemAdapter } from "@/contexts/room/infrastructure/adapters/room-record-system.adapter"
 import {
   RoomCoverageForbiddenError,

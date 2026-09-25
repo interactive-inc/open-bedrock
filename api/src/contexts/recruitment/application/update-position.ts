@@ -7,7 +7,7 @@ import { RecruitmentRepository } from "@/contexts/recruitment/infrastructure/rep
 
 export type Command = {
   session: CompanySessionValue
-  id: number
+  id: string
   title: string
   departmentCode: string | null
   status: "open" | "closed"

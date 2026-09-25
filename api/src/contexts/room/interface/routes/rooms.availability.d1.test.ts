@@ -27,7 +27,7 @@ afterAll(async () => {
 
 const roomAvailabilityResponseSchema = z.object({
   room: z.object({
-    id: z.number(),
+    id: z.string(),
     name: z.string(),
     capacity: z.number(),
   }),
@@ -111,7 +111,9 @@ describe("GET /rooms/availability", () => {
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(5)
 
-      const roomOne = parsed.data.data.find((row) => row.room.id === 1)
+      const roomOne = parsed.data.data.find(
+        (row) => row.room.id === "01900022-0000-7000-8000-000000000001",
+      )
 
       expect(roomOne?.room.name).toBe("大会議室A")
       expect(roomOne?.room.capacity).toBe(20)
@@ -119,7 +121,9 @@ describe("GET /rooms/availability", () => {
       expect(roomOne?.conflicts[0]?.startAt).toBe("2026-05-29T01:00:00Z")
       expect(roomOne?.conflicts[0]?.endAt).toBe("2026-05-29T02:00:00Z")
 
-      const roomFour = parsed.data.data.find((row) => row.room.id === 4)
+      const roomFour = parsed.data.data.find(
+        (row) => row.room.id === "01900022-0000-7000-8000-000000000004",
+      )
 
       expect(roomFour?.available).toBe(true)
       expect(roomFour?.conflicts.length).toBe(0)
@@ -202,12 +206,19 @@ describe("GET /rooms/availability", () => {
       { id: 4, email: "you+e004@example.com", passwordHash: "hash", role: "manager" },
     ])
 
-    await seedD1(db, "rooms", [{ id: 10, name: "Room Alpha", capacity: 5, location: null }])
+    await seedD1(db, "rooms", [
+      {
+        id: "01900022-0000-7000-8000-00000000000a",
+        name: "Room Alpha",
+        capacity: 5,
+        location: null,
+      },
+    ])
 
     await seedD1(db, "room_reservations", [
       {
         id: "10000000-0000-4000-8000-000000000001",
-        room_id: 10,
+        room_id: "01900022-0000-7000-8000-00000000000a",
         reserver_id: "4",
         start_at: "2026-06-01T09:00:00Z",
         end_at: "2026-06-01T10:00:00Z",
@@ -215,7 +226,7 @@ describe("GET /rooms/availability", () => {
       },
       {
         id: "10000000-0000-4000-8000-000000000002",
-        room_id: 10,
+        room_id: "01900022-0000-7000-8000-00000000000a",
         reserver_id: "4",
         start_at: "2026-06-01T09:30:00Z",
         end_at: "2026-06-01T10:30:00Z",
@@ -243,7 +254,9 @@ describe("GET /rooms/availability", () => {
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
 
-      const roomAlpha = parsed.data.data.find((row) => row.room.id === 10)
+      const roomAlpha = parsed.data.data.find(
+        (row) => row.room.id === "01900022-0000-7000-8000-00000000000a",
+      )
 
       expect(roomAlpha?.available).toBe(false)
       expect(roomAlpha?.conflicts.length).toBe(2)
@@ -275,15 +288,25 @@ describe("GET /rooms/availability", () => {
     ])
 
     await seedD1(db, "rooms", [
-      { id: 20, name: "Room Beta", capacity: 4, location: null },
-      { id: 21, name: "Room Gamma", capacity: 4, location: null },
+      {
+        id: "01900022-0000-7000-8000-000000000014",
+        name: "Room Beta",
+        capacity: 4,
+        location: null,
+      },
+      {
+        id: "01900022-0000-7000-8000-000000000015",
+        name: "Room Gamma",
+        capacity: 4,
+        location: null,
+      },
     ])
 
     await seedD1(db, "room_reservations", [
       // Room Beta: two conflicts
       {
         id: "20000000-0000-4000-8000-000000000001",
-        room_id: 20,
+        room_id: "01900022-0000-7000-8000-000000000014",
         reserver_id: "4",
         start_at: "2026-06-02T10:00:00Z",
         end_at: "2026-06-02T11:00:00Z",
@@ -291,7 +314,7 @@ describe("GET /rooms/availability", () => {
       },
       {
         id: "20000000-0000-4000-8000-000000000002",
-        room_id: 20,
+        room_id: "01900022-0000-7000-8000-000000000014",
         reserver_id: "4",
         start_at: "2026-06-02T10:30:00Z",
         end_at: "2026-06-02T11:30:00Z",
@@ -300,7 +323,7 @@ describe("GET /rooms/availability", () => {
       // Room Gamma: one conflict
       {
         id: "20000000-0000-4000-8000-000000000003",
-        room_id: 21,
+        room_id: "01900022-0000-7000-8000-000000000015",
         reserver_id: "4",
         start_at: "2026-06-02T10:15:00Z",
         end_at: "2026-06-02T10:45:00Z",
@@ -328,7 +351,9 @@ describe("GET /rooms/availability", () => {
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(2)
 
-      const roomBeta = parsed.data.data.find((row) => row.room.id === 20)
+      const roomBeta = parsed.data.data.find(
+        (row) => row.room.id === "01900022-0000-7000-8000-000000000014",
+      )
 
       expect(roomBeta?.available).toBe(false)
       expect(roomBeta?.conflicts.length).toBe(2)
@@ -337,7 +362,9 @@ describe("GET /rooms/availability", () => {
 
       expect(betaStartTimes).toEqual(["2026-06-02T10:00:00Z", "2026-06-02T10:30:00Z"])
 
-      const roomGamma = parsed.data.data.find((row) => row.room.id === 21)
+      const roomGamma = parsed.data.data.find(
+        (row) => row.room.id === "01900022-0000-7000-8000-000000000015",
+      )
 
       expect(roomGamma?.available).toBe(false)
       expect(roomGamma?.conflicts.length).toBe(1)

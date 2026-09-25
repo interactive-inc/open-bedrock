@@ -4,7 +4,7 @@ import type { ThanksPointBudgetRow } from "@/contexts/thanks/infrastructure/sche
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   employeeId: zEmployeeId,
   period: z.string(),
   grantedPoints: z.number(),
@@ -53,7 +53,7 @@ export class ThanksPointBudget implements Props {
     })
   }
 
-  static fromRow(row: ThanksPointBudgetRow): ThanksPointBudget {
+  static fromRow(row: Omit<ThanksPointBudgetRow, "legacyId">): ThanksPointBudget {
     return new ThanksPointBudget({
       id: row.id,
       employeeId: row.employeeId,

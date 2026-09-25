@@ -30,6 +30,12 @@ afterAll(async () => {
   await pool.dispose()
 })
 
+/** 移行前の整数の主キーの順に並ぶ固定の UUID。頁の続き位置を旧来の順と同じにする。 */
+const courseId = (serial: number) =>
+  `0190002c-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
+const enrollmentId = (serial: number) =>
+  `0190002d-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
+
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("研修コース・受講記録を全件保全し、人の承認を経て2台帳を撤去確定する", async () => {
   const {
@@ -66,14 +72,14 @@ test("研修コース・受講記録を全件保全し、人の承認を経て2�
       .prepare(`INSERT INTO training_courses
       (id,code,title,description,duration_minutes,category,is_required,status)
       VALUES (?1,?2,?3,NULL,60,'skill',0,'active')`)
-      .bind(id, code, `Training ${id}`)
+      .bind(courseId(id), code, `Training ${id}`)
       .run()
   }
   await database
     .prepare(`INSERT INTO training_enrollments
     (id,course_id,employee_id,status,completed_at,score,due_date)
-    VALUES (1,1,?1,'enrolled',NULL,NULL,'2026-12-31')`)
-    .bind(creatorPerson.employeeId)
+    VALUES (?2,?3,?1,'enrolled',NULL,NULL,'2026-12-31')`)
+    .bind(creatorPerson.employeeId, enrollmentId(1), courseId(1))
     .run()
   const at = clock()
   const token = await tokenFor(creator)
@@ -120,8 +126,8 @@ test("研修コース・受講記録を全件保全し、人の承認を経て2�
     database
       .prepare(`INSERT INTO training_enrollments
       (id,course_id,employee_id,status,completed_at,score,due_date)
-      VALUES (2,2,?1,'enrolled',NULL,NULL,NULL)`)
-      .bind(creatorPerson.employeeId)
+      VALUES (?2,?3,?1,'enrolled',NULL,NULL,NULL)`)
+      .bind(creatorPerson.employeeId, enrollmentId(2), courseId(2))
       .run(),
   ).rejects.toThrow("training_record_source_frozen")
   expect(
@@ -150,7 +156,7 @@ test("研修コース・受講記録を全件保全し、人の承認を経て2�
   ).toBe(409)
   expect(
     (
-      await apiRequest("/training/training-enrollments/1", {
+      await apiRequest("/training/training-enrollments/0190002d-0000-7000-8000-000000000001", {
         method: "DELETE",
       })
     ).status,
@@ -160,9 +166,9 @@ test("研修コース・受講記録を全件保全し、人の承認を経て2�
   > = [
     ...Array.from({ length: 11 }, (_, index) => ({
       recordKind: "training-course-record" as const,
-      recordId: String(index + 1),
+      recordId: courseId(index + 1),
     })),
-    { recordKind: "training-enrollment-record", recordId: "1" },
+    { recordKind: "training-enrollment-record", recordId: enrollmentId(1) },
   ]
   const mappings: Array<{
     recordKind: TrainingRecordKind
@@ -248,7 +254,7 @@ test("研修コース・受講記録を全件保全し、人の承認を経て2�
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "10",
+    nextCursor: courseId(10),
     recordCount: 10,
   })
   expect(

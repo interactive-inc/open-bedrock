@@ -32,9 +32,9 @@ import { z } from "zod"
 const settledStatus = "fulfilled"
 
 const thanksRedemptionD1RowSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   employeeId: zEmployeeId,
-  rewardId: z.number(),
+  rewardId: z.string(),
   pointCost: z.number(),
   status: redemptionStatusSchema,
   createdAt: z.string(),
@@ -45,7 +45,7 @@ const thanksRedemptionD1RowSchema = z.object({
 export class ThanksRedemptionRepository {
   constructor(private readonly c: Context) {}
 
-  async findById(redemptionId: number): Promise<ThanksRedemption | null | Error> {
+  async findById(redemptionId: string): Promise<ThanksRedemption | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -68,6 +68,7 @@ export class ThanksRedemptionRepository {
       const rows = await this.c.var.database
         .insert(thanksRedemptions)
         .values({
+          id: crypto.randomUUID(),
           employeeId: redemption.employeeId,
           rewardId: redemption.rewardId,
           pointCost: redemption.pointCost,
@@ -109,9 +110,9 @@ export class ThanksRedemptionRepository {
     | Error
   > {
     try {
-      const inserted = await this.c.var.database.all<{ id: number }>(
-        sql`INSERT INTO thanks_redemptions (employee_id, reward_id, point_cost, status, created_at, decided_at, decider_id)
-            SELECT ${redemption.employeeId}, ${redemption.rewardId}, ${redemption.pointCost},
+      const inserted = await this.c.var.database.all<{ id: string }>(
+        sql`INSERT INTO thanks_redemptions (id, employee_id, reward_id, point_cost, status, created_at, decided_at, decider_id)
+            SELECT ${crypto.randomUUID()}, ${redemption.employeeId}, ${redemption.rewardId}, ${redemption.pointCost},
                    'pending', ${redemption.createdAt}, NULL, NULL
             WHERE (
               (SELECT COALESCE(SUM(${thanks.points}), 0) FROM ${thanks}
@@ -196,9 +197,9 @@ export class ThanksRedemptionRepository {
    * （残高がマイナスに割れない）。0 行更新は残高不足 or 既に決裁済みを意味する。
    */
   async approveFromPending(props: {
-    redemptionId: number
+    redemptionId: string
     employeeId: EmployeeId
-    rewardId: number
+    rewardId: string
     deciderId: EmployeeId
     decidedAt: string
     guards: ReadonlyArray<D1PreparedStatement>
@@ -286,7 +287,7 @@ export class ThanksRedemptionRepository {
    * 0 行更新は既に決裁済み。
    */
   async rejectFromPending(props: {
-    redemptionId: number
+    redemptionId: string
     deciderId: EmployeeId
     decidedAt: string
     guards: ReadonlyArray<D1PreparedStatement>

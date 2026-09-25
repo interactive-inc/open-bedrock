@@ -12,8 +12,8 @@ import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
 const jwtSecret = "thanks-redemption-company-authority-test-secret"
 
 // E002 の交換申請。E001 は直属上司、E099 は技術的権限を持つが E002 の管理系列に属さない。
-const redemptionId = 1
-const rewardId = 1
+const redemptionId = "0190002b-0000-7000-8000-000000000001"
+const rewardId = "0190002a-0000-7000-8000-000000000001"
 const manager = 1
 const unrelatedManagerWithPermission = 99
 
@@ -49,6 +49,7 @@ async function createTestDb(name: string, cycle = false): Promise<D1Database> {
   ])
   await seedD1(db, "thanks_messages", [
     {
+      id: "01900028-0000-7000-8000-000000000001",
       sender_employee_id: "3",
       recipient_employee_id: "2",
       message: "Thank you",

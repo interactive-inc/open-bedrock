@@ -19,7 +19,7 @@ import { ApplicationError } from "@/lib/errors"
 import { codeSchema } from "@/lib/validation/code.schema"
 import { isoDate } from "@/lib/validation/iso-date.schema"
 import { zValidator } from "@hono/zod-validator"
-import { and, count, gte, inArray, lte, type SQL } from "drizzle-orm"
+import { and, asc, count, gte, inArray, lte, sql, type SQL } from "drizzle-orm"
 import { z } from "zod"
 
 // @authorization service - session を application service に渡して判定する
@@ -135,7 +135,11 @@ export const GET = factory.createHandlers(
       .select({ assignment: shiftAssignments })
       .from(shiftAssignments)
       .where(conditions.length === 0 ? undefined : and(...conditions))
-      .orderBy(shiftAssignments.id)
+      .orderBy(
+        asc(shiftAssignments.createdAt),
+        asc(sql`CAST(${shiftAssignments.legacyId} AS INTEGER)`),
+        asc(shiftAssignments.id),
+      )
       .limit(limit)
       .offset(offset)
 

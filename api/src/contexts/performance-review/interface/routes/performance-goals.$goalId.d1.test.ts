@@ -31,7 +31,7 @@ afterAll(async () => {
 })
 
 const goalResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   period: z.string(),
   title: z.string(),
@@ -43,13 +43,13 @@ const goalResponseSchema = z.object({
 const jwtSecret = "goal-crud-route-test-secret"
 
 /** 社員 5 が持つ目標。確定評価なし。編集・削除できる。 */
-const ownGoalId = 1
+const ownGoalId = "01900030-0000-7000-8000-000000000001"
 
 /** 社員 9 が持つ目標。 */
-const othersGoalId = 3
+const othersGoalId = "01900030-0000-7000-8000-000000000003"
 
 /** 社員 9 が持つ目標で final 評価がある。確定済みで編集・削除不可。 */
-const finalizedGoalId = 4
+const finalizedGoalId = "01900030-0000-7000-8000-000000000004"
 
 async function createTestDb(): Promise<D1Database> {
   const db = await pool.next()
@@ -223,7 +223,7 @@ describe("GET /performance-goals/:goalId", () => {
 
   test("returns 404 for an unknown goal", async () => {
     const response = await request({
-      path: "/performance-review/performance-goals/9999",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-00000000270f",
       token: await tokenFor(5),
     })
 
@@ -267,7 +267,7 @@ describe("PUT /performance-goals/:goalId", () => {
 
   test("returns 404 for an unknown goal", async () => {
     const response = await request({
-      path: "/performance-review/performance-goals/9999",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-00000000270f",
       token: await tokenFor(5),
       method: "PUT",
       body: { period: "2026-H2", title: "x", weight: 10 },
@@ -322,7 +322,7 @@ describe("DELETE /performance-goals/:goalId", () => {
 
   test("returns 404 for an unknown goal", async () => {
     const response = await request({
-      path: "/performance-review/performance-goals/9999",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-00000000270f",
       token: await tokenFor(5),
       method: "DELETE",
     })

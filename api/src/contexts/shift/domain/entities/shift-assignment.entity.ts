@@ -4,9 +4,9 @@ import type { ShiftAssignmentRow } from "@/contexts/shift/infrastructure/schema/
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   employeeId: zEmployeeId,
-  patternId: z.number().nullable(),
+  patternId: z.string().nullable(),
   date: z.string(),
   note: z.string().nullable(),
   publishedAt: z.string().nullable(),
@@ -44,7 +44,7 @@ export class ShiftAssignment implements Props {
   /** 新規作成する割当を組み立てる。id は未採番、未公開。 */
   static create(props: {
     employeeId: EmployeeId
-    patternId: number | null
+    patternId: string | null
     date: string
     note: string | null
   }): ShiftAssignment {
@@ -75,7 +75,7 @@ export class ShiftAssignment implements Props {
 
   /** パターン・日付・備考を変更した新しい割当を返す。 */
   withDetails(props: {
-    patternId: number | null
+    patternId: string | null
     date: string
     note: string | null
   }): ShiftAssignment {

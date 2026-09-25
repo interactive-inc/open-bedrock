@@ -18,7 +18,7 @@ import {
 import { ApplicationError } from "@/lib/errors"
 import { codeSchema } from "@/lib/validation/code.schema"
 import { zValidator } from "@hono/zod-validator"
-import { and, asc, count, eq, type SQL } from "drizzle-orm"
+import { type SQL, and, asc, count, eq, sql } from "drizzle-orm"
 import { z } from "zod"
 
 // @authorization service - session を application service に渡して判定する
@@ -124,7 +124,11 @@ export const GET = factory.createHandlers(
       .select()
       .from(trainingCourses)
       .where(conditions.length === 0 ? undefined : and(...conditions))
-      .orderBy(asc(trainingCourses.id))
+      .orderBy(
+        asc(trainingCourses.createdAt),
+        asc(sql`CAST(${trainingCourses.legacyId} AS INTEGER)`),
+        asc(trainingCourses.id),
+      )
       .limit(limit)
       .offset(offset)
 

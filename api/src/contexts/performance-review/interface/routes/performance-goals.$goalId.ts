@@ -10,7 +10,7 @@ import { factory } from "@/api/http/factory"
 import { ApplicationError } from "@/lib/errors"
 import { zAppGoal } from "@/contexts/performance-review/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { zValidator } from "@hono/zod-validator"
@@ -33,9 +33,9 @@ function toResponseBody(goal: Goal) {
   })
 }
 
-/** パスパラメータの goal_id を正の整数に変換する。不正値は 404。 */
-function toGoalId(value: string | undefined): number {
-  return validateIntParam(value, "goal")
+/** パスパラメータの goal_id を UUID として検査する。不正値は 404。 */
+function toGoalId(value: string | undefined): string {
+  return validateUuidParam(value, "goal")
 }
 
 // @authorization service - session を application service に渡して判定する

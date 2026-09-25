@@ -17,7 +17,7 @@ export type BulkFormInput = {
 
 export type Input = {
   session: CompanySessionValue
-  cycleId: number
+  cycleId: string
   forms: ReadonlyArray<BulkFormInput>
 }
 

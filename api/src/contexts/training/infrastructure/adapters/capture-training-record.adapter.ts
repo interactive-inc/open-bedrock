@@ -11,29 +11,25 @@ import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-dig
 import { z } from "zod"
 
 type Context = TrainingContext
-type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string | number> }>
+type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string> }>
 
-function numericId(recordId: string): number | null {
-  const parsed = z.coerce.number().int().safe().safeParse(recordId)
-  return parsed.success && String(parsed.data) === recordId ? parsed.data : null
-}
-
+/** 版 2 は主キーを UUID へ移し、移行前の整数の主キー legacy_id と created_at を含める。 */
 function snapshotQuery(recordKind: TrainingRecordKind, recordId: string): SnapshotQuery | Error {
-  const id = numericId(recordId)
-  if (id === null) return new Error("invalid training record id")
+  if (!z.uuid().safeParse(recordId).success) return new Error("invalid training record id")
+  const id = recordId
   if (recordKind === "training-course-record") {
     return {
-      sql: `SELECT json_object('format','training-course-record','version',1,'course',json_object(
-        'id',id,'code',code,'title',title,'description',description,'duration_minutes',duration_minutes,
-        'category',category,'is_required',is_required,'status',status))
+      sql: `SELECT json_object('format','training-course-record','version',2,'course',json_object(
+        'id',id,'legacy_id',legacy_id,'code',code,'title',title,'description',description,'duration_minutes',duration_minutes,
+        'category',category,'is_required',is_required,'status',status,'created_at',created_at))
         AS snapshot_json FROM training_courses WHERE id=?1`,
       values: [id],
     }
   }
   return {
-    sql: `SELECT json_object('format','training-enrollment-record','version',1,'enrollment',json_object(
-      'id',id,'course_id',course_id,'employee_id',employee_id,'status',status,'completed_at',completed_at,
-      'score',score,'due_date',due_date))
+    sql: `SELECT json_object('format','training-enrollment-record','version',2,'enrollment',json_object(
+      'id',id,'legacy_id',legacy_id,'course_id',course_id,'employee_id',employee_id,'status',status,'completed_at',completed_at,
+      'score',score,'due_date',due_date,'created_at',created_at))
       AS snapshot_json FROM training_enrollments WHERE id=?1`,
     values: [id],
   }
@@ -75,7 +71,7 @@ export class CaptureTrainingRecordAdapter {
         recordKind: kind.data,
         recordId: input.recordId,
         formatId: kind.data,
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

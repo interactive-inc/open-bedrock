@@ -507,11 +507,13 @@ describe("createWithAuditLog readback", () => {
     expect(createRes.status).toBe(201)
 
     const created = (await createRes.json()) as {
-      id: number
+      id: string
       employee_id: EmployeeId
     }
 
-    expect(created.id).toBeGreaterThan(0)
+    expect(created.id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    )
     expect(created.employee_id).toBe(toWorkforceEmployeeId(5))
 
     // GET with the returned ID
@@ -526,7 +528,7 @@ describe("createWithAuditLog readback", () => {
     expect(getRes.status).toBe(200)
 
     const fetched = (await getRes.json()) as {
-      id: number
+      id: string
       employee_id: EmployeeId
     }
 
@@ -538,7 +540,7 @@ describe("createWithAuditLog readback", () => {
     const db = await createTestDb()
     const adminTk = await tokenFor(1)
 
-    // シート 1 作成（sheet_id=1, audit_id=1）
+    // シート 1 作成
     const res1 = await requestWithContext({
       db,
       jwtSecret,
@@ -552,20 +554,28 @@ describe("createWithAuditLog readback", () => {
       },
     })
     expect(res1.status).toBe(201)
-    const sheet1 = (await res1.json()) as { id: number }
+    const sheet1 = (await res1.json()) as { id: string }
 
-    // 手動で audit ログを挿入して ID カウンタを意図的にずらす
-    // これにより audit_logs の次の ID は 3 になり、sheet の次の ID は 2 のまま
+    // 手動で audit ログを挿入し、シートと監査ログの行数をずらす。
     await db
       .prepare(
         `INSERT INTO evaluation_sheet_audit_logs
-           (sheet_id, actor_id, action, from_value, to_value, note, created_at)
-         VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
+           (id, sheet_id, actor_id, action, from_value, to_value, note, created_at)
+         VALUES (?8, ?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
       )
-      .bind(sheet1.id, "1", "manual_diverge", null, null, null, "2026-01-01T00:00:00.000Z")
+      .bind(
+        sheet1.id,
+        "1",
+        "manual_diverge",
+        null,
+        null,
+        null,
+        "2026-01-01T00:00:00.000Z",
+        crypto.randomUUID(),
+      )
       .run()
 
-    // シート 2 作成 — sheet_id=2, audit_id=3 になるはず
+    // シート 2 作成
     const res2 = await requestWithContext({
       db,
       jwtSecret,
@@ -579,11 +589,10 @@ describe("createWithAuditLog readback", () => {
       },
     })
     expect(res2.status).toBe(201)
-    const sheet2 = (await res2.json()) as { id: number }
+    const sheet2 = (await res2.json()) as { id: string }
 
-    // sheet ID と audit log ID は異なるカウンタ。
-    // readback が audit_id (3) ではなく正しい sheet_id (2) を返すことを確認。
-    expect(sheet2.id).toBe(sheet1.id + 1)
+    // readback が監査ログではなく作成したシートの ID を返すことを確認。
+    expect(sheet2.id).not.toBe(sheet1.id)
 
     const getRes = await requestWithContext({
       db,
@@ -594,7 +603,7 @@ describe("createWithAuditLog readback", () => {
     })
 
     expect(getRes.status).toBe(200)
-    const fetched = (await getRes.json()) as { id: number; employee_id: EmployeeId }
+    const fetched = (await getRes.json()) as { id: string; employee_id: EmployeeId }
     expect(fetched.id).toBe(sheet2.id)
     expect(fetched.employee_id).toBe(toWorkforceEmployeeId(5))
   })
