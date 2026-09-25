@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { prepareCompanyRecordProcedureTask } from "@/contexts/company/interface/operations/prepare-company-record-procedure-task"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
@@ -12,7 +13,7 @@ import { RecordPreservationSubmissionError } from "@system/application/records/e
 
 /** 打刻原記録の取得と会社資格をSystemの共通提出処理へ接続する。 */
 export function createAttendancePreservationSubmissionHandlers(mode: "create" | "resubmit") {
-  const idSchema = z.coerce.number().int().positive().safe()
+  const numberSchema = z.coerce.number().int().positive().safe()
   const requestSchema = z.strictObject({
     procedure_key: procedureKeySchema,
     conditions: recordPreservationRequestSchema,
@@ -25,7 +26,7 @@ export function createAttendancePreservationSubmissionHandlers(mode: "create" | 
     }),
   }
   return attendanceFactory.createHandlers(
-    zValidator("param", z.strictObject({ id: idSchema, number: idSchema.optional() })),
+    zValidator("param", z.strictObject({ id: uuidSchema, number: numberSchema.optional() })),
     zValidator("header", z.object({ "idempotency-key": z.uuid().optional() })),
     zValidator("json", schemas[mode]),
     async (c) => {

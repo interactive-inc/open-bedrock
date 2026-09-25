@@ -2,8 +2,8 @@ import type { ContractRow } from "@/contexts/partner/infrastructure/schema/partn
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
-  partnerId: z.number(),
+  id: z.string().nullable(),
+  partnerId: z.string(),
   title: z.string(),
   contractDate: z.string(),
   startsOn: z.string().nullable(),
@@ -45,7 +45,7 @@ export class Contract implements Props {
 
   /** 新規契約記録を組み立てる。id は未採番。 */
   static create(props: {
-    partnerId: number
+    partnerId: string
     title: string
     contractDate: string
     startsOn: string | null

@@ -67,7 +67,9 @@ test("実DBの書込み停止が通常の出勤と退勤で409になり、解除
   }
   expect(
     await f.database
-      .prepare("SELECT status FROM attendance_records WHERE id=1")
+      .prepare(
+        "SELECT status FROM attendance_records WHERE id='01900016-0000-7000-8000-000000000001'",
+      )
       .first<string>("status"),
   ).toBe("open")
   expect(

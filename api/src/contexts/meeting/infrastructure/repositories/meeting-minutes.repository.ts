@@ -7,7 +7,7 @@ export class MeetingMinutesRepository {
   constructor(private readonly c: Context) {}
 
   /** 議事録 id で1件取得する。存在しなければ null。 */
-  async findById(id: number): Promise<MeetingMinutes | null | Error> {
+  async findById(id: string): Promise<MeetingMinutes | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -25,7 +25,7 @@ export class MeetingMinutesRepository {
 
   /** 会議体 id 配下の議事録を新しい順に取得する。 */
   async listByMeetingId(
-    meetingId: number,
+    meetingId: string,
     limit: number,
     offset: number,
   ): Promise<ReadonlyArray<MeetingMinutes> | Error> {
@@ -34,7 +34,11 @@ export class MeetingMinutesRepository {
         .select()
         .from(meetingMinutes)
         .where(eq(meetingMinutes.meetingId, meetingId))
-        .orderBy(desc(meetingMinutes.heldOn), desc(meetingMinutes.id))
+        .orderBy(
+          desc(meetingMinutes.heldOn),
+          desc(meetingMinutes.createdAt),
+          desc(meetingMinutes.id),
+        )
         .limit(limit)
         .offset(offset)
 
@@ -49,6 +53,7 @@ export class MeetingMinutesRepository {
       const rows = await this.c.var.database
         .insert(meetingMinutes)
         .values({
+          id: crypto.randomUUID(),
           meetingId: minutes.meetingId,
           heldOn: minutes.heldOn,
           title: minutes.title,

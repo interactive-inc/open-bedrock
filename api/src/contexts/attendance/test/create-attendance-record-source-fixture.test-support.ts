@@ -30,15 +30,18 @@ export async function createAttendanceRecordSourceFixture(database: D1Database) 
     INSERT INTO company_employees (id,official_name,employee_code,email,phone,created_at,updated_at)
       VALUES ('employee:worker','Worker','WORKER',NULL,NULL,0,0);
     INSERT INTO attendance_records (id,employee_id,work_date,clock_in_at,clock_out_at,work_minutes,note,status)
-      VALUES (1,'employee:worker','2026-09-01','2026-09-01T00:00:00Z',NULL,NULL,'Original note','open'),
-      (2,'employee:worker','2026-08-31','2026-08-31T00:00:00Z','2026-08-31T08:00:00Z',480,NULL,'closed');
+      VALUES ('01900016-0000-7000-8000-000000000001','employee:worker','2026-09-01','2026-09-01T00:00:00Z',NULL,NULL,'Original note','open'),
+      ('01900016-0000-7000-8000-000000000002','employee:worker','2026-08-31','2026-08-31T00:00:00Z','2026-08-31T08:00:00Z',480,NULL,'closed');
     CREATE TABLE capture_test_receipts (id TEXT PRIMARY KEY);`,
   )
   const context = {
     env: { DB: database },
     var: { now: () => clock.now, bearerReadAuthentication: authentication },
   }
-  const input = { recordId: 1, sourceNamespace: "example-source" }
+  const input = {
+    recordId: "01900016-0000-7000-8000-000000000001",
+    sourceNamespace: "example-source",
+  }
   return {
     database,
     clock,

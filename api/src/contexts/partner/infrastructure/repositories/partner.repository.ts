@@ -24,7 +24,7 @@ export class PartnerRepository {
     }
   }
 
-  async findById(id: number): Promise<Partner | null | Error> {
+  async findById(id: string): Promise<Partner | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -45,6 +45,7 @@ export class PartnerRepository {
       const rows = await this.c.var.database
         .insert(partners)
         .values({
+          id: crypto.randomUUID(),
           code: partner.code,
           name: partner.name,
           category: partner.category,

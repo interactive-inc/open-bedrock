@@ -34,6 +34,20 @@ const LEGACY_INTEGER_SEED_PREFIXES: Readonly<Record<string, string>> = {
   "01900010": "employee_work_styles",
   "01900011": "company_calendar_days",
   "01900012": "document_ledger_entries",
+  "01900014": "announcements",
+  "01900015": "asset_lendings",
+  "01900016": "attendance_records",
+  "01900017": "career_postings",
+  "01900018": "career_applications",
+  "01900019": "certification_definitions",
+  "0190001a": "decision_records",
+  "0190001b": "meetings",
+  "0190001c": "meeting_minutes_records",
+  "0190001d": "partners",
+  "0190001e": "partner_contracts",
+  "0190001f": "regulations",
+  "01900020": "regulation_versions",
+  "01900021": "employee_certifications",
 }
 
 /**

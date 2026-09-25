@@ -3,7 +3,7 @@ import { z } from "zod"
 
 /** D1 batch の結果行を安全にパースする。fromRow の引数型に対応する。 */
 export const partnerRowSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   code: z.string(),
   name: z.string(),
   category: z.string().nullable(),
@@ -14,7 +14,7 @@ export const partnerRowSchema = z.object({
 })
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   code: z.string(),
   name: z.string(),
   category: z.string().nullable(),

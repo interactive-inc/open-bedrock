@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { ConflictError } from "@/lib/errors"
 import { ForbiddenError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { CareerApplicationRepository } from "@/contexts/career/infrastructure/repositories/career-application.repository"
@@ -13,7 +14,7 @@ import { zAppCareerApplication } from "@/contexts/career/interface/http/response
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
-const applicationIdSchema = z.coerce.number().int().positive()
+const applicationIdSchema = uuidSchema
 
 /** 応募をレスポンス用の snake_case に整形する。 */
 function toResponseBody(application: CareerApplication) {

@@ -26,14 +26,14 @@ afterAll(async () => {
 const jwtSecret = "decisions-route-test-secret"
 
 const decisionResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   decided_on: z.string(),
   context: z.string(),
   decision: z.string(),
   consequences: z.string().nullable(),
   status: z.enum(["active", "superseded"]),
-  superseded_by_id: z.number().nullable(),
+  superseded_by_id: z.uuid().nullable(),
   created_at: z.string(),
 })
 
@@ -62,7 +62,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "decision_records", [
     {
-      id: 1,
+      id: "0190001a-0000-7000-8000-000000000001",
       title: "本社移転",
       decided_on: "2026-01-10",
       context: "手狭になったため。",
@@ -73,7 +73,7 @@ async function createTestDb(): Promise<D1Database> {
       created_at: "2026-01-10T00:00:00Z",
     },
     {
-      id: 2,
+      id: "0190001a-0000-7000-8000-000000000002",
       title: "移転先変更",
       decided_on: "2026-02-10",
       context: "候補が増えたため。",
@@ -186,7 +186,7 @@ describe("GET /decision-records/:id", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meeting/decision-records/1",
+      path: "/meeting/decision-records/0190001a-0000-7000-8000-000000000001",
       token: await memberToken(),
     })
 
@@ -205,7 +205,7 @@ describe("GET /decision-records/:id", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meeting/decision-records/9999",
+      path: "/meeting/decision-records/ffffffff-0000-4000-8000-000000009999",
       token: await memberToken(),
     })
 
@@ -218,7 +218,7 @@ describe("PUT /decision-records/:id", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meeting/decision-records/1",
+      path: "/meeting/decision-records/0190001a-0000-7000-8000-000000000001",
       token: await adminToken(),
       method: "PUT",
       body: {
@@ -247,10 +247,10 @@ describe("POST /decision-records/:id/supersede", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meeting/decision-records/1/supersede",
+      path: "/meeting/decision-records/0190001a-0000-7000-8000-000000000001/supersede",
       token: await adminToken(),
       method: "POST",
-      body: { superseded_by_id: 2 },
+      body: { superseded_by_id: "0190001a-0000-7000-8000-000000000002" },
     })
 
     expect(response.status).toBe(200)
@@ -261,7 +261,7 @@ describe("POST /decision-records/:id/supersede", () => {
 
     if (parsed.success) {
       expect(parsed.data.status).toBe("superseded")
-      expect(parsed.data.superseded_by_id).toBe(2)
+      expect(parsed.data.superseded_by_id).toBe("0190001a-0000-7000-8000-000000000002")
     }
   })
 
@@ -271,10 +271,10 @@ describe("POST /decision-records/:id/supersede", () => {
     const first = await requestWithContext({
       db,
       jwtSecret,
-      path: "/meeting/decision-records/1/supersede",
+      path: "/meeting/decision-records/0190001a-0000-7000-8000-000000000001/supersede",
       token: await adminToken(),
       method: "POST",
-      body: { superseded_by_id: 2 },
+      body: { superseded_by_id: "0190001a-0000-7000-8000-000000000002" },
     })
 
     expect(first.status).toBe(200)
@@ -282,10 +282,10 @@ describe("POST /decision-records/:id/supersede", () => {
     const second = await requestWithContext({
       db,
       jwtSecret,
-      path: "/meeting/decision-records/1/supersede",
+      path: "/meeting/decision-records/0190001a-0000-7000-8000-000000000001/supersede",
       token: await adminToken(),
       method: "POST",
-      body: { superseded_by_id: 2 },
+      body: { superseded_by_id: "0190001a-0000-7000-8000-000000000002" },
     })
 
     expect(second.status).toBe(409)
@@ -295,10 +295,10 @@ describe("POST /decision-records/:id/supersede", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/meeting/decision-records/1/supersede",
+      path: "/meeting/decision-records/0190001a-0000-7000-8000-000000000001/supersede",
       token: await memberToken(),
       method: "POST",
-      body: { superseded_by_id: 2 },
+      body: { superseded_by_id: "0190001a-0000-7000-8000-000000000002" },
     })
 
     expect(response.status).toBe(403)

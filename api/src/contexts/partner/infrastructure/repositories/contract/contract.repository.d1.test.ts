@@ -74,6 +74,6 @@ describe("ContractRepository on local D1", () => {
 
     expect(reloaded.title).toBe("Amended Agreement")
     expect(reloaded.renewalDeadline).toBe("2026-11-30")
-    expect(await repository.findById(9999)).toBeNull()
+    expect(await repository.findById("0190001e-0000-7000-8000-00000000270f")).toBeNull()
   })
 })

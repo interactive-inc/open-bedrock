@@ -4,7 +4,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { zAppAnnouncement } from "@/contexts/announcement/interface/http/response-schemas"
 
 // @authorization service - session を application service に渡して判定する
@@ -20,7 +20,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
 
   const published = await new PublishAnnouncement(c).run({
     session: session,
-    announcementId: validateIntParam(c.req.param("id"), "announcement"),
+    announcementId: validateUuidParam(c.req.param("id"), "announcement"),
     publishedOn: now.slice(0, 10),
     createdAt: now,
   })

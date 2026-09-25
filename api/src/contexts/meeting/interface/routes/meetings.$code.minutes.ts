@@ -60,7 +60,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       .select()
       .from(meetingMinutes)
       .where(eq(meetingMinutes.meetingId, meeting.id))
-      .orderBy(desc(meetingMinutes.heldOn), desc(meetingMinutes.id))
+      .orderBy(desc(meetingMinutes.heldOn), desc(meetingMinutes.createdAt), desc(meetingMinutes.id))
       .limit(limit)
       .offset(offset),
     c.var.database

@@ -7,7 +7,7 @@ import { isAnnouncementRecordSourceFrozenError } from "@/contexts/announcement/i
 export class AnnouncementRepository {
   constructor(private readonly c: Context) {}
 
-  async findById(id: number): Promise<Announcement | null | Error> {
+  async findById(id: string): Promise<Announcement | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -28,6 +28,7 @@ export class AnnouncementRepository {
       const rows = await this.c.var.database
         .insert(announcements)
         .values({
+          id: crypto.randomUUID(),
           title: announcement.title,
           bodyMd: announcement.bodyMd,
           publishedOn: announcement.publishedOn,

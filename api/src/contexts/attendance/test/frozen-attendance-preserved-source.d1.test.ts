@@ -127,7 +127,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
   const page = await new CaptureFrozenAttendanceRecordPageAdapter(context).prepare({
     freezeId,
     sourceNamespace: f.settings.sourceNamespace,
-    afterId: 0,
+    afterId: "01900016-0000-7000-8000-000000000000",
     limit: 10,
   })
   if (page instanceof Error) throw page
@@ -190,7 +190,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
     sequence: 1,
     previousDigest: null,
     afterCursor: null,
-    nextCursor: "1",
+    nextCursor: "01900016-0000-7000-8000-000000000001",
     purpose: "archive",
     checkedAt: new Date().toISOString(),
     actorAccountId: creator,
@@ -228,7 +228,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
       id: crypto.randomUUID(),
       sequence: 2,
       previousDigest: coverage.digest,
-      afterCursor: "1",
+      afterCursor: "01900016-0000-7000-8000-000000000001",
       nextCursor: null,
     },
     coverage,
@@ -269,7 +269,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
       id: crypto.randomUUID(),
       sequence: 2,
       previousDigest: coverage.digest,
-      afterCursor: "1",
+      afterCursor: "01900016-0000-7000-8000-000000000001",
       nextCursor: null,
       records: [],
     },
@@ -479,7 +479,12 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
     freezeId: freshFreeze,
     sourceNamespace: f.settings.sourceNamespace,
     purpose: "archive",
-    records: [{ sourceRecordId: 1, preservedRecordId: receipt.record_id }],
+    records: [
+      {
+        sourceRecordId: "01900016-0000-7000-8000-000000000001",
+        preservedRecordId: receipt.record_id,
+      },
+    ],
   }
   expect((await requestCoverage(coverageCommand, f.database, { anonymous: true })).status).toBe(401)
   expect((await requestCoverage(coverageCommand, f.database, { withoutStepUp: true })).status).toBe(

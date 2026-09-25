@@ -28,22 +28,23 @@ import { makeTestSession } from "@tests/api/support/make-test-session"
  * 採番、条件付き削除、会社組織からの解決はlocal D1の career-posting-persistence.d1.test.ts で検証する。
  */
 function createContext() {
-  const postings = new Map<number, CareerPosting>()
+  const postings = new Map<string, CareerPosting>()
   const applications: CareerApplication[] = []
   const selectable = new Set<OrganizationUnitId>([toWorkforceOrganizationUnitId("D003")])
 
   const postingRepository = {
-    findById: async (id: number) => postings.get(id) ?? null,
+    findById: async (id: string) => postings.get(id) ?? null,
     create: async (careerPosting: CareerPosting) => {
+      const id = crypto.randomUUID()
       const saved = new CareerPosting({
-        id: postings.size + 1,
+        id,
         title: careerPosting.title,
         organizationUnitId: careerPosting.organizationUnitId,
         legacyDeptName: careerPosting.legacyDeptName,
         requiredSkills: careerPosting.requiredSkills,
         status: careerPosting.status,
       })
-      postings.set(postings.size + 1, saved)
+      postings.set(id, saved)
       return saved
     },
     update: async (careerPosting: CareerPosting) => {
@@ -64,7 +65,7 @@ function createContext() {
   }
 
   const applicationRepository = {
-    findByPostingAndApplicant: async (postingId: number, applicantId: EmployeeId) =>
+    findByPostingAndApplicant: async (postingId: string, applicantId: EmployeeId) =>
       applications.find(
         (application) =>
           application.postingId === postingId && application.applicantId === applicantId,
@@ -85,7 +86,7 @@ function createContext() {
   return { postingRepository, applicationRepository, organizationUnits, postings }
 }
 
-async function seedPosting(context: ReturnType<typeof createContext>): Promise<number> {
+async function seedPosting(context: ReturnType<typeof createContext>): Promise<string> {
   const created = await new CreateCareerPosting(context).run({
     session: makeTestSession("root"),
     title: "Platform Engineer",
@@ -236,7 +237,7 @@ describe("UpdateCareerPosting", () => {
 
     const updated = await new UpdateCareerPosting(context).run({
       session: makeTestSession("root"),
-      postingId: 9999,
+      postingId: "01900017-0000-7000-8000-00000000270f",
       title: "X",
       organizationUnitId: null,
       requiredSkills: null,

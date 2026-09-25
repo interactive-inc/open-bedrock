@@ -28,8 +28,8 @@ afterAll(async () => {
 const jwtSecret = "contract-route-test-secret"
 
 const contractResponseSchema = z.object({
-  id: z.number(),
-  partner_id: z.number(),
+  id: z.uuid(),
+  partner_id: z.uuid(),
   title: z.string(),
   contract_date: z.string(),
   starts_on: z.string().nullable(),
@@ -128,7 +128,10 @@ describe("GET /partner-contracts", () => {
   })
 
   test("filters by partner_id", async () => {
-    const response = await request("/partner/partner-contracts?partner_id=1", await tokenFor(1))
+    const response = await request(
+      "/partner/partner-contracts?partner_id=0190001d-0000-7000-8000-000000000001",
+      await tokenFor(1),
+    )
 
     expect(response.status).toBe(200)
 
@@ -138,7 +141,7 @@ describe("GET /partner-contracts", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0]?.partner_id).toBe(1)
+      expect(parsed.data.data[0]?.partner_id).toBe("0190001d-0000-7000-8000-000000000001")
     }
   })
 
@@ -158,7 +161,7 @@ describe("GET /partner-contracts", () => {
 describe("POST /partner-contracts", () => {
   test("creates a contract as admin", async () => {
     const response = await request("/partner/partner-contracts", await tokenFor(1), "POST", {
-      partner_id: 1,
+      partner_id: "0190001d-0000-7000-8000-000000000001",
       title: "New Agreement",
       contract_date: "2026-02-01",
       renewal_deadline: "2026-12-31",
@@ -172,13 +175,13 @@ describe("POST /partner-contracts", () => {
 
     if (parsed.success) {
       expect(parsed.data.title).toBe("New Agreement")
-      expect(parsed.data.partner_id).toBe(1)
+      expect(parsed.data.partner_id).toBe("0190001d-0000-7000-8000-000000000001")
     }
   })
 
   test("returns 403 for a member", async () => {
     const response = await request("/partner/partner-contracts", await tokenFor(5), "POST", {
-      partner_id: 1,
+      partner_id: "0190001d-0000-7000-8000-000000000001",
       title: "Blocked",
       contract_date: "2026-02-01",
     })
@@ -188,7 +191,7 @@ describe("POST /partner-contracts", () => {
 
   test("returns 404 for an unknown partner", async () => {
     const response = await request("/partner/partner-contracts", await tokenFor(1), "POST", {
-      partner_id: 9999,
+      partner_id: "0190001d-0000-7000-8000-00000000270f",
       title: "Ghost",
       contract_date: "2026-02-01",
     })
@@ -199,11 +202,16 @@ describe("POST /partner-contracts", () => {
 
 describe("PUT /partner-contracts/:id", () => {
   test("updates a contract as admin", async () => {
-    const response = await request("/partner/partner-contracts/1", await tokenFor(1), "PUT", {
-      title: "Amended Agreement",
-      contract_date: "2026-01-15",
-      renewal_deadline: "2026-11-30",
-    })
+    const response = await request(
+      "/partner/partner-contracts/0190001e-0000-7000-8000-000000000001",
+      await tokenFor(1),
+      "PUT",
+      {
+        title: "Amended Agreement",
+        contract_date: "2026-01-15",
+        renewal_deadline: "2026-11-30",
+      },
+    )
 
     expect(response.status).toBe(200)
 
@@ -217,19 +225,29 @@ describe("PUT /partner-contracts/:id", () => {
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/partner/partner-contracts/1", await tokenFor(5), "PUT", {
-      title: "Hijacked",
-      contract_date: "2026-01-15",
-    })
+    const response = await request(
+      "/partner/partner-contracts/0190001e-0000-7000-8000-000000000001",
+      await tokenFor(5),
+      "PUT",
+      {
+        title: "Hijacked",
+        contract_date: "2026-01-15",
+      },
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 404 for unknown id", async () => {
-    const response = await request("/partner/partner-contracts/9999", await tokenFor(1), "PUT", {
-      title: "Missing",
-      contract_date: "2026-01-15",
-    })
+    const response = await request(
+      "/partner/partner-contracts/0190001e-0000-7000-8000-00000000270f",
+      await tokenFor(1),
+      "PUT",
+      {
+        title: "Missing",
+        contract_date: "2026-01-15",
+      },
+    )
 
     expect(response.status).toBe(404)
   })

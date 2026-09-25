@@ -31,6 +31,12 @@ afterAll(async () => {
 })
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
+
+/** 公募の固定 UUID。末尾の連番と辞書順が一致するので、ページの並びは移行前の整数の主キーと同じになる。 */
+function postingId(serial: number): string {
+  return `01900017-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
+}
+
 test("キャリア公募・応募・シート記録を全件保全し、人の承認を経て3台帳を撤去確定する", async () => {
   const {
     clock,
@@ -65,12 +71,12 @@ test("キャリア公募・応募・シート記録を全件保全し、人の�
       .prepare(`INSERT INTO career_postings
         (id,title,dept_id,dept_name,required_skills,status)
         VALUES (?1,?2,NULL,NULL,NULL,?3)`)
-      .bind(id, `Career posting ${id}`, id === 11 ? "closed" : "open")
+      .bind(postingId(id), `Career posting ${id}`, id === 11 ? "closed" : "open")
       .run()
   }
   await database
     .prepare(`INSERT INTO career_applications (id,posting_id,applicant_id,message,status)
-      VALUES (1,1,?1,'Original application','applied')`)
+      VALUES ('01900018-0000-7000-8000-000000000001','01900017-0000-7000-8000-000000000001',?1,'Original application','applied')`)
     .bind(creatorPerson.employeeId)
     .run()
   await database
@@ -114,12 +120,16 @@ test("キャリア公募・応募・シート記録を全件保全し、人の�
       .first<number>("n"),
   ).toBe(1)
   await expect(
-    database.prepare("UPDATE career_postings SET title='Must not change' WHERE id=1").run(),
+    database
+      .prepare(
+        "UPDATE career_postings SET title='Must not change' WHERE id='01900017-0000-7000-8000-000000000001'",
+      )
+      .run(),
   ).rejects.toThrow("career_record_source_frozen")
   await expect(
     database
       .prepare(`INSERT INTO career_applications
-      (posting_id,applicant_id,message,status) VALUES (2,?1,NULL,'applied')`)
+      (id,posting_id,applicant_id,message,status) VALUES ('01900018-0000-7000-8000-000000000002','01900017-0000-7000-8000-000000000002',?1,NULL,'applied')`)
       .bind(creatorPerson.employeeId)
       .run(),
   ).rejects.toThrow("career_record_source_frozen")
@@ -133,7 +143,7 @@ test("キャリア公募・応募・シート記録を全件保全し、人の�
         status: "open",
       },
     }),
-    await apiRequest("/career/career-postings/1", {
+    await apiRequest("/career/career-postings/01900017-0000-7000-8000-000000000001", {
       method: "PUT",
       body: {
         title: "Must not change",
@@ -142,16 +152,20 @@ test("キャリア公募・応募・シート記録を全件保全し、人の�
         status: "open",
       },
     }),
-    await apiRequest("/career/career-postings/11", { method: "DELETE" }),
-    await apiRequest("/career/career-postings/2/apply", {
+    await apiRequest("/career/career-postings/01900017-0000-7000-8000-00000000000b", {
+      method: "DELETE",
+    }),
+    await apiRequest("/career/career-postings/01900017-0000-7000-8000-000000000002/apply", {
       method: "POST",
       body: { message: "Blocked" },
     }),
-    await apiRequest("/career/career-applications/1", {
+    await apiRequest("/career/career-applications/01900018-0000-7000-8000-000000000001", {
       method: "PUT",
       body: { message: "Blocked" },
     }),
-    await apiRequest("/career/career-applications/1", { method: "DELETE" }),
+    await apiRequest("/career/career-applications/01900018-0000-7000-8000-000000000001", {
+      method: "DELETE",
+    }),
     await apiRequest("/career/career-sheets/me", {
       method: "PUT",
       body: { goals_text: "Blocked", strengths_text: null },
@@ -168,9 +182,9 @@ test("キャリア公募・応募・シート記録を全件保全し、人の�
     [
       ...Array.from({ length: 11 }, (_, index) => ({
         recordKind: "career-posting-record" as const,
-        recordId: String(index + 1),
+        recordId: postingId(index + 1),
       })),
-      { recordKind: "career-application-record", recordId: "1" },
+      { recordKind: "career-application-record", recordId: "01900018-0000-7000-8000-000000000001" },
       { recordKind: "career-sheet-record", recordId: creatorPerson.employeeId },
     ]
   const mappings: Array<{
@@ -257,7 +271,7 @@ test("キャリア公募・応募・シート記録を全件保全し、人の�
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "10",
+    nextCursor: postingId(10),
     recordCount: 10,
   })
   expect(

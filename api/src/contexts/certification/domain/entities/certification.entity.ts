@@ -2,7 +2,7 @@ import type { CertificationRow } from "@/contexts/certification/infrastructure/s
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number(),
+  id: z.string(),
   code: z.string(),
   name: z.string(),
   issuer: z.string().nullable(),

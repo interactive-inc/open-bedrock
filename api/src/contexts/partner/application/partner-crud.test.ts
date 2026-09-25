@@ -180,7 +180,7 @@ describe("UpdatePartner", () => {
 
     const result = await new UpdatePartner(context).run({
       session: makeTestSession("root"),
-      id: 9999,
+      id: "0190001d-0000-7000-8000-00000000270f",
       details: { name: "Missing", category: null, corporateNumber: null, note: null },
     })
 
@@ -228,7 +228,7 @@ describe("ArchivePartner", () => {
 
     const result = await new ArchivePartner(context).run({
       session: makeTestSession("root"),
-      id: 9999,
+      id: "0190001d-0000-7000-8000-00000000270f",
     })
 
     expectApplicationError(result, NotFoundError, "partner_not_found")

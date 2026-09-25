@@ -30,14 +30,14 @@ test("取引先2台帳を停止中に人の承認で保全し、業務コード�
     database,
     `INSERT INTO partners
     (id,code,name,category,corporate_number,note,status,created_at)
-    VALUES (1,'vendor-1','Vendor One','supplier','1234567890123','Preferred','active',
+    VALUES ('0190001d-0000-7000-8000-000000000001','vendor-1','Vendor One','supplier','1234567890123','Preferred','active',
       '2026-09-01T00:00:00.000Z')`,
   )
   await execSql(
     database,
     `INSERT INTO partner_contracts
     (id,partner_id,title,contract_date,starts_on,ends_on,renewal_deadline,note,created_at)
-    VALUES (2,1,'Service Agreement','2026-09-15','2026-10-01','2027-09-30',
+    VALUES ('0190001e-0000-7000-8000-000000000002','0190001d-0000-7000-8000-000000000001','Service Agreement','2026-09-15','2026-10-01','2027-09-30',
       '2027-08-31','Annual renewal','2026-09-15T12:00:00.000Z')`,
   )
   const token = await tokenFor(creator.accountId)
@@ -75,8 +75,8 @@ test("取引先2台帳を停止中に人の承認で保全し、業務コード�
     )
   }
   const sources = [
-    ["partner-record", "1"],
-    ["partner-contract-record", "2"],
+    ["partner-record", "0190001d-0000-7000-8000-000000000001"],
+    ["partner-contract-record", "0190001e-0000-7000-8000-000000000002"],
   ] as const
   const preservedIds: string[] = []
   for (const [recordKind, recordId] of sources) {

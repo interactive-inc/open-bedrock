@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { CareerContext } from "@/contexts/career/configuration/career-context"
 import { CareerError } from "@/contexts/career/domain/errors"
 import {
@@ -11,7 +12,7 @@ import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-dig
 
 type Context = CareerContext
 
-type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string | number> }>
+type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string> }>
 
 function snapshotQuery(recordKind: CareerRecordKind, recordId: string): SnapshotQuery | Error {
   if (recordKind === "career-sheet-record") {
@@ -23,23 +24,21 @@ function snapshotQuery(recordKind: CareerRecordKind, recordId: string): Snapshot
       values: [recordId],
     }
   }
-  const id = Number(recordId)
-  if (!Number.isSafeInteger(id) || String(id) !== recordId)
-    return new Error("invalid career record id")
+  if (!z.uuid().safeParse(recordId).success) return new Error("invalid career record id")
   return recordKind === "career-posting-record"
     ? {
-        sql: `SELECT json_object('format','career-posting-record','version',2,'posting',json_object(
-          'id',id,'title',title,'dept_id',dept_id,'dept_name',dept_name,
+        sql: `SELECT json_object('format','career-posting-record','version',3,'posting',json_object(
+          'id',id,'legacy_id',legacy_id,'title',title,'dept_id',dept_id,'dept_name',dept_name,
           'organization_unit_id',organization_unit_id,
-          'required_skills',required_skills,'status',status)) AS snapshot_json
+          'required_skills',required_skills,'status',status,'created_at',created_at)) AS snapshot_json
           FROM career_postings WHERE id=?1`,
-        values: [id],
+        values: [recordId],
       }
     : {
-        sql: `SELECT json_object('format','career-application-record','version',1,'application',json_object(
-          'id',id,'posting_id',posting_id,'applicant_id',applicant_id,'message',message,
-          'status',status)) AS snapshot_json FROM career_applications WHERE id=?1`,
-        values: [id],
+        sql: `SELECT json_object('format','career-application-record','version',2,'application',json_object(
+          'id',id,'legacy_id',legacy_id,'posting_id',posting_id,'applicant_id',applicant_id,'message',message,
+          'status',status,'created_at',created_at)) AS snapshot_json FROM career_applications WHERE id=?1`,
+        values: [recordId],
       }
 }
 
@@ -79,7 +78,12 @@ export class CaptureCareerRecordAdapter {
         recordKind: kind.data,
         recordId: input.recordId,
         formatId: kind.data,
-        formatVersion: kind.data === "career-posting-record" ? 2 : 1,
+        formatVersion:
+          kind.data === "career-posting-record"
+            ? 3
+            : kind.data === "career-application-record"
+              ? 2
+              : 1,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

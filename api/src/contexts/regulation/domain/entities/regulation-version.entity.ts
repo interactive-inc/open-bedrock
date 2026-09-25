@@ -2,8 +2,8 @@ import type { RegulationVersionRow } from "@/contexts/regulation/infrastructure/
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
-  regulationId: z.number(),
+  id: z.string().nullable(),
+  regulationId: z.string(),
   version: z.number().int(),
   bodyMd: z.string(),
   effectiveOn: z.string(),
@@ -39,7 +39,7 @@ export class RegulationVersion implements Props {
 
   /** 新しい改定版を組み立てる。id は未採番。 */
   static create(props: {
-    regulationId: number
+    regulationId: string
     version: number
     bodyMd: string
     effectiveOn: string

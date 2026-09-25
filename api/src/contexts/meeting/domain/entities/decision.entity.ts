@@ -2,14 +2,14 @@ import type { DecisionRow } from "@/contexts/meeting/infrastructure/schema/meeti
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   title: z.string(),
   decidedOn: z.string(),
   context: z.string(),
   decision: z.string(),
   consequences: z.string().nullable(),
   status: z.enum(["active", "superseded"]),
-  supersededById: z.number().nullable(),
+  supersededById: z.string().nullable(),
   createdAt: z.string(),
 })
 

@@ -89,6 +89,6 @@ describe("PartnerRepository on local D1", () => {
     )
 
     expect(missing).toBeInstanceOf(Error)
-    expect(await repository.findById(9999)).toBeNull()
+    expect(await repository.findById("0190001d-0000-7000-8000-00000000270f")).toBeNull()
   })
 })

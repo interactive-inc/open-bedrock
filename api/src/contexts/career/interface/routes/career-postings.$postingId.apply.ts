@@ -2,7 +2,7 @@ import { CareerApplicationRepository } from "@/contexts/career/infrastructure/re
 import { CareerPostingRepository } from "@/contexts/career/infrastructure/repositories/career-posting.repository"
 import { ApplyToCareerPosting } from "@/contexts/career/application/apply-to-career-posting"
 import { factory } from "@/api/http/factory"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { ApplicationError } from "@/lib/errors"
@@ -21,7 +21,7 @@ export const POST = factory.createHandlers(
     }),
   ),
   async (c) => {
-    const postingId = validateIntParam(c.req.param("postingId"), "posting")
+    const postingId = validateUuidParam(c.req.param("postingId"), "posting")
 
     const session = c.var.session
 

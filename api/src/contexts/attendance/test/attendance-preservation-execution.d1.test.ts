@@ -41,7 +41,7 @@ test("保全確定APIは認証・権限・原記録の対応・承認済み状�
   expect(
     (
       await f.request(
-        `/attendance-records/2/preservation-requests/${receipt.number}/execute`,
+        `/attendance-records/01900016-0000-7000-8000-000000000002/preservation-requests/${receipt.number}/execute`,
         command,
       )
     ).status,

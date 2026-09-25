@@ -28,6 +28,7 @@ export class MeetingRepository {
       const rows = await this.c.var.database
         .insert(meetings)
         .values({
+          id: crypto.randomUUID(),
           code: meeting.code,
           name: meeting.name,
           cadence: meeting.cadence,

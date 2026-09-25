@@ -7,7 +7,7 @@ import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppContract } from "@/contexts/partner/interface/http/response-schemas"
 import { isoDate } from "@/lib/validation/iso-date.schema"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -38,7 +38,7 @@ export const PUT = factory.createHandlers(
     const updated = await new UpdateContract({ contractRepository: new ContractRepository(c) }).run(
       {
         session: session,
-        id: validateIntParam(c.req.param("id"), "contract"),
+        id: validateUuidParam(c.req.param("id"), "contract"),
         details: {
           title: json.title,
           contractDate: json.contract_date,

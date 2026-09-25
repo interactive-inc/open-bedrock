@@ -4,8 +4,8 @@ import type { MeetingMinutesRow } from "@/contexts/meeting/infrastructure/schema
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
-  meetingId: z.number(),
+  id: z.string().nullable(),
+  meetingId: z.string(),
   heldOn: z.string(),
   title: z.string(),
   attendees: z.string().nullable(),
@@ -44,7 +44,7 @@ export class MeetingMinutes implements Props {
 
   /** 新規議事録を組み立てる。id は未採番のため null。 */
   static create(props: {
-    meetingId: number
+    meetingId: string
     heldOn: string
     title: string
     attendees: string | null

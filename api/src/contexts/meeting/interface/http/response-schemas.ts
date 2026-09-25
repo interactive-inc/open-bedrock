@@ -48,7 +48,7 @@ export const zAppMeetingRetirementExecution = z.strictObject({
 
 /** 会議体 1 件のレスポンス（詳細・作成・更新）。 */
 export const zAppMeeting = z.object({
-  id: z.number(),
+  id: z.uuid(),
   code: z.string(),
   name: z.string(),
   cadence: z.string().nullable(),
@@ -65,8 +65,8 @@ export const zAppMeetingList = z.object({
 
 /** 議事録 1 件のレスポンス（詳細・作成・更新）。 */
 export const zAppMeetingMinutes = z.object({
-  id: z.number(),
-  meeting_id: z.number(),
+  id: z.uuid(),
+  meeting_id: z.uuid(),
   held_on: z.string(),
   title: z.string(),
   attendees: z.string().nullable(),
@@ -83,14 +83,14 @@ export const zAppMeetingMinutesList = z.object({
 
 /** 意思決定記録 1 件のレスポンス（詳細・作成・更新・supersede）。 */
 export const zAppDecision = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   decided_on: z.string(),
   context: z.string(),
   decision: z.string(),
   consequences: z.string().nullable(),
   status: z.enum(["active", "superseded"]),
-  superseded_by_id: z.number().nullable(),
+  superseded_by_id: z.uuid().nullable(),
   created_at: z.string(),
 })
 

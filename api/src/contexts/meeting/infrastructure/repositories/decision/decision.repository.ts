@@ -7,7 +7,7 @@ export class DecisionRepository {
   constructor(private readonly c: Context) {}
 
   /** 決定 id で1件取得する。存在しなければ null。 */
-  async findById(id: number): Promise<Decision | null | Error> {
+  async findById(id: string): Promise<Decision | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -28,7 +28,7 @@ export class DecisionRepository {
       const rows = await this.c.var.database
         .select()
         .from(decisions)
-        .orderBy(desc(decisions.decidedOn), desc(decisions.id))
+        .orderBy(desc(decisions.decidedOn), desc(decisions.createdAt), desc(decisions.id))
         .limit(limit)
         .offset(offset)
 
@@ -53,6 +53,7 @@ export class DecisionRepository {
       const rows = await this.c.var.database
         .insert(decisions)
         .values({
+          id: crypto.randomUUID(),
           title: decision.title,
           decidedOn: decision.decidedOn,
           context: decision.context,
@@ -103,7 +104,7 @@ export class DecisionRepository {
    * active な決定だけを条件付きで superseded に遷移させる（TOCTOU 防止）。
    * 更新された行を返す。既に superseded 等で対象外なら null。
    */
-  async supersede(id: number, supersededById: number): Promise<Decision | null | Error> {
+  async supersede(id: string, supersededById: string): Promise<Decision | null | Error> {
     try {
       const rows = await this.c.var.database
         .update(decisions)

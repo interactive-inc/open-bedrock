@@ -47,16 +47,17 @@ test("11件の打刻を全件保全し、人の承認・取消・再提出を経
     VALUES ('binding:retirement-review',?1,'role:retirement-review',0)`)
     .bind(f.reviewer.accountId)
     .run()
-  for (const id of [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
+  for (const serial of [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
+    const id = `01900016-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
     await f.database
       .prepare(`INSERT INTO attendance_records
       (id,employee_id,work_date,clock_in_at,note,status) VALUES (?1,?2,?3,?4,?5,'closed')`)
       .bind(
         id,
         f.governance.creator.employeeId,
-        `2026-08-${String(id).padStart(2, "0")}`,
-        `2026-08-${String(id).padStart(2, "0")}T00:00:00Z`,
-        `Original ${id}`,
+        `2026-08-${String(serial).padStart(2, "0")}`,
+        `2026-08-${String(serial).padStart(2, "0")}T00:00:00Z`,
+        `Original ${serial}`,
       )
       .run()
   }
@@ -109,7 +110,9 @@ test("11件の打刻を全件保全し、人の承認・取消・再提出を経
       .status,
   ).toBe(201)
   const mappings = []
-  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
+  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map(
+    (serial) => `01900016-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`,
+  )) {
     const path = `/attendance-records/${id}/preservation-requests`
     const submitted = await f.request(path, {
       key: crypto.randomUUID(),
@@ -175,7 +178,7 @@ test("11件の打刻を全件保全し、人の承認・取消・再提出を経
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "10",
+    nextCursor: "01900016-0000-7000-8000-00000000000a",
     recordCount: 10,
   })
   expect(

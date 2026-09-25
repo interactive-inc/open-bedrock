@@ -8,7 +8,7 @@ export const announcementStatusSchema = z.enum(["draft", "published", "archived"
 export type AnnouncementStatus = z.infer<typeof announcementStatusSchema>
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   title: z.string(),
   bodyMd: z.string(),
   publishedOn: z.string().nullable(),

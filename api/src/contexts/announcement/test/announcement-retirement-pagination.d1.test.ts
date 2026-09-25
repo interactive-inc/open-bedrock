@@ -27,7 +27,13 @@ afterAll(async () => {
 })
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
-test("頁末の ID 0 と負数IDを含む11件のアナウンスを全件保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
+
+/** 連番から UUID の主キーを作る。辞書順が連番の順と一致するので、頁の境界を連番で指定できる。 */
+function recordId(serial: number): string {
+  return `01900014-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
+}
+
+test("11件のアナウンスを全件保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
   const {
     clock,
     database,
@@ -56,18 +62,19 @@ test("頁末の ID 0 と負数IDを含む11件のアナウンスを全件保全�
     VALUES ('binding:retirement-review',?1,'role:retirement-review',0)`)
     .bind(reviewer.accountId)
     .run()
-  for (const id of Array.from({ length: 11 }, (_, index) => index - 9)) {
+  for (const serial of Array.from({ length: 11 }, (_, index) => index + 1)) {
+    const id = recordId(serial)
     await database
       .prepare(`INSERT INTO announcements
       (id,title,body_md,published_on,author_employee_id,status,created_at)
       VALUES (?1,?2,?3,?4,?5,'published',?6)`)
       .bind(
         id,
-        `Announcement ${id}`,
-        `Original body ${id}`,
-        `2026-08-${String(id + 10).padStart(2, "0")}`,
+        `Announcement ${serial}`,
+        `Original body ${serial}`,
+        `2026-08-${String(serial).padStart(2, "0")}`,
         creatorPerson.employeeId,
-        `2026-08-${String(id + 10).padStart(2, "0")}T00:00:00Z`,
+        `2026-08-${String(serial).padStart(2, "0")}T00:00:00Z`,
       )
       .run()
   }
@@ -114,14 +121,14 @@ test("頁末の ID 0 と負数IDを含む11件のアナウンスを全件保全�
   ).toBe(409)
   expect(
     (
-      await apiRequest("/announcement/announcements/1", {
+      await apiRequest(`/announcement/announcements/${recordId(11)}`, {
         method: "PUT",
         body: { title: "Changed announcement", body_md: "Must not be written" },
       })
     ).status,
   ).toBe(409)
   const mappings = []
-  for (const id of Array.from({ length: 11 }, (_, index) => index - 9)) {
+  for (const id of Array.from({ length: 11 }, (_, index) => recordId(index + 1))) {
     const path = `/announcement/announcements/${id}/preservation-requests`
     const submitted = await apiRequest(path, {
       method: "POST",
@@ -190,7 +197,7 @@ test("頁末の ID 0 と負数IDを含む11件のアナウンスを全件保全�
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "0",
+    nextCursor: recordId(10),
     recordCount: 10,
   })
   expect(

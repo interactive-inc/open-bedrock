@@ -2,7 +2,7 @@ import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 export type SeedAttendanceRecord = {
-  id: number
+  id: string
   employeeId: EmployeeId
   workDate: string
   clockInAt: string | null
@@ -19,7 +19,7 @@ export type SeedAttendanceRecord = {
  */
 export const seedAttendanceRecords: ReadonlyArray<SeedAttendanceRecord> = [
   {
-    id: 1,
+    id: "01900016-0000-7000-8000-000000000001",
     employeeId: toWorkforceEmployeeId(5),
     workDate: "2026-05-25",
     clockInAt: "2026-05-25T09:00:00Z",
@@ -28,7 +28,7 @@ export const seedAttendanceRecords: ReadonlyArray<SeedAttendanceRecord> = [
     status: "closed",
   },
   {
-    id: 2,
+    id: "01900016-0000-7000-8000-000000000002",
     employeeId: toWorkforceEmployeeId(5),
     workDate: "2026-05-26",
     clockInAt: "2026-05-26T09:00:00Z",
@@ -37,7 +37,7 @@ export const seedAttendanceRecords: ReadonlyArray<SeedAttendanceRecord> = [
     status: "closed",
   },
   {
-    id: 3,
+    id: "01900016-0000-7000-8000-000000000003",
     employeeId: toWorkforceEmployeeId(9),
     workDate: "2026-05-25",
     clockInAt: "2026-05-25T10:00:00Z",
@@ -46,7 +46,7 @@ export const seedAttendanceRecords: ReadonlyArray<SeedAttendanceRecord> = [
     status: "closed",
   },
   {
-    id: 4,
+    id: "01900016-0000-7000-8000-000000000004",
     employeeId: toWorkforceEmployeeId(9),
     workDate: "2026-05-29",
     clockInAt: "2026-05-29T09:15:00Z",

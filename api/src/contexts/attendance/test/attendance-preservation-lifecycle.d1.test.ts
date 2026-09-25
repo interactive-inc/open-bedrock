@@ -96,7 +96,7 @@ test("打刻の取下げ・否決・再提出・承認・確定後、業務テ�
   expect((await f.request(`${path}/withdraw`, withdrawal)).status).toBe(409)
   await execSql(
     f.database,
-    "UPDATE attendance_records SET note='Corrected before approval' WHERE id=1",
+    "UPDATE attendance_records SET note='Corrected before approval' WHERE id='01900016-0000-7000-8000-000000000001'",
   )
   const secondResponse = await f.request(`${path}/resubmit`, {
     body: {
@@ -147,8 +147,12 @@ test("打刻の取下げ・否決・再提出・承認・確定後、業務テ�
   const original = JSON.parse(Buffer.from(final.original.contentBase64, "base64").toString("utf8"))
   expect(original).toMatchObject({
     format: "attendance-record",
-    version: 2,
-    record: { id: 1, note: "Corrected before approval" },
+    version: 3,
+    record: {
+      id: "01900016-0000-7000-8000-000000000001",
+      legacy_id: null,
+      note: "Corrected before approval",
+    },
   })
   const approved = await f.request(`${finalPath}/approve`, {
     accountId: f.reviewer.accountId,

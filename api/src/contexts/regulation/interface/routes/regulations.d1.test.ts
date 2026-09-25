@@ -30,7 +30,7 @@ afterAll(async () => {
 const jwtSecret = "regulation-route-test-secret"
 
 const listItemSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   code: z.string(),
   title: z.string(),
   category: z.string().nullable(),
@@ -46,7 +46,7 @@ const listSchema = z.object({
 })
 
 const versionSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   version: z.number(),
   body_md: z.string(),
   effective_on: z.string(),
@@ -55,7 +55,7 @@ const versionSchema = z.object({
 })
 
 const detailSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   code: z.string(),
   title: z.string(),
   category: z.string().nullable(),
@@ -66,7 +66,7 @@ const detailSchema = z.object({
 })
 
 const regulationSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   code: z.string(),
   title: z.string(),
   category: z.string().nullable(),

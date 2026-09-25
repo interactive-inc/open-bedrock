@@ -1,5 +1,5 @@
 type SeedRegulation = {
-  id: number
+  id: string
   code: string
   title: string
   category: string | null
@@ -8,8 +8,8 @@ type SeedRegulation = {
 }
 
 type SeedRegulationVersion = {
-  id: number
-  regulationId: number
+  id: string
+  regulationId: string
   version: number
   bodyMd: string
   effectiveOn: string
@@ -19,7 +19,7 @@ type SeedRegulationVersion = {
 
 export const seedRegulations: ReadonlyArray<SeedRegulation> = [
   {
-    id: 1,
+    id: "0190001f-0000-7000-8000-000000000001",
     code: "REG-001",
     title: "就業規則",
     category: "labor",
@@ -27,7 +27,7 @@ export const seedRegulations: ReadonlyArray<SeedRegulation> = [
     createdAt: "2025-04-01T09:00:00Z",
   },
   {
-    id: 2,
+    id: "0190001f-0000-7000-8000-000000000002",
     code: "REG-002",
     title: "旅費規程",
     category: "expense",
@@ -35,7 +35,7 @@ export const seedRegulations: ReadonlyArray<SeedRegulation> = [
     createdAt: "2025-04-01T09:00:00Z",
   },
   {
-    id: 3,
+    id: "0190001f-0000-7000-8000-000000000003",
     code: "REG-003",
     title: "旧服装規定",
     category: null,
@@ -46,8 +46,8 @@ export const seedRegulations: ReadonlyArray<SeedRegulation> = [
 
 export const seedRegulationVersions: ReadonlyArray<SeedRegulationVersion> = [
   {
-    id: 1,
-    regulationId: 1,
+    id: "01900020-0000-7000-8000-000000000001",
+    regulationId: "0190001f-0000-7000-8000-000000000001",
     version: 1,
     bodyMd: "就業規則の初版。",
     effectiveOn: "2025-04-01",
@@ -55,8 +55,8 @@ export const seedRegulationVersions: ReadonlyArray<SeedRegulationVersion> = [
     createdAt: "2025-04-01T09:00:00Z",
   },
   {
-    id: 2,
-    regulationId: 1,
+    id: "01900020-0000-7000-8000-000000000002",
+    regulationId: "0190001f-0000-7000-8000-000000000001",
     version: 2,
     bodyMd: "リモートワークに対応した改訂版就業規則。",
     effectiveOn: "2026-04-01",
@@ -64,8 +64,8 @@ export const seedRegulationVersions: ReadonlyArray<SeedRegulationVersion> = [
     createdAt: "2026-03-15T09:00:00Z",
   },
   {
-    id: 3,
-    regulationId: 2,
+    id: "01900020-0000-7000-8000-000000000003",
+    regulationId: "0190001f-0000-7000-8000-000000000002",
     version: 1,
     bodyMd: "旅費規程。",
     effectiveOn: "2025-04-01",

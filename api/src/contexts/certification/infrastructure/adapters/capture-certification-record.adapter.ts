@@ -11,30 +11,30 @@ import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-dig
 import { z } from "zod"
 
 type Context = CertificationContext
-type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string | number> }>
+type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string> }>
 
-function numericId(recordId: string): number | null {
-  const parsed = z.coerce.number().int().safe().safeParse(recordId)
-  return parsed.success && String(parsed.data) === recordId ? parsed.data : null
+function recordUuid(recordId: string): string | null {
+  const parsed = z.uuid().safeParse(recordId)
+  return parsed.success ? parsed.data : null
 }
 
 function snapshotQuery(
   recordKind: CertificationRecordKind,
   recordId: string,
 ): SnapshotQuery | Error {
-  const id = numericId(recordId)
+  const id = recordUuid(recordId)
   if (id === null) return new Error("invalid certification record id")
   if (recordKind === "certification-record") {
     return {
-      sql: `SELECT json_object('format','certification-record','version',1,'certification',json_object(
-        'id',id,'code',code,'name',name,'issuer',issuer,'description',description,'created_at',created_at))
+      sql: `SELECT json_object('format','certification-record','version',2,'certification',json_object(
+        'id',id,'legacy_id',legacy_id,'code',code,'name',name,'issuer',issuer,'description',description,'created_at',created_at))
         AS snapshot_json FROM certification_definitions WHERE id=?1`,
       values: [id],
     }
   }
   return {
-    sql: `SELECT json_object('format','employee-certification-record','version',1,'employeeCertification',json_object(
-      'id',id,'employee_id',employee_id,'certification_id',certification_id,'acquired_on',acquired_on,
+    sql: `SELECT json_object('format','employee-certification-record','version',2,'employeeCertification',json_object(
+      'id',id,'legacy_id',legacy_id,'employee_id',employee_id,'certification_id',certification_id,'acquired_on',acquired_on,
       'expires_on',expires_on,'note',note,'created_at',created_at))
       AS snapshot_json FROM employee_certifications WHERE id=?1`,
     values: [id],
@@ -81,7 +81,7 @@ export class CaptureCertificationRecordAdapter {
         recordKind: kind.data,
         recordId: input.recordId,
         formatId: kind.data,
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test"
 describe("CareerApplication.create", () => {
   test("builds with null id and applied status", () => {
     const application = CareerApplication.create({
-      postingId: 1,
+      postingId: "01900017-0000-7000-8000-000000000001",
       applicantId: toWorkforceEmployeeId(5),
       message: "I am interested",
     })
@@ -18,7 +18,7 @@ describe("CareerApplication.create", () => {
 
   test("accepts null message", () => {
     const application = CareerApplication.create({
-      postingId: 1,
+      postingId: "01900017-0000-7000-8000-000000000001",
       applicantId: toWorkforceEmployeeId(5),
       message: null,
     })
@@ -30,7 +30,7 @@ describe("CareerApplication.create", () => {
 describe("CareerApplication.withMessage", () => {
   test("returns new application with changed message", () => {
     const application = CareerApplication.create({
-      postingId: 1,
+      postingId: "01900017-0000-7000-8000-000000000001",
       applicantId: toWorkforceEmployeeId(5),
       message: "original",
     })
@@ -38,6 +38,6 @@ describe("CareerApplication.withMessage", () => {
     const updated = application.withMessage("updated message")
 
     expect(updated.message).toBe("updated message")
-    expect(updated.postingId).toBe(1)
+    expect(updated.postingId).toBe("01900017-0000-7000-8000-000000000001")
   })
 })
