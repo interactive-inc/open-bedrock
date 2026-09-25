@@ -1,6 +1,7 @@
 import { app } from "@/api/app"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
-import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
+import { createLocalD1Governance } from "@tests/d1/support/create-local-d1-governance"
+import { execSql } from "@tests/d1/support/exec-sql"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
@@ -12,9 +13,8 @@ import { createMonotonicTestClock } from "@tests/api/support/create-monotonic-te
 const secret = "health-checkup-integration-test-secret"
 
 /** 実System・Companyと健康診断実施記録原記録を接続する保全fixture。 */
-export async function createHealthCheckupPreservationFixture() {
-  const governance = await createGovernanceTaskTestContext()
-  const database = governance.database
+export async function createHealthCheckupPreservationFixture(database: D1Database) {
+  const governance = await createLocalD1Governance(database)
   const creator = governance.creator
   const reviewer = governance.people.find((person) => person.accountId !== creator.accountId)
   const assignment = governance.resources.find(
@@ -66,7 +66,9 @@ export async function createHealthCheckupPreservationFixture() {
   if (definition instanceof Error) throw definition
   if ((await openSystemProcedures(governance.context).publish(definition, 0)) !== true)
     throw new Error("failed to publish preservation procedure")
-  await database.exec(`INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
+  await execSql(
+    database,
+    `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
     VALUES ('health-checkup-test-manager','health-checkup:test-manager','custom','HealthCheckup manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
       ('health-checkup-test-manager','health_checkup:manage'),
@@ -75,7 +77,8 @@ export async function createHealthCheckupPreservationFixture() {
       ('health-checkup-test-manager','system:record:read'),
       ('health-checkup-test-manager','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('health-checkup-test-binding','${creator.accountId}','health-checkup-test-manager',0);`)
+    VALUES ('health-checkup-test-binding','${creator.accountId}','health-checkup-test-manager',0);`,
+  )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {
     recordSourceNamespace: "example-source",

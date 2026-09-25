@@ -9,7 +9,8 @@ import { POST as approve } from "@/contexts/attendance/interface/routes/attendan
 import { POST as reject } from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.reject"
 import { POST as execute } from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.execute"
 import { POST as resubmit } from "@/contexts/attendance/interface/routes/attendance-records.$id.preservation-requests.$number.resubmit"
-import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
+import { createLocalD1Governance } from "@tests/d1/support/create-local-d1-governance"
+import { execSql } from "@tests/d1/support/exec-sql"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
@@ -18,8 +19,8 @@ import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-sy
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
 
 /** 実認証、会社の期間付き責務、暗号化した保全本文を使う打刻APIのfixture。 */
-export async function createAttendancePreservationFixture() {
-  const governance = await createGovernanceTaskTestContext()
+export async function createAttendancePreservationFixture(database: D1Database) {
+  const governance = await createLocalD1Governance(database)
   const reviewer = governance.people[1]
   const assignment = governance.resources.find(
     (resource) => resource.type === "responsibility-assignment",
@@ -70,10 +71,12 @@ export async function createAttendancePreservationFixture() {
   if (definition instanceof Error) throw definition
   const published = await openSystemProcedures(governance.context).publish(definition, 0)
   if (published !== true) throw published
-  const database = governance.database
-  await database.exec(`INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
+  await execSql(
+    database,
+    `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
     VALUES ('role:attendance-archive','attendance:archive','custom','Archive operator',0,0);
-    INSERT INTO system_iam_role_permissions VALUES ('role:attendance-archive','attendance:read:all');`)
+    INSERT INTO system_iam_role_permissions VALUES ('role:attendance-archive','attendance:read:all');`,
+  )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
     VALUES ('binding:attendance-archive',?1,'role:attendance-archive',0)`)
