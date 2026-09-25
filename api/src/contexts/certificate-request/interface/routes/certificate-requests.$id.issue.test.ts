@@ -14,7 +14,7 @@ import { initializeStandardCompanyTestState } from "@tests/api/support/initializ
 
 const jwtSecret = "certificate-request-issue-route-test-secret"
 
-const seedId = "20000000-0000-0000-0000-000000000001"
+const seedId = "20000000-0000-4000-8000-000000000001"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())
@@ -123,7 +123,7 @@ describe("POST /certificate-requests/:id/issue", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/certificate-request/certificate-requests/99999999-0000-0000-0000-000000000000/issue",
+      path: "/certificate-request/certificate-requests/99999999-0000-4000-8000-000000000000/issue",
       token: await tokenFor(1),
       method: "POST",
     })

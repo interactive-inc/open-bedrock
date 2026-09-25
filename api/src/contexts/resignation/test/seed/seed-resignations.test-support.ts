@@ -13,7 +13,7 @@ type SeedResignation = {
 
 export const seedResignations: ReadonlyArray<SeedResignation> = [
   {
-    id: "20000000-0000-0000-0000-000000000001",
+    id: "20000000-0000-4000-8000-000000000001",
     employeeId: toWorkforceEmployeeId(2),
     resignationDate: "2026-09-30",
     lastWorkingDate: "2026-09-20",
@@ -22,7 +22,7 @@ export const seedResignations: ReadonlyArray<SeedResignation> = [
     createdAt: "2026-06-01T00:00:00.000Z",
   },
   {
-    id: "20000000-0000-0000-0000-000000000002",
+    id: "20000000-0000-4000-8000-000000000002",
     employeeId: toWorkforceEmployeeId(4),
     resignationDate: "2026-10-31",
     lastWorkingDate: null,
@@ -31,7 +31,7 @@ export const seedResignations: ReadonlyArray<SeedResignation> = [
     createdAt: "2026-06-01T00:00:00.000Z",
   },
   {
-    id: "20000000-0000-0000-0000-000000000003",
+    id: "20000000-0000-4000-8000-000000000003",
     employeeId: toWorkforceEmployeeId(9),
     resignationDate: "2026-08-15",
     lastWorkingDate: "2026-08-08",

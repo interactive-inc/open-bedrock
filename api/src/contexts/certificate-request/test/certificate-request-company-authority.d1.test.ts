@@ -13,7 +13,7 @@ import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
 const jwtSecret = "certificate-request-company-authority-test-secret"
 
 // E002 の証明書発行依頼。E001 は直属上司、E099 は技術的権限を持つが E002 の管理系列に属さない。
-const requestId = "20000000-0000-0000-0000-000000000001"
+const requestId = "20000000-0000-4000-8000-000000000001"
 const manager = 1
 const unrelatedManagerWithPermission = 99
 

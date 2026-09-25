@@ -263,7 +263,7 @@ async function createDepartmentScopeTestDb(): Promise<D1Database> {
 
   await seedD1(db, "one_on_ones", [
     {
-      id: "dept-001",
+      id: "6a1e2d3c-4b5a-4c6d-9e7f-000000000001",
       member_id: "20",
       manager_id: "2",
       held_at: "2026-06-01T05:00:00Z",
@@ -272,7 +272,7 @@ async function createDepartmentScopeTestDb(): Promise<D1Database> {
       next_action: "action A",
     },
     {
-      id: "dept-002",
+      id: "6a1e2d3c-4b5a-4c6d-9e7f-000000000002",
       member_id: "21",
       manager_id: "2",
       held_at: "2026-06-08T05:00:00Z",
@@ -281,7 +281,7 @@ async function createDepartmentScopeTestDb(): Promise<D1Database> {
       next_action: "action B",
     },
     {
-      id: "dept-003",
+      id: "6a1e2d3c-4b5a-4c6d-9e7f-000000000003",
       member_id: "22",
       manager_id: "22",
       held_at: "2026-06-10T05:00:00Z",
