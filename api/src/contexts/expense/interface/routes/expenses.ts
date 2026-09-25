@@ -18,8 +18,8 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       request_key: z.string().uuid(),
-      existing_expense_id: z.number().int().positive().safe().nullable().optional(),
-      previous_expense_id: z.number().int().positive().safe().nullable().optional(),
+      existing_expense_id: z.uuid().nullable().optional(),
+      previous_expense_id: z.uuid().nullable().optional(),
       category: expenseCategorySchema,
       amount: z.number().positive().int().safe(),
       spent_at: isoDate,

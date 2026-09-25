@@ -2,9 +2,9 @@ import { attachmentEvidenceSchema } from "@system/domain/definitions/attachments
 import { z } from "zod"
 
 export const expenseProcedureBindingSchema = z.object({
-  previousExpenseId: z.number().int().positive().safe().nullable(),
+  previousExpenseId: z.uuid().nullable(),
   requestKey: z.string().min(1).max(255),
-  expenseId: z.number().int().positive().safe(),
+  expenseId: z.uuid(),
   applicationId: z.number().int().positive().safe(),
   seriesId: z.string().min(1),
   caseId: z.string().min(1),

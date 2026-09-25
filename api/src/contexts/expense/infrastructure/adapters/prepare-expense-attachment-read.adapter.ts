@@ -16,7 +16,7 @@ export class PrepareExpenseAttachmentReadAdapter {
 
   async prepare(
     input: Readonly<{
-      expenseId: number
+      expenseId: string
       attachmentId: string
       authentication: SystemReadAuthentication
       session: CompanyPersonnelSession

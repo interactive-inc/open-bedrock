@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test"
 describe("ExpenseApproval.create", () => {
   test("builds an ExpenseApproval with null id", () => {
     const approval = ExpenseApproval.create({
-      expenseId: 10,
+      expenseId: "0190004e-0000-7000-8000-00000000000a",
       approverId: toWorkforceEmployeeId(3),
       action: "approve",
       comment: "Looks good",
@@ -14,14 +14,14 @@ describe("ExpenseApproval.create", () => {
 
     expect(approval).toBeInstanceOf(ExpenseApproval)
     expect(approval.id).toBeNull()
-    expect(approval.expenseId).toBe(10)
+    expect(approval.expenseId).toBe("0190004e-0000-7000-8000-00000000000a")
     expect(approval.approverId).toBe(toWorkforceEmployeeId(3))
     expect(approval.comment).toBe("Looks good")
   })
 
   test("creates with approve action", () => {
     const approval = ExpenseApproval.create({
-      expenseId: 11,
+      expenseId: "0190004e-0000-7000-8000-00000000000b",
       approverId: toWorkforceEmployeeId(4),
       action: "approve",
       comment: null,
@@ -34,7 +34,7 @@ describe("ExpenseApproval.create", () => {
 
   test("creates with reject action", () => {
     const approval = ExpenseApproval.create({
-      expenseId: 12,
+      expenseId: "0190004e-0000-7000-8000-00000000000c",
       approverId: toWorkforceEmployeeId(5),
       action: "reject",
       comment: "Missing receipt",

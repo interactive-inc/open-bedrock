@@ -76,7 +76,7 @@ describe("経費CLIの確認対象と再送", () => {
     const key = "12345678-1234-4234-8234-123456789abc"
     const args = {
       "request-key": key,
-      "previous-expense-id": "41",
+      "previous-expense-id": "0190004e-0000-7000-8000-000000000029",
       category: "supplies",
       "spent-at": "2026-09-08",
       "attachment-id": ["receipt-a", "receipt-b"],
@@ -90,7 +90,7 @@ describe("経費CLIの確認対象と再送", () => {
       expect(new URL(request.url).pathname).toBe("/expense/expenses")
       expect(await request.json()).toEqual({
         request_key: key,
-        previous_expense_id: 41,
+        previous_expense_id: "0190004e-0000-7000-8000-000000000029",
         existing_expense_id: null,
         category: "supplies",
         spent_at: "2026-09-08",

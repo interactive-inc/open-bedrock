@@ -28,7 +28,7 @@ afterAll(async () => {
 const jwtSecret = "expense-admin-route-test-secret"
 
 const expenseAdminResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   applicant_id: zEmployeeId,
   applicant_name: z.string(),
   applicant_dept_name: z.string().nullable(),
@@ -111,7 +111,9 @@ describe("GET /expenses/admin", () => {
     if (parsed.success) {
       expect(parsed.data.total).toBe(seedExpenses.length)
 
-      const first = parsed.data.data.find((item) => item.id === 1)
+      const first = parsed.data.data.find(
+        (item) => item.id === "0190004e-0000-7000-8000-000000000001",
+      )
 
       expect(first?.applicant_name).toBe("Emery Lane")
       expect(first?.applicant_id).toBe(toWorkforceEmployeeId(5))

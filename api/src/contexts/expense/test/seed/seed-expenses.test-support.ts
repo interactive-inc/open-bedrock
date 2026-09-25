@@ -6,7 +6,7 @@ import type {
 } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 type SeedExpense = {
-  id: number
+  id: string
   employeeId: EmployeeId
   organizationUnitId: OrganizationUnitId
   category: "transport" | "supplies" | "entertainment" | "books" | "other"
@@ -20,7 +20,7 @@ type SeedExpense = {
 /** employeeId は seedEmployees に存在する社員に対応させる。 */
 export const seedExpenses: ReadonlyArray<SeedExpense> = [
   {
-    id: 1,
+    id: "0190004e-0000-7000-8000-000000000001",
     employeeId: toWorkforceEmployeeId(5),
     organizationUnitId: toWorkforceOrganizationUnitId("D003"),
     category: "transport",
@@ -31,7 +31,7 @@ export const seedExpenses: ReadonlyArray<SeedExpense> = [
     createdAt: "2026-05-11T01:00:00Z",
   },
   {
-    id: 2,
+    id: "0190004e-0000-7000-8000-000000000002",
     employeeId: toWorkforceEmployeeId(5),
     organizationUnitId: toWorkforceOrganizationUnitId("D003"),
     category: "books",
@@ -42,7 +42,7 @@ export const seedExpenses: ReadonlyArray<SeedExpense> = [
     createdAt: "2026-05-13T02:00:00Z",
   },
   {
-    id: 3,
+    id: "0190004e-0000-7000-8000-000000000003",
     employeeId: toWorkforceEmployeeId(10),
     organizationUnitId: toWorkforceOrganizationUnitId("D004"),
     category: "entertainment",

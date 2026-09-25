@@ -452,7 +452,7 @@ test("経費の添付保全候補も現在の判断資格と親の添付対応�
       machineCredentialId: null,
     },
   }
-  expect(await source.capture({ ...input, expenseId: c.expenseId + 1000 })).toBeInstanceOf(Error)
+  expect(await source.capture({ ...input, expenseId: crypto.randomUUID() })).toBeInstanceOf(Error)
   const captured = await source.capture(input)
   if (captured instanceof Error) throw captured
   expect(captured.source.props).toMatchObject({
@@ -506,18 +506,18 @@ test("添付対応の保全は元の全列を残し、対応の変更不能性�
       machineCredentialId: null,
     },
   }
-  expect(await source.prepare({ ...input, expenseId: c.expenseId + 1000 })).toBeInstanceOf(Error)
+  expect(await source.prepare({ ...input, expenseId: crypto.randomUUID() })).toBeInstanceOf(Error)
   const captured = await source.prepare(input)
   if (captured instanceof Error) throw captured
   const original = await c.database
     .prepare(
-      "SELECT expense_id,attachment_id,created_at FROM expense_attachments WHERE expense_id=?1 AND attachment_id=?2",
+      "SELECT id,expense_id,attachment_id,created_at FROM expense_attachments WHERE expense_id=?1 AND attachment_id=?2",
     )
     .bind(c.expenseId, c.attachmentId)
     .first()
   expect(JSON.parse(new TextDecoder().decode(captured.content))).toEqual({
     format: "expense-attachment-link",
-    version: 1,
+    version: 2,
     record: original,
   })
   expect(captured.source.props).toMatchObject({
@@ -626,7 +626,7 @@ test("再申請で同じ原添付を使っても、元申請と修正版の対�
       .first()
     expect(JSON.parse(new TextDecoder().decode(captured.content))).toEqual({
       format: "expense-procedure-binding",
-      version: 1,
+      version: 2,
       record: originalBinding,
     })
     expect(captured.source.props).toMatchObject({
@@ -641,7 +641,7 @@ test("再申請で同じ原添付を使っても、元申請と修正版の対�
       "SELECT previous_expense_id,attachment_evidence_json FROM expense_procedure_bindings WHERE expense_id=?1",
     )
     .bind(revisedId)
-    .first<{ previous_expense_id: number; attachment_evidence_json: string }>()
+    .first<{ previous_expense_id: string; attachment_evidence_json: string }>()
   expect(revisedBinding?.previous_expense_id).toBe(c.expenseId)
   expect(revisedBinding?.attachment_evidence_json).toContain(c.attachmentId)
   await c.database
@@ -693,25 +693,25 @@ test("停止世代の経費全種別をページ分割し、権限取消・停�
   await c.database
     .prepare(`INSERT INTO expense_approvals
     (id,expense_id,approver_id,action,comment,created_at)
-    SELECT 901,id,?1,'approve',NULL,created_at FROM expenses WHERE id=?2`)
+    SELECT '01900050-0000-7000-8000-000000000385',id,?1,'approve',NULL,created_at FROM expenses WHERE id=?2`)
     .bind(c.first.employeeId, c.expenseId)
     .run()
   await c.database
     .prepare(`INSERT INTO expense_budgets
     (id,organization_unit_id,fiscal_period,period_start,period_end,amount,name,note,created_at)
-    SELECT 901,organization_unit_id,'2026','2026-04-01','2027-03-31',100000,'Annual budget',NULL,created_at
+    SELECT '01900050-0000-7000-8000-000000000385',organization_unit_id,'2026','2026-04-01','2027-03-31',100000,'Annual budget',NULL,created_at
     FROM expenses WHERE id=?1`)
     .bind(c.expenseId)
     .run()
   await execSql(
     c.database,
-    `INSERT INTO expense_budgets (id,organization_unit_id,fiscal_period,period_start,period_end,amount,name,note,created_at) SELECT 902,organization_unit_id,'2027',period_start,period_end,amount,name,note,created_at
-    FROM expense_budgets WHERE id=901`,
+    `INSERT INTO expense_budgets (id,organization_unit_id,fiscal_period,period_start,period_end,amount,name,note,created_at) SELECT '01900050-0000-7000-8000-000000000386',organization_unit_id,'2027',period_start,period_end,amount,name,note,created_at
+    FROM expense_budgets WHERE id='01900050-0000-7000-8000-000000000385'`,
   )
   await execSql(
     c.database,
     `INSERT INTO expense_budgets (id,organization_unit_id,fiscal_period,period_start,period_end,amount,name,note,created_at)
-    SELECT 10,organization_unit_id,'2028',period_start,period_end,amount,name,note,created_at FROM expense_budgets WHERE id=901`,
+    SELECT '01900050-0000-7000-8000-00000000000a',organization_unit_id,'2028',period_start,period_end,amount,name,note,created_at FROM expense_budgets WHERE id='01900050-0000-7000-8000-000000000385'`,
   )
   const grant = (permission: string) =>
     c.database
@@ -766,10 +766,14 @@ test("停止世代の経費全種別をページ分割し、権限取消・停�
   })
   const expected = {
     "expense-record": [String(c.expenseId)],
-    "expense-approval": ["901"],
+    "expense-approval": ["01900050-0000-7000-8000-000000000385"],
     "expense-procedure-binding": [String(c.expenseId)],
     "expense-attachment-link": [`${c.expenseId}:${c.attachmentId}`],
-    "expense-budget": ["10", "901", "902"],
+    "expense-budget": [
+      "01900050-0000-7000-8000-00000000000a",
+      "01900050-0000-7000-8000-000000000385",
+      "01900050-0000-7000-8000-000000000386",
+    ],
     "expense-attachment": [c.attachmentId],
   }
   for (const recordKind of expenseRecordKindSchema.options) {
@@ -808,7 +812,7 @@ test("停止世代の経費全種別をページ分割し、権限取消・停�
     expect(seen).toEqual(expected[recordKind])
   }
   const empty = await adapter.prepare(
-    { ...input, recordKind: "expense-budget", afterCursor: "902" },
+    { ...input, recordKind: "expense-budget", afterCursor: "01900050-0000-7000-8000-000000000386" },
     reader,
   )
   if (empty instanceof Error) throw empty
@@ -825,7 +829,7 @@ test("停止世代の経費全種別をページ分割し、権限取消・停�
   }).prepare(
     {
       recordKind: "expense-budget",
-      recordId: "901",
+      recordId: "01900050-0000-7000-8000-000000000385",
       sourceNamespace: "example-source",
     },
     reader,
@@ -837,7 +841,7 @@ test("停止世代の経費全種別をページ分割し、権限取消・停�
     { recordKind: "unknown-record" },
     { recordId: "0901" },
     { formatId: "other-format" },
-    { formatVersion: 2 },
+    { formatVersion: 3 },
     { sourceRevision: "1" },
     { sourceRecordedAt: c.at.toISOString() },
     { capturedAt: new Date(revalidationClock.now.getTime() + 1000).toISOString() },
@@ -886,7 +890,10 @@ test("停止世代の経費全種別をページ分割し、権限取消・停�
   expect(await c.database.batch([...released]).catch((cause: unknown) => cause)).toBeInstanceOf(
     Error,
   )
-  await execSql(c.database, "UPDATE expense_budgets SET amount=amount+1 WHERE id=901")
+  await execSql(
+    c.database,
+    "UPDATE expense_budgets SET amount=amount+1 WHERE id='01900050-0000-7000-8000-000000000385'",
+  )
   expect(await revalidate.prepare(budgetSource.source, reader)).toBeInstanceOf(Error)
   const nextId = crypto.randomUUID()
   expect(
@@ -1055,13 +1062,13 @@ test("経費の全6種別を実認証で保全し、業務全テーブル撤去�
   )
   await c.database
     .prepare(`INSERT INTO expense_approvals (id,expense_id,approver_id,action,comment,created_at)
-    SELECT 901,id,?1,'approve',NULL,created_at FROM expenses WHERE id=?2`)
+    SELECT '01900050-0000-7000-8000-000000000385',id,?1,'approve',NULL,created_at FROM expenses WHERE id=?2`)
     .bind(c.first.employeeId, c.expenseId)
     .run()
   await c.database
     .prepare(`INSERT INTO expense_budgets
     (id,organization_unit_id,fiscal_period,period_start,period_end,amount,name,note,created_at)
-    SELECT 901,organization_unit_id,'2026','2026-04-01','2027-03-31',100000,'Annual budget',NULL,created_at
+    SELECT '01900050-0000-7000-8000-000000000385',organization_unit_id,'2026','2026-04-01','2027-03-31',100000,'Annual budget',NULL,created_at
     FROM expenses WHERE id=?1`)
     .bind(c.expenseId)
     .run()
@@ -1072,13 +1079,21 @@ test("経費の全6種別を実認証で保全し、業務全テーブル撤去�
       id: String(c.expenseId),
       table: "expense_procedure_bindings",
     },
-    { kind: "expense-approval", id: "901", table: "expense_approvals" },
+    {
+      kind: "expense-approval",
+      id: "01900050-0000-7000-8000-000000000385",
+      table: "expense_approvals",
+    },
     {
       kind: "expense-attachment-link",
       id: `${c.expenseId}:${c.attachmentId}`,
       table: "expense_attachments",
     },
-    { kind: "expense-budget", id: "901", table: "expense_budgets" },
+    {
+      kind: "expense-budget",
+      id: "01900050-0000-7000-8000-000000000385",
+      table: "expense_budgets",
+    },
     { kind: "expense-attachment", id: c.attachmentId, table: null },
   ]
   const request = async (path: string, accountId = c.requester.accountId, body?: unknown) => {

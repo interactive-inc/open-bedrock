@@ -22,7 +22,7 @@ import {
 
 type Context = CompanyContext
 type Command = Readonly<{
-  expenseId: number
+  expenseId: string
   session: CompanyPersonnelSession
   tokenVersion: number
   completedAt: Date

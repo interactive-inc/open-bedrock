@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { PrepareExpensePreservationReadAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-preservation-read.adapter"
@@ -7,8 +8,8 @@ import { toSha256Hex } from "@system/application/attachments/lib/to-sha256-hex"
 
 type Context = CompanyContext & Readonly<{ now: () => Date }>
 const snapshotSql = `SELECT json_object(
-  'format','expense-budget','version',1,
-  'record',json_object('id',id,'organization_unit_id',organization_unit_id,'fiscal_period',fiscal_period,
+  'format','expense-budget','version',2,
+  'record',json_object('id',id,'legacy_id',legacy_id,'organization_unit_id',organization_unit_id,'fiscal_period',fiscal_period,
     'period_start',period_start,'period_end',period_end,'amount',amount,'name',name,'note',note,'created_at',created_at)
 ) AS snapshot_json FROM expense_budgets WHERE id=?1`
 
@@ -20,13 +21,13 @@ export class CaptureExpenseBudgetRecordAdapter {
 
   async prepare(
     input: Readonly<{
-      budgetId: number
+      budgetId: string
       sourceNamespace: string
       authentication: SystemReadAuthentication
       session: CompanyPersonnelSession
     }>,
   ) {
-    if (!Number.isSafeInteger(input.budgetId)) return new Error("invalid expense record")
+    if (!z.uuid().safeParse(input.budgetId).success) return new Error("invalid expense record")
     const now = this.c.now()
     const authorized = await new PrepareExpensePreservationReadAdapter(this.c).prepare({
       ...input,
@@ -54,7 +55,7 @@ export class CaptureExpenseBudgetRecordAdapter {
         recordKind: "expense-budget",
         recordId,
         formatId: "expense-budget",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: now.toISOString(),

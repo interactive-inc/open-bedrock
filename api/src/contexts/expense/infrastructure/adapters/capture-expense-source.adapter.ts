@@ -67,11 +67,11 @@ export class CaptureExpenseSourceAdapter {
     guards: ReadonlyArray<D1PreparedStatement>,
   ) {
     const input = { ...reader, sourceNamespace: target.sourceNamespace }
-    const numericId = Number(target.recordId)
+    const numericId = target.recordId
     if (
       target.recordKind !== "expense-attachment" &&
       target.recordKind !== "expense-attachment-link" &&
-      (!Number.isSafeInteger(numericId) || String(numericId) !== target.recordId)
+      !z.uuid().safeParse(target.recordId).success
     )
       return new Error("invalid expense source identifier")
     switch (target.recordKind) {
@@ -90,8 +90,8 @@ export class CaptureExpenseSourceAdapter {
       case "expense-attachment-link": {
         const separator = target.recordId.indexOf(":")
         const parent = target.recordId.slice(0, separator)
-        const expenseId = Number(parent)
-        if (separator < 1 || !Number.isSafeInteger(expenseId) || String(expenseId) !== parent)
+        const expenseId = parent
+        if (separator < 1 || !z.uuid().safeParse(expenseId).success)
           return new Error("invalid expense attachment link identifier")
         return new CaptureExpenseAttachmentLinkAdapter(this.c).prepare({
           ...input,
@@ -107,20 +107,16 @@ export class CaptureExpenseSourceAdapter {
                 numericId,
               )
             : this.c.env.DB.prepare(
-                "SELECT MIN(expense_id) AS expense_id FROM expense_attachments WHERE attachment_id=?1",
+                "SELECT expense_id FROM expense_attachments WHERE attachment_id=?1 ORDER BY created_at,rowid LIMIT 1",
               ).bind(target.recordId)
-        const reads = await this.c.env.DB.batch<{ expense_id: number | null }>([
+        const reads = await this.c.env.DB.batch<{ expense_id: string | null }>([
           ...guards,
           lookup,
           ...guards,
         ])
         if (reads.length !== guards.length * 2 + 1 || reads.some((read) => !read.success))
           return new Error("expense source parent unavailable")
-        const id = z
-          .number()
-          .int()
-          .safe()
-          .safeParse(reads[guards.length]?.results.at(0)?.expense_id)
+        const id = z.uuid().safeParse(reads[guards.length]?.results.at(0)?.expense_id)
         if (!id.success) return new Error("expense source parent missing")
         return target.recordKind === "expense-approval"
           ? new CaptureExpenseApprovalRecordAdapter(this.c).prepare({

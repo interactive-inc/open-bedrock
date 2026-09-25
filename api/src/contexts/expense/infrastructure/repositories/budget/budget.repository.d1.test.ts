@@ -159,7 +159,7 @@ describe("BudgetRepository", () => {
     await seedD1(db, "expenses", [
       // 対象: dept 3, approved, 期間内
       {
-        id: 1,
+        id: "0190004e-0000-7000-8000-000000000001",
         employee_id: "1",
         organization_unit_id: "department:D003",
         category: "books",
@@ -171,7 +171,7 @@ describe("BudgetRepository", () => {
       },
       // 除外: pending
       {
-        id: 2,
+        id: "0190004e-0000-7000-8000-000000000002",
         employee_id: "1",
         organization_unit_id: "department:D003",
         category: "transport",
@@ -183,7 +183,7 @@ describe("BudgetRepository", () => {
       },
       // 除外: 別部署
       {
-        id: 3,
+        id: "0190004e-0000-7000-8000-000000000003",
         employee_id: "2",
         organization_unit_id: "department:D004",
         category: "other",
@@ -195,7 +195,7 @@ describe("BudgetRepository", () => {
       },
       // 除外: 期間外
       {
-        id: 4,
+        id: "0190004e-0000-7000-8000-000000000004",
         employee_id: "1",
         organization_unit_id: "department:D003",
         category: "other",

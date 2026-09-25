@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { PrepareExpenseRecordReadAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-record-read.adapter"
@@ -7,8 +8,8 @@ import { toSha256Hex } from "@system/application/attachments/lib/to-sha256-hex"
 
 type Context = CompanyContext & Readonly<{ now: () => Date }>
 const snapshotSql = `SELECT json_object(
-  'format','expense-procedure-binding','version',1,
-  'record',json_object('request_key',request_key,'expense_id',expense_id,'previous_expense_id',previous_expense_id,
+  'format','expense-procedure-binding','version',2,
+  'record',json_object('id',id,'request_key',request_key,'expense_id',expense_id,'previous_expense_id',previous_expense_id,
     'application_id',application_id,'series_id',series_id,'case_id',case_id,'proposal_digest',proposal_digest,
     'attachment_evidence_json',attachment_evidence_json,'created_at',created_at)
 ) AS snapshot_json FROM expense_procedure_bindings WHERE expense_id=?1`
@@ -21,13 +22,13 @@ export class CaptureExpenseProcedureBindingAdapter {
 
   async prepare(
     input: Readonly<{
-      expenseId: number
+      expenseId: string
       sourceNamespace: string
       authentication: SystemReadAuthentication
       session: CompanyPersonnelSession
     }>,
   ) {
-    if (!Number.isSafeInteger(input.expenseId))
+    if (!z.uuid().safeParse(input.expenseId).success)
       return new Error("invalid expense procedure binding")
     const now = this.c.now()
     const authorized = await new PrepareExpenseRecordReadAdapter(this.c).prepare({
@@ -55,7 +56,7 @@ export class CaptureExpenseProcedureBindingAdapter {
         recordKind: "expense-procedure-binding",
         recordId,
         formatId: "expense-procedure-binding",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: now.toISOString(),

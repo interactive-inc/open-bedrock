@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { PrepareExpenseRecordReadAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-record-read.adapter"
@@ -7,8 +8,8 @@ import { toSha256Hex } from "@system/application/attachments/lib/to-sha256-hex"
 
 type Context = CompanyContext & Readonly<{ now: () => Date }>
 const snapshotSql = `SELECT json_object(
-  'format','expense-record','version',1,
-  'record',json_object('id',id,'employee_id',employee_id,'organization_unit_id',organization_unit_id,
+  'format','expense-record','version',2,
+  'record',json_object('id',id,'legacy_id',legacy_id,'employee_id',employee_id,'organization_unit_id',organization_unit_id,
     'category',category,'amount',amount,'spent_at',spent_at,'note',note,'status',status,'created_at',created_at)
 ) AS snapshot_json FROM expenses WHERE id=?1`
 
@@ -20,13 +21,13 @@ export class CaptureExpenseRecordAdapter {
 
   async prepare(
     input: Readonly<{
-      expenseId: number
+      expenseId: string
       sourceNamespace: string
       authentication: SystemReadAuthentication
       session: CompanyPersonnelSession
     }>,
   ) {
-    if (!Number.isSafeInteger(input.expenseId)) return new Error("invalid expense record")
+    if (!z.uuid().safeParse(input.expenseId).success) return new Error("invalid expense record")
     const now = this.c.now()
     const authorized = await new PrepareExpenseRecordReadAdapter(this.c).prepare({
       ...input,
@@ -53,7 +54,7 @@ export class CaptureExpenseRecordAdapter {
         recordKind: "expense-record",
         recordId,
         formatId: "expense-record",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: now.toISOString(),

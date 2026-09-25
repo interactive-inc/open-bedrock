@@ -68,7 +68,7 @@ test("添付の不足・他人の添付・重複を拒否し、何も作らず�
     .prepare("UPDATE system_attachments SET owner_account_id = ?1 WHERE id = ?2")
     .bind(c.requester.accountId, c.attachmentId)
     .run()
-  expect((await c.create()).id).toBeGreaterThan(0)
+  expect((await c.create()).id).toMatch(/^[0-9a-f-]{36}$/)
 })
 
 test("監査保存の失敗で経費・添付状態・案件を巻き戻し再試行できる", async () => {
@@ -263,8 +263,8 @@ test("旧経費を元の内容と添付で接続し、過去の決定を引き�
   const c = await createExpenseProcedureTestContext(await pool.next())
   const legacy = await c.database
     .prepare(`INSERT INTO expenses
-    (employee_id,organization_unit_id,category,amount,spent_at,note,status,created_at)
-    VALUES (?1,?2,?3,?4,?5,?6,'pending',?7) RETURNING id`)
+    (id,employee_id,organization_unit_id,category,amount,spent_at,note,status,created_at)
+    VALUES (?8,?1,?2,?3,?4,?5,?6,'pending',?7) RETURNING id`)
     .bind(
       c.requester.employeeId,
       c.root.id,
@@ -273,16 +273,17 @@ test("旧経費を元の内容と添付で接続し、過去の決定を引き�
       c.command.spentAt,
       c.command.note,
       c.at.toISOString(),
+      crypto.randomUUID(),
     )
-    .first<{ id: number }>()
+    .first<{ id: string }>()
   if (legacy === null) throw new Error("legacy missing")
   const linked = await c.attachments.markLinked(c.attachmentId, c.at)
   if (linked instanceof Error) throw linked
   await c.database
     .prepare(
-      "INSERT INTO expense_attachments (expense_id,attachment_id,created_at) VALUES (?1,?2,?3)",
+      "INSERT INTO expense_attachments (id,expense_id,attachment_id,created_at) VALUES (?4,?1,?2,?3)",
     )
-    .bind(legacy.id, c.attachmentId, c.at.toISOString())
+    .bind(legacy.id, c.attachmentId, c.at.toISOString(), crypto.randomUUID())
     .run()
   const command = {
     ...c.command,

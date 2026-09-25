@@ -11,7 +11,7 @@ import { ConflictError, ForbiddenError, UnexpectedError, type ApplicationError }
 
 type Context = CompanyContext
 type Command = Readonly<{
-  expenseId: number
+  expenseId: string
   session: CompanyPersonnelSession
   tokenVersion: number
   decisionTarget: Readonly<{

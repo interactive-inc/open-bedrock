@@ -59,17 +59,21 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
     VALUES ('binding:archive-review',?1,'role:archive-review',0)`)
     .bind(f.reviewer.accountId)
     .run()
-  for (const id of [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]) {
+  const budgetId = (serial: number) =>
+    `01900050-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
+  for (const serial of [2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]) {
     await f.database
       .prepare(`INSERT INTO expense_budgets
       (id,organization_unit_id,fiscal_period,period_start,period_end,amount,name,note,created_at)
       SELECT ?1,organization_unit_id,fiscal_period,period_start,period_end,amount,name,note,created_at
-      FROM expense_budgets WHERE id=1`)
-      .bind(id)
+      FROM expense_budgets WHERE id='01900050-0000-7000-8000-000000000001'`)
+      .bind(budgetId(serial))
       .run()
   }
   const mappings: Array<{ sourceRecordId: string; preservedRecordId: string }> = []
-  for (const id of [1, 10, 11, 12, 2, 3, 4, 5, 6, 7, 8, 9]) {
+  // 照合は主キーの文字列順に進むため、その順で保全する。
+  for (const serial of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12]) {
+    const id = budgetId(serial)
     const path = `/expense/records/expense-budget/${id}/preservation-requests`
     const submitted = await f.request(path, {
       key: crypto.randomUUID(),
@@ -78,7 +82,7 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
         conditions: {
           ...f.conditions,
           preservation:
-            id === 12
+            serial === 12
               ? {
                   kind: "retention",
                   retainUntil: new Date(Date.now() + 86400000).toISOString(),
@@ -178,7 +182,7 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
   expect(firstReceipt).toMatchObject({
     sequence: 1,
     afterCursor: null,
-    nextCursor: "7",
+    nextCursor: budgetId(10),
     recordCount: 10,
   })
   expect((await f.request(path, { ...first, key: crypto.randomUUID() })).status).toBe(409)
@@ -192,7 +196,7 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
   const secondReceipt = zAppExpenseCoveragePageReceipt.parse(await secondResponse.json())
   expect(secondReceipt).toMatchObject({
     sequence: 2,
-    afterCursor: "7",
+    afterCursor: budgetId(10),
     nextCursor: null,
     recordCount: 2,
   })

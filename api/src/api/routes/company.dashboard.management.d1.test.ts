@@ -267,7 +267,7 @@ async function createTestDb(): Promise<D1Database> {
   // 経費: 当月 2 件(うち pending 1)、前月 1 件。
   await seedD1(db, "expenses", [
     {
-      id: 1,
+      id: "0190004e-0000-7000-8000-000000000001",
       employee_id: "2",
       organization_unit_id: "department:D002",
       category: "transport",
@@ -278,7 +278,7 @@ async function createTestDb(): Promise<D1Database> {
       created_at: "2026-06-02T00:00:00.000Z",
     },
     {
-      id: 2,
+      id: "0190004e-0000-7000-8000-000000000002",
       employee_id: "3",
       organization_unit_id: "department:D002",
       category: "supplies",
@@ -289,7 +289,7 @@ async function createTestDb(): Promise<D1Database> {
       created_at: "2026-06-04T00:00:00.000Z",
     },
     {
-      id: 3,
+      id: "0190004e-0000-7000-8000-000000000003",
       employee_id: "3",
       organization_unit_id: "department:D002",
       category: "books",

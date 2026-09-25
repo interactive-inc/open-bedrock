@@ -9,7 +9,7 @@ import { appendSystemAuditEvent } from "@system/interface/operations/append-syst
 import { factory } from "@/api/http/factory"
 import { ApplicationError, ForbiddenError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { InternalError, UnauthorizedError } from "@/lib/http/errors"
 
@@ -22,7 +22,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const expenseId = validateIntParam(c.req.param("id"), "expense")
+  const expenseId = validateUuidParam(c.req.param("id"), "expense")
 
   const attachmentId = c.req.param("attachmentId") ?? ""
 

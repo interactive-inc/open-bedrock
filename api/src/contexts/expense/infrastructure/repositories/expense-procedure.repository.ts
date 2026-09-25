@@ -1,6 +1,5 @@
 import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import { z } from "zod"
-import { withAllocatedIntegerId } from "@/lib/database/with-allocated-integer-id"
 import type { AttachmentEvidence } from "@system/domain/definitions/attachments/attachment-evidence.definition"
 import { prepareSystemAttachmentEvidence } from "@system/interface/operations/prepare-system-attachment-evidence"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
@@ -173,9 +172,9 @@ export class ExpenseProcedureRepository {
 
   async readSubmissionReceipt(
     input: Readonly<{
-      expenseId: number | null
-      previousExpenseId?: number | null
-      existingExpenseId?: number | null
+      expenseId: string | null
+      previousExpenseId?: string | null
+      existingExpenseId?: string | null
       actorAccountId: string
       guards: ReadonlyArray<D1PreparedStatement>
     }>,
@@ -229,14 +228,14 @@ export class ExpenseProcedureRepository {
         "SELECT expense_id FROM expense_procedure_bindings WHERE request_key = ?1",
       )
         .bind(requestKey)
-        .first<number>("expense_id")
+        .first<string>("expense_id")
       return id === null ? null : this.findById(id)
     } catch (cause) {
       return new Error("failed to read expense submission receipt", { cause })
     }
   }
 
-  async findProcedure(expenseId: number): Promise<ExpenseProcedureBinding | null | Error> {
+  async findProcedure(expenseId: string): Promise<ExpenseProcedureBinding | null | Error> {
     try {
       const row =
         await this.c.env.DB.prepare(`SELECT previous_expense_id AS previousExpenseId, request_key AS requestKey,
@@ -265,8 +264,8 @@ export class ExpenseProcedureRepository {
   async createWithProcedure(
     input: Readonly<{
       requestKey: string
-      existingExpenseId?: number | null
-      previousExpenseId?: number | null
+      existingExpenseId?: string | null
+      previousExpenseId?: string | null
       expense: Expense
       attachments: ReadonlyArray<AttachmentEvidence>
       attachmentEffects: ReadonlyArray<D1PreparedStatement>
@@ -282,8 +281,8 @@ export class ExpenseProcedureRepository {
     const statements = system.prepareStartStatements(input.workflow)
     try {
       // 新規の経費 ID は事前に明示し、手続きの結び付けはその ID を束縛値として受け取る。
-      const writeProcedure = (newExpenseId: number | null) =>
-        database.batch<{ id: number }>([
+      const writeProcedure = (newExpenseId: string | null) =>
+        database.batch<{ id: string }>([
           ...statements.slice(0, -1),
           ...input.attachmentEffects,
           ...(input.existingExpenseId == null
@@ -307,8 +306,8 @@ export class ExpenseProcedureRepository {
             : []),
           database
             .prepare(`INSERT INTO expense_procedure_bindings
-          (request_key, expense_id, application_id, series_id, case_id, proposal_digest, created_at, previous_expense_id, attachment_evidence_json)
-          VALUES (?1, ?6,
+          (id, request_key, expense_id, application_id, series_id, case_id, proposal_digest, created_at, previous_expense_id, attachment_evidence_json)
+          VALUES (?9, ?1, ?6,
             (SELECT number FROM system_proposal_numbers WHERE series_id = ?2), ?2, ?3, ?4, ?5, ?7, ?8)`)
             .bind(
               input.requestKey,
@@ -319,14 +318,20 @@ export class ExpenseProcedureRepository {
               input.existingExpenseId ?? newExpenseId,
               input.previousExpenseId ?? null,
               evidence.toString(),
+              crypto.randomUUID(),
             ),
           abortWhenPreviousStatementChangedNoRows(database),
           ...(input.existingExpenseId == null
             ? input.attachments.map((attachment) =>
                 database
                   .prepare(`INSERT INTO expense_attachments
-          (expense_id, attachment_id, created_at) VALUES ((SELECT expense_id FROM expense_procedure_bindings WHERE request_key = ?1), ?2, ?3)`)
-                  .bind(input.requestKey, attachment.id, input.expense.createdAt),
+          (id, expense_id, attachment_id, created_at) VALUES (?4, (SELECT expense_id FROM expense_procedure_bindings WHERE request_key = ?1), ?2, ?3)`)
+                  .bind(
+                    input.requestKey,
+                    attachment.id,
+                    input.expense.createdAt,
+                    crypto.randomUUID(),
+                  ),
               )
             : []),
           database
@@ -354,7 +359,7 @@ export class ExpenseProcedureRepository {
         ])
       const saved =
         input.existingExpenseId == null
-          ? await withAllocatedIntegerId(database, "expenses", writeProcedure)
+          ? await writeProcedure(crypto.randomUUID())
           : await writeProcedure(null)
       const id = saved.at(-1)?.results.at(0)?.id
       if (id === undefined) return new Error("expense procedure was not saved")
@@ -456,7 +461,7 @@ export class ExpenseProcedureRepository {
     }
   }
 
-  async findById(expenseId: number): Promise<Expense | null | Error> {
+  async findById(expenseId: string): Promise<Expense | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -472,7 +477,7 @@ export class ExpenseProcedureRepository {
     }
   }
 
-  async readAttachmentIds(expenseId: number): Promise<ReadonlyArray<string> | Error> {
+  async readAttachmentIds(expenseId: string): Promise<ReadonlyArray<string> | Error> {
     try {
       const rows = await this.c.env.DB.prepare(
         "SELECT attachment_id FROM expense_attachments WHERE expense_id = ?1 ORDER BY attachment_id",

@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import type { CompanyPersonnelSession } from "@/contexts/company/domain/definitions/company-personnel-session.definition"
 import { PrepareExpenseAttachmentReadAdapter } from "@/contexts/expense/infrastructure/adapters/prepare-expense-attachment-read.adapter"
@@ -7,8 +8,8 @@ import { toSha256Hex } from "@system/application/attachments/lib/to-sha256-hex"
 
 type Context = CompanyContext & Readonly<{ now: () => Date }>
 const snapshotSql = `SELECT json_object(
-  'format','expense-attachment-link','version',1,
-  'record',json_object('expense_id',expense_id,'attachment_id',attachment_id,'created_at',created_at)
+  'format','expense-attachment-link','version',2,
+  'record',json_object('id',id,'expense_id',expense_id,'attachment_id',attachment_id,'created_at',created_at)
 ) AS snapshot_json FROM expense_attachments WHERE expense_id=?1 AND attachment_id=?2`
 
 /** 同じ添付を使う各申請との対応を、ファイル本体と別の記録として取得する。 */
@@ -19,14 +20,15 @@ export class CaptureExpenseAttachmentLinkAdapter {
 
   async prepare(
     input: Readonly<{
-      expenseId: number
+      expenseId: string
       attachmentId: string
       sourceNamespace: string
       authentication: SystemReadAuthentication
       session: CompanyPersonnelSession
     }>,
   ) {
-    if (!Number.isSafeInteger(input.expenseId)) return new Error("invalid expense attachment link")
+    if (!z.uuid().safeParse(input.expenseId).success)
+      return new Error("invalid expense attachment link")
     const now = this.c.now()
     const authorized = await new PrepareExpenseAttachmentReadAdapter(this.c).prepare({
       ...input,
@@ -53,7 +55,7 @@ export class CaptureExpenseAttachmentLinkAdapter {
         recordKind: "expense-attachment-link",
         recordId,
         formatId: "expense-attachment-link",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: now.toISOString(),

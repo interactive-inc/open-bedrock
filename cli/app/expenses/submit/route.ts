@@ -46,13 +46,9 @@ export default factory.createHandlers(
       json: {
         request_key: query["request-key"],
         existing_expense_id:
-          query["existing-expense-id"] === undefined
-            ? null
-            : toFiniteNumber(query["existing-expense-id"], "--existing-expense-id"),
+          query["existing-expense-id"] === undefined ? null : query["existing-expense-id"],
         previous_expense_id:
-          query["previous-expense-id"] === undefined
-            ? null
-            : toFiniteNumber(query["previous-expense-id"], "--previous-expense-id"),
+          query["previous-expense-id"] === undefined ? null : query["previous-expense-id"],
         category,
         amount: toFiniteNumber(amount, "--amount"),
         spent_at: spentAt,

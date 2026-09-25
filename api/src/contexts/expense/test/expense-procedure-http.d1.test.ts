@@ -87,7 +87,7 @@ async function fixture(rejectionBehavior: "reject" | "return" = "reject") {
   const json = await created.json()
   if (created.status !== 201) throw new Error("submission failed: " + (await created.text()))
   expect(created.status).toBe(201)
-  const id = z.object({ id: z.number() }).parse(json).id
+  const id = z.object({ id: z.uuid() }).parse(json).id
   const path = `/expense/expenses/${id}`
   return { ...c, request, body, id, path }
 }
@@ -183,7 +183,7 @@ test("差戻し後は元の記録を残して修正版を一度だけ提出す�
   const created = await c.request(c.requester, "/expense/expenses", "POST", body)
   if (created.status !== 201) throw new Error("submission failed: " + (await created.text()))
   expect(created.status).toBe(201)
-  const id = z.object({ id: z.number() }).parse(await created.json()).id
+  const id = z.object({ id: z.uuid() }).parse(await created.json()).id
   const path = `/expense/expenses/${id}`
   const view = zExpenseProcedureView.parse(await (await c.request(c.first, path)).json())
   const returned = await c.request(c.first, path + "/reject", "POST", {
@@ -205,7 +205,7 @@ test("差戻し後は元の記録を残して修正版を一度だけ提出す�
   expect(otherOwner.status).toBe(409)
   const revised = await c.request(c.requester, "/expense/expenses", "POST", revision)
   expect(revised.status).toBe(201)
-  const newId = z.object({ id: z.number() }).parse(await revised.json()).id
+  const newId = z.object({ id: z.uuid() }).parse(await revised.json()).id
   expect(newId).not.toBe(id)
   expect((await c.request(c.requester, "/expense/expenses", "POST", revision)).status).toBe(200)
   expect(
@@ -324,15 +324,16 @@ test("旧経費への承認・直接編集・削除を閉じ、本人確認後�
   const c = await fixture()
   const original = await c.database
     .prepare(
-      "INSERT INTO expenses(employee_id,organization_unit_id,category,amount,spent_at,note,status,created_at) VALUES (?1,?2,'supplies',500,?3,'Legacy receipt','pending',?4) RETURNING id",
+      "INSERT INTO expenses(id,employee_id,organization_unit_id,category,amount,spent_at,note,status,created_at) VALUES (?5,?1,?2,'supplies',500,?3,'Legacy receipt','pending',?4) RETURNING id",
     )
     .bind(
       c.requester.employeeId,
       c.assignment.attributes.organizationUnitId,
       c.body.spent_at,
       c.at.toISOString(),
+      crypto.randomUUID(),
     )
-    .first<{ id: number }>()
+    .first<{ id: string }>()
   if (original === null) throw new Error("legacy expense missing")
   const path = `/expense/expenses/${original.id}`
   const legacy = zExpenseProcedureView.parse(await (await c.request(c.requester, path)).json())
@@ -533,7 +534,7 @@ test("部署予算の実認証APIは停止中の全書込みを409で拒否し�
   const path = "/expense/expense-budgets"
   const created = await c.request(c.requester, path, "POST", body)
   expect(created.status).toBe(201)
-  const id = z.object({ id: z.number() }).parse(await created.json()).id
+  const id = z.object({ id: z.uuid() }).parse(await created.json()).id
   const original = await c.database
     .prepare("SELECT * FROM expense_budgets WHERE id=?1")
     .bind(id)

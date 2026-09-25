@@ -30,7 +30,7 @@ const categoryEnum = z.enum(["transport", "supplies", "entertainment", "books", 
 const statusEnum = z.enum(["pending", "approved", "rejected", "settled"])
 
 const expenseMineResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   category: categoryEnum,
   amount: z.number(),
   spent_at: z.string(),

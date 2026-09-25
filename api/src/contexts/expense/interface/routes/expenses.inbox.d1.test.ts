@@ -33,7 +33,7 @@ const categoryEnum = z.enum(["transport", "supplies", "entertainment", "books", 
 const statusEnum = z.enum(["pending", "approved", "rejected", "settled"])
 
 const expenseInboxResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   applicant_name: z.string(),
   category: categoryEnum,
   amount: z.number(),

@@ -7,7 +7,7 @@ import { captureSystemLinkedAttachmentRecord } from "@system/interface/operation
 
 type Context = CompanyContext & SystemAttachmentStorageContext & Readonly<{ now: () => Date }>
 type Input = Readonly<{
-  expenseId: number
+  expenseId: string
   attachmentId: string
   sourceNamespace: string
   authentication: SystemReadAuthentication

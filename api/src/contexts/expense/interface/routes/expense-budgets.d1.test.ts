@@ -29,7 +29,7 @@ const jwtSecret = "budget-route-test-secret"
 const now = "2026-07-08T00:00:00.000Z"
 
 const budgetResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   organization_unit_id: z.string(),
   fiscal_period: z.string(),
   period_start: z.string(),
@@ -41,7 +41,7 @@ const budgetResponseSchema = z.object({
 })
 
 const listItemSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   organization_unit_id: z.string(),
   organization_unit_name: z.string().nullable(),
   fiscal_period: z.string(),

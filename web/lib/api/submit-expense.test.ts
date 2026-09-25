@@ -8,8 +8,11 @@ vi.mock("@/lib/api/hc-client", () => ({ createClient: mocks.createClient }))
 afterEach(() => vi.clearAllMocks())
 
 describe("submitExpense", () => {
-  test("converts string entity ids to the numbers the API still declares", async () => {
-    const post = vi.fn().mockResolvedValue({ status: 201, json: async () => ({ id: 42 }) })
+  test("sends entity ids as the UUID strings the API declares", async () => {
+    const post = vi.fn().mockResolvedValue({
+      status: 201,
+      json: async () => ({ id: "0190004e-0000-7000-8000-000000000029" }),
+    })
     mocks.createClient.mockResolvedValue({ expense: { expenses: { $post: post } } })
     const request = {
       request_key: "12345678-1234-4234-8234-123456789abc",
@@ -20,10 +23,18 @@ describe("submitExpense", () => {
       attachment_ids: [],
     }
 
-    await submitExpense({ ...request, existing_expense_id: null, previous_expense_id: "41" })
+    await submitExpense({
+      ...request,
+      existing_expense_id: null,
+      previous_expense_id: "0190004e-0000-7000-8000-000000000029",
+    })
 
     expect(post).toHaveBeenCalledExactlyOnceWith({
-      json: { ...request, existing_expense_id: null, previous_expense_id: 41 },
+      json: {
+        ...request,
+        existing_expense_id: null,
+        previous_expense_id: "0190004e-0000-7000-8000-000000000029",
+      },
     })
   })
 })

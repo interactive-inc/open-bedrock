@@ -6,7 +6,7 @@ import { factory } from "@/api/http/factory"
 import { ApplicationError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import { zAppBudget, zAppBudgetDetail } from "@/contexts/expense/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { zValidator } from "@hono/zod-validator"
@@ -25,7 +25,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
-  const budgetId = validateIntParam(c.req.param("id"), "budget")
+  const budgetId = validateUuidParam(c.req.param("id"), "budget")
 
   const repository = new BudgetRepository(c)
   const budget = await repository.findById(budgetId)
@@ -101,7 +101,7 @@ export const PATCH = factory.createHandlers(
       throw new ForbiddenError()
     }
 
-    const budgetId = validateIntParam(c.req.param("id"), "budget")
+    const budgetId = validateUuidParam(c.req.param("id"), "budget")
 
     const json = c.req.valid("json")
 
@@ -145,7 +145,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
-  const budgetId = validateIntParam(c.req.param("id"), "budget")
+  const budgetId = validateUuidParam(c.req.param("id"), "budget")
 
   const result = await (async () => {
     const command = { budgetId }
