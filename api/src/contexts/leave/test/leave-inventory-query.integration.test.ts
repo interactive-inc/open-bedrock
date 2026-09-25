@@ -3,10 +3,13 @@ import { expect, test } from "bun:test"
 import { leaveInventoryQuery } from "@/contexts/leave/infrastructure/adapters/lib/leave-inventory-query"
 import type { LeaveRecordKind } from "@/contexts/leave/domain/definitions/leave-record-kind.definition"
 
+const requestId = (serial: number) =>
+  `01900049-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
+
 test("休暇4台帳を複合キーを含む主キー順で分割し、欠落と重複を作らない", () => {
   const database = new Database(":memory:")
   database.exec(`
-    CREATE TABLE leave_requests (id INTEGER PRIMARY KEY);
+    CREATE TABLE leave_requests (id TEXT PRIMARY KEY);
     CREATE TABLE leave_balances (
       employee_id TEXT, fiscal_year TEXT, leave_type TEXT,
       PRIMARY KEY (employee_id, fiscal_year, leave_type)
@@ -15,7 +18,7 @@ test("休暇4台帳を複合キーを含む主キー順で分割し、欠落と�
     CREATE TABLE leave_decision_notifications (job_id TEXT PRIMARY KEY);
   `)
   for (let index = 1; index <= 11; index++) {
-    database.query("INSERT INTO leave_requests VALUES (?1)").run(index)
+    database.query("INSERT INTO leave_requests VALUES (?1)").run(requestId(index))
     database
       .query("INSERT INTO leave_balances VALUES (?1,?2,?3)")
       .run("employee-uuid", String(2025 + index), "annual:special")
@@ -39,8 +42,8 @@ test("休暇4台帳を複合キーを含む主キー順で分割し、欠落と�
     return pages
   }
   expect(scan("leave-request-record")).toEqual([
-    Array.from({ length: 10 }, (_, index) => String(index + 1)),
-    ["11"],
+    Array.from({ length: 10 }, (_, index) => requestId(index + 1)),
+    [requestId(11)],
   ])
   expect(scan("leave-balance-record")).toEqual([
     Array.from({ length: 10 }, (_, index) => `employee-uuid:${2026 + index}:annual%3Aspecial`),
@@ -49,12 +52,12 @@ test("休暇4台帳を複合キーを含む主キー順で分割し、欠落と�
   expect(scan("leave-procedure-binding-record")).toEqual([["binding-a", "binding-b"]])
   expect(scan("leave-decision-notification-record")).toEqual([["job-a", "job-b"]])
   database.exec(`
-    INSERT INTO leave_requests VALUES (0);
+    INSERT INTO leave_requests VALUES ('${requestId(0)}');
     INSERT INTO leave_procedure_bindings VALUES ('');
     INSERT INTO leave_decision_notifications VALUES ('');
   `)
   for (const [kind, firstId] of [
-    ["leave-request-record", "0"],
+    ["leave-request-record", requestId(0)],
     ["leave-procedure-binding-record", ""],
     ["leave-decision-notification-record", ""],
   ] as const) {
@@ -63,13 +66,13 @@ test("休暇4台帳を複合キーを含む主キー順で分割し、欠落と�
     const first = database.query(query.sql).get(...query.values) as Record<string, unknown> | null
     expect(first && query.recordId(first)).toBe(firstId)
   }
-  const afterZero = leaveInventoryQuery("leave-request-record", "0", 10)
+  const afterZero = leaveInventoryQuery("leave-request-record", requestId(0), 10)
   if (afterZero instanceof Error) throw afterZero
   const afterZeroIds = (
     database.query(afterZero.sql).all(...afterZero.values) as Record<string, unknown>[]
   ).map(afterZero.recordId)
-  expect(afterZeroIds).toEqual(Array.from({ length: 11 }, (_, index) => String(index + 1)))
-  expect(leaveInventoryQuery("leave-request-record", "01", 10)).toBeInstanceOf(Error)
+  expect(afterZeroIds).toEqual(Array.from({ length: 11 }, (_, index) => requestId(index + 1)))
+  expect(leaveInventoryQuery("leave-request-record", "1", 10)).toBeInstanceOf(Error)
   expect(leaveInventoryQuery("leave-balance-record", "broken", 10)).toBeInstanceOf(Error)
   database.close()
 })

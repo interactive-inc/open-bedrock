@@ -203,7 +203,7 @@ test("source revalidation preserves the approved capture time and rejects mismat
     { recordKind: "other-record" },
     { recordId: `0${f.license.id}` },
     { formatId: "other-format" },
-    { formatVersion: 2 },
+    { formatVersion: 3 },
     { sourceRevision: "1" },
     { sourceRecordedAt: "2026-09-08T00:00:00Z" },
     { capturedAt: "2026-09-08T03:00:00Z" },

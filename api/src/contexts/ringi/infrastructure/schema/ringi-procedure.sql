@@ -1,7 +1,8 @@
 CREATE TABLE ringi_procedure_bindings (
-  previous_ringi_id INTEGER REFERENCES ringi_requests(id) ON DELETE RESTRICT,
-  request_key TEXT PRIMARY KEY NOT NULL CHECK (length(request_key) BETWEEN 1 AND 255),
-  ringi_id INTEGER NOT NULL UNIQUE REFERENCES ringi_requests(id) ON DELETE RESTRICT,
+  id TEXT PRIMARY KEY NOT NULL,
+  previous_ringi_id TEXT REFERENCES ringi_requests(id) ON DELETE RESTRICT,
+  request_key TEXT NOT NULL UNIQUE CHECK (length(request_key) BETWEEN 1 AND 255),
+  ringi_id TEXT NOT NULL UNIQUE REFERENCES ringi_requests(id) ON DELETE RESTRICT,
   application_id INTEGER NOT NULL UNIQUE REFERENCES system_proposal_numbers(number) ON DELETE RESTRICT,
   series_id TEXT NOT NULL UNIQUE REFERENCES system_proposal_series(id) ON DELETE RESTRICT,
   case_id TEXT NOT NULL UNIQUE REFERENCES system_cases(id) ON DELETE RESTRICT,

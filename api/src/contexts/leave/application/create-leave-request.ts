@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { LeaveBalanceSufficiencyAdapter } from "@/contexts/leave/infrastructure/adapters/leave-balance-sufficiency.adapter"
 import { computeConsumedDays } from "@/contexts/leave/domain/policies/compute-consumed-days.policy"
@@ -14,7 +15,7 @@ import type {
 
 export type Command = {
   employeeId: EmployeeId
-  previousLeaveRequestId?: number | null
+  previousLeaveRequestId?: string | null
   leaveType: LeaveType
   startDate: string
   endDate: string
@@ -38,8 +39,7 @@ export class CreateLeaveRequest {
     const previousId = command.previousLeaveRequestId ?? null
     if (
       previousId !== null &&
-      (!Number.isSafeInteger(previousId) ||
-        previousId <= 0 ||
+      (!uuidSchema.safeParse(previousId).success ||
         !(await repository.isReturnedSource(command.employeeId, previousId)))
     )
       return new ConflictError("差戻し元の休暇を確認してください", "invalid_resubmission_source")

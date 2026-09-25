@@ -4,7 +4,7 @@ import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records
 
 /** ライセンス・SaaS 台帳 1 件のレスポンス。 */
 export const licenseResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   name: z.string(),
   plan_name: z.string().nullable(),
   revision: z.number().int().nonnegative(),

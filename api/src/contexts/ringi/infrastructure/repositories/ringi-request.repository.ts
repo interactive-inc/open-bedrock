@@ -1,6 +1,5 @@
 import { prepareCompanyAuthoritySnapshotGuard } from "@/contexts/company/interface/operations/prepare-company-authority-snapshot-guard"
 import { prepareSystemNotificationPublicationBatch } from "@system/interface/operations/prepare-system-notification-publication-batch"
-import { withAllocatedIntegerId } from "@/lib/database/with-allocated-integer-id"
 import { RingiRequest } from "@/contexts/ringi/domain/entities/ringi-request.entity"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { ringiRequests } from "@/contexts/ringi/infrastructure/schema/ringi"
@@ -168,9 +167,9 @@ export class RingiRequestRepository {
 
   async readSubmissionReceipt(
     input: Readonly<{
-      ringiId: number | null
-      previousRingiId?: number | null
-      existingRingiId?: number | null
+      ringiId: string | null
+      previousRingiId?: string | null
+      existingRingiId?: string | null
       actorAccountId: string
       guards: ReadonlyArray<D1PreparedStatement>
     }>,
@@ -224,14 +223,14 @@ export class RingiRequestRepository {
         "SELECT ringi_id FROM ringi_procedure_bindings WHERE request_key = ?1",
       )
         .bind(requestKey)
-        .first<number>("ringi_id")
+        .first<string>("ringi_id")
       return id === null ? null : this.findById(id)
     } catch (cause) {
       return new Error("failed to read ringi submission receipt", { cause })
     }
   }
 
-  async findProcedure(ringiId: number): Promise<RingiProcedureBinding | null | Error> {
+  async findProcedure(ringiId: string): Promise<RingiProcedureBinding | null | Error> {
     try {
       const row =
         await this.c.env.DB.prepare(`SELECT previous_ringi_id AS previousRingiId, request_key AS requestKey,
@@ -253,8 +252,8 @@ export class RingiRequestRepository {
   async createWithProcedure(
     input: Readonly<{
       requestKey: string
-      existingRingiId?: number | null
-      previousRingiId?: number | null
+      existingRingiId?: string | null
+      previousRingiId?: string | null
       ringi: RingiRequest
       workflow: Parameters<SystemWorkflowWriter["start"]>[0]
       guards: ReadonlyArray<D1PreparedStatement>
@@ -266,8 +265,8 @@ export class RingiRequestRepository {
     const statements = system.prepareStartStatements(input.workflow)
     try {
       // 新規の稟議 ID は事前に明示し、手続きの結び付けはその ID を束縛値として受け取る。
-      const writeProcedure = (newRingiId: number | null) =>
-        database.batch<{ id: number }>([
+      const writeProcedure = (newRingiId: string | null) =>
+        database.batch<{ id: string }>([
           ...statements.slice(0, -1),
           ...(input.existingRingiId == null
             ? [
@@ -289,8 +288,8 @@ export class RingiRequestRepository {
             : []),
           database
             .prepare(`INSERT INTO ringi_procedure_bindings
-          (request_key, ringi_id, application_id, series_id, case_id, proposal_digest, created_at, previous_ringi_id)
-          VALUES (?1, ?6,
+          (id, request_key, ringi_id, application_id, series_id, case_id, proposal_digest, created_at, previous_ringi_id)
+          VALUES (?8, ?1, ?6,
             (SELECT number FROM system_proposal_numbers WHERE series_id = ?2), ?2, ?3, ?4, ?5, ?7)`)
             .bind(
               input.requestKey,
@@ -300,6 +299,7 @@ export class RingiRequestRepository {
               input.workflow.proposal.createdAt.getTime(),
               input.existingRingiId ?? newRingiId,
               input.previousRingiId ?? null,
+              crypto.randomUUID(),
             ),
           abortWhenPreviousStatementChangedNoRows(database),
           ...prepareSystemAuditEventAppend({ database: this.c.env.DB, event: input.audit }),
@@ -309,7 +309,7 @@ export class RingiRequestRepository {
         ])
       const saved =
         input.existingRingiId == null
-          ? await withAllocatedIntegerId(database, "ringi_requests", writeProcedure)
+          ? await writeProcedure(crypto.randomUUID())
           : await writeProcedure(null)
       const id = saved.at(-1)?.results.at(0)?.id
       if (id === undefined) return new Error("ringi procedure was not saved")
@@ -414,7 +414,7 @@ export class RingiRequestRepository {
     }
   }
 
-  async findById(ringiId: number): Promise<RingiRequest | null | Error> {
+  async findById(ringiId: string): Promise<RingiRequest | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -435,6 +435,7 @@ export class RingiRequestRepository {
       const rows = await this.c.var.database
         .insert(ringiRequests)
         .values({
+          id: crypto.randomUUID(),
           applicantId: ringi.applicantId,
           approverId: ringi.approverId,
           title: ringi.title,

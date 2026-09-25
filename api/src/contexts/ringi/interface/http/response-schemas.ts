@@ -51,7 +51,7 @@ const ringiStatus = z.enum(["pending", "approved", "rejected"])
 
 /** 稟議 1 件のレスポンス。 */
 export const zAppRingi = z.object({
-  id: z.number(),
+  id: z.uuid(),
   applicant_id: zEmployeeId,
   approver_id: zEmployeeId,
   title: z.string(),
@@ -65,7 +65,7 @@ export const zAppRingi = z.object({
 
 /** 本人が起案した稟議一覧の 1 件。 */
 export const zAppRingiMineItem = z.object({
-  id: z.number(),
+  id: z.uuid(),
   approver_id: zEmployeeId,
   approver_name: z.string(),
   title: z.string(),
@@ -83,7 +83,7 @@ export const zAppRingiMineList = z.object({
 
 /** 承認待ち稟議一覧（自分が承認者）の 1 件。 */
 export const zAppRingiInboxItem = z.object({
-  id: z.number(),
+  id: z.uuid(),
   applicant_id: zEmployeeId,
   applicant_name: z.string(),
   title: z.string(),
@@ -106,7 +106,7 @@ export const zAppRingiDecision = z.object({
 
 /** 全社稟議一覧（GET /ringi-requests/admin）の 1 件。 */
 export const zAppRingiAdminItem = z.object({
-  id: z.number(),
+  id: z.uuid(),
   applicant_id: zEmployeeId,
   applicant_name: z.string(),
   applicant_dept_name: z.string().nullable(),
@@ -140,7 +140,7 @@ export const zRingiProcedureView = zAppRingi.extend({
   approver_name: z.string(),
   procedure_required: z.boolean(),
   application_id: z.number().int().positive().nullable(),
-  previous_ringi_id: z.number().int().positive().nullable(),
+  previous_ringi_id: z.uuid().nullable(),
   decision_target: z
     .object({
       proposal_version: z.number().int().positive(),
@@ -149,7 +149,7 @@ export const zRingiProcedureView = zAppRingi.extend({
       task_round: z.number().int().positive(),
     })
     .nullable(),
-  next_ringi_id: z.number().int().positive().nullable(),
+  next_ringi_id: z.uuid().nullable(),
   can_submit_legacy: z.boolean(),
   can_decide: z.boolean(),
   can_execute: z.boolean(),

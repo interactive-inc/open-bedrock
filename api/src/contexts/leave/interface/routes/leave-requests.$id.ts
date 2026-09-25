@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { resolveCompanyOrganizationAuthority } from "@/contexts/company/interface/operations/resolve-company-organization-authority"
 import { LeaveProcedureStatusReadAdapter } from "@/contexts/leave/infrastructure/adapters/leave-procedure-status-read.adapter"
 import type { LeaveProcedureStatus } from "@/contexts/leave/domain/definitions/leave-procedure.definition"
@@ -42,15 +43,11 @@ function toResponseBody(leaveRequest: LeaveRequest, status: LeaveProcedureStatus
   })
 }
 
-/** path の :id を数値へ。不正値は null。 */
-function toLeaveRequestId(value: string): number | null {
-  const parsed = Number(value)
+/** path の :id を UUID として読む。不正値は null。 */
+function toLeaveRequestId(value: string): string | null {
+  const parsed = uuidSchema.safeParse(value)
 
-  if (Number.isInteger(parsed) === false) {
-    return null
-  }
-
-  return parsed
+  return parsed.success ? parsed.data : null
 }
 
 // @authorization service - session を application service に渡して判定する

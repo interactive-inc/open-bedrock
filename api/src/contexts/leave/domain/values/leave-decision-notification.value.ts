@@ -1,10 +1,11 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { z } from "zod"
 
 const notificationSchema = z
   .object({
     decisionAuditId: z.string().min(1).max(200).regex(/^\S+$/),
-    leaveRequestId: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+    leaveRequestId: uuidSchema,
     recipientEmployeeId: zEmployeeId,
     outcome: z.enum(["approved", "rejected"]),
     decidedAt: z.number().int().nonnegative().max(8_640_000_000_000_000),

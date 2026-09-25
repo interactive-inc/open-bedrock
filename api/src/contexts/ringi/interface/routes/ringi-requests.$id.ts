@@ -1,7 +1,7 @@
 import { zRingiProcedureView } from "@/contexts/ringi/interface/http/response-schemas"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
@@ -12,7 +12,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const session = c.var.session
   if (session === null || c.var.accountTokenVersion === null) throw new UnauthorizedError()
   const view = await new RingiProcedureReadAdapter(c).find({
-    ringiId: validateIntParam(c.req.param("id"), "ringi"),
+    ringiId: validateUuidParam(c.req.param("id"), "ringi"),
     session,
     tokenVersion: c.var.accountTokenVersion,
     at: new Date(c.env.NOW ?? Date.now()),

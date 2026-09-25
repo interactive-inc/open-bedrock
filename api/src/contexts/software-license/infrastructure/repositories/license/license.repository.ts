@@ -1,5 +1,4 @@
 import { z } from "zod"
-import { withAllocatedIntegerId } from "@/lib/database/with-allocated-integer-id"
 import { LicenseEntity } from "@/contexts/software-license/domain/entities/license.entity"
 import type { LicenseState as LicenseRow } from "@/contexts/software-license/domain/entities/license.entity"
 import type { SoftwareLicenseContext } from "@/contexts/software-license/configuration/software-license-context"
@@ -29,7 +28,7 @@ export class LicenseRepository {
     Object.freeze(this)
   }
 
-  async find(id: number): Promise<LicenseEntity | null | Error> {
+  async find(id: string): Promise<LicenseEntity | null | Error> {
     try {
       const row = await this.c.env.DB.prepare(
         `SELECT ${columns} FROM software_licenses WHERE id = ?1`,
@@ -48,7 +47,8 @@ export class LicenseRepository {
     try {
       const pages = await this.c.env.DB.batch([
         this.c.env.DB.prepare(`SELECT ${columns} FROM software_licenses WHERE (?1 IS NULL OR status = ?1)
-          ORDER BY renewal_deadline IS NULL, renewal_deadline, id LIMIT ?2 OFFSET ?3`).bind(
+          ORDER BY renewal_deadline IS NULL, renewal_deadline, created_at,
+            CAST(legacy_id AS INTEGER), rowid LIMIT ?2 OFFSET ?3`).bind(
           props.status,
           props.limit,
           props.offset,
@@ -85,7 +85,7 @@ export class LicenseRepository {
       license.planName,
     ]
     // 新規ライセンスの ID は事前に明示し、変更履歴はその ID を束縛値として受け取る。
-    const prepareStatements = (newLicenseId: number | null) => {
+    const prepareStatements = (newLicenseId: string | null) => {
       const statements = [...options.assertions]
       if (license.id === null) {
         statements.push(
@@ -145,7 +145,7 @@ export class LicenseRepository {
       return statements
     }
     try {
-      const writeStatements = (newLicenseId: number | null) => {
+      const writeStatements = (newLicenseId: string | null) => {
         const statements = prepareStatements(newLicenseId)
         return database
           .batch(statements)
@@ -153,7 +153,7 @@ export class LicenseRepository {
       }
       const { writes, expected } =
         license.id === null
-          ? await withAllocatedIntegerId(database, "software_licenses", writeStatements)
+          ? await writeStatements(crypto.randomUUID())
           : await writeStatements(null)
       const row = writes.at(-1)?.results[0] as LicenseRow | undefined
       if (writes.length !== expected || writes.some((write) => !write.success) || row === undefined)

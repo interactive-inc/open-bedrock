@@ -31,7 +31,7 @@ afterAll(async () => {
 })
 
 const leaveRequestCreateResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   leave_type: z.string(),
   start_date: z.string(),
@@ -98,7 +98,8 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(
     db,
     "leave_balances",
-    seedLeaveBalances.map((balance) => ({
+    seedLeaveBalances.map((balance, index) => ({
+      id: `0190004c-0000-7000-8000-${String(index + 1).padStart(12, "0")}`,
       employee_id: balance.employeeId,
       fiscal_year: balance.fiscalYear,
       leave_type: balance.leaveType,
@@ -296,7 +297,7 @@ describe("POST /leave-requests", () => {
 })
 
 const leaveAdminItemSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   applicant_id: zEmployeeId,
   applicant_name: z.string(),
   applicant_dept_name: z.string().nullable(),
@@ -358,7 +359,7 @@ async function createScopeTestDb(): Promise<D1Database> {
 
   await seedD1(db, "leave_requests", [
     {
-      id: 100,
+      id: "01900049-0000-7000-8000-000000000064",
       employee_id: "20",
       leave_type: "annual",
       start_date: "2026-06-01",
@@ -371,7 +372,7 @@ async function createScopeTestDb(): Promise<D1Database> {
       created_at: "2026-05-20T00:00:00Z",
     },
     {
-      id: 101,
+      id: "01900049-0000-7000-8000-000000000065",
       employee_id: "21",
       leave_type: "special",
       start_date: "2026-07-01",

@@ -52,13 +52,24 @@ test("11件のサービス台帳を全件保全し、人の承認・取消・再
     VALUES ('binding:retirement-review',?1,'role:retirement-review',0)`)
     .bind(reviewer.accountId)
     .run()
-  for (const id of [2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
+  // fixture の 1 件と固定の UUID の 10 件を、撤去の頁と同じ主キーの順に並べる。
+  const insertedIds = [2, 3, 4, 5, 6, 7, 8, 9, 10, 11].map((serial) => ({
+    serial,
+    id: `0190004b-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`,
+  }))
+  for (const { serial, id } of insertedIds) {
     await f.database
       .prepare(`INSERT INTO software_licenses
       (id,name,status,created_at,revision,note) VALUES (?1,?2,'active',?3,1,?4)`)
-      .bind(id, `Example Service ${id}`, `2026-08-${String(id).padStart(2, "0")}`, `Original ${id}`)
+      .bind(
+        id,
+        `Example Service ${serial}`,
+        `2026-08-${String(serial).padStart(2, "0")}`,
+        `Original ${serial}`,
+      )
       .run()
   }
+  const licenseIds = [f.license.id, ...insertedIds.map(({ id }) => id)].toSorted()
   const clock = createMonotonicTestClock()
   const at = clock()
   const secret = "software-license-integration-test-secret"
@@ -111,7 +122,7 @@ test("11件のサービス台帳を全件保全し、人の承認・取消・再
     ).status,
   ).toBe(201)
   const mappings = []
-  for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
+  for (const id of licenseIds) {
     const path = `/software-licenses/${id}/preservation-requests`
     const submitted = await f.request(path, {
       method: "POST",
@@ -180,7 +191,7 @@ test("11件のサービス台帳を全件保全し、人の承認・取消・再
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "10",
+    nextCursor: licenseIds[9],
     recordCount: 10,
   })
   expect(

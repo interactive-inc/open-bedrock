@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import {
   decodeLeaveBalanceRecordId,
   encodeLeaveBalanceRecordId,
@@ -18,14 +19,14 @@ export function leaveInventoryQuery(
 ): Query | Error {
   const pageSize = limit + 1
   if (recordKind === "leave-request-record") {
-    const cursor = after === null ? null : Number(after)
-    if (cursor !== null && (!Number.isSafeInteger(cursor) || String(cursor) !== after))
+    const cursor = after
+    if (cursor !== null && !uuidSchema.safeParse(cursor).success)
       return new Error("invalid leave request cursor")
     return {
       sql:
         cursor === null
-          ? "SELECT id AS record_id FROM leave_requests ORDER BY id LIMIT ?1"
-          : "SELECT id AS record_id FROM leave_requests WHERE id>?1 ORDER BY id LIMIT ?2",
+          ? "SELECT id AS record_id FROM leave_requests ORDER BY id COLLATE BINARY LIMIT ?1"
+          : "SELECT id AS record_id FROM leave_requests WHERE id COLLATE BINARY>?1 ORDER BY id COLLATE BINARY LIMIT ?2",
       values: cursor === null ? [pageSize] : [cursor, pageSize],
       recordId: (row) => String(row.record_id),
     }

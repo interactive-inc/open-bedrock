@@ -58,7 +58,7 @@ async function fixture() {
   const created = await request(c.requester, "/ringi/ringi-requests", "POST", body)
   const json = await created.json()
   expect(created.status).toBe(201)
-  const id = z.object({ id: z.number() }).parse(json).id
+  const id = z.object({ id: z.uuid() }).parse(json).id
   const path = `/ringi/ringi-requests/${id}`
   return { ...c, request, body, id, path }
 }
@@ -175,7 +175,7 @@ test("差戻し後は元の記録を残して修正版を一度だけ提出す�
   const body = { ...c.body, request_key: crypto.randomUUID(), title: "Review this request" }
   const created = await c.request(c.requester, "/ringi/ringi-requests", "POST", body)
   expect(created.status).toBe(201)
-  const id = z.object({ id: z.number() }).parse(await created.json()).id
+  const id = z.object({ id: z.uuid() }).parse(await created.json()).id
   const path = `/ringi/ringi-requests/${id}`
   const view = zRingiProcedureView.parse(await (await c.request(c.first, path)).json())
   const returned = await c.request(c.first, path + "/reject", "POST", {
@@ -197,7 +197,7 @@ test("差戻し後は元の記録を残して修正版を一度だけ提出す�
   expect(otherOwner.status).toBe(409)
   const revised = await c.request(c.requester, "/ringi/ringi-requests", "POST", revision)
   expect(revised.status).toBe(201)
-  const newId = z.object({ id: z.number() }).parse(await revised.json()).id
+  const newId = z.object({ id: z.uuid() }).parse(await revised.json()).id
   expect(newId).not.toBe(id)
   expect((await c.request(c.requester, "/ringi/ringi-requests", "POST", revision)).status).toBe(200)
   expect(

@@ -71,6 +71,9 @@ const LEGACY_INTEGER_SEED_PREFIXES: Readonly<Record<string, string>> = {
   "0190003e": "onboarding_tasks",
   "01900042": "knowledge_articles",
   "01900043": "governance_org_role_assignments",
+  "01900049": "leave_requests",
+  "0190004a": "ringi_requests",
+  "0190004b": "software_licenses",
 }
 
 /**
@@ -86,6 +89,7 @@ const SURROGATE_SEED_TABLES: Readonly<Record<string, string>> = {
   governance_document_references: "01900044",
   governance_publication_approvals: "01900045",
   governance_acknowledgements: "01900046",
+  leave_balances: "0190004c",
 }
 
 /**

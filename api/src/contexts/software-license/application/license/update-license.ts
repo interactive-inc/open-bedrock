@@ -8,7 +8,7 @@ import { LicenseRepository } from "@/contexts/software-license/infrastructure/re
 
 export type Command = {
   session: CompanySessionValue
-  id: number
+  id: string
   expectedRevision: number
   details: {
     name: string

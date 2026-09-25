@@ -35,7 +35,7 @@ afterAll(async () => {
 })
 
 const leaveRequestResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   leave_type: z.string(),
   start_date: z.string(),
@@ -116,6 +116,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "leave_balances", [
     {
+      id: crypto.randomUUID(),
       employee_id: "5",
       fiscal_year: "2026",
       leave_type: "annual",
@@ -124,6 +125,7 @@ async function createTestDb(): Promise<D1Database> {
       remaining_days: 20,
     },
     {
+      id: crypto.randomUUID(),
       employee_id: "5",
       fiscal_year: "2026",
       leave_type: "special",
@@ -182,7 +184,7 @@ async function request(props: {
 describe("GET /leave-requests/:id", () => {
   test("returns the request for its applicant", async () => {
     const response = await request({
-      path: "/leave/leave-requests/1",
+      path: "/leave/leave-requests/01900049-0000-7000-8000-000000000001",
       token: await tokenFor(5),
     })
 
@@ -193,7 +195,7 @@ describe("GET /leave-requests/:id", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.id).toBe(1)
+      expect(parsed.data.id).toBe("01900049-0000-7000-8000-000000000001")
       expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
     }
   })
@@ -220,7 +222,7 @@ describe("GET /leave-requests/:id", () => {
     }
 
     const response = await testApp.request(
-      "/leave/leave-requests/1",
+      "/leave/leave-requests/01900049-0000-7000-8000-000000000001",
       {
         method: "GET",
         headers: {
@@ -237,14 +239,14 @@ describe("GET /leave-requests/:id", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.id).toBe(1)
+      expect(parsed.data.id).toBe("01900049-0000-7000-8000-000000000001")
       expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
     }
   })
 
   test("returns 403 for a manager outside the applicant organization scope", async () => {
     const response = await request({
-      path: "/leave/leave-requests/1",
+      path: "/leave/leave-requests/01900049-0000-7000-8000-000000000001",
       token: await tokenFor(2),
     })
 
@@ -273,7 +275,7 @@ describe("GET /leave-requests/:id", () => {
     }
 
     const response = await testApp.request(
-      "/leave/leave-requests/1",
+      "/leave/leave-requests/01900049-0000-7000-8000-000000000001",
       {
         method: "GET",
         headers: {
@@ -290,14 +292,14 @@ describe("GET /leave-requests/:id", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.id).toBe(1)
+      expect(parsed.data.id).toBe("01900049-0000-7000-8000-000000000001")
       expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
     }
   })
 
   test("returns 403 for another person's request", async () => {
     const response = await request({
-      path: "/leave/leave-requests/2",
+      path: "/leave/leave-requests/01900049-0000-7000-8000-000000000002",
       token: await tokenFor(5),
     })
 
@@ -306,7 +308,7 @@ describe("GET /leave-requests/:id", () => {
 
   test("returns 404 for an unknown request", async () => {
     const response = await request({
-      path: "/leave/leave-requests/9999",
+      path: "/leave/leave-requests/01900049-0000-7000-8000-00000000270f",
       token: await tokenFor(5),
     })
 
@@ -314,7 +316,10 @@ describe("GET /leave-requests/:id", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/leave/leave-requests/1", token: null })
+    const response = await request({
+      path: "/leave/leave-requests/01900049-0000-7000-8000-000000000001",
+      token: null,
+    })
 
     expect(response.status).toBe(401)
   })
@@ -323,7 +328,7 @@ describe("GET /leave-requests/:id", () => {
 describe("PUT /leave-requests/:id", () => {
   test("revises a pending request for its applicant", async () => {
     const response = await request({
-      path: "/leave/leave-requests/1",
+      path: "/leave/leave-requests/01900049-0000-7000-8000-000000000001",
       token: await tokenFor(5),
       method: "PUT",
       body: {
@@ -351,7 +356,7 @@ describe("PUT /leave-requests/:id", () => {
     // 申請1 (06-01..06-03) を自分自身と重なる 06-02..06-04 へ更新。
     // 自己除外 (excludeId) が無いと自分にヒットして 409 になってしまう。
     const response = await request({
-      path: "/leave/leave-requests/1",
+      path: "/leave/leave-requests/01900049-0000-7000-8000-000000000001",
       token: await tokenFor(5),
       method: "PUT",
       body: {
@@ -371,7 +376,7 @@ describe("PUT /leave-requests/:id", () => {
     // employee 5 に別期間の pending をもう 1 件追加する。
     await seedD1(db, "leave_requests", [
       {
-        id: 100,
+        id: "01900049-0000-7000-8000-000000000064",
         employee_id: "5",
         leave_type: "annual",
         start_date: "2026-07-01",
@@ -396,7 +401,7 @@ describe("PUT /leave-requests/:id", () => {
 
     // 申請1 を 07-02..07-04 へ変更すると申請100 と重複する → 409。
     const response = await testApp.request(
-      "/leave/leave-requests/1",
+      "/leave/leave-requests/01900049-0000-7000-8000-000000000001",
       {
         method: "PUT",
         headers: {
@@ -418,7 +423,7 @@ describe("PUT /leave-requests/:id", () => {
 
   test("returns 409 when revising a decided request", async () => {
     const response = await request({
-      path: "/leave/leave-requests/2",
+      path: "/leave/leave-requests/01900049-0000-7000-8000-000000000002",
       token: await tokenFor(10),
       method: "PUT",
       body: {
@@ -434,7 +439,7 @@ describe("PUT /leave-requests/:id", () => {
 
   test("returns 403 when revising another person's request", async () => {
     const response = await request({
-      path: "/leave/leave-requests/1",
+      path: "/leave/leave-requests/01900049-0000-7000-8000-000000000001",
       token: await tokenFor(10),
       method: "PUT",
       body: {
@@ -450,7 +455,7 @@ describe("PUT /leave-requests/:id", () => {
 
   test("returns 404 for an unknown request", async () => {
     const response = await request({
-      path: "/leave/leave-requests/9999",
+      path: "/leave/leave-requests/01900049-0000-7000-8000-00000000270f",
       token: await tokenFor(5),
       method: "PUT",
       body: {
@@ -468,7 +473,7 @@ describe("PUT /leave-requests/:id", () => {
 describe("DELETE /leave-requests/:id", () => {
   test("withdraws a pending request and returns 204", async () => {
     const response = await request({
-      path: "/leave/leave-requests/1",
+      path: "/leave/leave-requests/01900049-0000-7000-8000-000000000001",
       token: await tokenFor(5),
       method: "DELETE",
     })
@@ -478,7 +483,7 @@ describe("DELETE /leave-requests/:id", () => {
 
   test("returns 409 when withdrawing a decided request", async () => {
     const response = await request({
-      path: "/leave/leave-requests/2",
+      path: "/leave/leave-requests/01900049-0000-7000-8000-000000000002",
       token: await tokenFor(10),
       method: "DELETE",
     })
@@ -488,7 +493,7 @@ describe("DELETE /leave-requests/:id", () => {
 
   test("returns 403 when withdrawing another person's request", async () => {
     const response = await request({
-      path: "/leave/leave-requests/1",
+      path: "/leave/leave-requests/01900049-0000-7000-8000-000000000001",
       token: await tokenFor(10),
       method: "DELETE",
     })
@@ -498,7 +503,7 @@ describe("DELETE /leave-requests/:id", () => {
 
   test("returns 404 for an unknown request", async () => {
     const response = await request({
-      path: "/leave/leave-requests/9999",
+      path: "/leave/leave-requests/01900049-0000-7000-8000-00000000270f",
       token: await tokenFor(5),
       method: "DELETE",
     })
@@ -508,7 +513,7 @@ describe("DELETE /leave-requests/:id", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/leave/leave-requests/1",
+      path: "/leave/leave-requests/01900049-0000-7000-8000-000000000001",
       token: null,
       method: "DELETE",
     })

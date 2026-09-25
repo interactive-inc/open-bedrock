@@ -62,7 +62,7 @@ INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('leave
   }
   await c.database
     .prepare(
-      "INSERT INTO leave_balances (employee_id, fiscal_year, leave_type, granted_days, used_days, remaining_days) VALUES (?1, '2026', 'annual', 10, 0, 10)",
+      "INSERT INTO leave_balances (id, employee_id, fiscal_year, leave_type, granted_days, used_days, remaining_days) VALUES ('0190004c-0000-7000-8000-0000000000f1', ?1, '2026', 'annual', 10, 0, 10)",
     )
     .bind(c.creator.employeeId)
     .run()
@@ -371,7 +371,7 @@ test("差戻し後に修正した休暇を別番号で再提出し、元の内�
     reason: "再確認済み",
   })
   expect(draft.status).toBe(201)
-  const id = z.object({ id: z.number() }).parse(await draft.json()).id
+  const id = z.object({ id: z.uuid() }).parse(await draft.json()).id
   const path = `/leave/leave-requests/${id}`
   const revised = z
     .object({ confirmed_content_digest: z.string() })

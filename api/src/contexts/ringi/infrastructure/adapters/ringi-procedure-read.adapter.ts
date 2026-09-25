@@ -12,7 +12,7 @@ import { ConflictError, ForbiddenError, NotFoundError, UnexpectedError } from "@
 
 type Context = CompanyContext
 type Input = Readonly<{
-  ringiId: number
+  ringiId: string
   session: CompanyPersonnelSession
   tokenVersion: number
   at: Date
@@ -39,7 +39,7 @@ export class RingiProcedureReadAdapter {
             "SELECT ringi_id FROM ringi_procedure_bindings WHERE previous_ringi_id = ?1",
           )
             .bind(input.ringiId)
-            .first<number>("ringi_id")
+            .first<string>("ringi_id")
     const query = openSystemProposals(this.c)
     const proposal = binding === null ? null : await query.findByNumber(binding.applicationId)
     if (proposal instanceof Error)

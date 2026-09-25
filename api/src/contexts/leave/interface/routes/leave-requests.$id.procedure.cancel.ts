@@ -3,7 +3,7 @@ import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
@@ -24,7 +24,7 @@ export const POST = factory.createHandlers(
     const session = c.var.session
     if (session === null || c.var.accountTokenVersion === null) throw new UnauthorizedError()
     const target = c.req.valid("json").decision_target
-    const leaveRequestId = validateIntParam(c.req.param("id"), "leave")
+    const leaveRequestId = validateUuidParam(c.req.param("id"), "leave")
     const at = new Date(c.env.NOW ?? Date.now())
     const saved = await new CancelLeaveProcedure(c).run({
       leaveRequestId,

@@ -5,6 +5,7 @@ import { LeaveDecisionNotificationDeliveryAdapter } from "@/contexts/leave/infra
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
 import { execSql } from "@tests/d1/support/exec-sql"
+import { toSha256Hex } from "@/lib/crypto/to-sha256-hex"
 
 let local: LocalD1
 
@@ -24,6 +25,8 @@ beforeAll(async () => {
       "revoked-recipient",
       "revoked-permission",
       "dead-letter",
+      "legacy-payload",
+      "legacy-payload-tampered",
     ],
   })
 })
@@ -72,6 +75,64 @@ test("並行配送と再実行でも通知を一度だけ保存する", async ()
       "SELECT recipient_account_id FROM system_notification_deliveries WHERE id LIKE 'leave-decision:%'",
     ).first<string>("recipient_account_id"),
   ).toBe(f.creator.accountId)
+})
+
+/**
+ * 主キーを UUID へ移す前に作られた job を再現する。通知の行は申請の UUID へ書き換えられ、System の job の
+ * digest は申請の整数の主キーを含む移行前の本文に対する値のまま残る。
+ */
+async function simulatePreMigrationJob(
+  f: Awaited<ReturnType<typeof fixture>>,
+  legacyId: string,
+  digestLegacyId: number,
+) {
+  const row = await f.context.env.DB.prepare(
+    "SELECT job_id, leave_request_id, payload_json FROM leave_decision_notifications",
+  ).first<{ job_id: string; leave_request_id: string; payload_json: string }>()
+  if (row === null) throw new Error("notification fixture missing")
+  const legacyPayload = JSON.stringify({
+    ...JSON.parse(row.payload_json),
+    leaveRequestId: digestLegacyId,
+  })
+  // 移行が書き込む値を、変更を拒否する table の trigger を一時的に外して再現する。
+  const bypass = async (table: string, statement: D1PreparedStatement) => {
+    const guards = await f.context.env.DB.prepare(
+      "SELECT name, sql FROM sqlite_master WHERE type = 'trigger' AND tbl_name = ?1",
+    )
+      .bind(table)
+      .all<{ name: string; sql: string }>()
+    for (const guard of guards.results) await execSql(f.db, `DROP TRIGGER ${guard.name}`)
+    await statement.run()
+    for (const guard of guards.results) await execSql(f.db, guard.sql)
+  }
+  await bypass(
+    "system_jobs",
+    f.context.env.DB.prepare("UPDATE system_jobs SET payload_digest = ?1 WHERE id = ?2").bind(
+      await toSha256Hex(legacyPayload),
+      row.job_id,
+    ),
+  )
+  await bypass(
+    "leave_requests",
+    f.context.env.DB.prepare("UPDATE leave_requests SET legacy_id = ?1 WHERE id = ?2").bind(
+      legacyId,
+      row.leave_request_id,
+    ),
+  )
+}
+
+test("移行前に作られた job は申請の旧 ID から移行前の本文を組み立てて照合し、配送する", async () => {
+  const f = await fixture("legacy-payload")
+  await simulatePreMigrationJob(f, "41", 41)
+  expect(await f.run()).toEqual([expect.objectContaining({ status: "succeeded" })])
+  expect(await f.count()).toBe(1)
+})
+
+test("移行前の job の digest が申請の旧 ID と合わなければ改変として配送しない", async () => {
+  const f = await fixture("legacy-payload-tampered")
+  await simulatePreMigrationJob(f, "41", 42)
+  expect(await f.run()).not.toEqual([expect.objectContaining({ status: "succeeded" })])
+  expect(await f.count()).toBe(0)
 })
 
 test("通知保存に失敗しても承認済みの判断を保持し、復旧後に配送する", async () => {

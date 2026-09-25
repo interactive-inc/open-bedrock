@@ -12,7 +12,7 @@ import { zAppLeaveRequestSummaryList } from "@/contexts/leave/interface/http/res
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { zValidator } from "@hono/zod-validator"
-import { and, count, desc, eq, getTableColumns } from "drizzle-orm"
+import { and, count, desc, eq, getTableColumns, sql } from "drizzle-orm"
 import { z } from "zod"
 
 // @authorization owner - 本人のリソースに限定する
@@ -60,7 +60,11 @@ export const GET = factory.createHandlers(
       .select({ ...getTableColumns(leaveRequests), status: leaveProcedureStatusSql })
       .from(leaveRequests)
       .where(and(...conditions))
-      .orderBy(desc(leaveRequests.createdAt), desc(leaveRequests.id))
+      .orderBy(
+        desc(leaveRequests.createdAt),
+        desc(sql`CAST(${leaveRequests.legacyId} AS INTEGER)`),
+        desc(sql`${leaveRequests}.rowid`),
+      )
       .limit(limit)
       .offset(offset)
 

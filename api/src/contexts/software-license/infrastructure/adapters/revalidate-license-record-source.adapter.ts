@@ -20,7 +20,7 @@ export class RevalidateLicenseRecordSourceAdapter {
       return new LicenseError("forbidden", "record source does not belong to this license registry")
 
     const current = await new CaptureLicenseRecordAdapter(this.c).prepare({
-      licenseId: Number(source.props.recordId),
+      licenseId: source.props.recordId,
       sourceNamespace: this.c.sourceNamespace,
     })
     if (current instanceof Error) return current

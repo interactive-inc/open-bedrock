@@ -224,7 +224,7 @@ async function createTestDb(): Promise<D1Database> {
   // 休暇: 当月2件、前月1件。案件のないpendingは未提出なので判断待ち件数に含めない。
   await seedD1(db, "leave_requests", [
     {
-      id: 1,
+      id: "01900049-0000-7000-8000-000000000001",
       employee_id: "2",
       leave_type: "annual",
       start_date: "2026-06-20",
@@ -237,7 +237,7 @@ async function createTestDb(): Promise<D1Database> {
       created_at: "2026-06-05T00:00:00.000Z",
     },
     {
-      id: 2,
+      id: "01900049-0000-7000-8000-000000000002",
       employee_id: "3",
       leave_type: "annual",
       start_date: "2026-06-22",
@@ -250,7 +250,7 @@ async function createTestDb(): Promise<D1Database> {
       created_at: "2026-06-06T00:00:00.000Z",
     },
     {
-      id: 3,
+      id: "01900049-0000-7000-8000-000000000003",
       employee_id: "3",
       leave_type: "annual",
       start_date: "2026-05-10",
