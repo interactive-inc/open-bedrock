@@ -4,7 +4,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { zAppDocument } from "@/contexts/document/interface/http/response-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -35,7 +35,7 @@ export const PUT = factory.createHandlers(
 
     const updated = await new UpdateDocument(c).run({
       session: session,
-      documentId: validateIntParam(c.req.param("id"), "document"),
+      documentId: validateUuidParam(c.req.param("id"), "document"),
       title: json.title,
       category: json.category ?? null,
       location: json.location,

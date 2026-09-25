@@ -23,7 +23,7 @@ export class RevalidateCompanyCalendarDayRecordSourceAdapter {
       )
 
     const current = await new CaptureCompanyCalendarDayRecordAdapter(this.c).prepare({
-      companyCalendarDayId: Number(source.props.recordId),
+      companyCalendarDayId: source.props.recordId,
       sourceNamespace: this.c.sourceNamespace,
     })
     if (current instanceof Error) return current

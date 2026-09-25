@@ -46,6 +46,7 @@ export class DisciplinaryActionRepository {
       const rows = await this.c.var.database
         .insert(disciplinaryActions)
         .values({
+          id: crypto.randomUUID(),
           employeeId: action.employeeId,
           kind: action.kind,
           summary: action.summary,

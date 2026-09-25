@@ -158,11 +158,24 @@ const DEPARTMENT_CODE = crossContext(
 )
 const SYSTEM_ACCOUNT = crossContext("system_accounts")
 const COMPANY_EMPLOYEE_FROM_COMPANY = sameContext("company_employees")
+const LEGACY_PRIMARY_KEY = notReference(
+  "主キーを UUID へ移す前の自身の主キー。移行前の証跡が指す旧 ID から現在の行を辿る",
+)
 const PROCEDURE_REQUEST_KEY = external(
   "client が送る UUID の冪等性キー。System の案件の subject になる",
 )
 
 export const SOFT_REFERENCES: Readonly<Record<string, SoftReference>> = {
+  "commendations.legacy_id": LEGACY_PRIMARY_KEY,
+  "company_calendar_days.legacy_id": LEGACY_PRIMARY_KEY,
+  "disciplinary_actions.legacy_id": LEGACY_PRIMARY_KEY,
+  "document_ledger_entries.legacy_id": LEGACY_PRIMARY_KEY,
+  "employee_work_styles.legacy_id": LEGACY_PRIMARY_KEY,
+  "headcount_plans.legacy_id": LEGACY_PRIMARY_KEY,
+  "health_checkups.legacy_id": LEGACY_PRIMARY_KEY,
+  "it_incidents.legacy_id": LEGACY_PRIMARY_KEY,
+  "salary_revisions.legacy_id": LEGACY_PRIMARY_KEY,
+  "work_accidents.legacy_id": LEGACY_PRIMARY_KEY,
   "asset_lendings.asset_code": sameContext("assets"),
   "career_applications.posting_id": sameContext("career_postings"),
   "career_postings.dept_id": historical(

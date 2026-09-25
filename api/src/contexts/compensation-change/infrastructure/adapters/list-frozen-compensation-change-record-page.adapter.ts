@@ -33,20 +33,20 @@ export class ListFrozenCompensationChangeRecordPageAdapter {
       ownerContext: "compensation-change",
     })
     if (generation instanceof Error) return generation
-    const after = request.afterCursor === null ? null : Number(request.afterCursor)
-    if (after !== null && (!Number.isSafeInteger(after) || String(after) !== request.afterCursor))
+    const after = request.afterCursor
+    if (after !== null && !z.uuid().safeParse(after).success)
       return new Error("invalid compensation change cursor")
     try {
       const page =
         after === null
           ? this.c.env.DB.prepare(
-              "SELECT id AS record_id FROM salary_revisions ORDER BY id LIMIT ?1",
+              "SELECT id AS record_id FROM salary_revisions ORDER BY id COLLATE BINARY LIMIT ?1",
             ).bind(request.limit + 1)
           : this.c.env.DB.prepare(
-              "SELECT id AS record_id FROM salary_revisions WHERE id>?1 ORDER BY id LIMIT ?2",
+              "SELECT id AS record_id FROM salary_revisions WHERE id COLLATE BINARY>?1 ORDER BY id COLLATE BINARY LIMIT ?2",
             ).bind(after, request.limit + 1)
       const statements = [...generation.assertions, page, ...generation.assertions]
-      const reads = await this.c.env.DB.batch<{ record_id: number }>(statements)
+      const reads = await this.c.env.DB.batch<{ record_id: string }>(statements)
       if (reads.length !== statements.length || reads.some((read) => !read.success))
         return new Error("frozen compensation change inventory unavailable")
       const ids = (reads[generation.assertions.length]?.results ?? []).map((row) =>

@@ -4,7 +4,7 @@ import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records
 
 /** 健診・ストレスチェック実施記録 1 件のレスポンス。結果は持たない。 */
 export const zAppHealthCheckup = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   fiscal_year: z.number(),
   checkup_kind: z.string(),

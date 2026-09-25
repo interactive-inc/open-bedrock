@@ -15,6 +15,11 @@ import {
   type CompensationChangeRecordKind,
 } from "@/contexts/compensation-change/domain/definitions/compensation-change-record-kind.definition"
 
+/** 整数の番号から、番号と同じ順に並ぶ固定の UUID を作る。頁は主キーの文字列順で進む。 */
+function recordUuid(index: number): string {
+  return `01900013-0000-7000-8000-${String(index).padStart(12, "0")}`
+}
+
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("給与改定記録を全件保全し、人の承認を経て1台帳を撤去確定する", async () => {
   const {
@@ -48,7 +53,7 @@ test("給与改定記録を全件保全し、人の承認を経て1台帳を撤�
         (id,employee_id,effective_date,previous_base_salary,new_base_salary,reason,created_at)
         VALUES (?1,?2,?3,?4,?5,?6,'2026-01-01T00:00:00.000Z')`)
       .bind(
-        id,
+        recordUuid(id),
         creatorPerson.employeeId,
         `2026-${String(id).padStart(2, "0")}-01`,
         200000 + id,
@@ -91,11 +96,14 @@ test("給与改定記録を全件保全し、人の承認を経て1台帳を撤�
     ).status,
   ).toBe(201)
   await expect(
-    database.prepare("UPDATE salary_revisions SET reason='Must not change' WHERE id=1").run(),
+    database
+      .prepare("UPDATE salary_revisions SET reason='Must not change' WHERE id=?1")
+      .bind(recordUuid(1))
+      .run(),
   ).rejects.toThrow("compensation_change_record_source_frozen")
-  await expect(database.prepare("DELETE FROM salary_revisions WHERE id=1").run()).rejects.toThrow(
-    "compensation_change_record_source_frozen",
-  )
+  await expect(
+    database.prepare("DELETE FROM salary_revisions WHERE id=?1").bind(recordUuid(1)).run(),
+  ).rejects.toThrow("compensation_change_record_source_frozen")
   const blocked = await apiRequest("/compensation-change/salary-revisions", {
     method: "POST",
     body: {
@@ -112,7 +120,7 @@ test("給与改定記録を全件保全し、人の承認を経て1台帳を撤�
     Readonly<{ recordKind: CompensationChangeRecordKind; recordId: string }>
   > = Array.from({ length: 11 }, (_, index) => ({
     recordKind: "salary-revision-record" as const,
-    recordId: String(index + 1),
+    recordId: recordUuid(index + 1),
   }))
   const mappings: Array<{
     recordKind: CompensationChangeRecordKind
@@ -198,7 +206,7 @@ test("給与改定記録を全件保全し、人の承認を経て1台帳を撤�
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "10",
+    nextCursor: recordUuid(10),
     recordCount: 10,
   })
   expect(

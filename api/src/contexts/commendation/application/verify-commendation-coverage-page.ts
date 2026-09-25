@@ -1,3 +1,4 @@
+import { z } from "zod"
 import { CommendationRecordSystemAdapter } from "@/contexts/commendation/infrastructure/adapters/commendation-record-system.adapter"
 import {
   CommendationCoverageForbiddenError,
@@ -77,12 +78,12 @@ export class VerifyCommendationCoveragePage {
       return new CommendationCoverageConflictError("coverage scan already complete")
     const cursor =
       existing === null ? (previous?.snapshot.nextCursor ?? null) : existing.snapshot.afterCursor
-    if (cursor !== null && !/^(0|-?[1-9][0-9]*)$/.test(cursor))
+    if (cursor !== null && !z.uuid().safeParse(cursor).success)
       return new Error("invalid stored coverage cursor")
     const page = await new CaptureFrozenCommendationRecordPageAdapter(this.c).prepare({
       freezeId: command.freezeId,
       sourceNamespace: command.sourceNamespace,
-      afterId: cursor === null ? null : Number(cursor),
+      afterId: cursor,
       limit: 10,
     })
     if (page instanceof Error) return page

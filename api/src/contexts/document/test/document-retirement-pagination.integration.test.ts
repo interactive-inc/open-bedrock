@@ -11,6 +11,11 @@ import { GET as preservedDossier } from "@system/interface/routes/system.preserv
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
 
+/** 整数の番号から、番号と同じ順に並ぶ固定の UUID を作る。頁は主キーの文字列順で進む。 */
+function recordUuid(index: number): string {
+  return `01900012-0000-7000-8000-${String(index).padStart(12, "0")}`
+}
+
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("ID 0 を含む11件の文書台帳記録を全件保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
   const {
@@ -44,7 +49,7 @@ test("ID 0 を含む11件の文書台帳記録を全件保全し、人の承認�
       (id,title,category,location,counterparty_reference,expires_on,note,created_at)
       VALUES (?1,?2,'contract',?3,NULL,NULL,?4,?5)`)
       .bind(
-        id,
+        recordUuid(id),
         `Document ${id}`,
         `cabinet/${id}`,
         `Document note ${id}`,
@@ -97,7 +102,7 @@ test("ID 0 を含む11件の文書台帳記録を全件保全し、人の承認�
   ).toBe(409)
   expect(
     (
-      await apiRequest("/document/document-ledger-entries/1", {
+      await apiRequest(`/document/document-ledger-entries/${recordUuid(1)}`, {
         method: "PUT",
         body: {
           title: "Must not change",
@@ -112,7 +117,7 @@ test("ID 0 を含む11件の文書台帳記録を全件保全し、人の承認�
   ).toBe(409)
   const mappings = []
   for (const id of Array.from({ length: 11 }, (_, index) => index)) {
-    const path = `/document/document-ledger-entries/${id}/preservation-requests`
+    const path = `/document/document-ledger-entries/${recordUuid(id)}/preservation-requests`
     const submitted = await apiRequest(path, {
       method: "POST",
       headers: { "idempotency-key": crypto.randomUUID() },
@@ -169,7 +174,7 @@ test("ID 0 を含む11件の文書台帳記録を全件保全し、人の承認�
         })
       ).status,
     ).toBe(200)
-    mappings.push({ sourceRecordId: id, preservedRecordId: record.record_id })
+    mappings.push({ sourceRecordId: recordUuid(id), preservedRecordId: record.record_id })
   }
   const sourcePath = `/document/record-source-freezes/${freezeId}`
   const planId = crypto.randomUUID()
@@ -180,7 +185,7 @@ test("ID 0 を含む11件の文書台帳記録を全件保全し、人の承認�
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "9",
+    nextCursor: recordUuid(9),
     recordCount: 10,
   })
   expect(

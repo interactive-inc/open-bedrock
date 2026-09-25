@@ -11,6 +11,10 @@ import { GET as preservedDossier } from "@system/interface/routes/system.preserv
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
 
+/** 採番順と辞書順が一致する固定の UUID。頁は主キーの辞書順で分割される。 */
+const recordId = (sequence: number) =>
+  `0190000d-0000-7000-8000-${String(sequence).padStart(12, "0")}`
+
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("11件の健康診断実施記録を全件保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
   const {
@@ -44,7 +48,7 @@ test("11件の健康診断実施記録を全件保全し、人の承認・取消
       (id,employee_id,fiscal_year,checkup_kind,conducted_on,status,note,created_at)
       VALUES (?1,?2,2026,'regular',NULL,'scheduled',?3,?4)`)
       .bind(
-        id,
+        recordId(id),
         creatorPerson.employeeId,
         `Checkup note ${id}`,
         `2026-08-${String(id).padStart(2, "0")}T00:00:00Z`,
@@ -101,7 +105,7 @@ test("11件の健康診断実施記録を全件保全し、人の承認・取消
   ).toBe(409)
   expect(
     (
-      await apiRequest("/health-checkup/health-checkups/1/complete", {
+      await apiRequest(`/health-checkup/health-checkups/${recordId(1)}/complete`, {
         method: "POST",
         body: { conducted_on: "2026-09-15" },
       })
@@ -109,7 +113,7 @@ test("11件の健康診断実施記録を全件保全し、人の承認・取消
   ).toBe(409)
   const mappings = []
   for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
-    const path = `/health-checkup/health-checkups/${id}/preservation-requests`
+    const path = `/health-checkup/health-checkups/${recordId(id)}/preservation-requests`
     const submitted = await apiRequest(path, {
       method: "POST",
       headers: { "idempotency-key": crypto.randomUUID() },
@@ -166,7 +170,7 @@ test("11件の健康診断実施記録を全件保全し、人の承認・取消
         })
       ).status,
     ).toBe(200)
-    mappings.push({ sourceRecordId: id, preservedRecordId: record.record_id })
+    mappings.push({ sourceRecordId: recordId(id), preservedRecordId: record.record_id })
   }
   const sourcePath = `/health-checkup/record-source-freezes/${freezeId}`
   const planId = crypto.randomUUID()
@@ -177,7 +181,7 @@ test("11件の健康診断実施記録を全件保全し、人の承認・取消
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "10",
+    nextCursor: recordId(10),
     recordCount: 10,
   })
   expect(

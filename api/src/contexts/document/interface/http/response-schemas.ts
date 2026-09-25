@@ -3,7 +3,7 @@ import { z } from "zod"
 
 /** 文書台帳一覧の 1 件。 */
 export const zAppDocumentListItem = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   category: z.string().nullable(),
   location: z.string(),
@@ -21,7 +21,7 @@ export const zAppDocumentList = z.object({
 
 /** 文書台帳 1 件の作成・更新レスポンス。 */
 export const zAppDocument = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   category: z.string().nullable(),
   location: z.string(),

@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { CompanyCalendarDayContext } from "@/contexts/company-calendar/configuration/company-calendar-context"
 import { CompanyCalendarDayActorReadAdapter } from "@/contexts/company-calendar/infrastructure/adapters/company-calendar-actor-read.adapter"
 import { CompanyCalendarDayError } from "@/contexts/company-calendar/domain/errors"
@@ -6,9 +7,10 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
 const snapshotSql = `SELECT json_object(
-  'format', 'company-calendar-record', 'version', 1,
+  'format', 'company-calendar-record', 'version', 2,
   'company-calendar', json_object(
     'id', id,
+    'legacy_id', legacy_id,
     'calendar_date', calendar_date,
     'kind', kind,
     'name', name,
@@ -24,8 +26,8 @@ export class CaptureCompanyCalendarDayRecordAdapter {
     Object.freeze(this)
   }
 
-  async prepare(input: Readonly<{ companyCalendarDayId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.companyCalendarDayId))
+  async prepare(input: Readonly<{ companyCalendarDayId: string; sourceNamespace: string }>) {
+    if (!z.uuid().safeParse(input.companyCalendarDayId).success)
       return new CompanyCalendarDayError("forbidden", "invalid source record")
     const actor = await new CompanyCalendarDayActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
@@ -48,7 +50,7 @@ export class CaptureCompanyCalendarDayRecordAdapter {
         recordKind: "company-calendar-record",
         recordId: String(input.companyCalendarDayId),
         formatId: "company-calendar-record",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

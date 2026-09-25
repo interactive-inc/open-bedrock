@@ -11,6 +11,11 @@ import { GET as preservedDossier } from "@system/interface/routes/system.preserv
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
 
+/** 整数の番号から、番号と同じ順に並ぶ固定の UUID を作る。頁は主キーの文字列順で進む。 */
+function recordUuid(index: number): string {
+  return `0190000f-0000-7000-8000-${String(index).padStart(12, "0")}`
+}
+
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("11件の人員計画記録を全件保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
   const {
@@ -44,7 +49,7 @@ test("11件の人員計画記録を全件保全し、人の承認・取消・再
       (id,fiscal_year,department_code,planned_count,note,created_at)
       VALUES (?1,?2,?3,?4,?5,?6)`)
       .bind(
-        id,
+        recordUuid(id),
         2026 + id,
         `DEPT-${String(id).padStart(2, "0")}`,
         id * 2,
@@ -101,7 +106,7 @@ test("11件の人員計画記録を全件保全し、人の承認・取消・再
   ).toBe(409)
   expect(
     (
-      await apiRequest("/headcount-plan/headcount-plans/1", {
+      await apiRequest(`/headcount-plan/headcount-plans/${recordUuid(1)}`, {
         method: "PUT",
         body: { planned_count: 99, note: "Must not be updated" },
       })
@@ -109,7 +114,7 @@ test("11件の人員計画記録を全件保全し、人の承認・取消・再
   ).toBe(409)
   const mappings = []
   for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
-    const path = `/headcount-plan/headcount-plans/${id}/preservation-requests`
+    const path = `/headcount-plan/headcount-plans/${recordUuid(id)}/preservation-requests`
     const submitted = await apiRequest(path, {
       method: "POST",
       headers: { "idempotency-key": crypto.randomUUID() },
@@ -166,7 +171,7 @@ test("11件の人員計画記録を全件保全し、人の承認・取消・再
         })
       ).status,
     ).toBe(200)
-    mappings.push({ sourceRecordId: id, preservedRecordId: record.record_id })
+    mappings.push({ sourceRecordId: recordUuid(id), preservedRecordId: record.record_id })
   }
   const sourcePath = `/headcount-plan/record-source-freezes/${freezeId}`
   const planId = crypto.randomUUID()
@@ -177,7 +182,7 @@ test("11件の人員計画記録を全件保全し、人の承認・取消・再
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "10",
+    nextCursor: recordUuid(10),
     recordCount: 10,
   })
   expect(
