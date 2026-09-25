@@ -17,12 +17,12 @@ export class OnboardingAssignmentRepository {
 
   async create(assignment: OnboardingAssignment): Promise<OnboardingAssignment | Error> {
     try {
-      // assignment の id は AUTOINCREMENT のため先に INSERT して採番し、
-      // 続けて tasks を batch INSERT する。tasks の batch は D1 内部で
+      // assignment を先に INSERT し、続けて tasks を batch INSERT する。tasks の batch は D1 内部で
       // トランザクション化されるため個別タスク間はアトミック。
       const assignmentRows = await this.c.var.database
         .insert(onboardingAssignments)
         .values({
+          id: crypto.randomUUID(),
           employeeId: assignment.employeeId,
           templateCode: assignment.templateCode,
           kind: assignment.kind,
@@ -40,6 +40,7 @@ export class OnboardingAssignmentRepository {
       if (assignment.tasks.length > 0) {
         const taskStmts = assignment.tasks.map((task) =>
           this.c.var.database.insert(onboardingTasks).values({
+            id: crypto.randomUUID(),
             assignmentId: assignmentRow.id,
             templateTaskCode: task.templateTaskCode,
             title: task.title,
@@ -83,7 +84,7 @@ export class OnboardingAssignmentRepository {
     }
   }
 
-  async findById(assignmentId: number): Promise<OnboardingAssignment | null | Error> {
+  async findById(assignmentId: string): Promise<OnboardingAssignment | null | Error> {
     try {
       const assignmentRows = await this.c.var.database
         .select()
@@ -111,7 +112,7 @@ export class OnboardingAssignmentRepository {
     }
   }
 
-  async findByTaskId(taskId: number): Promise<OnboardingAssignment | null | Error> {
+  async findByTaskId(taskId: string): Promise<OnboardingAssignment | null | Error> {
     try {
       const rows = await this.c.var.database
         .select({ assignmentId: onboardingTasks.assignmentId })
@@ -152,7 +153,7 @@ export class OnboardingAssignmentRepository {
         .where(inArray(onboardingTasks.assignmentId, assignmentIds))
         .orderBy(asc(onboardingTasks.sortOrder))
 
-      const tasksByAssignmentId = new Map<number, Array<OnboardingTask>>()
+      const tasksByAssignmentId = new Map<string, Array<OnboardingTask>>()
 
       for (const row of taskRows) {
         const tasks = tasksByAssignmentId.get(row.assignmentId)
@@ -269,8 +270,8 @@ export class OnboardingAssignmentRepository {
    * タスクが既に done の場合はガードで abort → null を返す。
    */
   async completeTask(
-    taskId: number,
-    assignmentId: number,
+    taskId: string,
+    assignmentId: string,
     completedAt: string,
   ): Promise<OnboardingAssignment | null | Error> {
     try {
@@ -310,8 +311,8 @@ export class OnboardingAssignmentRepository {
    * タスクが既に pending の場合はガードで abort → null を返す。
    */
   async uncompleteTask(
-    taskId: number,
-    assignmentId: number,
+    taskId: string,
+    assignmentId: string,
   ): Promise<OnboardingAssignment | null | Error> {
     try {
       const db = this.c.env.DB

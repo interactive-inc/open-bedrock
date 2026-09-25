@@ -30,7 +30,7 @@ async function fixture() {
     .prepare(`INSERT INTO governance_org_role_assignments
       (id, org_role_code, employee_id, department_code, starts_on, ends_on,
        source_document_code, created_by_account_id, created_at, revoked_by_account_id, revoked_at)
-      VALUES (7, 'ciso', ?2, NULL, '2025-01-01', NULL,
+      VALUES ('01900043-0000-7000-8000-000000000007', 'ciso', ?2, NULL, '2025-01-01', NULL,
        'security-policy', ?1, '2025-01-02T00:00:00Z', ?1, '2025-02-01T00:00:00Z')`)
     .bind(context.creator.accountId, context.creator.employeeId)
     .run()
@@ -86,7 +86,7 @@ async function fixture() {
     database: context.database,
     now: context.at.getTime(),
     timeZone: "Asia/Tokyo",
-  }).find(7)
+  }).find("01900043-0000-7000-8000-000000000007")
   if (snapshot === null || snapshot instanceof Error)
     throw new Error("snapshot failed", { cause: snapshot })
 
@@ -98,7 +98,7 @@ test("凍結した取消済み割当を元記録とCompanyのactive・void履歴
   const expectedRevision = await context.companyRevision()
   const adopted = await context.application.execute({
     session: context.session,
-    assignmentId: 7,
+    assignmentId: "01900043-0000-7000-8000-000000000007",
     freezeId: "95ee3345-4f0e-4742-949a-c105bcb13b38",
     commandId: "governance:adopt:7",
     expectedRevision,
@@ -141,7 +141,7 @@ test("凍結した取消済み割当を元記録とCompanyのactive・void履歴
   expect(
     await context.application.execute({
       session: context.session,
-      assignmentId: 7,
+      assignmentId: "01900043-0000-7000-8000-000000000007",
       freezeId: "95ee3345-4f0e-4742-949a-c105bcb13b38",
       commandId: "governance:adopt:7",
       expectedRevision,
@@ -155,7 +155,7 @@ test("凍結前と異なる元記録ダイジェストでは会社版を進め�
   const expectedRevision = await context.companyRevision()
   const rejected = await context.application.execute({
     session: context.session,
-    assignmentId: 7,
+    assignmentId: "01900043-0000-7000-8000-000000000007",
     freezeId: "95ee3345-4f0e-4742-949a-c105bcb13b38",
     commandId: "governance:adopt:changed",
     expectedRevision,
@@ -175,7 +175,7 @@ test("別の停止世代では旧責務をCompanyへ移行しない", async () =
   const expectedRevision = await context.companyRevision()
   const rejected = await context.application.execute({
     session: context.session,
-    assignmentId: 7,
+    assignmentId: "01900043-0000-7000-8000-000000000007",
     freezeId: "8144784c-529c-45b3-bb71-a5439a02b93a",
     commandId: "governance:adopt:wrong-freeze",
     expectedRevision,
@@ -197,11 +197,17 @@ test("停止世代の間は旧責任台帳の追加・更新・削除を全て�
   ).rejects.toThrow("governance_org_role_assignment_source_frozen")
   await expect(
     context.database
-      .prepare("UPDATE governance_org_role_assignments SET ends_on = '2025-03-01' WHERE id = 7")
+      .prepare(
+        "UPDATE governance_org_role_assignments SET ends_on = '2025-03-01' WHERE id = '01900043-0000-7000-8000-000000000007'",
+      )
       .run(),
   ).rejects.toThrow("governance_org_role_assignment_source_frozen")
   await expect(
-    context.database.prepare("DELETE FROM governance_org_role_assignments WHERE id = 7").run(),
+    context.database
+      .prepare(
+        "DELETE FROM governance_org_role_assignments WHERE id = '01900043-0000-7000-8000-000000000007'",
+      )
+      .run(),
   ).rejects.toThrow("governance_org_role_assignment_source_frozen")
 })
 
@@ -258,7 +264,7 @@ test("全ての旧責務をCompanyへ接続した場合だけ廃止可能な完�
 
   const adopted = await context.application.execute({
     session: context.session,
-    assignmentId: 7,
+    assignmentId: "01900043-0000-7000-8000-000000000007",
     freezeId,
     commandId: "governance:adopt:cutover:7",
     expectedRevision: await context.companyRevision(),

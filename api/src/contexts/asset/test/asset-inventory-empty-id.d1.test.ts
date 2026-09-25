@@ -25,8 +25,8 @@ test("空の資産コードを初回ページから漏らさず撤去照合を�
   await execSql(
     database,
     `INSERT INTO assets
-    (code,name,kind,serial,purchased_on,status,holder_employee_id,disposed_on,disposal_reason)
-    VALUES ('','Legacy asset','pc',NULL,NULL,'in_stock',NULL,NULL,NULL)`,
+    (id,code,name,kind,serial,purchased_on,status,holder_employee_id,disposed_on,disposal_reason)
+    VALUES ('${crypto.randomUUID()}','','Legacy asset','pc',NULL,NULL,'in_stock',NULL,NULL,NULL)`,
   )
   const token = await tokenFor(creator.accountId)
   const stepUpToken = "c".repeat(64)
@@ -81,8 +81,8 @@ test("空の棚卸しIDを初回ページから漏らさず撤去照合を拒否
   await execSql(
     database,
     `INSERT INTO stocktake_items
-    (stocktake_id,asset_code,checked_at,checker_employee_id,location_note)
-    VALUES ('','A-1',NULL,NULL,NULL)`,
+    (id,stocktake_id,asset_code,checked_at,checker_employee_id,location_note)
+    VALUES ('${crypto.randomUUID()}','','A-1',NULL,NULL,NULL)`,
   )
   const token = await tokenFor(creator.accountId)
   const stepUpToken = "c".repeat(64)

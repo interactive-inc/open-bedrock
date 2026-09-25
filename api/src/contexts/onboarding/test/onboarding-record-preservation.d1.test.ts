@@ -30,7 +30,7 @@ test("入社手続きテンプレートを停止中に人の承認で保全し�
     database,
     `INSERT INTO onboarding_templates
     (id,code,name,kind,description)
-    VALUES (0,'start','Start','hire','Checklist')`,
+    VALUES ('0190003c-0000-7000-8000-000000000001','start','Start','hire','Checklist')`,
   )
   const token = await tokenFor(creator.accountId)
   const stepUpToken = "e".repeat(64)
@@ -59,9 +59,13 @@ test("入社手続きテンプレートを停止中に人の承認で保全し�
   )
   if (frozen.status !== 201) throw new Error(await frozen.text())
   await expect(
-    database.prepare("UPDATE onboarding_templates SET name='changed' WHERE id=0").run(),
+    database
+      .prepare(
+        "UPDATE onboarding_templates SET name='changed' WHERE id='0190003c-0000-7000-8000-000000000001'",
+      )
+      .run(),
   ).rejects.toThrow("onboarding_record_source_frozen")
-  const sources = [["onboarding-template-record", "0"]] as const
+  const sources = [["onboarding-template-record", "0190003c-0000-7000-8000-000000000001"]] as const
   const preservedIds: string[] = []
   for (const [recordKind, recordId] of sources) {
     const path = `/onboarding/records/${recordKind}/${recordId}/preservation-requests`

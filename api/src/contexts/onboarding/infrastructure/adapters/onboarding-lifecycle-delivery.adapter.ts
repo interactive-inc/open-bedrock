@@ -23,7 +23,7 @@ type Context = Readonly<{
   recordedSince: Date
   clock: () => Date
 }>
-type Replaceable = Readonly<{ assignmentId: number; actionId: string }>
+type Replaceable = Readonly<{ assignmentId: string; actionId: string }>
 const handlerKey = "onboarding.lifecycle"
 const MAX_CORRECTION_DEPTH = 20
 const templateSelection = `SELECT template.id, template.code, template.name, template.kind, template.description,
@@ -33,7 +33,7 @@ const templateSelection = `SELECT template.id, template.code, template.name, tem
  FROM onboarding_lifecycle_template_bindings binding JOIN onboarding_templates template ON template.code = binding.template_code
  WHERE binding.effect_type = ?1`
 const templateSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   code: z.string(),
   name: z.string(),
   kind: z.enum(["join", "leave"]),
@@ -258,21 +258,23 @@ export class OnboardingLifecycleDeliveryAdapter {
         row.data.binding_updated_at,
         row.data.tasks_json,
       ),
-      this.c.env.DB.prepare(`INSERT INTO onboarding_assignments (employee_id, template_code, kind, status, assigned_at, lifecycle_action_id)
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6)`).bind(
+      this.c.env.DB.prepare(`INSERT INTO onboarding_assignments (id, employee_id, template_code, kind, status, assigned_at, lifecycle_action_id)
+        VALUES (?7, ?1, ?2, ?3, ?4, ?5, ?6)`).bind(
         assignment.employeeId,
         assignment.templateCode,
         assignment.kind,
         assignment.status,
         assignment.assignedAt,
         actionId,
+        crypto.randomUUID(),
       ),
-      this.c.env.DB.prepare(`INSERT INTO onboarding_tasks (assignment_id, template_task_code, title, sort_order, status, completed_at)
-        SELECT (SELECT id FROM onboarding_assignments WHERE lifecycle_action_id = ?1), json_extract(value, '$.templateTaskCode'),
+      this.c.env.DB.prepare(`INSERT INTO onboarding_tasks (id, assignment_id, template_task_code, title, sort_order, status, completed_at)
+        SELECT json_extract(value, '$.id'), (SELECT id FROM onboarding_assignments WHERE lifecycle_action_id = ?1), json_extract(value, '$.templateTaskCode'),
           json_extract(value, '$.title'), json_extract(value, '$.order'), 'pending', NULL FROM json_each(?2)`).bind(
         actionId,
         JSON.stringify(
           assignment.tasks.map((task) => ({
+            id: crypto.randomUUID(),
             templateTaskCode: task.templateTaskCode,
             title: task.title,
             order: task.order,
@@ -300,7 +302,7 @@ export class OnboardingLifecycleDeliveryAdapter {
         "SELECT id, status FROM onboarding_assignments WHERE lifecycle_action_id = ?1",
       )
         .bind(predecessor)
-        .first<{ id: number; status: string }>()
+        .first<{ id: string; status: string }>()
       if (row !== null)
         return row.status === "in_progress" ? { assignmentId: row.id, actionId: predecessor } : null
       const previous = await company.findEmploymentEffect(predecessor, observedOn)

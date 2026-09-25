@@ -38,7 +38,7 @@ export class ReviewFormRepository {
         .orderBy(
           asc(reviewForms.createdAt),
           asc(sql`CAST(${reviewForms.legacyId} AS INTEGER)`),
-          asc(reviewForms.id),
+          asc(sql`${reviewForms}.rowid`),
         )
 
       return rows.map((row) => ReviewForm.fromRow(row))
@@ -70,7 +70,7 @@ export class ReviewFormRepository {
         .orderBy(
           asc(reviewForms.createdAt),
           asc(sql`CAST(${reviewForms.legacyId} AS INTEGER)`),
-          asc(reviewForms.id),
+          asc(sql`${reviewForms}.rowid`),
         )
         .limit(props.limit)
         .offset(props.offset)

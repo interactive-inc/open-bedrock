@@ -34,7 +34,7 @@ afterAll(async () => {
 })
 
 const template = new OnboardingTemplate({
-  id: 1,
+  id: "0190003c-0000-7000-8000-000000000001",
   code: "join-default",
   name: "入社手続き",
   kind: "join",
@@ -101,7 +101,7 @@ describe("OnboardingAssignmentRepository on local D1", () => {
 
 function twoTaskTemplate(): OnboardingTemplate {
   return new OnboardingTemplate({
-    id: 1,
+    id: "0190003c-0000-7000-8000-000000000001",
     code: "join-default",
     name: "入社手続き",
     kind: "join",
@@ -146,7 +146,7 @@ describe("OnboardingAssignmentRepository", () => {
     const { context } = await createLocalD1Context(local, "create-then-findbyid-round-trips-the")
 
     const template = new OnboardingTemplate({
-      id: 1,
+      id: "0190003c-0000-7000-8000-000000000001",
       code: "join-default",
       name: "入社手続き",
       kind: "join",

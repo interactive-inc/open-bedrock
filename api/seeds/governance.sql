@@ -7,8 +7,8 @@
 -- metadata_json は zGovernanceMetadata（strict）を満たす形にすること。
 
 INSERT INTO governance_org_role_assignments (id, org_role_code, employee_id, department_code, starts_on, ends_on, source_document_code, created_by_account_id, created_at, revoked_by_account_id, revoked_at) VALUES
-  (1, 'ciso', 4, NULL, '2026-01-05', NULL, NULL, 1, '2026-01-05T00:00:00Z', NULL, NULL),
-  (2, 'privacy-manager', 2, NULL, '2026-01-05', NULL, NULL, 1, '2026-01-05T00:00:00Z', NULL, NULL);
+  ('01900043-0000-7000-8000-000000000001', 'ciso', 4, NULL, '2026-01-05', NULL, NULL, 1, '2026-01-05T00:00:00Z', NULL, NULL),
+  ('01900043-0000-7000-8000-000000000002', 'privacy-manager', 2, NULL, '2026-01-05', NULL, NULL, 1, '2026-01-05T00:00:00Z', NULL, NULL);
 
 -- 公開済み: 在宅勤務規程 1.0.0 / 承認待ち: 情報セキュリティ基本規程 0.1.0
 INSERT INTO governance_documents (id, code, title, kind, classification, owner_capability_code, steward_org_role_code, status, current_version_id, source_path, created_by_account_id, created_at, updated_at) VALUES
@@ -37,14 +37,14 @@ INSERT INTO governance_document_versions (id, document_id, version, body_md, met
 - 情報資産は分類し、分類に応じて取り扱う
 - アカウントは本人のみが使用する', '{"id":"information-security-policy","title":"情報セキュリティ基本規程","kind":"policy","version":"0.1.0","classification":"internal","owner_capability":"information-security","steward_org_role":"ciso","publication":{"mode":"approval","approver_org_roles":["ciso"]}}', NULL, 'seedhash-infosec-010', NULL, NULL, NULL, 'in_review', 1, '2026-07-01T00:00:00Z', NULL, NULL);
 
-INSERT INTO governance_document_references (version_id, kind, code) VALUES
-  ('00000000-0000-4000-8000-000000000101', 'capability', 'policy-management'),
-  ('00000000-0000-4000-8000-000000000201', 'capability', 'information-security');
+INSERT INTO governance_document_references (id, version_id, kind, code) VALUES
+  ('01900044-0000-7000-8000-000000000001', '00000000-0000-4000-8000-000000000101', 'capability', 'policy-management'),
+  ('01900044-0000-7000-8000-000000000002', '00000000-0000-4000-8000-000000000201', 'capability', 'information-security');
 
 -- 公開承認待ち（pending）を 1 件含める。承認者は ciso（= E004 に割当済み）。
-INSERT INTO governance_publication_approvals (version_id, org_role_code, status, decided_by_employee_id, decided_at, comment) VALUES
-  ('00000000-0000-4000-8000-000000000201', 'ciso', 'pending', NULL, NULL, NULL);
+INSERT INTO governance_publication_approvals (id, version_id, org_role_code, status, decided_by_employee_id, decided_at, comment) VALUES
+  ('01900045-0000-7000-8000-000000000001', '00000000-0000-4000-8000-000000000201', 'ciso', 'pending', NULL, NULL, NULL);
 
-INSERT INTO governance_acknowledgements (version_id, employee_id, content_hash, acknowledged_at) VALUES
-  ('00000000-0000-4000-8000-000000000101', 5, 'seedhash-remote-work-100', '2026-03-02T01:00:00Z'),
-  ('00000000-0000-4000-8000-000000000101', 13, 'seedhash-remote-work-100', '2026-03-03T01:00:00Z');
+INSERT INTO governance_acknowledgements (id, version_id, employee_id, content_hash, acknowledged_at) VALUES
+  ('01900046-0000-7000-8000-000000000001', '00000000-0000-4000-8000-000000000101', 5, 'seedhash-remote-work-100', '2026-03-02T01:00:00Z'),
+  ('01900046-0000-7000-8000-000000000002', '00000000-0000-4000-8000-000000000101', 13, 'seedhash-remote-work-100', '2026-03-03T01:00:00Z');

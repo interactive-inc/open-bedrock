@@ -18,7 +18,11 @@ export class RoomRepository {
       const rows = await this.c.var.database
         .select()
         .from(rooms)
-        .orderBy(asc(rooms.createdAt), asc(sql`CAST(${rooms.legacyId} AS INTEGER)`), asc(rooms.id))
+        .orderBy(
+          asc(rooms.createdAt),
+          asc(sql`CAST(${rooms.legacyId} AS INTEGER)`),
+          asc(sql`${rooms}.rowid`),
+        )
         .limit(props.limit)
         .offset(props.offset)
 

@@ -50,7 +50,7 @@ export const zAppOnboardingRetirementExecution = z.strictObject({
 
 /** オンボーディングテンプレート 1 件のレスポンス。 */
 export const zAppOnboardingTemplate = z.object({
-  id: z.number(),
+  id: z.uuid(),
   code: z.string(),
   name: z.string(),
   kind: z.string(),
@@ -75,7 +75,7 @@ export const zAppOnboardingTemplateList = z.object({
 
 /** オンボーディングタスク 1 件のレスポンス。 */
 export const zAppOnboardingTask = z.object({
-  id: z.number(),
+  id: z.uuid(),
   template_task_code: z.string(),
   title: z.string(),
   order: z.number(),
@@ -91,7 +91,7 @@ export const zAppOnboardingTaskList = z.object({
 
 /** オンボーディング割り当て 1 件のレスポンス。template_name は割当一覧/作成時のみ含む。 */
 export const zAppOnboardingAssignment = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_code: z.string(),
   employee_name: z.string(),
   template_code: z.string(),
@@ -115,7 +115,7 @@ export const zAppOnboardingLifecycleDeliveryList = z.object({
       job_id: z.string(),
       action_id: z.string(),
       outcome: z.enum(["assigned", "superseded", "obsolete"]).nullable(),
-      assignment_id: z.number().int().nullable(),
+      assignment_id: z.uuid().nullable(),
       processed_at: z.number().int().nullable(),
       status: z.enum(["queued", "leased", "succeeded", "dead_letter"]),
       attempt: z.number().int(),

@@ -89,7 +89,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .orderBy(
       asc(surveys.createdAt),
       asc(sql`CAST(${surveys.legacyId} AS INTEGER)`),
-      asc(surveys.id),
+      asc(sql`${surveys}.rowid`),
     )
     .limit(limit)
     .offset(offset)

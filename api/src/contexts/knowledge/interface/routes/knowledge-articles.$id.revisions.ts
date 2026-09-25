@@ -2,7 +2,7 @@ import { zValidator } from "@hono/zod-validator"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { NotFoundError, UnauthorizedError } from "@/lib/http/errors"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { toBoundedInt } from "@/lib/http/to-bounded-int"
 import { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
 import { z } from "zod"
@@ -22,7 +22,7 @@ export const GET = factory.createHandlers(
   zValidator("query", z.object({ limit: z.string().optional(), offset: z.string().optional() })),
   async (c) => {
     if (c.var.session === null) throw new UnauthorizedError()
-    const articleId = validateIntParam(c.req.param("id"), "knowledge")
+    const articleId = validateUuidParam(c.req.param("id"), "knowledge")
     const limit = toBoundedInt({ raw: c.req.query("limit"), fallback: 20, min: 1, max: 100 })
     const offset = toBoundedInt({ raw: c.req.query("offset"), fallback: 0, min: 0, max: 100_000 })
     const results = await c.env.DB.batch([
@@ -42,8 +42,9 @@ export const GET = factory.createHandlers(
       .array(revisionSchema)
       .parse(results[1]?.results)
       .map((row) => {
-        const article = KnowledgeArticle.restore(JSON.parse(row.snapshot_json))
-        if (article.id !== articleId || article.revision !== row.revision)
+        const article = KnowledgeArticle.restoreRevision(JSON.parse(row.snapshot_json), articleId)
+        if (article instanceof Error) throw article
+        if (article.revision !== row.revision)
           throw new Error("knowledge revision snapshot mismatch")
         return {
           revision: row.revision,

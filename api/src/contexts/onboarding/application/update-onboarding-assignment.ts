@@ -12,7 +12,7 @@ type Context = Readonly<{
 }>
 
 export type Command = {
-  assignmentId: number
+  assignmentId: string
   session: CompanySessionValue
   assignedAt: string
 }

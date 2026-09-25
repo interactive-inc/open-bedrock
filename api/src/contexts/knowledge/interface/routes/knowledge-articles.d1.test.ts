@@ -26,7 +26,7 @@ afterAll(async () => {
 })
 
 const knowledgeSearchResultResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   category: z.string(),
   title: z.string(),
   snippet: z.string(),
@@ -34,7 +34,7 @@ const knowledgeSearchResultResponseSchema = z.object({
 })
 
 const knowledgeCreatedResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   category: z.string(),
   tags: z.string().nullable(),
@@ -108,7 +108,9 @@ describe("GET /knowledge-articles", () => {
       expect(parsed.data.data.length).toBe(6)
       expect(parsed.data.total).toBe(6)
 
-      const first = parsed.data.data.find((item) => item.id === 1)
+      const first = parsed.data.data.find(
+        (item) => item.id === "01900042-0000-7000-8000-000000000001",
+      )
 
       expect(first?.title).toBe("リモートワーク規程")
       expect(first?.category).toBe("規程")
@@ -131,7 +133,7 @@ describe("GET /knowledge-articles", () => {
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
       expect(parsed.data.total).toBe(1)
-      expect(parsed.data.data[0]?.id).toBe(2)
+      expect(parsed.data.data[0]?.id).toBe("01900042-0000-7000-8000-000000000002")
     }
   })
 
@@ -150,7 +152,7 @@ describe("GET /knowledge-articles", () => {
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
       expect(parsed.data.total).toBe(1)
-      expect(parsed.data.data[0]?.id).toBe(1)
+      expect(parsed.data.data[0]?.id).toBe("01900042-0000-7000-8000-000000000001")
     }
   })
 

@@ -33,6 +33,7 @@ export class AssetRepository {
       const rows = await this.c.var.database
         .insert(assets)
         .values({
+          id: crypto.randomUUID(),
           code: asset.code,
           name: asset.name,
           kind: asset.kind,

@@ -4,7 +4,7 @@ import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { zAppOnboardingTask } from "@/contexts/onboarding/interface/http/response-schemas"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 
@@ -16,7 +16,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const taskId = validateIntParam(c.req.param("id"), "task")
+  const taskId = validateUuidParam(c.req.param("id"), "task")
 
   const task = await new CompleteOnboardingTask({
     assignmentRepository: new OnboardingAssignmentRepository(c),

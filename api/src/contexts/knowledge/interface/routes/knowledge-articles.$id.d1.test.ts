@@ -26,7 +26,7 @@ afterAll(async () => {
 })
 
 const knowledgeArticleResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   category: z.string(),
   tags: z.string().nullable(),
@@ -84,7 +84,10 @@ async function request(path: string, token: string | null): Promise<Response> {
 
 describe("GET /knowledge-articles/:id", () => {
   test("returns 200 with the article in CLI detail shape", async () => {
-    const response = await request("/knowledge/knowledge-articles/4", await memberToken())
+    const response = await request(
+      "/knowledge/knowledge-articles/01900042-0000-7000-8000-000000000004",
+      await memberToken(),
+    )
 
     expect(response.status).toBe(200)
 
@@ -93,7 +96,7 @@ describe("GET /knowledge-articles/:id", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.id).toBe(4)
+      expect(parsed.data.id).toBe("01900042-0000-7000-8000-000000000004")
       expect(parsed.data.title).toBe("目標設定と評価")
       expect(parsed.data.category).toBe("評価")
       expect(parsed.data.tags).toBe("目標,評価,MBO")
@@ -102,19 +105,25 @@ describe("GET /knowledge-articles/:id", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/knowledge/knowledge-articles/4", null)
+    const response = await request(
+      "/knowledge/knowledge-articles/01900042-0000-7000-8000-000000000004",
+      null,
+    )
 
     expect(response.status).toBe(401)
   })
 
-  test("returns 404 when the id is not a positive integer", async () => {
+  test("returns 404 when the id is not a UUID", async () => {
     const response = await request("/knowledge/knowledge-articles/abc", await memberToken())
 
     expect(response.status).toBe(404)
   })
 
   test("returns 404 when the article does not exist", async () => {
-    const response = await request("/knowledge/knowledge-articles/9999", await memberToken())
+    const response = await request(
+      "/knowledge/knowledge-articles/01900042-0000-7000-8000-00000000270f",
+      await memberToken(),
+    )
 
     expect(response.status).toBe(404)
   })

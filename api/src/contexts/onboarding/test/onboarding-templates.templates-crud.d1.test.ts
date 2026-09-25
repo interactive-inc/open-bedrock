@@ -25,7 +25,7 @@ afterAll(async () => {
 })
 
 const onboardingTemplateResponseSchema = z.object({
-  id: z.number().nullable(),
+  id: z.uuid().nullable(),
   code: z.string(),
   name: z.string(),
   kind: z.enum(["join", "leave"]),
@@ -69,6 +69,7 @@ async function createTestDb(): Promise<D1Database> {
   for (const template of seedOnboardingTemplates) {
     for (const task of template.tasks) {
       templateTaskRows.push({
+        id: crypto.randomUUID(),
         template_code: template.code,
         code: task.code,
         title: task.title,

@@ -60,7 +60,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .orderBy(
       asc(surveyResponses.submittedAt),
       asc(sql`CAST(${surveyResponses.legacyId} AS INTEGER)`),
-      asc(surveyResponses.id),
+      asc(sql`${surveyResponses}.rowid`),
     )
     .limit(MAX_SUMMARY_RESPONSES)
 

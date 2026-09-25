@@ -79,7 +79,7 @@ export class Asset implements Props {
   }
 
   /** 永続化された行から復元する。 */
-  static fromRow(row: AssetRow): Asset {
+  static fromRow(row: Omit<AssetRow, "id">): Asset {
     return new Asset({
       code: row.code,
       name: row.name,

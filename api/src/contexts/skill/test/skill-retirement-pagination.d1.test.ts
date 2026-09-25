@@ -64,15 +64,15 @@ test("スキル定義・従業員スキルを全件保全し、人の承認を�
   for (let id = 1; id <= 11; id++) {
     const code = `A${String(id).padStart(4, "0")}`
     await database
-      .prepare(`INSERT INTO skill_definitions (code,name,category)
-      VALUES (?1,?2,'engineering')`)
+      .prepare(`INSERT INTO skill_definitions (id,code,name,category)
+      VALUES ('${crypto.randomUUID()}',?1,?2,'engineering')`)
       .bind(code, `Skill ${id}`)
       .run()
   }
   await database
     .prepare(`INSERT INTO employee_skills
-    (employee_id,skill_code,level,years,note)
-    VALUES (?1,'A0001',4,3,'Original evidence')`)
+    (id,employee_id,skill_code,level,years,note)
+    VALUES ('${crypto.randomUUID()}',?1,'A0001',4,3,'Original evidence')`)
     .bind(creatorPerson.employeeId)
     .run()
   const at = clock()
@@ -118,8 +118,8 @@ test("スキル定義・従業員スキルを全件保全し、人の承認を�
   await expect(
     database
       .prepare(`INSERT INTO employee_skills
-      (employee_id,skill_code,level,years,note)
-      VALUES (?1,'A0002',3,NULL,NULL)`)
+      (id,employee_id,skill_code,level,years,note)
+      VALUES ('${crypto.randomUUID()}',?1,'A0002',3,NULL,NULL)`)
       .bind(creatorPerson.employeeId)
       .run(),
   ).rejects.toThrow("skill_record_source_frozen")

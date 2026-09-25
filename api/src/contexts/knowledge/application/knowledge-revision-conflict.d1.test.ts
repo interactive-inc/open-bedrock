@@ -27,7 +27,7 @@ test("a stale knowledge edit cannot replace the text another edit already saved"
   await fixture.db
     .prepare(`INSERT INTO knowledge_articles
     (id,title,category,tags,body_md,author_id,created_at)
-    VALUES (1,'Procedure','Operations',NULL,'Original instructions',?1,'2026-01-01T00:00:00Z')`)
+    VALUES ('01900042-0000-7000-8000-000000000001','Procedure','Operations',NULL,'Original instructions',?1,'2026-01-01T00:00:00Z')`)
     .bind(toWorkforceEmployeeId(1))
     .run()
   const jwtSecret = "knowledge-revision-test-secret"
@@ -37,7 +37,7 @@ test("a stale knowledge edit cannot replace the text another edit already saved"
     jwtSecret,
     token,
     now: new Date().toISOString(),
-    path: "/knowledge/knowledge-articles/1",
+    path: "/knowledge/knowledge-articles/01900042-0000-7000-8000-000000000001",
     method: "PUT",
     headers: { "if-match": '"1"', "idempotency-key": "knowledge:first" },
     body: {
@@ -57,7 +57,9 @@ test("a stale knowledge edit cannot replace the text another edit already saved"
   expect(stale.status).toBe(409)
   expect(
     await fixture.db
-      .prepare("SELECT body_md FROM knowledge_articles WHERE id=1")
+      .prepare(
+        "SELECT body_md FROM knowledge_articles WHERE id='01900042-0000-7000-8000-000000000001'",
+      )
       .first<string>("body_md"),
   ).toBe("Reviewed new instructions")
   const detail = await requestWithContext({ ...request, method: "GET", body: undefined })
@@ -97,7 +99,7 @@ test("a stale knowledge edit cannot replace the text another edit already saved"
   const historyRequest = {
     ...request,
     method: "GET",
-    path: "/knowledge/knowledge-articles/1/revisions?limit=1",
+    path: "/knowledge/knowledge-articles/01900042-0000-7000-8000-000000000001/revisions?limit=1",
     body: undefined,
   }
   const history = await requestWithContext(historyRequest)
@@ -148,7 +150,7 @@ test("new article API records the initial version and requires a stable retry ke
   }
   const response = await requestWithContext(request)
   expect(response.status).toBe(201)
-  const created = (await response.json()) as { id: number; revision: number }
+  const created = (await response.json()) as { id: string; revision: number }
   expect(created.revision).toBe(1)
   expect(await (await requestWithContext(request)).json()).toEqual(created)
   expect((await requestWithContext({ ...request, headers: {} })).status).toBe(400)

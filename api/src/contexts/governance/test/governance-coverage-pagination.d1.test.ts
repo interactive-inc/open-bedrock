@@ -37,24 +37,24 @@ test("規程・ガバナンス8台帳を分割照合し撤去確定する", asyn
     const code = `cap-${String(index).padStart(2, "0")}`
     await database
       .prepare(`INSERT INTO governance_capabilities
-      (code,name,description,owner_org_role_code,status,created_at,updated_at)
-      VALUES (?1,?2,NULL,NULL,'active','2026-09-01','2026-09-01')`)
-      .bind(code, `Capability ${index}`)
+      (id,code,name,description,owner_org_role_code,status,created_at,updated_at)
+      VALUES (?3,?1,?2,NULL,NULL,'active','2026-09-01','2026-09-01')`)
+      .bind(code, `Capability ${index}`, crypto.randomUUID())
       .run()
   }
   await database
     .prepare(`INSERT INTO governance_acknowledgements
-    (version_id,employee_id,content_hash,acknowledged_at)
-    VALUES ('version:a',?1,?2,'2026-09-02')`)
+    (id,version_id,employee_id,content_hash,acknowledged_at)
+    VALUES ('01900046-0000-7000-8000-000000000001','version:a',?1,?2,'2026-09-02')`)
     .bind(creator.employeeId, "a".repeat(64))
     .run()
   await execSql(
     database,
     `INSERT INTO governance_document_references
-    (version_id,kind,code) VALUES ('version:a','capability','cap:ref');
+    (id,version_id,kind,code) VALUES ('01900044-0000-7000-8000-000000000001','version:a','capability','cap:ref');
     INSERT INTO governance_publication_approvals
-    (version_id,org_role_code,status,decided_by_employee_id,decided_at,comment)
-    VALUES ('version:a','role:a','pending',NULL,NULL,NULL);`,
+    (id,version_id,org_role_code,status,decided_by_employee_id,decided_at,comment)
+    VALUES ('01900045-0000-7000-8000-000000000001','version:a','role:a','pending',NULL,NULL,NULL);`,
   )
   const token = await tokenFor(creator.accountId)
   const stepUpToken = "f".repeat(64)
