@@ -3,11 +3,15 @@ import { openSystemProposals } from "@system/interface/operations/open-system-pr
 import { expect, test } from "bun:test"
 import { z } from "zod"
 import { createLicensePreservationFixture } from "@/contexts/software-license/test/create-license-preservation-fixture.test-support"
+import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
+import { loadSchema } from "@tests/api/support/load-schema"
 import { findSystemPreservedRecordExecutionProof } from "@system/interface/operations/find-system-preserved-record-execution-proof"
 import { prepareSystemPreservedRecordApprovalHistory } from "@system/interface/operations/prepare-system-preserved-record-approval-history"
 
 test("代理承認で保存した記録は業務撤去後も委任条件を返し、後日の取消と当時の無効を区別する", async () => {
-  const fixture = await createLicensePreservationFixture()
+  // 最後に外部キーを外して委任を消し、参照先の欠けた承認履歴を拒否することを確かめる。
+  // D1は外部キーの検査を外せず、この状態を作れないため、移行を終えるまで互換DBで検証する。
+  const fixture = await createLicensePreservationFixture(createD1TestDatabase(loadSchema()))
   const delegate = fixture.governance.people.find(
     (person) => person.accountId !== fixture.reviewer.accountId,
   )
