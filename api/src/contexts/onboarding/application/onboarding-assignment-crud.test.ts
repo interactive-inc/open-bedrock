@@ -20,7 +20,7 @@ import { makeTestSession } from "@tests/api/support/make-test-session"
 import { describe, expect, test } from "bun:test"
 
 const template = new OnboardingTemplate({
-  id: 1,
+  id: "0190003c-0000-7000-8000-000000000001",
   code: "join-default",
   name: "入社手続き",
   kind: "join",
@@ -81,7 +81,7 @@ async function seedAssignment(context: AssignmentTestContext): Promise<Onboardin
   return created
 }
 
-function firstTaskId(assignment: OnboardingAssignment): number {
+function firstTaskId(assignment: OnboardingAssignment): string {
   const taskId = assignment.tasks[0]?.id
 
   if (taskId === null || taskId === undefined) {
@@ -100,7 +100,7 @@ describe("UpdateOnboardingAssignment", () => {
     const assignment = await seedAssignment(context)
 
     const result = await new UpdateOnboardingAssignment(context).run({
-      assignmentId: assignment.id ?? 0,
+      assignmentId: assignment.id ?? "",
       session: makeTestSession("hr"),
       assignedAt: "2026-06-15T00:00:00.000Z",
     })
@@ -119,7 +119,7 @@ describe("UpdateOnboardingAssignment", () => {
     const assignment = await seedAssignment(context)
 
     const result = await new UpdateOnboardingAssignment(context).run({
-      assignmentId: assignment.id ?? 0,
+      assignmentId: assignment.id ?? "",
       session: makeTestSession("member"),
       assignedAt: "2026-06-15T00:00:00.000Z",
     })
@@ -135,13 +135,13 @@ describe("CancelOnboardingAssignment", () => {
     const assignment = await seedAssignment(context)
 
     const result = await new CancelOnboardingAssignment(context).run({
-      assignmentId: assignment.id ?? 0,
+      assignmentId: assignment.id ?? "",
       session: makeTestSession("root"),
     })
 
     expect(result).toEqual({ reason: "cancelled" })
 
-    const found = await context.assignmentRepository.findById(assignment.id ?? 0)
+    const found = await context.assignmentRepository.findById(assignment.id ?? "")
 
     expect(found).toBeNull()
   })
@@ -154,7 +154,7 @@ describe("CancelOnboardingAssignment", () => {
     await context.assignmentRepository.update(assignment.updateStatus("completed"))
 
     const result = await new CancelOnboardingAssignment(context).run({
-      assignmentId: assignment.id ?? 0,
+      assignmentId: assignment.id ?? "",
       session: makeTestSession("root"),
     })
 
@@ -167,7 +167,7 @@ describe("CancelOnboardingAssignment", () => {
     const assignment = await seedAssignment(context)
 
     const result = await new CancelOnboardingAssignment(context).run({
-      assignmentId: assignment.id ?? 0,
+      assignmentId: assignment.id ?? "",
       session: makeTestSession("member"),
     })
 
@@ -217,7 +217,7 @@ describe("UncompleteOnboardingTask", () => {
     const context = createAssignmentTestContext()
 
     const result = await new UncompleteOnboardingTask(context).run({
-      taskId: 9999,
+      taskId: "0190003e-0000-7000-8000-00000000270f",
       session: makeTestSession("root", 1),
     })
 

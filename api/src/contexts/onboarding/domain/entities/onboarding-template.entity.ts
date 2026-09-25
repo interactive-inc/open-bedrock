@@ -3,7 +3,7 @@ import type { OnboardingTemplateRow } from "@/contexts/onboarding/infrastructure
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   code: z.string(),
   name: z.string(),
   kind: z.enum(["join", "leave"]),

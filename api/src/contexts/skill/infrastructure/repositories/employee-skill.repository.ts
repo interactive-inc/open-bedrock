@@ -58,6 +58,7 @@ export class EmployeeSkillRepository {
       const rows = await this.c.var.database
         .insert(employeeSkills)
         .values({
+          id: crypto.randomUUID(),
           employeeId: employeeSkill.employeeId,
           skillCode: employeeSkill.skillCode,
           level: employeeSkill.level,

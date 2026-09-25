@@ -3,18 +3,23 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import { sql, type InferSelectModel } from "drizzle-orm"
 import { check, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
-/** 資産台帳（asset ドメイン）。code がPK。在庫/貸出/廃棄状態と保有者を持つ。 */
-export const assets = sqliteTable("assets", {
-  code: text("code").primaryKey(),
-  name: text("name").notNull(),
-  kind: text("kind").notNull(),
-  serial: text("serial"),
-  purchasedOn: text("purchased_on"),
-  status: text("status").notNull(),
-  holderEmployeeId: text("holder_employee_id").$type<EmployeeId>(),
-  disposedOn: text("disposed_on"),
-  disposalReason: text("disposal_reason"),
-})
+/** 資産台帳（asset ドメイン）。id が UUID の主キーで、code は一意な業務コード。在庫/貸出/廃棄状態と保有者を持つ。 */
+export const assets = sqliteTable(
+  "assets",
+  {
+    id: text("id").primaryKey().notNull(),
+    code: text("code").notNull().unique(),
+    name: text("name").notNull(),
+    kind: text("kind").notNull(),
+    serial: text("serial"),
+    purchasedOn: text("purchased_on"),
+    status: text("status").notNull(),
+    holderEmployeeId: text("holder_employee_id").$type<EmployeeId>(),
+    disposedOn: text("disposed_on"),
+    disposalReason: text("disposal_reason"),
+  },
+  () => [check("assets_id_uuid", sql.raw(uuidCheckPredicate("id")))],
+)
 
 export type AssetRow = InferSelectModel<typeof assets>
 

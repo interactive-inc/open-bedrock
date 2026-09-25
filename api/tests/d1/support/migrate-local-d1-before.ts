@@ -66,6 +66,21 @@ const LEGACY_INTEGER_SEED_PREFIXES: Readonly<Record<string, string>> = {
   "01900031": "goal_evaluations",
   "01900032": "review_cycles",
   "01900033": "review_forms",
+  "0190003c": "onboarding_templates",
+  "0190003d": "onboarding_assignments",
+  "0190003e": "onboarding_tasks",
+}
+
+/**
+ * 業務コードや複合の主キーから、新しい UUID の id を主キーにした table の seed。
+ * 移行前の schema は id 列を持たないので、先頭の id 列と値を外して入れる。
+ */
+const SURROGATE_SEED_TABLES: Readonly<Record<string, string>> = {
+  assets: "01900037",
+  onboarding_template_tasks: "01900038",
+  stocktake_items: "01900039",
+  skill_definitions: "0190003a",
+  employee_skills: "0190003b",
 }
 
 /**
@@ -94,12 +109,37 @@ async function integerKeyedPrefixes(database: D1Database): Promise<ReadonlySet<s
   return prefixes
 }
 
+async function tablesWithoutSurrogateId(database: D1Database): Promise<ReadonlySet<string>> {
+  const tables = new Set<string>()
+  for (const table of Object.keys(SURROGATE_SEED_TABLES)) {
+    const column = await database
+      .prepare(`SELECT name FROM pragma_table_info('${table}') WHERE name = 'id'`)
+      .first<{ name: string }>()
+    if (column === null) tables.add(table)
+  }
+  return tables
+}
+
+function withoutSurrogateId(sql: string, table: string, prefix: string): string {
+  const statement = new RegExp(
+    String.raw`(INSERT INTO ${table} \()id, ([^)]*\) VALUES)([\s\S]*?;)`,
+    "u",
+  )
+  const leadingId = new RegExp(String.raw`\('${prefix}-0000-7000-8000-[0-9a-f]{12}', `, "gu")
+  return sql.replace(
+    statement,
+    (_match, head: string, columns: string, rows: string) =>
+      `${head}${columns}${rows.replaceAll(leadingId, "(")}`,
+  )
+}
+
 /**
  * 開発用 seed を入れる。本番に近い行数と参照関係の上で migration を確かめるために使う。
  * seed は最新の schema に合わせて書いてあるため、主キーがまだ整数の table の ID は連番へ戻して入れる。
  */
 export async function seedLocalD1(database: D1Database): Promise<void> {
   const legacy = await integerKeyedPrefixes(database)
+  const withoutId = await tablesWithoutSurrogateId(database)
   const files = readdirSync(seedsDirectory)
     .filter((file) => file.endsWith(".sql"))
     .sort()
@@ -108,7 +148,10 @@ export async function seedLocalD1(database: D1Database): Promise<void> {
     ...files.filter((file) => !SEED_ORDER.includes(file.replace(".sql", ""))),
   ]
   for (const file of ordered) {
-    const sql = readFileSync(join(seedsDirectory, file), "utf8").replaceAll(
+    let sql = readFileSync(join(seedsDirectory, file), "utf8")
+    for (const table of withoutId)
+      sql = withoutSurrogateId(sql, table, SURROGATE_SEED_TABLES[table] ?? "")
+    sql = sql.replaceAll(
       /'([0-9a-f]{8})-0000-7000-8000-([0-9a-f]{12})'/gu,
       (literal, prefix: string, serial: string) =>
         legacy.has(prefix) ? String(Number.parseInt(serial, 16)) : literal,

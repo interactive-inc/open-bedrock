@@ -1,6 +1,9 @@
 import type { OnboardingContext } from "@/contexts/onboarding/configuration/onboarding-context"
 import { OnboardingActorReadAdapter } from "@/contexts/onboarding/infrastructure/adapters/onboarding-actor-read.adapter"
-import { onboardingSnapshotQuery } from "@/contexts/onboarding/infrastructure/adapters/lib/onboarding-snapshot-query"
+import {
+  ONBOARDING_SNAPSHOT_FORMAT_VERSION,
+  onboardingSnapshotQuery,
+} from "@/contexts/onboarding/infrastructure/adapters/lib/onboarding-snapshot-query"
 import { OnboardingError } from "@/contexts/onboarding/domain/errors"
 import {
   onboardingRecordKindSchema,
@@ -52,7 +55,7 @@ export class CaptureOnboardingRecordAdapter {
         recordKind: kind.data,
         recordId: input.recordId,
         formatId: kind.data,
-        formatVersion: 1,
+        formatVersion: ONBOARDING_SNAPSHOT_FORMAT_VERSION,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

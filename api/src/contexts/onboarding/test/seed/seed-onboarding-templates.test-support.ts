@@ -6,7 +6,7 @@ type SeedOnboardingTemplateTask = {
 }
 
 type SeedOnboardingTemplate = {
-  id: number
+  id: string
   code: string
   name: string
   kind: "join" | "leave"
@@ -16,7 +16,7 @@ type SeedOnboardingTemplate = {
 
 export const seedOnboardingTemplates: ReadonlyArray<SeedOnboardingTemplate> = [
   {
-    id: 1,
+    id: "0190003c-0000-7000-8000-000000000001",
     code: "engineer_join",
     name: "エンジニア入社チェックリスト",
     kind: "join",
@@ -27,7 +27,7 @@ export const seedOnboardingTemplates: ReadonlyArray<SeedOnboardingTemplate> = [
     ],
   },
   {
-    id: 2,
+    id: "0190003c-0000-7000-8000-000000000002",
     code: "common_leave",
     name: "共通退職チェックリスト",
     kind: "leave",

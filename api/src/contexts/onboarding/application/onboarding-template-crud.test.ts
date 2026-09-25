@@ -44,7 +44,7 @@ async function seedInProgressAssignment(
   templateCode: string,
 ): Promise<void> {
   const template = new OnboardingTemplate({
-    id: 1,
+    id: "0190003c-0000-7000-8000-000000000001",
     code: templateCode,
     name: "入社手続き",
     kind: "join",
