@@ -403,23 +403,27 @@ describe("canonical System core schema", () => {
     database.run(
       `INSERT INTO system_audit_events
          (event_id, actor_account_id, action, target_type, target_id, outcome, occurred_at)
-       VALUES ('audit-1', 'deleted-account', 'system.account.locked', 'system:account',
+       VALUES ('0190aaaa-0000-4000-8000-000000000001', 'deleted-account', 'system.account.locked', 'system:account',
                'account-1', 'succeeded', 100)`,
     )
     expect(() =>
       database.run(
         `INSERT INTO system_audit_events
            (event_id, action, target_type, outcome, metadata_json, occurred_at)
-         VALUES ('audit-invalid-json', 'system.account.locked', 'system:account',
+         VALUES ('0190aaaa-0000-4000-8000-000000000002', 'system.account.locked', 'system:account',
                  'failed', '{', 101)`,
       ),
     ).toThrow()
 
     expect(() =>
-      database.run("UPDATE system_audit_events SET outcome = 'failed' WHERE event_id = 'audit-1'"),
+      database.run(
+        "UPDATE system_audit_events SET outcome = 'failed' WHERE event_id = '0190aaaa-0000-4000-8000-000000000001'",
+      ),
     ).toThrow()
     expect(() =>
-      database.run("DELETE FROM system_audit_events WHERE event_id = 'audit-1'"),
+      database.run(
+        "DELETE FROM system_audit_events WHERE event_id = '0190aaaa-0000-4000-8000-000000000001'",
+      ),
     ).toThrow()
 
     expect(database.query("SELECT actor_account_id FROM system_audit_events").get()).toEqual({

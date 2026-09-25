@@ -19,20 +19,14 @@ import { buildIdInventory } from "../../scripts/inventory-ids"
  */
 const NOT_YET_CONVERTED: ReadonlySet<string> = new Set([
   // integer
-  "company_audit_append_guard",
-  "company_audit_event_appends",
-  "company_audit_event_employee_contexts",
-  "company_audit_events",
   "company_lifecycle_outbox_entries",
   "company_personnel_annotations",
-  "system_audit_disclosure_policy_revisions",
   "system_batch_jobs",
   "system_work_item_revisions",
   // text-uuid-candidate
   "career_sheets",
   "company_account_employee_links",
   "company_assignment_resource_adoptions",
-  "company_audit_batch_decisions",
   "company_bootstrap_receipts",
   "company_employee_lifecycle_revisions",
   "company_employee_resource_adoptions",
@@ -46,7 +40,6 @@ const NOT_YET_CONVERTED: ReadonlySet<string> = new Set([
   "system_accounts",
   "system_attachment_preservations",
   "system_attachments",
-  "system_audit_events",
   "system_authentication_attempts",
   "system_cases",
   "system_connectors",

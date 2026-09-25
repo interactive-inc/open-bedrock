@@ -61,8 +61,8 @@ export class SystemAuditDisclosurePolicyRepository {
         ...this.c.assertions,
         ...new SystemAuditEventRepository(this.c).prepareAppend(audit),
         this.c.env.DB.prepare(`INSERT INTO system_audit_disclosure_policy_revisions
-        (scope, revision, command_id, enabled, allowed_fields_json, allowed_target_types_json, allowed_purposes_json, expires_at, reason, actor_account_id, recorded_at, audit_event_id)
-        VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)`).bind(
+        (id, scope, revision, command_id, enabled, allowed_fields_json, allowed_target_types_json, allowed_purposes_json, expires_at, reason, actor_account_id, recorded_at, audit_event_id)
+        VALUES (?13, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10, ?11, ?12)`).bind(
           value.scope,
           value.revision,
           value.commandId,
@@ -75,6 +75,7 @@ export class SystemAuditDisclosurePolicyRepository {
           value.actorAccountId,
           Date.parse(value.recordedAt),
           value.auditEventId,
+          crypto.randomUUID(),
         ),
         abortWhenPreviousStatementChangedNoRows(this.c.env.DB),
       ]

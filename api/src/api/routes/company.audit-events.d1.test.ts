@@ -154,7 +154,7 @@ function request(db: D1Database, path: string, bearer: string | null): Promise<R
 
 async function latestAudit(db: D1Database): Promise<Record<string, unknown>> {
   const row = await db
-    .prepare("SELECT * FROM company_audit_events ORDER BY id DESC LIMIT 1")
+    .prepare("SELECT * FROM company_audit_events ORDER BY rowid DESC LIMIT 1")
     .first()
   if (row === null) throw new Error("missing audit event")
   return row as Record<string, unknown>
