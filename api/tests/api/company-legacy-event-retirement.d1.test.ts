@@ -38,9 +38,10 @@ test("旧人事注記は管理者も追加できず、記録日と適用日が�
     body: { employee_code: "E001", kind: "join", effective_date: "2026-01-01" },
   })
   expect(write.status).toBe(404)
-  expect(await db.prepare("SELECT * FROM company_personnel_annotations ORDER BY id").all()).toEqual(
-    before,
-  )
+  // 実D1の結果はmetaに実行時間を含むため、行だけを比べる。
+  expect(
+    (await db.prepare("SELECT * FROM company_personnel_annotations ORDER BY id").all()).results,
+  ).toEqual(before.results)
   const read = await requestWithContext({
     ...common,
     path: "/company/personnel-annotations?employee_code=E001",

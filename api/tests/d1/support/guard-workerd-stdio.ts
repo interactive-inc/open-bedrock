@@ -1,5 +1,6 @@
 import childProcess from "node:child_process"
-import type { ChildProcess } from "node:child_process"
+import type { ChildProcess, SpawnOptions } from "node:child_process"
+import { spawnWorkerdWithBun } from "@tests/d1/support/spawn-workerd-with-bun"
 
 let installed = false
 
@@ -25,8 +26,17 @@ export function installWorkerdStdioGuard(): void {
   installed = true
   const spawn = childProcess.spawn
   const guarded = function (this: unknown, ...args: unknown[]) {
-    const child = Reflect.apply(spawn, this, args) as ChildProcess
-    if (isWorkerd(args[0])) guard(child)
+    const [command, commandArgs, options] = args
+    if (!isWorkerd(command) || !Array.isArray(commandArgs)) {
+      return Reflect.apply(spawn, this, args) as ChildProcess
+    }
+    // workerdだけはBunのsocketによるpipeを使わずに起動する（spawn-workerd-with-bun.ts）。
+    const child = spawnWorkerdWithBun(
+      command as string,
+      commandArgs as string[],
+      (options ?? {}) as SpawnOptions,
+    )
+    guard(child)
     return child
   }
   childProcess.spawn = guarded as typeof spawn

@@ -99,9 +99,10 @@ test.each(["grade", "position"] as const)(
       body: { employee_code: "E001", kind: "join", effective_date: "2026-01-01" },
     })
     expect(event.status).toBe(404)
+    // 実D1の結果はmetaに実行時間を含むため、行だけを比べる。
     expect(
-      await db.prepare("SELECT * FROM company_personnel_annotations ORDER BY id").all(),
-    ).toEqual(originalEvents)
+      (await db.prepare("SELECT * FROM company_personnel_annotations ORDER BY id").all()).results,
+    ).toEqual(originalEvents.results)
     await db
       .prepare("DELETE FROM system_iam_role_permissions WHERE role_id = 'definition-only'")
       .run()
