@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { HeadcountPlanContext } from "@/contexts/headcount-plan/configuration/headcount-plan-context"
 import { HeadcountPlanActorReadAdapter } from "@/contexts/headcount-plan/infrastructure/adapters/headcount-plan-actor-read.adapter"
 import { HeadcountPlanError } from "@/contexts/headcount-plan/domain/errors"
@@ -6,9 +7,10 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
 const snapshotSql = `SELECT json_object(
-  'format', 'headcount-plan-record', 'version', 1,
+  'format', 'headcount-plan-record', 'version', 2,
   'headcount-plan', json_object(
     'id', id,
+    'legacy_id', legacy_id,
     'fiscal_year', fiscal_year,
     'department_code', department_code,
     'planned_count', planned_count,
@@ -25,8 +27,8 @@ export class CaptureHeadcountPlanRecordAdapter {
     Object.freeze(this)
   }
 
-  async prepare(input: Readonly<{ headcountPlanId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.headcountPlanId))
+  async prepare(input: Readonly<{ headcountPlanId: string; sourceNamespace: string }>) {
+    if (!z.uuid().safeParse(input.headcountPlanId).success)
       return new HeadcountPlanError("forbidden", "invalid source record")
     const actor = await new HeadcountPlanActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
@@ -49,7 +51,7 @@ export class CaptureHeadcountPlanRecordAdapter {
         recordKind: "headcount-plan-record",
         recordId: String(input.headcountPlanId),
         formatId: "headcount-plan-record",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

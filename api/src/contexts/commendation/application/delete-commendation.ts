@@ -8,7 +8,7 @@ import { isCommendationRecordSourceFrozenError } from "@/contexts/commendation/i
 
 export type Command = {
   session: CompanySessionValue
-  id: number
+  id: string
 }
 
 /**

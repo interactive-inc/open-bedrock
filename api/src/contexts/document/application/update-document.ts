@@ -8,7 +8,7 @@ import { isDocumentRecordSourceFrozenError } from "@/contexts/document/infrastru
 
 export type Command = {
   session: CompanySessionValue
-  documentId: number
+  documentId: string
   title: string
   category: string | null
   location: string

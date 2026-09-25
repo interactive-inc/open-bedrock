@@ -3,7 +3,7 @@ import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records
 
 /** インシデント記録 1 件のレスポンス。 */
 export const zAppItIncident = z.object({
-  id: z.number(),
+  id: z.uuid(),
   occurred_at: z.string(),
   title: z.string(),
   summary: z.string(),

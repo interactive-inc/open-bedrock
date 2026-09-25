@@ -4,7 +4,7 @@ import type { DisciplinaryActionRow } from "@/contexts/disciplinary-action/infra
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   employeeId: zEmployeeId,
   kind: z.string(),
   summary: z.string(),

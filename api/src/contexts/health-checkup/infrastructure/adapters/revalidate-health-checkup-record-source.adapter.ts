@@ -23,7 +23,7 @@ export class RevalidateHealthCheckupRecordSourceAdapter {
       )
 
     const current = await new CaptureHealthCheckupRecordAdapter(this.c).prepare({
-      healthCheckupId: Number(source.props.recordId),
+      healthCheckupId: source.props.recordId,
       sourceNamespace: this.c.sourceNamespace,
     })
     if (current instanceof Error) return current

@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { WorkAccidentContext } from "@/contexts/work-accident/configuration/work-accident-context"
 import { WorkAccidentActorReadAdapter } from "@/contexts/work-accident/infrastructure/adapters/work-accident-actor-read.adapter"
 import { WorkAccidentError } from "@/contexts/work-accident/domain/errors"
@@ -6,9 +7,10 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
 const snapshotSql = `SELECT json_object(
-  'format', 'work-accident-record', 'version', 1,
+  'format', 'work-accident-record', 'version', 2,
   'work-accident', json_object(
     'id', id,
+    'legacy_id', legacy_id,
     'occurred_on', occurred_on,
     'employee_id', employee_id,
     'location', location,
@@ -27,8 +29,8 @@ export class CaptureWorkAccidentRecordAdapter {
     Object.freeze(this)
   }
 
-  async prepare(input: Readonly<{ workAccidentId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.workAccidentId))
+  async prepare(input: Readonly<{ workAccidentId: string; sourceNamespace: string }>) {
+    if (!z.uuid().safeParse(input.workAccidentId).success)
       return new WorkAccidentError("forbidden", "invalid source record")
     const actor = await new WorkAccidentActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
@@ -51,7 +53,7 @@ export class CaptureWorkAccidentRecordAdapter {
         recordKind: "work-accident-record",
         recordId: String(input.workAccidentId),
         formatId: "work-accident-record",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

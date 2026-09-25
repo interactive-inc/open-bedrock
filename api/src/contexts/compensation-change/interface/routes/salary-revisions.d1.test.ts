@@ -28,7 +28,7 @@ afterAll(async () => {
 const jwtSecret = "salary-revision-route-test-secret"
 
 const revisionSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   effective_date: z.string(),
   previous_base_salary: z.number(),

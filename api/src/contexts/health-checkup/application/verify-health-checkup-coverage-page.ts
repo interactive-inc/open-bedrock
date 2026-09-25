@@ -1,3 +1,4 @@
+import { z } from "zod"
 import { HealthCheckupRecordSystemAdapter } from "@/contexts/health-checkup/infrastructure/adapters/health-checkup-record-system.adapter"
 import {
   HealthCheckupCoverageForbiddenError,
@@ -77,12 +78,12 @@ export class VerifyHealthCheckupCoveragePage {
       return new HealthCheckupCoverageConflictError("coverage scan already complete")
     const cursor =
       existing === null ? (previous?.snapshot.nextCursor ?? null) : existing.snapshot.afterCursor
-    if (cursor !== null && !/^(0|-?[1-9][0-9]*)$/.test(cursor))
+    if (cursor !== null && !z.uuid().safeParse(cursor).success)
       return new Error("invalid stored coverage cursor")
     const page = await new CaptureFrozenHealthCheckupRecordPageAdapter(this.c).prepare({
       freezeId: command.freezeId,
       sourceNamespace: command.sourceNamespace,
-      afterId: cursor === null ? null : Number(cursor),
+      afterId: cursor,
       limit: 10,
     })
     if (page instanceof Error) return page

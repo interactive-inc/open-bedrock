@@ -23,7 +23,7 @@ export class RevalidateItIncidentRecordSourceAdapter {
       )
 
     const current = await new CaptureItIncidentRecordAdapter(this.c).prepare({
-      itIncidentId: Number(source.props.recordId),
+      itIncidentId: source.props.recordId,
       sourceNamespace: this.c.sourceNamespace,
     })
     if (current instanceof Error) return current

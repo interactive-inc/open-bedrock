@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { DisciplinaryActionContext } from "@/contexts/disciplinary-action/configuration/disciplinary-action-context"
 import { DisciplinaryActionActorReadAdapter } from "@/contexts/disciplinary-action/infrastructure/adapters/disciplinary-action-actor-read.adapter"
 import { DisciplinaryActionError } from "@/contexts/disciplinary-action/domain/errors"
@@ -6,9 +7,10 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
 const snapshotSql = `SELECT json_object(
-  'format', 'disciplinary-action-record', 'version', 1,
+  'format', 'disciplinary-action-record', 'version', 2,
   'disciplinary-action', json_object(
     'id', id,
+    'legacy_id', legacy_id,
     'employee_id', employee_id,
     'kind', kind,
     'summary', summary,
@@ -25,8 +27,8 @@ export class CaptureDisciplinaryActionRecordAdapter {
     Object.freeze(this)
   }
 
-  async prepare(input: Readonly<{ disciplinaryActionId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.disciplinaryActionId))
+  async prepare(input: Readonly<{ disciplinaryActionId: string; sourceNamespace: string }>) {
+    if (!z.uuid().safeParse(input.disciplinaryActionId).success)
       return new DisciplinaryActionError("forbidden", "invalid source record")
     const actor = await new DisciplinaryActionActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
@@ -49,7 +51,7 @@ export class CaptureDisciplinaryActionRecordAdapter {
         recordKind: "disciplinary-action-record",
         recordId: String(input.disciplinaryActionId),
         formatId: "disciplinary-action-record",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

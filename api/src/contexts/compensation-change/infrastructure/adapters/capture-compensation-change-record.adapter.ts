@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { CompensationChangeContext } from "@/contexts/compensation-change/configuration/compensation-change-context"
 import { CompensationChangeError } from "@/contexts/compensation-change/domain/errors"
 import {
@@ -11,22 +12,21 @@ import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-dig
 
 type Context = CompensationChangeContext
 
-type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<number> }>
+type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string> }>
 
 function snapshotQuery(
   recordKind: CompensationChangeRecordKind,
   recordId: string,
 ): SnapshotQuery | Error {
   const parsed = compensationChangeRecordKindSchema.safeParse(recordKind)
-  const id = Number(recordId)
-  if (!parsed.success || !Number.isSafeInteger(id) || String(id) !== recordId)
+  if (!parsed.success || !z.uuid().safeParse(recordId).success)
     return new Error("invalid compensation change record id")
   return {
-    sql: `SELECT json_object('format','salary-revision-record','version',1,'salary_revision',json_object(
-      'id',id,'employee_id',employee_id,'effective_date',effective_date,
+    sql: `SELECT json_object('format','salary-revision-record','version',2,'salary_revision',json_object(
+      'id',id,'legacy_id',legacy_id,'employee_id',employee_id,'effective_date',effective_date,
       'previous_base_salary',previous_base_salary,'new_base_salary',new_base_salary,
       'reason',reason,'created_at',created_at)) AS snapshot_json FROM salary_revisions WHERE id=?1`,
-    values: [id],
+    values: [recordId],
   }
 }
 
@@ -68,7 +68,7 @@ export class CaptureCompensationChangeRecordAdapter {
         recordKind: input.recordKind,
         recordId: input.recordId,
         formatId: input.recordKind,
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

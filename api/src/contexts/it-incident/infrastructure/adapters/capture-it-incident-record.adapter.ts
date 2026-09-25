@@ -1,3 +1,4 @@
+import { z } from "zod"
 import type { ItIncidentContext } from "@/contexts/it-incident/configuration/it-incident-context"
 import { ItIncidentActorReadAdapter } from "@/contexts/it-incident/infrastructure/adapters/it-incident-actor-read.adapter"
 import { ItIncidentError } from "@/contexts/it-incident/domain/errors"
@@ -6,9 +7,10 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
 const snapshotSql = `SELECT json_object(
-  'format', 'it-incident-record', 'version', 1,
+  'format', 'it-incident-record', 'version', 2,
   'it-incident', json_object(
     'id', id,
+    'legacy_id', legacy_id,
     'occurred_at', occurred_at,
     'title', title,
     'summary', summary,
@@ -27,8 +29,8 @@ export class CaptureItIncidentRecordAdapter {
     Object.freeze(this)
   }
 
-  async prepare(input: Readonly<{ itIncidentId: number; sourceNamespace: string }>) {
-    if (!Number.isSafeInteger(input.itIncidentId))
+  async prepare(input: Readonly<{ itIncidentId: string; sourceNamespace: string }>) {
+    if (!z.uuid().safeParse(input.itIncidentId).success)
       return new ItIncidentError("forbidden", "invalid source record")
     const actor = await new ItIncidentActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
@@ -51,7 +53,7 @@ export class CaptureItIncidentRecordAdapter {
         recordKind: "it-incident-record",
         recordId: String(input.itIncidentId),
         formatId: "it-incident-record",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

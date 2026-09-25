@@ -8,7 +8,7 @@ import { isCompanyCalendarDayRecordSourceFrozenError } from "@/contexts/company-
 
 export type Command = {
   session: CompanySessionValue
-  id: number
+  id: string
 }
 
 /**

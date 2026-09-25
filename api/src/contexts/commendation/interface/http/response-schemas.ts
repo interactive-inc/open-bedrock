@@ -4,7 +4,7 @@ import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records
 
 /** 表彰の記録 1 件のレスポンス（社内公開）。 */
 export const zAppCommendation = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   title: z.string(),
   reason: z.string(),

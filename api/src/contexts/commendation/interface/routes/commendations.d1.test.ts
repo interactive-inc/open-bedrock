@@ -51,7 +51,7 @@ function tokenFor(employeeId: number): Promise<string> {
   })
 }
 
-async function createCommendation(db: D1Database): Promise<number> {
+async function createCommendation(db: D1Database): Promise<string> {
   const response = await requestWithContext({
     db,
     jwtSecret,
@@ -66,7 +66,7 @@ async function createCommendation(db: D1Database): Promise<number> {
     },
   })
 
-  const body = (await response.json()) as { id: number }
+  const body = (await response.json()) as { id: string }
 
   return body.id
 }
@@ -77,7 +77,7 @@ describe("commendations", () => {
 
     const id = await createCommendation(db)
 
-    expect(id).toBeGreaterThan(0)
+    expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)
 
     const list = await requestWithContext({
       db,

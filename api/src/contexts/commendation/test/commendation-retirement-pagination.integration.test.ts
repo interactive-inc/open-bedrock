@@ -11,6 +11,10 @@ import { GET as preservedDossier } from "@system/interface/routes/system.preserv
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
 
+/** 採番順と辞書順が一致する固定の UUID。頁は主キーの辞書順で分割される。 */
+const recordId = (sequence: number) =>
+  `0190000a-0000-7000-8000-${String(sequence).padStart(12, "0")}`
+
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("11件の表彰記録を全件保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
   const {
@@ -44,7 +48,7 @@ test("11件の表彰記録を全件保全し、人の承認・取消・再提出
       (id,employee_id,title,reason,awarded_on,created_at)
       VALUES (?1,?2,?3,?4,?5,?6)`)
       .bind(
-        id,
+        recordId(id),
         creatorPerson.employeeId,
         `Commendation ${id}`,
         `Award reason ${id}`,
@@ -101,14 +105,14 @@ test("11件の表彰記録を全件保全し、人の承認・取消・再提出
   ).toBe(409)
   expect(
     (
-      await apiRequest("/commendation/commendations/1", {
+      await apiRequest(`/commendation/commendations/${recordId(1)}`, {
         method: "DELETE",
       })
     ).status,
   ).toBe(409)
   const mappings = []
   for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
-    const path = `/commendation/commendations/${id}/preservation-requests`
+    const path = `/commendation/commendations/${recordId(id)}/preservation-requests`
     const submitted = await apiRequest(path, {
       method: "POST",
       headers: { "idempotency-key": crypto.randomUUID() },
@@ -165,7 +169,7 @@ test("11件の表彰記録を全件保全し、人の承認・取消・再提出
         })
       ).status,
     ).toBe(200)
-    mappings.push({ sourceRecordId: id, preservedRecordId: record.record_id })
+    mappings.push({ sourceRecordId: recordId(id), preservedRecordId: record.record_id })
   }
   const sourcePath = `/commendation/record-source-freezes/${freezeId}`
   const planId = crypto.randomUUID()
@@ -176,7 +180,7 @@ test("11件の表彰記録を全件保全し、人の承認・取消・再提出
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "10",
+    nextCursor: recordId(10),
     recordCount: 10,
   })
   expect(

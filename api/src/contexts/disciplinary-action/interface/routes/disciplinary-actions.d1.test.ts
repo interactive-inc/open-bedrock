@@ -51,7 +51,7 @@ function tokenFor(employeeId: number): Promise<string> {
   })
 }
 
-async function createAction(db: D1Database): Promise<number> {
+async function createAction(db: D1Database): Promise<string> {
   const response = await requestWithContext({
     db,
     jwtSecret,
@@ -61,7 +61,7 @@ async function createAction(db: D1Database): Promise<number> {
     body: { employee_id: "5", kind: "warning", summary: "policy breach", decided_on: "2026-06-01" },
   })
 
-  const body = (await response.json()) as { id: number }
+  const body = (await response.json()) as { id: string }
 
   return body.id
 }
@@ -72,7 +72,7 @@ describe("disciplinary actions", () => {
 
     const id = await createAction(db)
 
-    expect(id).toBeGreaterThan(0)
+    expect(id).toMatch(/^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/)
 
     const list = await requestWithContext({
       db,

@@ -17,7 +17,7 @@ type Context = SystemD1Context &
   }>
 type Input = Readonly<{
   records: ReadonlyArray<Readonly<{ source: PreservedRecordSourceValue }>>
-  mappings: ReadonlyArray<Readonly<{ sourceRecordId: number; preservedRecordId: string }>>
+  mappings: ReadonlyArray<Readonly<{ sourceRecordId: string; preservedRecordId: string }>>
   purpose: string
 }>
 

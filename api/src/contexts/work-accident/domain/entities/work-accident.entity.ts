@@ -3,7 +3,7 @@ import type { WorkAccidentRow } from "@/contexts/work-accident/infrastructure/sc
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number(),
+  id: z.string(),
   occurredOn: z.string(),
   employeeId: zEmployeeId.nullable(),
   location: z.string().nullable(),

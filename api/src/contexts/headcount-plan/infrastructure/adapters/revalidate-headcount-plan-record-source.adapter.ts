@@ -23,7 +23,7 @@ export class RevalidateHeadcountPlanRecordSourceAdapter {
       )
 
     const current = await new CaptureHeadcountPlanRecordAdapter(this.c).prepare({
-      headcountPlanId: Number(source.props.recordId),
+      headcountPlanId: source.props.recordId,
       sourceNamespace: this.c.sourceNamespace,
     })
     if (current instanceof Error) return current

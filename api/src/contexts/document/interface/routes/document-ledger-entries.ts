@@ -70,7 +70,12 @@ export const GET = factory.createHandlers(
         .from(documents)
         .where(where)
         // 期限なし(NULL)は末尾、期限ありは近い順。同着は id 昇順で安定化。
-        .orderBy(sql`${documents.expiresOn} IS NULL`, asc(documents.expiresOn), asc(documents.id))
+        .orderBy(
+          sql`${documents.expiresOn} IS NULL`,
+          asc(documents.expiresOn),
+          asc(documents.createdAt),
+          asc(documents.id),
+        )
         .limit(limit)
         .offset(offset),
       c.var.database.select({ total: count() }).from(documents).where(where),

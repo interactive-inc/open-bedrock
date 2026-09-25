@@ -3,7 +3,7 @@ import { calendarDayKindSchema } from "@/contexts/company-calendar/domain/defini
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   calendarDate: z.string(),
   kind: calendarDayKindSchema,
   name: z.string().nullable(),
