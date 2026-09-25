@@ -26,7 +26,7 @@ async function countRows(db: D1Database, table: "rooms" | "room_reservations"): 
 }
 
 describe("RoomRepository on local D1", () => {
-  test("creates with an autoincrement id, updates, and deletes the room with its reservations in one batch", async () => {
+  test("creates with a UUID id, updates, and deletes the room with its reservations in one batch", async () => {
     const { context, db } = await createLocalD1Context(local, "room-lifecycle")
 
     const repository = new RoomRepository(context)
@@ -35,7 +35,7 @@ describe("RoomRepository on local D1", () => {
 
     if (!(created instanceof Room)) throw new Error("create failed")
 
-    expect(Number.isSafeInteger(created.id)).toBe(true)
+    expect(created.id).toMatch(/^[0-9a-f-]{36}$/)
 
     const updated = await repository.update(
       created.withDetails({ name: "Updated Room", capacity: 20, location: "5F" }),

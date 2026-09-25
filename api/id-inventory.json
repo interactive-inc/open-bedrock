@@ -4,10 +4,10 @@
     "primaryKeyKinds": {
       "allocator-singleton-secret": 11,
       "composite": 35,
-      "integer": 42,
+      "integer": 28,
       "text-business-code": 6,
       "text-prefixed": 13,
-      "text-uuid": 34,
+      "text-uuid": 48,
       "text-uuid-candidate": 65
     },
     "declaredForeignKeys": 272,
@@ -15,11 +15,11 @@
       "cross-context": 17,
       "external": 32,
       "historical": 10,
-      "not-reference": 57,
+      "not-reference": 71,
       "polymorphic": 18,
       "same-context": 79
     },
-    "triggers": 662,
+    "triggers": 690,
     "views": 25,
     "indexes": 290
   },
@@ -4673,11 +4673,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -4685,12 +4685,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "department_code",
           "classification": "cross-context",
           "target": "company_organization_units"
         }
       ],
       "triggers": [
+        "job_openings_identity_update",
+        "job_openings_legacy_id_insert",
         "job_openings_source_freeze_delete",
         "job_openings_source_freeze_insert",
         "job_openings_source_freeze_update"
@@ -5538,11 +5544,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -5550,12 +5556,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "position_id",
           "classification": "same-context",
           "target": "job_openings"
         }
       ],
       "triggers": [
+        "recruitment_candidates_identity_update",
+        "recruitment_candidates_legacy_id_insert",
         "recruitment_candidates_source_freeze_delete",
         "recruitment_candidates_source_freeze_insert",
         "recruitment_candidates_source_freeze_update"
@@ -5973,18 +5985,25 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
         "incoming": []
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "rooms_identity_update",
+        "rooms_legacy_id_insert",
         "rooms_source_freeze_delete",
         "rooms_source_freeze_insert",
         "rooms_source_freeze_update"
@@ -6037,11 +6056,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -6056,12 +6075,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "pattern_id",
           "classification": "same-context",
           "target": "shift_patterns"
         }
       ],
       "triggers": [
+        "shift_assignments_identity_update",
+        "shift_assignments_legacy_id_insert",
         "shift_assignments_source_freeze_delete",
         "shift_assignments_source_freeze_insert",
         "shift_assignments_source_freeze_update"
@@ -6080,18 +6105,25 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
         "incoming": []
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "shift_patterns_identity_update",
+        "shift_patterns_legacy_id_insert",
         "shift_patterns_source_freeze_delete",
         "shift_patterns_source_freeze_insert",
         "shift_patterns_source_freeze_update"
@@ -6105,11 +6137,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -6128,8 +6160,15 @@
         ],
         "incoming": []
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "shift_swap_requests_identity_update",
+        "shift_swap_requests_legacy_id_insert",
         "shift_swap_requests_source_freeze_delete",
         "shift_swap_requests_source_freeze_insert",
         "shift_swap_requests_source_freeze_update"
@@ -6390,11 +6429,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -6409,12 +6448,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "survey_id",
           "classification": "same-context",
           "target": "surveys"
         }
       ],
       "triggers": [
+        "survey_responses_identity_update",
+        "survey_responses_legacy_id_insert",
         "survey_responses_source_freeze_delete",
         "survey_responses_source_freeze_insert",
         "survey_responses_source_freeze_update"
@@ -6432,18 +6477,25 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
         "incoming": []
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "surveys_identity_update",
+        "surveys_legacy_id_insert",
         "surveys_source_freeze_delete",
         "surveys_source_freeze_insert",
         "surveys_source_freeze_update"
@@ -10463,11 +10515,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -10486,8 +10538,15 @@
         ],
         "incoming": []
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "thanks_messages_identity_update",
+        "thanks_messages_legacy_id_insert",
         "thanks_messages_source_freeze_delete",
         "thanks_messages_source_freeze_insert",
         "thanks_messages_source_freeze_update"
@@ -10501,11 +10560,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -10518,8 +10577,15 @@
         ],
         "incoming": []
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "thanks_point_budgets_identity_update",
+        "thanks_point_budgets_legacy_id_insert",
         "thanks_point_budgets_source_freeze_delete",
         "thanks_point_budgets_source_freeze_insert",
         "thanks_point_budgets_source_freeze_update"
@@ -10533,11 +10599,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -10558,12 +10624,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "reward_id",
           "classification": "same-context",
           "target": "thanks_rewards"
         }
       ],
       "triggers": [
+        "thanks_redemptions_identity_update",
+        "thanks_redemptions_legacy_id_insert",
         "thanks_redemptions_source_freeze_delete",
         "thanks_redemptions_source_freeze_insert",
         "thanks_redemptions_source_freeze_update"
@@ -10581,18 +10653,25 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
         "incoming": []
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "thanks_rewards_identity_update",
+        "thanks_rewards_legacy_id_insert",
         "thanks_rewards_source_freeze_delete",
         "thanks_rewards_source_freeze_insert",
         "thanks_rewards_source_freeze_update"
@@ -10606,18 +10685,25 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
         "incoming": []
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "training_courses_identity_update",
+        "training_courses_legacy_id_insert",
         "training_courses_source_freeze_delete",
         "training_courses_source_freeze_insert",
         "training_courses_source_freeze_update"
@@ -10631,11 +10717,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -10650,12 +10736,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "course_id",
           "classification": "same-context",
           "target": "training_courses"
         }
       ],
       "triggers": [
+        "training_enrollments_identity_update",
+        "training_enrollments_legacy_id_insert",
         "training_enrollments_source_freeze_delete",
         "training_enrollments_source_freeze_insert",
         "training_enrollments_source_freeze_update"

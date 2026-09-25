@@ -28,7 +28,7 @@ afterAll(async () => {
 const jwtSecret = "shift-swap-request-crud-test-secret"
 
 const shiftSwapRequestResponseSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   requester_employee_id: zEmployeeId,
   target_employee_id: zEmployeeId,
   date: z.string(),
@@ -126,7 +126,7 @@ describe("GET /shift-swap-requests/me", () => {
 describe("GET /shift-swap-requests/:id", () => {
   test("the requester can read their own request", async () => {
     const response = await request({
-      path: "/shift/shift-swap-requests/1",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001",
       token: await tokenFor(5),
     })
 
@@ -137,13 +137,13 @@ describe("GET /shift-swap-requests/:id", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.id).toBe(1)
+      expect(parsed.data.id).toBe("01900025-0000-7000-8000-000000000001")
     }
   })
 
   test("an approver can read another person's request", async () => {
     const response = await request({
-      path: "/shift/shift-swap-requests/1",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001",
       token: await tokenFor(1),
     })
 
@@ -152,7 +152,7 @@ describe("GET /shift-swap-requests/:id", () => {
 
   test("returns 403 for a non-requester non-approver", async () => {
     const response = await request({
-      path: "/shift/shift-swap-requests/1",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001",
       token: await tokenFor(10),
     })
 
@@ -161,7 +161,7 @@ describe("GET /shift-swap-requests/:id", () => {
 
   test("returns 404 for an unknown request", async () => {
     const response = await request({
-      path: "/shift/shift-swap-requests/9999",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-00000000270f",
       token: await tokenFor(5),
     })
 
@@ -172,7 +172,7 @@ describe("GET /shift-swap-requests/:id", () => {
 describe("DELETE /shift-swap-requests/:id", () => {
   test("the requester cancels their pending request and returns 204", async () => {
     const response = await request({
-      path: "/shift/shift-swap-requests/1",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001",
       token: await tokenFor(5),
       method: "DELETE",
     })
@@ -182,7 +182,7 @@ describe("DELETE /shift-swap-requests/:id", () => {
 
   test("returns 403 when cancelling another person's request", async () => {
     const response = await request({
-      path: "/shift/shift-swap-requests/1",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001",
       token: await tokenFor(4),
       method: "DELETE",
     })
@@ -192,7 +192,7 @@ describe("DELETE /shift-swap-requests/:id", () => {
 
   test("returns 409 when cancelling an approved request", async () => {
     const response = await request({
-      path: "/shift/shift-swap-requests/2",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000002",
       token: await tokenFor(4),
       method: "DELETE",
     })
@@ -202,7 +202,7 @@ describe("DELETE /shift-swap-requests/:id", () => {
 
   test("returns 404 for an unknown request", async () => {
     const response = await request({
-      path: "/shift/shift-swap-requests/9999",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-00000000270f",
       token: await tokenFor(5),
       method: "DELETE",
     })
@@ -212,7 +212,7 @@ describe("DELETE /shift-swap-requests/:id", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/shift/shift-swap-requests/1",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001",
       token: null,
       method: "DELETE",
     })

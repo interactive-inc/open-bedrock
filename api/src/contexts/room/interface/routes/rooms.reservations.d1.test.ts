@@ -28,7 +28,7 @@ afterAll(async () => {
 
 const roomReservationResponseSchema = z.object({
   id: z.string(),
-  room_id: z.number(),
+  room_id: z.string(),
   reserver_id: zEmployeeId,
   start_at: z.string(),
   end_at: z.string(),
@@ -108,7 +108,7 @@ async function postReservation(token: string | null, body: unknown): Promise<Res
 describe("POST /rooms/reservations", () => {
   test("returns 201 and creates a reservation from a snake_case body", async () => {
     const response = await postReservation(await managerToken(), {
-      room_id: 3,
+      room_id: "01900022-0000-7000-8000-000000000003",
       start_at: "2026-05-30T01:00:00Z",
       end_at: "2026-05-30T02:00:00Z",
       purpose: "Interview",
@@ -121,7 +121,7 @@ describe("POST /rooms/reservations", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.room_id).toBe(3)
+      expect(parsed.data.room_id).toBe("01900022-0000-7000-8000-000000000003")
       expect(parsed.data.reserver_id).toBe(toWorkforceEmployeeId(4))
       expect(parsed.data.purpose).toBe("Interview")
       expect(parsed.data.id.length).toBeGreaterThan(0)
@@ -130,7 +130,7 @@ describe("POST /rooms/reservations", () => {
 
   test("returns 409 when the slot overlaps an existing reservation", async () => {
     const response = await postReservation(await managerToken(), {
-      room_id: 1,
+      room_id: "01900022-0000-7000-8000-000000000001",
       start_at: "2026-05-29T01:30:00Z",
       end_at: "2026-05-29T02:30:00Z",
       purpose: null,
@@ -141,7 +141,7 @@ describe("POST /rooms/reservations", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await postReservation(null, {
-      room_id: 3,
+      room_id: "01900022-0000-7000-8000-000000000003",
       start_at: "2026-05-30T01:00:00Z",
       end_at: "2026-05-30T02:00:00Z",
       purpose: null,
@@ -161,7 +161,7 @@ describe("POST /rooms/reservations", () => {
 
   test("returns 400 when start_at equals end_at (zero-length)", async () => {
     const response = await postReservation(await managerToken(), {
-      room_id: 3,
+      room_id: "01900022-0000-7000-8000-000000000003",
       start_at: "2026-05-30T01:00:00Z",
       end_at: "2026-05-30T01:00:00Z",
       purpose: null,
@@ -171,7 +171,7 @@ describe("POST /rooms/reservations", () => {
 
   test("returns 400 when start_at is after end_at (reversed)", async () => {
     const response = await postReservation(await managerToken(), {
-      room_id: 3,
+      room_id: "01900022-0000-7000-8000-000000000003",
       start_at: "2026-05-30T02:00:00Z",
       end_at: "2026-05-30T01:00:00Z",
       purpose: null,

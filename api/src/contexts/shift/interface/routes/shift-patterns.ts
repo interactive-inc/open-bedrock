@@ -17,7 +17,7 @@ import {
 import { ApplicationError } from "@/lib/errors"
 import { codeSchema } from "@/lib/validation/code.schema"
 import { zValidator } from "@hono/zod-validator"
-import { count } from "drizzle-orm"
+import { asc, count, sql } from "drizzle-orm"
 import { z } from "zod"
 
 // @authorization service - session を application service に渡して判定する
@@ -104,7 +104,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const rows = await c.var.database
     .select()
     .from(shiftPatterns)
-    .orderBy(shiftPatterns.id)
+    .orderBy(
+      asc(shiftPatterns.createdAt),
+      asc(sql`CAST(${shiftPatterns.legacyId} AS INTEGER)`),
+      asc(shiftPatterns.id),
+    )
     .limit(limit)
     .offset(offset)
 

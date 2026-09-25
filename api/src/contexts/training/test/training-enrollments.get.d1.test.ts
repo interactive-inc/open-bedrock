@@ -27,8 +27,8 @@ afterAll(async () => {
 })
 
 const trainingEnrollmentResponseSchema = z.object({
-  id: z.number(),
-  course_id: z.number(),
+  id: z.uuid(),
+  course_id: z.uuid(),
   employee_id: zEmployeeId,
   status: z.enum(["enrolled", "completed", "failed"]),
   completed_at: z.string().nullable(),

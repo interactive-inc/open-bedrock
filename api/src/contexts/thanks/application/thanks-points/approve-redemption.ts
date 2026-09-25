@@ -21,7 +21,7 @@ type Context = Readonly<{
 
 export type Command = {
   session: CompanySessionValue
-  redemptionId: number
+  redemptionId: string
   deciderId: EmployeeId
   decidedAt: string
 }
@@ -122,7 +122,7 @@ export class ApproveRedemption {
    * 承認 UPDATE が 0 行のとき、在庫切れか残高不足か既に決裁済みかを判定する。
    * pending のまま残っていれば在庫 or 残高、消えていれば既に決裁済み。
    */
-  private async classifyZeroUpdate(redemptionId: number): Promise<OutOfStock | ApplicationError> {
+  private async classifyZeroUpdate(redemptionId: string): Promise<OutOfStock | ApplicationError> {
     const after = await this.c.redemptionRepository.findById(redemptionId)
 
     if (after instanceof Error) {

@@ -8,7 +8,7 @@ import type { ShiftSwapRequest } from "@/contexts/shift/domain/entities/shift-sw
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 
 /** 交代申請をレスポンス用の snake_case に整形する。 */
 function toResponseBody(swapRequest: ShiftSwapRequest) {
@@ -26,7 +26,7 @@ function toResponseBody(swapRequest: ShiftSwapRequest) {
 // @authorization service - session を application service に渡して判定する
 /** GET /shift-swap-requests/:id — 交代申請の詳細（申請者本人か承認権限者） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
-  const swapRequestId = validateIntParam(c.req.param("id"), "swap request")
+  const swapRequestId = validateUuidParam(c.req.param("id"), "swap request")
 
   const session = c.var.session
 
@@ -79,7 +79,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 // @authorization owner - 本人のリソースに限定する
 /** DELETE /shift-swap-requests/:id — 保留中の交代申請を取り下げる（申請者本人） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
-  const swapRequestId = validateIntParam(c.req.param("id"), "swap request")
+  const swapRequestId = validateUuidParam(c.req.param("id"), "swap request")
 
   const session = c.var.session
 

@@ -66,6 +66,7 @@ export class ThanksPointBudgetRepository {
       const rows = await this.c.var.database
         .insert(thanksPointBudgets)
         .values({
+          id: crypto.randomUUID(),
           employeeId: created.employeeId,
           period: created.period,
           grantedPoints: created.grantedPoints,

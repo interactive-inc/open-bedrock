@@ -206,7 +206,10 @@ describe("TrainingEnrollmentRepository", () => {
 
     const repository = new TrainingEnrollmentRepository(context)
 
-    const found = await repository.findByCourseAndEmployee(9999, toWorkforceEmployeeId(9999))
+    const found = await repository.findByCourseAndEmployee(
+      crypto.randomUUID(),
+      toWorkforceEmployeeId(9999),
+    )
 
     expect(found).toBeNull()
   })

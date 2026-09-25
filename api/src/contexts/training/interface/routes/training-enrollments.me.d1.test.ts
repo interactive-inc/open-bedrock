@@ -27,8 +27,8 @@ afterAll(async () => {
 })
 
 const trainingEnrollmentResponseSchema = z.object({
-  id: z.number(),
-  course_id: z.number(),
+  id: z.uuid(),
+  course_id: z.uuid(),
   employee_id: zEmployeeId,
   status: z.enum(["enrolled", "completed", "failed"]),
   completed_at: z.string().nullable(),
@@ -121,7 +121,7 @@ describe("GET /training-enrollments/me", () => {
       .parse(await response.json())
 
     expect(body.data.length).toBe(1)
-    expect(body.data[0]?.id).toBe(1)
+    expect(body.data[0]?.id).toBe("0190002d-0000-7000-8000-000000000001")
   })
 
   test("returns 401 without a bearer token", async () => {

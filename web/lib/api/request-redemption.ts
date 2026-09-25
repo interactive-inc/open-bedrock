@@ -13,7 +13,7 @@ export async function requestRedemption(
   const client = await createClient()
 
   const response = await client["thanks"]["thanks-redemptions"].$post({
-    json: { reward_id: Number(rewardId) },
+    json: { reward_id: String(rewardId) },
   })
 
   if (response.status >= 400) {

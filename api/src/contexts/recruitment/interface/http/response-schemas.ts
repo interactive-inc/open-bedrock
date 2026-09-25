@@ -47,7 +47,7 @@ export const zAppRecruitmentRetirementExecution = z.strictObject({
 
 /** 募集ポジション 1 件のレスポンス。 */
 export const zAppRecruitmentPosition = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   department_code: z.string().nullable(),
   status: z.string(),
@@ -63,8 +63,8 @@ export const zAppRecruitmentPositionList = z.object({
 
 /** 応募者 1 件のレスポンス（社外個人情報。閲覧も recruitment:manage に閉じる）。 */
 export const zAppRecruitmentCandidate = z.object({
-  id: z.number(),
-  position_id: z.number(),
+  id: z.uuid(),
+  position_id: z.uuid(),
   name: z.string(),
   email: z.string().nullable(),
   source: z.string().nullable(),

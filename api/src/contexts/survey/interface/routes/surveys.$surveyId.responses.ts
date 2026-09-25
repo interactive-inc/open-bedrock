@@ -1,7 +1,7 @@
 import { SubmitSurveyResponse } from "@/contexts/survey/application/submit-survey-response"
 import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
 import { jsonPayloadSchema } from "@/lib/http/json-payload-schema"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { factory } from "@/api/http/factory"
 import { UnauthorizedError } from "@/lib/http/errors"
@@ -25,7 +25,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const surveyId = validateIntParam(c.req.param("surveyId"), "survey")
+    const surveyId = validateUuidParam(c.req.param("surveyId"), "survey")
 
     const json = c.req.valid("json")
 

@@ -29,9 +29,9 @@ afterAll(async () => {
 const jwtSecret = "shift-assignment-crud-test-secret"
 
 const shiftAssignmentResponseSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   employee_id: zEmployeeId,
-  pattern_id: z.number().nullable(),
+  pattern_id: z.string().nullable(),
   date: z.string(),
   note: z.string().nullable(),
   published_at: z.string().nullable(),
@@ -110,7 +110,7 @@ async function request(props: {
 describe("GET /shift-assignments/:id", () => {
   test("privileged role reads an assignment and returns 200", async () => {
     const response = await request({
-      path: "/shift/shift-assignments/1",
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-000000000001",
       token: await tokenFor(1),
     })
 
@@ -121,13 +121,13 @@ describe("GET /shift-assignments/:id", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.id).toBe(1)
+      expect(parsed.data.id).toBe("01900024-0000-7000-8000-000000000001")
     }
   })
 
   test("member is forbidden", async () => {
     const response = await request({
-      path: "/shift/shift-assignments/1",
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-000000000001",
       token: await tokenFor(5),
     })
 
@@ -136,7 +136,7 @@ describe("GET /shift-assignments/:id", () => {
 
   test("returns 404 for an unknown assignment", async () => {
     const response = await request({
-      path: "/shift/shift-assignments/9999",
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-00000000270f",
       token: await tokenFor(1),
     })
 
@@ -144,7 +144,10 @@ describe("GET /shift-assignments/:id", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request({ path: "/shift/shift-assignments/1", token: null })
+    const response = await request({
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-000000000001",
+      token: null,
+    })
 
     expect(response.status).toBe(401)
   })
@@ -153,7 +156,7 @@ describe("GET /shift-assignments/:id", () => {
 describe("PUT /shift-assignments/:id", () => {
   test("privileged role updates pattern, date and note and returns 200", async () => {
     const response = await request({
-      path: "/shift/shift-assignments/2",
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-000000000002",
       token: await tokenFor(1),
       method: "PUT",
       body: { pattern_code: "LATE", date: "2026-06-10", note: "Updated" },
@@ -166,7 +169,7 @@ describe("PUT /shift-assignments/:id", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.pattern_id).toBe(2)
+      expect(parsed.data.pattern_id).toBe("01900023-0000-7000-8000-000000000002")
       expect(parsed.data.date).toBe("2026-06-10")
       expect(parsed.data.note).toBe("Updated")
     }
@@ -174,7 +177,7 @@ describe("PUT /shift-assignments/:id", () => {
 
   test("clears the pattern when pattern_code is null", async () => {
     const response = await request({
-      path: "/shift/shift-assignments/2",
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-000000000002",
       token: await tokenFor(1),
       method: "PUT",
       body: { pattern_code: null, date: "2026-06-10", note: null },
@@ -193,7 +196,7 @@ describe("PUT /shift-assignments/:id", () => {
 
   test("returns 404 for an unknown pattern code", async () => {
     const response = await request({
-      path: "/shift/shift-assignments/2",
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-000000000002",
       token: await tokenFor(1),
       method: "PUT",
       body: { pattern_code: "UNKNOWN", date: "2026-06-10", note: null },
@@ -204,7 +207,7 @@ describe("PUT /shift-assignments/:id", () => {
 
   test("member is forbidden", async () => {
     const response = await request({
-      path: "/shift/shift-assignments/2",
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-000000000002",
       token: await tokenFor(5),
       method: "PUT",
       body: { pattern_code: "LATE", date: "2026-06-10", note: null },
@@ -215,7 +218,7 @@ describe("PUT /shift-assignments/:id", () => {
 
   test("returns 404 for an unknown assignment", async () => {
     const response = await request({
-      path: "/shift/shift-assignments/9999",
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-00000000270f",
       token: await tokenFor(1),
       method: "PUT",
       body: { pattern_code: "LATE", date: "2026-06-10", note: null },
@@ -228,7 +231,7 @@ describe("PUT /shift-assignments/:id", () => {
 describe("DELETE /shift-assignments/:id", () => {
   test("privileged role deletes an assignment and returns 204", async () => {
     const response = await request({
-      path: "/shift/shift-assignments/2",
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-000000000002",
       token: await tokenFor(1),
       method: "DELETE",
     })
@@ -238,7 +241,7 @@ describe("DELETE /shift-assignments/:id", () => {
 
   test("member is forbidden", async () => {
     const response = await request({
-      path: "/shift/shift-assignments/2",
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-000000000002",
       token: await tokenFor(5),
       method: "DELETE",
     })
@@ -248,7 +251,7 @@ describe("DELETE /shift-assignments/:id", () => {
 
   test("returns 404 for an unknown assignment", async () => {
     const response = await request({
-      path: "/shift/shift-assignments/9999",
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-00000000270f",
       token: await tokenFor(1),
       method: "DELETE",
     })
@@ -258,7 +261,7 @@ describe("DELETE /shift-assignments/:id", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/shift/shift-assignments/2",
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-000000000002",
       token: null,
       method: "DELETE",
     })

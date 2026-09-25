@@ -1,6 +1,6 @@
 import { UpdateReward } from "@/contexts/thanks/application/thanks-points/update-reward"
 import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
-import { toPositiveInt } from "@/lib/http/to-positive-int"
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { rewardPointCostSchema } from "@/contexts/thanks/domain/entities/thanks-reward.entity"
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksReward } from "@/contexts/thanks/interface/http/response-schemas"
@@ -34,7 +34,7 @@ export const PATCH = factory.createHandlers(
       throw new ForbiddenError()
     }
 
-    const rewardId = toPositiveInt(c.req.param("id") ?? "")
+    const rewardId = uuidSchema.safeParse(c.req.param("id")).data ?? null
 
     if (rewardId === null) {
       throw new BadRequestError("invalid reward id")

@@ -4,7 +4,7 @@ import { ApplicationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppRecruitmentCandidate } from "@/contexts/recruitment/interface/http/response-schemas"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -33,7 +33,7 @@ export const PUT = factory.createHandlers(
 
     const updated = await new UpdateCandidate(c).run({
       session,
-      id: validateIntParam(c.req.param("id"), "recruitment candidate"),
+      id: validateUuidParam(c.req.param("id"), "recruitment candidate"),
       name: json.name,
       email: json.email ?? null,
       source: json.source ?? null,

@@ -28,7 +28,7 @@ afterAll(async () => {
 const jwtSecret = "shift-swap-admin-route-test-secret"
 
 const swapAdminResponseSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   requester_employee_id: zEmployeeId,
   requester_employee_code: z.string(),
   requester_name: z.string(),
@@ -112,7 +112,9 @@ describe("GET /shift-swap-requests/admin", () => {
     if (parsed.success) {
       expect(parsed.data.total).toBe(seedShiftSwapRequests.length)
 
-      const first = parsed.data.data.find((item) => item.id === 1)
+      const first = parsed.data.data.find(
+        (item) => item.id === "01900025-0000-7000-8000-000000000001",
+      )
 
       expect(first?.requester_name).toBe("Emery Lane")
       expect(first?.target_name).toBe("Drew Sato")

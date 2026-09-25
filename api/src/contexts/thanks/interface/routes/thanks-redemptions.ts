@@ -1,7 +1,7 @@
 import { RequestRedemption } from "@/contexts/thanks/application/thanks-points/request-redemption"
 import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-redemption.repository"
 import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
-import { toPositiveInt } from "@/lib/http/to-positive-int"
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksRedemption } from "@/contexts/thanks/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
@@ -18,7 +18,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      reward_id: z.number(),
+      reward_id: z.string(),
     }),
   ),
   async (c) => {
@@ -30,7 +30,7 @@ export const POST = factory.createHandlers(
 
     const json = c.req.valid("json")
 
-    const rewardId = toPositiveInt(json.reward_id)
+    const rewardId = uuidSchema.safeParse(json.reward_id).data ?? null
 
     if (rewardId === null) {
       throw new BadRequestError("invalid reward id")

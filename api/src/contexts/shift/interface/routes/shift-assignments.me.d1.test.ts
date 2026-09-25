@@ -29,9 +29,9 @@ afterAll(async () => {
 const jwtSecret = "shift-assignments-me-route-test-secret"
 
 const shiftAssignmentResponseSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   employee_id: zEmployeeId,
-  pattern_id: z.number().nullable(),
+  pattern_id: z.string().nullable(),
   pattern_name: z.string().nullable(),
   pattern_start_time: z.string().nullable(),
   pattern_end_time: z.string().nullable(),
@@ -156,7 +156,7 @@ describe("GET /shift-assignments/me", () => {
     if (parsed.success) {
       // id=1 は公開済み (2026-06-01)。id=2 は下書き (2026-06-02) なので対象外。
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0]?.id).toBe(1)
+      expect(parsed.data.data[0]?.id).toBe("01900024-0000-7000-8000-000000000001")
     }
   })
 

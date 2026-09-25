@@ -7,7 +7,7 @@ import { ShiftPatternRepository } from "@/contexts/shift/infrastructure/reposito
 
 export type Input = {
   session: CompanySessionValue
-  patternId: number
+  patternId: string
   code: string
   name: string
   startTime: string
@@ -70,7 +70,7 @@ export class UpdateShiftPattern {
   /** 変更後コードが自分以外のパターンと重複しないか確認する。重複なしは null を返す。 */
   private async findCodeConflict(
     code: string,
-    patternId: number,
+    patternId: string,
   ): Promise<null | ApplicationError> {
     const patternRepository = new ShiftPatternRepository(this.c)
 

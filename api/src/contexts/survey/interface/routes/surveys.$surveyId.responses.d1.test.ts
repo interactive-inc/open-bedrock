@@ -27,8 +27,8 @@ afterAll(async () => {
 })
 
 const surveySubmissionResponseSchema = z.object({
-  id: z.number(),
-  survey_id: z.number(),
+  id: z.uuid(),
+  survey_id: z.uuid(),
   respondent_id: zEmployeeId,
   answers_json: z.unknown(),
   submitted_at: z.string(),
@@ -112,7 +112,7 @@ async function request(props: {
 describe("POST /surveys/:surveyId/responses", () => {
   test("returns 201 with the created snake_case response", async () => {
     const response = await request({
-      path: "/survey/surveys/2/responses",
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000002/responses",
       token: await memberToken(),
       method: "POST",
       body: { answers_json: { q1: 4, q2: "1 day/week" } },
@@ -125,7 +125,7 @@ describe("POST /surveys/:surveyId/responses", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.survey_id).toBe(2)
+      expect(parsed.data.survey_id).toBe("01900026-0000-7000-8000-000000000002")
       expect(parsed.data.respondent_id).toBe(toWorkforceEmployeeId(13))
       expect(parsed.data.submitted_at).toBe("2026-01-01T00:00:00.000Z")
     }
@@ -133,7 +133,7 @@ describe("POST /surveys/:surveyId/responses", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/survey/surveys/2/responses",
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000002/responses",
       token: null,
       method: "POST",
       body: { answers_json: { q1: 4 } },
@@ -144,7 +144,7 @@ describe("POST /surveys/:surveyId/responses", () => {
 
   test("returns 400 when answers_json is missing", async () => {
     const response = await request({
-      path: "/survey/surveys/2/responses",
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000002/responses",
       token: await memberToken(),
       method: "POST",
       body: {},
@@ -155,7 +155,7 @@ describe("POST /surveys/:surveyId/responses", () => {
 
   test("returns 404 when the survey does not exist", async () => {
     const response = await request({
-      path: "/survey/surveys/9999/responses",
+      path: "/survey/surveys/01900026-0000-7000-8000-00000000270f/responses",
       token: await memberToken(),
       method: "POST",
       body: { answers_json: { q1: 4 } },
@@ -166,7 +166,7 @@ describe("POST /surveys/:surveyId/responses", () => {
 
   test("returns 409 when the survey is not open", async () => {
     const response = await request({
-      path: "/survey/surveys/3/responses",
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000003/responses",
       token: await memberToken(),
       method: "POST",
       body: { answers_json: { q1: 4 } },
@@ -177,7 +177,7 @@ describe("POST /surveys/:surveyId/responses", () => {
 
   test("returns 409 when the respondent already submitted", async () => {
     const response = await request({
-      path: "/survey/surveys/1/responses",
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000001/responses",
       token: await repeaterToken(),
       method: "POST",
       body: { answers_json: { q1: 4 } },

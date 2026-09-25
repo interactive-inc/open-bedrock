@@ -27,7 +27,7 @@ afterAll(async () => {
 
 const roomReservationResponseSchema = z.object({
   id: z.string(),
-  room_id: z.number(),
+  room_id: z.string(),
   reserver_id: zEmployeeId,
   start_at: z.string(),
   end_at: z.string(),
@@ -70,7 +70,7 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "room_reservations", [
     {
       id: "aaaaaaaa-0000-4000-8000-000000000001",
-      room_id: 1,
+      room_id: "01900022-0000-7000-8000-000000000001",
       reserver_id: "4",
       start_at: "2026-06-01T01:00:00Z",
       end_at: "2026-06-01T02:00:00Z",
@@ -78,7 +78,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: "aaaaaaaa-0000-4000-8000-000000000002",
-      room_id: 2,
+      room_id: "01900022-0000-7000-8000-000000000002",
       reserver_id: "4",
       start_at: "2026-06-02T01:00:00Z",
       end_at: "2026-06-02T02:00:00Z",
@@ -86,7 +86,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: "aaaaaaaa-0000-4000-8000-000000000003",
-      room_id: 1,
+      room_id: "01900022-0000-7000-8000-000000000001",
       reserver_id: "4",
       start_at: "2026-06-03T01:00:00Z",
       end_at: "2026-06-03T02:00:00Z",

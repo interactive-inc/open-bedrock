@@ -30,9 +30,9 @@ const jwtSecret = "shift-assignments-publish-route-test-secret"
 const now = "2026-01-01T00:00:00.000Z"
 
 const shiftAssignmentResponseSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   employee_id: zEmployeeId,
-  pattern_id: z.number().nullable(),
+  pattern_id: z.string().nullable(),
   date: z.string(),
   note: z.string().nullable(),
   published_at: z.string().nullable(),
@@ -100,7 +100,7 @@ async function request(props: RequestProps): Promise<Response> {
 describe("POST /shift-assignments/:id/publish", () => {
   test("privileged role publishes a draft assignment and returns 200", async () => {
     const response = await request({
-      path: "/shift/shift-assignments/2/publish",
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-000000000002/publish",
       token: await tokenFor(1),
       method: "POST",
     })
@@ -118,7 +118,7 @@ describe("POST /shift-assignments/:id/publish", () => {
 
   test("returns 409 when already published", async () => {
     const response = await request({
-      path: "/shift/shift-assignments/1/publish",
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-000000000001/publish",
       token: await tokenFor(1),
       method: "POST",
     })
@@ -128,7 +128,7 @@ describe("POST /shift-assignments/:id/publish", () => {
 
   test("returns 404 for a missing assignment", async () => {
     const response = await request({
-      path: "/shift/shift-assignments/9999/publish",
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-00000000270f/publish",
       token: await tokenFor(1),
       method: "POST",
     })
@@ -138,7 +138,7 @@ describe("POST /shift-assignments/:id/publish", () => {
 
   test("member is forbidden", async () => {
     const response = await request({
-      path: "/shift/shift-assignments/2/publish",
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-000000000002/publish",
       token: await tokenFor(5),
       method: "POST",
     })
@@ -148,7 +148,7 @@ describe("POST /shift-assignments/:id/publish", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/shift/shift-assignments/2/publish",
+      path: "/shift/shift-assignments/01900024-0000-7000-8000-000000000002/publish",
       token: null,
       method: "POST",
     })

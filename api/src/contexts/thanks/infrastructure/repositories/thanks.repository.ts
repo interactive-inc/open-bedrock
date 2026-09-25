@@ -14,6 +14,7 @@ export class ThanksRepository {
       const rows = await this.c.var.database
         .insert(thanks)
         .values({
+          id: crypto.randomUUID(),
           senderEmployeeId: thanksRecord.senderEmployeeId,
           recipientEmployeeId: thanksRecord.recipientEmployeeId,
           message: thanksRecord.message,
@@ -39,8 +40,8 @@ export class ThanksRepository {
       const insert = db
         .prepare(
           props.thanksRecord.points === 0
-            ? "INSERT INTO thanks_messages (sender_employee_id, recipient_employee_id, message, points, created_at) VALUES (?1, ?2, ?3, ?4, ?5) RETURNING id, sender_employee_id AS senderEmployeeId, recipient_employee_id AS recipientEmployeeId, message, points, created_at AS createdAt"
-            : "INSERT INTO thanks_messages (sender_employee_id, recipient_employee_id, message, points, created_at) SELECT ?1, ?2, ?3, ?4, ?5 WHERE changes() > 0 RETURNING id, sender_employee_id AS senderEmployeeId, recipient_employee_id AS recipientEmployeeId, message, points, created_at AS createdAt",
+            ? "INSERT INTO thanks_messages (id, sender_employee_id, recipient_employee_id, message, points, created_at) VALUES (?6, ?1, ?2, ?3, ?4, ?5) RETURNING id, sender_employee_id AS senderEmployeeId, recipient_employee_id AS recipientEmployeeId, message, points, created_at AS createdAt"
+            : "INSERT INTO thanks_messages (id, sender_employee_id, recipient_employee_id, message, points, created_at) SELECT ?6, ?1, ?2, ?3, ?4, ?5 WHERE changes() > 0 RETURNING id, sender_employee_id AS senderEmployeeId, recipient_employee_id AS recipientEmployeeId, message, points, created_at AS createdAt",
         )
         .bind(
           props.thanksRecord.senderEmployeeId,
@@ -48,6 +49,7 @@ export class ThanksRepository {
           props.thanksRecord.message,
           props.thanksRecord.points,
           props.thanksRecord.createdAt,
+          crypto.randomUUID(),
         )
 
       const results =

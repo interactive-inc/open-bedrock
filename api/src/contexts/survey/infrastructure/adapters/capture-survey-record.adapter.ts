@@ -11,22 +11,22 @@ import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-dig
 import { z } from "zod"
 
 type Context = SurveyContext
-type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string | number> }>
+type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string> }>
+/** 版 2 は主キーを UUID へ移し、移行前の整数の主キー legacy_id とアンケートの created_at を含める。 */
 function snapshotQuery(recordKind: SurveyRecordKind, recordId: string): SnapshotQuery | Error {
-  const parsed = z.coerce.number().int().safe().safeParse(recordId)
-  if (!parsed.success || String(parsed.data) !== recordId)
-    return new Error("invalid survey record id")
-  const id = parsed.data
+  if (!z.uuid().safeParse(recordId).success) return new Error("invalid survey record id")
+  const id = recordId
   return recordKind === "survey-record"
     ? {
-        sql: `SELECT json_object('format','survey-record','version',1,'survey',json_object(
-      'id',id,'title',title,'status',status,'questions_json',questions_json))
+        sql: `SELECT json_object('format','survey-record','version',2,'survey',json_object(
+      'id',id,'legacy_id',legacy_id,'title',title,'status',status,'questions_json',questions_json,
+      'created_at',created_at))
       AS snapshot_json FROM surveys WHERE id=?1`,
         values: [id],
       }
     : {
-        sql: `SELECT json_object('format','survey-response-record','version',1,'response',json_object(
-      'id',id,'survey_id',survey_id,'respondent_id',respondent_id,'answers_json',answers_json,
+        sql: `SELECT json_object('format','survey-response-record','version',2,'response',json_object(
+      'id',id,'legacy_id',legacy_id,'survey_id',survey_id,'respondent_id',respondent_id,'answers_json',answers_json,
       'submitted_at',submitted_at)) AS snapshot_json FROM survey_responses WHERE id=?1`,
         values: [id],
       }
@@ -66,7 +66,7 @@ export class CaptureSurveyRecordAdapter {
         recordKind: kind.data,
         recordId: input.recordId,
         formatId: kind.data,
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

@@ -5,7 +5,7 @@ import { z } from "zod"
 
 /** ===== survey ===== */
 export const zAppSurvey = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   status: z.enum(["open", "closed"]),
   questions_json: z.array(z.unknown()),
@@ -19,8 +19,8 @@ export const zAppSurveyList = z.object({
 })
 
 export const zAppSurveyResponse = z.object({
-  id: z.number().nullable(),
-  survey_id: z.number(),
+  id: z.uuid().nullable(),
+  survey_id: z.uuid(),
   respondent_id: zEmployeeId,
   answers_json: z.unknown(),
   submitted_at: z.string(),
@@ -42,7 +42,7 @@ export const zAppSurveySummaryQuestion = z.object({
 })
 
 export const zAppSurveySummary = z.object({
-  survey_id: z.number(),
+  survey_id: z.uuid(),
   title: z.string(),
   response_count: z.number(),
   is_truncated: z.boolean(),

@@ -3,7 +3,7 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 
 type SeedRoomReservation = {
   id: string
-  roomId: number
+  roomId: string
   reserverId: EmployeeId
   startAt: string
   endAt: string
@@ -13,7 +13,7 @@ type SeedRoomReservation = {
 export const seedRoomReservations: ReadonlyArray<SeedRoomReservation> = [
   {
     id: "00000000-0000-4000-8000-000000000001",
-    roomId: 1,
+    roomId: "01900022-0000-7000-8000-000000000001",
     reserverId: toWorkforceEmployeeId(2),
     startAt: "2026-05-29T01:00:00Z",
     endAt: "2026-05-29T02:00:00Z",
@@ -21,7 +21,7 @@ export const seedRoomReservations: ReadonlyArray<SeedRoomReservation> = [
   },
   {
     id: "00000000-0000-4000-8000-000000000002",
-    roomId: 2,
+    roomId: "01900022-0000-7000-8000-000000000002",
     reserverId: toWorkforceEmployeeId(4),
     startAt: "2026-05-29T03:00:00Z",
     endAt: "2026-05-29T04:00:00Z",
@@ -29,7 +29,7 @@ export const seedRoomReservations: ReadonlyArray<SeedRoomReservation> = [
   },
   {
     id: "00000000-0000-4000-8000-000000000003",
-    roomId: 1,
+    roomId: "01900022-0000-7000-8000-000000000001",
     reserverId: toWorkforceEmployeeId(9),
     startAt: "2026-05-29T05:00:00Z",
     endAt: "2026-05-29T06:00:00Z",

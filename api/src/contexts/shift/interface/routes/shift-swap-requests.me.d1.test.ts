@@ -28,7 +28,7 @@ afterAll(async () => {
 const jwtSecret = "shift-swap-requests-me-route-test-secret"
 
 const myShiftSwapRequestResponseSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   requester_employee_id: zEmployeeId,
   target_employee_id: zEmployeeId,
   target_employee_name: z.string().nullable(),

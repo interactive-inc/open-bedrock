@@ -4,8 +4,8 @@ import type { SurveyResponseRow } from "@/contexts/survey/infrastructure/schema/
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
-  surveyId: z.number(),
+  id: z.string().nullable(),
+  surveyId: z.string(),
   respondentId: zEmployeeId,
   answersJson: z.unknown(),
   submittedAt: z.string(),
@@ -36,7 +36,7 @@ export class SurveyResponse implements Props {
 
   /** 新規提出する回答を組み立てる。id は未採番。 */
   static create(props: {
-    surveyId: number
+    surveyId: string
     respondentId: EmployeeId
     answersJson: unknown
     submittedAt: string

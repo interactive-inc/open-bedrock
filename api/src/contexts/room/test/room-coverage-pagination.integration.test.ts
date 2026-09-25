@@ -10,22 +10,27 @@ import { GET as preservedDossier } from "@system/interface/routes/system.preserv
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
 
+/** 連番の会議室 ID。UUID の辞書順が連番の順と一致する。 */
+function roomId(serial: number): string {
+  return `01900022-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
+}
+
 test("会議室11件と予約を分割照合し撤去確定する", async () => {
   const { database, governance, creator, reviewer, definition, bindings, tokenFor, request } =
     await createRoomPreservationFixture()
-  for (let id = -9; id <= 1; id++) {
+  for (let serial = 1; serial <= 11; serial++) {
     await database
       .prepare(`INSERT INTO rooms (id,name,capacity,location)
       VALUES (?1,?2,8,'Floor 2')`)
-      .bind(id, `Room ${id}`)
+      .bind(roomId(serial), `Room ${serial}`)
       .run()
   }
   await database
     .prepare(`INSERT INTO room_reservations
     (id,room_id,reserver_id,start_at,end_at,purpose)
-    VALUES ('5e0f7c3a-1d2b-4c5d-8e6f-000000000001',-9,?1,'2026-09-15T09:00:00.000Z',
+    VALUES ('5e0f7c3a-1d2b-4c5d-8e6f-000000000001',?2,?1,'2026-09-15T09:00:00.000Z',
       '2026-09-15T10:00:00.000Z','Planning')`)
-    .bind(creator.employeeId)
+    .bind(creator.employeeId, roomId(1))
     .run()
   const token = await tokenFor(creator.accountId)
   const stepUpToken = "f".repeat(64)
@@ -74,7 +79,7 @@ test("会議室11件と予約を分割照合し撤去確定する", async () => 
   const sources = [
     ...Array.from({ length: 11 }, (_, index) => ({
       kind: "room-record" as const,
-      id: String(index - 9),
+      id: roomId(index + 1),
     })),
     { kind: "room-reservation-record" as const, id: "5e0f7c3a-1d2b-4c5d-8e6f-000000000001" },
   ]
@@ -138,7 +143,7 @@ test("会議室11件と予約を分割照合し撤去確定する", async () => 
     post(coveragePath, { purpose: "archive", recordKind, records })
   const first = await cover("room-record", roomMappings.slice(0, 10))
   if (first.status !== 200) throw new Error(await first.text())
-  expect(await first.json()).toMatchObject({ sequence: 1, nextCursor: "0", recordCount: 10 })
+  expect(await first.json()).toMatchObject({ sequence: 1, nextCursor: roomId(10), recordCount: 10 })
   expect((await cover("room-record", roomMappings.slice(0, 1))).status).toBe(409)
   const second = await cover("room-record", roomMappings.slice(10))
   if (second.status !== 200) throw new Error(await second.text())

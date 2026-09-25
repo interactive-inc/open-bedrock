@@ -11,7 +11,7 @@ type Context = Readonly<{
 }>
 
 export type Command = {
-  enrollmentId: number
+  enrollmentId: string
   viewerEmployeeId: EmployeeId
   session: CompanySessionValue
 }

@@ -7,7 +7,7 @@ import type { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-ass
 
 export type Input = {
   session: CompanySessionValue
-  assignmentId: number
+  assignmentId: string
 }
 
 export type Deleted = { reason: "deleted" }

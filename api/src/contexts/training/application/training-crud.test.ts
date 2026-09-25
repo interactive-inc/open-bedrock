@@ -22,17 +22,13 @@ import { ConflictError, ForbiddenError, NotFoundError } from "@/lib/errors"
 class FakeTraining {
   private readonly courses = new Map<string, TrainingCourse>()
 
-  private readonly enrollments = new Map<number, TrainingEnrollment>()
-
-  private nextCourseId = 1
-
-  private nextEnrollmentId = 1
+  private readonly enrollments = new Map<string, TrainingEnrollment>()
 
   readonly courseRepository = {
     findByCode: async (code: string) => this.courses.get(code) ?? null,
     create: async (course: TrainingCourse) => {
       const created = new TrainingCourse({
-        id: this.nextCourseId++,
+        id: crypto.randomUUID(),
         code: course.code,
         title: course.title,
         description: course.description,
@@ -52,14 +48,14 @@ class FakeTraining {
   }
 
   readonly enrollmentRepository = {
-    findById: async (id: number) => this.enrollments.get(id) ?? null,
+    findById: async (id: string) => this.enrollments.get(id) ?? null,
     create: async (enrollment: TrainingEnrollment) => {
       const course = [...this.courses.values()].find((item) => item.id === enrollment.courseId)
       if (course === undefined || course.status === "archived") {
         return { reason: "course_archived" as const }
       }
       const created = new TrainingEnrollment({
-        id: this.nextEnrollmentId++,
+        id: crypto.randomUUID(),
         courseId: enrollment.courseId,
         employeeId: enrollment.employeeId,
         status: enrollment.status,
@@ -67,13 +63,13 @@ class FakeTraining {
         score: enrollment.score,
         dueDate: enrollment.dueDate,
       })
-      this.enrollments.set(created.id ?? 0, created)
+      this.enrollments.set(created.id ?? "", created)
       return created
     },
     completeEnrollment: async (enrollment: TrainingEnrollment) => this.replaceEnrolled(enrollment),
     rescheduleEnrollment: async (enrollment: TrainingEnrollment) =>
       this.replaceEnrolled(enrollment),
-    delete: async (id: number) => (this.enrollments.delete(id) ? (true as const) : null),
+    delete: async (id: string) => (this.enrollments.delete(id) ? (true as const) : null),
   }
 
   readonly employeeDirectory = {
@@ -105,7 +101,7 @@ class FakeTraining {
     return result
   }
 
-  async seedEnrollment(courseCode: string, employeeId: EmployeeId): Promise<number> {
+  async seedEnrollment(courseCode: string, employeeId: EmployeeId): Promise<string> {
     await this.seedCourse(courseCode)
 
     const result = await new EnrollTraining(this).run({
@@ -488,7 +484,7 @@ describe("CancelTrainingEnrollment", () => {
     const training = new FakeTraining()
 
     const result = await new CancelTrainingEnrollment(training).run({
-      enrollmentId: 9999,
+      enrollmentId: crypto.randomUUID(),
       viewerEmployeeId: toWorkforceEmployeeId(1),
       session: makeTestSession("member"),
     })

@@ -5,9 +5,9 @@ import type { ThanksRedemptionRow } from "@/contexts/thanks/infrastructure/schem
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   employeeId: zEmployeeId,
-  rewardId: z.number(),
+  rewardId: z.string(),
   pointCost: z.number(),
   status: redemptionStatusSchema,
   createdAt: z.string(),
@@ -50,7 +50,7 @@ export class ThanksRedemption implements Props {
   /** 新規の交換申請を組み立てる。初期状態は pending。 */
   static create(props: {
     employeeId: EmployeeId
-    rewardId: number
+    rewardId: string
     pointCost: number
     createdAt: string
   }): ThanksRedemption {
@@ -66,7 +66,7 @@ export class ThanksRedemption implements Props {
     })
   }
 
-  static fromRow(row: ThanksRedemptionRow): ThanksRedemption {
+  static fromRow(row: Omit<ThanksRedemptionRow, "legacyId">): ThanksRedemption {
     return new ThanksRedemption({
       id: row.id,
       employeeId: row.employeeId,

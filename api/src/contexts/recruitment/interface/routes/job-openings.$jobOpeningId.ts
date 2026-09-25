@@ -5,7 +5,7 @@ import { ForbiddenError, InternalError, NotFoundError, UnauthorizedError } from 
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppRecruitmentPosition } from "@/contexts/recruitment/interface/http/response-schemas"
 import { RecruitmentRepository } from "@/contexts/recruitment/infrastructure/repositories/recruitment.repository"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -23,7 +23,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
-  const id = validateIntParam(c.req.param("jobOpeningId"), "job opening")
+  const id = validateUuidParam(c.req.param("jobOpeningId"), "job opening")
 
   const repository = new RecruitmentRepository(c)
 
@@ -73,7 +73,7 @@ export const PUT = factory.createHandlers(
 
     const updated = await new UpdatePosition(c).run({
       session,
-      id: validateIntParam(c.req.param("jobOpeningId"), "job opening"),
+      id: validateUuidParam(c.req.param("jobOpeningId"), "job opening"),
       title: json.title,
       departmentCode: json.department_code ?? null,
       status: json.status,

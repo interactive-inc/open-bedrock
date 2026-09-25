@@ -21,7 +21,7 @@ describe("ThanksPointBudget.create", () => {
 describe("ThanksPointBudget.remainingPoints", () => {
   test("returns granted minus consumed", () => {
     const budget = new ThanksPointBudget({
-      id: 1,
+      id: "01900029-0000-7000-8000-000000000001",
       employeeId: toWorkforceEmployeeId(1),
       period: "2026-01",
       grantedPoints: 400,
@@ -34,7 +34,7 @@ describe("ThanksPointBudget.remainingPoints", () => {
 
   test("returns 0 when consumed exceeds granted", () => {
     const budget = new ThanksPointBudget({
-      id: 1,
+      id: "01900029-0000-7000-8000-000000000001",
       employeeId: toWorkforceEmployeeId(1),
       period: "2026-01",
       grantedPoints: 100,

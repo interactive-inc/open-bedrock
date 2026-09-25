@@ -8,7 +8,7 @@ export const thanksMessageSchema = z.string().trim().min(1).max(1000)
 
 /** D1 batch の RETURNING 結果行を安全にパースする。fromRow の引数型に対応する。 */
 export const thanksRowSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   senderEmployeeId: zEmployeeId,
   recipientEmployeeId: zEmployeeId,
   message: z.string(),
@@ -17,7 +17,7 @@ export const thanksRowSchema = z.object({
 })
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   senderEmployeeId: zEmployeeId,
   recipientEmployeeId: zEmployeeId,
   message: z.string(),
@@ -32,7 +32,7 @@ type Props = z.infer<typeof zProps>
  * points は感謝に添えるサンクスポイント。0 はメッセージのみの感謝。負値は不可。
  */
 export class Thanks implements Props {
-  /** 永続化前は null、DB 採番後に確定する。 */
+  /** 永続化前は null、保存時に UUID を採番する。 */
   readonly id!: Props["id"]
 
   readonly senderEmployeeId!: Props["senderEmployeeId"]
@@ -88,7 +88,7 @@ export class Thanks implements Props {
     })
   }
 
-  static fromRow(row: ThanksRow): Thanks {
+  static fromRow(row: Omit<ThanksRow, "legacyId">): Thanks {
     return new Thanks({
       id: row.id,
       senderEmployeeId: row.senderEmployeeId,

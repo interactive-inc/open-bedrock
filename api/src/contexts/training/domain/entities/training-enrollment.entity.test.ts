@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test"
 describe("TrainingEnrollment.create", () => {
   test("builds with null id, enrolled status, null completedAt and score", () => {
     const enrollment = TrainingEnrollment.create({
-      courseId: 1,
+      courseId: "0190002c-0000-7000-8000-000000000001",
       employeeId: toWorkforceEmployeeId(5),
       dueDate: "2026-03-31",
     })
@@ -21,7 +21,7 @@ describe("TrainingEnrollment.create", () => {
 describe("TrainingEnrollment.complete", () => {
   test("returns new with completed status, completedAt, and score", () => {
     const enrollment = TrainingEnrollment.create({
-      courseId: 1,
+      courseId: "0190002c-0000-7000-8000-000000000001",
       employeeId: toWorkforceEmployeeId(5),
       dueDate: "2026-03-31",
     })
@@ -37,7 +37,7 @@ describe("TrainingEnrollment.complete", () => {
 describe("TrainingEnrollment.withRescheduled", () => {
   test("returns new with changed dueDate", () => {
     const enrollment = TrainingEnrollment.create({
-      courseId: 1,
+      courseId: "0190002c-0000-7000-8000-000000000001",
       employeeId: toWorkforceEmployeeId(5),
       dueDate: "2026-03-31",
     })
@@ -45,6 +45,6 @@ describe("TrainingEnrollment.withRescheduled", () => {
     const rescheduled = enrollment.withRescheduled("2026-06-30")
 
     expect(rescheduled.dueDate).toBe("2026-06-30")
-    expect(rescheduled.courseId).toBe(1)
+    expect(rescheduled.courseId).toBe("0190002c-0000-7000-8000-000000000001")
   })
 })

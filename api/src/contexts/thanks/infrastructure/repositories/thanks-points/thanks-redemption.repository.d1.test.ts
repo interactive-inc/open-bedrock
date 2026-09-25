@@ -46,6 +46,7 @@ afterAll(async () => {
 
 async function seedBalance(context: Context, employeeId: EmployeeId, points: number) {
   await context.var.database.insert(thanks).values({
+    id: crypto.randomUUID(),
     senderEmployeeId: toWorkforceEmployeeId(99),
     recipientEmployeeId: employeeId,
     message: "テスト",
@@ -58,6 +59,7 @@ async function seedReward(context: Context, props: { pointCost: number; stock: n
   const rows = await context.var.database
     .insert(thanksRewards)
     .values({
+      id: crypto.randomUUID(),
       name: "景品",
       pointCost: props.pointCost,
       stock: props.stock,
@@ -81,7 +83,7 @@ function ports(context: Context) {
   }
 }
 
-async function requestPending(context: Context, employeeId: number, rewardId: number) {
+async function requestPending(context: Context, employeeId: number, rewardId: string) {
   const pending = await new RequestRedemption(ports(context)).run({
     employeeId: toWorkforceEmployeeId(employeeId),
     rewardId,
@@ -93,7 +95,7 @@ async function requestPending(context: Context, employeeId: number, rewardId: nu
   return pending
 }
 
-async function stockOf(context: Context, rewardId: number) {
+async function stockOf(context: Context, rewardId: string) {
   const reward = await new ThanksRewardRepository(context).findById(rewardId)
 
   if (reward instanceof Error || reward === null) throw new Error("reward not found")
@@ -123,7 +125,7 @@ describe("thanks redemption SQL on local D1", () => {
 
     const approved = await new ApproveRedemption(ports(context)).execute({
       session: makeTestSession("root"),
-      redemptionId: pending.id ?? 0,
+      redemptionId: pending.id ?? "",
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
@@ -135,7 +137,7 @@ describe("thanks redemption SQL on local D1", () => {
 
     const rejected = await new RejectRedemption(ports(context)).execute({
       session: makeTestSession("root"),
-      redemptionId: pending.id ?? 0,
+      redemptionId: pending.id ?? "",
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-02-03T00:00:00.000Z",
     })
@@ -158,7 +160,7 @@ describe("thanks redemption SQL on local D1", () => {
 
     const first = await new ApproveRedemption(ports(context)).execute({
       session: makeTestSession("root"),
-      redemptionId: firstPending.id ?? 0,
+      redemptionId: firstPending.id ?? "",
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
@@ -167,7 +169,7 @@ describe("thanks redemption SQL on local D1", () => {
 
     const second = await new ApproveRedemption(ports(context)).execute({
       session: makeTestSession("root"),
-      redemptionId: secondPending.id ?? 0,
+      redemptionId: secondPending.id ?? "",
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-02-02T00:01:00.000Z",
     })
@@ -194,6 +196,7 @@ describe("thanks redemption SQL on local D1", () => {
 
     // 別の fulfilled 行で残高を食いつぶす
     await context.var.database.insert(thanksRedemptions).values({
+      id: crypto.randomUUID(),
       employeeId: toWorkforceEmployeeId(5),
       rewardId,
       pointCost: 50,
@@ -205,7 +208,7 @@ describe("thanks redemption SQL on local D1", () => {
 
     const result = await new ApproveRedemption(ports(context)).execute({
       session: makeTestSession("root"),
-      redemptionId: pending.id ?? 0,
+      redemptionId: pending.id ?? "",
       deciderId: toWorkforceEmployeeId(2),
       decidedAt: "2026-02-02T00:00:00.000Z",
     })

@@ -4,7 +4,7 @@ import type { ShiftSwapRequestRow } from "@/contexts/shift/infrastructure/schema
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   requesterEmployeeId: zEmployeeId,
   targetEmployeeId: zEmployeeId,
   date: z.string(),

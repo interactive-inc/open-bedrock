@@ -2,7 +2,7 @@ import { ApproveRedemption } from "@/contexts/thanks/application/thanks-points/a
 import { ThanksRewardRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-reward.repository"
 import { ThanksRedemptionDecisionAuthorityAdapter } from "@/contexts/thanks/infrastructure/adapters/thanks-redemption-decision-authority.adapter"
 import { ThanksRedemptionRepository } from "@/contexts/thanks/infrastructure/repositories/thanks-points/thanks-redemption.repository"
-import { toPositiveInt } from "@/lib/http/to-positive-int"
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { ApplicationError } from "@/lib/errors"
 import { zAppThanksRedemptionDecision } from "@/contexts/thanks/interface/http/response-schemas"
 import { toHttpException } from "@/lib/http/to-http-exception"
@@ -28,7 +28,7 @@ export const POST = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
-  const redemptionId = toPositiveInt(c.req.param("id") ?? "")
+  const redemptionId = uuidSchema.safeParse(c.req.param("id")).data ?? null
 
   if (redemptionId === null) {
     throw new BadRequestError("invalid redemption id")

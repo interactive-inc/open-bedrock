@@ -48,7 +48,7 @@ export class CaptureShiftRecordAdapter {
         recordKind: kind.data,
         recordId: input.recordId,
         formatId: kind.data,
-        formatVersion: 1,
+        formatVersion: query.formatVersion,
         sourceRevision: null,
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

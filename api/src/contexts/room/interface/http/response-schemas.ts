@@ -48,7 +48,7 @@ export const zAppRoomRetirementExecution = z.strictObject({
 
 /** 会議室マスタ 1 件のレスポンス。 */
 export const zAppRoom = z.object({
-  id: z.number(),
+  id: z.uuid(),
   name: z.string(),
   capacity: z.number(),
   location: z.string().nullable(),
@@ -63,7 +63,7 @@ export const zAppRoomList = z.object({
 /** 会議室予約 1 件のレスポンス。 */
 export const zAppRoomReservation = z.object({
   id: z.string(),
-  room_id: z.number(),
+  room_id: z.uuid(),
   reserver_id: zEmployeeId,
   start_at: z.string(),
   end_at: z.string(),
@@ -79,7 +79,7 @@ export const zAppRoomReservationList = z.object({
 /** 会議室空き状況 1 件のレスポンス。conflicts のフィールドは camelCase。 */
 export const zAppRoomAvailability = z.object({
   room: z.object({
-    id: z.number(),
+    id: z.uuid(),
     name: z.string(),
     capacity: z.number(),
   }),

@@ -2,7 +2,7 @@ import type { TrainingCourseRow } from "@/contexts/training/infrastructure/schem
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   code: z.string(),
   title: z.string(),
   description: z.string().nullable(),

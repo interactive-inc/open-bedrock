@@ -10,7 +10,7 @@ type Context = Readonly<{
 
 export type Input = {
   session: CompanySessionValue
-  assignmentId: number
+  assignmentId: string
   publishedAt: string
 }
 

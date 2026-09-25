@@ -6,7 +6,7 @@ describe("ShiftAssignment.create", () => {
   test("builds with null id and null publishedAt", () => {
     const assignment = ShiftAssignment.create({
       employeeId: toWorkforceEmployeeId(5),
-      patternId: 1,
+      patternId: "01900023-0000-7000-8000-000000000001",
       date: "2026-06-15",
       note: "Holiday coverage",
     })
@@ -15,7 +15,7 @@ describe("ShiftAssignment.create", () => {
     expect(assignment.id).toBeNull()
     expect(assignment.publishedAt).toBeNull()
     expect(assignment.employeeId).toBe(toWorkforceEmployeeId(5))
-    expect(assignment.patternId).toBe(1)
+    expect(assignment.patternId).toBe("01900023-0000-7000-8000-000000000001")
     expect(assignment.date).toBe("2026-06-15")
     expect(assignment.note).toBe("Holiday coverage")
   })
@@ -25,7 +25,7 @@ describe("ShiftAssignment.isModifiable", () => {
   test("true when unpublished", () => {
     const assignment = ShiftAssignment.create({
       employeeId: toWorkforceEmployeeId(5),
-      patternId: 1,
+      patternId: "01900023-0000-7000-8000-000000000001",
       date: "2026-06-15",
       note: null,
     })
@@ -36,7 +36,7 @@ describe("ShiftAssignment.isModifiable", () => {
   test("false when published", () => {
     const assignment = ShiftAssignment.create({
       employeeId: toWorkforceEmployeeId(5),
-      patternId: 1,
+      patternId: "01900023-0000-7000-8000-000000000001",
       date: "2026-06-15",
       note: null,
     })
@@ -51,7 +51,7 @@ describe("ShiftAssignment.withPublished", () => {
   test("returns new with publishedAt set", () => {
     const assignment = ShiftAssignment.create({
       employeeId: toWorkforceEmployeeId(5),
-      patternId: 1,
+      patternId: "01900023-0000-7000-8000-000000000001",
       date: "2026-06-15",
       note: null,
     })
@@ -69,19 +69,19 @@ describe("ShiftAssignment.withDetails", () => {
   test("returns new with changed fields", () => {
     const assignment = ShiftAssignment.create({
       employeeId: toWorkforceEmployeeId(5),
-      patternId: 1,
+      patternId: "01900023-0000-7000-8000-000000000001",
       date: "2026-06-15",
       note: "Original note",
     })
 
     const updated = assignment.withDetails({
-      patternId: 2,
+      patternId: "01900023-0000-7000-8000-000000000002",
       date: "2026-06-20",
       note: "Updated note",
     })
 
     expect(updated).toBeInstanceOf(ShiftAssignment)
-    expect(updated.patternId).toBe(2)
+    expect(updated.patternId).toBe("01900023-0000-7000-8000-000000000002")
     expect(updated.date).toBe("2026-06-20")
     expect(updated.note).toBe("Updated note")
     expect(updated.employeeId).toBe(toWorkforceEmployeeId(5))

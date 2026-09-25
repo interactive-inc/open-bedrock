@@ -33,8 +33,8 @@ afterAll(async () => {
 })
 
 const surveyResponseSchema = z.object({
-  id: z.number(),
-  survey_id: z.number(),
+  id: z.uuid(),
+  survey_id: z.uuid(),
   respondent_id: zEmployeeId,
   answers_json: z.unknown(),
   submitted_at: z.string(),
@@ -184,7 +184,7 @@ describe("GET /surveys/responses/me", () => {
 describe("GET /surveys/responses/:responseId", () => {
   test("returns the response for its respondent", async () => {
     const response = await request({
-      path: "/survey/surveys/responses/1",
+      path: "/survey/surveys/responses/01900027-0000-7000-8000-000000000001",
       token: await ownerToken(),
     })
 
@@ -195,13 +195,13 @@ describe("GET /surveys/responses/:responseId", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.id).toBe(1)
+      expect(parsed.data.id).toBe("01900027-0000-7000-8000-000000000001")
     }
   })
 
   test("returns 403 for another person's response", async () => {
     const response = await request({
-      path: "/survey/surveys/responses/1",
+      path: "/survey/surveys/responses/01900027-0000-7000-8000-000000000001",
       token: await otherToken(),
     })
 
@@ -210,7 +210,7 @@ describe("GET /surveys/responses/:responseId", () => {
 
   test("returns 404 for an unknown response", async () => {
     const response = await request({
-      path: "/survey/surveys/responses/9999",
+      path: "/survey/surveys/responses/01900027-0000-7000-8000-00000000270f",
       token: await ownerToken(),
     })
 
@@ -221,7 +221,7 @@ describe("GET /surveys/responses/:responseId", () => {
 describe("PUT /surveys/responses/:responseId", () => {
   test("updates the answers of the viewer's response while the survey is open", async () => {
     const response = await request({
-      path: "/survey/surveys/responses/1",
+      path: "/survey/surveys/responses/01900027-0000-7000-8000-000000000001",
       token: await ownerToken(),
       method: "PUT",
       body: { answers_json: { q1: 2, q2: 3, q3: "Revised" } },
@@ -240,7 +240,7 @@ describe("PUT /surveys/responses/:responseId", () => {
 
   test("returns 403 when updating another person's response", async () => {
     const response = await request({
-      path: "/survey/surveys/responses/1",
+      path: "/survey/surveys/responses/01900027-0000-7000-8000-000000000001",
       token: await otherToken(),
       method: "PUT",
       body: { answers_json: { q1: 1 } },
@@ -251,7 +251,7 @@ describe("PUT /surveys/responses/:responseId", () => {
 
   test("returns 404 for an unknown response", async () => {
     const response = await request({
-      path: "/survey/surveys/responses/9999",
+      path: "/survey/surveys/responses/01900027-0000-7000-8000-00000000270f",
       token: await ownerToken(),
       method: "PUT",
       body: { answers_json: { q1: 1 } },
@@ -262,7 +262,7 @@ describe("PUT /surveys/responses/:responseId", () => {
 
   test("returns 400 when answers_json is missing", async () => {
     const response = await request({
-      path: "/survey/surveys/responses/1",
+      path: "/survey/surveys/responses/01900027-0000-7000-8000-000000000001",
       token: await ownerToken(),
       method: "PUT",
       body: {},
@@ -275,7 +275,7 @@ describe("PUT /surveys/responses/:responseId", () => {
 describe("DELETE /surveys/responses/:responseId", () => {
   test("withdraws the viewer's response and returns 204", async () => {
     const response = await request({
-      path: "/survey/surveys/responses/1",
+      path: "/survey/surveys/responses/01900027-0000-7000-8000-000000000001",
       token: await ownerToken(),
       method: "DELETE",
     })
@@ -285,7 +285,7 @@ describe("DELETE /surveys/responses/:responseId", () => {
 
   test("returns 403 when withdrawing another person's response", async () => {
     const response = await request({
-      path: "/survey/surveys/responses/1",
+      path: "/survey/surveys/responses/01900027-0000-7000-8000-000000000001",
       token: await otherToken(),
       method: "DELETE",
     })
@@ -295,7 +295,7 @@ describe("DELETE /surveys/responses/:responseId", () => {
 
   test("returns 404 for an unknown response", async () => {
     const response = await request({
-      path: "/survey/surveys/responses/9999",
+      path: "/survey/surveys/responses/01900027-0000-7000-8000-00000000270f",
       token: await ownerToken(),
       method: "DELETE",
     })
@@ -305,7 +305,7 @@ describe("DELETE /surveys/responses/:responseId", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/survey/surveys/responses/1",
+      path: "/survey/surveys/responses/01900027-0000-7000-8000-000000000001",
       token: null,
       method: "DELETE",
     })

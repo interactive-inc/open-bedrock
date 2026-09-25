@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { readCompanyEmployeeProfiles } from "@/contexts/company/interface/operations/read-company-employee-profiles"
@@ -84,10 +85,10 @@ export const GET = factory.createHandlers(
     }
 
     if (query.reward_id !== undefined && query.reward_id !== "") {
-      const rewardId = Number(query.reward_id)
+      const rewardId = uuidSchema.safeParse(query.reward_id)
 
-      if (Number.isInteger(rewardId)) {
-        conditions.push(eq(thanksRedemptions.rewardId, rewardId))
+      if (rewardId.success) {
+        conditions.push(eq(thanksRedemptions.rewardId, rewardId.data))
       }
     }
 

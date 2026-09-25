@@ -16,7 +16,7 @@ import { surveys } from "@/contexts/survey/infrastructure/schema/survey"
 import { zAppSurvey, zAppSurveyList } from "@/contexts/survey/interface/http/response-schemas"
 import { ApplicationError } from "@/lib/errors"
 import { zValidator } from "@hono/zod-validator"
-import { count, eq } from "drizzle-orm"
+import { asc, count, eq, sql } from "drizzle-orm"
 import { z } from "zod"
 
 // @authorization service - session を application service に渡して判定する
@@ -86,7 +86,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select()
     .from(surveys)
     .where(eq(surveys.status, "open"))
-    .orderBy(surveys.id)
+    .orderBy(
+      asc(surveys.createdAt),
+      asc(sql`CAST(${surveys.legacyId} AS INTEGER)`),
+      asc(surveys.id),
+    )
     .limit(limit)
     .offset(offset)
 

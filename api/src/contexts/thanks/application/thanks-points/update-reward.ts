@@ -9,7 +9,7 @@ type Context = Readonly<{
 }>
 
 export type Command = {
-  rewardId: number
+  rewardId: string
   name: string
   pointCost: number
   isActive: boolean

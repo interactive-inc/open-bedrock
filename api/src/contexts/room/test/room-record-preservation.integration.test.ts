@@ -11,14 +11,15 @@ import { drizzle } from "drizzle-orm/d1"
 test("会議室2台帳を停止中に人の承認で保全し、業務コードを外してもSystemから読める", async () => {
   const { database, creator, reviewer, definition, bindings, tokenFor, request } =
     await createRoomPreservationFixture()
+  const roomId = "01900022-0000-7000-8000-000000000001"
   await database.exec(`INSERT INTO rooms (id,name,capacity,location)
-    VALUES (1,'Conference A',8,'Floor 2')`)
+    VALUES ('${roomId}','Conference A',8,'Floor 2')`)
   await database
     .prepare(`INSERT INTO room_reservations
     (id,room_id,reserver_id,start_at,end_at,purpose)
-    VALUES ('5e0f7c3a-1d2b-4c5d-8e6f-000000000002',1,?1,'2026-09-15T09:00:00.000Z',
+    VALUES ('5e0f7c3a-1d2b-4c5d-8e6f-000000000002',?2,?1,'2026-09-15T09:00:00.000Z',
       '2026-09-15T10:00:00.000Z','Planning')`)
-    .bind(creator.employeeId)
+    .bind(creator.employeeId, roomId)
     .run()
   const token = await tokenFor(creator.accountId)
   const stepUpToken = "e".repeat(64)
@@ -55,7 +56,7 @@ test("会議室2台帳を停止中に人の承認で保全し、業務コード�
     )
   }
   const sources = [
-    ["room-record", "1"],
+    ["room-record", roomId],
     ["room-reservation-record", "5e0f7c3a-1d2b-4c5d-8e6f-000000000002"],
   ] as const
   const preservedIds: string[] = []

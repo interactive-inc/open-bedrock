@@ -5,7 +5,7 @@ import { z } from "zod"
 
 const zProps = z.object({
   id: z.string(),
-  roomId: z.number(),
+  roomId: z.string(),
   reserverId: zEmployeeId,
   startAt: z.string(),
   endAt: z.string(),
@@ -39,7 +39,7 @@ export class RoomReservation implements Props {
 
   /** 新規予約を組み立てる。id は crypto.randomUUID() で採番する。 */
   static create(props: {
-    roomId: number
+    roomId: string
     reserverId: EmployeeId
     startAt: string
     endAt: string

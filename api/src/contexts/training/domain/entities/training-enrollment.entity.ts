@@ -4,8 +4,8 @@ import type { TrainingEnrollmentRow } from "@/contexts/training/infrastructure/s
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
-  courseId: z.number(),
+  id: z.string().nullable(),
+  courseId: z.string(),
   employeeId: zEmployeeId,
   status: z.enum(["enrolled", "completed", "failed"]),
   completedAt: z.string().nullable(),
@@ -42,7 +42,7 @@ export class TrainingEnrollment implements Props {
 
   /** 新規受講登録を組み立てる。id は未採番、初期状態は enrolled。 */
   static create(props: {
-    courseId: number
+    courseId: string
     employeeId: EmployeeId
     dueDate: string | null
   }): TrainingEnrollment {

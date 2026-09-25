@@ -7,10 +7,10 @@ import { SurveyResponse } from "@/contexts/survey/domain/entities/survey-respons
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { ForbiddenError, InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { zAppSurveySummary } from "@/contexts/survey/interface/http/response-schemas"
 import { surveyResponses, surveys } from "@/contexts/survey/infrastructure/schema/survey"
-import { count, eq } from "drizzle-orm"
+import { asc, count, eq, sql } from "drizzle-orm"
 
 /**
  * D1 の応答サイズ上限（16MB）と Worker CPU タイムアウト対策として、集計に使う回答数の上限を設ける。
@@ -32,7 +32,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
-  const surveyId = validateIntParam(c.req.param("surveyId"), "survey")
+  const surveyId = validateUuidParam(c.req.param("surveyId"), "survey")
 
   const surveyRows = await c.var.database
     .select()
@@ -57,7 +57,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select()
     .from(surveyResponses)
     .where(eq(surveyResponses.surveyId, surveyId))
-    .orderBy(surveyResponses.id)
+    .orderBy(
+      asc(surveyResponses.submittedAt),
+      asc(sql`CAST(${surveyResponses.legacyId} AS INTEGER)`),
+      asc(surveyResponses.id),
+    )
     .limit(MAX_SUMMARY_RESPONSES)
 
   const responses = responseRows.map((row) => {

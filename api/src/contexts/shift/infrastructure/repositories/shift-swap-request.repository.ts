@@ -12,7 +12,7 @@ export type ShiftSwapConflict = { reason: "conflict" }
 export class ShiftSwapRequestRepository {
   constructor(private readonly c: Context) {}
 
-  async findById(swapRequestId: number): Promise<ShiftSwapRequest | null | Error> {
+  async findById(swapRequestId: string): Promise<ShiftSwapRequest | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -81,9 +81,9 @@ export class ShiftSwapRequestRepository {
    */
   async create(swapRequest: ShiftSwapRequest): Promise<ShiftSwapRequest | null | Error> {
     try {
-      const inserted = await this.c.var.database.all<{ id: number }>(
-        sql`INSERT INTO shift_swap_requests (requester_employee_id, target_employee_id, date, note, status, approved_at)
-            SELECT ${swapRequest.requesterEmployeeId}, ${swapRequest.targetEmployeeId},
+      const inserted = await this.c.var.database.all<{ id: string }>(
+        sql`INSERT INTO shift_swap_requests (id, requester_employee_id, target_employee_id, date, note, status, approved_at)
+            SELECT ${crypto.randomUUID()}, ${swapRequest.requesterEmployeeId}, ${swapRequest.targetEmployeeId},
                    ${swapRequest.date}, ${swapRequest.note}, ${swapRequest.status}, ${swapRequest.approvedAt}
             WHERE NOT EXISTS (
               SELECT 1 FROM shift_swap_requests
@@ -210,7 +210,7 @@ export class ShiftSwapRequestRepository {
     return false
   }
 
-  async delete(swapRequestId: number): Promise<true | null | Error> {
+  async delete(swapRequestId: string): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database
         .delete(shiftSwapRequests)

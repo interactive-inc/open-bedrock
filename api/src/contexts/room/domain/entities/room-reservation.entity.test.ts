@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test"
 describe("RoomReservation.create", () => {
   test("with valid time range builds reservation", () => {
     const reservation = RoomReservation.create({
-      roomId: 1,
+      roomId: "01900022-0000-7000-8000-000000000001",
       reserverId: toWorkforceEmployeeId(10),
       startAt: "2026-06-11T10:00:00.000Z",
       endAt: "2026-06-11T11:00:00.000Z",
@@ -18,7 +18,7 @@ describe("RoomReservation.create", () => {
       throw new Error(reservation.reason)
     }
 
-    expect(reservation.roomId).toBe(1)
+    expect(reservation.roomId).toBe("01900022-0000-7000-8000-000000000001")
     expect(reservation.reserverId).toBe(toWorkforceEmployeeId(10))
     expect(reservation.startAt).toBe("2026-06-11T10:00:00.000Z")
     expect(reservation.endAt).toBe("2026-06-11T11:00:00.000Z")
@@ -27,7 +27,7 @@ describe("RoomReservation.create", () => {
 
   test("with startAt equal to endAt returns invalid_time_range", () => {
     const reservation = RoomReservation.create({
-      roomId: 1,
+      roomId: "01900022-0000-7000-8000-000000000001",
       reserverId: toWorkforceEmployeeId(10),
       startAt: "2026-06-11T10:00:00.000Z",
       endAt: "2026-06-11T10:00:00.000Z",
@@ -46,7 +46,7 @@ describe("RoomReservation.create", () => {
 
   test("with startAt after endAt returns invalid_time_range", () => {
     const reservation = RoomReservation.create({
-      roomId: 1,
+      roomId: "01900022-0000-7000-8000-000000000001",
       reserverId: toWorkforceEmployeeId(10),
       startAt: "2026-06-11T12:00:00.000Z",
       endAt: "2026-06-11T11:00:00.000Z",
@@ -61,7 +61,7 @@ describe("RoomReservation.fromRow", () => {
   test("with valid data returns RoomReservation", () => {
     const reservation = RoomReservation.fromRow({
       id: "550e8400-e29b-41d4-a716-446655440000",
-      roomId: 1,
+      roomId: "01900022-0000-7000-8000-000000000001",
       reserverId: toWorkforceEmployeeId(10),
       startAt: "2026-06-11T10:00:00.000Z",
       endAt: "2026-06-11T11:00:00.000Z",
@@ -81,7 +81,7 @@ describe("RoomReservation.fromRow", () => {
   test("with startAt >= endAt returns Error", () => {
     const reservation = RoomReservation.fromRow({
       id: "550e8400-e29b-41d4-a716-446655440000",
-      roomId: 1,
+      roomId: "01900022-0000-7000-8000-000000000001",
       reserverId: toWorkforceEmployeeId(10),
       startAt: "2026-06-11T12:00:00.000Z",
       endAt: "2026-06-11T11:00:00.000Z",
@@ -95,7 +95,7 @@ describe("RoomReservation.fromRow", () => {
 describe("RoomReservation.withPurpose", () => {
   test("returns new reservation with changed purpose", () => {
     const reservation = RoomReservation.create({
-      roomId: 1,
+      roomId: "01900022-0000-7000-8000-000000000001",
       reserverId: toWorkforceEmployeeId(10),
       startAt: "2026-06-11T10:00:00.000Z",
       endAt: "2026-06-11T11:00:00.000Z",
@@ -110,14 +110,14 @@ describe("RoomReservation.withPurpose", () => {
 
     expect(updated).toBeInstanceOf(RoomReservation)
     expect(updated.purpose).toBe("臨時会議")
-    expect(updated.roomId).toBe(1)
+    expect(updated.roomId).toBe("01900022-0000-7000-8000-000000000001")
   })
 })
 
 describe("RoomReservation.withRescheduled", () => {
   test("with valid range returns new reservation", () => {
     const reservation = RoomReservation.create({
-      roomId: 1,
+      roomId: "01900022-0000-7000-8000-000000000001",
       reserverId: toWorkforceEmployeeId(10),
       startAt: "2026-06-11T10:00:00.000Z",
       endAt: "2026-06-11T11:00:00.000Z",
@@ -145,7 +145,7 @@ describe("RoomReservation.withRescheduled", () => {
 
   test("with invalid range returns invalid_time_range", () => {
     const reservation = RoomReservation.create({
-      roomId: 1,
+      roomId: "01900022-0000-7000-8000-000000000001",
       reserverId: toWorkforceEmployeeId(10),
       startAt: "2026-06-11T10:00:00.000Z",
       endAt: "2026-06-11T11:00:00.000Z",

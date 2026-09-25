@@ -28,7 +28,7 @@ afterAll(async () => {
 
 const roomReservationResponseSchema = z.object({
   id: z.string(),
-  room_id: z.number(),
+  room_id: z.string(),
   reserver_id: zEmployeeId,
   start_at: z.string(),
   end_at: z.string(),
