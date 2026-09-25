@@ -12,6 +12,7 @@ import { join } from "node:path"
 import { getTableConfig } from "drizzle-orm/sqlite-core"
 import { executeSql } from "../../scripts/sql-statements"
 import { schema } from "@/schema"
+import { createFullyMigratedSqliteDatabase } from "@tests/api/support/migrated-sqlite-database"
 
 const migrationsDirectory = join(import.meta.dir, "../../migrations")
 const migrationFiles = readdirSync(migrationsDirectory)
@@ -25,12 +26,18 @@ function applyMigrations(database: Database, files: readonly string[]): void {
   }
 }
 
-test("Company cutover preserves records and matches every shared Company table", () => {
-  expect(companyCutoverIndex).toBeGreaterThan(0)
-  const database = new Database(":memory:")
-  database.exec("PRAGMA foreign_keys = ON")
-  applyMigrations(database, migrationFiles.slice(0, companyCutoverIndex))
-  database.exec(`
+// 既存の行を入れた後に残りの migration をすべて当てること自体が検査対象で、複製では置き換えられない。
+// 全 migration の適用は CI で 5 秒近くかかるため、既定の制限ではなくこの検査の所要時間に合わせる。
+const MIGRATING_EXISTING_ROWS_TIMEOUT_MS = 30_000
+
+test(
+  "Company cutover preserves records and matches every shared Company table",
+  () => {
+    expect(companyCutoverIndex).toBeGreaterThan(0)
+    const database = new Database(":memory:")
+    database.exec("PRAGMA foreign_keys = ON")
+    applyMigrations(database, migrationFiles.slice(0, companyCutoverIndex))
+    database.exec(`
     INSERT INTO system_accounts
       (id, status, token_version, closed_at, created_at, updated_at)
     VALUES ('account-existing', 'active', 0, NULL, 0, 0);
@@ -80,67 +87,69 @@ test("Company cutover preserves records and matches every shared Company table",
     VALUES (13, 1, '2026', '2026-01-01', '2026-12-31', 1000, 'Existing', '2026-01-01');
   `)
 
-  applyMigrations(database, migrationFiles.slice(companyCutoverIndex))
+    applyMigrations(database, migrationFiles.slice(companyCutoverIndex))
 
-  expect(
-    database
-      .query(
-        `SELECT id, official_name, employee_code, email, phone
+    expect(
+      database
+        .query(
+          `SELECT id, official_name, employee_code, email, phone
          FROM company_employees WHERE id = '7'`,
-      )
-      .get(),
-  ).toEqual({
-    id: "7",
-    official_name: "Existing Employee",
-    employee_code: "E007",
-    email: "existing@example.test",
-    phone: "000-0000",
-  })
-  expect(
-    database.query("SELECT account_id, employee_id FROM company_account_employee_links").get(),
-  ).toEqual({ account_id: "account-existing", employee_id: "7" })
-  expect(
-    database
-      .query("SELECT employee_id, status FROM company_employments WHERE employee_id = '7'")
-      .get(),
-  ).toEqual({ employee_id: "7", status: "ACTIVE" })
-  expect(database.query("SELECT id FROM company_personnel_annotations").get()).toEqual({ id: 11 })
-  expect(database.query("SELECT id, organization_unit_id FROM expense_budgets").get()).toEqual({
-    id: 13,
-    organization_unit_id: "department:D001",
-  })
+        )
+        .get(),
+    ).toEqual({
+      id: "7",
+      official_name: "Existing Employee",
+      employee_code: "E007",
+      email: "existing@example.test",
+      phone: "000-0000",
+    })
+    expect(
+      database.query("SELECT account_id, employee_id FROM company_account_employee_links").get(),
+    ).toEqual({ account_id: "account-existing", employee_id: "7" })
+    expect(
+      database
+        .query("SELECT employee_id, status FROM company_employments WHERE employee_id = '7'")
+        .get(),
+    ).toEqual({ employee_id: "7", status: "ACTIVE" })
+    expect(database.query("SELECT id FROM company_personnel_annotations").get()).toEqual({ id: 11 })
+    expect(database.query("SELECT id, organization_unit_id FROM expense_budgets").get()).toEqual({
+      id: 13,
+      organization_unit_id: "department:D001",
+    })
 
-  const declarations = [
-    auditSchema,
-    companySchema,
-    employeeEventSchema,
-    employeeLifecycleSchema,
-    employeeSchema,
-    employmentSchema,
-    organizationSchema,
-  ].flatMap((schemaModule) =>
-    Object.values(schemaModule).flatMap((declaration) => {
-      try {
-        return [getTableConfig(declaration)]
-      } catch {
-        return []
-      }
-    }),
-  )
-  const tables = new Map(declarations.map((table) => [table.name, table]))
+    const declarations = [
+      auditSchema,
+      companySchema,
+      employeeEventSchema,
+      employeeLifecycleSchema,
+      employeeSchema,
+      employmentSchema,
+      organizationSchema,
+    ].flatMap((schemaModule) =>
+      Object.values(schemaModule).flatMap((declaration) => {
+        try {
+          return [getTableConfig(declaration)]
+        } catch {
+          return []
+        }
+      }),
+    )
+    const tables = new Map(declarations.map((table) => [table.name, table]))
 
-  for (const table of tables.values()) {
-    const actualColumns = database
-      .query<{ name: string }, []>(`PRAGMA table_info(${table.name})`)
-      .all()
-      .map((column) => column.name)
-      .toSorted()
-    expect(actualColumns).toEqual(table.columns.map((column) => column.name).toSorted())
-  }
+    for (const table of tables.values()) {
+      const actualColumns = database
+        .query<{ name: string }, []>(`PRAGMA table_info(${table.name})`)
+        .all()
+        .map((column) => column.name)
+        .toSorted()
+      expect(actualColumns).toEqual(table.columns.map((column) => column.name).toSorted())
+    }
 
-  expect(database.query("PRAGMA foreign_key_check").all()).toEqual([])
-  database.close()
-})
+    expect(database.query("PRAGMA foreign_key_check").all()).toEqual([])
+    database.close()
+  },
+  MIGRATING_EXISTING_ROWS_TIMEOUT_MS,
+)
 
 describe("Product schema migration contract", () => {
   const employeeReferenceColumns = new Set([
@@ -173,9 +182,7 @@ describe("Product schema migration contract", () => {
   ])
 
   test("all Drizzle tables match the migrated database and product workforce references are constrained", () => {
-    const database = new Database(":memory:")
-    database.exec("PRAGMA foreign_keys = ON")
-    applyMigrations(database, migrationFiles)
+    const database = createFullyMigratedSqliteDatabase({ foreignKeys: true })
 
     const declarations = Object.values(schema).flatMap((declaration) => {
       try {

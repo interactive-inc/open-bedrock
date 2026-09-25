@@ -7,6 +7,7 @@ import {
   resolveTableOwner,
 } from "./check-table-ownership-isolation"
 import { describe, expect, test } from "bun:test"
+import { createFullyMigratedSqliteDatabase } from "@tests/api/support/migrated-sqlite-database"
 
 const owners = new Map([
   ["system_accounts", "system"],
@@ -147,6 +148,6 @@ describe("table の所有境界", () => {
   })
 
   test("現在の migration と production source に違反がない", async () => {
-    expect(await collectTableOwnershipViolations()).toEqual([])
+    expect(await collectTableOwnershipViolations(createFullyMigratedSqliteDatabase())).toEqual([])
   })
 })

@@ -1,2 +1,5 @@
 [test]
-preload = ["./tests/d1/support/stop-local-d1.preload.ts"]
+preload = [
+  "./tests/api/support/warm-migrated-sqlite.preload.ts",
+  "./tests/d1/support/stop-local-d1.preload.ts",
+]
