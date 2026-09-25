@@ -7,7 +7,7 @@ import type { SQL } from "drizzle-orm"
 export class EvaluationTemplateRepository {
   constructor(private readonly c: Context) {}
 
-  async findById(id: number): Promise<EvaluationTemplate | null | Error> {
+  async findById(id: string): Promise<EvaluationTemplate | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -69,6 +69,7 @@ export class EvaluationTemplateRepository {
       const rows = await this.c.var.database
         .insert(evaluationTemplates)
         .values({
+          id: crypto.randomUUID(),
           title: template.title,
           period: template.period,
           items: JSON.stringify(template.items),

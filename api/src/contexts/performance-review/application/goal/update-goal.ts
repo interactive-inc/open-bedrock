@@ -23,7 +23,7 @@ type Context = Readonly<{
 }>
 
 export type Command = {
-  goalId: number
+  goalId: string
   employeeId: EmployeeId
   period: string
   title: string

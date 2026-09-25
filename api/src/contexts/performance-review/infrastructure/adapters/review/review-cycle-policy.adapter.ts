@@ -10,7 +10,7 @@ import { eq } from "drizzle-orm"
 export class ReviewCyclePolicyAdapter {
   constructor(private readonly c: Context) {}
 
-  async find(cycleId: number): Promise<ReviewCyclePolicy | Error> {
+  async find(cycleId: string): Promise<ReviewCyclePolicy | Error> {
     try {
       const row = await this.c.var.database
         .select({ policyJson: reviewCyclePolicies.policyJson })
@@ -27,7 +27,7 @@ export class ReviewCyclePolicyAdapter {
     }
   }
 
-  async upsert(cycleId: number, policy: ReviewCyclePolicy): Promise<null | Error> {
+  async upsert(cycleId: string, policy: ReviewCyclePolicy): Promise<null | Error> {
     try {
       await this.c.var.database
         .insert(reviewCyclePolicies)

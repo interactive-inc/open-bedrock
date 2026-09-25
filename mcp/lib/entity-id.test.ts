@@ -1,5 +1,5 @@
 import { describe, expect, test } from "bun:test"
-import { entityIdInput, entityIdSegment, toApiIntegerId, toApiStringId } from "@/lib/entity-id.ts"
+import { entityIdInput, entityIdSegment, toApiStringId } from "@/lib/entity-id.ts"
 
 describe("entityIdSegment", () => {
   test("整数IDとUUIDをpathのIDとして受け付ける", () => {
@@ -20,12 +20,5 @@ describe("entityIdInput", () => {
     expect(toApiStringId(parsed)).toBe("E001")
     expect(toApiStringId(entityIdInput.parse(7))).toBe("7")
     expect(toApiStringId(undefined)).toBeUndefined()
-  })
-
-  test("APIがまだ整数を宣言する項目は送信直前にだけ整数へ変換する", () => {
-    expect(toApiIntegerId("12")).toBe(12)
-    expect(toApiIntegerId(12)).toBe(12)
-    expect(toApiIntegerId(undefined)).toBeUndefined()
-    expect(() => toApiIntegerId("0b7a3c1e-2f4d-4e5a-9b8c-7d6e5f4a3b2c")).toThrow()
   })
 })

@@ -4,10 +4,10 @@
     "primaryKeyKinds": {
       "allocator-singleton-secret": 11,
       "composite": 35,
-      "integer": 28,
+      "integer": 20,
       "text-business-code": 6,
       "text-prefixed": 13,
-      "text-uuid": 48,
+      "text-uuid": 56,
       "text-uuid-candidate": 65
     },
     "declaredForeignKeys": 272,
@@ -15,11 +15,11 @@
       "cross-context": 17,
       "external": 32,
       "historical": 10,
-      "not-reference": 71,
+      "not-reference": 78,
       "polymorphic": 18,
       "same-context": 79
     },
-    "triggers": 690,
+    "triggers": 704,
     "views": 25,
     "indexes": 290
   },
@@ -3798,11 +3798,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -3817,12 +3817,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "sheet_id",
           "classification": "same-context",
           "target": "evaluation_sheets"
         }
       ],
       "triggers": [
+        "evaluation_sheet_audit_logs_identity_update",
+        "evaluation_sheet_audit_logs_legacy_id_insert",
         "evaluation_sheet_audit_logs_source_freeze_delete",
         "evaluation_sheet_audit_logs_source_freeze_insert",
         "evaluation_sheet_audit_logs_source_freeze_update"
@@ -3836,11 +3842,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -3867,12 +3873,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "template_id",
           "classification": "same-context",
           "target": "evaluation_templates"
         }
       ],
       "triggers": [
+        "evaluation_sheets_identity_update",
+        "evaluation_sheets_legacy_id_insert",
         "evaluation_sheets_source_freeze_delete",
         "evaluation_sheets_source_freeze_insert",
         "evaluation_sheets_source_freeze_update"
@@ -3891,11 +3903,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -3908,8 +3920,15 @@
         ],
         "incoming": []
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "evaluation_templates_identity_update",
+        "evaluation_templates_legacy_id_insert",
         "evaluation_templates_source_freeze_delete",
         "evaluation_templates_source_freeze_insert",
         "evaluation_templates_source_freeze_update"
@@ -4191,11 +4210,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -4210,12 +4229,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "goal_id",
           "classification": "same-context",
           "target": "performance_goals"
         }
       ],
       "triggers": [
+        "goal_evaluations_identity_update",
+        "goal_evaluations_legacy_id_insert",
         "goal_evaluations_source_freeze_delete",
         "goal_evaluations_source_freeze_insert",
         "goal_evaluations_source_freeze_update"
@@ -5489,11 +5514,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -5507,6 +5532,10 @@
         "incoming": []
       },
       "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
         {
           "column": "parent_goal_id",
           "classification": "same-context",
@@ -5524,6 +5553,8 @@
         }
       ],
       "triggers": [
+        "performance_goals_identity_update",
+        "performance_goals_legacy_id_insert",
         "performance_goals_source_freeze_delete",
         "performance_goals_source_freeze_insert",
         "performance_goals_source_freeze_update"
@@ -5714,11 +5745,11 @@
         "columns": [
           {
             "name": "cycle_id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false,
+        "kind": "text-uuid",
+        "uuidEnforced": true,
         "inheritsFrom": "review_cycles"
       },
       "foreignKeys": {
@@ -5746,18 +5777,25 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
         "incoming": []
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "review_cycles_identity_update",
+        "review_cycles_legacy_id_insert",
         "review_cycles_source_freeze_delete",
         "review_cycles_source_freeze_insert",
         "review_cycles_source_freeze_update"
@@ -5771,11 +5809,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -5796,12 +5834,18 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "cycle_id",
           "classification": "same-context",
           "target": "review_cycles"
         }
       ],
       "triggers": [
+        "review_forms_identity_update",
+        "review_forms_legacy_id_insert",
         "review_forms_source_freeze_delete",
         "review_forms_source_freeze_insert",
         "review_forms_source_freeze_update"

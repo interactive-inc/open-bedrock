@@ -27,7 +27,7 @@ afterAll(async () => {
 const jwtSecret = "review-cycles-open-route-test-secret"
 
 const reviewCycleResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   period: z.string(),
   status: z.enum(["draft", "open", "closed"]),
@@ -92,7 +92,7 @@ async function request(
 describe("POST /review-cycles/:cycleId/open and /close", () => {
   test("admin opens the draft cycle and returns 200", async () => {
     const response = await request(
-      "/performance-review/review-cycles/3/open",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000003/open",
       await adminToken(),
       "POST",
     )
@@ -110,7 +110,7 @@ describe("POST /review-cycles/:cycleId/open and /close", () => {
 
   test("close returns 404 for a missing cycle", async () => {
     const response = await request(
-      "/performance-review/review-cycles/9999/close",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-00000000270f/close",
       await adminToken(),
       "POST",
     )
@@ -120,7 +120,7 @@ describe("POST /review-cycles/:cycleId/open and /close", () => {
 
   test("member opening a cycle is forbidden", async () => {
     const response = await request(
-      "/performance-review/review-cycles/1/open",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000001/open",
       await memberToken(),
       "POST",
     )
@@ -130,7 +130,7 @@ describe("POST /review-cycles/:cycleId/open and /close", () => {
 
   test("closed cycle cannot be opened (409)", async () => {
     const response = await request(
-      "/performance-review/review-cycles/2/open",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000002/open",
       await adminToken(),
       "POST",
     )
@@ -140,7 +140,7 @@ describe("POST /review-cycles/:cycleId/open and /close", () => {
 
   test("already open cycle cannot be opened again (409)", async () => {
     const response = await request(
-      "/performance-review/review-cycles/1/open",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000001/open",
       await adminToken(),
       "POST",
     )
@@ -150,7 +150,7 @@ describe("POST /review-cycles/:cycleId/open and /close", () => {
 
   test("draft cycle cannot be closed directly (409)", async () => {
     const response = await request(
-      "/performance-review/review-cycles/3/close",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000003/close",
       await adminToken(),
       "POST",
     )

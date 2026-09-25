@@ -6,7 +6,7 @@ import { ConflictError, NotFoundError, UnexpectedError } from "@/lib/errors"
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  sheetId: number
+  sheetId: string
   actorEmployeeId: EmployeeId
   expectedRevision: number
   note: string | null

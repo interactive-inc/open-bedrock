@@ -303,15 +303,33 @@ async function createTestDb(): Promise<D1Database> {
 
   // 評価サイクル: open 2 / closed 1。
   await seedD1(db, "review_cycles", [
-    { id: 1, title: "C1", period: "2026-H1", status: "open", due_date: null },
-    { id: 2, title: "C2", period: "2026-H1", status: "open", due_date: null },
-    { id: 3, title: "C3", period: "2025-H2", status: "closed", due_date: null },
+    {
+      id: "01900032-0000-7000-8000-000000000001",
+      title: "C1",
+      period: "2026-H1",
+      status: "open",
+      due_date: null,
+    },
+    {
+      id: "01900032-0000-7000-8000-000000000002",
+      title: "C2",
+      period: "2026-H1",
+      status: "open",
+      due_date: null,
+    },
+    {
+      id: "01900032-0000-7000-8000-000000000003",
+      title: "C3",
+      period: "2025-H2",
+      status: "closed",
+      due_date: null,
+    },
   ])
 
   // 目標: 2026-H1 は 3 件中 done 1 (rate 1/3)、2025-H2 は 1 件中 done 1 (rate 1)。
   await seedD1(db, "performance_goals", [
     {
-      id: 1,
+      id: "01900030-0000-7000-8000-000000000001",
       employee_id: "2",
       period: "2026-H1",
       title: "g1",
@@ -320,7 +338,7 @@ async function createTestDb(): Promise<D1Database> {
       status: "done",
     },
     {
-      id: 2,
+      id: "01900030-0000-7000-8000-000000000002",
       employee_id: "2",
       period: "2026-H1",
       title: "g2",
@@ -329,7 +347,7 @@ async function createTestDb(): Promise<D1Database> {
       status: "in_progress",
     },
     {
-      id: 3,
+      id: "01900030-0000-7000-8000-000000000003",
       employee_id: "3",
       period: "2026-H1",
       title: "g3",
@@ -338,7 +356,7 @@ async function createTestDb(): Promise<D1Database> {
       status: "draft",
     },
     {
-      id: 4,
+      id: "01900030-0000-7000-8000-000000000004",
       employee_id: "3",
       period: "2025-H2",
       title: "g4",

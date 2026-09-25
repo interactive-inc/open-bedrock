@@ -6,7 +6,7 @@ import type { ReviewCycleRow } from "@/contexts/performance-review/infrastructur
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   title: z.string(),
   period: z.string(),
   status: reviewCycleStatusSchema,
@@ -47,7 +47,7 @@ export class ReviewCycle implements Props {
     })
   }
 
-  static fromRow(row: ReviewCycleRow): ReviewCycle {
+  static fromRow(row: Omit<ReviewCycleRow, "legacyId" | "createdAt">): ReviewCycle {
     return new ReviewCycle({
       id: row.id,
       title: row.title,

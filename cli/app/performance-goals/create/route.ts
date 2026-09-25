@@ -38,9 +38,7 @@ export default factory.createHandlers(
         kpi: query.kpi,
         owner_type: query["owner-type"] ?? "individual",
         department_code: query["department-code"],
-        parent_goal_id: query["parent-goal-id"]
-          ? toFiniteNumber(query["parent-goal-id"], "--parent-goal-id")
-          : undefined,
+        parent_goal_id: query["parent-goal-id"],
       },
     })
 

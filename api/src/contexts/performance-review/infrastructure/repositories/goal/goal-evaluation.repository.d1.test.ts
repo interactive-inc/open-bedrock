@@ -30,7 +30,7 @@ describe("GoalEvaluationRepository", () => {
 
     await seedD1(db, "performance_goals", [
       {
-        id: 1,
+        id: "01900030-0000-7000-8000-000000000001",
         employee_id: "2",
         period: "2026-H1",
         title: "テスト目標",
@@ -44,7 +44,7 @@ describe("GoalEvaluationRepository", () => {
 
     const created = await repository.create(
       GoalEvaluation.create({
-        goalId: 1,
+        goalId: "01900030-0000-7000-8000-000000000001",
         evaluatorId: toWorkforceEmployeeId(2),
         kind: "self",
         score: 80,

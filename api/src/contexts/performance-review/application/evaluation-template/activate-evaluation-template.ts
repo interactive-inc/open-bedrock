@@ -5,7 +5,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { EvaluationTemplateRepository } from "@/contexts/performance-review/infrastructure/repositories/evaluation-template/evaluation-template.repository"
 
 export type Command = {
-  templateId: number
+  templateId: string
   now: string
 }
 

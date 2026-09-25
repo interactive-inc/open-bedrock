@@ -9,7 +9,7 @@ export type Props = {
 /** 目標 1 件を子なしのツリーノードに写す。 */
 function toNode(goal: Goal): GoalTreeNode {
   return {
-    id: goal.id ?? 0,
+    id: goal.id ?? "",
     employee_id: goal.employeeId,
     period: goal.period,
     title: goal.title,
@@ -24,7 +24,7 @@ function toNode(goal: Goal): GoalTreeNode {
 }
 
 /** 親候補が存在し、かつ親が自分より上位の階層(company>department>individual)なら親 id を返す。 */
-function toParentId(goal: Goal, nodesById: Map<number, GoalTreeNode>): number | null {
+function toParentId(goal: Goal, nodesById: Map<string, GoalTreeNode>): string | null {
   if (goal.parentGoalId === null) {
     return null
   }
@@ -37,7 +37,7 @@ function toParentId(goal: Goal, nodesById: Map<number, GoalTreeNode>): number | 
  * 親が集合内に無い目標はルートとして扱う。循環は id ベースの走査で作らない。
  */
 export function buildGoalTree(props: Props): ReadonlyArray<GoalTreeNode> {
-  const nodesById = new Map<number, GoalTreeNode>()
+  const nodesById = new Map<string, GoalTreeNode>()
 
   for (const goal of props.goals) {
     if (goal.id !== null) {

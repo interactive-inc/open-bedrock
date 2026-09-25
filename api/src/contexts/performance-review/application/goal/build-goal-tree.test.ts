@@ -5,7 +5,7 @@ import { buildGoalTree } from "@/contexts/performance-review/domain/policies/goa
 import type { GoalOwnerType } from "@/contexts/performance-review/domain/entities/goal.entity"
 
 /** テスト用の目標を組み立てる。 */
-function goal(props: { id: number; ownerType: GoalOwnerType; parentGoalId: number | null }): Goal {
+function goal(props: { id: string; ownerType: GoalOwnerType; parentGoalId: string | null }): Goal {
   return Goal.fromRow({
     id: props.id,
     employeeId: toWorkforceEmployeeId(1),
@@ -25,28 +25,51 @@ describe("buildGoalTree", () => {
   test("nests company -> department -> individual by parent_goal_id", () => {
     const roots = buildGoalTree({
       goals: [
-        goal({ id: 1, ownerType: "company", parentGoalId: null }),
-        goal({ id: 2, ownerType: "department", parentGoalId: 1 }),
-        goal({ id: 3, ownerType: "individual", parentGoalId: 2 }),
+        goal({
+          id: "01900030-0000-7000-8000-000000000001",
+          ownerType: "company",
+          parentGoalId: null,
+        }),
+        goal({
+          id: "01900030-0000-7000-8000-000000000002",
+          ownerType: "department",
+          parentGoalId: "01900030-0000-7000-8000-000000000001",
+        }),
+        goal({
+          id: "01900030-0000-7000-8000-000000000003",
+          ownerType: "individual",
+          parentGoalId: "01900030-0000-7000-8000-000000000002",
+        }),
       ],
     })
 
     expect(roots.length).toBe(1)
-    expect(roots[0]?.id).toBe(1)
-    expect(roots[0]?.children[0]?.id).toBe(2)
-    expect(roots[0]?.children[0]?.children[0]?.id).toBe(3)
+    expect(roots[0]?.id).toBe("01900030-0000-7000-8000-000000000001")
+    expect(roots[0]?.children[0]?.id).toBe("01900030-0000-7000-8000-000000000002")
+    expect(roots[0]?.children[0]?.children[0]?.id).toBe("01900030-0000-7000-8000-000000000003")
   })
 
   test("treats goals whose parent is absent as roots", () => {
     const roots = buildGoalTree({
       goals: [
-        goal({ id: 2, ownerType: "department", parentGoalId: 99 }),
-        goal({ id: 3, ownerType: "individual", parentGoalId: null }),
+        goal({
+          id: "01900030-0000-7000-8000-000000000002",
+          ownerType: "department",
+          parentGoalId: "01900030-0000-7000-8000-000000000063",
+        }),
+        goal({
+          id: "01900030-0000-7000-8000-000000000003",
+          ownerType: "individual",
+          parentGoalId: null,
+        }),
       ],
     })
 
-    const rootIds = roots.map((node) => node.id).sort((a, b) => a - b)
+    const rootIds = roots.map((node) => node.id).toSorted()
 
-    expect(rootIds).toEqual([2, 3])
+    expect(rootIds).toEqual([
+      "01900030-0000-7000-8000-000000000002",
+      "01900030-0000-7000-8000-000000000003",
+    ])
   })
 })

@@ -52,7 +52,7 @@ export const zAppGoalOwnerType = z.enum(["individual", "department", "company"])
 
 /** 目標 1 件のレスポンス。 */
 export const zAppGoal = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   period: z.string(),
   title: z.string(),
@@ -60,9 +60,9 @@ export const zAppGoal = z.object({
   weight: z.number(),
   status: z.string(),
   owner_type: zAppGoalOwnerType.default("individual"),
-  parent_goal_id: z.number().nullable().default(null),
+  parent_goal_id: z.uuid().nullable().default(null),
   department_code: z.string().nullable().default(null),
-  evaluation_sheet_id: z.number().nullable().default(null),
+  evaluation_sheet_id: z.uuid().nullable().default(null),
 })
 
 /** 目標一覧のレスポンス。 */
@@ -73,8 +73,8 @@ export const zAppGoalList = z.object({
 
 /** 目標評価 1 件のレスポンス。 */
 export const zAppGoalEvaluation = z.object({
-  id: z.number(),
-  goal_id: z.number(),
+  id: z.uuid(),
+  goal_id: z.uuid(),
   evaluator_id: zEmployeeId,
   kind: z.string(),
   score: z.number().nullable(),
@@ -87,7 +87,7 @@ export const zAppGoalEvaluationList = z.array(zAppGoalEvaluation)
 
 /** 目標ツリーのノード 1 件（children で再帰）。全社を根、部門を中間、個人目標を葉とする。 */
 export const zAppGoalTreeNode: z.ZodType<GoalTreeNode> = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   period: z.string(),
   title: z.string(),
@@ -95,7 +95,7 @@ export const zAppGoalTreeNode: z.ZodType<GoalTreeNode> = z.object({
   weight: z.number(),
   status: z.string(),
   owner_type: zAppGoalOwnerType,
-  parent_goal_id: z.number().nullable(),
+  parent_goal_id: z.uuid().nullable(),
   department_code: z.string().nullable(),
   children: z.array(z.lazy(() => zAppGoalTreeNode)),
 })
@@ -115,7 +115,7 @@ export const zAppEvaluationTemplateItem = z.object({
 
 /** 評価テンプレート 1 件のレスポンス。 */
 export const zAppEvaluationTemplate = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   period: z.string(),
   items: z.array(zAppEvaluationTemplateItem),
@@ -133,9 +133,9 @@ export const zAppEvaluationTemplateList = z.object({
 
 /** 評価シート 1 件のレスポンス。 */
 export const zAppEvaluationSheet = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
-  template_id: z.number().nullable(),
+  template_id: z.uuid().nullable(),
   period: z.string(),
   status: z.string(),
   primary_evaluator_id: zEmployeeId,
@@ -156,7 +156,7 @@ export const zAppEvaluationSheetList = z.object({
 
 /** 評価サイクル 1 件のレスポンス。 */
 export const zAppReviewCycle = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   period: z.string(),
   status: z.string(),
@@ -182,8 +182,8 @@ export const zAppReviewPeriodList = z.object({
 
 /** 評価フォーム 1 件のレスポンス。submit は comment を含む。 */
 export const zAppReviewForm = z.object({
-  id: z.number(),
-  cycle_id: z.number(),
+  id: z.uuid(),
+  cycle_id: z.uuid(),
   subject_employee_id: zEmployeeId,
   reviewer_employee_id: zEmployeeId,
   reviewer_type: z.string(),
@@ -197,8 +197,8 @@ export const zAppReviewForm = z.object({
 
 /** 評価フォーム一覧（comment を含まない）の要素。 */
 export const zAppReviewFormSummary = z.object({
-  id: z.number(),
-  cycle_id: z.number(),
+  id: z.uuid(),
+  cycle_id: z.uuid(),
   subject_employee_id: zEmployeeId,
   reviewer_employee_id: zEmployeeId,
   reviewer_type: z.string(),
@@ -228,7 +228,8 @@ export const zAppReviewResultForm = zAppReviewFormSummary.extend({
 })
 
 export const zAppReviewResult = z.object({
-  cycle_id: z.number(),
+  /** 集計対象の評価サイクル。サイクルを絞らない集計では null。 */
+  cycle_id: z.uuid().nullable(),
   subject_employee_id: zEmployeeId,
   form_count: z.number(),
   submitted_count: z.number(),
@@ -245,6 +246,6 @@ export const zAppReviewFormBulkResult = z.object({
 
 /** サイクル一括開示のレスポンス。 */
 export const zAppReviewDiscloseResult = z.object({
-  cycle_id: z.number(),
+  cycle_id: z.uuid(),
   disclosed_count: z.number(),
 })

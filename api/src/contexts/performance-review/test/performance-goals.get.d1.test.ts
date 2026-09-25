@@ -32,7 +32,7 @@ afterAll(async () => {
 })
 
 const goalResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   period: z.string(),
   title: z.string(),
@@ -152,7 +152,7 @@ describe("GET /performance-goals", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0]?.id).toBe(4)
+      expect(parsed.data.data[0]?.id).toBe("01900030-0000-7000-8000-000000000004")
     }
   })
 
@@ -323,7 +323,7 @@ async function createScopeTestDb(): Promise<D1Database> {
 
   await seedD1(db, "performance_goals", [
     {
-      id: 100,
+      id: "01900030-0000-7000-8000-000000000064",
       employee_id: "20",
       period: "2025-H2",
       title: "A goal",
@@ -332,7 +332,7 @@ async function createScopeTestDb(): Promise<D1Database> {
       status: "draft",
     },
     {
-      id: 101,
+      id: "01900030-0000-7000-8000-000000000065",
       employee_id: "21",
       period: "2025-H2",
       title: "B goal",
@@ -434,7 +434,7 @@ async function createDepartmentScopeTestDb(): Promise<D1Database> {
 
   await seedD1(db, "performance_goals", [
     {
-      id: 102,
+      id: "01900030-0000-7000-8000-000000000066",
       employee_id: "22",
       period: "2025-H2",
       title: "C goal",

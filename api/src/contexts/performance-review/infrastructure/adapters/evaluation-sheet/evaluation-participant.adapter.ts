@@ -28,7 +28,7 @@ export class EvaluationParticipantAdapter {
     }
   }
 
-  async evaluationTemplateExists(templateId: number): Promise<boolean | Error> {
+  async evaluationTemplateExists(templateId: string): Promise<boolean | Error> {
     try {
       const rows = await this.c.var.database
         .select({ id: evaluationTemplates.id })

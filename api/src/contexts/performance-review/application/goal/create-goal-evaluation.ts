@@ -25,7 +25,7 @@ type Context = Readonly<{
 }>
 
 export type Command = {
-  goalId: number
+  goalId: string
   kind: GoalEvaluationKind
   score: number | null
   comment: string | null

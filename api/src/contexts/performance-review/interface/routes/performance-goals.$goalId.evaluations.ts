@@ -16,7 +16,7 @@ import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { z } from "zod"
 
 // @authorization service - session を application service に渡して判定する
@@ -28,7 +28,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const goalId = validateIntParam(c.req.param("goalId"), "goal")
+  const goalId = validateUuidParam(c.req.param("goalId"), "goal")
 
   const evaluations = await (async () => {
     const command = {
@@ -125,7 +125,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const goalId = validateIntParam(c.req.param("goalId"), "goal")
+    const goalId = validateUuidParam(c.req.param("goalId"), "goal")
 
     const json = c.req.valid("json")
 

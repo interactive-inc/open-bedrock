@@ -59,8 +59,8 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "review_forms", [
     {
-      id: 1,
-      cycle_id: 1,
+      id: "01900033-0000-7000-8000-000000000001",
+      cycle_id: "01900032-0000-7000-8000-000000000001",
       subject_employee_id: "5",
       reviewer_employee_id: "5",
       reviewer_type: "self",
@@ -71,8 +71,8 @@ async function createTestDb(): Promise<D1Database> {
       visibility: "hidden",
     },
     {
-      id: 2,
-      cycle_id: 1,
+      id: "01900033-0000-7000-8000-000000000002",
+      cycle_id: "01900032-0000-7000-8000-000000000001",
       subject_employee_id: "5",
       reviewer_employee_id: "4",
       reviewer_type: "manager",
@@ -107,7 +107,7 @@ async function request(path: string, token: string | null, method?: string): Pro
 describe("POST /review-cycles/:cycleId/disclose", () => {
   test("admin discloses all forms in the cycle", async () => {
     const response = await request(
-      "/performance-review/review-cycles/1/disclose",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000001/disclose",
       await adminToken(),
       "POST",
     )
@@ -115,20 +115,20 @@ describe("POST /review-cycles/:cycleId/disclose", () => {
     expect(response.status).toBe(200)
 
     const parsed = z
-      .object({ cycle_id: z.number(), disclosed_count: z.number() })
+      .object({ cycle_id: z.uuid(), disclosed_count: z.number() })
       .safeParse(await response.json())
 
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.cycle_id).toBe(1)
+      expect(parsed.data.cycle_id).toBe("01900032-0000-7000-8000-000000000001")
       expect(parsed.data.disclosed_count).toBe(2)
     }
   })
 
   test("member is forbidden", async () => {
     const response = await request(
-      "/performance-review/review-cycles/1/disclose",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000001/disclose",
       await memberToken(),
       "POST",
     )
@@ -138,7 +138,7 @@ describe("POST /review-cycles/:cycleId/disclose", () => {
 
   test("returns 404 when the cycle does not exist", async () => {
     const response = await request(
-      "/performance-review/review-cycles/999/disclose",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-0000000003e7/disclose",
       await adminToken(),
       "POST",
     )
@@ -147,7 +147,11 @@ describe("POST /review-cycles/:cycleId/disclose", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/performance-review/review-cycles/1/disclose", null, "POST")
+    const response = await request(
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000001/disclose",
+      null,
+      "POST",
+    )
 
     expect(response.status).toBe(401)
   })

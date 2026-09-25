@@ -10,7 +10,7 @@ import { zAppReviewFormList } from "@/contexts/performance-review/interface/http
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { reviewForms } from "@/contexts/performance-review/infrastructure/schema/performance-review"
-import { asc, count, eq } from "drizzle-orm"
+import { asc, count, eq, sql } from "drizzle-orm"
 
 // @authorization owner - 本人のリソースに限定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -34,7 +34,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select()
     .from(reviewForms)
     .where(eq(reviewForms.reviewerEmployeeId, session.employeeId))
-    .orderBy(asc(reviewForms.id))
+    .orderBy(
+      asc(reviewForms.createdAt),
+      asc(sql`CAST(${reviewForms.legacyId} AS INTEGER)`),
+      asc(reviewForms.id),
+    )
     .limit(limit)
     .offset(offset)
 

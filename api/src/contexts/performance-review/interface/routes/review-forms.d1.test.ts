@@ -59,8 +59,8 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "review_forms", [
     {
-      id: 1,
-      cycle_id: 1,
+      id: "01900033-0000-7000-8000-000000000001",
+      cycle_id: "01900032-0000-7000-8000-000000000001",
       subject_employee_id: "5",
       reviewer_employee_id: "5",
       reviewer_type: "self",
@@ -71,8 +71,8 @@ async function createTestDb(): Promise<D1Database> {
       visibility: "disclosed",
     },
     {
-      id: 2,
-      cycle_id: 1,
+      id: "01900033-0000-7000-8000-000000000002",
+      cycle_id: "01900032-0000-7000-8000-000000000001",
       subject_employee_id: "5",
       reviewer_employee_id: "4",
       reviewer_type: "manager",

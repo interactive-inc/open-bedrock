@@ -2,8 +2,8 @@ import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 type SeedReviewForm = {
-  id: number
-  cycleId: number
+  id: string
+  cycleId: string
   subjectEmployeeId: EmployeeId
   reviewerEmployeeId: EmployeeId
   reviewerType: "self" | "manager" | "peer" | "subordinate"
@@ -17,8 +17,8 @@ type SeedReviewForm = {
 /** 1サイクル・1被評価者に self/manager/peer のフォームを割り当てる。 */
 export const seedReviewForms: ReadonlyArray<SeedReviewForm> = [
   {
-    id: 1,
-    cycleId: 1,
+    id: "01900033-0000-7000-8000-000000000001",
+    cycleId: "01900032-0000-7000-8000-000000000001",
     subjectEmployeeId: toWorkforceEmployeeId(5),
     reviewerEmployeeId: toWorkforceEmployeeId(5),
     reviewerType: "self",
@@ -29,8 +29,8 @@ export const seedReviewForms: ReadonlyArray<SeedReviewForm> = [
     submittedAt: null,
   },
   {
-    id: 2,
-    cycleId: 1,
+    id: "01900033-0000-7000-8000-000000000002",
+    cycleId: "01900032-0000-7000-8000-000000000001",
     subjectEmployeeId: toWorkforceEmployeeId(5),
     reviewerEmployeeId: toWorkforceEmployeeId(4),
     reviewerType: "manager",
@@ -41,8 +41,8 @@ export const seedReviewForms: ReadonlyArray<SeedReviewForm> = [
     submittedAt: null,
   },
   {
-    id: 3,
-    cycleId: 2,
+    id: "01900033-0000-7000-8000-000000000003",
+    cycleId: "01900032-0000-7000-8000-000000000002",
     subjectEmployeeId: toWorkforceEmployeeId(5),
     reviewerEmployeeId: toWorkforceEmployeeId(4),
     reviewerType: "manager",

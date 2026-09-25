@@ -33,9 +33,9 @@ const VALID_TRANSITIONS: Record<EvaluationSheetStatus, ReadonlyArray<EvaluationS
 }
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   employeeId: zEmployeeId,
-  templateId: z.number().nullable(),
+  templateId: z.string().nullable(),
   period: z.string().min(1).max(100),
   status: evaluationSheetStatusSchema,
   primaryEvaluatorId: zEmployeeId,
@@ -88,7 +88,7 @@ export class EvaluationSheet implements Props {
 
   static create(props: {
     employeeId: EmployeeId
-    templateId: number | null
+    templateId: string | null
     period: string
     primaryEvaluatorId: EmployeeId
     secondaryEvaluatorId: EmployeeId | null
@@ -111,7 +111,7 @@ export class EvaluationSheet implements Props {
     })
   }
 
-  static fromRow(row: EvaluationSheetRow): EvaluationSheet {
+  static fromRow(row: Omit<EvaluationSheetRow, "legacyId">): EvaluationSheet {
     return new EvaluationSheet({
       id: row.id,
       employeeId: row.employeeId,
