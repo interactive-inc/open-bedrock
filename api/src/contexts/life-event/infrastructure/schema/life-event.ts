@@ -1,17 +1,22 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { LifeEventType } from "@/contexts/life-event/domain/definitions/life-event-type.definition"
-import type { InferSelectModel } from "drizzle-orm"
-import { sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { sql, type InferSelectModel } from "drizzle-orm"
+import { uuidCheckPredicate } from "@/lib/validation/uuid.schema"
+import { check, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 /** ライフイベント届出（結婚・出産・転居・忌引・扶養変更などの届出を記録） */
-export const lifeEvents = sqliteTable("life_events", {
-  id: text("id").primaryKey(),
-  employeeId: text("employee_id").$type<EmployeeId>().notNull(),
-  eventType: text("event_type").notNull().$type<LifeEventType>(),
-  eventDate: text("event_date").notNull(),
-  detail: text("detail"),
-  status: text("status").notNull(),
-  createdAt: text("created_at").notNull(),
-})
+export const lifeEvents = sqliteTable(
+  "life_events",
+  {
+    id: text("id").primaryKey().notNull(),
+    employeeId: text("employee_id").$type<EmployeeId>().notNull(),
+    eventType: text("event_type").notNull().$type<LifeEventType>(),
+    eventDate: text("event_date").notNull(),
+    detail: text("detail"),
+    status: text("status").notNull(),
+    createdAt: text("created_at").notNull(),
+  },
+  () => [check("life_events_id_uuid", sql.raw(uuidCheckPredicate("id")))],
+)
 
 export type LifeEventRow = InferSelectModel<typeof lifeEvents>

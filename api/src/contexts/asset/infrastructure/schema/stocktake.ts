@@ -1,19 +1,23 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { InferSelectModel } from "drizzle-orm"
-import { index, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { sql, type InferSelectModel } from "drizzle-orm"
+import { uuidCheckPredicate } from "@/lib/validation/uuid.schema"
+import { check, index, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 /** 棚卸しセッション（stocktake ドメイン）。open→closed の状態を持つ。 */
 export const stocktakes = sqliteTable(
   "stocktakes",
   {
-    id: text("id").primaryKey(),
+    id: text("id").primaryKey().notNull(),
     name: text("name").notNull(),
     targetDate: text("target_date").notNull(),
     status: text("status").notNull(),
     createdAt: text("created_at").notNull(),
     closedAt: text("closed_at"),
   },
-  (table) => [index("idx_stocktakes_status").on(table.status)],
+  (table) => [
+    index("idx_stocktakes_status").on(table.status),
+    check("stocktakes_id_uuid", sql.raw(uuidCheckPredicate("id"))),
+  ],
 )
 
 export type StocktakeRow = InferSelectModel<typeof stocktakes>

@@ -16,7 +16,7 @@ test("会議室2台帳を停止中に人の承認で保全し、業務コード�
   await database
     .prepare(`INSERT INTO room_reservations
     (id,room_id,reserver_id,start_at,end_at,purpose)
-    VALUES ('reservation-2',1,?1,'2026-09-15T09:00:00.000Z',
+    VALUES ('5e0f7c3a-1d2b-4c5d-8e6f-000000000002',1,?1,'2026-09-15T09:00:00.000Z',
       '2026-09-15T10:00:00.000Z','Planning')`)
     .bind(creator.employeeId)
     .run()
@@ -56,7 +56,7 @@ test("会議室2台帳を停止中に人の承認で保全し、業務コード�
   }
   const sources = [
     ["room-record", "1"],
-    ["room-reservation-record", "reservation-2"],
+    ["room-reservation-record", "5e0f7c3a-1d2b-4c5d-8e6f-000000000002"],
   ] as const
   const preservedIds: string[] = []
   for (const [recordKind, recordId] of sources) {

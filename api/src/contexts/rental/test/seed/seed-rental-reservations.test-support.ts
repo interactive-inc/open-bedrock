@@ -14,7 +14,7 @@ type SeedRentalReservation = {
 
 export const seedRentalReservations: ReadonlyArray<SeedRentalReservation> = [
   {
-    id: "10000000-0000-0000-0000-000000000001",
+    id: "10000000-0000-4000-8000-000000000001",
     requesterId: toWorkforceEmployeeId(2),
     itemName: "プロジェクター",
     startDate: "2026-06-10",
@@ -24,7 +24,7 @@ export const seedRentalReservations: ReadonlyArray<SeedRentalReservation> = [
     createdAt: "2026-06-01T00:00:00Z",
   },
   {
-    id: "10000000-0000-0000-0000-000000000002",
+    id: "10000000-0000-4000-8000-000000000002",
     requesterId: toWorkforceEmployeeId(4),
     itemName: "ノートPC",
     startDate: "2026-06-15",
@@ -34,7 +34,7 @@ export const seedRentalReservations: ReadonlyArray<SeedRentalReservation> = [
     createdAt: "2026-06-01T00:00:00Z",
   },
   {
-    id: "10000000-0000-0000-0000-000000000003",
+    id: "10000000-0000-4000-8000-000000000003",
     requesterId: toWorkforceEmployeeId(9),
     itemName: "カメラ",
     startDate: "2026-06-18",

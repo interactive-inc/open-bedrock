@@ -54,9 +54,9 @@ const resignationResponseSchema = z.object({
 
 const jwtSecret = "resignations-crud-test-secret"
 
-const ownResignationId = "20000000-0000-0000-0000-000000000002"
+const ownResignationId = "20000000-0000-4000-8000-000000000002"
 
-const othersResignationId = "20000000-0000-0000-0000-000000000001"
+const othersResignationId = "20000000-0000-4000-8000-000000000001"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())

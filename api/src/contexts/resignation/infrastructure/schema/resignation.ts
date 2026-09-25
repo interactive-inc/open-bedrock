@@ -1,13 +1,14 @@
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import type { InferSelectModel } from "drizzle-orm"
 import { sql } from "drizzle-orm"
-import { sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import { uuidCheckPredicate } from "@/lib/validation/uuid.schema"
+import { check, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
 /** 退職申請（申出の受付から書類交付までの記録。法的判定は持たず記録のみ） */
 export const resignations = sqliteTable(
   "resignations",
   {
-    id: text("id").primaryKey(),
+    id: text("id").primaryKey().notNull(),
     employeeId: text("employee_id").$type<EmployeeId>().notNull(),
     resignationDate: text("resignation_date").notNull(),
     lastWorkingDate: text("last_working_date"),
@@ -17,6 +18,7 @@ export const resignations = sqliteTable(
   },
   // 1 社員につき requested の退職申請は 1 件まで（二重申請を防ぐ）。
   (table) => [
+    check("resignations_id_uuid", sql.raw(uuidCheckPredicate("id"))),
     uniqueIndex("idx_resignations_employee_requested")
       .on(table.employeeId)
       .where(sql`status = 'requested'`),

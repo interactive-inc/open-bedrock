@@ -54,9 +54,9 @@ const lifeEventResponseSchema = z.object({
 
 const jwtSecret = "life-events-crud-test-secret"
 
-const ownLifeEventId = "20000000-0000-0000-0000-000000000002"
+const ownLifeEventId = "20000000-0000-4000-8000-000000000002"
 
-const othersLifeEventId = "20000000-0000-0000-0000-000000000001"
+const othersLifeEventId = "20000000-0000-4000-8000-000000000001"
 
 async function createTestDb(): Promise<D1Database> {
   const db = createD1TestDatabase(loadSchema())

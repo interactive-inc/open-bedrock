@@ -13,13 +13,13 @@ test("会議室と予約の全列を原記録に残す", () => {
     );
     INSERT INTO rooms VALUES (1,'Conference A',8,'Floor 2');
     INSERT INTO room_reservations VALUES (
-      'reservation-2',1,'employee-1','2026-09-15T09:00:00.000Z',
+      '5e0f7c3a-1d2b-4c5d-8e6f-000000000002',1,'employee-1','2026-09-15T09:00:00.000Z',
       '2026-09-15T10:00:00.000Z','Planning'
     );
   `)
   const sources: ReadonlyArray<readonly [RoomRecordKind, string]> = [
     ["room-record", "1"],
-    ["room-reservation-record", "reservation-2"],
+    ["room-reservation-record", "5e0f7c3a-1d2b-4c5d-8e6f-000000000002"],
   ]
   const snapshots = sources.map(([kind, id]) => {
     const query = roomSnapshotQuery(kind, id)
@@ -35,7 +35,7 @@ test("会議室と予約の全列を原記録に残す", () => {
     location: "Floor 2",
   })
   expect(snapshots[1].reservation).toMatchObject({
-    id: "reservation-2",
+    id: "5e0f7c3a-1d2b-4c5d-8e6f-000000000002",
     room_id: 1,
     reserver_id: "employee-1",
     start_at: "2026-09-15T09:00:00.000Z",

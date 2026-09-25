@@ -23,7 +23,7 @@ test("会議室11件と予約を分割照合し撤去確定する", async () => 
   await database
     .prepare(`INSERT INTO room_reservations
     (id,room_id,reserver_id,start_at,end_at,purpose)
-    VALUES ('reservation-1',-9,?1,'2026-09-15T09:00:00.000Z',
+    VALUES ('5e0f7c3a-1d2b-4c5d-8e6f-000000000001',-9,?1,'2026-09-15T09:00:00.000Z',
       '2026-09-15T10:00:00.000Z','Planning')`)
     .bind(creator.employeeId)
     .run()
@@ -76,7 +76,7 @@ test("会議室11件と予約を分割照合し撤去確定する", async () => 
       kind: "room-record" as const,
       id: String(index - 9),
     })),
-    { kind: "room-reservation-record" as const, id: "reservation-1" },
+    { kind: "room-reservation-record" as const, id: "5e0f7c3a-1d2b-4c5d-8e6f-000000000001" },
   ]
   for (const source of sources) {
     const path = `/room/records/${source.kind}/${encodeURIComponent(source.id)}/preservation-requests`

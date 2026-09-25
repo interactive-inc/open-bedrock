@@ -12,7 +12,7 @@ type SeedRoomReservation = {
 
 export const seedRoomReservations: ReadonlyArray<SeedRoomReservation> = [
   {
-    id: "00000000-0000-0000-0000-000000000001",
+    id: "00000000-0000-4000-8000-000000000001",
     roomId: 1,
     reserverId: toWorkforceEmployeeId(2),
     startAt: "2026-05-29T01:00:00Z",
@@ -20,7 +20,7 @@ export const seedRoomReservations: ReadonlyArray<SeedRoomReservation> = [
     purpose: "全社定例スタンドアップ",
   },
   {
-    id: "00000000-0000-0000-0000-000000000002",
+    id: "00000000-0000-4000-8000-000000000002",
     roomId: 2,
     reserverId: toWorkforceEmployeeId(4),
     startAt: "2026-05-29T03:00:00Z",
@@ -28,7 +28,7 @@ export const seedRoomReservations: ReadonlyArray<SeedRoomReservation> = [
     purpose: "スプリントレビュー",
   },
   {
-    id: "00000000-0000-0000-0000-000000000003",
+    id: "00000000-0000-4000-8000-000000000003",
     roomId: 1,
     reserverId: toWorkforceEmployeeId(9),
     startAt: "2026-05-29T05:00:00Z",
