@@ -11,15 +11,21 @@ import { GET as preservedDossier } from "@system/interface/routes/system.preserv
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
 
+/** 並び順が連番と一致する評価テンプレートの UUID。 */
+function templateId(serial: number): string {
+  return `01900034-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
+}
+
 test("人事評価8台帳を分割照合し撤去確定する", async () => {
   const { database, governance, creator, reviewer, definition, bindings, tokenFor, request } =
     await createPerformanceReviewPreservationFixture()
-  for (let id = -9; id <= 1; id++) {
+  for (let serial = 1; serial <= 11; serial++) {
+    const id = templateId(serial)
     await database
       .prepare(`INSERT INTO evaluation_templates
       (id,title,period,items,status,created_by,created_at,updated_at)
       VALUES (?1,?2,'2026-Q3','[]','draft',?3,'2026-09-01','2026-09-01')`)
-      .bind(id, `Evaluation ${id}`, creator.employeeId)
+      .bind(id, `Evaluation ${serial}`, creator.employeeId)
       .run()
   }
   const token = await tokenFor(creator.accountId)
@@ -67,7 +73,7 @@ test("人事評価8台帳を分割照合し撤去確定する", async () => {
   const templateMappings: Array<{ sourceRecordId: string; preservedRecordId: string }> = []
   const sources = Array.from({ length: 11 }, (_, index) => ({
     kind: "evaluation-template-record" as const,
-    id: String(index - 9),
+    id: templateId(index + 1),
   }))
   for (const source of sources) {
     const path = `/performance-review/records/${source.kind}/${encodeURIComponent(source.id)}/preservation-requests`
@@ -128,7 +134,11 @@ test("人事評価8台帳を分割照合し撤去確定する", async () => {
     post(coveragePath, { purpose: "archive", recordKind, records })
   const first = await cover("evaluation-template-record", templateMappings.slice(0, 10))
   if (first.status !== 200) throw new Error(await first.text())
-  expect(await first.json()).toMatchObject({ sequence: 1, nextCursor: "0", recordCount: 10 })
+  expect(await first.json()).toMatchObject({
+    sequence: 1,
+    nextCursor: templateId(10),
+    recordCount: 10,
+  })
   expect((await cover("evaluation-template-record", templateMappings.slice(0, 1))).status).toBe(409)
   const second = await cover("evaluation-template-record", templateMappings.slice(10))
   if (second.status !== 200) throw new Error(await second.text())

@@ -27,7 +27,7 @@ afterAll(async () => {
 const jwtSecret = "review-cycles-close-route-test-secret"
 
 const reviewCycleResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   period: z.string(),
   status: z.enum(["draft", "open", "closed"]),
@@ -92,7 +92,7 @@ async function request(
 describe("POST /review-cycles/:cycleId/close", () => {
   test("admin closes the open cycle and returns 200", async () => {
     const response = await request(
-      "/performance-review/review-cycles/1/close",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000001/close",
       await adminToken(),
       "POST",
     )
@@ -110,7 +110,7 @@ describe("POST /review-cycles/:cycleId/close", () => {
 
   test("returns 404 for a missing cycle", async () => {
     const response = await request(
-      "/performance-review/review-cycles/9999/close",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-00000000270f/close",
       await adminToken(),
       "POST",
     )
@@ -120,7 +120,7 @@ describe("POST /review-cycles/:cycleId/close", () => {
 
   test("member closing a cycle is forbidden", async () => {
     const response = await request(
-      "/performance-review/review-cycles/1/close",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000001/close",
       await memberToken(),
       "POST",
     )
@@ -130,7 +130,7 @@ describe("POST /review-cycles/:cycleId/close", () => {
 
   test("returns 409 when closing a draft cycle", async () => {
     const response = await request(
-      "/performance-review/review-cycles/3/close",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000003/close",
       await adminToken(),
       "POST",
     )

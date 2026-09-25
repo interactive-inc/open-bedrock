@@ -5,7 +5,6 @@ import { EvaluationSheet } from "@/contexts/performance-review/domain/entities/e
 import type { Context } from "@/env"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
-import { withAllocatedIntegerId } from "@/lib/database/with-allocated-integer-id"
 import { ConflictError } from "@/lib/errors"
 import {
   evaluationSheetAuditLogs,
@@ -16,7 +15,7 @@ import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"
 export class EvaluationSheetRepository {
   constructor(private readonly c: Context) {}
 
-  async findById(id: number): Promise<EvaluationSheet | null | Error> {
+  async findById(id: string): Promise<EvaluationSheet | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -83,6 +82,7 @@ export class EvaluationSheetRepository {
       const rows = await this.c.var.database
         .insert(evaluationSheets)
         .values({
+          id: crypto.randomUUID(),
           employeeId: sheet.employeeId,
           templateId: sheet.templateId,
           period: sheet.period,
@@ -173,12 +173,12 @@ export class EvaluationSheetRepository {
       const db = this.c.env.DB
 
       // シート作成と監査ログ挿入を同一 batch でアトミックに実行する。
-      // シート ID は事前に明示し、監査ログはその ID を束縛値として受け取る。
-      const results = await withAllocatedIntegerId(db, "evaluation_sheets", (sheetId) =>
-        db.batch([
-          db
-            .prepare(
-              `INSERT INTO evaluation_sheets
+      // シート ID は事前に UUID で採番し、監査ログはその ID を束縛値として受け取る。
+      const sheetId = crypto.randomUUID()
+      const results = await db.batch([
+        db
+          .prepare(
+            `INSERT INTO evaluation_sheets
                  (id, employee_id, template_id, period, status, primary_evaluator_id,
                   secondary_evaluator_id, submitted_at, approved_at, finalized_at,
                   revision, created_at, updated_at)
@@ -186,44 +186,44 @@ export class EvaluationSheetRepository {
                RETURNING id, employee_id, template_id, period, status, primary_evaluator_id,
                  secondary_evaluator_id, submitted_at, approved_at, finalized_at, revision,
                  created_at, updated_at`,
-            )
-            .bind(
-              sheet.employeeId,
-              sheet.templateId,
-              sheet.period,
-              sheet.status,
-              sheet.primaryEvaluatorId,
-              sheet.secondaryEvaluatorId,
-              sheet.submittedAt,
-              sheet.approvedAt,
-              sheet.finalizedAt,
-              sheet.revision,
-              sheet.createdAt,
-              sheet.updatedAt,
-              sheetId,
-            ),
-          db
-            .prepare(
-              `INSERT INTO evaluation_sheet_audit_logs
-                 (sheet_id, actor_id, action, from_value, to_value, note, created_at)
-               VALUES (?7, ?1, ?2, ?3, ?4, ?5, ?6)`,
-            )
-            .bind(
-              audit.actorId,
-              audit.action,
-              audit.fromValue,
-              audit.toValue,
-              audit.note,
-              audit.now,
-              sheetId,
-            ),
-        ]),
-      )
+          )
+          .bind(
+            sheet.employeeId,
+            sheet.templateId,
+            sheet.period,
+            sheet.status,
+            sheet.primaryEvaluatorId,
+            sheet.secondaryEvaluatorId,
+            sheet.submittedAt,
+            sheet.approvedAt,
+            sheet.finalizedAt,
+            sheet.revision,
+            sheet.createdAt,
+            sheet.updatedAt,
+            sheetId,
+          ),
+        db
+          .prepare(
+            `INSERT INTO evaluation_sheet_audit_logs
+                 (id, sheet_id, actor_id, action, from_value, to_value, note, created_at)
+               VALUES (?8, ?7, ?1, ?2, ?3, ?4, ?5, ?6)`,
+          )
+          .bind(
+            audit.actorId,
+            audit.action,
+            audit.fromValue,
+            audit.toValue,
+            audit.note,
+            audit.now,
+            sheetId,
+            crypto.randomUUID(),
+          ),
+      ])
 
       type SheetRow = {
-        id: number
+        id: string
         employee_id: EmployeeId
-        template_id: number | null
+        template_id: string | null
         period: string
         status: string
         primary_evaluator_id: EmployeeId
@@ -309,8 +309,8 @@ export class EvaluationSheetRepository {
         db
           .prepare(
             `INSERT INTO evaluation_sheet_audit_logs
-               (sheet_id, actor_id, action, from_value, to_value, note, created_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
+               (id, sheet_id, actor_id, action, from_value, to_value, note, created_at)
+             VALUES (?8, ?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
           )
           .bind(
             sheet.id,
@@ -320,6 +320,7 @@ export class EvaluationSheetRepository {
             audit.toValue,
             audit.note,
             audit.now,
+            crypto.randomUUID(),
           ),
       ])
 
@@ -344,7 +345,7 @@ export class EvaluationSheetRepository {
     }
   }
 
-  async totalGoalWeight(sheetId: number): Promise<number | Error> {
+  async totalGoalWeight(sheetId: string): Promise<number | Error> {
     try {
       const rows = await this.c.var.database
         .select({ total: sum(goals.weight) })
@@ -395,8 +396,8 @@ export class EvaluationSheetRepository {
         db
           .prepare(
             `INSERT INTO evaluation_sheet_audit_logs
-               (sheet_id, actor_id, action, from_value, to_value, note, created_at)
-             VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
+               (id, sheet_id, actor_id, action, from_value, to_value, note, created_at)
+             VALUES (?8, ?1, ?2, ?3, ?4, ?5, ?6, ?7)`,
           )
           .bind(
             transitioned.id,
@@ -406,6 +407,7 @@ export class EvaluationSheetRepository {
             transitioned.status,
             audit.note,
             audit.now,
+            crypto.randomUUID(),
           ),
       ])
       const saved = await this.findById(transitioned.id)
@@ -423,7 +425,7 @@ export class EvaluationSheetRepository {
 
   /** 監査ログを 1 件追記する。 */
   async appendAuditLog(entry: {
-    sheetId: number
+    sheetId: string
     actorId: EmployeeId
     action: string
     fromValue: string | null
@@ -433,6 +435,7 @@ export class EvaluationSheetRepository {
   }): Promise<null | Error> {
     try {
       await this.c.var.database.insert(evaluationSheetAuditLogs).values({
+        id: crypto.randomUUID(),
         sheetId: entry.sheetId,
         actorId: entry.actorId,
         action: entry.action,

@@ -29,9 +29,9 @@ afterAll(async () => {
 const jwtSecret = "evaluation-sheet-create-test-secret"
 
 const sheetSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
-  template_id: z.number().nullable(),
+  template_id: z.uuid().nullable(),
   period: z.string(),
   status: z.string(),
   primary_evaluator_id: zEmployeeId,

@@ -27,7 +27,7 @@ afterAll(async () => {
 const jwtSecret = "review-cycles-create-route-test-secret"
 
 const reviewCycleResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   period: z.string(),
   status: z.enum(["draft", "open", "closed"]),

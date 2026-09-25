@@ -23,10 +23,10 @@ const unrelated: EmployeeRelation = { isSelf: false, isReport: false, isSameDepa
  * 組織関係の解決は goal.repository.test.ts と performance-review/test/goal-evaluation.d1.test.ts が検証する。
  */
 function createGoalPorts(options: { relation?: EmployeeRelation } = {}) {
-  const goals = new Map<number, Goal>()
+  const goals = new Map<string, Goal>()
   const evaluations: GoalEvaluation[] = []
 
-  const withId = (goal: Goal, id: number) =>
+  const withId = (goal: Goal, id: string) =>
     new Goal({
       id,
       employeeId: goal.employeeId,
@@ -43,7 +43,7 @@ function createGoalPorts(options: { relation?: EmployeeRelation } = {}) {
 
   const storeEvaluation = (evaluation: GoalEvaluation) => {
     const stored = new GoalEvaluation({
-      id: evaluations.length + 1,
+      id: crypto.randomUUID(),
       goalId: evaluation.goalId,
       evaluatorId: evaluation.evaluatorId,
       kind: evaluation.kind,
@@ -60,10 +60,11 @@ function createGoalPorts(options: { relation?: EmployeeRelation } = {}) {
   }
 
   const goalRepository = {
-    findById: async (goalId: number) => goals.get(goalId) ?? null,
+    findById: async (goalId: string) => goals.get(goalId) ?? null,
     create: async (goal: Goal) => {
-      const created = withId(goal, goals.size + 1)
-      goals.set(goals.size + 1, created)
+      const id = crypto.randomUUID()
+      const created = withId(goal, id)
+      goals.set(id, created)
       return created
     },
     update: async (goal: Goal) => {
@@ -82,7 +83,7 @@ function createGoalPorts(options: { relation?: EmployeeRelation } = {}) {
   }
 
   const goalEvaluationRepository = {
-    findByGoalId: async (goalId: number) =>
+    findByGoalId: async (goalId: string) =>
       evaluations.filter((evaluation) => evaluation.goalId === goalId),
     create: async (evaluation: GoalEvaluation) => storeEvaluation(evaluation),
     createWithGoalCompletion: async (evaluation: GoalEvaluation, goal: Goal) => {
@@ -223,7 +224,7 @@ describe("UpdateGoal", () => {
     const { ports } = createGoalPorts()
 
     const result = await new UpdateGoal(ports).run({
-      goalId: 9999,
+      goalId: "01900030-0000-7000-8000-00000000270f",
       employeeId: toWorkforceEmployeeId(1),
       period: "2026-H1",
       title: "Missing",
@@ -284,7 +285,7 @@ describe("DeleteGoal", () => {
     const { ports } = createGoalPorts()
 
     const result = await new DeleteGoal(ports).run({
-      goalId: 9999,
+      goalId: "01900030-0000-7000-8000-00000000270f",
       employeeId: toWorkforceEmployeeId(1),
     })
 
@@ -432,7 +433,7 @@ describe("CreateGoalEvaluation", () => {
     const { ports } = createGoalPorts()
 
     const result = await new CreateGoalEvaluation(ports).run({
-      goalId: 9999,
+      goalId: "01900030-0000-7000-8000-00000000270f",
       kind: "self",
       score: 3,
       comment: null,

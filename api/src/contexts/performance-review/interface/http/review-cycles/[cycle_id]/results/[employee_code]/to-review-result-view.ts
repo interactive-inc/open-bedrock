@@ -5,7 +5,7 @@ import type { ReviewerTypeSummary } from "@/contexts/performance-review/interfac
 import { toReviewerTypeSummary } from "@/contexts/performance-review/interface/http/to-reviewer-type-summary"
 
 export type ReviewResultView = {
-  cycleId: number
+  cycleId: string
   subjectEmployeeId: EmployeeId
   formCount: number
   submittedCount: number

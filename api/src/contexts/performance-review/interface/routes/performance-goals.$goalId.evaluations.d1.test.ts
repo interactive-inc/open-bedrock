@@ -31,7 +31,7 @@ afterAll(async () => {
 })
 
 const goalResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   period: z.string(),
   title: z.string(),
@@ -41,8 +41,8 @@ const goalResponseSchema = z.object({
 })
 
 const goalEvaluationResponseSchema = z.object({
-  id: z.number(),
-  goal_id: z.number(),
+  id: z.uuid(),
+  goal_id: z.uuid(),
   evaluator_id: zEmployeeId,
   kind: z.enum(["self", "manager", "final"]),
   score: z.number().nullable(),
@@ -125,7 +125,7 @@ describe("GET /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/4/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000004/evaluations",
       token: await tokenFor(9),
     })
 
@@ -137,9 +137,17 @@ describe("GET /performance-goals/:goalId/evaluations", () => {
 
     if (parsed.success) {
       expect(parsed.data.length).toBe(3)
-      expect(parsed.data.map((evaluation) => evaluation.id)).toEqual([1, 2, 3])
+      expect(parsed.data.map((evaluation) => evaluation.id)).toEqual([
+        "01900031-0000-7000-8000-000000000001",
+        "01900031-0000-7000-8000-000000000002",
+        "01900031-0000-7000-8000-000000000003",
+      ])
       expect(parsed.data.map((evaluation) => evaluation.kind)).toEqual(["self", "manager", "final"])
-      expect(parsed.data.every((evaluation) => evaluation.goal_id === 4)).toBe(true)
+      expect(
+        parsed.data.every(
+          (evaluation) => evaluation.goal_id === "01900030-0000-7000-8000-000000000004",
+        ),
+      ).toBe(true)
     }
   })
 
@@ -147,7 +155,7 @@ describe("GET /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/4/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000004/evaluations",
       token: await tokenFor(1),
     })
 
@@ -158,7 +166,7 @@ describe("GET /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/3/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000003/evaluations",
       token: await tokenFor(9),
     })
 
@@ -177,7 +185,7 @@ describe("GET /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/4/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000004/evaluations",
       token: await tokenFor(5),
     })
 
@@ -188,7 +196,7 @@ describe("GET /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/9999/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-00000000270f/evaluations",
       token: await tokenFor(1),
     })
 
@@ -199,7 +207,7 @@ describe("GET /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/4/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000004/evaluations",
       token: null,
     })
 
@@ -212,7 +220,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/3/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000003/evaluations",
       token: await tokenFor(9),
       method: "POST",
       body: { kind: "self", score: 80, comment: "On track" },
@@ -225,7 +233,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.goal_id).toBe(3)
+      expect(parsed.data.goal_id).toBe("01900030-0000-7000-8000-000000000003")
       expect(parsed.data.evaluator_id).toBe(toWorkforceEmployeeId(9))
       expect(parsed.data.kind).toBe("self")
       expect(parsed.data.score).toBe(80)
@@ -240,7 +248,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
     const evaluateResponse = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-review/performance-goals/1/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000001/evaluations",
       token: await tokenFor(4),
       method: "POST",
       body: { kind: "final", score: 90 },
@@ -262,7 +270,9 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      const finalized = parsed.data.data.find((goal) => goal.id === 1)
+      const finalized = parsed.data.data.find(
+        (goal) => goal.id === "01900030-0000-7000-8000-000000000001",
+      )
       expect(finalized?.status).toBe("done")
     }
   })
@@ -272,7 +282,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/3/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000003/evaluations",
       token: await tokenFor(4),
       method: "POST",
       body: { kind: "final", score: 90 },
@@ -285,7 +295,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/4/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000004/evaluations",
       token: await tokenFor(5),
       method: "POST",
       body: { kind: "self", score: 50 },
@@ -298,7 +308,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/4/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000004/evaluations",
       token: await tokenFor(9),
       method: "POST",
       body: { kind: "manager", score: 70 },
@@ -311,7 +321,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/9999/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-00000000270f/evaluations",
       token: await tokenFor(1),
       method: "POST",
       body: { kind: "final", score: 90 },
@@ -324,7 +334,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/4/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000004/evaluations",
       token: await tokenFor(9),
       method: "POST",
       body: { kind: "self", score: -1, comment: "negative" },
@@ -337,7 +347,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/4/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000004/evaluations",
       token: await tokenFor(9),
       method: "POST",
       body: { kind: "self", score: 101, comment: "too high" },
@@ -350,7 +360,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/4/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000004/evaluations",
       token: await tokenFor(9),
       method: "POST",
       body: { kind: "self", score: 50.5, comment: "decimal" },
@@ -363,7 +373,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/3/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000003/evaluations",
       token: await tokenFor(9),
       method: "POST",
       body: { kind: "self", score: 0, comment: "minimum" },
@@ -376,7 +386,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/3/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000003/evaluations",
       token: await tokenFor(9),
       method: "POST",
       body: { kind: "self", score: 100, comment: "maximum" },
@@ -389,7 +399,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/4/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000004/evaluations",
       token: await tokenFor(1),
       method: "POST",
       body: { kind: "bogus" },
@@ -402,7 +412,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/4/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000004/evaluations",
       token: null,
       method: "POST",
       body: { kind: "self" },
@@ -415,7 +425,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals/4/evaluations",
+      path: "/performance-review/performance-goals/01900030-0000-7000-8000-000000000004/evaluations",
       token: await tokenFor(9),
       method: "POST",
       body: { kind: "self", score: 75, comment: "duplicate attempt" },

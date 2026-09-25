@@ -13,7 +13,7 @@ export async function createGoal(request: GoalCreateRequest) {
     json: {
       ...request,
       parent_goal_id:
-        request.parent_goal_id === undefined ? undefined : Number(request.parent_goal_id),
+        request.parent_goal_id === undefined ? undefined : String(request.parent_goal_id),
     },
   })
 

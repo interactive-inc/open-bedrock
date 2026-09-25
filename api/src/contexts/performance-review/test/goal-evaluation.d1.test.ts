@@ -39,7 +39,7 @@ function goalPorts(context: Context) {
   }
 }
 
-async function createGoal(context: Context): Promise<number> {
+async function createGoal(context: Context): Promise<string> {
   const goal = await new CreateGoal(goalPorts(context)).run({
     employeeId: toWorkforceEmployeeId(1),
     period: "2026-H1",

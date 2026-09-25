@@ -32,14 +32,14 @@ afterAll(async () => {
 const jwtSecret = "goal-tree-route-test-secret"
 
 type TreeNode = {
-  id: number
+  id: string
   owner_type: string
   employee_id: EmployeeId
   children: Array<TreeNode>
 }
 
 const treeNodeSchema: z.ZodType<TreeNode> = z.object({
-  id: z.number(),
+  id: z.uuid(),
   owner_type: z.string(),
   employee_id: zEmployeeId,
   children: z.array(z.lazy(() => treeNodeSchema)),
@@ -80,7 +80,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "performance_goals", [
     {
-      id: 1,
+      id: "01900030-0000-7000-8000-000000000001",
       employee_id: "1",
       period: "2026-H1",
       title: "Company goal",
@@ -92,7 +92,7 @@ async function createTestDb(): Promise<D1Database> {
       department_code: null,
     },
     {
-      id: 2,
+      id: "01900030-0000-7000-8000-000000000002",
       employee_id: "4",
       period: "2026-H1",
       title: "D003 dept goal",
@@ -100,11 +100,11 @@ async function createTestDb(): Promise<D1Database> {
       weight: 50,
       status: "in_progress",
       owner_type: "department",
-      parent_goal_id: 1,
+      parent_goal_id: "01900030-0000-7000-8000-000000000001",
       department_code: "D003",
     },
     {
-      id: 3,
+      id: "01900030-0000-7000-8000-000000000003",
       employee_id: "5",
       period: "2026-H1",
       title: "E005 individual goal",
@@ -112,11 +112,11 @@ async function createTestDb(): Promise<D1Database> {
       weight: 40,
       status: "in_progress",
       owner_type: "individual",
-      parent_goal_id: 2,
+      parent_goal_id: "01900030-0000-7000-8000-000000000002",
       department_code: null,
     },
     {
-      id: 4,
+      id: "01900030-0000-7000-8000-000000000004",
       employee_id: "9",
       period: "2026-H1",
       title: "D004 dept goal",
@@ -124,11 +124,11 @@ async function createTestDb(): Promise<D1Database> {
       weight: 50,
       status: "in_progress",
       owner_type: "department",
-      parent_goal_id: 1,
+      parent_goal_id: "01900030-0000-7000-8000-000000000001",
       department_code: "D004",
     },
     {
-      id: 5,
+      id: "01900030-0000-7000-8000-000000000005",
       employee_id: "10",
       period: "2026-H1",
       title: "E010 individual goal",
@@ -136,7 +136,7 @@ async function createTestDb(): Promise<D1Database> {
       weight: 60,
       status: "in_progress",
       owner_type: "individual",
-      parent_goal_id: 4,
+      parent_goal_id: "01900030-0000-7000-8000-000000000004",
       department_code: null,
     },
   ])
@@ -196,9 +196,12 @@ describe("GET /performance-goals/tree", () => {
       const individualIds = all
         .filter((node) => node.owner_type === "individual")
         .map((node) => node.id)
-        .sort((a, b) => a - b)
+        .toSorted()
 
-      expect(individualIds).toEqual([3, 5])
+      expect(individualIds).toEqual([
+        "01900030-0000-7000-8000-000000000003",
+        "01900030-0000-7000-8000-000000000005",
+      ])
     }
   })
 
@@ -230,7 +233,7 @@ describe("GET /performance-goals/tree", () => {
         .filter((node) => node.owner_type === "individual")
         .map((node) => node.id)
 
-      expect(individualIds).toEqual([3])
+      expect(individualIds).toEqual(["01900030-0000-7000-8000-000000000003"])
       expect(ownerTypes.length).toBe(4)
     }
   })

@@ -1,7 +1,7 @@
 import { McpServer } from "@modelcontextprotocol/sdk/server/mcp.js"
 import { StdioServerTransport } from "@modelcontextprotocol/sdk/server/stdio.js"
 import { z } from "zod"
-import { entityIdInput, entityIdSegment, toApiIntegerId, toApiStringId } from "@/lib/entity-id.ts"
+import { entityIdInput, entityIdSegment, toApiStringId } from "@/lib/entity-id.ts"
 import { apiRequest } from "@/lib/api-client.ts"
 import { uploadAttachment } from "@/lib/upload-attachment.ts"
 
@@ -115,9 +115,9 @@ server.tool(
         weight,
         kpi,
         owner_type,
-        parent_goal_id: toApiIntegerId(parent_goal_id),
+        parent_goal_id: toApiStringId(parent_goal_id),
         department_code,
-        evaluation_sheet_id: toApiIntegerId(evaluation_sheet_id),
+        evaluation_sheet_id: toApiStringId(evaluation_sheet_id),
       },
     })
 
@@ -254,7 +254,7 @@ server.tool(
       json: {
         employee_id: toApiStringId(employee_id),
         period,
-        template_id: toApiIntegerId(template_id),
+        template_id: toApiStringId(template_id),
         primary_evaluator_id: toApiStringId(primary_evaluator_id),
         secondary_evaluator_id: toApiStringId(secondary_evaluator_id),
       },

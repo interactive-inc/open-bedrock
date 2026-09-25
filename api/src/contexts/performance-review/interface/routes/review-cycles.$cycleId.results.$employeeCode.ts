@@ -10,10 +10,10 @@ import {
   reviewCycles,
   reviewForms,
 } from "@/contexts/performance-review/infrastructure/schema/performance-review"
-import { and, asc, eq } from "drizzle-orm"
+import { and, asc, eq, sql } from "drizzle-orm"
 import { ForbiddenError, InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { validateCodeParam } from "@/lib/http/validate-code-param"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 
 // @authorization permission - 権限キーで判定する
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
@@ -21,7 +21,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   if (session === null) {
     throw new UnauthorizedError()
   }
-  const cycleId = validateIntParam(c.req.param("cycleId"), "review cycle")
+  const cycleId = validateUuidParam(c.req.param("cycleId"), "review cycle")
 
   const cycleRows = await c.var.database
     .select()
@@ -46,7 +46,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select()
     .from(reviewForms)
     .where(and(eq(reviewForms.cycleId, cycleId), eq(reviewForms.subjectEmployeeId, employeeId)))
-    .orderBy(asc(reviewForms.id))
+    .orderBy(
+      asc(reviewForms.createdAt),
+      asc(sql`CAST(${reviewForms.legacyId} AS INTEGER)`),
+      asc(reviewForms.id),
+    )
   const canAdminister = session.hasPermission("review:administer")
   let visibleFormRows = formRows
 

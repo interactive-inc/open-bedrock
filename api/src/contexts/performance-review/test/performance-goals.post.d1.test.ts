@@ -31,7 +31,7 @@ afterAll(async () => {
 })
 
 const goalResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   period: z.string(),
   title: z.string(),

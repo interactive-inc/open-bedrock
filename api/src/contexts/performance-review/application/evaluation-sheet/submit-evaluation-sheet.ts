@@ -6,7 +6,7 @@ import { ConflictError, NotFoundError, UnexpectedError, ValidationError } from "
 import type { ApplicationError } from "@/lib/errors"
 
 export type Command = {
-  sheetId: number
+  sheetId: string
   actorEmployeeId: EmployeeId
   expectedRevision: number
   note: string | null
@@ -70,7 +70,7 @@ export class SubmitEvaluationSheet {
     return saved
   }
 
-  private async validateWeights(sheetId: number): Promise<ApplicationError | null> {
+  private async validateWeights(sheetId: string): Promise<ApplicationError | null> {
     const total = await new EvaluationSheetRepository(this.c).totalGoalWeight(sheetId)
 
     if (total instanceof Error) {

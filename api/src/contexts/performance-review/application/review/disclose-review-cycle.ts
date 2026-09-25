@@ -8,11 +8,11 @@ import type { ReviewCycle } from "@/contexts/performance-review/domain/entities/
 
 export type Input = {
   session: CompanySessionValue
-  cycleId: number
+  cycleId: string
 }
 
 export type DiscloseResult = {
-  cycleId: number
+  cycleId: string
   disclosedCount: number
 }
 

@@ -20,7 +20,7 @@ export class GoalEvaluationRepository {
   constructor(private readonly c: Context) {}
 
   /** 目標に紐づく評価を作成順（id 昇順）で返す。 */
-  async findByGoalId(goalId: number): Promise<ReadonlyArray<GoalEvaluation> | Error> {
+  async findByGoalId(goalId: string): Promise<ReadonlyArray<GoalEvaluation> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -44,8 +44,8 @@ export class GoalEvaluationRepository {
     try {
       const result = await this.c.env.DB.prepare(
         `
-        INSERT INTO goal_evaluations (goal_id, evaluator_id, kind, score, comment, created_at)
-        SELECT ?1, ?2, ?3, ?4, ?5, ?6
+        INSERT INTO goal_evaluations (id, goal_id, evaluator_id, kind, score, comment, created_at)
+        SELECT ?7, ?1, ?2, ?3, ?4, ?5, ?6
         WHERE EXISTS (SELECT 1 FROM performance_goals WHERE id = ?1 AND status != 'done')
         RETURNING id, goal_id AS goalId, evaluator_id AS evaluatorId, kind, score, comment, created_at AS createdAt
         `,
@@ -57,13 +57,14 @@ export class GoalEvaluationRepository {
           evaluation.score,
           evaluation.comment,
           evaluation.createdAt,
+          crypto.randomUUID(),
         )
         .all()
 
       const row = result.results.at(0) as
         | {
-            id: number
-            goalId: number
+            id: string
+            goalId: string
             evaluatorId: EmployeeId
             kind: string
             score: number | null
@@ -117,8 +118,8 @@ export class GoalEvaluationRepository {
         db
           .prepare(
             `
-          INSERT INTO goal_evaluations (goal_id, evaluator_id, kind, score, comment, created_at)
-          VALUES (?1, ?2, ?3, ?4, ?5, ?6)
+          INSERT INTO goal_evaluations (id, goal_id, evaluator_id, kind, score, comment, created_at)
+          VALUES (?7, ?1, ?2, ?3, ?4, ?5, ?6)
           RETURNING id, goal_id AS goalId, evaluator_id AS evaluatorId, kind, score, comment, created_at AS createdAt
           `,
           )
@@ -129,14 +130,15 @@ export class GoalEvaluationRepository {
             evaluation.score,
             evaluation.comment,
             evaluation.createdAt,
+            crypto.randomUUID(),
           ),
       ])
 
       const insertResult = results.at(2)
       const row = insertResult?.results?.at(0) as
         | {
-            id: number
-            goalId: number
+            id: string
+            goalId: string
             evaluatorId: EmployeeId
             kind: string
             score: number | null
@@ -169,7 +171,7 @@ export class GoalEvaluationRepository {
     }
   }
 
-  async delete(evaluationId: number): Promise<null | Error> {
+  async delete(evaluationId: string): Promise<null | Error> {
     try {
       await this.c.var.database.delete(goalEvaluations).where(eq(goalEvaluations.id, evaluationId))
       return null
@@ -179,7 +181,7 @@ export class GoalEvaluationRepository {
   }
 
   /** 目標に紐づく評価をすべて削除する。 */
-  async deleteByGoalId(goalId: number): Promise<null | Error> {
+  async deleteByGoalId(goalId: string): Promise<null | Error> {
     try {
       await this.c.var.database.delete(goalEvaluations).where(eq(goalEvaluations.goalId, goalId))
       return null

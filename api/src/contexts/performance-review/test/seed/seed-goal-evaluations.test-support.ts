@@ -2,8 +2,8 @@ import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 type SeedGoalEvaluation = {
-  id: number
-  goalId: number
+  id: string
+  goalId: string
   evaluatorId: EmployeeId
   kind: "self" | "manager" | "final"
   score: number | null
@@ -13,8 +13,8 @@ type SeedGoalEvaluation = {
 
 export const seedGoalEvaluations: ReadonlyArray<SeedGoalEvaluation> = [
   {
-    id: 1,
-    goalId: 4,
+    id: "01900031-0000-7000-8000-000000000001",
+    goalId: "01900030-0000-7000-8000-000000000004",
     evaluatorId: toWorkforceEmployeeId(9),
     kind: "self",
     score: 90,
@@ -22,8 +22,8 @@ export const seedGoalEvaluations: ReadonlyArray<SeedGoalEvaluation> = [
     createdAt: "2026-01-10T09:00:00Z",
   },
   {
-    id: 2,
-    goalId: 4,
+    id: "01900031-0000-7000-8000-000000000002",
+    goalId: "01900030-0000-7000-8000-000000000004",
     evaluatorId: toWorkforceEmployeeId(4),
     kind: "manager",
     score: 85,
@@ -31,8 +31,8 @@ export const seedGoalEvaluations: ReadonlyArray<SeedGoalEvaluation> = [
     createdAt: "2026-01-15T09:00:00Z",
   },
   {
-    id: 3,
-    goalId: 4,
+    id: "01900031-0000-7000-8000-000000000003",
+    goalId: "01900030-0000-7000-8000-000000000004",
     evaluatorId: toWorkforceEmployeeId(4),
     kind: "final",
     score: 88,

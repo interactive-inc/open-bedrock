@@ -9,7 +9,7 @@ export const goalOwnerTypeSchema = z.enum(["individual", "department", "company"
 export type GoalOwnerType = z.infer<typeof goalOwnerTypeSchema>
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   employeeId: zEmployeeId,
   period: z.string(),
   title: z.string(),
@@ -17,9 +17,9 @@ const zProps = z.object({
   weight: z.number().int().min(1).max(100),
   status: z.string(),
   ownerType: goalOwnerTypeSchema,
-  parentGoalId: z.number().nullable(),
+  parentGoalId: z.string().nullable(),
   departmentCode: z.string().nullable(),
-  evaluationSheetId: z.number().nullable(),
+  evaluationSheetId: z.string().nullable(),
 })
 
 type Props = z.infer<typeof zProps>
@@ -65,9 +65,9 @@ export class Goal implements Props {
     kpi: string | null
     weight: number
     ownerType?: GoalOwnerType
-    parentGoalId?: number | null
+    parentGoalId?: string | null
     departmentCode?: string | null
-    evaluationSheetId?: number | null
+    evaluationSheetId?: string | null
   }): Goal {
     return new Goal({
       id: null,
@@ -84,7 +84,7 @@ export class Goal implements Props {
     })
   }
 
-  static fromRow(row: GoalRow): Goal {
+  static fromRow(row: Omit<GoalRow, "legacyId" | "createdAt">): Goal {
     return new Goal({
       id: row.id,
       employeeId: row.employeeId,
