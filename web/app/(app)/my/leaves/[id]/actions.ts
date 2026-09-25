@@ -30,7 +30,8 @@ export async function actOnLeaveProcedure(_previous: State, form: FormData): Pro
     if (operation.data === "submit") {
       const previousValue = form.get("previous_leave_request_id")
       const previous = z
-        .string().uuid()
+        .string()
+        .uuid()
         .nullable()
         .safeParse(previousValue === "" || previousValue === null ? null : previousValue)
       if (!previous.success) return new Error("差戻し元の休暇番号が不正です")

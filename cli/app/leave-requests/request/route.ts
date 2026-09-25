@@ -43,7 +43,8 @@ export default factory.createHandlers(
     if (!query.start || !query.end) throw new UsageError("--start と --end が必要です")
 
     const previous = z
-      .string().uuid()
+      .string()
+      .uuid()
       .nullable()
       .safeParse(query["previous-leave-request-id"] ?? null)
     if (!previous.success) throw new UsageError("差戻し元の番号が不正です")
