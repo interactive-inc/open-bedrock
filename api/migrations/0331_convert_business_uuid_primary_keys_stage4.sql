@@ -18,6 +18,9 @@
 -- legacy_id の数値順で旧来の並びを保つ。
 --
 -- 所有業務が撤去の停止中なら検証表の CHECK で止める。index と trigger は作り直す前の定義から復元する。
+--
+-- ALTER TABLE RENAME は trigger を含む全 schema を解析し直し、table ごとに数十 ms かかる。
+-- 名前を変えずに行を退避し、同じ名前で作り直してから戻す。
 
 CREATE TABLE _business_uuid_primary_key_stage4_validation (
   resource TEXT PRIMARY KEY NOT NULL,
@@ -177,7 +180,9 @@ INSERT INTO _uuid_reference_orphans VALUES ('training_enrollments.course_id', (S
 INSERT INTO _uuid_reference_orphans VALUES ('recruitment_candidates.position_id', (SELECT count(*) FROM recruitment_candidates child WHERE child.position_id IS NOT NULL AND NOT EXISTS (SELECT 1 FROM job_openings parent WHERE parent.id = child.position_id)));
 
 -- rooms
-CREATE TABLE "__new_rooms" (
+CREATE TABLE "_stage_rooms" AS SELECT * FROM rooms;
+DROP TABLE rooms;
+CREATE TABLE rooms (
   id TEXT PRIMARY KEY NOT NULL,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   legacy_id TEXT UNIQUE,
@@ -186,24 +191,23 @@ CREATE TABLE "__new_rooms" (
   location TEXT,
   CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
-INSERT INTO "__new_rooms" (id, name, capacity, location, legacy_id, created_at)
+INSERT INTO rooms (id, name, capacity, location, legacy_id, created_at)
 SELECT map.new_id,
        source.name,
        source.capacity,
        source.location,
        CAST(source.id AS TEXT),
        strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-FROM rooms source
+FROM "_stage_rooms" source
 INNER JOIN _rooms_id_map map ON map.old_id = source.id;
 INSERT INTO _business_uuid_primary_key_stage4_validation
 SELECT 'rooms',
+       (SELECT count(*) FROM "_stage_rooms"),
        (SELECT count(*) FROM rooms),
-       (SELECT count(*) FROM "__new_rooms"),
        0,
-       (SELECT count(*) FROM "__new_rooms" WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
+       (SELECT count(*) FROM rooms WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'room' AND revision = 1);
-DROP TABLE rooms;
-ALTER TABLE "__new_rooms" RENAME TO rooms;
+DROP TABLE "_stage_rooms";
 CREATE INDEX idx_rooms_capacity ON rooms (capacity);
 CREATE TRIGGER rooms_source_freeze_delete BEFORE DELETE ON rooms
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'room' AND revision = 1)
@@ -224,7 +228,9 @@ WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
 BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 -- room_reservations
-CREATE TABLE "__new_room_reservations" (
+CREATE TABLE "_stage_room_reservations" AS SELECT * FROM room_reservations;
+DROP TABLE room_reservations;
+CREATE TABLE room_reservations (
   id TEXT PRIMARY KEY NOT NULL,
   room_id TEXT NOT NULL,
   reserver_id TEXT REFERENCES company_employees(id) ON DELETE RESTRICT NOT NULL,
@@ -234,29 +240,28 @@ CREATE TABLE "__new_room_reservations" (
   CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]'),
   CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
-INSERT INTO "__new_room_reservations" (id, room_id, reserver_id, start_at, end_at, purpose)
+INSERT INTO room_reservations (id, room_id, reserver_id, start_at, end_at, purpose)
 SELECT map.new_id,
        CASE WHEN source.room_id IS NULL THEN NULL ELSE COALESCE((SELECT ref.new_id FROM _rooms_id_map ref WHERE ref.old_id = source.room_id), CAST(source.room_id AS TEXT)) END,
        source.reserver_id,
        source.start_at,
        source.end_at,
        source.purpose
-FROM room_reservations source
+FROM "_stage_room_reservations" source
 INNER JOIN _room_reservations_id_map map ON map.old_id = source.id;
 INSERT INTO _business_uuid_primary_key_stage4_validation
 SELECT 'room_reservations',
+       (SELECT count(*) FROM "_stage_room_reservations"),
        (SELECT count(*) FROM room_reservations),
-       (SELECT count(*) FROM "__new_room_reservations"),
        0,
-       (SELECT count(*) FROM "__new_room_reservations" WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
+       (SELECT count(*) FROM room_reservations WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'room' AND revision = 1)
          + (SELECT count(*) FROM _room_reservations_id_map WHERE old_id IS NOT new_id AND (
              EXISTS (SELECT 1 FROM system_record_coverage_entries entry WHERE entry.source_record_id = _room_reservations_id_map.old_id)
              OR EXISTS (SELECT 1 FROM system_preserved_records preserved WHERE json_extract(preserved.snapshot_json, '$.source.recordId') = _room_reservations_id_map.old_id)
              OR EXISTS (SELECT 1 FROM system_cases workflow_case WHERE workflow_case.subject_id = _room_reservations_id_map.old_id)
              OR EXISTS (SELECT 1 FROM system_audit_events audit WHERE audit.target_id = _room_reservations_id_map.old_id)));
-DROP TABLE room_reservations;
-ALTER TABLE "__new_room_reservations" RENAME TO room_reservations;
+DROP TABLE "_stage_room_reservations";
 CREATE INDEX idx_room_reservations_reserver ON room_reservations (reserver_id);
 CREATE INDEX idx_room_reservations_room ON room_reservations (room_id);
 CREATE INDEX idx_room_reservations_room_time ON room_reservations (room_id, start_at, end_at);
@@ -271,7 +276,9 @@ WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'r
 BEGIN SELECT RAISE(ABORT, 'room_record_source_frozen'); END;
 
 -- shift_patterns
-CREATE TABLE "__new_shift_patterns" (
+CREATE TABLE "_stage_shift_patterns" AS SELECT * FROM shift_patterns;
+DROP TABLE shift_patterns;
+CREATE TABLE shift_patterns (
   id TEXT PRIMARY KEY NOT NULL,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   legacy_id TEXT UNIQUE,
@@ -282,7 +289,7 @@ CREATE TABLE "__new_shift_patterns" (
   break_minutes INTEGER NOT NULL,
   CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
-INSERT INTO "__new_shift_patterns" (id, code, name, start_time, end_time, break_minutes, legacy_id, created_at)
+INSERT INTO shift_patterns (id, code, name, start_time, end_time, break_minutes, legacy_id, created_at)
 SELECT map.new_id,
        source.code,
        source.name,
@@ -291,17 +298,16 @@ SELECT map.new_id,
        source.break_minutes,
        CAST(source.id AS TEXT),
        strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-FROM shift_patterns source
+FROM "_stage_shift_patterns" source
 INNER JOIN _shift_patterns_id_map map ON map.old_id = source.id;
 INSERT INTO _business_uuid_primary_key_stage4_validation
 SELECT 'shift_patterns',
+       (SELECT count(*) FROM "_stage_shift_patterns"),
        (SELECT count(*) FROM shift_patterns),
-       (SELECT count(*) FROM "__new_shift_patterns"),
        0,
-       (SELECT count(*) FROM "__new_shift_patterns" WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
+       (SELECT count(*) FROM shift_patterns WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'shift' AND revision = 1);
-DROP TABLE shift_patterns;
-ALTER TABLE "__new_shift_patterns" RENAME TO shift_patterns;
+DROP TABLE "_stage_shift_patterns";
 CREATE INDEX idx_shift_patterns_code ON shift_patterns (code);
 CREATE TRIGGER shift_patterns_source_freeze_delete BEFORE DELETE ON shift_patterns
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'shift' AND revision = 1)
@@ -322,7 +328,9 @@ WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
 BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 -- shift_assignments
-CREATE TABLE "__new_shift_assignments" (
+CREATE TABLE "_stage_shift_assignments" AS SELECT * FROM shift_assignments;
+DROP TABLE shift_assignments;
+CREATE TABLE shift_assignments (
   id TEXT PRIMARY KEY NOT NULL,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   legacy_id TEXT UNIQUE,
@@ -333,7 +341,7 @@ CREATE TABLE "__new_shift_assignments" (
   published_at TEXT,
   CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
-INSERT INTO "__new_shift_assignments" (id, employee_id, pattern_id, date, note, published_at, legacy_id, created_at)
+INSERT INTO shift_assignments (id, employee_id, pattern_id, date, note, published_at, legacy_id, created_at)
 SELECT map.new_id,
        source.employee_id,
        CASE WHEN source.pattern_id IS NULL THEN NULL ELSE COALESCE((SELECT ref.new_id FROM _shift_patterns_id_map ref WHERE ref.old_id = source.pattern_id), CAST(source.pattern_id AS TEXT)) END,
@@ -342,17 +350,16 @@ SELECT map.new_id,
        source.published_at,
        CAST(source.id AS TEXT),
        strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-FROM shift_assignments source
+FROM "_stage_shift_assignments" source
 INNER JOIN _shift_assignments_id_map map ON map.old_id = source.id;
 INSERT INTO _business_uuid_primary_key_stage4_validation
 SELECT 'shift_assignments',
+       (SELECT count(*) FROM "_stage_shift_assignments"),
        (SELECT count(*) FROM shift_assignments),
-       (SELECT count(*) FROM "__new_shift_assignments"),
        0,
-       (SELECT count(*) FROM "__new_shift_assignments" WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
+       (SELECT count(*) FROM shift_assignments WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'shift' AND revision = 1);
-DROP TABLE shift_assignments;
-ALTER TABLE "__new_shift_assignments" RENAME TO shift_assignments;
+DROP TABLE "_stage_shift_assignments";
 CREATE INDEX idx_shift_assignments_date ON shift_assignments (date);
 CREATE INDEX idx_shift_assignments_employee ON shift_assignments (employee_id);
 CREATE INDEX idx_shift_assignments_pattern ON shift_assignments (pattern_id);
@@ -377,7 +384,9 @@ WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
 BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 -- shift_swap_requests
-CREATE TABLE "__new_shift_swap_requests" (
+CREATE TABLE "_stage_shift_swap_requests" AS SELECT * FROM shift_swap_requests;
+DROP TABLE shift_swap_requests;
+CREATE TABLE shift_swap_requests (
   id TEXT PRIMARY KEY NOT NULL,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   legacy_id TEXT UNIQUE,
@@ -389,7 +398,7 @@ CREATE TABLE "__new_shift_swap_requests" (
   approved_at TEXT,
   CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
-INSERT INTO "__new_shift_swap_requests" (id, requester_employee_id, target_employee_id, date, note, status, approved_at, legacy_id, created_at)
+INSERT INTO shift_swap_requests (id, requester_employee_id, target_employee_id, date, note, status, approved_at, legacy_id, created_at)
 SELECT map.new_id,
        source.requester_employee_id,
        source.target_employee_id,
@@ -399,17 +408,16 @@ SELECT map.new_id,
        source.approved_at,
        CAST(source.id AS TEXT),
        strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-FROM shift_swap_requests source
+FROM "_stage_shift_swap_requests" source
 INNER JOIN _shift_swap_requests_id_map map ON map.old_id = source.id;
 INSERT INTO _business_uuid_primary_key_stage4_validation
 SELECT 'shift_swap_requests',
+       (SELECT count(*) FROM "_stage_shift_swap_requests"),
        (SELECT count(*) FROM shift_swap_requests),
-       (SELECT count(*) FROM "__new_shift_swap_requests"),
        0,
-       (SELECT count(*) FROM "__new_shift_swap_requests" WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
+       (SELECT count(*) FROM shift_swap_requests WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'shift' AND revision = 1);
-DROP TABLE shift_swap_requests;
-ALTER TABLE "__new_shift_swap_requests" RENAME TO shift_swap_requests;
+DROP TABLE "_stage_shift_swap_requests";
 CREATE UNIQUE INDEX idx_shift_swap_requests_pending
 ON shift_swap_requests (requester_employee_id, target_employee_id, date)
 WHERE status = 'pending';
@@ -433,7 +441,9 @@ WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
 BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 -- surveys
-CREATE TABLE "__new_surveys" (
+CREATE TABLE "_stage_surveys" AS SELECT * FROM surveys;
+DROP TABLE surveys;
+CREATE TABLE surveys (
   id TEXT PRIMARY KEY NOT NULL,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   legacy_id TEXT UNIQUE,
@@ -442,24 +452,23 @@ CREATE TABLE "__new_surveys" (
   questions_json TEXT NOT NULL,
   CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
-INSERT INTO "__new_surveys" (id, title, status, questions_json, legacy_id, created_at)
+INSERT INTO surveys (id, title, status, questions_json, legacy_id, created_at)
 SELECT map.new_id,
        source.title,
        source.status,
        source.questions_json,
        CAST(source.id AS TEXT),
        strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-FROM surveys source
+FROM "_stage_surveys" source
 INNER JOIN _surveys_id_map map ON map.old_id = source.id;
 INSERT INTO _business_uuid_primary_key_stage4_validation
 SELECT 'surveys',
+       (SELECT count(*) FROM "_stage_surveys"),
        (SELECT count(*) FROM surveys),
-       (SELECT count(*) FROM "__new_surveys"),
        0,
-       (SELECT count(*) FROM "__new_surveys" WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
+       (SELECT count(*) FROM surveys WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'survey' AND revision = 1);
-DROP TABLE surveys;
-ALTER TABLE "__new_surveys" RENAME TO surveys;
+DROP TABLE "_stage_surveys";
 CREATE INDEX idx_surveys_status ON surveys (status);
 CREATE TRIGGER surveys_source_freeze_delete BEFORE DELETE ON surveys
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context='survey' AND revision=1)
@@ -480,7 +489,9 @@ WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
 BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 -- survey_responses
-CREATE TABLE "__new_survey_responses" (
+CREATE TABLE "_stage_survey_responses" AS SELECT * FROM survey_responses;
+DROP TABLE survey_responses;
+CREATE TABLE survey_responses (
   id TEXT PRIMARY KEY NOT NULL,
   legacy_id TEXT UNIQUE,
   survey_id TEXT NOT NULL,
@@ -489,24 +500,23 @@ CREATE TABLE "__new_survey_responses" (
   submitted_at TEXT NOT NULL,
   CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
-INSERT INTO "__new_survey_responses" (id, survey_id, respondent_id, answers_json, submitted_at, legacy_id)
+INSERT INTO survey_responses (id, survey_id, respondent_id, answers_json, submitted_at, legacy_id)
 SELECT map.new_id,
        CASE WHEN source.survey_id IS NULL THEN NULL ELSE COALESCE((SELECT ref.new_id FROM _surveys_id_map ref WHERE ref.old_id = source.survey_id), CAST(source.survey_id AS TEXT)) END,
        source.respondent_id,
        source.answers_json,
        source.submitted_at,
        CAST(source.id AS TEXT)
-FROM survey_responses source
+FROM "_stage_survey_responses" source
 INNER JOIN _survey_responses_id_map map ON map.old_id = source.id;
 INSERT INTO _business_uuid_primary_key_stage4_validation
 SELECT 'survey_responses',
+       (SELECT count(*) FROM "_stage_survey_responses"),
        (SELECT count(*) FROM survey_responses),
-       (SELECT count(*) FROM "__new_survey_responses"),
        0,
-       (SELECT count(*) FROM "__new_survey_responses" WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
+       (SELECT count(*) FROM survey_responses WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'survey' AND revision = 1);
-DROP TABLE survey_responses;
-ALTER TABLE "__new_survey_responses" RENAME TO survey_responses;
+DROP TABLE "_stage_survey_responses";
 CREATE INDEX idx_survey_responses_respondent ON survey_responses (respondent_id);
 CREATE INDEX idx_survey_responses_survey ON survey_responses (survey_id);
 CREATE UNIQUE INDEX idx_survey_responses_survey_respondent
@@ -530,7 +540,9 @@ WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
 BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 -- thanks_rewards
-CREATE TABLE "__new_thanks_rewards" (
+CREATE TABLE "_stage_thanks_rewards" AS SELECT * FROM thanks_rewards;
+DROP TABLE thanks_rewards;
+CREATE TABLE thanks_rewards (
   id TEXT PRIMARY KEY NOT NULL,
   legacy_id TEXT UNIQUE,
   name TEXT NOT NULL,
@@ -540,7 +552,7 @@ CREATE TABLE "__new_thanks_rewards" (
   created_at TEXT NOT NULL,
   CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
-INSERT INTO "__new_thanks_rewards" (id, name, point_cost, is_active, stock, created_at, legacy_id)
+INSERT INTO thanks_rewards (id, name, point_cost, is_active, stock, created_at, legacy_id)
 SELECT map.new_id,
        source.name,
        source.point_cost,
@@ -548,17 +560,16 @@ SELECT map.new_id,
        source.stock,
        source.created_at,
        CAST(source.id AS TEXT)
-FROM thanks_rewards source
+FROM "_stage_thanks_rewards" source
 INNER JOIN _thanks_rewards_id_map map ON map.old_id = source.id;
 INSERT INTO _business_uuid_primary_key_stage4_validation
 SELECT 'thanks_rewards',
+       (SELECT count(*) FROM "_stage_thanks_rewards"),
        (SELECT count(*) FROM thanks_rewards),
-       (SELECT count(*) FROM "__new_thanks_rewards"),
        0,
-       (SELECT count(*) FROM "__new_thanks_rewards" WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
+       (SELECT count(*) FROM thanks_rewards WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'thanks' AND revision = 1);
-DROP TABLE thanks_rewards;
-ALTER TABLE "__new_thanks_rewards" RENAME TO thanks_rewards;
+DROP TABLE "_stage_thanks_rewards";
 CREATE TRIGGER thanks_rewards_source_freeze_delete BEFORE DELETE ON thanks_rewards
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context='thanks' AND revision=1)
 BEGIN SELECT RAISE(ABORT, 'thanks_record_source_frozen'); END;
@@ -578,7 +589,9 @@ WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
 BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 -- thanks_messages
-CREATE TABLE "__new_thanks_messages" (
+CREATE TABLE "_stage_thanks_messages" AS SELECT * FROM thanks_messages;
+DROP TABLE thanks_messages;
+CREATE TABLE thanks_messages (
   id TEXT PRIMARY KEY NOT NULL,
   legacy_id TEXT UNIQUE,
   sender_employee_id TEXT REFERENCES company_employees(id) ON DELETE RESTRICT NOT NULL,
@@ -588,7 +601,7 @@ CREATE TABLE "__new_thanks_messages" (
   created_at TEXT NOT NULL,
   CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
-INSERT INTO "__new_thanks_messages" (id, sender_employee_id, recipient_employee_id, message, points, created_at, legacy_id)
+INSERT INTO thanks_messages (id, sender_employee_id, recipient_employee_id, message, points, created_at, legacy_id)
 SELECT map.new_id,
        source.sender_employee_id,
        source.recipient_employee_id,
@@ -596,17 +609,16 @@ SELECT map.new_id,
        source.points,
        source.created_at,
        CAST(source.id AS TEXT)
-FROM thanks_messages source
+FROM "_stage_thanks_messages" source
 INNER JOIN _thanks_messages_id_map map ON map.old_id = source.id;
 INSERT INTO _business_uuid_primary_key_stage4_validation
 SELECT 'thanks_messages',
+       (SELECT count(*) FROM "_stage_thanks_messages"),
        (SELECT count(*) FROM thanks_messages),
-       (SELECT count(*) FROM "__new_thanks_messages"),
        0,
-       (SELECT count(*) FROM "__new_thanks_messages" WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
+       (SELECT count(*) FROM thanks_messages WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'thanks' AND revision = 1);
-DROP TABLE thanks_messages;
-ALTER TABLE "__new_thanks_messages" RENAME TO thanks_messages;
+DROP TABLE "_stage_thanks_messages";
 CREATE INDEX idx_thanks_created_at ON "thanks_messages" (created_at);
 CREATE INDEX idx_thanks_recipient ON "thanks_messages" (recipient_employee_id);
 CREATE TRIGGER thanks_messages_source_freeze_delete BEFORE DELETE ON thanks_messages
@@ -628,7 +640,9 @@ WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
 BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 -- thanks_point_budgets
-CREATE TABLE "__new_thanks_point_budgets" (
+CREATE TABLE "_stage_thanks_point_budgets" AS SELECT * FROM thanks_point_budgets;
+DROP TABLE thanks_point_budgets;
+CREATE TABLE thanks_point_budgets (
   id TEXT PRIMARY KEY NOT NULL,
   legacy_id TEXT UNIQUE,
   employee_id TEXT REFERENCES company_employees(id) ON DELETE RESTRICT NOT NULL,
@@ -638,7 +652,7 @@ CREATE TABLE "__new_thanks_point_budgets" (
   created_at TEXT NOT NULL,
   CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
-INSERT INTO "__new_thanks_point_budgets" (id, employee_id, period, granted_points, consumed_points, created_at, legacy_id)
+INSERT INTO thanks_point_budgets (id, employee_id, period, granted_points, consumed_points, created_at, legacy_id)
 SELECT map.new_id,
        source.employee_id,
        source.period,
@@ -646,17 +660,16 @@ SELECT map.new_id,
        source.consumed_points,
        source.created_at,
        CAST(source.id AS TEXT)
-FROM thanks_point_budgets source
+FROM "_stage_thanks_point_budgets" source
 INNER JOIN _thanks_point_budgets_id_map map ON map.old_id = source.id;
 INSERT INTO _business_uuid_primary_key_stage4_validation
 SELECT 'thanks_point_budgets',
+       (SELECT count(*) FROM "_stage_thanks_point_budgets"),
        (SELECT count(*) FROM thanks_point_budgets),
-       (SELECT count(*) FROM "__new_thanks_point_budgets"),
        0,
-       (SELECT count(*) FROM "__new_thanks_point_budgets" WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
+       (SELECT count(*) FROM thanks_point_budgets WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'thanks' AND revision = 1);
-DROP TABLE thanks_point_budgets;
-ALTER TABLE "__new_thanks_point_budgets" RENAME TO thanks_point_budgets;
+DROP TABLE "_stage_thanks_point_budgets";
 CREATE UNIQUE INDEX uq_thanks_point_budgets_employee_period
   ON thanks_point_budgets (employee_id, period);
 CREATE TRIGGER thanks_point_budgets_source_freeze_delete BEFORE DELETE ON thanks_point_budgets
@@ -678,7 +691,9 @@ WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
 BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 -- thanks_redemptions
-CREATE TABLE "__new_thanks_redemptions" (
+CREATE TABLE "_stage_thanks_redemptions" AS SELECT * FROM thanks_redemptions;
+DROP TABLE thanks_redemptions;
+CREATE TABLE thanks_redemptions (
   id TEXT PRIMARY KEY NOT NULL,
   legacy_id TEXT UNIQUE,
   employee_id TEXT REFERENCES company_employees(id) ON DELETE RESTRICT NOT NULL,
@@ -690,7 +705,7 @@ CREATE TABLE "__new_thanks_redemptions" (
   decider_id TEXT REFERENCES company_employees(id) ON DELETE RESTRICT,
   CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
-INSERT INTO "__new_thanks_redemptions" (id, employee_id, reward_id, point_cost, status, created_at, decided_at, decider_id, legacy_id)
+INSERT INTO thanks_redemptions (id, employee_id, reward_id, point_cost, status, created_at, decided_at, decider_id, legacy_id)
 SELECT map.new_id,
        source.employee_id,
        CASE WHEN source.reward_id IS NULL THEN NULL ELSE COALESCE((SELECT ref.new_id FROM _thanks_rewards_id_map ref WHERE ref.old_id = source.reward_id), CAST(source.reward_id AS TEXT)) END,
@@ -700,17 +715,16 @@ SELECT map.new_id,
        source.decided_at,
        source.decider_id,
        CAST(source.id AS TEXT)
-FROM thanks_redemptions source
+FROM "_stage_thanks_redemptions" source
 INNER JOIN _thanks_redemptions_id_map map ON map.old_id = source.id;
 INSERT INTO _business_uuid_primary_key_stage4_validation
 SELECT 'thanks_redemptions',
+       (SELECT count(*) FROM "_stage_thanks_redemptions"),
        (SELECT count(*) FROM thanks_redemptions),
-       (SELECT count(*) FROM "__new_thanks_redemptions"),
        0,
-       (SELECT count(*) FROM "__new_thanks_redemptions" WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
+       (SELECT count(*) FROM thanks_redemptions WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'thanks' AND revision = 1);
-DROP TABLE thanks_redemptions;
-ALTER TABLE "__new_thanks_redemptions" RENAME TO thanks_redemptions;
+DROP TABLE "_stage_thanks_redemptions";
 CREATE INDEX idx_thanks_redemptions_employee ON thanks_redemptions (employee_id);
 CREATE UNIQUE INDEX idx_thanks_redemptions_employee_pending
   ON thanks_redemptions (employee_id) WHERE status = 'pending';
@@ -734,7 +748,9 @@ WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
 BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 -- training_courses
-CREATE TABLE "__new_training_courses" (
+CREATE TABLE "_stage_training_courses" AS SELECT * FROM training_courses;
+DROP TABLE training_courses;
+CREATE TABLE training_courses (
   id TEXT PRIMARY KEY NOT NULL,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   legacy_id TEXT UNIQUE,
@@ -747,7 +763,7 @@ CREATE TABLE "__new_training_courses" (
   status TEXT NOT NULL,
   CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
-INSERT INTO "__new_training_courses" (id, code, title, description, duration_minutes, category, is_required, status, legacy_id, created_at)
+INSERT INTO training_courses (id, code, title, description, duration_minutes, category, is_required, status, legacy_id, created_at)
 SELECT map.new_id,
        source.code,
        source.title,
@@ -758,17 +774,16 @@ SELECT map.new_id,
        source.status,
        CAST(source.id AS TEXT),
        strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-FROM training_courses source
+FROM "_stage_training_courses" source
 INNER JOIN _training_courses_id_map map ON map.old_id = source.id;
 INSERT INTO _business_uuid_primary_key_stage4_validation
 SELECT 'training_courses',
+       (SELECT count(*) FROM "_stage_training_courses"),
        (SELECT count(*) FROM training_courses),
-       (SELECT count(*) FROM "__new_training_courses"),
        0,
-       (SELECT count(*) FROM "__new_training_courses" WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
+       (SELECT count(*) FROM training_courses WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'training' AND revision = 1);
-DROP TABLE training_courses;
-ALTER TABLE "__new_training_courses" RENAME TO training_courses;
+DROP TABLE "_stage_training_courses";
 CREATE INDEX idx_training_courses_category ON training_courses (category);
 CREATE INDEX idx_training_courses_code ON training_courses (code);
 CREATE TRIGGER training_courses_source_freeze_delete BEFORE DELETE ON training_courses
@@ -790,7 +805,9 @@ WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
 BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 -- training_enrollments
-CREATE TABLE "__new_training_enrollments" (
+CREATE TABLE "_stage_training_enrollments" AS SELECT * FROM training_enrollments;
+DROP TABLE training_enrollments;
+CREATE TABLE training_enrollments (
   id TEXT PRIMARY KEY NOT NULL,
   created_at TEXT NOT NULL DEFAULT (strftime('%Y-%m-%dT%H:%M:%fZ', 'now')),
   legacy_id TEXT UNIQUE,
@@ -802,7 +819,7 @@ CREATE TABLE "__new_training_enrollments" (
   due_date TEXT,
   CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
-INSERT INTO "__new_training_enrollments" (id, course_id, employee_id, status, completed_at, score, due_date, legacy_id, created_at)
+INSERT INTO training_enrollments (id, course_id, employee_id, status, completed_at, score, due_date, legacy_id, created_at)
 SELECT map.new_id,
        CASE WHEN source.course_id IS NULL THEN NULL ELSE COALESCE((SELECT ref.new_id FROM _training_courses_id_map ref WHERE ref.old_id = source.course_id), CAST(source.course_id AS TEXT)) END,
        source.employee_id,
@@ -812,17 +829,16 @@ SELECT map.new_id,
        source.due_date,
        CAST(source.id AS TEXT),
        strftime('%Y-%m-%dT%H:%M:%fZ', 'now')
-FROM training_enrollments source
+FROM "_stage_training_enrollments" source
 INNER JOIN _training_enrollments_id_map map ON map.old_id = source.id;
 INSERT INTO _business_uuid_primary_key_stage4_validation
 SELECT 'training_enrollments',
+       (SELECT count(*) FROM "_stage_training_enrollments"),
        (SELECT count(*) FROM training_enrollments),
-       (SELECT count(*) FROM "__new_training_enrollments"),
        0,
-       (SELECT count(*) FROM "__new_training_enrollments" WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
+       (SELECT count(*) FROM training_enrollments WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'training' AND revision = 1);
-DROP TABLE training_enrollments;
-ALTER TABLE "__new_training_enrollments" RENAME TO training_enrollments;
+DROP TABLE "_stage_training_enrollments";
 CREATE INDEX idx_training_enrollments_course ON training_enrollments (course_id);
 CREATE UNIQUE INDEX idx_training_enrollments_course_employee
   ON training_enrollments (course_id, employee_id);
@@ -846,7 +862,9 @@ WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
 BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 -- job_openings
-CREATE TABLE "__new_job_openings" (
+CREATE TABLE "_stage_job_openings" AS SELECT * FROM job_openings;
+DROP TABLE job_openings;
+CREATE TABLE job_openings (
   id TEXT PRIMARY KEY NOT NULL,
   legacy_id TEXT UNIQUE,
   title TEXT NOT NULL,
@@ -856,7 +874,7 @@ CREATE TABLE "__new_job_openings" (
   created_at TEXT NOT NULL,
   CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
-INSERT INTO "__new_job_openings" (id, title, department_code, status, note, created_at, legacy_id)
+INSERT INTO job_openings (id, title, department_code, status, note, created_at, legacy_id)
 SELECT map.new_id,
        source.title,
        source.department_code,
@@ -864,17 +882,16 @@ SELECT map.new_id,
        source.note,
        source.created_at,
        CAST(source.id AS TEXT)
-FROM job_openings source
+FROM "_stage_job_openings" source
 INNER JOIN _job_openings_id_map map ON map.old_id = source.id;
 INSERT INTO _business_uuid_primary_key_stage4_validation
 SELECT 'job_openings',
+       (SELECT count(*) FROM "_stage_job_openings"),
        (SELECT count(*) FROM job_openings),
-       (SELECT count(*) FROM "__new_job_openings"),
        0,
-       (SELECT count(*) FROM "__new_job_openings" WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
+       (SELECT count(*) FROM job_openings WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'recruitment' AND revision = 1);
-DROP TABLE job_openings;
-ALTER TABLE "__new_job_openings" RENAME TO job_openings;
+DROP TABLE "_stage_job_openings";
 CREATE INDEX idx_recruitment_positions_status ON "job_openings" (status);
 CREATE TRIGGER job_openings_source_freeze_delete BEFORE DELETE ON job_openings
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'recruitment' AND revision = 1)
@@ -895,7 +912,9 @@ WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
 BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 -- recruitment_candidates
-CREATE TABLE "__new_recruitment_candidates" (
+CREATE TABLE "_stage_recruitment_candidates" AS SELECT * FROM recruitment_candidates;
+DROP TABLE recruitment_candidates;
+CREATE TABLE recruitment_candidates (
   id TEXT PRIMARY KEY NOT NULL,
   legacy_id TEXT UNIQUE,
   position_id TEXT NOT NULL,
@@ -907,7 +926,7 @@ CREATE TABLE "__new_recruitment_candidates" (
   created_at TEXT NOT NULL,
   CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
-INSERT INTO "__new_recruitment_candidates" (id, position_id, name, email, source, stage, note, created_at, legacy_id)
+INSERT INTO recruitment_candidates (id, position_id, name, email, source, stage, note, created_at, legacy_id)
 SELECT map.new_id,
        CASE WHEN source.position_id IS NULL THEN NULL ELSE COALESCE((SELECT ref.new_id FROM _job_openings_id_map ref WHERE ref.old_id = source.position_id), CAST(source.position_id AS TEXT)) END,
        source.name,
@@ -917,17 +936,16 @@ SELECT map.new_id,
        source.note,
        source.created_at,
        CAST(source.id AS TEXT)
-FROM recruitment_candidates source
+FROM "_stage_recruitment_candidates" source
 INNER JOIN _recruitment_candidates_id_map map ON map.old_id = source.id;
 INSERT INTO _business_uuid_primary_key_stage4_validation
 SELECT 'recruitment_candidates',
+       (SELECT count(*) FROM "_stage_recruitment_candidates"),
        (SELECT count(*) FROM recruitment_candidates),
-       (SELECT count(*) FROM "__new_recruitment_candidates"),
        0,
-       (SELECT count(*) FROM "__new_recruitment_candidates" WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
+       (SELECT count(*) FROM recruitment_candidates WHERE NOT (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')),
        (SELECT count(*) FROM system_record_source_freezes WHERE owner_context = 'recruitment' AND revision = 1);
-DROP TABLE recruitment_candidates;
-ALTER TABLE "__new_recruitment_candidates" RENAME TO recruitment_candidates;
+DROP TABLE "_stage_recruitment_candidates";
 CREATE INDEX idx_recruitment_candidates_position ON recruitment_candidates (position_id);
 CREATE TRIGGER recruitment_candidates_source_freeze_delete BEFORE DELETE ON recruitment_candidates
 WHEN EXISTS (SELECT 1 FROM system_record_source_freezes WHERE owner_context = 'recruitment' AND revision = 1)
