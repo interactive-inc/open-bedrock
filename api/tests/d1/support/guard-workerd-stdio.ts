@@ -1,12 +1,13 @@
 import childProcess from "node:child_process"
-import type { ChildProcess } from "node:child_process"
+import type { ChildProcess, SpawnOptions } from "node:child_process"
+import { spawnWorkerdWithBun } from "@tests/d1/support/spawn-workerd-with-bun"
 
 let installed = false
 
 const failures: unknown[] = []
 
-/** 動いているworkerdのpid。 */
-const running = new Set<number>()
+/** 動いているworkerdのpidと、その終了を待つpromise。 */
+const running = new Map<number, Promise<void>>()
 
 /**
  * Miniflareが起動するworkerdの子プロセスについて、起動とstdioの失敗を受け止める。
@@ -25,8 +26,17 @@ export function installWorkerdStdioGuard(): void {
   installed = true
   const spawn = childProcess.spawn
   const guarded = function (this: unknown, ...args: unknown[]) {
-    const child = Reflect.apply(spawn, this, args) as ChildProcess
-    if (isWorkerd(args[0])) guard(child)
+    const [command, commandArgs, options] = args
+    if (!isWorkerd(command) || !Array.isArray(commandArgs)) {
+      return Reflect.apply(spawn, this, args) as ChildProcess
+    }
+    // workerdだけはBunのsocketによるpipeを使わずに起動する（spawn-workerd-with-bun.ts）。
+    const child = spawnWorkerdWithBun(
+      command as string,
+      commandArgs as string[],
+      (options ?? {}) as SpawnOptions,
+    )
+    guard(child)
     return child
   }
   childProcess.spawn = guarded as typeof spawn
@@ -39,7 +49,12 @@ export function takeWorkerdStdioFailures(): unknown[] {
 
 /** 動いているworkerdのpid。止まった要求の記録や、testがworkerdの終了を再現する時に使う。 */
 export function runningWorkerdPids(): ReadonlyArray<number> {
-  return [...running]
+  return [...running.keys()]
+}
+
+/** 指定したworkerdが終了するまで待つ。既に終了していればすぐに返る。 */
+export function workerdExited(pid: number): Promise<void> {
+  return running.get(pid) ?? Promise.resolve()
 }
 
 function isWorkerd(command: unknown): boolean {
@@ -50,10 +65,18 @@ function guard(child: ChildProcess): void {
   child.on("error", (error: unknown) => {
     failures.push(error)
   })
-  if (child.pid !== undefined) running.add(child.pid)
-  child.on("exit", () => {
-    if (child.pid !== undefined) running.delete(child.pid)
-  })
+  const pid = child.pid
+  if (pid !== undefined) {
+    running.set(
+      pid,
+      new Promise<void>((resolve) => {
+        child.once("exit", () => {
+          running.delete(pid)
+          resolve()
+        })
+      }),
+    )
+  }
   for (const stream of child.stdio) {
     stream?.on("error", (error: unknown) => {
       failures.push(error)

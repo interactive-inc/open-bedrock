@@ -1,0 +1,274 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
+import { seedSalaryRevisions } from "@/contexts/compensation-change/test/seed/seed-salary-revisions.test-support"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
+import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
+
+let pool: LocalD1Pool
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  pool = await startLocalD1Pool(11)
+})
+
+afterAll(async () => {
+  await pool.dispose()
+})
+
+const jwtSecret = "salary-revision-route-test-secret"
+
+const revisionSchema = z.object({
+  id: z.uuid(),
+  employee_id: zEmployeeId,
+  effective_date: z.string(),
+  previous_base_salary: z.number(),
+  new_base_salary: z.number(),
+  reason: z.string().nullable(),
+  created_at: z.string(),
+})
+
+const listSchema = z.object({ data: z.array(revisionSchema), total: z.number() })
+
+async function createTestDb(): Promise<D1Database> {
+  const db = await pool.next()
+
+  await seedCompanyEmployees(
+    db,
+    seedEmployees.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
+      position: employee.position,
+      status: employee.status,
+    })),
+  )
+
+  await seedIamForEmployees(db)
+
+  await seedD1(
+    db,
+    "salary_revisions",
+    seedSalaryRevisions.map((revision) => ({
+      id: revision.id,
+      employee_id: revision.employeeId,
+      effective_date: revision.effectiveDate,
+      previous_base_salary: revision.previousBaseSalary,
+      new_base_salary: revision.newBaseSalary,
+      reason: revision.reason,
+      created_at: revision.createdAt,
+    })),
+  )
+  await initializeStandardCompanyTestState(db)
+
+  return db
+}
+
+function tokenFor(employeeId: number): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: toWorkforceEmployeeId(employeeId),
+  })
+}
+
+async function request(
+  path: string,
+  token: string | null,
+  method?: string,
+  body?: unknown,
+): Promise<Response> {
+  return requestWithContext({ db: await createTestDb(), jwtSecret, path, token, method, body })
+}
+
+describe("GET /salary-revisions", () => {
+  test("returns 200 for admin viewing an employee's history", async () => {
+    const response = await request(
+      "/compensation-change/salary-revisions?employee_id=5",
+      await tokenFor(1),
+    )
+
+    expect(response.status).toBe(200)
+
+    const parsed = listSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0]?.employee_id).toBe(toWorkforceEmployeeId(5))
+    }
+  })
+
+  test("returns 403 for a member viewing their own history (no self exception)", async () => {
+    const response = await request(
+      "/compensation-change/salary-revisions?employee_id=5",
+      await tokenFor(5),
+    )
+
+    expect(response.status).toBe(403)
+  })
+
+  test("returns 401 without a bearer token", async () => {
+    const response = await request("/compensation-change/salary-revisions?employee_id=5", null)
+
+    expect(response.status).toBe(401)
+  })
+})
+
+describe("POST /salary-revisions", () => {
+  test("creates a salary revision as admin", async () => {
+    const response = await request(
+      "/compensation-change/salary-revisions",
+      await tokenFor(1),
+      "POST",
+      {
+        employee_id: "1",
+        effective_date: "2026-04-01",
+        previous_base_salary: 280000,
+        new_base_salary: 300000,
+        reason: "annual_raise",
+      },
+    )
+
+    expect(response.status).toBe(201)
+
+    const parsed = revisionSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.new_base_salary).toBe(300000)
+    }
+  })
+
+  test("returns 409 on duplicate employee + effective_date", async () => {
+    const response = await request(
+      "/compensation-change/salary-revisions",
+      await tokenFor(1),
+      "POST",
+      {
+        employee_id: "5",
+        effective_date: "2025-04-01",
+        previous_base_salary: 280000,
+        new_base_salary: 300000,
+      },
+    )
+
+    expect(response.status).toBe(409)
+  })
+
+  test("returns 403 for a member", async () => {
+    const response = await request(
+      "/compensation-change/salary-revisions",
+      await tokenFor(5),
+      "POST",
+      {
+        employee_id: "1",
+        effective_date: "2026-05-01",
+        previous_base_salary: 1,
+        new_base_salary: 2,
+      },
+    )
+
+    expect(response.status).toBe(403)
+  })
+
+  test("returns 404 for an unknown employee", async () => {
+    const response = await request(
+      "/compensation-change/salary-revisions",
+      await tokenFor(1),
+      "POST",
+      {
+        employee_id: "9999",
+        effective_date: "2026-05-01",
+        previous_base_salary: 1,
+        new_base_salary: 2,
+      },
+    )
+
+    expect(response.status).toBe(404)
+  })
+
+  test("creates a salary revision by employee_code", async () => {
+    const response = await request(
+      "/compensation-change/salary-revisions",
+      await tokenFor(1),
+      "POST",
+      {
+        employee_code: "E001",
+        effective_date: "2026-04-01",
+        previous_base_salary: 280000,
+        new_base_salary: 300000,
+        reason: "annual_raise",
+      },
+    )
+
+    expect(response.status).toBe(201)
+
+    const parsed = revisionSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(1))
+    }
+  })
+
+  test("returns 404 for an unknown employee_code", async () => {
+    const response = await request(
+      "/compensation-change/salary-revisions",
+      await tokenFor(1),
+      "POST",
+      {
+        employee_code: "E999",
+        effective_date: "2026-05-01",
+        previous_base_salary: 1,
+        new_base_salary: 2,
+      },
+    )
+
+    expect(response.status).toBe(404)
+  })
+
+  test("returns 400 when both employee_id and employee_code are given", async () => {
+    const response = await request(
+      "/compensation-change/salary-revisions",
+      await tokenFor(1),
+      "POST",
+      {
+        employee_id: "1",
+        employee_code: "E001",
+        effective_date: "2026-05-01",
+        previous_base_salary: 1,
+        new_base_salary: 2,
+      },
+    )
+
+    expect(response.status).toBe(400)
+  })
+
+  test("returns 400 when neither employee_id nor employee_code is given", async () => {
+    const response = await request(
+      "/compensation-change/salary-revisions",
+      await tokenFor(1),
+      "POST",
+      {
+        effective_date: "2026-05-01",
+        previous_base_salary: 1,
+        new_base_salary: 2,
+      },
+    )
+
+    expect(response.status).toBe(400)
+  })
+})

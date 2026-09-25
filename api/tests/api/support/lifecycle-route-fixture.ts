@@ -2,9 +2,7 @@ import { seedDepartments } from "@tests/api/support/company/seed-departments.tes
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { seedOrgDepartments } from "@tests/api/support/company/seed-org-departments.test-support"
 import { seedOrgMemberships } from "@tests/api/support/company/seed-org-memberships.test-support"
-import { createD1TestDatabase } from "@tests/api/support/d1-test-database"
 import { initializeCompanyTestFixture } from "@tests/api/support/initialize-company-test-fixture"
-import { loadSchema } from "@tests/api/support/load-schema"
 import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 
 export const lifecycleRouteJwtSecret = "lifecycle-route-test-secret"
@@ -18,18 +16,17 @@ export async function readOrganizationRevision(db: D1Database): Promise<number> 
 }
 
 /**
- * テスト用の共通 fixture DB を作る。
- * onQuery を渡すと、発行された全クエリを数えられる（N+1 の検出に使う）。
+ * migration済みのDBへ、ライフサイクルrouteのtestが使う共通の会社状態を投入する。
+ * 問い合わせ回数を数える場合は、呼び出し側が数えるDBを渡す。
  */
 export async function createLifecycleRouteDb(
+  db: D1Database,
   options?: Readonly<{
-    onQuery?: () => void
     subjectAssignmentStartsOn?: string
     subjectAssignmentEndsOn?: string | null
     managerEndsOn?: string
   }>,
 ): Promise<D1Database> {
-  const db = createD1TestDatabase(loadSchema(), options)
   await initializeCompanyTestFixture({
     db,
     employees: seedEmployees,

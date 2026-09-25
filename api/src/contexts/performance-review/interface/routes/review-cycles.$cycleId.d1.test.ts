@@ -1,0 +1,253 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
+import { seedReviewCycles } from "@/contexts/performance-review/test/seed/seed-review-cycles.test-support"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
+import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
+
+let pool: LocalD1Pool
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  pool = await startLocalD1Pool(12)
+})
+
+afterAll(async () => {
+  await pool.dispose()
+})
+
+const jwtSecret = "review-cycles-edit-route-test-secret"
+
+const reviewCycleResponseSchema = z.object({
+  id: z.number(),
+  title: z.string(),
+  period: z.string(),
+  status: z.enum(["draft", "open", "closed"]),
+  due_date: z.string().nullable(),
+})
+
+async function createTestDb(): Promise<D1Database> {
+  const db = await pool.next()
+
+  await seedCompanyEmployees(
+    db,
+    seedEmployees.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
+      position: employee.position,
+      status: employee.status,
+    })),
+  )
+
+  await seedIamForEmployees(db)
+
+  await seedD1(
+    db,
+    "review_cycles",
+    seedReviewCycles.map((cycle) => ({
+      id: cycle.id,
+      title: cycle.title,
+      period: cycle.period,
+      status: cycle.status,
+      due_date: cycle.dueDate,
+    })),
+  )
+  await initializeStandardCompanyTestState(db)
+
+  return db
+}
+
+function adminToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: toWorkforceEmployeeId(1),
+  })
+}
+
+function memberToken(): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: toWorkforceEmployeeId(5),
+  })
+}
+
+async function request(
+  path: string,
+  token: string | null,
+  method?: string,
+  body?: unknown,
+): Promise<Response> {
+  return requestWithContext({ db: await createTestDb(), jwtSecret, path, token, method, body })
+}
+
+describe("PUT /review-cycles/:cycleId", () => {
+  test("admin updates title/period/dueDate and returns 200", async () => {
+    const response = await request(
+      "/performance-review/review-cycles/3",
+      await adminToken(),
+      "PUT",
+      {
+        title: "Updated Cycle",
+        period: "2027-H1",
+        dueDate: "2027-06-30",
+      },
+    )
+
+    expect(response.status).toBe(200)
+
+    const parsed = reviewCycleResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.title).toBe("Updated Cycle")
+      expect(parsed.data.period).toBe("2027-H1")
+      expect(parsed.data.due_date).toBe("2027-06-30")
+    }
+  })
+
+  test("admin can null out dueDate", async () => {
+    const response = await request(
+      "/performance-review/review-cycles/1",
+      await adminToken(),
+      "PUT",
+      {
+        title: "No Due",
+        period: "2026-H1",
+        dueDate: null,
+      },
+    )
+
+    expect(response.status).toBe(200)
+
+    const parsed = reviewCycleResponseSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.due_date).toBe(null)
+    }
+  })
+
+  test("returns 404 for a missing cycle", async () => {
+    const response = await request(
+      "/performance-review/review-cycles/9999",
+      await adminToken(),
+      "PUT",
+      {
+        title: "X",
+        period: "2026-H1",
+      },
+    )
+
+    expect(response.status).toBe(404)
+  })
+
+  test("member updating a cycle is forbidden", async () => {
+    const response = await request(
+      "/performance-review/review-cycles/1",
+      await memberToken(),
+      "PUT",
+      {
+        title: "X",
+        period: "2026-H1",
+      },
+    )
+
+    expect(response.status).toBe(403)
+  })
+
+  test("missing title is rejected with 400", async () => {
+    const response = await request(
+      "/performance-review/review-cycles/1",
+      await adminToken(),
+      "PUT",
+      {
+        period: "2026-H1",
+      },
+    )
+
+    expect(response.status).toBe(400)
+  })
+})
+
+describe("DELETE /review-cycles/:cycleId", () => {
+  test("admin deletes the cycle and returns 204", async () => {
+    const response = await request(
+      "/performance-review/review-cycles/3",
+      await adminToken(),
+      "DELETE",
+    )
+
+    expect(response.status).toBe(204)
+  })
+
+  test("returns 409 when deleting an open cycle", async () => {
+    const response = await request(
+      "/performance-review/review-cycles/1",
+      await adminToken(),
+      "DELETE",
+    )
+
+    expect(response.status).toBe(409)
+  })
+
+  test("returns 409 when deleting a closed cycle", async () => {
+    const response = await request(
+      "/performance-review/review-cycles/2",
+      await adminToken(),
+      "DELETE",
+    )
+
+    expect(response.status).toBe(409)
+  })
+
+  test("returns 404 for a missing cycle", async () => {
+    const response = await request(
+      "/performance-review/review-cycles/9999",
+      await adminToken(),
+      "DELETE",
+    )
+
+    expect(response.status).toBe(404)
+  })
+
+  test("member deleting a cycle is forbidden", async () => {
+    const response = await request(
+      "/performance-review/review-cycles/1",
+      await memberToken(),
+      "DELETE",
+    )
+
+    expect(response.status).toBe(403)
+  })
+
+  test("open cycle cannot be deleted (409)", async () => {
+    const response = await request(
+      "/performance-review/review-cycles/1",
+      await adminToken(),
+      "DELETE",
+    )
+
+    expect(response.status).toBe(409)
+  })
+
+  test("closed cycle cannot be deleted (409)", async () => {
+    const response = await request(
+      "/performance-review/review-cycles/2",
+      await adminToken(),
+      "DELETE",
+    )
+
+    expect(response.status).toBe(409)
+  })
+})

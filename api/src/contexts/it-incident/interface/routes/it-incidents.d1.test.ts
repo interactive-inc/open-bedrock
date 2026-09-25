@@ -1,0 +1,202 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
+import { seedItIncidents } from "@/contexts/it-incident/test/seed/seed-it-incidents.test-support"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import { z } from "zod"
+import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
+import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
+
+let pool: LocalD1Pool
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  pool = await startLocalD1Pool(8)
+})
+
+afterAll(async () => {
+  await pool.dispose()
+})
+
+const jwtSecret = "it-incident-route-test-secret"
+
+const incidentSchema = z.object({
+  id: z.string(),
+  occurred_at: z.string(),
+  title: z.string(),
+  summary: z.string(),
+  severity: z.string().nullable(),
+  status: z.enum(["open", "resolved"]),
+  resolved_at: z.string().nullable(),
+  created_at: z.string(),
+})
+
+const listSchema = z.object({ data: z.array(incidentSchema), total: z.number() })
+
+async function createTestDb(): Promise<D1Database> {
+  const db = await pool.next()
+
+  await seedCompanyEmployees(
+    db,
+    seedEmployees.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      deptId: employee.deptId,
+      deptName: employee.deptName,
+      position: employee.position,
+      status: employee.status,
+    })),
+  )
+
+  await seedIamForEmployees(db)
+
+  await seedD1(
+    db,
+    "it_incidents",
+    seedItIncidents.map((incident) => ({
+      id: incident.id,
+      occurred_at: incident.occurredAt,
+      title: incident.title,
+      summary: incident.summary,
+      severity: incident.severity,
+      status: incident.status,
+      resolved_at: incident.resolvedAt,
+      created_at: incident.createdAt,
+    })),
+  )
+  await initializeStandardCompanyTestState(db)
+
+  return db
+}
+
+function tokenFor(employeeId: number): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: toWorkforceEmployeeId(employeeId),
+  })
+}
+
+async function request(
+  path: string,
+  token: string | null,
+  method?: string,
+  body?: unknown,
+): Promise<Response> {
+  return requestWithContext({ db: await createTestDb(), jwtSecret, path, token, method, body })
+}
+
+describe("GET /it-incidents", () => {
+  test("returns 200 with all incidents for a read:all viewer (admin)", async () => {
+    const response = await request("/it-incident/it-incidents", await tokenFor(1))
+
+    expect(response.status).toBe(200)
+
+    const parsed = listSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.data.length).toBe(2)
+    }
+  })
+
+  test("filters by status=open", async () => {
+    const response = await request("/it-incident/it-incidents?status=open", await tokenFor(1))
+
+    expect(response.status).toBe(200)
+
+    const parsed = listSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.data.length).toBe(1)
+      expect(parsed.data.data[0]?.status).toBe("open")
+    }
+  })
+
+  test("returns 403 for a viewer without read:all (member)", async () => {
+    const response = await request("/it-incident/it-incidents", await tokenFor(5))
+
+    expect(response.status).toBe(403)
+  })
+})
+
+describe("POST /it-incidents", () => {
+  test("creates an incident as admin", async () => {
+    const response = await request("/it-incident/it-incidents", await tokenFor(1), "POST", {
+      occurred_at: "2026-03-01T10:00:00Z",
+      title: "Disk full",
+      summary: "A server ran out of disk space.",
+      severity: "medium",
+    })
+
+    expect(response.status).toBe(201)
+
+    const parsed = incidentSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.status).toBe("open")
+      expect(parsed.data.resolved_at).toBeNull()
+    }
+  })
+
+  test("returns 403 for a member", async () => {
+    const response = await request("/it-incident/it-incidents", await tokenFor(5), "POST", {
+      occurred_at: "2026-03-01T10:00:00Z",
+      title: "Blocked",
+      summary: "Should not be created.",
+    })
+
+    expect(response.status).toBe(403)
+  })
+})
+
+describe("POST /it-incidents/:id/resolve", () => {
+  test("resolves an open incident as admin", async () => {
+    const response = await request(
+      "/it-incident/it-incidents/0190000e-0000-7000-8000-000000000002/resolve",
+      await tokenFor(1),
+      "POST",
+    )
+
+    expect(response.status).toBe(200)
+
+    const parsed = incidentSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      expect(parsed.data.status).toBe("resolved")
+      expect(parsed.data.resolved_at).not.toBeNull()
+    }
+  })
+
+  test("returns 409 when already resolved", async () => {
+    const response = await request(
+      "/it-incident/it-incidents/0190000e-0000-7000-8000-000000000001/resolve",
+      await tokenFor(1),
+      "POST",
+    )
+
+    expect(response.status).toBe(409)
+  })
+
+  test("returns 403 for a member", async () => {
+    const response = await request(
+      "/it-incident/it-incidents/0190000e-0000-7000-8000-000000000002/resolve",
+      await tokenFor(5),
+      "POST",
+    )
+
+    expect(response.status).toBe(403)
+  })
+})
