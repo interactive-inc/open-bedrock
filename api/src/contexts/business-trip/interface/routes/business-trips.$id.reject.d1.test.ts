@@ -26,7 +26,7 @@ afterAll(async () => {
 
 const jwtSecret = "business-trip-reject-route-test-secret"
 
-const seedId = "10000000-0000-0000-0000-000000000001"
+const seedId = "10000000-0000-4000-8000-000000000001"
 
 async function createTestDb(): Promise<D1Database> {
   const db = await pool.next()

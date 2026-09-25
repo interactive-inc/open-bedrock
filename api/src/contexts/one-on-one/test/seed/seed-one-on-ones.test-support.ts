@@ -13,7 +13,7 @@ export type SeedOneOnOne = {
 
 export const seedOneOnOnes: ReadonlyArray<SeedOneOnOne> = [
   {
-    id: "00000000-0000-0000-0000-000000000001",
+    id: "00000000-0000-4000-8000-000000000001",
     memberId: toWorkforceEmployeeId(5),
     managerId: toWorkforceEmployeeId(4),
     heldAt: "2026-05-01T05:00:00Z",
@@ -22,7 +22,7 @@ export const seedOneOnOnes: ReadonlyArray<SeedOneOnOne> = [
     nextAction: "次回の設計レビューの担当を割り当てる",
   },
   {
-    id: "00000000-0000-0000-0000-000000000002",
+    id: "00000000-0000-4000-8000-000000000002",
     memberId: toWorkforceEmployeeId(3),
     managerId: toWorkforceEmployeeId(4),
     heldAt: "2026-05-08T05:00:00Z",
@@ -31,7 +31,7 @@ export const seedOneOnOnes: ReadonlyArray<SeedOneOnOne> = [
     nextAction: "毎週進捗を共有する",
   },
   {
-    id: "00000000-0000-0000-0000-000000000003",
+    id: "00000000-0000-4000-8000-000000000003",
     memberId: toWorkforceEmployeeId(10),
     managerId: toWorkforceEmployeeId(9),
     heldAt: "2026-05-12T06:00:00Z",

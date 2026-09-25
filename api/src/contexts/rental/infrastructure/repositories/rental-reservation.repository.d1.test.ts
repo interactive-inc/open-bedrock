@@ -239,7 +239,7 @@ describe("RentalReservationRepository", () => {
 
     await seedD1(db, "rental_reservations", [
       {
-        id: "20000000-0000-0000-0000-000000000001",
+        id: "20000000-0000-4000-8000-000000000001",
         requester_id: "1",
         item_name: "Projector",
         start_date: "2026-06-10",
@@ -253,7 +253,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const target = new RentalReservation({
-      id: "20000000-0000-0000-0000-000000000001",
+      id: "20000000-0000-4000-8000-000000000001",
       requesterId: toWorkforceEmployeeId(1),
       itemName: "Updated Item",
       startDate: "2026-07-01",
@@ -308,7 +308,7 @@ describe("RentalReservationRepository", () => {
 
     await seedD1(db, "rental_reservations", [
       {
-        id: "30000000-0000-0000-0000-000000000001",
+        id: "30000000-0000-4000-8000-000000000001",
         requester_id: "1",
         item_name: "Projector",
         start_date: "2026-06-10",
@@ -321,13 +321,13 @@ describe("RentalReservationRepository", () => {
 
     const repository = new RentalReservationRepository(context)
 
-    const deleted = await repository.delete("30000000-0000-0000-0000-000000000001")
+    const deleted = await repository.delete("30000000-0000-4000-8000-000000000001")
 
     expect(deleted).toBeNull()
 
     const row = await db
       .prepare("SELECT id FROM rental_reservations WHERE id = ?")
-      .bind("30000000-0000-0000-0000-000000000001")
+      .bind("30000000-0000-4000-8000-000000000001")
       .first()
 
     expect(row).not.toBeNull()
@@ -601,7 +601,7 @@ describe("RentalReservationRepository", () => {
 
     await seedD1(db, "rental_reservations", [
       {
-        id: "40000000-0000-0000-0000-000000000001",
+        id: "40000000-0000-4000-8000-000000000001",
         requester_id: "1",
         item_name: "Projector",
         start_date: "2026-06-10",
@@ -774,7 +774,7 @@ describe("RentalReservationRepository", () => {
 
     await seedD1(db, "rental_reservations", [
       {
-        id: "50000000-0000-0000-0000-000000000001",
+        id: "50000000-0000-4000-8000-000000000001",
         requester_id: "1",
         item_name: "Projector",
         start_date: "2026-06-10",
@@ -788,7 +788,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const target = new RentalReservation({
-      id: "50000000-0000-0000-0000-000000000001",
+      id: "50000000-0000-4000-8000-000000000001",
       requesterId: toWorkforceEmployeeId(1),
       itemName: "Updated Item",
       startDate: "2026-07-01",

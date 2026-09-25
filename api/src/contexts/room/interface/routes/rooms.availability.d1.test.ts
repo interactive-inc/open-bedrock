@@ -206,7 +206,7 @@ describe("GET /rooms/availability", () => {
 
     await seedD1(db, "room_reservations", [
       {
-        id: "10000000-0000-0000-0000-000000000001",
+        id: "10000000-0000-4000-8000-000000000001",
         room_id: 10,
         reserver_id: "4",
         start_at: "2026-06-01T09:00:00Z",
@@ -214,7 +214,7 @@ describe("GET /rooms/availability", () => {
         purpose: "First overlap",
       },
       {
-        id: "10000000-0000-0000-0000-000000000002",
+        id: "10000000-0000-4000-8000-000000000002",
         room_id: 10,
         reserver_id: "4",
         start_at: "2026-06-01T09:30:00Z",
@@ -282,7 +282,7 @@ describe("GET /rooms/availability", () => {
     await seedD1(db, "room_reservations", [
       // Room Beta: two conflicts
       {
-        id: "20000000-0000-0000-0000-000000000001",
+        id: "20000000-0000-4000-8000-000000000001",
         room_id: 20,
         reserver_id: "4",
         start_at: "2026-06-02T10:00:00Z",
@@ -290,7 +290,7 @@ describe("GET /rooms/availability", () => {
         purpose: "Beta conflict 1",
       },
       {
-        id: "20000000-0000-0000-0000-000000000002",
+        id: "20000000-0000-4000-8000-000000000002",
         room_id: 20,
         reserver_id: "4",
         start_at: "2026-06-02T10:30:00Z",
@@ -299,7 +299,7 @@ describe("GET /rooms/availability", () => {
       },
       // Room Gamma: one conflict
       {
-        id: "20000000-0000-0000-0000-000000000003",
+        id: "20000000-0000-4000-8000-000000000003",
         room_id: 21,
         reserver_id: "4",
         start_at: "2026-06-02T10:15:00Z",

@@ -13,7 +13,7 @@ import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
 
 const jwtSecret = "business-trip-approve-route-test-secret"
 
-const seedId = "10000000-0000-0000-0000-000000000001"
+const seedId = "10000000-0000-4000-8000-000000000001"
 
 let local: LocalD1
 
