@@ -230,7 +230,13 @@ function slotIdFor(index: number): string {
 }
 
 /** workerd の起動が失敗した時、または止まった時に作り直す回数。 */
-const RUNTIME_START_ATTEMPTS = 3
+const RUNTIME_START_ATTEMPTS = 5
+
+/**
+ * 起動を作り直す前に待つ時間（試行ごと）。Bunは失敗した子プロセスのpipeを閉じ終えるまで、
+ * 続けて起動した子プロセスでも同じ失敗を返すことがあるため、間隔を広げながら作り直す。
+ */
+const RUNTIME_RESTART_DELAYS_MS = [250, 1_000, 2_000, 4_000]
 
 /** 起動が止まったと見なすまでの時間。通常の起動は1秒前後で終わる。 */
 const RUNTIME_START_STALL_MS = 15_000
@@ -245,6 +251,7 @@ type StartRuntimeOptions<T extends StartableRuntime> = Readonly<{
   create: (persist: string) => T
   stallMs?: number
   attempts?: number
+  restartDelaysMs?: ReadonlyArray<number>
 }>
 
 type Readiness = Readonly<{ kind: "ready" }> | Readonly<{ kind: "failed"; error: unknown }>
@@ -265,6 +272,7 @@ export async function startRuntime<T extends StartableRuntime>(
 ): Promise<{ runtime: T; persist: string }> {
   const stallMs = options.stallMs ?? RUNTIME_START_STALL_MS
   const attempts = options.attempts ?? RUNTIME_START_ATTEMPTS
+  const restartDelaysMs = options.restartDelaysMs ?? RUNTIME_RESTART_DELAYS_MS
   for (let attempt = 1; ; attempt++) {
     const persist = preparePersist()
     const runtime = options.create(persist)
@@ -301,6 +309,8 @@ export async function startRuntime<T extends StartableRuntime>(
       ...takeWorkerdStdioFailures(),
     )
     if (attempt >= attempts) throw failure
+    const delay = restartDelaysMs[Math.min(attempt - 1, restartDelaysMs.length - 1)] ?? 0
+    await new Promise((resolve) => setTimeout(resolve, delay))
   }
 }
 
