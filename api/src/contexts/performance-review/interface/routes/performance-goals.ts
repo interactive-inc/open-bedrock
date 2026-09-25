@@ -261,7 +261,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select()
     .from(goals)
     .where(and(...conditions))
-    .orderBy(asc(goals.createdAt), asc(sql`CAST(${goals.legacyId} AS INTEGER)`), asc(goals.id))
+    .orderBy(
+      asc(goals.createdAt),
+      asc(sql`CAST(${goals.legacyId} AS INTEGER)`),
+      asc(sql`${goals}.rowid`),
+    )
     .limit(limit)
     .offset(offset)
 

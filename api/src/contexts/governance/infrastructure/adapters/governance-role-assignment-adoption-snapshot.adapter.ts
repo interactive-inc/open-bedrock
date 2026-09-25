@@ -5,7 +5,7 @@ import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-dig
 import { z } from "zod"
 
 const rowSchema = z.object({
-  id: z.number().int().positive(),
+  id: z.uuid(),
   org_role_code: z.string().min(1),
   employee_id: z.string().min(1),
   employee_code: z.string().min(1),
@@ -33,7 +33,7 @@ export class GovernanceRoleAssignmentAdoptionSnapshotAdapter {
     Object.freeze(this)
   }
 
-  async find(assignmentId: number): Promise<Snapshot | null | Error> {
+  async find(assignmentId: string): Promise<Snapshot | null | Error> {
     try {
       const row = await this.c.database
         .prepare(

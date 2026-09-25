@@ -2,38 +2,51 @@ import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce
 import type { InferSelectModel } from "drizzle-orm"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { sql } from "drizzle-orm"
-import { check, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import { check, sqliteTable, text, unique, uniqueIndex } from "drizzle-orm/sqlite-core"
+import { uuidCheckPredicate } from "@/lib/validation/uuid.schema"
 
 /** 規程・手続き・統制の安定した業務能力。表示名や担当組織の変更で code は変えない。 */
-export const governanceCapabilities = sqliteTable("governance_capabilities", {
-  code: text("code").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  ownerOrgRoleCode: text("owner_org_role_code"),
-  status: text("status").notNull().$type<"active" | "archived">(),
-  createdAt: text("created_at").notNull(),
-  updatedAt: text("updated_at").notNull(),
-})
+export const governanceCapabilities = sqliteTable(
+  "governance_capabilities",
+  {
+    id: text("id").primaryKey().notNull(),
+    code: text("code").notNull().unique(),
+    name: text("name").notNull(),
+    description: text("description"),
+    ownerOrgRoleCode: text("owner_org_role_code"),
+    status: text("status").notNull().$type<"active" | "archived">(),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  () => [check("governance_capabilities_id_uuid", sql.raw(uuidCheckPredicate("id")))],
+)
 
 export type GovernanceCapabilityRow = InferSelectModel<typeof governanceCapabilities>
 
 /** 組織上の責任。IAM の system role（操作能力）とは分離する。 */
-export const governanceOrgRoles = sqliteTable("governance_org_roles", {
-  code: text("code").primaryKey(),
-  name: text("name").notNull(),
-  description: text("description"),
-  assignmentMode: text("assignment_mode").notNull().$type<"manual" | "department_manager">(),
-  cardinality: text("cardinality").notNull().$type<"one" | "per_department" | "many">(),
-  createdAt: text("created_at").notNull(),
-  updatedAt: text("updated_at").notNull(),
-})
+export const governanceOrgRoles = sqliteTable(
+  "governance_org_roles",
+  {
+    id: text("id").primaryKey().notNull(),
+    code: text("code").notNull().unique(),
+    name: text("name").notNull(),
+    description: text("description"),
+    assignmentMode: text("assignment_mode").notNull().$type<"manual" | "department_manager">(),
+    cardinality: text("cardinality").notNull().$type<"one" | "per_department" | "many">(),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  () => [check("governance_org_roles_id_uuid", sql.raw(uuidCheckPredicate("id")))],
+)
 
 export type GovernanceOrgRoleRow = InferSelectModel<typeof governanceOrgRoles>
 
 export const governanceOrgRoleAssignments = sqliteTable(
   "governance_org_role_assignments",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    id: text("id").primaryKey().notNull(),
+    /** 主キーを UUID へ移す前の整数の主キー。移行前の証跡を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
     orgRoleCode: text("org_role_code").notNull(),
     employeeId: text("employee_id").$type<EmployeeId>().notNull(),
     departmentCode: text("department_code"),
@@ -46,6 +59,7 @@ export const governanceOrgRoleAssignments = sqliteTable(
     revokedAt: text("revoked_at"),
   },
   (table) => [
+    check("governance_org_role_assignments_id_uuid", sql.raw(uuidCheckPredicate("id"))),
     check(
       "governance_org_role_assignments_range",
       sql`${table.endsOn} IS NULL OR ${table.startsOn} < ${table.endsOn}`,
@@ -55,30 +69,34 @@ export const governanceOrgRoleAssignments = sqliteTable(
 
 export type GovernanceOrgRoleAssignmentRow = InferSelectModel<typeof governanceOrgRoleAssignments>
 
-export const governanceDocuments = sqliteTable("governance_documents", {
-  id: text("id").primaryKey(),
-  code: text("code").notNull().unique(),
-  title: text("title").notNull(),
-  kind: text("kind").notNull().$type<"policy" | "procedure" | "guideline" | "control">(),
-  classification: text("classification")
-    .notNull()
-    .$type<"public" | "internal" | "confidential" | "restricted">(),
-  ownerCapabilityCode: text("owner_capability_code").notNull(),
-  stewardOrgRoleCode: text("steward_org_role_code"),
-  status: text("status").notNull().$type<"draft" | "published" | "retired">(),
-  currentVersionId: text("current_version_id"),
-  sourcePath: text("source_path").notNull().unique(),
-  createdByAccountId: text("created_by_account_id").notNull().$type<AccountId>(),
-  createdAt: text("created_at").notNull(),
-  updatedAt: text("updated_at").notNull(),
-})
+export const governanceDocuments = sqliteTable(
+  "governance_documents",
+  {
+    id: text("id").primaryKey().notNull(),
+    code: text("code").notNull().unique(),
+    title: text("title").notNull(),
+    kind: text("kind").notNull().$type<"policy" | "procedure" | "guideline" | "control">(),
+    classification: text("classification")
+      .notNull()
+      .$type<"public" | "internal" | "confidential" | "restricted">(),
+    ownerCapabilityCode: text("owner_capability_code").notNull(),
+    stewardOrgRoleCode: text("steward_org_role_code"),
+    status: text("status").notNull().$type<"draft" | "published" | "retired">(),
+    currentVersionId: text("current_version_id"),
+    sourcePath: text("source_path").notNull().unique(),
+    createdByAccountId: text("created_by_account_id").notNull().$type<AccountId>(),
+    createdAt: text("created_at").notNull(),
+    updatedAt: text("updated_at").notNull(),
+  },
+  () => [check("governance_documents_id_uuid", sql.raw(uuidCheckPredicate("id")))],
+)
 
 export type GovernanceDocumentRow = InferSelectModel<typeof governanceDocuments>
 
 export const governanceDocumentVersions = sqliteTable(
   "governance_document_versions",
   {
-    id: text("id").primaryKey(),
+    id: text("id").primaryKey().notNull(),
     documentId: text("document_id").notNull(),
     version: text("version").notNull(),
     bodyMd: text("body_md").notNull(),
@@ -97,6 +115,7 @@ export const governanceDocumentVersions = sqliteTable(
     publishedAt: text("published_at"),
   },
   (table) => [
+    check("governance_document_versions_id_uuid", sql.raw(uuidCheckPredicate("id"))),
     uniqueIndex("uniq_governance_document_version").on(table.documentId, table.version),
     check(
       "governance_document_versions_range",
@@ -110,6 +129,7 @@ export type GovernanceDocumentVersionRow = InferSelectModel<typeof governanceDoc
 export const governanceDocumentReferences = sqliteTable(
   "governance_document_references",
   {
+    id: text("id").primaryKey().notNull(),
     versionId: text("version_id").notNull(),
     kind: text("kind")
       .notNull()
@@ -125,7 +145,10 @@ export const governanceDocumentReferences = sqliteTable(
       >(),
     code: text("code").notNull(),
   },
-  (table) => [primaryKey({ columns: [table.versionId, table.kind, table.code] })],
+  (table) => [
+    check("governance_document_references_id_uuid", sql.raw(uuidCheckPredicate("id"))),
+    unique().on(table.versionId, table.kind, table.code),
+  ],
 )
 
 export type GovernanceDocumentReferenceRow = InferSelectModel<typeof governanceDocumentReferences>
@@ -133,6 +156,7 @@ export type GovernanceDocumentReferenceRow = InferSelectModel<typeof governanceD
 export const governancePublicationApprovals = sqliteTable(
   "governance_publication_approvals",
   {
+    id: text("id").primaryKey().notNull(),
     versionId: text("version_id").notNull(),
     orgRoleCode: text("org_role_code").notNull(),
     status: text("status").notNull().$type<"pending" | "approved" | "rejected">(),
@@ -140,7 +164,10 @@ export const governancePublicationApprovals = sqliteTable(
     decidedAt: text("decided_at"),
     comment: text("comment"),
   },
-  (table) => [primaryKey({ columns: [table.versionId, table.orgRoleCode] })],
+  (table) => [
+    check("governance_publication_approvals_id_uuid", sql.raw(uuidCheckPredicate("id"))),
+    unique().on(table.versionId, table.orgRoleCode),
+  ],
 )
 
 export type GovernancePublicationApprovalRow = InferSelectModel<
@@ -150,12 +177,16 @@ export type GovernancePublicationApprovalRow = InferSelectModel<
 export const governanceAcknowledgements = sqliteTable(
   "governance_acknowledgements",
   {
+    id: text("id").primaryKey().notNull(),
     versionId: text("version_id").notNull(),
     employeeId: text("employee_id").$type<EmployeeId>().notNull(),
     contentHash: text("content_hash").notNull(),
     acknowledgedAt: text("acknowledged_at").notNull(),
   },
-  (table) => [primaryKey({ columns: [table.versionId, table.employeeId] })],
+  (table) => [
+    check("governance_acknowledgements_id_uuid", sql.raw(uuidCheckPredicate("id"))),
+    unique().on(table.versionId, table.employeeId),
+  ],
 )
 
 export type GovernanceAcknowledgementRow = InferSelectModel<typeof governanceAcknowledgements>

@@ -3,18 +3,21 @@ import {
   type GovernanceRecordKind,
 } from "@/contexts/governance/domain/definitions/governance-record-kind.definition"
 
-type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string> }>
+type SnapshotQuery = Readonly<{ sql: string; values: ReadonlyArray<string>; formatVersion: 1 | 2 }>
 
 export const governanceSourceTables = {
   "governance-acknowledgement-record": {
     table: "governance_acknowledgements",
     keys: ["version_id", "employee_id"],
-    columns: ["version_id", "employee_id", "content_hash", "acknowledged_at"],
+    formatVersion: 2,
+    columns: ["id", "version_id", "employee_id", "content_hash", "acknowledged_at"],
   },
   "governance-capability-record": {
     table: "governance_capabilities",
     keys: ["code"],
+    formatVersion: 2,
     columns: [
+      "id",
       "code",
       "name",
       "description",
@@ -27,11 +30,13 @@ export const governanceSourceTables = {
   "governance-document-reference-record": {
     table: "governance_document_references",
     keys: ["version_id", "kind", "code"],
-    columns: ["version_id", "kind", "code"],
+    formatVersion: 2,
+    columns: ["id", "version_id", "kind", "code"],
   },
   "governance-document-version-record": {
     table: "governance_document_versions",
     keys: ["id"],
+    formatVersion: 1,
     columns: [
       "id",
       "document_id",
@@ -53,6 +58,7 @@ export const governanceSourceTables = {
   "governance-document-record": {
     table: "governance_documents",
     keys: ["id"],
+    formatVersion: 1,
     columns: [
       "id",
       "code",
@@ -72,8 +78,10 @@ export const governanceSourceTables = {
   "governance-org-role-assignment-record": {
     table: "governance_org_role_assignments",
     keys: ["id"],
+    formatVersion: 2,
     columns: [
       "id",
+      "legacy_id",
       "org_role_code",
       "employee_id",
       "department_code",
@@ -89,7 +97,9 @@ export const governanceSourceTables = {
   "governance-org-role-record": {
     table: "governance_org_roles",
     keys: ["code"],
+    formatVersion: 2,
     columns: [
+      "id",
       "code",
       "name",
       "description",
@@ -102,7 +112,9 @@ export const governanceSourceTables = {
   "governance-publication-approval-record": {
     table: "governance_publication_approvals",
     keys: ["version_id", "org_role_code"],
+    formatVersion: 2,
     columns: [
+      "id",
       "version_id",
       "org_role_code",
       "status",
@@ -113,7 +125,13 @@ export const governanceSourceTables = {
   },
 } as const satisfies Record<
   GovernanceRecordKind,
-  { table: string; keys: ReadonlyArray<string>; columns: ReadonlyArray<string> }
+  {
+    table: string
+    keys: ReadonlyArray<string>
+    /** 版 2 は主キーを UUID へ移した後の本文で、代理の id または旧主キー（legacy_id）を含む。 */
+    formatVersion: 1 | 2
+    columns: ReadonlyArray<string>
+  }
 >
 
 /** 規程・ガバナンス8台帳の現行全列を、元にない版を創作せず形式付きの原文にする。 */
@@ -127,7 +145,8 @@ export function governanceSnapshotQuery(
   const fields = source.columns.map((column) => `'${column}',${column}`).join(",")
   const where = source.keys.map((column, index) => `${column}=?${index + 1}`).join(" AND ")
   return {
-    sql: `SELECT json_object('format','${recordKind}','version',1,'source',json_object(${fields})) AS snapshot_json FROM ${source.table} WHERE ${where}`,
+    sql: `SELECT json_object('format','${recordKind}','version',${source.formatVersion},'source',json_object(${fields})) AS snapshot_json FROM ${source.table} WHERE ${where}`,
     values: parts,
+    formatVersion: source.formatVersion,
   }
 }

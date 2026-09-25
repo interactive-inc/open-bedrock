@@ -52,7 +52,11 @@ export class GoalRepository {
         .select()
         .from(goals)
         .where(eq(goals.employeeId, employeeId))
-        .orderBy(asc(goals.createdAt), asc(sql`CAST(${goals.legacyId} AS INTEGER)`), asc(goals.id))
+        .orderBy(
+          asc(goals.createdAt),
+          asc(sql`CAST(${goals.legacyId} AS INTEGER)`),
+          asc(sql`${goals}.rowid`),
+        )
 
       const rows =
         opts !== undefined ? await query.limit(opts.limit).offset(opts.offset) : await query
@@ -76,7 +80,11 @@ export class GoalRepository {
         .select()
         .from(goals)
         .where(and(...conditions))
-        .orderBy(asc(goals.createdAt), asc(sql`CAST(${goals.legacyId} AS INTEGER)`), asc(goals.id))
+        .orderBy(
+          asc(goals.createdAt),
+          asc(sql`CAST(${goals.legacyId} AS INTEGER)`),
+          asc(sql`${goals}.rowid`),
+        )
 
       return rows.map((row) => Goal.fromRow(row))
     } catch (error) {

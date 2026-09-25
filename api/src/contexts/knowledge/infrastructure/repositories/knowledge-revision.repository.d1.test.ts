@@ -30,11 +30,11 @@ test("knowledge revision append preserves replay, rejects stale edits and rolls 
   await seedIamForEmployees(f.db)
   await f.db
     .prepare(`INSERT INTO knowledge_articles (id,title,category,tags,body_md,author_id,created_at)
-    VALUES (1,'Procedure','Operations',NULL,'Original',?1,'2026-01-01T00:00:00Z')`)
+    VALUES ('01900042-0000-7000-8000-000000000001','Procedure','Operations',NULL,'Original',?1,'2026-01-01T00:00:00Z')`)
     .bind(toWorkforceEmployeeId(1))
     .run()
   const repository = new KnowledgeArticleRepository(f.context)
-  const original = await repository.findById(1)
+  const original = await repository.findById("01900042-0000-7000-8000-000000000001")
   if (original === null || original instanceof Error) throw new Error("fixture missing")
   const updated = original.withContent({
     title: "Procedure",
@@ -81,7 +81,11 @@ test("knowledge revision append preserves replay, rejects stale edits and rolls 
   }
   expect(await repository.appendRevision(withdrawn, withdrawal)).toBeInstanceOf(Error)
   expect(
-    await f.db.prepare("SELECT status FROM knowledge_articles WHERE id=1").first<string>("status"),
+    await f.db
+      .prepare(
+        "SELECT status FROM knowledge_articles WHERE id='01900042-0000-7000-8000-000000000001'",
+      )
+      .first<string>("status"),
   ).toBe("active")
   expect(
     await f.db.prepare("SELECT count(*) AS n FROM knowledge_article_revisions").first<number>("n"),
@@ -89,19 +93,23 @@ test("knowledge revision append preserves replay, rejects stale edits and rolls 
   await f.db.exec("DROP TRIGGER reject_knowledge_audit")
   await f.db
     .prepare(`CREATE TRIGGER corrupt_knowledge_after_audit AFTER INSERT ON system_audit_events
-    WHEN NEW.action='knowledge.withdraw' BEGIN UPDATE knowledge_articles SET body_md='Corrupted' WHERE id=1; END;`)
+    WHEN NEW.action='knowledge.withdraw' BEGIN UPDATE knowledge_articles SET body_md='Corrupted' WHERE id='01900042-0000-7000-8000-000000000001'; END;`)
     .run()
   expect(await repository.appendRevision(withdrawn, withdrawal)).toBeInstanceOf(Error)
   expect(
     await f.db
-      .prepare("SELECT body_md FROM knowledge_articles WHERE id=1")
+      .prepare(
+        "SELECT body_md FROM knowledge_articles WHERE id='01900042-0000-7000-8000-000000000001'",
+      )
       .first<string>("body_md"),
   ).toBe("Reviewed")
   await f.db.exec("DROP TRIGGER corrupt_knowledge_after_audit")
   expect(await repository.appendRevision(withdrawn, withdrawal)).toEqual(withdrawn)
   expect(
     await f.db
-      .prepare("SELECT body_md FROM knowledge_articles WHERE id=1")
+      .prepare(
+        "SELECT body_md FROM knowledge_articles WHERE id='01900042-0000-7000-8000-000000000001'",
+      )
       .first<string>("body_md"),
   ).toBe("Reviewed")
   expect(await repository.readRecordedCommand(input)).toEqual({

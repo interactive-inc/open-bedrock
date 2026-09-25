@@ -9,7 +9,7 @@ export class KnowledgeArticleRepository {
   constructor(private readonly c: Context) {}
 
   /** 記事 id で1件取得する。存在しなければ null。 */
-  async findById(id: number): Promise<KnowledgeArticle | null | Error> {
+  async findById(id: string): Promise<KnowledgeArticle | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -51,11 +51,7 @@ export class KnowledgeArticleRepository {
       if (previous !== null)
         return previous.requestJson === input.requestJson ? previous.article : null
       try {
-        const id = await db
-          .prepare("SELECT coalesce(max(id),0)+1 AS id FROM knowledge_articles")
-          .first<number>("id")
-        if (id === null || !Number.isSafeInteger(id) || id < 1)
-          return new Error("knowledge identity unavailable")
+        const id = crypto.randomUUID()
         const saved = KnowledgeArticle.restore({ ...article.toJSON(), id })
         const snapshot = JSON.stringify(saved)
         const audit = SystemAuditEventEntity.create({
@@ -92,8 +88,8 @@ export class KnowledgeArticleRepository {
               article.createdAt,
             ),
           db
-            .prepare(`INSERT INTO knowledge_article_revisions(article_id,revision,snapshot_json,status,source,actor_account_id,reason,recorded_at,command_id,request_json)
-            VALUES (?1,1,?2,'active','actor',?3,?4,?5,?6,?7)`)
+            .prepare(`INSERT INTO knowledge_article_revisions(id,article_id,revision,snapshot_json,status,source,actor_account_id,reason,recorded_at,command_id,request_json)
+            VALUES (?8,?1,1,?2,'active','actor',?3,?4,?5,?6,?7)`)
             .bind(
               id,
               snapshot,
@@ -102,6 +98,7 @@ export class KnowledgeArticleRepository {
               input.at.getTime(),
               input.commandId,
               input.requestJson,
+              crypto.randomUUID(),
             ),
           ...prepareSystemAuditEventAppend({ database: this.c.env.DB, event: audit }),
           db
@@ -148,19 +145,25 @@ export class KnowledgeArticleRepository {
     )
       return new Error("invalid knowledge command lookup")
     try {
-      const results = await this.c.env.DB.batch<{ snapshot_json: string; request_json: string }>([
+      const results = await this.c.env.DB.batch<{
+        article_id: string
+        snapshot_json: string
+        request_json: string
+      }>([
         ...input.assertions,
-        this.c.env.DB.prepare(`SELECT snapshot_json,request_json FROM knowledge_article_revisions
+        this.c.env.DB.prepare(`SELECT article_id,snapshot_json,request_json FROM knowledge_article_revisions
           WHERE actor_account_id=?1 AND command_id=?2`).bind(input.actorAccountId, input.commandId),
       ])
       if (results.some((result) => !result.success))
         return new Error("knowledge command authorization failed")
       const row = results.at(-1)?.results.at(0)
       if (row === undefined) return null
-      return {
-        article: KnowledgeArticle.restore(JSON.parse(row.snapshot_json)),
-        requestJson: row.request_json,
-      }
+      const article = KnowledgeArticle.restoreRevision(
+        JSON.parse(row.snapshot_json),
+        row.article_id,
+      )
+      if (article instanceof Error) return article
+      return { article, requestJson: row.request_json }
     } catch (cause) {
       return new Error("knowledge replay unavailable", { cause })
     }
@@ -226,8 +229,8 @@ export class KnowledgeArticleRepository {
         ...input.assertions,
         db
           .prepare(`INSERT INTO knowledge_article_revisions
-          (article_id,revision,snapshot_json,status,source,actor_account_id,reason,recorded_at,command_id,request_json)
-          SELECT id,?2,?3,?4,'actor',?5,?6,?7,?8,?9 FROM knowledge_articles
+          (id,article_id,revision,snapshot_json,status,source,actor_account_id,reason,recorded_at,command_id,request_json)
+          SELECT ?13,id,?2,?3,?4,'actor',?5,?6,?7,?8,?9 FROM knowledge_articles
           WHERE id=?1 AND revision=?10 AND status='active' AND author_id=?11 AND created_at=?12`)
           .bind(
             article.id,
@@ -242,6 +245,7 @@ export class KnowledgeArticleRepository {
             input.expectedRevision,
             article.authorId,
             article.createdAt,
+            crypto.randomUUID(),
           ),
         changed(),
         db

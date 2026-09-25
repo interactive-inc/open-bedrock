@@ -7,9 +7,10 @@ import { z } from "zod"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
 const snapshotSql = `SELECT json_object(
-  'format', 'knowledge-article-record', 'version', 1,
+  'format', 'knowledge-article-record', 'version', 2,
   'article', json_object(
     'id', id,
+    'legacy_id', legacy_id,
     'title', title,
     'category', category,
     'tags', tags,
@@ -21,6 +22,7 @@ const snapshotSql = `SELECT json_object(
   ),
   'revisions', json(coalesce((SELECT json_group_array(json(value)) FROM (
     SELECT json_object(
+      'id', id,
       'article_id', article_id,
       'revision', revision,
       'snapshot_json', snapshot_json,
@@ -43,8 +45,8 @@ export class CaptureKnowledgeRecordAdapter {
     Object.freeze(this)
   }
 
-  async prepare(input: Readonly<{ articleId: number; sourceNamespace: string }>) {
-    if (!z.number().int().safe().safeParse(input.articleId).success)
+  async prepare(input: Readonly<{ articleId: string; sourceNamespace: string }>) {
+    if (!z.uuid().safeParse(input.articleId).success)
       return new KnowledgeError("forbidden", "invalid source record")
     const actor = await new KnowledgeActorReadAdapter(this.c).prepare()
     if (actor instanceof Error) return actor
@@ -74,7 +76,7 @@ export class CaptureKnowledgeRecordAdapter {
         recordKind: "knowledge-article-record",
         recordId: String(input.articleId),
         formatId: "knowledge-article-record",
-        formatVersion: 1,
+        formatVersion: 2,
         sourceRevision: String(sourceRevision),
         sourceRecordedAt: null,
         capturedAt: actor.now.toISOString(),

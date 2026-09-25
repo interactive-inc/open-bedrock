@@ -105,7 +105,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
         .orderBy(
           asc(reviewCycles.createdAt),
           asc(sql`CAST(${reviewCycles.legacyId} AS INTEGER)`),
-          asc(reviewCycles.id),
+          asc(sql`${reviewCycles}.rowid`),
         )
         .limit(limit)
         .offset(offset)
@@ -114,7 +114,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
         .orderBy(
           asc(reviewCycles.createdAt),
           asc(sql`CAST(${reviewCycles.legacyId} AS INTEGER)`),
-          asc(reviewCycles.id),
+          asc(sql`${reviewCycles}.rowid`),
         )
         .limit(limit)
         .offset(offset)

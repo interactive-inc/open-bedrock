@@ -10,7 +10,7 @@ import {
 
 type Props = Readonly<{
   session: CompanySessionValue
-  assignmentId: number
+  assignmentId: string
   freezeId: string
   commandId: string
   expectedRevision: number
