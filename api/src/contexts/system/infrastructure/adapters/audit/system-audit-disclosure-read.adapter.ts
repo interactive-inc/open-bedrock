@@ -58,7 +58,8 @@ export class SystemAuditDisclosureReadAdapter {
       }>([
         this.c.env.DB.prepare(authorization).bind(...args),
         this.c.env.DB.prepare(
-          "SELECT COALESCE(MAX(sequence), 0) AS epoch FROM system_audit_disclosure_policy_revisions",
+          // 版は削除も更新もできないため、行数が増えたかどうかで変更を検知する。
+          "SELECT count(*) AS epoch FROM system_audit_disclosure_policy_revisions",
         ),
         this.c.env.DB.prepare(`SELECT audit.after_json AS snapshot_json FROM system_audit_disclosure_policy_revisions policy
           JOIN system_audit_events audit ON audit.event_id = policy.audit_event_id
@@ -96,7 +97,7 @@ export class SystemAuditDisclosureReadAdapter {
             ...args,
             actor,
           ),
-          this.c.env.DB.prepare(`SELECT CASE WHEN COALESCE(MAX(sequence), 0) = ?1 THEN 1
+          this.c.env.DB.prepare(`SELECT CASE WHEN count(*) = ?1 THEN 1
           ELSE json_extract('{}', 'system_audit_disclosure_changed') END AS ok FROM system_audit_disclosure_policy_revisions`).bind(
             epoch,
           ),

@@ -1,5 +1,5 @@
 CREATE TABLE system_audit_disclosure_policy_revisions (
-  sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+  id TEXT PRIMARY KEY NOT NULL CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]'),
   scope TEXT NOT NULL CHECK (length(scope) BETWEEN 1 AND 255),
   revision INTEGER NOT NULL CHECK (revision > 0),
   command_id TEXT NOT NULL UNIQUE,

@@ -8,7 +8,7 @@ import { check, index, integer, sqliteTable, text } from "drizzle-orm/sqlite-cor
 export const auditLogs = sqliteTable(
   "company_audit_events",
   {
-    id: integer("id").primaryKey(),
+    id: text("id").primaryKey().notNull(),
     eventId: text("event_id").notNull().unique(),
     requestId: text("request_id").notNull(),
     actorAccountId: text("actor_account_id").$type<AccountId>(),
@@ -46,14 +46,10 @@ export type AuditLogRow = InferSelectModel<typeof auditLogs>
 export const auditBatchDecisions = sqliteTable(
   "company_audit_batch_decisions",
   {
-    decisionId: text("decision_id").primaryKey(),
+    decisionId: text("decision_id").primaryKey().notNull(),
     decisionValue: text("decision_value").notNull(),
   },
   (table) => [
-    check(
-      "company_audit_batch_decisions_decision_id_length",
-      sql`length(${table.decisionId}) BETWEEN 1 AND 200`,
-    ),
     check(
       "company_audit_batch_decisions_decision_value_length",
       sql`length(${table.decisionValue}) BETWEEN 1 AND 64`,
@@ -67,7 +63,7 @@ export type AuditBatchDecisionRow = InferSelectModel<typeof auditBatchDecisions>
 export const auditEventEmployeeContexts = sqliteTable(
   "company_audit_event_employee_contexts",
   {
-    auditEventId: integer("audit_event_id").primaryKey(),
+    auditEventId: text("audit_event_id").primaryKey().notNull(),
     employeeId: text("employee_id").notNull().$type<EmployeeId>(),
   },
   (table) => [

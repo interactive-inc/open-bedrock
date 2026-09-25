@@ -235,7 +235,7 @@ describe("governance documents", () => {
     })
     const audits = await db
       .prepare(
-        "SELECT action FROM company_audit_events WHERE action LIKE 'governance.%' ORDER BY id",
+        "SELECT action FROM company_audit_events WHERE action LIKE 'governance.%' ORDER BY rowid",
       )
       .all<{ action: string }>()
     expect(audits.results.map((row) => row.action)).toEqual([

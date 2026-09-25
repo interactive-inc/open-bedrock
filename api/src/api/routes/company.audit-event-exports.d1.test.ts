@@ -91,6 +91,11 @@ async function grantPermission(
   ])
 }
 
+/** 監査の主キーと event_id は UUID に限られる。検査用の値を group と連番から決定的に作る。 */
+function auditUuid(group: number, value: number): string {
+  return `${group.toString(16).padStart(8, "0")}-0000-4000-8000-${value.toString(16).padStart(12, "0")}`
+}
+
 async function seedExportRow(db: D1Database): Promise<void> {
   await db
     .prepare(
@@ -98,7 +103,7 @@ async function seedExportRow(db: D1Database): Promise<void> {
        (event_id, request_id, actor_account_id, action, target_type,
         target_id, outcome, reason_code, authorization_json, before_json, after_json,
         metadata_json, client_ip, client_name, created_at)
-       VALUES ('custom-41', 'custom-request', -41, 'custom.action', 'custom_target',
+       VALUES ('00000041-0000-4000-8000-000000000041', 'custom-request', -41, 'custom.action', 'custom_target',
                '=formula', 'succeeded', 'custom_reason', '7', '"before"', '[1,2]',
                '{"custom_text":"value"}', '192.0.2.41', 'cli', 1767225600)`,
     )
@@ -168,7 +173,7 @@ function rawRequest(
 
 async function latestAudit(db: D1Database): Promise<Record<string, unknown>> {
   const row = await db
-    .prepare("SELECT * FROM company_audit_events ORDER BY id DESC LIMIT 1")
+    .prepare("SELECT * FROM company_audit_events ORDER BY rowid DESC LIMIT 1")
     .first()
   if (row === null) throw new Error("missing audit event")
   return row as Record<string, unknown>
@@ -201,7 +206,7 @@ async function insertBulkRows(db: D1Database, count: number): Promise<void> {
     )
     INSERT INTO company_audit_events
       (id, event_id, request_id, action, outcome, client_name, created_at)
-    SELECT value, 'custom-' || (100000 + value), 'r' || value,
+    SELECT printf('%08x-0000-4000-8000-%012x', 1, value), printf('%08x-0000-4000-8000-%012x', 2, value), 'r' || value,
            'custom.bulk', 'succeeded', 'api', 1767225600 + value
     FROM sequence
   `,
@@ -209,14 +214,18 @@ async function insertBulkRows(db: D1Database, count: number): Promise<void> {
 }
 
 async function insertFormalWorstRows(db: D1Database): Promise<void> {
-  const metadata = JSON.stringify("x".repeat(1_000_000))
+  // event_id は UUID の 36 文字に固定されるため、整数の文字列を使っていた頃より 1 行あたり長い。
+  // 同じ総量に収まるよう、大きな 14 行の本文をその差（行あたり 102,662 byte）だけ短くする。
+  const metadata = JSON.stringify("x".repeat(1_000_000 - 102_662))
   const statement = db.prepare(
     `INSERT INTO company_audit_events
        (id, event_id, request_id, action, outcome, metadata_json, client_name, created_at)
      VALUES (?1, ?2, 'r', 'a', 'succeeded', ?3, 'api', ?4)`,
   )
   for (let index = 0; index < 14; index += 1) {
-    await statement.bind(index + 1, `l${index + 1}`, metadata, 100_001 + index).run()
+    await statement
+      .bind(auditUuid(3, index + 1), auditUuid(4, index + 1), metadata, 100_001 + index)
+      .run()
   }
   await execSql(
     db,
@@ -226,7 +235,7 @@ async function insertFormalWorstRows(db: D1Database): Promise<void> {
     )
     INSERT INTO company_audit_events
       (id, event_id, request_id, action, outcome, client_name, created_at)
-    SELECT value, CAST(value AS TEXT), 'r', 'a', 'succeeded', 'api', value
+    SELECT printf('%08x-0000-4000-8000-%012x', 5, value), printf('%08x-0000-4000-8000-%012x', 6, value), 'r', 'a', 'succeeded', 'api', value
     FROM sequence
   `,
   )
@@ -238,7 +247,7 @@ async function insertOneByteCsvOverflow(db: D1Database): Promise<void> {
   const emptyRows: AuditEventDetail[] = Array.from({ length: rowCount }, (_, index) => {
     const id = index + 1
     return {
-      eventId: `l${id}`,
+      eventId: auditUuid(7, id),
       requestId: "r",
       actorAccountId: null,
       actorEmployeeId: null,
@@ -275,8 +284,8 @@ async function insertOneByteCsvOverflow(db: D1Database): Promise<void> {
     const id = index + 1
     await statement
       .bind(
-        id,
-        `l${id}`,
+        auditUuid(8, id),
+        auditUuid(7, id),
         JSON.stringify("x".repeat(contentLength + (index === rowCount - 1 ? 1 : 0))),
         createdAtBase + id,
       )
@@ -546,7 +555,8 @@ describe("POST /audit-event-exports", () => {
       to: "1970-02-01T00:00:00Z",
     })
     expect(worst.status).toBe(200)
-    expect(formalWorst.queries()).toBe(31)
+    // 大きな行の本文を短くした分、分割読取りの回数が 2 回減る。
+    expect(formalWorst.queries()).toBe(29)
     expect(formalWorst.queries()).toBeLessThanOrEqual(33)
   }, 20_000)
 

@@ -731,7 +731,6 @@ export const systemAuditEvents = sqliteTable(
     index("system_audit_events_action_idx").on(table.action, table.occurredAt),
     index("system_audit_events_target_idx").on(table.targetType, table.targetId, table.occurredAt),
     index("system_audit_events_outcome_idx").on(table.outcome, table.occurredAt),
-    check("system_audit_events_id_length", sql`length(${table.eventId}) BETWEEN 1 AND 255`),
     check("system_audit_events_action_length", sql`length(${table.action}) BETWEEN 3 AND 200`),
     check(
       "system_audit_events_target_type_length",
@@ -786,7 +785,7 @@ export type SystemBootstrapStateRow = InferSelectModel<typeof systemBootstrapSta
 export const systemAuditDisclosurePolicyRevisions = sqliteTable(
   "system_audit_disclosure_policy_revisions",
   {
-    sequence: integer("sequence").primaryKey({ autoIncrement: true }),
+    id: text("id").primaryKey().notNull(),
     scope: text("scope").notNull(),
     revision: integer("revision").notNull(),
     commandId: text("command_id").notNull().unique(),

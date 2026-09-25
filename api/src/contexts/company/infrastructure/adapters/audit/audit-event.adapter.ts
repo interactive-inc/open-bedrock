@@ -27,6 +27,21 @@ import { z } from "zod"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 
+/**
+ * 監査イベントの読取り元。公開する識別子は event_id であり、主キーの id は UUID である。
+ * 一覧の keyset と snapshot には追記順を表す整数が要るため、追記専用で削除も更新もしない
+ * company_audit_events の rowid を内部の id として使う。rowid は外へ出さない。
+ */
+const AUDIT_EVENT_RELATION = `SELECT event.rowid AS id, event.event_id, event.request_id,
+  event.actor_account_id, employee_context.employee_id AS actor_employee_id, event.action,
+  event.target_type, event.target_id, event.outcome, event.reason_code, event.authorization_json,
+  event.before_json, event.after_json, event.metadata_json, event.client_ip, event.client_name,
+  event.created_at
+FROM company_audit_events event
+LEFT JOIN company_audit_event_employee_contexts employee_context
+  ON employee_context.audit_event_id = event.id`
+const AUDIT_EVENT_SOURCE = `(${AUDIT_EVENT_RELATION}) company_audit_event_details`
+
 const SEARCH_MAX_LIMIT = 100
 const SEARCH_SUMMARY_WIRE_BUDGET_BYTES = 4 * 1024 * 1024
 const EXPORT_MAX_ROWS = 50_000
@@ -1013,7 +1028,7 @@ function summaryDescriptorSql(
   const limitIndex = parts.bindings.push(limit)
   const snapshotSql =
     snapshotMaxId === null
-      ? "(SELECT MAX(id) FROM company_audit_event_details)"
+      ? "(SELECT MAX(rowid) FROM company_audit_events)"
       : `?${parts.bindings.push(snapshotMaxId)}`
   const where = parts.clauses.length === 0 ? "" : `WHERE ${parts.clauses.join(" AND ")}`
   const order = ascending ? "ASC" : "DESC"
@@ -1025,7 +1040,7 @@ function summaryDescriptorSql(
                  (${SUMMARY_MAX_TEXT_BYTES_SQL}) AS max_text_bytes,
                  (${SUMMARY_STORAGE_OK_SQL}) AS storage_ok,
                  ${snapshotSql} AS snapshot_max_id
-          FROM company_audit_event_details ${where}
+          FROM ${AUDIT_EVENT_SOURCE} ${where}
           ORDER BY created_at ${order}, id ${order} LIMIT ?${limitIndex}`,
     bindings: parts.bindings,
   }
@@ -1073,7 +1088,7 @@ function exportDescriptorSql(
     sql: `WITH layout AS (
             SELECT id, created_at, actor_account_id, actor_employee_id,
                    ${DETAIL_TEXT_COLUMNS.join(", ")}, ${DETAIL_COMPACT_LAYOUT_COLUMNS}
-            FROM company_audit_event_details ${where}
+            FROM ${AUDIT_EVENT_SOURCE} ${where}
             ORDER BY created_at DESC, id DESC
             LIMIT ?${limitIndex}
           ), measured AS (
@@ -1257,7 +1272,7 @@ const EXPORT_SEGMENT_SQL = `
              `hex(substr(CAST(a.${column} AS BLOB), ` + `p.byte_offset + 1, p.expected_bytes))`,
          )}
   FROM plan p
-  JOIN company_audit_event_details a ON a.id = p.id
+  JOIN (${AUDIT_EVENT_RELATION}) a ON a.id = p.id
   ORDER BY p.plan_ordinal
 `
 
@@ -1295,7 +1310,7 @@ export class AuditEventAdapter {
     if (hexDescriptors.length > 0) {
       const summaryResult = await this.c.env.DB.prepare(
         `SELECT ${SUMMARY_HEX_SELECT_COLUMNS}
-         FROM company_audit_event_details
+         FROM ${AUDIT_EVENT_SOURCE}
          WHERE id IN (SELECT value FROM json_each(?1))
          ORDER BY created_at ${order}, id ${order}`,
       )
@@ -1331,7 +1346,7 @@ export class AuditEventAdapter {
   ): Promise<ReadonlyArray<AuditDetailDatabaseRow>> {
     const detailResult = await this.c.env.DB.prepare(
       `SELECT ${DETAIL_HEX_SELECT_COLUMNS}
-       FROM company_audit_event_details
+       FROM ${AUDIT_EVENT_SOURCE}
        WHERE id IN (SELECT value FROM json_each(?1))
        ORDER BY created_at DESC, id DESC`,
     )
@@ -1532,7 +1547,7 @@ export class AuditEventAdapter {
       if (selections.length === 0) throw new Error("audit segmented text read made no progress")
 
       const segmentResult = await this.c.env.DB.prepare(
-        `SELECT ${projections.join(", ")} FROM company_audit_event_details WHERE id = ?1 LIMIT 1`,
+        `SELECT ${projections.join(", ")} FROM ${AUDIT_EVENT_SOURCE} WHERE id = ?1 LIMIT 1`,
       )
         .bind(...bindings)
         .all()
@@ -1725,7 +1740,7 @@ export class AuditEventAdapter {
              AND decision_value IN (${decisionPlaceholders.join(", ")})) = 1
          AND
          (SELECT COUNT(*)
-            FROM company_audit_event_details
+            FROM ${AUDIT_EVENT_SOURCE}
            WHERE event_id IN (${eventIdPlaceholders.join(", ")})) = 1
        THEN 1 ELSE json_extract('', '$') END AS ok`,
     ).bind(props.decisionId, ...decisions, ...eventIds)
@@ -1962,7 +1977,7 @@ export class AuditEventAdapter {
                 (${DETAIL_WIRE_BYTES_SQL}) AS wire_bytes,
                 (${DETAIL_MAX_TEXT_BYTES_SQL}) AS max_text_bytes,
                 (${DETAIL_STORAGE_OK_SQL}) AS storage_ok
-         FROM company_audit_event_details WHERE event_id = ?1 LIMIT 1`,
+         FROM ${AUDIT_EVENT_SOURCE} WHERE event_id = ?1 LIMIT 1`,
       )
         .bind(eventId)
         .all()

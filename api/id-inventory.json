@@ -4,11 +4,11 @@
     "primaryKeyKinds": {
       "allocator-singleton-secret": 11,
       "composite": 26,
-      "integer": 9,
+      "integer": 4,
       "text-business-code": 1,
       "text-prefixed": 13,
-      "text-uuid": 90,
-      "text-uuid-candidate": 56
+      "text-uuid": 97,
+      "text-uuid-candidate": 54
     },
     "declaredForeignKeys": 272,
     "softReferences": {
@@ -748,12 +748,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "event_id",
+            "name": "audit_id",
             "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false,
+        "kind": "text-uuid",
+        "uuidEnforced": true,
         "inheritsFrom": "company_audit_events"
       },
       "foreignKeys": {
@@ -790,8 +790,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -813,11 +813,11 @@
         "columns": [
           {
             "name": "staging_id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -865,11 +865,11 @@
         "columns": [
           {
             "name": "audit_event_id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false,
+        "kind": "text-uuid",
+        "uuidEnforced": true,
         "inheritsFrom": "company_audit_events"
       },
       "foreignKeys": {
@@ -903,11 +903,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -7116,12 +7116,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "sequence",
-            "type": "INTEGER"
+            "name": "id",
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -7163,8 +7163,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
