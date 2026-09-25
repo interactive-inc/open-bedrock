@@ -3,7 +3,7 @@ import { LicenseActorReadAdapter } from "@/contexts/software-license/infrastruct
 import { z } from "zod"
 
 const inventorySql =
-  "SELECT json_group_array(id) AS ids_json FROM (SELECT id FROM software_licenses ORDER BY id)"
+  "SELECT json_group_array(id) AS ids_json FROM (SELECT id FROM software_licenses ORDER BY id COLLATE BINARY)"
 
 type Context = SoftwareLicenseContext
 
@@ -25,7 +25,7 @@ export class ListLicenseRecordInventoryAdapter {
         return new Error("license inventory is unavailable")
       const snapshot = reads.at(-1)?.results[0]?.ids_json
       if (snapshot === undefined) return new Error("license inventory is unavailable")
-      const ids = z.array(z.number().int().safe()).readonly().safeParse(JSON.parse(snapshot))
+      const ids = z.array(z.uuid()).readonly().safeParse(JSON.parse(snapshot))
       if (!ids.success) return ids.error
       return Object.freeze({
         licenseIds: ids.data,

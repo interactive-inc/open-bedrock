@@ -32,14 +32,18 @@ export class RingiProcedureListAdapter {
     const from = `FROM ringi_requests request LEFT JOIN ringi_procedure_bindings binding ON binding.ringi_id = request.id
       LEFT JOIN system_cases workflow_case ON workflow_case.id = binding.case_id`
     const sort = {
-      created_at_desc: "request.created_at DESC, request.id DESC",
-      created_at_asc: "request.created_at ASC, request.id ASC",
-      amount_desc: "request.amount DESC, request.id DESC",
-      amount_asc: "request.amount ASC, request.id ASC",
+      created_at_desc:
+        "request.created_at DESC, CAST(request.legacy_id AS INTEGER) DESC, request.rowid DESC",
+      created_at_asc:
+        "request.created_at ASC, CAST(request.legacy_id AS INTEGER) ASC, request.rowid ASC",
+      amount_desc:
+        "request.amount DESC, request.created_at DESC, CAST(request.legacy_id AS INTEGER) DESC, request.rowid DESC",
+      amount_asc:
+        "request.amount ASC, request.created_at ASC, CAST(request.legacy_id AS INTEGER) ASC, request.rowid ASC",
     }[input.sort]
     try {
       const applicantId = input.mode === "mine" ? input.session.employeeId : input.applicantId
-      const rows = await this.c.env.DB.batch<{ id: number; total: number }>([
+      const rows = await this.c.env.DB.batch<{ id: string; total: number }>([
         this.c.env.DB.prepare(
           `SELECT request.id ${from} ${where} ORDER BY ${sort} LIMIT ?3 OFFSET ?4`,
         ).bind(applicantId, input.status, input.limit, input.offset),

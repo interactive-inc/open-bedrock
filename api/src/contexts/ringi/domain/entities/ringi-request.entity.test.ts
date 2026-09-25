@@ -38,7 +38,8 @@ describe("RingiRequest.create", () => {
 describe("RingiRequest.fromRow", () => {
   test("reconstructs a decided ringi from a row", () => {
     const ringi = RingiRequest.fromRow({
-      id: 2,
+      id: "0190004a-0000-7000-8000-000000000002",
+      legacyId: null,
       applicantId: toWorkforceEmployeeId(5),
       approverId: toWorkforceEmployeeId(4),
       title: "Conference",
@@ -50,7 +51,7 @@ describe("RingiRequest.fromRow", () => {
       createdAt: "2026-05-12T02:00:00Z",
     })
 
-    expect(ringi.id).toBe(2)
+    expect(ringi.id).toBe("0190004a-0000-7000-8000-000000000002")
     expect(ringi.status).toBe("approved")
     expect(ringi.decisionComment).toBe("approved within budget")
   })

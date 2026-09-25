@@ -4,7 +4,7 @@ import type { LicenseAssignmentProps } from "@/contexts/software-license/domain/
 export function isLicenseAssignmentReplay(
   stored: LicenseAssignmentProps,
   command: Readonly<{
-    licenseId: number
+    licenseId: string
     employeeId: string
     accountReference: string | null
     reason: string

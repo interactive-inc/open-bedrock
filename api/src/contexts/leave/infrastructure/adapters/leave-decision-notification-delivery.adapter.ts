@@ -64,12 +64,13 @@ export class LeaveDecisionNotificationDeliveryAdapter {
     )
       .bind(job.id)
       .first<string>("payload_json")
-    if (payload === null || (await toSha256Hex(payload)) !== job.payloadDigest)
-      return new Error("notification payload cannot be verified")
+    if (payload === null) return new Error("notification payload cannot be verified")
     const notification = LeaveDecisionNotificationValue.create(JSON.parse(payload))
     if (notification instanceof Error) return notification
-    if (notification.deliveryId !== job.id || notification.toCanonicalJson() !== payload)
+    if (notification.toCanonicalJson() !== payload)
       return new Error("notification identity changed")
+    const identity = await this.verifyIdentity(notification, payload, job)
+    if (identity instanceof Error) return identity
     if (at.getTime() < notification.props.decidedAt)
       return new Error("notification delivery precedes decision")
     const companyGuard = await prepareCompanyAuthoritySnapshotGuard(
@@ -112,6 +113,33 @@ export class LeaveDecisionNotificationDeliveryAdapter {
         THEN 1 ELSE json_extract('', '$') END AS ok`).bind(recipient.data),
       ...publication,
     ]
+  }
+
+  /**
+   * 通知待ちの本文と配送 ID を System の job と照合する。主キーを UUID へ移す前に作られた job の digest は
+   * 休暇申請の整数の主キーを含む本文に対する値なので、休暇申請の legacy_id から移行前の本文を組み立てて照合する。
+   */
+  private async verifyIdentity(
+    notification: LeaveDecisionNotificationValue,
+    payload: string,
+    job: SystemDeliveryEntity,
+  ): Promise<true | Error> {
+    if (notification.deliveryId !== job.id) return new Error("notification identity changed")
+    if ((await toSha256Hex(payload)) === job.payloadDigest) return true
+    const legacyId = await this.c.env.DB.prepare(
+      "SELECT legacy_id FROM leave_requests WHERE id = ?1",
+    )
+      .bind(notification.props.leaveRequestId)
+      .first<string | null>("legacy_id")
+    if (legacyId === null || !/^[1-9][0-9]*$/.test(legacyId))
+      return new Error("notification payload cannot be verified")
+    const legacyPayload = JSON.stringify({
+      ...JSON.parse(payload),
+      leaveRequestId: Number(legacyId),
+    })
+    if ((await toSha256Hex(legacyPayload)) !== job.payloadDigest)
+      return new Error("notification payload cannot be verified")
+    return true
   }
 
   private preparePublication(

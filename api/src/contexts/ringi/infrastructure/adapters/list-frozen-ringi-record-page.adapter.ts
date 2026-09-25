@@ -39,35 +39,33 @@ export class ListFrozenRingiRecordPageAdapter {
       ownerContext: "ringi",
     })
     if (generation instanceof Error) return generation
-    const numeric = request.recordKind === "ringi-request-record"
+    const requests = request.recordKind === "ringi-request-record"
     const after = request.afterCursor
-    const numericCursor = numeric && after !== null ? Number(after) : null
+    const requestCursor = requests && after !== null ? after : null
     const bindingCursor =
-      !numeric && after !== null ? decodeRingiProcedureBindingRecordId(after) : null
+      !requests && after !== null ? decodeRingiProcedureBindingRecordId(after) : null
     if (
       after !== null &&
-      (numeric
-        ? !Number.isSafeInteger(numericCursor) || String(numericCursor) !== after
-        : bindingCursor === null)
+      (requests ? !z.uuid().safeParse(requestCursor).success : bindingCursor === null)
     )
       return new Error("invalid ringi cursor")
     try {
-      const table = numeric ? "ringi_requests" : "ringi_procedure_bindings"
-      const column = numeric ? "id" : "request_key"
+      const table = requests ? "ringi_requests" : "ringi_procedure_bindings"
+      const column = requests ? "id" : "request_key"
       const page =
         after === null
           ? this.c.env.DB.prepare(
-              `SELECT ${column} AS record_id FROM ${table} ORDER BY ${column} LIMIT ?1`,
+              `SELECT ${column} AS record_id FROM ${table} ORDER BY ${column} COLLATE BINARY LIMIT ?1`,
             ).bind(request.limit + 1)
           : this.c.env.DB.prepare(
-              `SELECT ${column} AS record_id FROM ${table} WHERE ${column}>?1 ORDER BY ${column} LIMIT ?2`,
-            ).bind(numeric ? numericCursor : bindingCursor, request.limit + 1)
+              `SELECT ${column} AS record_id FROM ${table} WHERE ${column} COLLATE BINARY>?1 ORDER BY ${column} COLLATE BINARY LIMIT ?2`,
+            ).bind(requests ? requestCursor : bindingCursor, request.limit + 1)
       const statements = [...generation.assertions, page, ...generation.assertions]
-      const reads = await this.c.env.DB.batch<{ record_id: number | string }>(statements)
+      const reads = await this.c.env.DB.batch<{ record_id: string }>(statements)
       if (reads.length !== statements.length || reads.some((read) => !read.success))
         return new Error("frozen ringi inventory unavailable")
       const ids = (reads[generation.assertions.length]?.results ?? []).map((row) =>
-        numeric
+        requests
           ? String(row.record_id)
           : encodeRingiProcedureBindingRecordId(String(row.record_id)),
       )

@@ -2,7 +2,7 @@ import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 type SeedLeaveRequest = {
-  id: number
+  id: string
   employeeId: EmployeeId
   leaveType: "annual" | "special"
   startDate: string
@@ -18,7 +18,7 @@ type SeedLeaveRequest = {
 /** days は toLeaveDays(startDate, endDate) と一致する包括日数。pending は approverId/decidedComment を null に。 */
 export const seedLeaveRequests: ReadonlyArray<SeedLeaveRequest> = [
   {
-    id: 1,
+    id: "01900049-0000-7000-8000-000000000001",
     employeeId: toWorkforceEmployeeId(5),
     leaveType: "annual",
     startDate: "2026-06-01",
@@ -31,7 +31,7 @@ export const seedLeaveRequests: ReadonlyArray<SeedLeaveRequest> = [
     createdAt: "2026-05-20T00:00:00Z",
   },
   {
-    id: 2,
+    id: "01900049-0000-7000-8000-000000000002",
     employeeId: toWorkforceEmployeeId(10),
     leaveType: "special",
     startDate: "2026-07-10",

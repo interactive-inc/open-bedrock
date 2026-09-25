@@ -78,7 +78,8 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(
     db,
     "leave_balances",
-    seedLeaveBalances.map((balance) => ({
+    seedLeaveBalances.map((balance, index) => ({
+      id: `0190004c-0000-7000-8000-${String(index + 1).padStart(12, "0")}`,
       employee_id: balance.employeeId,
       fiscal_year: balance.fiscalYear,
       leave_type: balance.leaveType,

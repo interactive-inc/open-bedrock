@@ -36,7 +36,7 @@ export class LeaveBalance implements Props {
     Object.freeze(this)
   }
 
-  static fromRow(row: LeaveBalanceRow): LeaveBalance {
+  static fromRow(row: Omit<LeaveBalanceRow, "id">): LeaveBalance {
     return new LeaveBalance({
       employeeId: row.employeeId,
       fiscalYear: row.fiscalYear,

@@ -1,6 +1,6 @@
 CREATE TABLE software_license_changes (
   id TEXT PRIMARY KEY NOT NULL,
-  license_id INTEGER NOT NULL REFERENCES software_licenses(id) ON DELETE RESTRICT,
+  license_id TEXT NOT NULL REFERENCES software_licenses(id) ON DELETE RESTRICT,
   actor_account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE RESTRICT,
   recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
   command_id TEXT,
@@ -17,7 +17,7 @@ CREATE TRIGGER software_license_changes_delete BEFORE DELETE ON software_license
 BEGIN SELECT RAISE(ABORT, 'software_license_history_immutable'); END;
 CREATE TABLE software_license_assignments (
   id TEXT PRIMARY KEY NOT NULL,
-  license_id INTEGER NOT NULL REFERENCES software_licenses(id) ON DELETE RESTRICT,
+  license_id TEXT NOT NULL REFERENCES software_licenses(id) ON DELETE RESTRICT,
   employee_id TEXT NOT NULL REFERENCES company_employees(id) ON DELETE RESTRICT,
   service_name TEXT NOT NULL CHECK (length(trim(service_name)) > 0),
   plan_name TEXT,

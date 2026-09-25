@@ -55,7 +55,7 @@ export const zAppLeaveRetirementExecution = z.strictObject({
 
 /** 休暇申請 1 件のレスポンス（作成・承認・却下時）。approver_id と decided_comment を含む。 */
 export const zAppLeaveRequest = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   leave_type: leaveTypeSchema,
   start_date: z.string(),
@@ -73,7 +73,7 @@ export const zAppLeaveRequest = z.object({
 /** 休暇申請の詳細レスポンス（GET/PUT /requests/:id）。approver_id と decided_comment を含まない。 */
 export const zAppLeaveRequestDetail = z.object({
   consumed_days: z.number(),
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   leave_type: leaveTypeSchema,
   start_date: z.string(),
@@ -88,7 +88,7 @@ export const zAppLeaveRequestDetail = z.object({
 
 /** 本人の休暇申請一覧 1 件（GET /requests/me）。 */
 export const zAppLeaveRequestSummary = z.object({
-  id: z.number(),
+  id: z.uuid(),
   leave_type: leaveTypeSchema,
   start_date: z.string(),
   end_date: z.string(),
@@ -107,7 +107,7 @@ export const zAppLeaveRequestSummaryList = z.object({
 
 /** 全社休暇申請一覧（GET /leave-requests/admin）の 1 件。 */
 export const zAppLeaveRequestAdminItem = z.object({
-  id: z.number(),
+  id: z.uuid(),
   applicant_id: zEmployeeId,
   applicant_name: z.string(),
   applicant_dept_name: z.string().nullable(),
@@ -142,7 +142,7 @@ export const zAppLeaveBalanceList = z.array(zAppLeaveBalance)
 
 /** 確認した休暇内容とSystem判断案件の参照結果。 */
 export const zLeaveProcedureView = z.object({
-  id: z.number().int().positive(),
+  id: z.uuid(),
   applicant_id: zEmployeeId,
   applicant_name: z.string(),
   applicant_dept_name: z.string().nullable(),
@@ -177,8 +177,8 @@ export const zLeaveProcedureView = z.object({
   can_execute: z.boolean(),
   can_cancel: z.boolean(),
   can_resubmit: z.boolean(),
-  next_leave_request_id: z.number().nullable(),
-  previous_leave_request_id: z.number().nullable(),
+  next_leave_request_id: z.uuid().nullable(),
+  previous_leave_request_id: z.uuid().nullable(),
   decision_target: leaveProcedureDecisionTargetSchema.nullable(),
   required_approvals: z.number().nullable(),
   approvals: z.number(),

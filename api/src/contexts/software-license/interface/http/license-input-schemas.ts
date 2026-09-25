@@ -1,7 +1,8 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { z } from "zod"
 
-export const licenseIdSchema = z.coerce.number().int().safe()
+export const licenseIdSchema = uuidSchema
 export const licenseInputSchema = z
   .object({
     name: z.string().trim().min(1).max(300),

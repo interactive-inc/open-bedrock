@@ -32,11 +32,9 @@ export default factory.createHandlers(
     if (query.operation === undefined)
       return c.text(JSON.stringify(await api(path + "/procedure"), null, 2))
     if (query.operation === "submit") {
-      const previous = z.coerce
-        .number()
-        .int()
-        .positive()
-        .safe()
+      const previous = z
+        .string()
+        .uuid()
         .nullable()
         .safeParse(query["previous-leave-request-id"] ?? null)
       if (!previous.success) throw new UsageError("差戻し元の番号が不正です")

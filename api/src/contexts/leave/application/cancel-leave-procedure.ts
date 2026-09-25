@@ -9,7 +9,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 import { ConflictError, ForbiddenError, UnexpectedError, type ApplicationError } from "@/lib/errors"
 
 type Command = Readonly<{
-  leaveRequestId: number
+  leaveRequestId: string
   session: CompanyPersonnelSession
   tokenVersion: number
   decisionTarget: Readonly<{

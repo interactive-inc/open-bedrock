@@ -89,7 +89,7 @@ test("提出のrequest key・確認digest・差戻し元を再送でも保持す
     operation: "submit",
     "request-key": key,
     "content-digest": target.proposal_digest,
-    "previous-leave-request-id": "41",
+    "previous-leave-request-id": "01900049-0000-7000-8000-000000000029",
   }
   expect((await command("/leave-requests/procedure", args)).status).toBe(200)
   expect((await command("/leave-requests/procedure", args)).status).toBe(200)
@@ -98,7 +98,7 @@ test("提出のrequest key・確認digest・差戻し元を再送でも保持す
     expect(await request.json()).toEqual({
       request_key: key,
       confirmed_content_digest: target.proposal_digest,
-      previous_leave_request_id: 41,
+      previous_leave_request_id: "01900049-0000-7000-8000-000000000029",
     })
 })
 

@@ -42,12 +42,9 @@ export default factory.createHandlers(
 
     if (!query.start || !query.end) throw new UsageError("--start と --end が必要です")
 
-    // APIは差戻し元をまだ整数で受け取るため、送信直前にだけ数値へ変換する。
-    const previous = z.coerce
-      .number()
-      .int()
-      .positive()
-      .safe()
+    const previous = z
+      .string()
+      .uuid()
       .nullable()
       .safeParse(query["previous-leave-request-id"] ?? null)
     if (!previous.success) throw new UsageError("差戻し元の番号が不正です")

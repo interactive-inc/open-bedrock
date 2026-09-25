@@ -75,7 +75,7 @@ describe("LeaveRequestRepository", () => {
       employeeId: EmployeeId
       startDate: string
       endDate: string
-    }): Promise<{ repository: LeaveRequestRepository; id: number; db: D1Database }> {
+    }): Promise<{ repository: LeaveRequestRepository; id: string; db: D1Database }> {
       const { context, db } = await createLocalD1Context(local, props.database)
 
       const repository = new LeaveRequestRepository(context)
@@ -150,8 +150,8 @@ describe("LeaveRequestRepository", () => {
       const repository = new LeaveRequestRepository(context)
       await db
         .prepare(`INSERT INTO leave_requests
-        (employee_id,leave_type,start_date,end_date,days,unit,hours,consumed_days,reason,status,created_at)
-        VALUES (?1,'annual','2026-02-01','2026-02-05',5,'full_day',NULL,5,NULL,'rejected','2026-01-01T00:00:00.000Z')`)
+        (id,employee_id,leave_type,start_date,end_date,days,unit,hours,consumed_days,reason,status,created_at)
+        VALUES ('01900049-0000-7000-8000-0000000000aa',?1,'annual','2026-02-01','2026-02-05',5,'full_day',NULL,5,NULL,'rejected','2026-01-01T00:00:00.000Z')`)
         .bind(toWorkforceEmployeeId(1))
         .run()
 

@@ -67,6 +67,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "leave_balances", [
     {
+      id: crypto.randomUUID(),
       employee_id: "20",
       fiscal_year: "2026",
       leave_type: "annual",

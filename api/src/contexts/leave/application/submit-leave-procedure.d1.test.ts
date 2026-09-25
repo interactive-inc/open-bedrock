@@ -51,7 +51,12 @@ test("本人が確認した休暇を提出し、同じ再送で案件を増や�
     tokenVersion: 0,
     createdAt: c.at,
   }
-  for (const previousLeaveRequestId of [0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1]) {
+  for (const previousLeaveRequestId of [
+    "0",
+    "-1",
+    "not-a-uuid",
+    "00000000-0000-0000-0000-000000000000",
+  ]) {
     expect(await application.run({ ...command, previousLeaveRequestId })).toBeInstanceOf(Error)
   }
   await c.database

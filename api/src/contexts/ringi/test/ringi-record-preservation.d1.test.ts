@@ -30,7 +30,7 @@ test("稟議起案を停止中に人の承認で保全し、業務コードを�
   await database
     .prepare(`INSERT INTO ringi_requests
       (id,applicant_id,approver_id,title,amount,reason,status,decided_at,decision_comment,created_at)
-      VALUES (0,?1,?2,'Equipment review',45000,'Team need','approved',
+      VALUES ('0190004a-0000-7000-8000-000000000000',?1,?2,'Equipment review',45000,'Team need','approved',
         '2026-09-15T10:00:00.000Z','Reviewed','2026-09-01T00:00:00.000Z')`)
     .bind(creator.employeeId, reviewer.employeeId)
     .run()
@@ -61,9 +61,13 @@ test("稟議起案を停止中に人の承認で保全し、業務コードを�
   )
   if (frozen.status !== 201) throw new Error(await frozen.text())
   await expect(
-    database.prepare("UPDATE ringi_requests SET title='changed' WHERE id=0").run(),
+    database
+      .prepare(
+        "UPDATE ringi_requests SET title='changed' WHERE id='0190004a-0000-7000-8000-000000000000'",
+      )
+      .run(),
   ).rejects.toThrow("ringi_record_source_frozen")
-  const sources = [["ringi-request-record", "0"]] as const
+  const sources = [["ringi-request-record", "0190004a-0000-7000-8000-000000000000"]] as const
   const preservedIds: string[] = []
   for (const [recordKind, recordId] of sources) {
     const path = `/ringi/records/${recordKind}/${recordId}/preservation-requests`

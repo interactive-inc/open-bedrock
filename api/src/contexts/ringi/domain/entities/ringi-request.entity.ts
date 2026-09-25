@@ -6,7 +6,7 @@ import { z } from "zod"
 
 /** D1 batch の結果行を安全にパースする。fromRow の引数型に対応する。 */
 export const ringiRequestRowSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   applicantId: zEmployeeId,
   approverId: zEmployeeId,
   title: z.string(),
@@ -19,7 +19,7 @@ export const ringiRequestRowSchema = z.object({
 })
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   applicantId: zEmployeeId,
   approverId: zEmployeeId,
   title: z.string(),

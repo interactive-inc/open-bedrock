@@ -74,11 +74,11 @@ export async function createLeaveProcedureLocalD1Context(local: LocalD1, name: s
   })
   const requestId = await c.database
     .prepare(`INSERT INTO leave_requests
-    (employee_id, leave_type, start_date, end_date, days, unit, consumed_days, reason, status, created_at)
-    VALUES (?1, 'annual', '2027-01-01', '2027-01-01', 1, 'full_day', 1, 'Leave', 'pending', ?2)
+    (id, employee_id, leave_type, start_date, end_date, days, unit, consumed_days, reason, status, created_at)
+    VALUES (?3, ?1, 'annual', '2027-01-01', '2027-01-01', 1, 'full_day', 1, 'Leave', 'pending', ?2)
     RETURNING id`)
-    .bind(requester.employeeId, c.at.toISOString())
-    .first<number>("id")
+    .bind(requester.employeeId, c.at.toISOString(), crypto.randomUUID())
+    .first<string>("id")
   if (requestId === null) throw new Error("leave fixture missing")
   const resolved = await resolveCompanyGovernanceTask(c.context, {
     step,
@@ -167,7 +167,7 @@ export async function createLeaveProcedureDecisionLocalD1Context(local: LocalD1,
   }
   await c.database
     .prepare(
-      "INSERT INTO leave_balances (employee_id,fiscal_year,leave_type,granted_days,used_days,remaining_days) VALUES (?1,'2026','annual',10,0,10)",
+      "INSERT INTO leave_balances (id, employee_id,fiscal_year,leave_type,granted_days,used_days,remaining_days) VALUES ('0190004c-0000-7000-8000-0000000000f1', ?1,'2026','annual',10,0,10)",
     )
     .bind(c.creator.employeeId)
     .run()

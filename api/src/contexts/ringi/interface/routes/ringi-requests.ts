@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { SubmitRingiProcedure } from "@/contexts/ringi/application/submit-ringi-procedure"
 import { factory } from "@/api/http/factory"
@@ -17,8 +18,8 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       request_key: z.string().uuid(),
-      existing_ringi_id: z.number().int().positive().safe().nullable().optional(),
-      previous_ringi_id: z.number().int().positive().safe().nullable().optional(),
+      existing_ringi_id: uuidSchema.nullable().optional(),
+      previous_ringi_id: uuidSchema.nullable().optional(),
       approver_id: zEmployeeId,
       title: z.string().min(1).max(200),
       amount: z.number().positive().int().safe(),

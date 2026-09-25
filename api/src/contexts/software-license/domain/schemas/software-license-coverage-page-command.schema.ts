@@ -8,7 +8,7 @@ export const softwareLicenseCoveragePageCommandSchema = z.strictObject({
   records: z
     .array(
       z.strictObject({
-        sourceRecordId: z.number().int().safe(),
+        sourceRecordId: z.uuid(),
         preservedRecordId: z.uuid(),
       }),
     )

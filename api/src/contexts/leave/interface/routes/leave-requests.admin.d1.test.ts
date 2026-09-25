@@ -25,7 +25,7 @@ afterAll(async () => {
 const jwtSecret = "leave-admin-route-test-secret"
 
 const leaveAdminResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   applicant_id: zEmployeeId,
   applicant_name: z.string(),
   applicant_dept_name: z.string().nullable(),

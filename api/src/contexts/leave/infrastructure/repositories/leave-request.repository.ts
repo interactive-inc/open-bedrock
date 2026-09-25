@@ -7,7 +7,7 @@ import { and, eq, gte, inArray, lte, ne, sql } from "drizzle-orm"
 export class LeaveRequestRepository {
   constructor(private readonly c: Context) {}
 
-  async findById(leaveRequestId: number): Promise<LeaveRequest | null | Error> {
+  async findById(leaveRequestId: string): Promise<LeaveRequest | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -33,7 +33,7 @@ export class LeaveRequestRepository {
     employeeId: EmployeeId
     startDate: string
     endDate: string
-    excludeId?: number
+    excludeId?: string
   }): Promise<ReadonlyArray<LeaveRequest> | Error> {
     try {
       const rows = await this.c.var.database
@@ -57,7 +57,7 @@ export class LeaveRequestRepository {
   }
 
   /** 本人の差戻し案件が、まだ別の再提出へ接続されていないことを確認する。 */
-  async isReturnedSource(employeeId: EmployeeId, previousLeaveRequestId: number) {
+  async isReturnedSource(employeeId: EmployeeId, previousLeaveRequestId: string) {
     return (
       (await this.c.env.DB.prepare(`SELECT 1 AS found FROM leave_requests original
       JOIN leave_procedure_bindings binding ON binding.leave_request_id = original.id
@@ -75,12 +75,12 @@ export class LeaveRequestRepository {
    */
   async create(
     leaveRequest: LeaveRequest,
-    previousLeaveRequestId: number | null = null,
+    previousLeaveRequestId: string | null = null,
   ): Promise<LeaveRequest | null | Error> {
     try {
-      const inserted = await this.c.var.database.get<{ id: number }>(
-        sql`INSERT INTO leave_requests (employee_id, leave_type, start_date, end_date, days, unit, hours, consumed_days, reason, status, approver_id, decided_comment, created_at, previous_leave_request_id)
-            SELECT ${leaveRequest.employeeId}, ${leaveRequest.leaveType},
+      const inserted = await this.c.var.database.get<{ id: string }>(
+        sql`INSERT INTO leave_requests (id, employee_id, leave_type, start_date, end_date, days, unit, hours, consumed_days, reason, status, approver_id, decided_comment, created_at, previous_leave_request_id)
+            SELECT ${crypto.randomUUID()}, ${leaveRequest.employeeId}, ${leaveRequest.leaveType},
                    ${leaveRequest.startDate}, ${leaveRequest.endDate},
                    ${leaveRequest.days}, ${leaveRequest.unit}, ${leaveRequest.hours},
                    ${leaveRequest.consumedDays},
@@ -194,7 +194,7 @@ export class LeaveRequestRepository {
    * 休暇申請を削除する。
    * pending 状態のみ削除可。承認済み・却下済みは 0 行削除となり null を返す（TOCTOU 競合を防ぐ）。
    */
-  async delete(leaveRequestId: number): Promise<true | null | Error> {
+  async delete(leaveRequestId: string): Promise<true | null | Error> {
     try {
       const rows = await this.c.var.database
         .delete(leaveRequests)

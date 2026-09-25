@@ -10,7 +10,7 @@ import { SystemAuditEventEntity } from "@system/domain/entities/system-audit-eve
 
 type Command = Readonly<{
   id: string
-  licenseId: number
+  licenseId: string
   employeeId: EmployeeId
   accountReference: string | null
   reason: string

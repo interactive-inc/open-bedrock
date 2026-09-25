@@ -12,11 +12,11 @@ export async function submitRingi(request: RingiSubmitRequest) {
       existing_ringi_id:
         request.existing_ringi_id == null
           ? request.existing_ringi_id
-          : Number(request.existing_ringi_id),
+          : String(request.existing_ringi_id),
       previous_ringi_id:
         request.previous_ringi_id == null
           ? request.previous_ringi_id
-          : Number(request.previous_ringi_id),
+          : String(request.previous_ringi_id),
     },
   })
 

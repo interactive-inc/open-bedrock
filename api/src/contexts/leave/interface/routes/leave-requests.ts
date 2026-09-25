@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { resolveCompanyEmployeeRelation } from "@/contexts/company/interface/operations/resolve-company-employee-relation"
 import { leaveProcedureStatusSql } from "@/contexts/leave/infrastructure/adapters/lib/leave-procedure-status-sql"
 import { leaveProcedureStatusSchema } from "@/contexts/leave/domain/definitions/leave-procedure.definition"
@@ -32,7 +33,7 @@ import {
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { readCompanyEmployeeNames } from "@/contexts/company/interface/operations/read-company-employee-names"
 import { leaveRequests } from "@/contexts/leave/infrastructure/schema/leave"
-import { and, count, desc, eq, inArray } from "drizzle-orm"
+import { and, count, desc, eq, inArray, sql } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -184,7 +185,11 @@ export const GET = factory.createHandlers(
       })
       .from(leaveRequests)
       .where(where)
-      .orderBy(desc(leaveRequests.createdAt), desc(leaveRequests.id))
+      .orderBy(
+        desc(leaveRequests.createdAt),
+        desc(sql`CAST(${leaveRequests.legacyId} AS INTEGER)`),
+        desc(sql`${leaveRequests}.rowid`),
+      )
       .limit(limit)
       .offset(offset)
 
@@ -236,7 +241,7 @@ export const POST = factory.createHandlers(
     "json",
     z
       .object({
-        previous_leave_request_id: z.number().int().positive().safe().nullable().optional(),
+        previous_leave_request_id: uuidSchema.nullable().optional(),
         leave_type: leaveTypeSchema,
         start_date: isoDate,
         end_date: isoDate,

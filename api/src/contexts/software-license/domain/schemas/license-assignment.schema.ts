@@ -5,7 +5,7 @@ import { z } from "zod"
 export const licenseAssignmentSchema = z
   .object({
     id: z.string().uuid(),
-    license_id: z.number().int().positive().max(Number.MAX_SAFE_INTEGER),
+    license_id: z.uuid(),
     employee_id: zEmployeeId,
     service_name: z.string().min(1),
     plan_name: z.string().nullable(),
