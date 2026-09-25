@@ -1,0 +1,485 @@
+import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { createTestToken } from "@tests/api/support/create-test-token"
+import { requestWithContext } from "@tests/api/support/request-with-context"
+import { seedD1 } from "@tests/api/support/seed-d1"
+import {
+  seedCompanyEmployees,
+  seedCompanyOrganization,
+} from "@tests/api/support/company/seed-company-test-state"
+import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
+import { publishTestEmployeeResources } from "@tests/api/support/company/publish-test-employee-resources"
+import { z } from "zod"
+import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
+
+let pool: LocalD1Pool
+
+// プロセスで最初のファイルは全migrationのtemplateを作るため、数秒以上かかる。
+setDefaultTimeout(30_000)
+
+beforeAll(async () => {
+  pool = await startLocalD1Pool(6)
+})
+
+afterAll(async () => {
+  await pool.dispose()
+})
+
+const jwtSecret = "management-dashboard-route-test-secret"
+
+/** 基準時刻。当月 = 2026-06、直近 30 日の下限 = 2026-05-16。 */
+const now = "2026-06-15T00:00:00.000Z"
+
+const managementDashboardSchema = z.object({
+  employee_count: z.number(),
+  department_headcounts: z.array(
+    z.object({ department_name: z.string().nullable(), headcount: z.number() }),
+  ),
+  recent_join_count: z.number(),
+  recent_retire_count: z.number(),
+  attendance_record_count: z.number(),
+  leave_request_count: z.number(),
+  leave_pending_count: z.number(),
+  expense_count: z.number(),
+  expense_pending_count: z.number(),
+  open_review_cycle_count: z.number(),
+  pending_application_count: z.number(),
+  goal_done_rates: z.array(
+    z.object({
+      period: z.string(),
+      total: z.number(),
+      done: z.number(),
+      done_rate: z.number(),
+    }),
+  ),
+})
+
+const managementEmployees = [
+  { id: 1, code: "E001", name: "Admin", email: "you+e001@example.com", role: "root", dept: "HR" },
+  {
+    id: 2,
+    code: "E002",
+    name: "Member",
+    email: "you+e002@example.com",
+    role: "member",
+    dept: "Sales",
+  },
+  {
+    id: 3,
+    code: "E003",
+    name: "Two",
+    email: "you+e003@example.com",
+    role: "member",
+    dept: "Sales",
+  },
+  {
+    id: 4,
+    code: "E004",
+    name: "Gone",
+    email: "you+e004@example.com",
+    role: "member",
+    dept: "Sales",
+  },
+]
+
+async function createTestDb(): Promise<D1Database> {
+  const db = await pool.next()
+
+  await seedCompanyEmployees(
+    db,
+    managementEmployees.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      deptId: employee.dept === "HR" ? 1 : 2,
+      deptName: employee.dept,
+      position: null,
+      // E004 は退職済み(在籍数に数えない)。
+      status: employee.id === 4 ? "retired" : "active",
+    })),
+    { publishResources: false },
+  )
+
+  await seedIamForEmployees(
+    db,
+    managementEmployees.map((employee) => ({
+      id: employee.id,
+      email: employee.email,
+      passwordHash: "x",
+      role: employee.role,
+    })),
+  )
+
+  await seedCompanyOrganization(db, {
+    employees: managementEmployees.map((employee) => ({
+      id: employee.id,
+      code: employee.code,
+      name: employee.name,
+      deptId: employee.dept === "HR" ? 1 : 2,
+      deptName: employee.dept,
+      status: employee.id === 4 ? "retired" : "active",
+    })),
+    departments: [
+      {
+        id: 1,
+        code: "D001",
+        name: "HR",
+        parentCode: null,
+        managerEmployeeCode: "E001",
+      },
+      {
+        id: 2,
+        code: "D002",
+        name: "Sales",
+        parentCode: "D001",
+        managerEmployeeCode: "E002",
+      },
+    ],
+  })
+
+  // 入社 2 件(直近 30 日以内)、退職 1 件(直近)、入社 1 件(30 日より前=数えない)。
+  await seedD1(db, "company_personnel_annotations", [
+    {
+      id: 1,
+      employee_id: "2",
+      kind: "join",
+      effective_date: "2026-06-01",
+      from_department_code: null,
+      to_department_code: "D002",
+      note: null,
+      created_at: "2026-06-01T00:00:00.000Z",
+    },
+    {
+      id: 2,
+      employee_id: "3",
+      kind: "join",
+      effective_date: "2026-05-20",
+      from_department_code: null,
+      to_department_code: "D002",
+      note: null,
+      created_at: "2026-05-20T00:00:00.000Z",
+    },
+    {
+      id: 3,
+      employee_id: "4",
+      kind: "retire",
+      effective_date: "2026-06-10",
+      from_department_code: "D002",
+      to_department_code: null,
+      note: null,
+      created_at: "2026-06-10T00:00:00.000Z",
+    },
+    {
+      id: 4,
+      employee_id: "1",
+      kind: "join",
+      effective_date: "2026-04-01",
+      from_department_code: null,
+      to_department_code: "D001",
+      note: null,
+      created_at: "2026-04-01T00:00:00.000Z",
+    },
+  ])
+
+  // 集計の正本となる公開雇用履歴。旧注記は参照元として使用しない。
+  for (const employee of managementEmployees) {
+    const employeeId = String(employee.id)
+    await publishTestEmployeeResources(db, {
+      employeeId,
+      employmentId: `test:${employeeId}:employment`,
+      officialName: employee.name,
+      employeeCode: employee.code,
+      email: employee.email,
+      employmentType: "FULL_TIME",
+      employmentStatus: "ACTIVE",
+      effectiveFrom:
+        employee.id === 2 ? "2026-06-01" : employee.id === 3 ? "2026-05-20" : "2024-01-01",
+      effectiveTo: employee.id === 4 ? "2026-06-11" : null,
+      recordedAt: 0,
+    })
+  }
+
+  // 当月の打刻 2 件、前月 1 件(数えない)。
+  await seedD1(db, "attendance_records", [
+    { id: 1, employee_id: "2", work_date: "2026-06-02", status: "closed" },
+    { id: 2, employee_id: "2", work_date: "2026-06-03", status: "closed" },
+    { id: 3, employee_id: "2", work_date: "2026-05-30", status: "closed" },
+  ])
+
+  // 休暇: 当月2件、前月1件。案件のないpendingは未提出なので判断待ち件数に含めない。
+  await seedD1(db, "leave_requests", [
+    {
+      id: 1,
+      employee_id: "2",
+      leave_type: "annual",
+      start_date: "2026-06-20",
+      end_date: "2026-06-21",
+      days: 2,
+      reason: null,
+      status: "pending",
+      approver_id: null,
+      decided_comment: null,
+      created_at: "2026-06-05T00:00:00.000Z",
+    },
+    {
+      id: 2,
+      employee_id: "3",
+      leave_type: "annual",
+      start_date: "2026-06-22",
+      end_date: "2026-06-22",
+      days: 1,
+      reason: null,
+      status: "approved",
+      approver_id: "1",
+      decided_comment: null,
+      created_at: "2026-06-06T00:00:00.000Z",
+    },
+    {
+      id: 3,
+      employee_id: "3",
+      leave_type: "annual",
+      start_date: "2026-05-10",
+      end_date: "2026-05-10",
+      days: 1,
+      reason: null,
+      status: "pending",
+      approver_id: null,
+      decided_comment: null,
+      created_at: "2026-05-01T00:00:00.000Z",
+    },
+  ])
+
+  // 経費: 当月 2 件(うち pending 1)、前月 1 件。
+  await seedD1(db, "expenses", [
+    {
+      id: 1,
+      employee_id: "2",
+      organization_unit_id: "department:D002",
+      category: "transport",
+      amount: 1000,
+      spent_at: "2026-06-01",
+      note: null,
+      status: "pending",
+      created_at: "2026-06-02T00:00:00.000Z",
+    },
+    {
+      id: 2,
+      employee_id: "3",
+      organization_unit_id: "department:D002",
+      category: "supplies",
+      amount: 2000,
+      spent_at: "2026-06-03",
+      note: null,
+      status: "approved",
+      created_at: "2026-06-04T00:00:00.000Z",
+    },
+    {
+      id: 3,
+      employee_id: "3",
+      organization_unit_id: "department:D002",
+      category: "books",
+      amount: 500,
+      spent_at: "2026-05-01",
+      note: null,
+      status: "pending",
+      created_at: "2026-05-02T00:00:00.000Z",
+    },
+  ])
+
+  // 評価サイクル: open 2 / closed 1。
+  await seedD1(db, "review_cycles", [
+    { id: 1, title: "C1", period: "2026-H1", status: "open", due_date: null },
+    { id: 2, title: "C2", period: "2026-H1", status: "open", due_date: null },
+    { id: 3, title: "C3", period: "2025-H2", status: "closed", due_date: null },
+  ])
+
+  // 目標: 2026-H1 は 3 件中 done 1 (rate 1/3)、2025-H2 は 1 件中 done 1 (rate 1)。
+  await seedD1(db, "performance_goals", [
+    {
+      id: 1,
+      employee_id: "2",
+      period: "2026-H1",
+      title: "g1",
+      kpi: null,
+      weight: 10,
+      status: "done",
+    },
+    {
+      id: 2,
+      employee_id: "2",
+      period: "2026-H1",
+      title: "g2",
+      kpi: null,
+      weight: 10,
+      status: "in_progress",
+    },
+    {
+      id: 3,
+      employee_id: "3",
+      period: "2026-H1",
+      title: "g3",
+      kpi: null,
+      weight: 10,
+      status: "draft",
+    },
+    {
+      id: 4,
+      employee_id: "3",
+      period: "2025-H2",
+      title: "g4",
+      kpi: null,
+      weight: 10,
+      status: "done",
+    },
+  ])
+
+  // System Case(pending 2 / approved 1)。
+  await seedD1(
+    db,
+    "system_cases",
+    ["pending", "pending", "approved"].map((status, index) => ({
+      id: `management-dashboard-case-${index + 1}`,
+      subject_context: "system",
+      subject_kind: "dashboard-example",
+      subject_id: String(index + 1),
+      subject_version: "1",
+      proposal_digest: "a".repeat(64),
+      created_by_account_id: "1",
+      status,
+      created_at: Date.parse(`2026-06-0${index + 1}T00:00:00Z`),
+      updated_at: Date.parse(`2026-06-0${index + 1}T00:00:00Z`),
+    })),
+  )
+  return db
+}
+
+function tokenFor(employeeId: number): Promise<string> {
+  return createTestToken(jwtSecret, {
+    employeeId: toWorkforceEmployeeId(employeeId),
+  })
+}
+
+describe("GET /dashboard/management", () => {
+  test("returns 200 with deterministic aggregated counts", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/company/dashboard/management",
+      token: await tokenFor(1),
+      now,
+    })
+
+    expect(response.status).toBe(200)
+
+    const parsed = managementDashboardSchema.safeParse(await response.json())
+
+    expect(parsed.success).toBe(true)
+
+    if (parsed.success) {
+      const summary = parsed.data
+
+      expect(summary.employee_count).toBe(3)
+      expect(summary.recent_join_count).toBe(2)
+      expect(summary.recent_retire_count).toBe(1)
+      expect(summary.attendance_record_count).toBe(2)
+      expect(summary.leave_request_count).toBe(2)
+      expect(summary.leave_pending_count).toBe(0)
+      expect(summary.expense_count).toBe(2)
+      expect(summary.expense_pending_count).toBe(2)
+      expect(summary.open_review_cycle_count).toBe(2)
+      expect(summary.pending_application_count).toBe(2)
+
+      const salesHeadcount = summary.department_headcounts.find(
+        (row) => row.department_name === "Sales",
+      )
+
+      expect(salesHeadcount?.headcount).toBe(2)
+
+      const h1 = summary.goal_done_rates.find((row) => row.period === "2026-H1")
+
+      expect(h1?.total).toBe(3)
+      expect(h1?.done).toBe(1)
+      expect(h1?.done_rate).toBeCloseTo(1 / 3, 5)
+
+      const h2 = summary.goal_done_rates.find((row) => row.period === "2025-H2")
+
+      expect(h2?.done_rate).toBe(1)
+    }
+  })
+
+  test("returns 403 for a member without management_dashboard:view", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/company/dashboard/management",
+      token: await tokenFor(2),
+      now,
+    })
+
+    expect(response.status).toBe(403)
+  })
+
+  test("returns 401 without a bearer token", async () => {
+    const response = await requestWithContext({
+      db: await createTestDb(),
+      jwtSecret,
+      path: "/company/dashboard/management",
+      token: null,
+      now,
+    })
+
+    expect(response.status).toBe(401)
+  })
+})
+
+test("旧注記の削除後も正式な雇用履歴から同じ入退社件数を返す", async () => {
+  const db = await createTestDb()
+  expect(
+    await db
+      .prepare(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name = 'company_employee_events'",
+      )
+      .first(),
+  ).toBeNull()
+  const response = await requestWithContext({
+    db,
+    jwtSecret,
+    path: "/company/dashboard/management",
+    token: await tokenFor(1),
+    now,
+  })
+  expect(response.status).toBe(200)
+  const summary = managementDashboardSchema.parse(await response.json())
+  expect(summary.recent_join_count).toBe(2)
+  expect(summary.recent_retire_count).toBe(1)
+})
+
+test("既存契約が未接続なら正確な集計としてゼロ件を返さない", async () => {
+  const db = await createTestDb()
+  await seedCompanyEmployees(db, [{ id: 5, code: "E005", name: "Unconnected", status: "active" }], {
+    publishResources: false,
+  })
+  const response = await requestWithContext({
+    db,
+    jwtSecret,
+    path: "/company/dashboard/management",
+    token: await tokenFor(1),
+    now,
+  })
+  expect(response.status).toBe(500)
+})
+
+test("会社営業日を上限にし、未来の退職を数えない", async () => {
+  const response = await requestWithContext({
+    db: await createTestDb(),
+    jwtSecret,
+    path: "/company/dashboard/management",
+    token: await tokenFor(1),
+    now: "2026-05-31T15:00:00.000Z",
+    companyTimeZone: "Asia/Tokyo",
+  })
+  expect(response.status).toBe(200)
+  const summary = managementDashboardSchema.parse(await response.json())
+  expect(summary.recent_join_count).toBe(2)
+  expect(summary.recent_retire_count).toBe(0)
+})

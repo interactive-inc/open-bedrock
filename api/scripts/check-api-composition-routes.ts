@@ -122,7 +122,8 @@ export async function checkApiCompositionRoutes(
 
   const productionPathSet = new Set(productionPaths)
   for (const testPath of testPaths) {
-    const productionPath = testPath.replace(/\.test\.ts$/, ".ts")
+    // ローカルD1で検証するtestは *.d1.test.ts とし、同じproduction routeへ対応させる。
+    const productionPath = testPath.replace(/(?:\.d1)?\.test\.ts$/, ".ts")
     if (!productionPathSet.has(productionPath)) {
       violations.push(`production routeとbasenameが一致しないtestです: ${testPath}`)
     }
