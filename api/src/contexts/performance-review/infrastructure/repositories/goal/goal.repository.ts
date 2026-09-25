@@ -5,13 +5,12 @@ import { goals } from "@/contexts/performance-review/infrastructure/schema/goal"
 import { evaluationSheets } from "@/contexts/performance-review/infrastructure/schema/performance-review"
 import { abortWhenPreviousStatementChangedNoRows } from "@/lib/database/abort-when-previous-statement-changed-no-rows"
 import { isAbortedByGuard } from "@/lib/database/is-aborted-by-guard"
-import { withAllocatedIntegerId } from "@/lib/database/with-allocated-integer-id"
 import { ConflictError } from "@/lib/errors"
-import { and, asc, eq, ne, sum } from "drizzle-orm"
+import { and, asc, eq, ne, sql, sum } from "drizzle-orm"
 import type { SQL } from "drizzle-orm"
 
 type GoalRow = {
-  id: number
+  id: string
   employee_id: EmployeeId
   period: string
   title: string
@@ -19,15 +18,15 @@ type GoalRow = {
   weight: number
   status: Goal["status"]
   owner_type: Goal["ownerType"]
-  parent_goal_id: number | null
+  parent_goal_id: string | null
   department_code: string | null
-  evaluation_sheet_id: number | null
+  evaluation_sheet_id: string | null
 }
 
 export class GoalRepository {
   constructor(private readonly c: Context) {}
 
-  async findById(goalId: number): Promise<Goal | null | Error> {
+  async findById(goalId: string): Promise<Goal | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -53,7 +52,7 @@ export class GoalRepository {
         .select()
         .from(goals)
         .where(eq(goals.employeeId, employeeId))
-        .orderBy(asc(goals.id))
+        .orderBy(asc(goals.createdAt), asc(sql`CAST(${goals.legacyId} AS INTEGER)`), asc(goals.id))
 
       const rows =
         opts !== undefined ? await query.limit(opts.limit).offset(opts.offset) : await query
@@ -77,7 +76,7 @@ export class GoalRepository {
         .select()
         .from(goals)
         .where(and(...conditions))
-        .orderBy(asc(goals.id))
+        .orderBy(asc(goals.createdAt), asc(sql`CAST(${goals.legacyId} AS INTEGER)`), asc(goals.id))
 
       return rows.map((row) => Goal.fromRow(row))
     } catch (error) {
@@ -90,6 +89,7 @@ export class GoalRepository {
       const rows = await this.c.var.database
         .insert(goals)
         .values({
+          id: crypto.randomUUID(),
           employeeId: goal.employeeId,
           period: goal.period,
           title: goal.title,
@@ -111,7 +111,7 @@ export class GoalRepository {
     }
   }
 
-  async findEvaluationSheetState(sheetId: number): Promise<
+  async findEvaluationSheetState(sheetId: string): Promise<
     | Readonly<{
         employeeId: EmployeeId
         period: string
@@ -136,7 +136,7 @@ export class GoalRepository {
     }
   }
 
-  async totalWeightForEvaluationSheet(sheetId: number): Promise<number | Error> {
+  async totalWeightForEvaluationSheet(sheetId: string): Promise<number | Error> {
     try {
       const rows = await this.c.var.database
         .select({ total: sum(goals.weight) })
@@ -156,12 +156,12 @@ export class GoalRepository {
     try {
       if (goal.evaluationSheetId === null) return new Error("evaluation sheet is required")
       const db = this.c.env.DB
-      // 目標 ID は事前に明示し、監査ログはその ID を束縛値として受け取る。
-      const results = await withAllocatedIntegerId(db, "performance_goals", (goalId) =>
-        db.batch([
-          db
-            .prepare(
-              `INSERT INTO performance_goals
+      // 目標 ID は事前に UUID で採番し、監査ログはその ID を束縛値として受け取る。
+      const goalId = crypto.randomUUID()
+      const results = await db.batch([
+        db
+          .prepare(
+            `INSERT INTO performance_goals
                  (id, employee_id, period, title, kpi, weight, status, owner_type,
                   parent_goal_id, department_code, evaluation_sheet_id)
                SELECT ?11, ?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10
@@ -176,41 +176,41 @@ export class GoalRepository {
                ) + ?5 <= 100
                RETURNING id, employee_id, period, title, kpi, weight, status,
                  owner_type, parent_goal_id, department_code, evaluation_sheet_id`,
-            )
-            .bind(
-              goal.employeeId,
-              goal.period,
-              goal.title,
-              goal.kpi,
-              goal.weight,
-              goal.status,
-              goal.ownerType,
-              goal.parentGoalId,
-              goal.departmentCode,
-              goal.evaluationSheetId,
-              goalId,
-            ),
-          abortWhenPreviousStatementChangedNoRows(db),
-          db
-            .prepare(
-              `INSERT INTO evaluation_sheet_audit_logs
-                 (sheet_id, actor_id, action, from_value, to_value, note, created_at)
-               VALUES (?1, ?2, 'goal_add', NULL,
+          )
+          .bind(
+            goal.employeeId,
+            goal.period,
+            goal.title,
+            goal.kpi,
+            goal.weight,
+            goal.status,
+            goal.ownerType,
+            goal.parentGoalId,
+            goal.departmentCode,
+            goal.evaluationSheetId,
+            goalId,
+          ),
+        abortWhenPreviousStatementChangedNoRows(db),
+        db
+          .prepare(
+            `INSERT INTO evaluation_sheet_audit_logs
+                 (id, sheet_id, actor_id, action, from_value, to_value, note, created_at)
+               VALUES (?9, ?1, ?2, 'goal_add', NULL,
                  json_object('goal_id', ?8, 'title', ?3, 'weight', ?4, 'period', ?5, 'kpi', ?6),
                  NULL, ?7)`,
-            )
-            .bind(
-              goal.evaluationSheetId,
-              actorEmployeeId,
-              goal.title,
-              goal.weight,
-              goal.period,
-              goal.kpi,
-              now,
-              goalId,
-            ),
-        ]),
-      )
+          )
+          .bind(
+            goal.evaluationSheetId,
+            actorEmployeeId,
+            goal.title,
+            goal.weight,
+            goal.period,
+            goal.kpi,
+            now,
+            goalId,
+            crypto.randomUUID(),
+          ),
+      ])
       const row = (results[0] as D1Result<GoalRow> | undefined)?.results?.at(0)
       return row === undefined
         ? new Error("failed to read back created goal")
@@ -265,8 +265,8 @@ export class GoalRepository {
           db
             .prepare(
               `INSERT INTO evaluation_sheet_audit_logs
-                 (sheet_id, actor_id, action, from_value, to_value, note, created_at)
-               VALUES (?1, ?2, 'goal_delete', ?3, NULL, NULL, ?4)`,
+                 (id, sheet_id, actor_id, action, from_value, to_value, note, created_at)
+               VALUES (?5, ?1, ?2, 'goal_delete', ?3, NULL, NULL, ?4)`,
             )
             .bind(
               goal.evaluationSheetId,
@@ -279,6 +279,7 @@ export class GoalRepository {
                 kpi: goal.kpi,
               }),
               now,
+              crypto.randomUUID(),
             ),
         )
       }
@@ -326,8 +327,8 @@ export class GoalRepository {
         db
           .prepare(
             `INSERT INTO evaluation_sheet_audit_logs
-               (sheet_id, actor_id, action, from_value, to_value, note, created_at)
-             VALUES (?1, ?2, 'goal_update', ?3, ?4, NULL, ?5)`,
+               (id, sheet_id, actor_id, action, from_value, to_value, note, created_at)
+             VALUES (?6, ?1, ?2, 'goal_update', ?3, ?4, NULL, ?5)`,
           )
           .bind(
             goal.evaluationSheetId,
@@ -347,6 +348,7 @@ export class GoalRepository {
               kpi: goal.kpi,
             }),
             now,
+            crypto.randomUUID(),
           ),
       ])
       return (await this.findById(goal.id)) ?? new Error("failed to read back updated goal")
@@ -388,7 +390,7 @@ export class GoalRepository {
   }
 
   /** 目標を削除する。 */
-  async delete(goalId: number): Promise<null | Error> {
+  async delete(goalId: string): Promise<null | Error> {
     try {
       await this.c.var.database.delete(goals).where(eq(goals.id, goalId))
 

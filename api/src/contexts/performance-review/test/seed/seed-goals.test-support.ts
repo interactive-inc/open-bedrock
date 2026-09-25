@@ -2,7 +2,7 @@ import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 type SeedGoal = {
-  id: number
+  id: string
   employeeId: EmployeeId
   period: string
   title: string
@@ -13,7 +13,7 @@ type SeedGoal = {
 
 export const seedGoals: ReadonlyArray<SeedGoal> = [
   {
-    id: 1,
+    id: "01900030-0000-7000-8000-000000000001",
     employeeId: toWorkforceEmployeeId(5),
     period: "2026-H1",
     title: "新ダッシュボード機能をリリースする",
@@ -22,7 +22,7 @@ export const seedGoals: ReadonlyArray<SeedGoal> = [
     status: "in_progress",
   },
   {
-    id: 2,
+    id: "01900030-0000-7000-8000-000000000002",
     employeeId: toWorkforceEmployeeId(5),
     period: "2026-H1",
     title: "コードレビューの折り返し時間を短縮する",
@@ -31,7 +31,7 @@ export const seedGoals: ReadonlyArray<SeedGoal> = [
     status: "in_progress",
   },
   {
-    id: 3,
+    id: "01900030-0000-7000-8000-000000000003",
     employeeId: toWorkforceEmployeeId(9),
     period: "2026-H1",
     title: "テストカバレッジを改善する",
@@ -40,7 +40,7 @@ export const seedGoals: ReadonlyArray<SeedGoal> = [
     status: "in_progress",
   },
   {
-    id: 4,
+    id: "01900030-0000-7000-8000-000000000004",
     employeeId: toWorkforceEmployeeId(9),
     period: "2025-H2",
     title: "CI/CDパイプラインを構築する",
@@ -49,7 +49,7 @@ export const seedGoals: ReadonlyArray<SeedGoal> = [
     status: "completed",
   },
   {
-    id: 5,
+    id: "01900030-0000-7000-8000-000000000005",
     employeeId: toWorkforceEmployeeId(10),
     period: "2026-H1",
     title: "新規顧客を10件獲得する",
@@ -58,7 +58,7 @@ export const seedGoals: ReadonlyArray<SeedGoal> = [
     status: "in_progress",
   },
   {
-    id: 6,
+    id: "01900030-0000-7000-8000-000000000006",
     employeeId: toWorkforceEmployeeId(10),
     period: "2026-H1",
     title: "既存顧客の解約率を下げる",
@@ -67,7 +67,7 @@ export const seedGoals: ReadonlyArray<SeedGoal> = [
     status: "draft",
   },
   {
-    id: 7,
+    id: "01900030-0000-7000-8000-000000000007",
     employeeId: toWorkforceEmployeeId(13),
     period: "2026-H1",
     title: "オンボーディング資料を刷新する",
@@ -76,7 +76,7 @@ export const seedGoals: ReadonlyArray<SeedGoal> = [
     status: "in_progress",
   },
   {
-    id: 8,
+    id: "01900030-0000-7000-8000-000000000008",
     employeeId: toWorkforceEmployeeId(3),
     period: "2026-H1",
     title: "採用プロセスを改善する",

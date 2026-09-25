@@ -29,8 +29,8 @@ afterAll(async () => {
 const jwtSecret = "review-forms-me-route-test-secret"
 
 const reviewFormResponseSchema = z.object({
-  id: z.number(),
-  cycle_id: z.number(),
+  id: z.uuid(),
+  cycle_id: z.uuid(),
   subject_employee_id: zEmployeeId,
   reviewer_employee_id: zEmployeeId,
   reviewer_type: z.enum(["self", "manager", "peer", "subordinate"]),

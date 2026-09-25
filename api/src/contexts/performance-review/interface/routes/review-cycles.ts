@@ -22,7 +22,7 @@ import { ApplicationError } from "@/lib/errors"
 import { halfYearPeriod } from "@/contexts/performance-review/domain/definitions/half-year-period.definition"
 import { isoDate } from "@/lib/validation/iso-date.schema"
 import { zValidator } from "@hono/zod-validator"
-import { asc, count, eq } from "drizzle-orm"
+import { asc, count, eq, sql } from "drizzle-orm"
 import { z } from "zod"
 
 // @authorization service - session を application service に渡して判定する
@@ -101,10 +101,21 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   const query = c.var.database.select().from(reviewCycles)
 
   const rows = isAdmin
-    ? await query.orderBy(asc(reviewCycles.id)).limit(limit).offset(offset)
+    ? await query
+        .orderBy(
+          asc(reviewCycles.createdAt),
+          asc(sql`CAST(${reviewCycles.legacyId} AS INTEGER)`),
+          asc(reviewCycles.id),
+        )
+        .limit(limit)
+        .offset(offset)
     : await query
         .where(eq(reviewCycles.status, "open"))
-        .orderBy(asc(reviewCycles.id))
+        .orderBy(
+          asc(reviewCycles.createdAt),
+          asc(sql`CAST(${reviewCycles.legacyId} AS INTEGER)`),
+          asc(reviewCycles.id),
+        )
         .limit(limit)
         .offset(offset)
 

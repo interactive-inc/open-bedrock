@@ -19,7 +19,7 @@ describe("toReviewResultView", () => {
 
   test("builds result view with correct averageScore from submitted forms", () => {
     const cycle = ReviewCycle.fromRow({
-      id: 1,
+      id: "01900032-0000-7000-8000-000000000001",
       title: "2026H1",
       period: "2026-H1",
       status: "open",
@@ -27,8 +27,8 @@ describe("toReviewResultView", () => {
     })
 
     const form1 = new ReviewForm({
-      id: 1,
-      cycleId: 1,
+      id: "01900033-0000-7000-8000-000000000001",
+      cycleId: "01900032-0000-7000-8000-000000000001",
       subjectEmployeeId: toWorkforceEmployeeId(5),
       reviewerEmployeeId: toWorkforceEmployeeId(2),
       reviewerType: "manager",
@@ -41,8 +41,8 @@ describe("toReviewResultView", () => {
     })
 
     const form2 = new ReviewForm({
-      id: 2,
-      cycleId: 1,
+      id: "01900033-0000-7000-8000-000000000002",
+      cycleId: "01900032-0000-7000-8000-000000000001",
       subjectEmployeeId: toWorkforceEmployeeId(5),
       reviewerEmployeeId: toWorkforceEmployeeId(3),
       reviewerType: "peer",
@@ -60,7 +60,7 @@ describe("toReviewResultView", () => {
       throw view
     }
 
-    expect(view.cycleId).toBe(1)
+    expect(view.cycleId).toBe("01900032-0000-7000-8000-000000000001")
     expect(view.subjectEmployeeId).toBe(toWorkforceEmployeeId(5))
     expect(view.formCount).toBe(2)
     expect(view.submittedCount).toBe(2)
@@ -69,7 +69,7 @@ describe("toReviewResultView", () => {
 
   test("returns null averageScore when no submitted forms with scores", () => {
     const cycle = ReviewCycle.fromRow({
-      id: 1,
+      id: "01900032-0000-7000-8000-000000000001",
       title: "2026H1",
       period: "2026-H1",
       status: "open",
@@ -77,8 +77,8 @@ describe("toReviewResultView", () => {
     })
 
     const pendingForm = new ReviewForm({
-      id: 1,
-      cycleId: 1,
+      id: "01900033-0000-7000-8000-000000000001",
+      cycleId: "01900032-0000-7000-8000-000000000001",
       subjectEmployeeId: toWorkforceEmployeeId(5),
       reviewerEmployeeId: toWorkforceEmployeeId(2),
       reviewerType: "self",

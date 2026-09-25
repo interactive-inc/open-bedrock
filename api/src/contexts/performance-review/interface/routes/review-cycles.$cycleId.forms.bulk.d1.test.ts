@@ -84,7 +84,7 @@ async function request(
 describe("POST /review-cycles/:cycleId/forms/bulk", () => {
   test("admin creates self/manager/peer forms in one call and they start hidden", async () => {
     const response = await request(
-      "/performance-review/review-cycles/1/forms/bulk",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000001/forms/bulk",
       await adminToken(),
       "POST",
       {
@@ -102,7 +102,7 @@ describe("POST /review-cycles/:cycleId/forms/bulk", () => {
       .object({
         created_count: z.number(),
         forms: z.array(
-          z.object({ visibility: z.string(), status: z.string(), cycle_id: z.number() }),
+          z.object({ visibility: z.string(), status: z.string(), cycle_id: z.uuid() }),
         ),
       })
       .safeParse(await response.json())
@@ -116,14 +116,14 @@ describe("POST /review-cycles/:cycleId/forms/bulk", () => {
       for (const form of parsed.data.forms) {
         expect(form.visibility).toBe("hidden")
         expect(form.status).toBe("pending")
-        expect(form.cycle_id).toBe(1)
+        expect(form.cycle_id).toBe("01900032-0000-7000-8000-000000000001")
       }
     }
   })
 
   test("member is forbidden", async () => {
     const response = await request(
-      "/performance-review/review-cycles/1/forms/bulk",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000001/forms/bulk",
       await memberToken(),
       "POST",
       {
@@ -136,7 +136,7 @@ describe("POST /review-cycles/:cycleId/forms/bulk", () => {
 
   test("returns 404 when the cycle does not exist", async () => {
     const response = await request(
-      "/performance-review/review-cycles/999/forms/bulk",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-0000000003e7/forms/bulk",
       await adminToken(),
       "POST",
       {
@@ -149,7 +149,7 @@ describe("POST /review-cycles/:cycleId/forms/bulk", () => {
 
   test("returns 404 when a referenced employee does not exist", async () => {
     const response = await request(
-      "/performance-review/review-cycles/1/forms/bulk",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000001/forms/bulk",
       await adminToken(),
       "POST",
       {
@@ -161,9 +161,14 @@ describe("POST /review-cycles/:cycleId/forms/bulk", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/performance-review/review-cycles/1/forms/bulk", null, "POST", {
-      forms: [],
-    })
+    const response = await request(
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000001/forms/bulk",
+      null,
+      "POST",
+      {
+        forms: [],
+      },
+    )
 
     expect(response.status).toBe(401)
   })

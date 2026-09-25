@@ -12,7 +12,7 @@ import { EvaluationParticipantAdapter } from "@/contexts/performance-review/infr
 
 export type Command = {
   employeeId: EmployeeId
-  templateId: number | null
+  templateId: string | null
   period: string
   /** HR/admin が明示指定する場合のみ。省略時は directManager を自動解決する。 */
   primaryEvaluatorId?: EmployeeId

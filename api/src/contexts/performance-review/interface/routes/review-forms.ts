@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { filterFormsForSubjectViewer } from "@/contexts/performance-review/interface/http/review-forms/filter-forms-for-subject-viewer"
 import { toReviewerTypeSummary } from "@/contexts/performance-review/interface/http/to-reviewer-type-summary"
 import { factory } from "@/api/http/factory"
@@ -42,11 +43,13 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
 
   const cycleIdRaw = c.req.query("cycle_id")
 
-  const cycleId = cycleIdRaw === undefined ? null : Number(cycleIdRaw)
+  const parsedCycleId = cycleIdRaw === undefined ? null : uuidSchema.safeParse(cycleIdRaw)
 
-  if (cycleId !== null && (Number.isInteger(cycleId) === false || cycleId <= 0)) {
+  if (parsedCycleId !== null && !parsedCycleId.success) {
     throw new BadRequestError("cycle_id is invalid")
   }
+
+  const cycleId = parsedCycleId === null ? null : parsedCycleId.data
 
   const limit = toBoundedInt({
     raw: c.req.query("limit"),
@@ -98,7 +101,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
 
   const responseBody = zAppReviewResult.parse({
-    cycle_id: cycleId ?? 0,
+    cycle_id: cycleId,
     subject_employee_id: subjectEmployeeId,
     form_count: forms.length,
     submitted_count: submittedCount,

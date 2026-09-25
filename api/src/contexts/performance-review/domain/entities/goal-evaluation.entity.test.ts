@@ -5,7 +5,7 @@ import { describe, expect, test } from "bun:test"
 describe("GoalEvaluation.create", () => {
   test("builds self evaluation with null id", () => {
     const evaluation = GoalEvaluation.create({
-      goalId: 1,
+      goalId: "01900030-0000-7000-8000-000000000001",
       evaluatorId: toWorkforceEmployeeId(10),
       kind: "self",
       score: 80,
@@ -15,7 +15,7 @@ describe("GoalEvaluation.create", () => {
 
     expect(evaluation).toBeInstanceOf(GoalEvaluation)
     expect(evaluation.id).toBe(null)
-    expect(evaluation.goalId).toBe(1)
+    expect(evaluation.goalId).toBe("01900030-0000-7000-8000-000000000001")
     expect(evaluation.evaluatorId).toBe(toWorkforceEmployeeId(10))
     expect(evaluation.kind).toBe("self")
     expect(evaluation.score).toBe(80)
@@ -24,7 +24,7 @@ describe("GoalEvaluation.create", () => {
 
   test("builds manager evaluation with null id", () => {
     const evaluation = GoalEvaluation.create({
-      goalId: 2,
+      goalId: "01900030-0000-7000-8000-000000000002",
       evaluatorId: toWorkforceEmployeeId(20),
       kind: "manager",
       score: 90,
@@ -41,7 +41,7 @@ describe("GoalEvaluation.create", () => {
 
   test("builds final evaluation with null id", () => {
     const evaluation = GoalEvaluation.create({
-      goalId: 3,
+      goalId: "01900030-0000-7000-8000-000000000003",
       evaluatorId: toWorkforceEmployeeId(30),
       kind: "final",
       score: null,

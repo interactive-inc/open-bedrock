@@ -46,17 +46,17 @@ async function seedCycle(context: Context, status: "draft" | "open"): Promise<Re
   return created
 }
 
-async function seedPendingForm(db: D1Database, cycleId: number): Promise<void> {
+async function seedPendingForm(db: D1Database, cycleId: string): Promise<void> {
   await db
     .prepare(
-      `INSERT INTO review_forms (cycle_id, subject_employee_id, reviewer_employee_id, reviewer_type, answers, score, comment, status, submitted_at)
-       VALUES (?1, '10', '5', 'peer', '[]', NULL, NULL, 'pending', NULL)`,
+      `INSERT INTO review_forms (id, cycle_id, subject_employee_id, reviewer_employee_id, reviewer_type, answers, score, comment, status, submitted_at)
+       VALUES (?2, ?1, '10', '5', 'peer', '[]', NULL, NULL, 'pending', NULL)`,
     )
-    .bind(cycleId)
+    .bind(cycleId, crypto.randomUUID())
     .run()
 }
 
-async function formCount(db: D1Database, cycleId: number): Promise<number> {
+async function formCount(db: D1Database, cycleId: string): Promise<number> {
   const row = await db
     .prepare("SELECT count(*) AS count FROM review_forms WHERE cycle_id = ?1")
     .bind(cycleId)
@@ -119,15 +119,15 @@ describe("review cycle persistence on local D1", () => {
     const repository = new ReviewCycleRepository(context)
 
     const draft = await seedCycle(context, "draft")
-    await seedPendingForm(db, draft.id ?? -1)
+    await seedPendingForm(db, draft.id ?? "")
 
     expect(await repository.deleteWithForms(draft)).toBeNull()
-    expect(await repository.findById(draft.id ?? -1)).toBeNull()
-    expect(await formCount(db, draft.id ?? -1)).toBe(0)
+    expect(await repository.findById(draft.id ?? "")).toBeNull()
+    expect(await formCount(db, draft.id ?? "")).toBe(0)
 
     // draftとして読み出した後に別の要求でopenへ変わった状況を再現する。
     const raced = await seedCycle(context, "open")
-    await seedPendingForm(db, raced.id ?? -1)
+    await seedPendingForm(db, raced.id ?? "")
     const staleDraft = new ReviewCycle({
       id: raced.id,
       title: raced.title,
@@ -141,6 +141,6 @@ describe("review cycle persistence on local D1", () => {
       ConflictError,
       "not_deletable",
     )
-    expect(await formCount(db, raced.id ?? -1)).toBe(1)
+    expect(await formCount(db, raced.id ?? "")).toBe(1)
   })
 })

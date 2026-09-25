@@ -62,6 +62,10 @@ const LEGACY_INTEGER_SEED_PREFIXES: Readonly<Record<string, string>> = {
   "0190002d": "training_enrollments",
   "0190002e": "job_openings",
   "0190002f": "recruitment_candidates",
+  "01900030": "performance_goals",
+  "01900031": "goal_evaluations",
+  "01900032": "review_cycles",
+  "01900033": "review_forms",
 }
 
 /**

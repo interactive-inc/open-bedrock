@@ -6,7 +6,7 @@ import { describe, expect, test } from "bun:test"
 describe("hasFinalEvaluation", () => {
   test("returns true when array contains a final evaluation", () => {
     const selfEvaluation = GoalEvaluation.create({
-      goalId: 1,
+      goalId: "01900030-0000-7000-8000-000000000001",
       evaluatorId: toWorkforceEmployeeId(10),
       kind: "self",
       score: 80,
@@ -15,7 +15,7 @@ describe("hasFinalEvaluation", () => {
     })
 
     const finalEvaluation = GoalEvaluation.create({
-      goalId: 1,
+      goalId: "01900030-0000-7000-8000-000000000001",
       evaluatorId: toWorkforceEmployeeId(20),
       kind: "final",
       score: 85,
@@ -28,7 +28,7 @@ describe("hasFinalEvaluation", () => {
 
   test("returns false when no final evaluation", () => {
     const selfEvaluation = GoalEvaluation.create({
-      goalId: 1,
+      goalId: "01900030-0000-7000-8000-000000000001",
       evaluatorId: toWorkforceEmployeeId(10),
       kind: "self",
       score: 80,
@@ -37,7 +37,7 @@ describe("hasFinalEvaluation", () => {
     })
 
     const managerEvaluation = GoalEvaluation.create({
-      goalId: 1,
+      goalId: "01900030-0000-7000-8000-000000000001",
       evaluatorId: toWorkforceEmployeeId(20),
       kind: "manager",
       score: 85,

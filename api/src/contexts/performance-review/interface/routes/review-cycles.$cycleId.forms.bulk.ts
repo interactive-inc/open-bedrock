@@ -6,7 +6,7 @@ import { zAppReviewFormBulkResult } from "@/contexts/performance-review/interfac
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
@@ -36,7 +36,7 @@ export const POST = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const cycleId = validateIntParam(c.req.param("cycleId"), "review cycle")
+    const cycleId = validateUuidParam(c.req.param("cycleId"), "review cycle")
 
     const json = c.req.valid("json")
 

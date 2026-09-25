@@ -18,16 +18,3 @@ export function toApiStringId(value: string | number | undefined): string | unde
 export function toApiStringId(value: string | number | undefined): string | undefined {
   return value === undefined ? undefined : String(value)
 }
-
-/**
- * API の入力 schema がまだ整数 ID を宣言している項目へ送るときの変換。
- * 整数として読めない値は API へ送らずに拒否する。
- */
-export function toApiIntegerId(value: string | number | undefined): number | undefined {
-  if (value === undefined) return undefined
-  const parsed = typeof value === "number" ? value : /^[1-9]\d*$/.test(value) ? Number(value) : NaN
-  if (!Number.isSafeInteger(parsed) || parsed <= 0) {
-    throw new Error("this API field still requires a positive integer id")
-  }
-  return parsed
-}

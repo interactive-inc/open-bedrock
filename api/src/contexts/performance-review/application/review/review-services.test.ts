@@ -20,12 +20,12 @@ type CycleStatus = "draft" | "open" | "closed"
  * 条件付き状態更新、batch削除、フォーム生成のSQLは performance-review/test/review-cycle.d1.test.ts が検証する。
  */
 function createReviewPorts() {
-  const cycles = new Map<number, ReviewCycle>()
-  const forms = new Map<number, ReviewForm>()
-  const policies = new Map<number, unknown>()
-  const generatedFor: number[] = []
+  const cycles = new Map<string, ReviewCycle>()
+  const forms = new Map<string, ReviewForm>()
+  const policies = new Map<string, unknown>()
+  const generatedFor: string[] = []
 
-  const store = (cycle: ReviewCycle, id: number) => {
+  const store = (cycle: ReviewCycle, id: string) => {
     const stored = new ReviewCycle({
       id,
       title: cycle.title,
@@ -38,9 +38,9 @@ function createReviewPorts() {
   }
 
   const reviewCycleRepository = {
-    findById: async (cycleId: number) => cycles.get(cycleId) ?? null,
-    create: async (cycle: ReviewCycle) => store(cycle, cycles.size + 1),
-    delete: async (cycleId: number) => {
+    findById: async (cycleId: string) => cycles.get(cycleId) ?? null,
+    create: async (cycle: ReviewCycle) => store(cycle, crypto.randomUUID()),
+    delete: async (cycleId: string) => {
       cycles.delete(cycleId)
       return null
     },
@@ -65,7 +65,7 @@ function createReviewPorts() {
   }
 
   const reviewFormRepository = {
-    findById: async (formId: number) => forms.get(formId) ?? null,
+    findById: async (formId: string) => forms.get(formId) ?? null,
     update: async (form: ReviewForm) => {
       if (forms.get(form.id)?.status !== "pending") return null
       forms.set(form.id, form)
@@ -74,7 +74,7 @@ function createReviewPorts() {
   }
 
   const reviewCyclePolicyAdapter = {
-    upsert: async (cycleId: number, policy: unknown) => {
+    upsert: async (cycleId: string, policy: unknown) => {
       policies.set(cycleId, policy)
       return null
     },
@@ -82,24 +82,24 @@ function createReviewPorts() {
   }
 
   const reviewFormGenerationAdapter = {
-    generate: async (props: { cycleId: number }) => {
+    generate: async (props: { cycleId: string }) => {
       generatedFor.push(props.cycleId)
       return 0
     },
   }
 
-  const seedCycle = (status: CycleStatus): number =>
+  const seedCycle = (status: CycleStatus): string =>
     store(
       new ReviewCycle({ id: null, title: "Test Cycle", period: "2026-H1", status, dueDate: null }),
-      cycles.size + 1,
-    ).id ?? -1
+      crypto.randomUUID(),
+    ).id ?? ""
 
   const seedForm = (
-    cycleId: number,
+    cycleId: string,
     reviewerEmployeeId: number,
     status: "pending" | "submitted",
-  ): number => {
-    const id = forms.size + 1
+  ): string => {
+    const id = crypto.randomUUID()
     forms.set(
       id,
       new ReviewForm({
@@ -256,7 +256,7 @@ describe("DeleteReviewCycle", () => {
 
     const result = await new DeleteReviewCycle(ports).run({
       session: makeTestSession("root"),
-      cycleId: 9999,
+      cycleId: "01900032-0000-7000-8000-00000000270f",
     })
 
     expectApplicationError(result, NotFoundError, "cycle_not_found")
@@ -369,7 +369,7 @@ describe("OpenReviewCycle / CloseReviewCycle", () => {
 
     const result = await new OpenReviewCycle(ports).execute({
       session: makeTestSession("root"),
-      cycleId: 9999,
+      cycleId: "01900032-0000-7000-8000-00000000270f",
     })
 
     expectApplicationError(result, NotFoundError, "cycle_not_found")
@@ -380,7 +380,7 @@ describe("OpenReviewCycle / CloseReviewCycle", () => {
 
     const result = await new OpenReviewCycle(ports).execute({
       session: makeTestSession("member"),
-      cycleId: 1,
+      cycleId: "01900032-0000-7000-8000-00000000270f",
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
@@ -455,7 +455,7 @@ describe("UpdateReviewCycle", () => {
 
     const result = await new UpdateReviewCycle(ports).run({
       session: makeTestSession("root"),
-      cycleId: 9999,
+      cycleId: "01900032-0000-7000-8000-00000000270f",
       title: "Missing",
       period: "2026-H1",
       dueDate: null,
@@ -469,7 +469,7 @@ describe("UpdateReviewCycle", () => {
 
     const result = await new UpdateReviewCycle(ports).run({
       session: makeTestSession("member"),
-      cycleId: 1,
+      cycleId: "01900032-0000-7000-8000-00000000270f",
       title: "Should Fail",
       period: "2026-H1",
       dueDate: null,
@@ -511,7 +511,7 @@ describe("SubmitReviewForm", () => {
 
     const result = await new SubmitReviewForm(ports).run({
       viewerEmployeeId: toWorkforceEmployeeId(5),
-      formId: 9999,
+      formId: "01900032-0000-7000-8000-00000000270f",
       score: null,
       answers: [],
       comment: null,

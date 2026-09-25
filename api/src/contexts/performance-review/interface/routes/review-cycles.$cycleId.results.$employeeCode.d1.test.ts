@@ -32,8 +32,8 @@ afterAll(async () => {
 const jwtSecret = "review-cycles-results-route-test-secret"
 
 const reviewFormResponseSchema = z.object({
-  id: z.number(),
-  cycle_id: z.number(),
+  id: z.uuid(),
+  cycle_id: z.uuid(),
   subject_employee_id: zEmployeeId,
   reviewer_employee_id: zEmployeeId.nullable(),
   reviewer_type: z.enum(["self", "manager", "peer", "subordinate"]),
@@ -44,7 +44,7 @@ const reviewFormResponseSchema = z.object({
 })
 
 const reviewResultResponseSchema = z.object({
-  cycle_id: z.number(),
+  cycle_id: z.uuid(),
   subject_employee_id: zEmployeeId,
   form_count: z.number(),
   submitted_count: z.number(),
@@ -95,8 +95,8 @@ async function createTestDb(): Promise<D1Database> {
       submitted_at: form.submittedAt,
     })),
     {
-      id: 4,
-      cycle_id: 2,
+      id: "01900033-0000-7000-8000-000000000004",
+      cycle_id: "01900032-0000-7000-8000-000000000002",
       subject_employee_id: "5",
       reviewer_employee_id: "10",
       reviewer_type: "peer",
@@ -106,8 +106,8 @@ async function createTestDb(): Promise<D1Database> {
       submitted_at: "2025-12-21T00:00:00Z",
     },
     {
-      id: 5,
-      cycle_id: 2,
+      id: "01900033-0000-7000-8000-000000000005",
+      cycle_id: "01900032-0000-7000-8000-000000000002",
       subject_employee_id: "5",
       reviewer_employee_id: "9",
       reviewer_type: "subordinate",
@@ -117,8 +117,8 @@ async function createTestDb(): Promise<D1Database> {
       submitted_at: "2025-12-22T00:00:00Z",
     },
     {
-      id: 6,
-      cycle_id: 2,
+      id: "01900033-0000-7000-8000-000000000006",
+      cycle_id: "01900032-0000-7000-8000-000000000002",
       subject_employee_id: "5",
       reviewer_employee_id: "2",
       reviewer_type: "peer",
@@ -164,7 +164,7 @@ async function request(
 describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
   test("admin reads aggregated results and returns 200", async () => {
     const response = await request(
-      "/performance-review/review-cycles/2/results/E005",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000002/results/E005",
       await adminToken(),
     )
 
@@ -175,18 +175,23 @@ describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.cycle_id).toBe(2)
+      expect(parsed.data.cycle_id).toBe("01900032-0000-7000-8000-000000000002")
       expect(parsed.data.subject_employee_id).toBe(toWorkforceEmployeeId(5))
       expect(parsed.data.form_count).toBe(4)
       expect(parsed.data.submitted_count).toBe(3)
       expect(parsed.data.average_score).toBe(80)
-      expect(parsed.data.forms.map((form) => form.id)).toEqual([3, 4, 5, 6])
+      expect(parsed.data.forms.map((form) => form.id)).toEqual([
+        "01900033-0000-7000-8000-000000000003",
+        "01900033-0000-7000-8000-000000000004",
+        "01900033-0000-7000-8000-000000000005",
+        "01900033-0000-7000-8000-000000000006",
+      ])
     }
   })
 
   test("member can read own results after the cycle is closed", async () => {
     const response = await request(
-      "/performance-review/review-cycles/2/results/E005",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000002/results/E005",
       await memberToken(),
     )
 
@@ -194,13 +199,18 @@ describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
 
     const parsed = reviewResultResponseSchema.parse(await response.json())
     expect(parsed.form_count).toBe(4)
-    expect(parsed.forms.map((form) => form.id)).toEqual([3, 4, 5, 6])
+    expect(parsed.forms.map((form) => form.id)).toEqual([
+      "01900033-0000-7000-8000-000000000003",
+      "01900033-0000-7000-8000-000000000004",
+      "01900033-0000-7000-8000-000000000005",
+      "01900033-0000-7000-8000-000000000006",
+    ])
     expect(parsed.forms.every((form) => form.reviewer_employee_id === null)).toBe(true)
   })
 
   test("saved reviewer receives only their own submitted form after the reporting line changes", async () => {
     const response = await request(
-      "/performance-review/review-cycles/2/results/E005",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000002/results/E005",
       await memberToken(4),
     )
 
@@ -213,7 +223,7 @@ describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
       average_score: 80,
       forms: [
         {
-          id: 3,
+          id: "01900033-0000-7000-8000-000000000003",
           reviewer_employee_id: "4",
           answers: ["優れた協調性"],
           score: 80,
@@ -226,7 +236,7 @@ describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
 
   test("saved peer reviewer cannot see another saved reviewer's form or aggregate", async () => {
     const response = await request(
-      "/performance-review/review-cycles/2/results/E005",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000002/results/E005",
       await memberToken(10),
     )
 
@@ -238,7 +248,7 @@ describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
     expect(parsed.average_score).toBe(70)
     expect(parsed.forms).toHaveLength(1)
     expect(parsed.forms[0]).toMatchObject({
-      id: 4,
+      id: "01900033-0000-7000-8000-000000000004",
       reviewer_employee_id: "10",
       answers: ["Private peer answer"],
     })
@@ -246,7 +256,7 @@ describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
 
   test("saved reviewer with no submitted form cannot read the result", async () => {
     const response = await request(
-      "/performance-review/review-cycles/2/results/E005",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000002/results/E005",
       await memberToken(2),
     )
 
@@ -255,7 +265,7 @@ describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
 
   test("new current manager cannot read historical results they did not review", async () => {
     const response = await request(
-      "/performance-review/review-cycles/2/results/E005",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000002/results/E005",
       await memberToken(6),
     )
 
@@ -264,7 +274,7 @@ describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
 
   test("unrelated member cannot read another employee results", async () => {
     const response = await request(
-      "/performance-review/review-cycles/2/results/E005",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000002/results/E005",
       await memberToken(3),
     )
 
@@ -273,7 +283,7 @@ describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
 
   test("returns 404 when the employee code is unknown", async () => {
     const response = await request(
-      "/performance-review/review-cycles/2/results/E999",
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000002/results/E999",
       await adminToken(),
     )
 
@@ -281,7 +291,10 @@ describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/performance-review/review-cycles/2/results/E005", null)
+    const response = await request(
+      "/performance-review/review-cycles/01900032-0000-7000-8000-000000000002/results/E005",
+      null,
+    )
 
     expect(response.status).toBe(401)
   })

@@ -7,7 +7,7 @@ import { EvaluationSheetRepository } from "@/contexts/performance-review/infrast
 import { EvaluationParticipantAdapter } from "@/contexts/performance-review/infrastructure/adapters/evaluation-sheet/evaluation-participant.adapter"
 
 export type Command = {
-  sheetId: number
+  sheetId: string
   primaryEvaluatorId: EmployeeId
   secondaryEvaluatorId: EmployeeId | null
   expectedRevision: number

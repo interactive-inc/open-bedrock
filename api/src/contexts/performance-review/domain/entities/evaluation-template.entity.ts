@@ -27,7 +27,7 @@ const VALID_TEMPLATE_TRANSITIONS: Record<
 }
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   title: z.string().min(1).max(200),
   period: z.string().min(1).max(100),
   items: z.array(evaluationTemplateItemSchema).min(1),
@@ -84,7 +84,7 @@ export class EvaluationTemplate implements Props {
     })
   }
 
-  static fromRow(row: EvaluationTemplateRow): EvaluationTemplate {
+  static fromRow(row: Omit<EvaluationTemplateRow, "legacyId">): EvaluationTemplate {
     return new EvaluationTemplate({
       id: row.id,
       title: row.title,

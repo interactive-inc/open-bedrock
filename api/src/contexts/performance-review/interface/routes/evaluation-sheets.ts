@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { ForbiddenError, UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
@@ -31,7 +32,7 @@ export const POST = factory.createHandlers(
     "json",
     z.object({
       employee_id: zEmployeeId,
-      template_id: z.number().int().positive().nullable().optional(),
+      template_id: uuidSchema.nullable().optional(),
       period: z.string().min(1).max(100),
       primary_evaluator_id: zEmployeeId.optional(),
       secondary_evaluator_id: zEmployeeId.nullable().optional(),

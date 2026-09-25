@@ -96,7 +96,7 @@ describe("GoalRepository", () => {
 
     const repository = new GoalRepository(context)
 
-    const found = await repository.findById(9999)
+    const found = await repository.findById("01900033-0000-7000-8000-00000000270f")
 
     expect(found).toBeNull()
   })

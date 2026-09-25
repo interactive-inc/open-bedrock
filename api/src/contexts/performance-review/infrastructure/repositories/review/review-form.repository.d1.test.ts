@@ -34,8 +34,8 @@ describe("ReviewFormRepository", () => {
 
     await seedD1(db, "review_forms", [
       {
-        id: 1,
-        cycle_id: 1,
+        id: "01900033-0000-7000-8000-000000000001",
+        cycle_id: "01900032-0000-7000-8000-000000000001",
         subject_employee_id: "2",
         reviewer_employee_id: "3",
         reviewer_type: "manager",
@@ -48,7 +48,7 @@ describe("ReviewFormRepository", () => {
 
     const repository = new ReviewFormRepository(context)
 
-    const found = await repository.findById(1)
+    const found = await repository.findById("01900033-0000-7000-8000-000000000001")
 
     expect(found).toBeInstanceOf(ReviewForm)
 
@@ -64,13 +64,19 @@ describe("ReviewFormRepository", () => {
     const { context, db } = await createLocalD1Context(local, "update-persists-the-submission")
 
     await seedD1(db, "review_cycles", [
-      { id: 1, title: "2026-H1", period: "2026-H1", status: "open", due_date: null },
+      {
+        id: "01900032-0000-7000-8000-000000000001",
+        title: "2026-H1",
+        period: "2026-H1",
+        status: "open",
+        due_date: null,
+      },
     ])
 
     await seedD1(db, "review_forms", [
       {
-        id: 1,
-        cycle_id: 1,
+        id: "01900033-0000-7000-8000-000000000001",
+        cycle_id: "01900032-0000-7000-8000-000000000001",
         subject_employee_id: "2",
         reviewer_employee_id: "3",
         reviewer_type: "manager",
@@ -83,7 +89,7 @@ describe("ReviewFormRepository", () => {
 
     const repository = new ReviewFormRepository(context)
 
-    const found = await repository.findById(1)
+    const found = await repository.findById("01900033-0000-7000-8000-000000000001")
 
     if (found instanceof Error || found === null) {
       throw new Error("findById failed")
@@ -111,8 +117,8 @@ describe("ReviewFormRepository", () => {
 
     await seedD1(db, "review_forms", [
       {
-        id: 1,
-        cycle_id: 1,
+        id: "01900033-0000-7000-8000-000000000001",
+        cycle_id: "01900032-0000-7000-8000-000000000001",
         subject_employee_id: "2",
         reviewer_employee_id: "3",
         reviewer_type: "manager",
@@ -126,8 +132,8 @@ describe("ReviewFormRepository", () => {
     const repository = new ReviewFormRepository(context)
 
     const form = new ReviewForm({
-      id: 1,
-      cycleId: 1,
+      id: "01900033-0000-7000-8000-000000000001",
+      cycleId: "01900032-0000-7000-8000-000000000001",
       subjectEmployeeId: toWorkforceEmployeeId(2),
       reviewerEmployeeId: toWorkforceEmployeeId(3),
       reviewerType: "manager",
