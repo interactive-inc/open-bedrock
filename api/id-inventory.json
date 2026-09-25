@@ -3,23 +3,23 @@
     "tables": 206,
     "primaryKeyKinds": {
       "allocator-singleton-secret": 11,
-      "composite": 32,
-      "integer": 17,
-      "text-business-code": 3,
+      "composite": 28,
+      "integer": 15,
+      "text-business-code": 1,
       "text-prefixed": 13,
-      "text-uuid": 66,
-      "text-uuid-candidate": 64
+      "text-uuid": 76,
+      "text-uuid-candidate": 62
     },
     "declaredForeignKeys": 272,
     "softReferences": {
       "cross-context": 17,
       "external": 32,
       "historical": 10,
-      "not-reference": 81,
+      "not-reference": 83,
       "polymorphic": 18,
       "same-context": 79
     },
-    "triggers": 716,
+    "triggers": 726,
     "views": 25,
     "indexes": 290
   },
@@ -4255,16 +4255,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "version_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "employee_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -4285,6 +4281,7 @@
         }
       ],
       "triggers": [
+        "governance_acknowledgements_identity_update",
         "governance_acknowledgements_source_freeze_delete",
         "governance_acknowledgements_source_freeze_insert",
         "governance_acknowledgements_source_freeze_update"
@@ -4297,12 +4294,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "code",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "text-business-code",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -4316,6 +4313,7 @@
         }
       ],
       "triggers": [
+        "governance_capabilities_identity_update",
         "governance_capabilities_source_freeze_delete",
         "governance_capabilities_source_freeze_insert",
         "governance_capabilities_source_freeze_update"
@@ -4328,20 +4326,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "version_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "kind",
-            "type": "TEXT"
-          },
-          {
-            "name": "code",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -4355,6 +4345,7 @@
         }
       ],
       "triggers": [
+        "governance_document_references_identity_update",
         "governance_document_references_source_freeze_delete",
         "governance_document_references_source_freeze_insert",
         "governance_document_references_source_freeze_update"
@@ -4371,8 +4362,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -4412,8 +4403,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -4455,11 +4446,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -4473,6 +4464,10 @@
         "incoming": []
       },
       "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
         {
           "column": "org_role_code",
           "classification": "same-context",
@@ -4499,6 +4494,8 @@
         }
       ],
       "triggers": [
+        "governance_org_role_assignments_identity_update",
+        "governance_org_role_assignments_legacy_id_insert",
         "governance_org_role_assignments_source_freeze_delete_guard",
         "governance_org_role_assignments_source_freeze_insert_guard",
         "governance_org_role_assignments_source_freeze_update_guard",
@@ -4515,12 +4512,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "code",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "text-business-code",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -4528,6 +4525,7 @@
       },
       "softReferences": [],
       "triggers": [
+        "governance_org_roles_identity_update",
         "governance_org_roles_source_freeze_delete",
         "governance_org_roles_source_freeze_insert",
         "governance_org_roles_source_freeze_update"
@@ -4540,16 +4538,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "version_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "org_role_code",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -4575,6 +4569,7 @@
         }
       ],
       "triggers": [
+        "governance_publication_approvals_identity_update",
         "governance_publication_approvals_source_freeze_delete",
         "governance_publication_approvals_source_freeze_insert",
         "governance_publication_approvals_source_freeze_update"
@@ -4732,16 +4727,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "article_id",
-            "type": "INTEGER"
-          },
-          {
-            "name": "revision",
-            "type": "INTEGER"
+            "name": "id",
+            "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -4769,6 +4760,7 @@
       "triggers": [
         "knowledge_article_revision_no_delete",
         "knowledge_article_revision_no_update",
+        "knowledge_article_revisions_identity_update",
         "knowledge_article_revisions_source_freeze_insert"
       ],
       "views": [],
@@ -4780,11 +4772,11 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -4804,9 +4796,16 @@
           }
         ]
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
         "knowledge_article_no_delete",
+        "knowledge_articles_identity_update",
+        "knowledge_articles_legacy_id_insert",
         "knowledge_articles_source_freeze_delete",
         "knowledge_articles_source_freeze_insert",
         "knowledge_articles_source_freeze_update"

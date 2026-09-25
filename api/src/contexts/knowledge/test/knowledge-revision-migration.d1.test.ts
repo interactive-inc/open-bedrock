@@ -1,4 +1,3 @@
-import { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
 import { splitSqlStatements } from "@/lib/database/split-sql-statements"
 import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"
 import { readFileSync, readdirSync } from "node:fs"
@@ -53,7 +52,8 @@ test("migration preserves the existing text without inventing an editor or past 
   expect(revision?.source).toBe("existing_record")
   expect(revision?.actor_account_id).toBeNull()
   expect(revision?.recorded_at).toBeGreaterThan(Date.parse("2020-01-01T00:00:00Z"))
-  expect(KnowledgeArticle.restore(JSON.parse(revision?.snapshot_json ?? "null"))).toMatchObject({
+  // 0178 は主キーが整数だった頃の本文を記録する。後の移行でも本文は書き換えない。
+  expect(JSON.parse(revision?.snapshot_json ?? "null")).toMatchObject({
     id: 1,
     revision: 1,
     status: "active",

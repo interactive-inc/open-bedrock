@@ -44,7 +44,7 @@ export class GovernanceOrgRoleAssignmentAdoptionAdapter {
 
   async execute(props: {
     session: CompanySessionValue
-    assignmentId: number
+    assignmentId: string
     freezeId: string
     commandId: string
     expectedRevision: number

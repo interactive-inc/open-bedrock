@@ -72,7 +72,7 @@ export const GET = factory.createHandlers(
       .orderBy(
         asc(shiftAssignments.createdAt),
         asc(sql`CAST(${shiftAssignments.legacyId} AS INTEGER)`),
-        asc(shiftAssignments.id),
+        asc(sql`${shiftAssignments}.rowid`),
       )
       .limit(limit)
       .offset(offset)

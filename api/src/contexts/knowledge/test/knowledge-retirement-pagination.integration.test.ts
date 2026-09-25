@@ -12,7 +12,12 @@ import { systemFactory } from "@system/interface/request-environment/system-fact
 import { drizzle } from "drizzle-orm/d1"
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
-test("ID 0 を含む11件のナレッジ記事と全改訂履歴を保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
+/** 旧来の連番と同じ順に並ぶ固定の記事 UUID。 */
+function articleId(serial: number): string {
+  return `01900042-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
+}
+
+test("11件のナレッジ記事と全改訂履歴を保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
   const {
     clock,
     database,
@@ -41,7 +46,7 @@ test("ID 0 を含む11件のナレッジ記事と全改訂履歴を保全し、�
   for (const id of Array.from({ length: 11 }, (_, index) => index)) {
     const createdAt = `2026-08-${String(id + 1).padStart(2, "0")}T00:00:00Z`
     const initialSnapshot = JSON.stringify({
-      id,
+      id: articleId(id),
       revision: 1,
       status: "active",
       title: id === 2 ? "Knowledge 2 initial" : `Knowledge ${id}`,
@@ -58,13 +63,13 @@ test("ID 0 を含む11件のナレッジ記事と全改訂履歴を保全し、�
       .prepare(`INSERT INTO knowledge_articles
       (id,title,category,tags,body_md,author_id,created_at,revision,status)
       VALUES (?1,?2,'handbook',?3,?4,?5,?6,?7,'active')`)
-      .bind(id, title, `tag-${id}`, body, creatorPerson.employeeId, createdAt, revision)
+      .bind(articleId(id), title, `tag-${id}`, body, creatorPerson.employeeId, createdAt, revision)
       .run()
     await database
       .prepare(`INSERT INTO knowledge_article_revisions
-      (article_id,revision,snapshot_json,status,source,actor_account_id,reason,recorded_at,command_id,request_json)
-      VALUES (?1,1,?2,'active','existing_record',NULL,'Initial article',?3,NULL,NULL)`)
-      .bind(id, initialSnapshot, id)
+      (id,article_id,revision,snapshot_json,status,source,actor_account_id,reason,recorded_at,command_id,request_json)
+      VALUES (?4,?1,1,?2,'active','existing_record',NULL,'Initial article',?3,NULL,NULL)`)
+      .bind(articleId(id), initialSnapshot, id, crypto.randomUUID())
       .run()
     if (id === 2) {
       const revisedSnapshot = JSON.stringify({
@@ -75,9 +80,9 @@ test("ID 0 を含む11件のナレッジ記事と全改訂履歴を保全し、�
       })
       await database
         .prepare(`INSERT INTO knowledge_article_revisions
-        (article_id,revision,snapshot_json,status,source,actor_account_id,reason,recorded_at,command_id,request_json)
-        VALUES (2,2,?1,'active','actor',?2,'Revised article',12,'knowledge-revision-2','{}')`)
-        .bind(revisedSnapshot, creator)
+        (id,article_id,revision,snapshot_json,status,source,actor_account_id,reason,recorded_at,command_id,request_json)
+        VALUES (?3,?4,2,?1,'active','actor',?2,'Revised article',12,'knowledge-revision-2','{}')`)
+        .bind(revisedSnapshot, creator, crypto.randomUUID(), articleId(2))
         .run()
     }
   }
@@ -118,14 +123,16 @@ test("ID 0 を含む11件のナレッジ記事と全改訂履歴を保全し、�
       .first<number>("n"),
   ).toBe(1)
   await expect(
-    database.prepare("UPDATE knowledge_articles SET title='Must not change' WHERE id=1").run(),
+    database
+      .prepare(`UPDATE knowledge_articles SET title='Must not change' WHERE id='${articleId(1)}'`)
+      .run(),
   ).rejects.toThrow("knowledge_record_source_frozen")
   await expect(
     database
       .prepare(`INSERT INTO knowledge_article_revisions
-      (article_id,revision,snapshot_json,status,source,actor_account_id,reason,recorded_at,command_id,request_json)
-      VALUES (1,2,'{}','active','actor',?1,'Blocked revision',1,'blocked-revision','{}')`)
-      .bind(creator)
+      (id,article_id,revision,snapshot_json,status,source,actor_account_id,reason,recorded_at,command_id,request_json)
+      VALUES (?2,?3,2,'{}','active','actor',?1,'Blocked revision',1,'blocked-revision','{}')`)
+      .bind(creator, crypto.randomUUID(), articleId(1))
       .run(),
   ).rejects.toThrow("knowledge_record_source_frozen")
   expect(
@@ -145,7 +152,7 @@ test("ID 0 を含む11件のナレッジ記事と全改訂履歴を保全し、�
   ).toBe(409)
   expect(
     (
-      await apiRequest("/knowledge/knowledge-articles/1", {
+      await apiRequest(`/knowledge/knowledge-articles/${articleId(1)}`, {
         method: "PUT",
         headers: { "idempotency-key": crypto.randomUUID(), "if-match": '"1"' },
         body: {
@@ -160,7 +167,7 @@ test("ID 0 を含む11件のナレッジ記事と全改訂履歴を保全し、�
   ).toBe(409)
   const mappings = []
   for (const id of Array.from({ length: 11 }, (_, index) => index)) {
-    const path = `/knowledge/knowledge-articles/${id}/preservation-requests`
+    const path = `/knowledge/knowledge-articles/${articleId(id)}/preservation-requests`
     const submitted = await apiRequest(path, {
       method: "POST",
       headers: { "idempotency-key": crypto.randomUUID() },
@@ -217,7 +224,7 @@ test("ID 0 を含む11件のナレッジ記事と全改訂履歴を保全し、�
         })
       ).status,
     ).toBe(200)
-    mappings.push({ sourceRecordId: id, preservedRecordId: record.record_id })
+    mappings.push({ sourceRecordId: articleId(id), preservedRecordId: record.record_id })
   }
   expect(
     await database
@@ -236,7 +243,7 @@ test("ID 0 を含む11件のナレッジ記事と全改訂履歴を保全し、�
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "9",
+    nextCursor: articleId(9),
     recordCount: 10,
   })
   expect(

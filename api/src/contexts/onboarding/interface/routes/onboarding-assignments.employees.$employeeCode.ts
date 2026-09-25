@@ -62,7 +62,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .orderBy(
       asc(onboardingAssignments.assignedAt),
       asc(sql`CAST(${onboardingAssignments.legacyId} AS INTEGER)`),
-      asc(onboardingAssignments.id),
+      asc(sql`${onboardingAssignments}.rowid`),
     )
     .limit(limit)
     .offset(offset)

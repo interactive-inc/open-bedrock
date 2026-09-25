@@ -62,7 +62,7 @@ test("規程8台帳の現行全列と空・区切り文字を含む複合キー�
     if (row === null) throw new Error(`missing ${kind}`)
     expect(JSON.parse(row.snapshot_json)).toEqual({
       format: kind,
-      version: 1,
+      version: source.formatVersion,
       source: Object.fromEntries(source.columns.map((column, index) => [column, values[index]])),
     })
     expect(governanceSnapshotQuery(kind, `${id}x`)).toBeInstanceOf(Error)

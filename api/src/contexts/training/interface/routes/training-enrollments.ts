@@ -128,7 +128,7 @@ export const GET = factory.createHandlers(
       .orderBy(
         asc(trainingEnrollments.createdAt),
         asc(sql`CAST(${trainingEnrollments.legacyId} AS INTEGER)`),
-        asc(trainingEnrollments.id),
+        asc(sql`${trainingEnrollments}.rowid`),
       )
       .limit(limit)
       .offset(offset)

@@ -91,9 +91,7 @@ export const PREFIXED_TEXT_PRIMARY_KEY_TABLES: ReadonlySet<string> = new Set([
 ])
 
 /** 列名が `code` / `key` でなくても、業務上の意味を持つ値を主キーにしている table。 */
-export const BUSINESS_CODE_TEXT_PRIMARY_KEY_TABLES: ReadonlySet<string> = new Set([
-  "onboarding_lifecycle_template_bindings",
-])
+export const BUSINESS_CODE_TEXT_PRIMARY_KEY_TABLES: ReadonlySet<string> = new Set<string>([])
 
 /**
  * 外部キーを宣言していない `*_id` / `*_code` / `*_key` / `*_ref` 列の分類。
@@ -166,6 +164,8 @@ const PROCEDURE_REQUEST_KEY = external(
 )
 
 export const SOFT_REFERENCES: Readonly<Record<string, SoftReference>> = {
+  "governance_org_role_assignments.legacy_id": LEGACY_PRIMARY_KEY,
+  "knowledge_articles.legacy_id": LEGACY_PRIMARY_KEY,
   "onboarding_assignments.legacy_id": LEGACY_PRIMARY_KEY,
   "onboarding_tasks.legacy_id": LEGACY_PRIMARY_KEY,
   "onboarding_templates.legacy_id": LEGACY_PRIMARY_KEY,

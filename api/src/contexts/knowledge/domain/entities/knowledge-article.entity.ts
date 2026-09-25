@@ -4,7 +4,7 @@ import type { KnowledgeArticleRow } from "@/contexts/knowledge/infrastructure/sc
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   title: z.string(),
   category: z.string(),
   tags: z.string().nullable(),
@@ -107,6 +107,20 @@ export class KnowledgeArticle implements Props {
 
   static restore(snapshot: unknown): KnowledgeArticle {
     return new KnowledgeArticle(zProps.parse(snapshot))
+  }
+
+  /**
+   * 改訂履歴の本文から記事を復元する。主キーを UUID へ移す前の履歴は整数の記事 ID を含んだまま
+   * 変更しないので、記録行の article_id（現在の記事の UUID）を記事 ID として使う。
+   */
+  static restoreRevision(snapshot: unknown, articleId: string): KnowledgeArticle | Error {
+    const parsed = zProps
+      .extend({ id: z.union([z.string(), z.number().int().positive()]) })
+      .safeParse(snapshot)
+    if (!parsed.success) return parsed.error
+    if (typeof parsed.data.id === "string" && parsed.data.id !== articleId)
+      return new Error("knowledge revision snapshot belongs to another article")
+    return new KnowledgeArticle({ ...parsed.data, id: articleId })
   }
 
   toJSON(): Props {

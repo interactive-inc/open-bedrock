@@ -76,12 +76,12 @@ export class VerifyKnowledgeCoveragePage {
       return new KnowledgeCoverageConflictError("coverage scan already complete")
     const cursor =
       existing === null ? (previous?.snapshot.nextCursor ?? null) : existing.snapshot.afterCursor
-    if (cursor !== null && !/^(0|-?[1-9][0-9]*)$/.test(cursor))
+    if (cursor !== null && !z.uuid().safeParse(cursor).success)
       return new Error("invalid stored coverage cursor")
     const page = await new CaptureFrozenKnowledgeRecordPageAdapter(this.c).prepare({
       freezeId: command.freezeId,
       sourceNamespace: command.sourceNamespace,
-      afterId: cursor === null ? null : Number(cursor),
+      afterId: cursor,
       limit: 10,
     })
     if (page instanceof Error) return page
