@@ -42,7 +42,7 @@ describe("RoomReservationRepository", () => {
     const repository = new RoomReservationRepository(context)
 
     const reservation = createReservation({
-      roomId: 1,
+      roomId: "01900022-0000-7000-8000-000000000001",
       reserverId: toWorkforceEmployeeId(1),
       startAt: "2026-01-01T10:00:00.000Z",
       endAt: "2026-01-01T11:00:00.000Z",
@@ -58,7 +58,7 @@ describe("RoomReservationRepository", () => {
     }
 
     expect(result.id).toBe(reservation.id)
-    expect(result.roomId).toBe(1)
+    expect(result.roomId).toBe("01900022-0000-7000-8000-000000000001")
   })
 
   test("createIfNoOverlap returns null when overlapping reservation exists", async () => {
@@ -67,7 +67,7 @@ describe("RoomReservationRepository", () => {
     const repository = new RoomReservationRepository(context)
 
     const existing = createReservation({
-      roomId: 1,
+      roomId: "01900022-0000-7000-8000-000000000001",
       reserverId: toWorkforceEmployeeId(1),
       startAt: "2026-01-01T10:00:00.000Z",
       endAt: "2026-01-01T11:00:00.000Z",
@@ -81,7 +81,7 @@ describe("RoomReservationRepository", () => {
     }
 
     const overlapping = createReservation({
-      roomId: 1,
+      roomId: "01900022-0000-7000-8000-000000000001",
       reserverId: toWorkforceEmployeeId(2),
       startAt: "2026-01-01T10:30:00.000Z",
       endAt: "2026-01-01T11:30:00.000Z",
@@ -102,7 +102,7 @@ describe("RoomReservationRepository", () => {
     const repository = new RoomReservationRepository(context)
 
     const reservation = createReservation({
-      roomId: 1,
+      roomId: "01900022-0000-7000-8000-000000000001",
       reserverId: toWorkforceEmployeeId(1),
       startAt: "2026-01-01T10:00:00.000Z",
       endAt: "2026-01-01T11:00:00.000Z",
@@ -142,7 +142,7 @@ describe("RoomReservationRepository", () => {
     const repository = new RoomReservationRepository(context)
 
     const existing = createReservation({
-      roomId: 1,
+      roomId: "01900022-0000-7000-8000-000000000001",
       reserverId: toWorkforceEmployeeId(2),
       startAt: "2026-01-01T14:00:00.000Z",
       endAt: "2026-01-01T15:00:00.000Z",
@@ -156,7 +156,7 @@ describe("RoomReservationRepository", () => {
     }
 
     const target = createReservation({
-      roomId: 1,
+      roomId: "01900022-0000-7000-8000-000000000001",
       reserverId: toWorkforceEmployeeId(1),
       startAt: "2026-01-01T10:00:00.000Z",
       endAt: "2026-01-01T11:00:00.000Z",
@@ -190,7 +190,7 @@ describe("RoomReservationRepository", () => {
     const repository = new RoomReservationRepository(context)
 
     const reservation = createReservation({
-      roomId: 1,
+      roomId: "01900022-0000-7000-8000-000000000001",
       reserverId: toWorkforceEmployeeId(1),
       startAt: "2026-01-01T10:00:00.000Z",
       endAt: "2026-01-01T11:00:00.000Z",
@@ -206,7 +206,7 @@ describe("RoomReservationRepository", () => {
     }
 
     const overlapping = await repository.findOverlapping({
-      roomId: 1,
+      roomId: "01900022-0000-7000-8000-000000000001",
       startAt: "2026-01-01T10:30:00.000Z",
       endAt: "2026-01-01T11:30:00.000Z",
       excludeReservationId: null,

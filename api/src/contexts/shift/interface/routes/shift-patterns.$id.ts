@@ -9,7 +9,7 @@ import type { ShiftPattern } from "@/contexts/shift/domain/entities/shift-patter
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 import { codeSchema } from "@/lib/validation/code.schema"
@@ -29,7 +29,7 @@ function toResponseBody(pattern: ShiftPattern) {
 // @authorization service - session を application service に渡して判定する
 /** GET /shift-patterns/:id — シフトパターンの詳細（特権ロール） */
 export const GET = factory.createHandlers(verifyBearer, async (c) => {
-  const patternId = validateIntParam(c.req.param("id"), "shift pattern")
+  const patternId = validateUuidParam(c.req.param("id"), "shift pattern")
 
   const session = c.var.session
 
@@ -88,7 +88,7 @@ export const PUT = factory.createHandlers(
     }),
   ),
   async (c) => {
-    const patternId = validateIntParam(c.req.param("id"), "shift pattern")
+    const patternId = validateUuidParam(c.req.param("id"), "shift pattern")
 
     const session = c.var.session
 
@@ -119,7 +119,7 @@ export const PUT = factory.createHandlers(
 // @authorization service - session を application service に渡して判定する
 /** DELETE /shift-patterns/:id — シフトパターンを削除（特権ロール） */
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
-  const patternId = validateIntParam(c.req.param("id"), "shift pattern")
+  const patternId = validateUuidParam(c.req.param("id"), "shift pattern")
 
   const session = c.var.session
 

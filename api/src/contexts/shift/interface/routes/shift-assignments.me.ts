@@ -10,7 +10,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { shiftAssignments, shiftPatterns } from "@/contexts/shift/infrastructure/schema/shift"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
-import { and, count, eq, gte, inArray, isNotNull, lte } from "drizzle-orm"
+import { and, asc, count, eq, gte, inArray, isNotNull, lte, sql } from "drizzle-orm"
 import { UnauthorizedError } from "@/lib/http/errors"
 
 // @authorization owner - 本人のリソースに限定する
@@ -69,7 +69,11 @@ export const GET = factory.createHandlers(
       .select()
       .from(shiftAssignments)
       .where(and(...conditions))
-      .orderBy(shiftAssignments.id)
+      .orderBy(
+        asc(shiftAssignments.createdAt),
+        asc(sql`CAST(${shiftAssignments.legacyId} AS INTEGER)`),
+        asc(shiftAssignments.id),
+      )
       .limit(limit)
       .offset(offset)
 
@@ -80,7 +84,7 @@ export const GET = factory.createHandlers(
 
     const patternIds = rows
       .map((row) => row.patternId)
-      .filter((patternId): patternId is number => patternId !== null)
+      .filter((patternId): patternId is string => patternId !== null)
 
     const patternRows =
       patternIds.length === 0

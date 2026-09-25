@@ -43,7 +43,7 @@ export class RecruitmentRepository {
     }
   }
 
-  async findPositionById(id: number): Promise<RecruitmentPosition | null | Error> {
+  async findPositionById(id: string): Promise<RecruitmentPosition | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -64,6 +64,7 @@ export class RecruitmentRepository {
       const rows = await this.c.var.database
         .insert(recruitmentPositions)
         .values({
+          id: crypto.randomUUID(),
           title: position.title,
           departmentCode: position.departmentCode,
           status: position.status,
@@ -83,7 +84,7 @@ export class RecruitmentRepository {
   }
 
   async updatePosition(
-    id: number,
+    id: string,
     position: RecruitmentPosition,
   ): Promise<RecruitmentPosition | Error> {
     try {
@@ -109,7 +110,7 @@ export class RecruitmentRepository {
   }
 
   async listCandidatesByPosition(props: {
-    positionId: number
+    positionId: string
     limit: number
     offset: number
   }): Promise<ReadonlyArray<RecruitmentCandidate> | Error> {
@@ -128,7 +129,7 @@ export class RecruitmentRepository {
     }
   }
 
-  async countCandidatesByPosition(positionId: number): Promise<number | Error> {
+  async countCandidatesByPosition(positionId: string): Promise<number | Error> {
     try {
       const rows = await this.c.var.database
         .select({ total: count() })
@@ -141,7 +142,7 @@ export class RecruitmentRepository {
     }
   }
 
-  async findCandidateById(id: number): Promise<RecruitmentCandidate | null | Error> {
+  async findCandidateById(id: string): Promise<RecruitmentCandidate | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -162,6 +163,7 @@ export class RecruitmentRepository {
       const rows = await this.c.var.database
         .insert(recruitmentCandidates)
         .values({
+          id: crypto.randomUUID(),
           positionId: candidate.positionId,
           name: candidate.name,
           email: candidate.email,
@@ -183,7 +185,7 @@ export class RecruitmentRepository {
   }
 
   async updateCandidate(
-    id: number,
+    id: string,
     candidate: RecruitmentCandidate,
   ): Promise<RecruitmentCandidate | Error> {
     try {

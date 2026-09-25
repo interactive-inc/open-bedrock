@@ -69,7 +69,7 @@ describe("TrainingCourseRepository", () => {
 
     const repository = new TrainingCourseRepository(context)
 
-    const found = await repository.findById(9999)
+    const found = await repository.findById(crypto.randomUUID())
 
     expect(found).toBeNull()
   })

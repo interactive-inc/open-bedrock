@@ -7,7 +7,7 @@ import type { ShiftPatternRepository } from "@/contexts/shift/infrastructure/rep
 
 export type Input = {
   session: CompanySessionValue
-  assignmentId: number
+  assignmentId: string
   patternCode: string | null
   date: string
   note: string | null
@@ -18,7 +18,7 @@ type Context = Readonly<{
   patternRepository: Pick<ShiftPatternRepository, "findByCode">
 }>
 
-type ResolvedPattern = { patternId: number | null }
+type ResolvedPattern = { patternId: string | null }
 
 /**
  * 権限・パターンを確認し、シフト割当のパターン・日付・備考を変更する。

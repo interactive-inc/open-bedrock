@@ -15,6 +15,11 @@ import {
   type ThanksRecordKind,
 } from "@/contexts/thanks/domain/definitions/thanks-record-kind.definition"
 
+/** 感謝の固定 UUID。末尾の連番を 16 進 12 桁にし、辞書順を連番の順と一致させる。 */
+function messageId(serial: number): string {
+  return `01900028-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
+}
+
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
 test("感謝・原資・景品・交換申請を全件保全し、人の承認を経て4台帳を撤去確定する", async () => {
   const {
@@ -47,22 +52,22 @@ test("感謝・原資・景品・交換申請を全件保全し、人の承認�
       .prepare(`INSERT INTO thanks_messages
       (id,sender_employee_id,recipient_employee_id,message,points,created_at)
       VALUES (?1,?2,?3,?4,0,'2026-01-01T00:00:00.000Z')`)
-      .bind(id, creatorPerson.employeeId, reviewer.employeeId, `Thanks ${id}`)
+      .bind(messageId(id), creatorPerson.employeeId, reviewer.employeeId, `Thanks ${id}`)
       .run()
   }
   await database
     .prepare(`INSERT INTO thanks_point_budgets
     (id,employee_id,period,granted_points,consumed_points,created_at)
-    VALUES (1,?1,'2026-01',100,0,'2026-01-01T00:00:00.000Z')`)
+    VALUES ('01900029-0000-7000-8000-000000000001',?1,'2026-01',100,0,'2026-01-01T00:00:00.000Z')`)
     .bind(creatorPerson.employeeId)
     .run()
   await database.exec(`INSERT INTO thanks_rewards
     (id,name,point_cost,is_active,stock,created_at)
-    VALUES (1,'Reward',10,1,5,'2026-01-01T00:00:00.000Z')`)
+    VALUES ('0190002a-0000-7000-8000-000000000001','Reward',10,1,5,'2026-01-01T00:00:00.000Z')`)
   await database
     .prepare(`INSERT INTO thanks_redemptions
     (id,employee_id,reward_id,point_cost,status,created_at,decided_at,decider_id)
-    VALUES (1,?1,1,10,'pending','2026-01-02T00:00:00.000Z',NULL,NULL)`)
+    VALUES ('0190002b-0000-7000-8000-000000000001',?1,'0190002a-0000-7000-8000-000000000001',10,'pending','2026-01-02T00:00:00.000Z',NULL,NULL)`)
     .bind(creatorPerson.employeeId)
     .run()
   const at = clock()
@@ -101,26 +106,45 @@ test("感謝・原資・景品・交換申請を全件保全し、人の承認�
       .first<number>("n"),
   ).toBe(1)
   await expect(
-    database.prepare("UPDATE thanks_messages SET message='Must not change' WHERE id=1").run(),
+    database
+      .prepare(
+        "UPDATE thanks_messages SET message='Must not change' WHERE id='01900028-0000-7000-8000-000000000001'",
+      )
+      .run(),
   ).rejects.toThrow("thanks_record_source_frozen")
   await expect(
-    database.prepare("UPDATE thanks_point_budgets SET granted_points=200 WHERE id=1").run(),
+    database
+      .prepare(
+        "UPDATE thanks_point_budgets SET granted_points=200 WHERE id='01900029-0000-7000-8000-000000000001'",
+      )
+      .run(),
   ).rejects.toThrow("thanks_record_source_frozen")
   await expect(
-    database.prepare("UPDATE thanks_rewards SET name='Must not change' WHERE id=1").run(),
+    database
+      .prepare(
+        "UPDATE thanks_rewards SET name='Must not change' WHERE id='0190002a-0000-7000-8000-000000000001'",
+      )
+      .run(),
   ).rejects.toThrow("thanks_record_source_frozen")
   await expect(
-    database.prepare("UPDATE thanks_redemptions SET status='rejected' WHERE id=1").run(),
+    database
+      .prepare(
+        "UPDATE thanks_redemptions SET status='rejected' WHERE id='0190002b-0000-7000-8000-000000000001'",
+      )
+      .run(),
   ).rejects.toThrow("thanks_record_source_frozen")
   const sourceRecords: ReadonlyArray<Readonly<{ recordKind: ThanksRecordKind; recordId: string }>> =
     [
       ...Array.from({ length: 11 }, (_, index) => ({
         recordKind: "thanks-message-record" as const,
-        recordId: String(index + 1),
+        recordId: messageId(index + 1),
       })),
-      { recordKind: "thanks-point-budget-record", recordId: "1" },
-      { recordKind: "thanks-reward-record", recordId: "1" },
-      { recordKind: "thanks-redemption-record", recordId: "1" },
+      {
+        recordKind: "thanks-point-budget-record",
+        recordId: "01900029-0000-7000-8000-000000000001",
+      },
+      { recordKind: "thanks-reward-record", recordId: "0190002a-0000-7000-8000-000000000001" },
+      { recordKind: "thanks-redemption-record", recordId: "0190002b-0000-7000-8000-000000000001" },
     ]
   const mappings: Array<{
     recordKind: ThanksRecordKind
@@ -206,7 +230,7 @@ test("感謝・原資・景品・交換申請を全件保全し、人の承認�
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "10",
+    nextCursor: messageId(10),
     recordCount: 10,
   })
   expect(

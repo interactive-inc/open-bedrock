@@ -29,9 +29,9 @@ afterAll(async () => {
 const jwtSecret = "shift-assignments-create-route-test-secret"
 
 const shiftAssignmentResponseSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   employee_id: zEmployeeId,
-  pattern_id: z.number().nullable(),
+  pattern_id: z.string().nullable(),
   date: z.string(),
   note: z.string().nullable(),
   published_at: z.string().nullable(),
@@ -126,7 +126,7 @@ describe("POST /shift-assignments", () => {
 
     if (parsed.success) {
       expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
-      expect(parsed.data.pattern_id).toBe(1)
+      expect(parsed.data.pattern_id).toBe("01900023-0000-7000-8000-000000000001")
       expect(parsed.data.published_at).toBeNull()
     }
   })

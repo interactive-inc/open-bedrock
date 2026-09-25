@@ -23,7 +23,7 @@ import { ApplicationError } from "@/lib/errors"
 import { codeSchema } from "@/lib/validation/code.schema"
 import { isoDate } from "@/lib/validation/iso-date.schema"
 import { zValidator } from "@hono/zod-validator"
-import { asc, count, eq } from "drizzle-orm"
+import { asc, count, eq, sql } from "drizzle-orm"
 import { z } from "zod"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
@@ -125,7 +125,11 @@ export const GET = factory.createHandlers(
       .select()
       .from(trainingEnrollments)
       .where(eq(trainingEnrollments.employeeId, targetEmployeeId))
-      .orderBy(asc(trainingEnrollments.id))
+      .orderBy(
+        asc(trainingEnrollments.createdAt),
+        asc(sql`CAST(${trainingEnrollments.legacyId} AS INTEGER)`),
+        asc(trainingEnrollments.id),
+      )
       .limit(limit)
       .offset(offset)
 

@@ -29,7 +29,7 @@ afterAll(async () => {
 const jwtSecret = "shift-swap-requests-create-route-test-secret"
 
 const shiftSwapRequestResponseSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   requester_employee_id: zEmployeeId,
   target_employee_id: zEmployeeId,
   date: z.string(),
@@ -73,25 +73,25 @@ async function createTestDb(): Promise<D1Database> {
   // 2026-06-10: emp5・emp4 とも公開済み。2026-06-11: emp5 のみ公開済み（emp4 は割当なし）。
   await seedD1(db, "shift_assignments", [
     {
-      id: 101,
+      id: "01900024-0000-7000-8000-000000000065",
       employee_id: "5",
-      pattern_id: 1,
+      pattern_id: "01900023-0000-7000-8000-000000000001",
       date: "2026-06-10",
       note: null,
       published_at: "2026-05-20T09:00:00Z",
     },
     {
-      id: 102,
+      id: "01900024-0000-7000-8000-000000000066",
       employee_id: "4",
-      pattern_id: 2,
+      pattern_id: "01900023-0000-7000-8000-000000000002",
       date: "2026-06-10",
       note: null,
       published_at: "2026-05-20T09:00:00Z",
     },
     {
-      id: 103,
+      id: "01900024-0000-7000-8000-000000000067",
       employee_id: "5",
-      pattern_id: 1,
+      pattern_id: "01900023-0000-7000-8000-000000000001",
       date: "2026-06-11",
       note: null,
       published_at: "2026-05-20T09:00:00Z",
@@ -141,7 +141,7 @@ async function request(props: RequestProps): Promise<Response> {
 }
 
 const pendingSwapRequestSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   requester_employee_code: z.string(),
   target_employee_code: z.string(),
   date: z.string(),
@@ -167,7 +167,7 @@ describe("GET /shift-swap-requests", () => {
 
     if (parsed.success) {
       expect(parsed.data.data).toHaveLength(1)
-      expect(parsed.data.data[0]?.id).toBe(1)
+      expect(parsed.data.data[0]?.id).toBe("01900025-0000-7000-8000-000000000001")
       expect(parsed.data.data[0]?.status).toBe("pending")
       expect(parsed.data.data[0]?.requester_employee_code).toBe("E005")
       expect(parsed.data.data[0]?.target_employee_code).toBe("E004")

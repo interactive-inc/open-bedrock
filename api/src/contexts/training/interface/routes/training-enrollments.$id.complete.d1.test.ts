@@ -27,8 +27,8 @@ afterAll(async () => {
 })
 
 const trainingEnrollmentResponseSchema = z.object({
-  id: z.number(),
-  course_id: z.number(),
+  id: z.uuid(),
+  course_id: z.uuid(),
   employee_id: zEmployeeId,
   status: z.enum(["enrolled", "completed", "failed"]),
   completed_at: z.string().nullable(),
@@ -114,10 +114,14 @@ async function request(
 
 describe("POST /training-enrollments/:id/complete", () => {
   test("the owner completes their enrollment and returns 200", async () => {
-    const response = await request("/training/training-enrollments/1/complete", await tokenFor(5), {
-      method: "POST",
-      body: { score: 85 },
-    })
+    const response = await request(
+      "/training/training-enrollments/0190002d-0000-7000-8000-000000000001/complete",
+      await tokenFor(5),
+      {
+        method: "POST",
+        body: { score: 85 },
+      },
+    )
 
     expect(response.status).toBe(200)
 
@@ -131,7 +135,7 @@ describe("POST /training-enrollments/:id/complete", () => {
   test("rejects an out-of-range or non-integer score with 400", async () => {
     for (const score of [150, -5, 85.5]) {
       const response = await request(
-        "/training/training-enrollments/1/complete",
+        "/training/training-enrollments/0190002d-0000-7000-8000-000000000001/complete",
         await tokenFor(5),
         {
           method: "POST",
@@ -145,7 +149,7 @@ describe("POST /training-enrollments/:id/complete", () => {
 
   test("returns 404 for a missing enrollment", async () => {
     const response = await request(
-      "/training/training-enrollments/999/complete",
+      "/training/training-enrollments/0190002d-0000-7000-8000-0000000003e7/complete",
       await tokenFor(5),
       {
         method: "POST",
@@ -157,28 +161,40 @@ describe("POST /training-enrollments/:id/complete", () => {
   })
 
   test("a member completing another's enrollment is forbidden", async () => {
-    const response = await request("/training/training-enrollments/2/complete", await tokenFor(5), {
-      method: "POST",
-      body: {},
-    })
+    const response = await request(
+      "/training/training-enrollments/0190002d-0000-7000-8000-000000000002/complete",
+      await tokenFor(5),
+      {
+        method: "POST",
+        body: {},
+      },
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 409 when already completed", async () => {
-    const response = await request("/training/training-enrollments/2/complete", await tokenFor(4), {
-      method: "POST",
-      body: {},
-    })
+    const response = await request(
+      "/training/training-enrollments/0190002d-0000-7000-8000-000000000002/complete",
+      await tokenFor(4),
+      {
+        method: "POST",
+        body: {},
+      },
+    )
 
     expect(response.status).toBe(409)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/training/training-enrollments/1/complete", null, {
-      method: "POST",
-      body: {},
-    })
+    const response = await request(
+      "/training/training-enrollments/0190002d-0000-7000-8000-000000000001/complete",
+      null,
+      {
+        method: "POST",
+        body: {},
+      },
+    )
 
     expect(response.status).toBe(401)
   })

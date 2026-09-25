@@ -5,7 +5,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { zAppTrainingEnrollment } from "@/contexts/training/interface/http/response-schemas"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -20,7 +20,7 @@ export const POST = factory.createHandlers(
     }),
   ),
   async (c) => {
-    const enrollmentId = validateIntParam(c.req.param("id"), "enrollment")
+    const enrollmentId = validateUuidParam(c.req.param("id"), "enrollment")
 
     const body = c.req.valid("json")
 

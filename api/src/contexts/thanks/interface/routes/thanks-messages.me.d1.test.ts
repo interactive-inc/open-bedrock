@@ -24,7 +24,7 @@ afterAll(async () => {
 })
 
 const thanksResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   sender_employee_id: zEmployeeId,
   sender_name: z.string(),
   recipient_employee_id: zEmployeeId,
@@ -82,6 +82,7 @@ async function request(props: {
   token: string | null
   method?: string
   body?: unknown
+  now?: string
 }): Promise<Response> {
   return requestWithContext({
     db: props.db,
@@ -90,6 +91,7 @@ async function request(props: {
     token: props.token,
     method: props.method,
     body: props.body,
+    ...(props.now === undefined ? {} : { now: props.now }),
   })
 }
 
@@ -104,6 +106,7 @@ describe("GET /thanks-messages/me", () => {
       token: await senderToken(),
       method: "POST",
       body: { recipient_employee_code: "E005", message: "1件目" },
+      now: "2026-01-01T00:00:01.000Z",
     })
 
     await request({
@@ -112,6 +115,7 @@ describe("GET /thanks-messages/me", () => {
       token: await senderToken(),
       method: "POST",
       body: { recipient_employee_code: "E005", message: "2件目" },
+      now: "2026-01-01T00:00:02.000Z",
     })
 
     await request({
@@ -120,6 +124,7 @@ describe("GET /thanks-messages/me", () => {
       token: await recipientToken(),
       method: "POST",
       body: { recipient_employee_code: "E004", message: "お返し" },
+      now: "2026-01-01T00:00:03.000Z",
     })
 
     const response = await request({
@@ -148,13 +153,14 @@ describe("GET /thanks-messages/me", () => {
   test("honors limit and offset", async () => {
     const db = await createTestDb()
 
-    for (const message of ["1件目", "2件目", "3件目"]) {
+    for (const [index, message] of ["1件目", "2件目", "3件目"].entries()) {
       await request({
         db,
         path: "/thanks/thanks-messages",
         token: await senderToken(),
         method: "POST",
         body: { recipient_employee_code: "E005", message },
+        now: `2026-01-01T00:00:0${index + 1}.000Z`,
       })
     }
 

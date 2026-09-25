@@ -26,7 +26,7 @@ afterAll(async () => {
 })
 
 const trainingCourseResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   code: z.string(),
   title: z.string(),
   description: z.string().nullable(),

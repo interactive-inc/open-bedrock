@@ -2,7 +2,7 @@ import type { ShiftPatternRow } from "@/contexts/shift/infrastructure/schema/shi
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   code: z.string(),
   name: z.string(),
   startTime: z.string(),

@@ -17,16 +17,12 @@ import { makeTestSession } from "@tests/api/support/make-test-session"
  * 条件付き削除・条件付き更新のSQLは survey.repository.d1.test.ts がローカルD1で検証する。
  */
 class FakeSurveyRepository {
-  readonly surveys = new Map<number, Survey>()
+  readonly surveys = new Map<string, Survey>()
 
-  readonly responses = new Map<number, SurveyResponse>()
+  readonly responses = new Map<string, SurveyResponse>()
 
-  private nextSurveyId = 1
-
-  private nextResponseId = 1
-
-  seedSurvey(status: "open" | "closed"): number {
-    const id = this.nextSurveyId++
+  seedSurvey(status: "open" | "closed"): string {
+    const id = crypto.randomUUID()
     this.surveys.set(
       id,
       new Survey({ id, title: "Test Survey", status, questionsJson: [{ q: "How are you?" }] }),
@@ -34,8 +30,8 @@ class FakeSurveyRepository {
     return id
   }
 
-  seedResponse(surveyId: number, respondentId: EmployeeId): number {
-    const id = this.nextResponseId++
+  seedResponse(surveyId: string, respondentId: EmployeeId): string {
+    const id = crypto.randomUUID()
     this.responses.set(
       id,
       new SurveyResponse({
@@ -49,20 +45,20 @@ class FakeSurveyRepository {
     return id
   }
 
-  closeSurvey(surveyId: number): void {
+  closeSurvey(surveyId: string): void {
     const survey = this.surveys.get(surveyId)
     if (survey === undefined) throw new Error("unknown survey")
     this.surveys.set(surveyId, survey.withDetails({ ...survey, status: "closed" }))
   }
 
-  private hasResponses(surveyId: number): boolean {
+  private hasResponses(surveyId: string): boolean {
     return [...this.responses.values()].some((response) => response.surveyId === surveyId)
   }
 
-  findById = async (surveyId: number) => this.surveys.get(surveyId) ?? null
+  findById = async (surveyId: string) => this.surveys.get(surveyId) ?? null
 
   create = async (survey: Survey) => {
-    const id = this.nextSurveyId++
+    const id = crypto.randomUUID()
     const created = new Survey({
       id,
       title: survey.title,
@@ -96,9 +92,9 @@ class FakeSurveyRepository {
     return true as const
   }
 
-  findResponseById = async (responseId: number) => this.responses.get(responseId) ?? null
+  findResponseById = async (responseId: string) => this.responses.get(responseId) ?? null
 
-  findResponseBySurveyIdAndRespondentId = async (surveyId: number, respondentId: EmployeeId) =>
+  findResponseBySurveyIdAndRespondentId = async (surveyId: string, respondentId: EmployeeId) =>
     [...this.responses.values()].find(
       (response) => response.surveyId === surveyId && response.respondentId === respondentId,
     ) ?? null
@@ -107,7 +103,7 @@ class FakeSurveyRepository {
     if (this.surveys.get(response.surveyId)?.isOpen() !== true) {
       return { reason: "survey_not_open" as const }
     }
-    const id = this.nextResponseId++
+    const id = crypto.randomUUID()
     const created = new SurveyResponse({
       id,
       surveyId: response.surveyId,
@@ -257,7 +253,7 @@ describe("DeleteSurvey", () => {
 
     const result = await new DeleteSurvey({ surveyRepository }).run({
       session: makeTestSession("root"),
-      surveyId: 9999,
+      surveyId: crypto.randomUUID(),
     })
 
     expectApplicationError(result, NotFoundError, "survey_not_found")
@@ -268,7 +264,7 @@ describe("DeleteSurvey", () => {
 
     const result = await new DeleteSurvey({ surveyRepository }).run({
       session: makeTestSession("member"),
-      surveyId: 1,
+      surveyId: crypto.randomUUID(),
     })
 
     expectApplicationError(result, ForbiddenError, "forbidden")
@@ -338,7 +334,7 @@ describe("UpdateSurvey", () => {
 
     const result = await new UpdateSurvey({ surveyRepository }).run({
       session: makeTestSession("root"),
-      surveyId: 9999,
+      surveyId: crypto.randomUUID(),
       title: "Missing",
       status: "open",
       questionsJson: [],
@@ -352,7 +348,7 @@ describe("UpdateSurvey", () => {
 
     const result = await new UpdateSurvey({ surveyRepository }).run({
       session: makeTestSession("member"),
-      surveyId: 1,
+      surveyId: crypto.randomUUID(),
       title: "Survey",
       status: "open",
       questionsJson: [],
@@ -426,7 +422,7 @@ describe("SubmitSurveyResponse", () => {
     const surveyRepository = new FakeSurveyRepository()
 
     const result = await new SubmitSurveyResponse({ surveyRepository }).run({
-      surveyId: 9999,
+      surveyId: crypto.randomUUID(),
       respondentId: toWorkforceEmployeeId(1),
       answersJson: {},
       submittedAt: "2026-02-01T00:00:00.000Z",
@@ -495,7 +491,7 @@ describe("UpdateSurveyResponse", () => {
     const surveyRepository = new FakeSurveyRepository()
 
     const result = await new UpdateSurveyResponse({ surveyRepository }).run({
-      responseId: 9999,
+      responseId: crypto.randomUUID(),
       respondentId: toWorkforceEmployeeId(1),
       answersJson: {},
       submittedAt: "2026-03-01T00:00:00.000Z",

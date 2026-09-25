@@ -10,7 +10,7 @@ export const rewardPointCostSchema = z.number().int().positive().max(maxRewardPo
 export const rewardStockSchema = z.number().int().min(0).nullable()
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   name: z.string(),
   pointCost: z.number(),
   isActive: z.boolean(),
@@ -78,7 +78,7 @@ export class ThanksReward implements Props {
     })
   }
 
-  static fromRow(row: ThanksRewardRow): ThanksReward {
+  static fromRow(row: Omit<ThanksRewardRow, "legacyId">): ThanksReward {
     return new ThanksReward({
       id: row.id,
       name: row.name,

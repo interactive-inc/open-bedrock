@@ -27,7 +27,7 @@ afterAll(async () => {
 })
 
 const thanksResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   sender_employee_id: zEmployeeId,
   sender_name: z.string(),
   recipient_employee_id: zEmployeeId,
@@ -177,7 +177,7 @@ describe("POST /thanks-messages", () => {
     expect(await repository.write(future)).toMatchObject({ kind: "applied" })
     await db
       .prepare(
-        "INSERT INTO thanks_messages (sender_employee_id, recipient_employee_id, message, points, created_at) VALUES ('4', 'employee:thanks-name', 'Thank you', 0, '2026-06-01T00:00:00Z')",
+        "INSERT INTO thanks_messages (id, sender_employee_id, recipient_employee_id, message, points, created_at) VALUES ('01900028-0000-7000-8000-000000000001', '4', 'employee:thanks-name', 'Thank you', 0, '2026-06-01T00:00:00Z')",
       )
       .run()
     const before = await db
@@ -370,6 +370,7 @@ describe("GET /thanks-messages", () => {
       token: await senderToken(),
       method: "POST",
       body: { recipient_employee_code: "E005", message: "1件目" },
+      now: "2026-01-01T00:00:01.000Z",
     })
 
     await request({
@@ -378,6 +379,7 @@ describe("GET /thanks-messages", () => {
       token: await senderToken(),
       method: "POST",
       body: { recipient_employee_code: "E005", message: "2件目" },
+      now: "2026-01-01T00:00:02.000Z",
     })
 
     const response = await request({
@@ -403,13 +405,15 @@ describe("GET /thanks-messages", () => {
   test("honors limit and offset", async () => {
     const db = await createTestDb()
 
-    for (const message of ["1件目", "2件目", "3件目"]) {
+    for (const [index, message] of ["1件目", "2件目", "3件目"].entries()) {
       await request({
         db,
         path: "/thanks/thanks-messages",
         token: await senderToken(),
         method: "POST",
         body: { recipient_employee_code: "E005", message },
+        // 作成日時の順が新着順になる。同時刻の行は UUID の主キー順で、作成順ではない。
+        now: `2026-01-01T00:00:0${index + 1}.000Z`,
       })
     }
 
@@ -495,11 +499,12 @@ describe("GET /thanks-messages", () => {
       expect(parsed.data.data.length).toBe(2)
       expect(parsed.data.data[0]?.created_at).toBe(parsed.data.data[1]?.created_at)
 
-      const firstId = parsed.data.data[0]?.id ?? 0
+      const firstId = parsed.data.data[0]?.id ?? ""
 
-      const secondId = parsed.data.data[1]?.id ?? 0
+      const secondId = parsed.data.data[1]?.id ?? ""
 
-      expect(firstId).toBeGreaterThan(secondId)
+      // 作成日時が同じ行は主キーの降順（UUID の辞書順）で並ぶ。
+      expect(firstId > secondId).toBe(true)
     }
   })
 

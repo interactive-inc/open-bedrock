@@ -27,11 +27,11 @@ afterAll(async () => {
 const jwtSecret = "thanks-redemption-admin-route-test-secret"
 
 const redemptionAdminResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   employee_name: z.string(),
   employee_dept_name: z.string().nullable(),
-  reward_id: z.number(),
+  reward_id: z.uuid(),
   reward_name: z.string(),
   point_cost: z.number(),
   status: z.enum(["pending", "rejected", "fulfilled"]),
@@ -65,7 +65,7 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "thanks_rewards", [
     {
-      id: 1,
+      id: "0190002a-0000-7000-8000-000000000001",
       name: "コーヒーチケット",
       point_cost: 50,
       is_active: 1,
@@ -73,7 +73,7 @@ async function createTestDb(): Promise<D1Database> {
       created_at: "2026-05-01T00:00:00Z",
     },
     {
-      id: 2,
+      id: "0190002a-0000-7000-8000-000000000002",
       name: "書籍購入補助",
       point_cost: 200,
       is_active: 1,
@@ -84,9 +84,9 @@ async function createTestDb(): Promise<D1Database> {
 
   await seedD1(db, "thanks_redemptions", [
     {
-      id: 1,
+      id: "0190002b-0000-7000-8000-000000000001",
       employee_id: "5",
-      reward_id: 1,
+      reward_id: "0190002a-0000-7000-8000-000000000001",
       point_cost: 50,
       status: "pending",
       created_at: "2026-06-01T00:00:00Z",
@@ -94,9 +94,9 @@ async function createTestDb(): Promise<D1Database> {
       decider_id: null,
     },
     {
-      id: 2,
+      id: "0190002b-0000-7000-8000-000000000002",
       employee_id: "10",
-      reward_id: 2,
+      reward_id: "0190002a-0000-7000-8000-000000000002",
       point_cost: 200,
       status: "fulfilled",
       created_at: "2026-06-05T00:00:00Z",
@@ -104,9 +104,9 @@ async function createTestDb(): Promise<D1Database> {
       decider_id: "1",
     },
     {
-      id: 3,
+      id: "0190002b-0000-7000-8000-000000000003",
       employee_id: "13",
-      reward_id: 1,
+      reward_id: "0190002a-0000-7000-8000-000000000001",
       point_cost: 50,
       status: "rejected",
       created_at: "2026-06-10T00:00:00Z",
@@ -148,7 +148,9 @@ describe("GET /thanks-redemptions/admin", () => {
     if (parsed.success) {
       expect(parsed.data.total).toBe(3)
 
-      const first = parsed.data.data.find((item) => item.id === 1)
+      const first = parsed.data.data.find(
+        (item) => item.id === "0190002b-0000-7000-8000-000000000001",
+      )
 
       expect(first?.employee_name).toBe("Emery Lane")
       expect(first?.reward_name).toBe("コーヒーチケット")
@@ -211,7 +213,7 @@ describe("GET /thanks-redemptions/admin", () => {
 
   test("filters by reward_id", async () => {
     const response = await request(
-      "/thanks/thanks-redemptions/admin?reward_id=1",
+      "/thanks/thanks-redemptions/admin?reward_id=0190002a-0000-7000-8000-000000000001",
       await tokenFor(1),
     )
 
@@ -222,7 +224,9 @@ describe("GET /thanks-redemptions/admin", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.data.every((item) => item.reward_id === 1)).toBe(true)
+      expect(
+        parsed.data.data.every((item) => item.reward_id === "0190002a-0000-7000-8000-000000000001"),
+      ).toBe(true)
     }
   })
 })

@@ -26,7 +26,7 @@ afterAll(async () => {
 })
 
 const surveyListItemResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   status: z.enum(["open", "closed"]),
   questions_json: z.array(z.unknown()).readonly(),

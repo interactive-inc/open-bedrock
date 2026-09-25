@@ -4,7 +4,7 @@ import { UpdateSurvey } from "@/contexts/survey/application/update-survey"
 import { Survey } from "@/contexts/survey/domain/entities/survey.entity"
 import { surveyQuestionSchema } from "@/contexts/survey/domain/definitions/survey-question.definition"
 import { factory } from "@/api/http/factory"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { InternalError, NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
@@ -28,7 +28,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const surveyId = validateIntParam(c.req.param("surveyId"), "survey")
+  const surveyId = validateUuidParam(c.req.param("surveyId"), "survey")
 
   const rows = await c.var.database.select().from(surveys).where(eq(surveys.id, surveyId)).limit(1)
 
@@ -84,7 +84,7 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const surveyId = validateIntParam(c.req.param("surveyId"), "survey")
+    const surveyId = validateUuidParam(c.req.param("surveyId"), "survey")
 
     const body = c.req.valid("json")
 
@@ -113,7 +113,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const surveyId = validateIntParam(c.req.param("surveyId"), "survey")
+  const surveyId = validateUuidParam(c.req.param("surveyId"), "survey")
 
   const result = await new DeleteSurvey({ surveyRepository: new SurveyRepository(c) }).run({
     session: session,

@@ -13,7 +13,7 @@ export type EmployeeNotification = Readonly<{
   title: string
   body: string | null
   sourceDomain: string
-  sourceId: number | null
+  sourceId: string | number | null
   createdAt: string
 }>
 
@@ -21,7 +21,7 @@ export type PublishedEmployeeNotification = Readonly<{
   id: number
   recipientAccountId: AccountId
   sourceDomain: string
-  sourceId: number | null
+  sourceId: string | number | null
   kind: CompanyNotificationKind
   title: string
   body: string | null

@@ -24,7 +24,7 @@ export class ShiftPatternRepository {
     }
   }
 
-  async findById(patternId: number): Promise<ShiftPattern | null | Error> {
+  async findById(patternId: string): Promise<ShiftPattern | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -45,6 +45,7 @@ export class ShiftPatternRepository {
       const rows = await this.c.var.database
         .insert(shiftPatterns)
         .values({
+          id: crypto.randomUUID(),
           code: pattern.code,
           name: pattern.name,
           startTime: pattern.startTime,

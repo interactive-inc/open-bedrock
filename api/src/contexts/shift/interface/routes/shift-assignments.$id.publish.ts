@@ -6,12 +6,12 @@ import { zAppShiftAssignment } from "@/contexts/shift/interface/http/response-sc
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 
 // @authorization service - session を application service に渡して判定する
 /** POST /shift-assignments/:id/publish — 特権ロールが未公開の割当を公開する */
 export const POST = factory.createHandlers(verifyBearer, async (c) => {
-  const assignmentId = validateIntParam(c.req.param("id"), "shift assignment")
+  const assignmentId = validateUuidParam(c.req.param("id"), "shift assignment")
 
   const session = c.var.session
 

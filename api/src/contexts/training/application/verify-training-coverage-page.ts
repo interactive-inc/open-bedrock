@@ -1,4 +1,3 @@
-import { z } from "zod"
 import { TrainingRecordSystemAdapter } from "@/contexts/training/infrastructure/adapters/training-record-system.adapter"
 import {
   TrainingCoverageForbiddenError,

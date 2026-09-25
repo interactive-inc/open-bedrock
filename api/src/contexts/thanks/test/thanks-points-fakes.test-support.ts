@@ -43,9 +43,9 @@ function redemptionWith(
  * 条件付きINSERT・UPDATEのSQLは thanks-redemption.repository.d1.test.ts がローカルD1で検証する。
  */
 export class FakeThanksPoints {
-  readonly rewards = new Map<number, ThanksReward>()
+  readonly rewards = new Map<string, ThanksReward>()
 
-  readonly redemptions = new Map<number, ThanksRedemption>()
+  readonly redemptions = new Map<string, ThanksRedemption>()
 
   private readonly received = new Map<EmployeeId, number>()
 
@@ -56,16 +56,27 @@ export class FakeThanksPoints {
     prepare: async () => this.authorityError ?? { guards: [] },
   }
 
-  private nextRewardId = 1
+  private rewardSerial = 0
 
-  private nextRedemptionId = 1
+  private redemptionSerial = 0
+
+  /** 採番順が辞書順にも一致する固定の UUID を返す。 */
+  private nextRewardId(): string {
+    this.rewardSerial += 1
+    return `0190002a-0000-7000-8000-${this.rewardSerial.toString(16).padStart(12, "0")}`
+  }
+
+  private nextRedemptionId(): string {
+    this.redemptionSerial += 1
+    return `0190002b-0000-7000-8000-${this.redemptionSerial.toString(16).padStart(12, "0")}`
+  }
 
   seedBalance(employeeId: EmployeeId, points: number): void {
     this.received.set(employeeId, (this.received.get(employeeId) ?? 0) + points)
   }
 
-  seedReward(props: { pointCost: number; stock: number | null; isActive?: boolean }): number {
-    const id = this.nextRewardId++
+  seedReward(props: { pointCost: number; stock: number | null; isActive?: boolean }): string {
+    const id = this.nextRewardId()
     this.rewards.set(
       id,
       new ThanksReward({
@@ -82,11 +93,11 @@ export class FakeThanksPoints {
 
   seedRedemption(props: {
     employeeId: EmployeeId
-    rewardId: number
+    rewardId: string
     pointCost: number
     status: "pending" | "fulfilled" | "rejected"
   }): ThanksRedemption {
-    const id = this.nextRedemptionId++
+    const id = this.nextRedemptionId()
     const redemption = new ThanksRedemption({
       id,
       employeeId: props.employeeId,
@@ -101,7 +112,7 @@ export class FakeThanksPoints {
     return redemption
   }
 
-  private balanceOf(employeeId: EmployeeId, excludedRedemptionId: number | null): number {
+  private balanceOf(employeeId: EmployeeId, excludedRedemptionId: string | null): number {
     let reserved = 0
     for (const redemption of this.redemptions.values()) {
       if (redemption.employeeId !== employeeId || redemption.id === excludedRedemptionId) continue
@@ -112,9 +123,9 @@ export class FakeThanksPoints {
   }
 
   readonly rewardRepository = {
-    findById: async (rewardId: number) => this.rewards.get(rewardId) ?? null,
+    findById: async (rewardId: string) => this.rewards.get(rewardId) ?? null,
     create: async (reward: ThanksReward) => {
-      const id = this.nextRewardId++
+      const id = this.nextRewardId()
       const created = rewardWith(reward, { id })
       this.rewards.set(id, created)
       return created
@@ -130,7 +141,7 @@ export class FakeThanksPoints {
   }
 
   readonly redemptionRepository = {
-    findById: async (redemptionId: number) => this.redemptions.get(redemptionId) ?? null,
+    findById: async (redemptionId: string) => this.redemptions.get(redemptionId) ?? null,
     createIfSufficientBalance: async (redemption: ThanksRedemption) => {
       const reward = this.rewards.get(redemption.rewardId)
       if (reward === undefined || !reward.isActive) return { reason: "reward_inactive" as const }
@@ -143,15 +154,15 @@ export class FakeThanksPoints {
       if (this.balanceOf(redemption.employeeId, null) < redemption.pointCost) {
         return { reason: "insufficient_balance" as const }
       }
-      const id = this.nextRedemptionId++
+      const id = this.nextRedemptionId()
       const created = redemptionWith(redemption, { id })
       this.redemptions.set(id, created)
       return created
     },
     approveFromPending: async (props: {
-      redemptionId: number
+      redemptionId: string
       employeeId: EmployeeId
-      rewardId: number
+      rewardId: string
       deciderId: EmployeeId
       decidedAt: string
     }) => {
@@ -175,7 +186,7 @@ export class FakeThanksPoints {
       return fulfilled
     },
     rejectFromPending: async (props: {
-      redemptionId: number
+      redemptionId: string
       deciderId: EmployeeId
       decidedAt: string
     }) => {

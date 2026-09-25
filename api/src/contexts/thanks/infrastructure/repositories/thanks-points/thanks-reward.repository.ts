@@ -9,7 +9,7 @@ export type StockDecrementOutcome = "decremented" | "unlimited" | "out_of_stock"
 export class ThanksRewardRepository {
   constructor(private readonly c: Context) {}
 
-  async findById(rewardId: number): Promise<ThanksReward | null | Error> {
+  async findById(rewardId: string): Promise<ThanksReward | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -56,6 +56,7 @@ export class ThanksRewardRepository {
       const rows = await this.c.var.database
         .insert(thanksRewards)
         .values({
+          id: crypto.randomUUID(),
           name: reward.name,
           pointCost: reward.pointCost,
           isActive: reward.isActive,
@@ -132,7 +133,7 @@ export class ThanksRewardRepository {
    * 同時承認でも在庫はマイナスにならない。無制限（stock=null）と在庫切れを区別して返す。
    * SQL 例外は Error として返し、握りつぶさず呼び出し側で追跡できるようにする。
    */
-  async decrementStock(rewardId: number): Promise<StockDecrementOutcome | Error> {
+  async decrementStock(rewardId: string): Promise<StockDecrementOutcome | Error> {
     try {
       const rows = await this.c.var.database
         .update(thanksRewards)

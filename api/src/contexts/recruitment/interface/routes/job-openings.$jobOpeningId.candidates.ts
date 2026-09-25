@@ -14,7 +14,7 @@ import {
   MAX_LIST_OFFSET,
   toBoundedInt,
 } from "@/lib/http/to-bounded-int"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
@@ -32,7 +32,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new ForbiddenError()
   }
 
-  const positionId = validateIntParam(c.req.param("jobOpeningId"), "job opening")
+  const positionId = validateUuidParam(c.req.param("jobOpeningId"), "job opening")
 
   const repository = new RecruitmentRepository(c)
 
@@ -113,7 +113,7 @@ export const POST = factory.createHandlers(
 
     const created = await new RegisterCandidate(c).run({
       session,
-      positionId: validateIntParam(c.req.param("jobOpeningId"), "job opening"),
+      positionId: validateUuidParam(c.req.param("jobOpeningId"), "job opening"),
       name: json.name,
       email: json.email ?? null,
       source: json.source ?? null,

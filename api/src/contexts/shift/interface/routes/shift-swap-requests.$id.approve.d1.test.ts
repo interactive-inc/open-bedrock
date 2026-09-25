@@ -32,7 +32,7 @@ const jwtSecret = "shift-swap-requests-approve-route-test-secret"
 const now = "2026-01-01T00:00:00.000Z"
 
 const shiftSwapRequestResponseSchema = z.object({
-  id: z.number(),
+  id: z.string(),
   requester_employee_id: zEmployeeId,
   target_employee_id: zEmployeeId,
   date: z.string(),
@@ -77,17 +77,17 @@ async function createTestDb(): Promise<D1Database> {
   // requester gets pattern 1 (Early), target gets pattern 2 (Late)
   await seedD1(db, "shift_assignments", [
     {
-      id: 1,
+      id: "01900024-0000-7000-8000-000000000001",
       employee_id: "5",
-      pattern_id: 1,
+      pattern_id: "01900023-0000-7000-8000-000000000001",
       date: "2026-06-01",
       note: null,
       published_at: "2026-05-20T09:00:00Z",
     },
     {
-      id: 2,
+      id: "01900024-0000-7000-8000-000000000002",
       employee_id: "4",
-      pattern_id: 2,
+      pattern_id: "01900023-0000-7000-8000-000000000002",
       date: "2026-06-01",
       note: null,
       published_at: "2026-05-20T09:00:00Z",
@@ -172,7 +172,7 @@ async function createTestDbWithNullPatternIds(): Promise<D1Database> {
   // 両者とも pattern_id = NULL（シフト種別未設定の割当）
   await seedD1(db, "shift_assignments", [
     {
-      id: 1,
+      id: "01900024-0000-7000-8000-000000000001",
       employee_id: "5",
       pattern_id: null,
       date: "2026-06-01",
@@ -180,7 +180,7 @@ async function createTestDbWithNullPatternIds(): Promise<D1Database> {
       published_at: "2026-05-20T09:00:00Z",
     },
     {
-      id: 2,
+      id: "01900024-0000-7000-8000-000000000002",
       employee_id: "4",
       pattern_id: null,
       date: "2026-06-01",
@@ -226,10 +226,10 @@ async function createTestDbWithRequesterNullPatternId(): Promise<D1Database> {
     })),
   )
 
-  // requester (employee 5) は pattern_id = NULL、target (employee 4) は pattern_id = 2
+  // requester (employee 5) は pattern_id = NULL、target (employee 4) は pattern_id = '01900023-0000-7000-8000-000000000002'
   await seedD1(db, "shift_assignments", [
     {
-      id: 1,
+      id: "01900024-0000-7000-8000-000000000001",
       employee_id: "5",
       pattern_id: null,
       date: "2026-06-01",
@@ -237,9 +237,9 @@ async function createTestDbWithRequesterNullPatternId(): Promise<D1Database> {
       published_at: "2026-05-20T09:00:00Z",
     },
     {
-      id: 2,
+      id: "01900024-0000-7000-8000-000000000002",
       employee_id: "4",
-      pattern_id: 2,
+      pattern_id: "01900023-0000-7000-8000-000000000002",
       date: "2026-06-01",
       note: null,
       published_at: "2026-05-20T09:00:00Z",
@@ -286,9 +286,9 @@ async function createTestDbWithPartialAssignment(): Promise<D1Database> {
   // requester (employee 5) のみ割当あり
   await seedD1(db, "shift_assignments", [
     {
-      id: 1,
+      id: "01900024-0000-7000-8000-000000000001",
       employee_id: "5",
-      pattern_id: 1,
+      pattern_id: "01900023-0000-7000-8000-000000000001",
       date: "2026-06-01",
       note: null,
       published_at: "2026-05-20T09:00:00Z",
@@ -329,7 +329,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
     const db = await createTestDb()
 
     const response = await request({
-      path: "/shift/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001/approve",
       token: await tokenFor(1),
       method: "POST",
       db,
@@ -350,22 +350,26 @@ describe("POST /shift-swap-requests/:id/approve", () => {
     // requester (employee 5) は元 pattern 1 → pattern 2 になる。
     // target (employee 4) は元 pattern 2 → pattern 1 になる。
     const requesterRow = await db
-      .prepare("SELECT pattern_id FROM shift_assignments WHERE id = 1")
-      .first<{ pattern_id: number }>()
+      .prepare(
+        "SELECT pattern_id FROM shift_assignments WHERE id = '01900024-0000-7000-8000-000000000001'",
+      )
+      .first<{ pattern_id: string }>()
 
     const targetRow = await db
-      .prepare("SELECT pattern_id FROM shift_assignments WHERE id = 2")
-      .first<{ pattern_id: number }>()
+      .prepare(
+        "SELECT pattern_id FROM shift_assignments WHERE id = '01900024-0000-7000-8000-000000000002'",
+      )
+      .first<{ pattern_id: string }>()
 
-    expect(requesterRow?.pattern_id).toBe(2)
-    expect(targetRow?.pattern_id).toBe(1)
+    expect(requesterRow?.pattern_id).toBe("01900023-0000-7000-8000-000000000002")
+    expect(targetRow?.pattern_id).toBe("01900023-0000-7000-8000-000000000001")
   })
 
   test("creates notifications for both requester and target", async () => {
     const db = await createTestDb()
 
     await request({
-      path: "/shift/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001/approve",
       token: await tokenFor(1),
       method: "POST",
       db,
@@ -397,7 +401,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
   test("returns 409 when neither requester nor target has an assignment", async () => {
     const response = await request({
-      path: "/shift/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001/approve",
       token: await tokenFor(1),
       method: "POST",
       db: await createTestDbWithoutAssignments(),
@@ -408,7 +412,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
   test("returns 409 when only requester has an assignment (target missing)", async () => {
     const response = await request({
-      path: "/shift/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001/approve",
       token: await tokenFor(1),
       method: "POST",
       db: await createTestDbWithPartialAssignment(),
@@ -419,7 +423,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
   test("returns 409 when already approved", async () => {
     const response = await request({
-      path: "/shift/shift-swap-requests/2/approve",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000002/approve",
       token: await tokenFor(1),
       method: "POST",
     })
@@ -429,7 +433,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
   test("returns 404 for a missing swap request", async () => {
     const response = await request({
-      path: "/shift/shift-swap-requests/9999/approve",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-00000000270f/approve",
       token: await tokenFor(1),
       method: "POST",
     })
@@ -440,7 +444,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
   test("requester with manager role cannot self-approve (forbidden)", async () => {
     // swap request id=1 の申請者は employee 5。manager ロールでも当事者は承認できない。
     const response = await request({
-      path: "/shift/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001/approve",
       token: await tokenFor(5),
       method: "POST",
     })
@@ -451,7 +455,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
   test("target with manager role cannot self-approve (forbidden)", async () => {
     // swap request id=1 の交代相手は employee 4。manager ロールでも当事者は承認できない。
     const response = await request({
-      path: "/shift/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001/approve",
       token: await tokenFor(4),
       method: "POST",
     })
@@ -462,7 +466,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
   test("third-party manager can approve (not a party to the swap)", async () => {
     // swap request id=1 の当事者は employee 5 と 4。第三者 manager (employee 1) は従来どおり承認できる。
     const response = await request({
-      path: "/shift/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001/approve",
       token: await tokenFor(1),
       method: "POST",
     })
@@ -472,7 +476,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
   test("member is forbidden", async () => {
     const response = await request({
-      path: "/shift/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001/approve",
       token: await tokenFor(5),
       method: "POST",
     })
@@ -482,7 +486,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/shift/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001/approve",
       token: null,
       method: "POST",
     })
@@ -500,7 +504,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
     // --- 1. 正規の承認で pattern_id を入れ替える ---
     const firstResponse = await request({
-      path: "/shift/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001/approve",
       token: await tokenFor(1),
       method: "POST",
       db,
@@ -510,10 +514,12 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
     // 承認後: requester (id=1) は pattern 2、target (id=2) は pattern 1
     const afterFirst = await db
-      .prepare("SELECT pattern_id FROM shift_assignments WHERE id = 1")
-      .first<{ pattern_id: number }>()
+      .prepare(
+        "SELECT pattern_id FROM shift_assignments WHERE id = '01900024-0000-7000-8000-000000000001'",
+      )
+      .first<{ pattern_id: string }>()
 
-    expect(afterFirst?.pattern_id).toBe(2)
+    expect(afterFirst?.pattern_id).toBe("01900023-0000-7000-8000-000000000002")
 
     // --- 2. 並行承認を再現: 古い pattern_id (1) で UPDATE を試行する ---
     // 並行リーダーは承認前の pattern_id=1 を読み取っている。
@@ -537,10 +543,12 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
     // pattern_id が上書きされていないことを確認する（先の交換が保全されている）。
     const preserved = await db
-      .prepare("SELECT pattern_id FROM shift_assignments WHERE id = 1")
-      .first<{ pattern_id: number }>()
+      .prepare(
+        "SELECT pattern_id FROM shift_assignments WHERE id = '01900024-0000-7000-8000-000000000001'",
+      )
+      .first<{ pattern_id: string }>()
 
-    expect(preserved?.pattern_id).toBe(2)
+    expect(preserved?.pattern_id).toBe("01900023-0000-7000-8000-000000000002")
   })
 
   // pattern_id が NULL の割当に対する楽観ロックの NULL-safe 比較の検証。
@@ -550,7 +558,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
     const db = await createTestDbWithNullPatternIds()
 
     const response = await request({
-      path: "/shift/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001/approve",
       token: await tokenFor(1),
       method: "POST",
       db,
@@ -567,12 +575,16 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
     // NULL どうしの交換後も両者の pattern_id は NULL のまま（交換結果として一貫している）。
     const requesterRow = await db
-      .prepare("SELECT pattern_id FROM shift_assignments WHERE id = 1")
-      .first<{ pattern_id: number | null }>()
+      .prepare(
+        "SELECT pattern_id FROM shift_assignments WHERE id = '01900024-0000-7000-8000-000000000001'",
+      )
+      .first<{ pattern_id: string | null }>()
 
     const targetRow = await db
-      .prepare("SELECT pattern_id FROM shift_assignments WHERE id = 2")
-      .first<{ pattern_id: number | null }>()
+      .prepare(
+        "SELECT pattern_id FROM shift_assignments WHERE id = '01900024-0000-7000-8000-000000000002'",
+      )
+      .first<{ pattern_id: string | null }>()
 
     expect(requesterRow?.pattern_id).toBeNull()
     expect(targetRow?.pattern_id).toBeNull()
@@ -582,7 +594,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
     const db = await createTestDbWithRequesterNullPatternId()
 
     const response = await request({
-      path: "/shift/shift-swap-requests/1/approve",
+      path: "/shift/shift-swap-requests/01900025-0000-7000-8000-000000000001/approve",
       token: await tokenFor(1),
       method: "POST",
       db,
@@ -599,14 +611,18 @@ describe("POST /shift-swap-requests/:id/approve", () => {
 
     // requester (id=1) は NULL → 2、target (id=2) は 2 → NULL になる。
     const requesterRow = await db
-      .prepare("SELECT pattern_id FROM shift_assignments WHERE id = 1")
-      .first<{ pattern_id: number | null }>()
+      .prepare(
+        "SELECT pattern_id FROM shift_assignments WHERE id = '01900024-0000-7000-8000-000000000001'",
+      )
+      .first<{ pattern_id: string | null }>()
 
     const targetRow = await db
-      .prepare("SELECT pattern_id FROM shift_assignments WHERE id = 2")
-      .first<{ pattern_id: number | null }>()
+      .prepare(
+        "SELECT pattern_id FROM shift_assignments WHERE id = '01900024-0000-7000-8000-000000000002'",
+      )
+      .first<{ pattern_id: string | null }>()
 
-    expect(requesterRow?.pattern_id).toBe(2)
+    expect(requesterRow?.pattern_id).toBe("01900023-0000-7000-8000-000000000002")
     expect(targetRow?.pattern_id).toBeNull()
   })
 })

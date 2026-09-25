@@ -2,7 +2,7 @@ import type { RoomRow } from "@/contexts/room/infrastructure/schema/room"
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number(),
+  id: z.string(),
   name: z.string(),
   capacity: z.number(),
   location: z.string().nullable(),

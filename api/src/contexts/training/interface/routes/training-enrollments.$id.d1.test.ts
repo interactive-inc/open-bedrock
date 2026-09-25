@@ -27,8 +27,8 @@ afterAll(async () => {
 })
 
 const trainingEnrollmentResponseSchema = z.object({
-  id: z.number(),
-  course_id: z.number(),
+  id: z.uuid(),
+  course_id: z.uuid(),
   employee_id: zEmployeeId,
   status: z.enum(["enrolled", "completed", "failed"]),
   completed_at: z.string().nullable(),
@@ -112,36 +112,51 @@ async function request(
 
 describe("GET /training-enrollments/:id", () => {
   test("the owner reads their enrollment and returns 200", async () => {
-    const response = await request("/training/training-enrollments/1", await tokenFor(5))
+    const response = await request(
+      "/training/training-enrollments/0190002d-0000-7000-8000-000000000001",
+      await tokenFor(5),
+    )
 
     expect(response.status).toBe(200)
 
     const body = trainingEnrollmentResponseSchema.parse(await response.json())
 
-    expect(body.id).toBe(1)
+    expect(body.id).toBe("0190002d-0000-7000-8000-000000000001")
     expect(body.employee_id).toBe(toWorkforceEmployeeId(5))
   })
 
   test("a privileged role reads another's enrollment and returns 200", async () => {
-    const response = await request("/training/training-enrollments/1", await tokenFor(1))
+    const response = await request(
+      "/training/training-enrollments/0190002d-0000-7000-8000-000000000001",
+      await tokenFor(1),
+    )
 
     expect(response.status).toBe(200)
   })
 
   test("a member reading another's enrollment is forbidden", async () => {
-    const response = await request("/training/training-enrollments/2", await tokenFor(5))
+    const response = await request(
+      "/training/training-enrollments/0190002d-0000-7000-8000-000000000002",
+      await tokenFor(5),
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 404 for a missing enrollment", async () => {
-    const response = await request("/training/training-enrollments/999", await tokenFor(5))
+    const response = await request(
+      "/training/training-enrollments/0190002d-0000-7000-8000-0000000003e7",
+      await tokenFor(5),
+    )
 
     expect(response.status).toBe(404)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/training/training-enrollments/1", null)
+    const response = await request(
+      "/training/training-enrollments/0190002d-0000-7000-8000-000000000001",
+      null,
+    )
 
     expect(response.status).toBe(401)
   })
@@ -149,10 +164,14 @@ describe("GET /training-enrollments/:id", () => {
 
 describe("PUT /training-enrollments/:id", () => {
   test("the owner reschedules their enrollment and returns 200", async () => {
-    const response = await request("/training/training-enrollments/1", await tokenFor(5), {
-      method: "PUT",
-      body: { due_date: "2026-09-30" },
-    })
+    const response = await request(
+      "/training/training-enrollments/0190002d-0000-7000-8000-000000000001",
+      await tokenFor(5),
+      {
+        method: "PUT",
+        body: { due_date: "2026-09-30" },
+      },
+    )
 
     expect(response.status).toBe(200)
 
@@ -162,28 +181,40 @@ describe("PUT /training-enrollments/:id", () => {
   })
 
   test("a member rescheduling another's enrollment is forbidden", async () => {
-    const response = await request("/training/training-enrollments/2", await tokenFor(5), {
-      method: "PUT",
-      body: { due_date: "2026-09-30" },
-    })
+    const response = await request(
+      "/training/training-enrollments/0190002d-0000-7000-8000-000000000002",
+      await tokenFor(5),
+      {
+        method: "PUT",
+        body: { due_date: "2026-09-30" },
+      },
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 409 when the enrollment is already completed", async () => {
-    const response = await request("/training/training-enrollments/2", await tokenFor(4), {
-      method: "PUT",
-      body: { due_date: "2026-09-30" },
-    })
+    const response = await request(
+      "/training/training-enrollments/0190002d-0000-7000-8000-000000000002",
+      await tokenFor(4),
+      {
+        method: "PUT",
+        body: { due_date: "2026-09-30" },
+      },
+    )
 
     expect(response.status).toBe(409)
   })
 
   test("returns 404 for a missing enrollment", async () => {
-    const response = await request("/training/training-enrollments/999", await tokenFor(5), {
-      method: "PUT",
-      body: { due_date: null },
-    })
+    const response = await request(
+      "/training/training-enrollments/0190002d-0000-7000-8000-0000000003e7",
+      await tokenFor(5),
+      {
+        method: "PUT",
+        body: { due_date: null },
+      },
+    )
 
     expect(response.status).toBe(404)
   })
@@ -191,37 +222,53 @@ describe("PUT /training-enrollments/:id", () => {
 
 describe("DELETE /training-enrollments/:id", () => {
   test("the owner cancels their enrollment and returns 204", async () => {
-    const response = await request("/training/training-enrollments/1", await tokenFor(5), {
-      method: "DELETE",
-      body: {},
-    })
+    const response = await request(
+      "/training/training-enrollments/0190002d-0000-7000-8000-000000000001",
+      await tokenFor(5),
+      {
+        method: "DELETE",
+        body: {},
+      },
+    )
 
     expect(response.status).toBe(204)
   })
 
   test("a member cancelling another's enrollment is forbidden", async () => {
-    const response = await request("/training/training-enrollments/2", await tokenFor(5), {
-      method: "DELETE",
-      body: {},
-    })
+    const response = await request(
+      "/training/training-enrollments/0190002d-0000-7000-8000-000000000002",
+      await tokenFor(5),
+      {
+        method: "DELETE",
+        body: {},
+      },
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 409 when cancelling a completed enrollment", async () => {
-    const response = await request("/training/training-enrollments/2", await tokenFor(4), {
-      method: "DELETE",
-      body: {},
-    })
+    const response = await request(
+      "/training/training-enrollments/0190002d-0000-7000-8000-000000000002",
+      await tokenFor(4),
+      {
+        method: "DELETE",
+        body: {},
+      },
+    )
 
     expect(response.status).toBe(409)
   })
 
   test("returns 404 for a missing enrollment", async () => {
-    const response = await request("/training/training-enrollments/999", await tokenFor(5), {
-      method: "DELETE",
-      body: {},
-    })
+    const response = await request(
+      "/training/training-enrollments/0190002d-0000-7000-8000-0000000003e7",
+      await tokenFor(5),
+      {
+        method: "DELETE",
+        body: {},
+      },
+    )
 
     expect(response.status).toBe(404)
   })

@@ -11,7 +11,7 @@ type Context = Readonly<{
 
 export type Command = {
   session: CompanySessionValue
-  surveyId: number
+  surveyId: string
 }
 
 export type Deleted = { reason: "deleted" }

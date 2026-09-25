@@ -18,7 +18,7 @@ type Context = Readonly<{
 
 export type Command = {
   session: CompanySessionValue
-  redemptionId: number
+  redemptionId: string
   deciderId: EmployeeId
   decidedAt: string
 }

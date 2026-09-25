@@ -5,7 +5,7 @@ import { z } from "zod"
 
 /** 研修コース 1 件のレスポンス。 */
 export const zAppTrainingCourse = z.object({
-  id: z.number(),
+  id: z.uuid(),
   code: z.string(),
   title: z.string(),
   description: z.string().nullable(),
@@ -23,8 +23,8 @@ export const zAppTrainingCourseList = z.object({
 
 /** 受講登録 1 件のレスポンス。 */
 export const zAppTrainingEnrollment = z.object({
-  id: z.number(),
-  course_id: z.number(),
+  id: z.uuid(),
+  course_id: z.uuid(),
   employee_id: zEmployeeId,
   status: z.string(),
   completed_at: z.string().nullable(),

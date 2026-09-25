@@ -142,7 +142,7 @@ describe("SurveyRepository", () => {
 
     await seedD1(db, "surveys", [
       {
-        id: 1,
+        id: "01900026-0000-7000-8000-000000000001",
         title: "従業員満足度調査",
         status: "open",
         questions_json: JSON.stringify([{ id: "q1", label: "満足度" }]),
@@ -151,7 +151,7 @@ describe("SurveyRepository", () => {
 
     const repository = new SurveyRepository(context)
 
-    const found = await repository.findById(1)
+    const found = await repository.findById("01900026-0000-7000-8000-000000000001")
 
     expect(found).toBeInstanceOf(Survey)
 
@@ -168,7 +168,7 @@ describe("SurveyRepository", () => {
 
     const repository = new SurveyRepository(context)
 
-    const found = await repository.findById(9999)
+    const found = await repository.findById(crypto.randomUUID())
 
     expect(found).toBeNull()
   })
@@ -178,7 +178,7 @@ describe("SurveyRepository", () => {
 
     await seedD1(db, "surveys", [
       {
-        id: 1,
+        id: "01900026-0000-7000-8000-000000000001",
         title: "テスト調査",
         status: "open",
         questions_json: JSON.stringify([{ id: "q1", label: "満足度" }]),
@@ -189,7 +189,7 @@ describe("SurveyRepository", () => {
 
     const created = await repository.createResponse(
       SurveyResponse.create({
-        surveyId: 1,
+        surveyId: "01900026-0000-7000-8000-000000000001",
         respondentId: toWorkforceEmployeeId(2),
         answersJson: { q1: 5 },
         submittedAt: "2026-01-01T00:00:00.000Z",
@@ -203,7 +203,7 @@ describe("SurveyRepository", () => {
     }
 
     const found = await repository.findResponseBySurveyIdAndRespondentId(
-      1,
+      "01900026-0000-7000-8000-000000000001",
       toWorkforceEmployeeId(2),
     )
 
@@ -213,7 +213,7 @@ describe("SurveyRepository", () => {
       throw new Error("findResponseBySurveyIdAndRespondentId failed")
     }
 
-    expect(found.surveyId).toBe(1)
+    expect(found.surveyId).toBe("01900026-0000-7000-8000-000000000001")
     expect(found.respondentId).toBe(toWorkforceEmployeeId(2))
   })
 
@@ -226,7 +226,7 @@ describe("SurveyRepository", () => {
     const repository = new SurveyRepository(context)
 
     const found = await repository.findResponseBySurveyIdAndRespondentId(
-      9999,
+      crypto.randomUUID(),
       toWorkforceEmployeeId(9999),
     )
 

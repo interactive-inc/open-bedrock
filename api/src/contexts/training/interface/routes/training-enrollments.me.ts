@@ -9,7 +9,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { zAppTrainingEnrollmentList } from "@/contexts/training/interface/http/response-schemas"
 import { trainingEnrollments } from "@/contexts/training/infrastructure/schema/training"
-import { asc, count, eq } from "drizzle-orm"
+import { asc, count, eq, sql } from "drizzle-orm"
 
 // @authorization owner - 本人のリソースに限定する
 /** GET /training-enrollments/me — 本人の受講一覧 */
@@ -38,7 +38,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     .select()
     .from(trainingEnrollments)
     .where(eq(trainingEnrollments.employeeId, session.employeeId))
-    .orderBy(asc(trainingEnrollments.id))
+    .orderBy(
+      asc(trainingEnrollments.createdAt),
+      asc(sql`CAST(${trainingEnrollments.legacyId} AS INTEGER)`),
+      asc(trainingEnrollments.id),
+    )
     .limit(limit)
     .offset(offset)
 

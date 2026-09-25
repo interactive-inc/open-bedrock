@@ -115,7 +115,7 @@ async function createReward(props: {
   db: D1Database
   pointCost: number
   stock?: number | null
-}): Promise<number> {
+}): Promise<string> {
   const response = await request({
     db: props.db,
     path: "/thanks/thanks-rewards",
@@ -126,7 +126,7 @@ async function createReward(props: {
 
   const body = await response.json()
 
-  const parsed = z.object({ id: z.number() }).parse(body)
+  const parsed = z.object({ id: z.uuid() }).parse(body)
 
   return parsed.id
 }
@@ -520,7 +520,7 @@ describe("redemption", () => {
 
     expect(requested.status).toBe(201)
 
-    const redemptionId = z.object({ id: z.number() }).parse(await requested.json()).id
+    const redemptionId = z.object({ id: z.uuid() }).parse(await requested.json()).id
 
     const approved = await request({
       db,
@@ -575,7 +575,7 @@ describe("redemption", () => {
       body: { reward_id: rewardId },
     })
 
-    const redemptionId = z.object({ id: z.number() }).parse(await requested.json()).id
+    const redemptionId = z.object({ id: z.uuid() }).parse(await requested.json()).id
 
     const first = await request({
       db,
@@ -642,7 +642,7 @@ describe("redemption", () => {
 
     expect(first.status).toBe(201)
 
-    const firstId = z.object({ id: z.number() }).parse(await first.json()).id
+    const firstId = z.object({ id: z.uuid() }).parse(await first.json()).id
 
     // 1 件目を承認して pending を解消する。
     const approved = await request({
@@ -681,7 +681,7 @@ describe("redemption", () => {
       body: { reward_id: rewardId },
     })
 
-    const redemptionId = z.object({ id: z.number() }).parse(await requested.json()).id
+    const redemptionId = z.object({ id: z.uuid() }).parse(await requested.json()).id
 
     const rejected = await request({
       db,
@@ -718,7 +718,7 @@ describe("redemption", () => {
       body: { reward_id: rewardId },
     })
 
-    const redemptionId = z.object({ id: z.number() }).parse(await requested.json()).id
+    const redemptionId = z.object({ id: z.uuid() }).parse(await requested.json()).id
 
     const response = await request({
       db,
@@ -749,7 +749,7 @@ describe("redemption", () => {
 
     expect(requested.status).toBe(201)
 
-    const redemptionId = z.object({ id: z.number() }).parse(await requested.json()).id
+    const redemptionId = z.object({ id: z.uuid() }).parse(await requested.json()).id
 
     // admin 本人が承認しようとすると 403 で弾かれる。
     const response = await request({
@@ -781,7 +781,7 @@ describe("redemption", () => {
 
     expect(requested.status).toBe(201)
 
-    const redemptionId = z.object({ id: z.number() }).parse(await requested.json()).id
+    const redemptionId = z.object({ id: z.uuid() }).parse(await requested.json()).id
 
     // 却下も決裁行為。admin 本人が却下しようとすると 403 で弾かれる。
     const response = await request({
@@ -810,7 +810,7 @@ describe("redemption", () => {
 
 describe("redemption pagination", () => {
   const redemptionListSchema = z.object({
-    data: z.array(z.object({ id: z.number(), employee_id: zEmployeeId, status: z.string() })),
+    data: z.array(z.object({ id: z.uuid(), employee_id: zEmployeeId, status: z.string() })),
     total: z.number(),
   })
 
@@ -818,7 +818,7 @@ describe("redemption pagination", () => {
   async function createRejectedRedemption(props: {
     db: D1Database
     recipientTokenValue: string
-    rewardId: number
+    rewardId: string
   }): Promise<void> {
     const requested = await request({
       db: props.db,
@@ -828,7 +828,7 @@ describe("redemption pagination", () => {
       body: { reward_id: props.rewardId },
     })
 
-    const id = z.object({ id: z.number() }).parse(await requested.json()).id
+    const id = z.object({ id: z.uuid() }).parse(await requested.json()).id
 
     await request({
       db: props.db,
@@ -1017,7 +1017,7 @@ describe("atomicity", () => {
         body: { reward_id: rewardId },
       })
 
-      return z.object({ id: z.number() }).parse(await requested.json()).id
+      return z.object({ id: z.uuid() }).parse(await requested.json()).id
     }
 
     const recipientTokenValue = await recipientToken()
@@ -1028,7 +1028,7 @@ describe("atomicity", () => {
 
     const adminTokenValue = await adminToken()
 
-    const approve = (id: number) =>
+    const approve = (id: string) =>
       request({
         db,
         path: `/thanks/thanks-redemptions/${id}/approve`,
@@ -1078,22 +1078,23 @@ describe("atomicity", () => {
     // 部分 unique インデックスを一時的に削除して 2 件目の pending を挿入可能にする。
     await db.prepare("DROP INDEX IF EXISTS idx_thanks_redemptions_employee_pending").run()
 
+    const secondRedemptionId = crypto.randomUUID()
+
     // DB に直接 2 件目の pending（60pt）を挿入。
     // これで合計 pending = 120pt > 残高 100pt。
     await db
       .prepare(
-        `INSERT INTO thanks_redemptions (employee_id, reward_id, point_cost, status, created_at)
-         VALUES (?, ?, ?, 'pending', datetime('now'))`,
+        `INSERT INTO thanks_redemptions (id, employee_id, reward_id, point_cost, status, created_at)
+         VALUES (?, ?, ?, ?, 'pending', datetime('now'))`,
       )
-      .bind("5", rewardId, 60)
+      .bind(secondRedemptionId, "5", rewardId, 60)
       .run()
 
     // 2 件目の pending の id を取得。
     const secondRow = await db
-      .prepare(
-        "SELECT id FROM thanks_redemptions WHERE employee_id = 5 AND status = 'pending' ORDER BY id DESC LIMIT 1",
-      )
-      .first<{ id: number }>()
+      .prepare("SELECT id FROM thanks_redemptions WHERE id = ?")
+      .bind(secondRedemptionId)
+      .first<{ id: string }>()
 
     // 2 件目を承認しようとする。1 件目の pending（60pt）があるため実効残高は 40pt。
     // 60pt の承認は残高不足で弾かれるべき。

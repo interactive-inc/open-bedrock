@@ -12,11 +12,13 @@ import { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-assignme
  * shift-assignment.repository.test.ts がDB上で検証する。
  */
 function createAssignmentRepository(initial: ShiftAssignment) {
-  const assignments = new Map<number, ShiftAssignment>([[1, initial]])
+  const assignments = new Map<string, ShiftAssignment>([
+    ["01900024-0000-7000-8000-000000000001", initial],
+  ])
 
   return {
-    findById: async (id: number) => assignments.get(id) ?? null,
-    markPublished: async (id: number, publishedAt: string) => {
+    findById: async (id: string) => assignments.get(id) ?? null,
+    markPublished: async (id: string, publishedAt: string) => {
       const current = assignments.get(id)
       if (current === undefined || current.publishedAt !== null) return null
       const published = current.withPublished(publishedAt)
@@ -35,7 +37,7 @@ function createAssignmentRepository(initial: ShiftAssignment) {
 
 function draftAssignment(): ShiftAssignment {
   return new ShiftAssignment({
-    id: 1,
+    id: "01900024-0000-7000-8000-000000000001",
     employeeId: toWorkforceEmployeeId(1),
     patternId: null,
     date: "2026-06-01",
@@ -52,7 +54,7 @@ describe("PublishShiftAssignment", () => {
 
     const first = await publish.run({
       session: makeTestSession("manager"),
-      assignmentId: 1,
+      assignmentId: "01900024-0000-7000-8000-000000000001",
       publishedAt: "2026-06-01T00:00:00.000Z",
     })
 
@@ -60,7 +62,7 @@ describe("PublishShiftAssignment", () => {
 
     const second = await publish.run({
       session: makeTestSession("manager"),
-      assignmentId: 1,
+      assignmentId: "01900024-0000-7000-8000-000000000001",
       publishedAt: "2026-06-02T00:00:00.000Z",
     })
 
@@ -79,7 +81,7 @@ describe("UpdateShiftAssignment", () => {
       patternRepository: { findByCode: async () => null },
     }).run({
       session: makeTestSession("manager"),
-      assignmentId: 1,
+      assignmentId: "01900024-0000-7000-8000-000000000001",
       patternCode: null,
       date: "2026-06-05",
       note: "changed",

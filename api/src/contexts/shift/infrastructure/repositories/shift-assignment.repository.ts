@@ -9,7 +9,7 @@ import { and, asc, eq, isNull } from "drizzle-orm"
 export class ShiftAssignmentRepository {
   constructor(private readonly c: Context) {}
 
-  async findById(assignmentId: number): Promise<ShiftAssignment | null | Error> {
+  async findById(assignmentId: string): Promise<ShiftAssignment | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -49,6 +49,7 @@ export class ShiftAssignmentRepository {
       const rows = await this.c.var.database
         .insert(shiftAssignments)
         .values({
+          id: crypto.randomUUID(),
           employeeId: assignment.employeeId,
           patternId: assignment.patternId,
           date: assignment.date,
@@ -70,7 +71,7 @@ export class ShiftAssignmentRepository {
     }
   }
 
-  async findByPatternId(patternId: number): Promise<ReadonlyArray<ShiftAssignment> | Error> {
+  async findByPatternId(patternId: string): Promise<ReadonlyArray<ShiftAssignment> | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -83,7 +84,7 @@ export class ShiftAssignmentRepository {
     }
   }
 
-  async existsByPatternId(patternId: number): Promise<boolean | Error> {
+  async existsByPatternId(patternId: string): Promise<boolean | Error> {
     try {
       const rows = await this.c.var.database
         .select({ id: shiftAssignments.id })
@@ -113,7 +114,7 @@ export class ShiftAssignmentRepository {
 
   /** 未公開（published_at IS NULL）の割当のみを公開済みにする。既に公開済みなら 0 行更新で null を返す。 */
   async markPublished(
-    assignmentId: number,
+    assignmentId: string,
     publishedAt: string,
   ): Promise<ShiftAssignment | null | Error> {
     try {

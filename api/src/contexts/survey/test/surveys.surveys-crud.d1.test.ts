@@ -34,7 +34,7 @@ afterAll(async () => {
 })
 
 const surveyResponseSchema = z.object({
-  id: z.number().nullable(),
+  id: z.uuid().nullable(),
   title: z.string(),
   status: z.enum(["open", "closed"]),
   questions_json: z.array(z.unknown()),
@@ -220,7 +220,7 @@ describe("POST /surveys", () => {
 describe("PUT /surveys/:surveyId", () => {
   test("updates a survey without responses and returns 200", async () => {
     const response = await request({
-      path: "/survey/surveys/2",
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000002",
       token: await adminToken(),
       method: "PUT",
       body: {
@@ -237,7 +237,7 @@ describe("PUT /surveys/:surveyId", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.id).toBe(2)
+      expect(parsed.data.id).toBe("01900026-0000-7000-8000-000000000002")
       expect(parsed.data.title).toBe("Updated Remote Work Survey")
       expect(parsed.data.status).toBe("closed")
     }
@@ -245,7 +245,7 @@ describe("PUT /surveys/:surveyId", () => {
 
   test("returns 409 when changing questions on a survey with responses", async () => {
     const response = await request({
-      path: "/survey/surveys/1",
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000001",
       token: await adminToken(),
       method: "PUT",
       body: {
@@ -260,7 +260,7 @@ describe("PUT /surveys/:surveyId", () => {
 
   test("allows changing questions on a survey without responses", async () => {
     const response = await request({
-      path: "/survey/surveys/2",
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000002",
       token: await adminToken(),
       method: "PUT",
       body: {
@@ -275,7 +275,7 @@ describe("PUT /surveys/:surveyId", () => {
 
   test("returns 403 for a non-admin", async () => {
     const response = await request({
-      path: "/survey/surveys/1",
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000001",
       token: await memberToken(),
       method: "PUT",
       body: { title: "X", status: "open", questions_json: [] },
@@ -286,7 +286,7 @@ describe("PUT /surveys/:surveyId", () => {
 
   test("returns 404 for an unknown survey", async () => {
     const response = await request({
-      path: "/survey/surveys/9999",
+      path: "/survey/surveys/01900026-0000-7000-8000-00000000270f",
       token: await adminToken(),
       method: "PUT",
       body: { title: "X", status: "open", questions_json: [] },
@@ -297,7 +297,7 @@ describe("PUT /surveys/:surveyId", () => {
 
   test("returns 400 when status is invalid", async () => {
     const response = await request({
-      path: "/survey/surveys/1",
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000001",
       token: await adminToken(),
       method: "PUT",
       body: { title: "X", status: "paused", questions_json: [] },
@@ -309,7 +309,7 @@ describe("PUT /surveys/:surveyId", () => {
   // #910: closed → open の再開は禁止し、409 を返す。
   test("returns 409 when reopening a closed survey", async () => {
     const response = await request({
-      path: "/survey/surveys/3",
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000003",
       token: await adminToken(),
       method: "PUT",
       body: {
@@ -326,7 +326,7 @@ describe("PUT /surveys/:surveyId", () => {
 describe("DELETE /surveys/:surveyId", () => {
   test("deletes a closed survey and returns 204", async () => {
     const response = await request({
-      path: "/survey/surveys/3",
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000003",
       token: await adminToken(),
       method: "DELETE",
     })
@@ -336,7 +336,7 @@ describe("DELETE /surveys/:surveyId", () => {
 
   test("returns 409 when deleting an open survey", async () => {
     const response = await request({
-      path: "/survey/surveys/1",
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000001",
       token: await adminToken(),
       method: "DELETE",
     })
@@ -346,7 +346,7 @@ describe("DELETE /surveys/:surveyId", () => {
 
   test("returns 403 for a non-admin", async () => {
     const response = await request({
-      path: "/survey/surveys/1",
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000001",
       token: await memberToken(),
       method: "DELETE",
     })
@@ -356,7 +356,7 @@ describe("DELETE /surveys/:surveyId", () => {
 
   test("returns 404 for an unknown survey", async () => {
     const response = await request({
-      path: "/survey/surveys/9999",
+      path: "/survey/surveys/01900026-0000-7000-8000-00000000270f",
       token: await adminToken(),
       method: "DELETE",
     })
@@ -366,7 +366,7 @@ describe("DELETE /surveys/:surveyId", () => {
 
   test("returns 401 without a bearer token", async () => {
     const response = await request({
-      path: "/survey/surveys/1",
+      path: "/survey/surveys/01900026-0000-7000-8000-000000000001",
       token: null,
       method: "DELETE",
     })
@@ -387,11 +387,15 @@ describe("DELETE /surveys/:surveyId", () => {
     }
 
     // Close survey 1 directly so the deletion guard allows it.
-    await db.prepare("UPDATE surveys SET status = 'closed' WHERE id = 1").run()
+    await db
+      .prepare(
+        "UPDATE surveys SET status = 'closed' WHERE id = '01900026-0000-7000-8000-000000000001'",
+      )
+      .run()
 
     // Survey 1 has 3 seed responses. Confirm they exist via summary.
     const summaryBefore = await testApp.request(
-      "/survey/surveys/1/summary",
+      "/survey/surveys/01900026-0000-7000-8000-000000000001/summary",
       { method: "GET", headers: { Authorization: `Bearer ${token}` } },
       bindings,
     )
@@ -404,7 +408,7 @@ describe("DELETE /surveys/:surveyId", () => {
 
     // Delete the now-closed survey.
     const deleteRes = await testApp.request(
-      "/survey/surveys/1",
+      "/survey/surveys/01900026-0000-7000-8000-000000000001",
       { method: "DELETE", headers: { Authorization: `Bearer ${token}` } },
       bindings,
     )
@@ -413,7 +417,7 @@ describe("DELETE /surveys/:surveyId", () => {
 
     // Summary should now 404 because the survey is gone.
     const summaryAfter = await testApp.request(
-      "/survey/surveys/1/summary",
+      "/survey/surveys/01900026-0000-7000-8000-000000000001/summary",
       { method: "GET", headers: { Authorization: `Bearer ${token}` } },
       bindings,
     )

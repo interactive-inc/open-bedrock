@@ -5,7 +5,7 @@ import { z } from "zod"
 
 /** ===== thanks ===== */
 export const zAppThanks = z.object({
-  id: z.number().nullable(),
+  id: z.uuid().nullable(),
   sender_employee_id: zEmployeeId,
   sender_name: z.string(),
   recipient_employee_id: zEmployeeId,
@@ -22,7 +22,7 @@ export const zAppThanksList = z.object({
 
 /** Thanks ポイントの交換カタログ 1 件のレスポンス。 */
 export const zAppThanksReward = z.object({
-  id: z.number(),
+  id: z.uuid(),
   name: z.string(),
   point_cost: z.number(),
   is_active: z.boolean(),
@@ -38,9 +38,9 @@ export const zAppThanksRewardList = z.object({
 
 /** Thanks ポイントの交換申請 1 件のレスポンス。 */
 export const zAppThanksRedemption = z.object({
-  id: z.number().nullable(),
+  id: z.uuid().nullable(),
   employee_id: zEmployeeId,
-  reward_id: z.number(),
+  reward_id: z.uuid(),
   point_cost: z.number(),
   status: z.enum(["pending", "rejected", "fulfilled"]),
   created_at: z.string(),
@@ -56,18 +56,18 @@ export const zAppThanksRedemptionList = z.object({
 
 /** 交換申請の承認・却下の決定結果。stock_warning は承認時のみ含まれる。 */
 export const zAppThanksRedemptionDecision = z.object({
-  id: z.number(),
+  id: z.uuid(),
   status: z.enum(["pending", "rejected", "fulfilled"]),
   stock_warning: z.boolean().optional(),
 })
 
 /** 全社サンクス交換申請一覧（GET /thanks-redemptions/admin）の 1 件。申請者名・景品名を含む。 */
 export const zAppThanksRedemptionAdminItem = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   employee_name: z.string(),
   employee_dept_name: z.string().nullable(),
-  reward_id: z.number(),
+  reward_id: z.uuid(),
   reward_name: z.string(),
   point_cost: z.number(),
   status: z.enum(["pending", "rejected", "fulfilled"]),

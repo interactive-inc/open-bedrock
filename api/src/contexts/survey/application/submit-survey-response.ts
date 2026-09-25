@@ -14,7 +14,7 @@ type Context = Readonly<{
 }>
 
 export type Command = {
-  surveyId: number
+  surveyId: string
   respondentId: EmployeeId
   answersJson: unknown
   submittedAt: string

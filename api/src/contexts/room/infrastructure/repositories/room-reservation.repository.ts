@@ -5,7 +5,7 @@ import { roomReservations } from "@/contexts/room/infrastructure/schema/room"
 import { and, asc, eq, gt, lt, ne, sql } from "drizzle-orm"
 
 type OverlapQuery = {
-  roomId: number
+  roomId: string
   startAt: string
   endAt: string
   // 変更時に自分自身の予約を重複対象から除外するための予約 id。
@@ -221,7 +221,7 @@ export class RoomReservationRepository {
   }
 
   /** 指定した会議室に紐づく予約をすべて削除する。 */
-  async deleteByRoomId(roomId: number): Promise<null | Error> {
+  async deleteByRoomId(roomId: string): Promise<null | Error> {
     try {
       await this.c.var.database.delete(roomReservations).where(eq(roomReservations.roomId, roomId))
 

@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { ConflictError } from "@/lib/errors"
 import { isSurveyRecordSourceFrozenError } from "@/contexts/survey/infrastructure/repositories/lib/is-survey-record-source-frozen-error"
 import { SurveyRepository } from "@/contexts/survey/infrastructure/repositories/survey.repository"
@@ -26,11 +27,11 @@ function toResponseBody(response: SurveyResponse): AppSurveyResponse {
   })
 }
 
-/** パスパラメータの回答 id を数値に変換する。不正なら null。 */
-function toResponseId(value: string): number | null {
-  const parsed = Number(value)
+/** パスパラメータの回答 id を UUID として受け取る。不正なら null。 */
+function toResponseId(value: string): string | null {
+  const parsed = uuidSchema.safeParse(value)
 
-  return Number.isInteger(parsed) && parsed > 0 ? parsed : null
+  return parsed.success ? parsed.data : null
 }
 
 // @authorization owner - 本人のリソースに限定する

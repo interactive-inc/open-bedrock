@@ -52,7 +52,7 @@ function tokenFor(employeeId: number): Promise<string> {
 }
 
 /** recruitment:manage を持つ admin(E001) で募集を1件作り、その id を返す。 */
-async function createPosition(db: D1Database): Promise<number> {
+async function createPosition(db: D1Database): Promise<string> {
   const response = await requestWithContext({
     db,
     jwtSecret,
@@ -62,7 +62,7 @@ async function createPosition(db: D1Database): Promise<number> {
     body: { title: "Backend Engineer", department_code: "D003" },
   })
 
-  const body = (await response.json()) as { id: number }
+  const body = (await response.json()) as { id: string }
 
   return body.id
 }
@@ -73,7 +73,9 @@ describe("recruitment positions", () => {
 
     const positionId = await createPosition(db)
 
-    expect(positionId).toBeGreaterThan(0)
+    expect(positionId).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
+    )
 
     const list = await requestWithContext({
       db,
@@ -159,7 +161,7 @@ describe("recruitment candidates", () => {
 
     expect(created.status).toBe(201)
 
-    const candidate = (await created.json()) as { id: number; stage: string }
+    const candidate = (await created.json()) as { id: string; stage: string }
 
     expect(candidate.stage).toBe("applied")
 
@@ -193,7 +195,7 @@ describe("recruitment candidates", () => {
       body: { name: "Applicant Two" },
     })
 
-    const candidate = (await created.json()) as { id: number }
+    const candidate = (await created.json()) as { id: string }
 
     // applied から interview へ飛ばすのは正順違反。
     const response = await requestWithContext({

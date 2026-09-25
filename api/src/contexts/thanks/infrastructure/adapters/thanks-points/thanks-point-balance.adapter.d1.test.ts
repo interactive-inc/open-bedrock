@@ -44,6 +44,7 @@ async function seedReceived(
   points: number,
 ): Promise<void> {
   await context.var.database.insert(thanks).values({
+    id: crypto.randomUUID(),
     senderEmployeeId: toWorkforceEmployeeId(99),
     recipientEmployeeId,
     message: "テスト",
@@ -60,6 +61,7 @@ async function seedRedemption(
   const rewardRows = await context.var.database
     .insert(thanksRewards)
     .values({
+      id: crypto.randomUUID(),
       name: "景品",
       pointCost: props.pointCost,
       stock: null,
@@ -75,6 +77,7 @@ async function seedRedemption(
   }
 
   await context.var.database.insert(thanksRedemptions).values({
+    id: crypto.randomUUID(),
     employeeId: toWorkforceEmployeeId(props.employeeId),
     rewardId,
     pointCost: props.pointCost,
@@ -191,6 +194,7 @@ describe("ThanksPointBalanceAdapter.getBalance", () => {
     )
 
     await context.var.database.insert(thanksPointBudgets).values({
+      id: crypto.randomUUID(),
       employeeId: toWorkforceEmployeeId(5),
       period: "2026-01",
       grantedPoints: 400,

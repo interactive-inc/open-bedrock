@@ -13,11 +13,11 @@ test("採用2台帳を停止中に人の承認で保全し、業務コードを�
     await createRecruitmentPreservationFixture()
   await database.exec(`INSERT INTO job_openings
     (id,title,department_code,status,note,created_at)
-    VALUES (1,'Engineer','engineering','open','Remote',
+    VALUES ('0190002e-0000-7000-8000-000000000001','Engineer','engineering','open','Remote',
       '2026-09-01T00:00:00.000Z')`)
   await database.exec(`INSERT INTO recruitment_candidates
     (id,position_id,name,email,source,stage,note,created_at)
-    VALUES (2,1,'Applicant','person@example.test','referral','interview','Private',
+    VALUES ('0190002f-0000-7000-8000-000000000002','0190002e-0000-7000-8000-000000000001','Applicant','person@example.test','referral','interview','Private',
       '2026-09-15T12:00:00.000Z')`)
   const token = await tokenFor(creator.accountId)
   const stepUpToken = "e".repeat(64)
@@ -54,8 +54,8 @@ test("採用2台帳を停止中に人の承認で保全し、業務コードを�
     )
   }
   const sources = [
-    ["recruitment-position-record", "1"],
-    ["recruitment-candidate-record", "2"],
+    ["recruitment-position-record", "0190002e-0000-7000-8000-000000000001"],
+    ["recruitment-candidate-record", "0190002f-0000-7000-8000-000000000002"],
   ] as const
   const preservedIds: string[] = []
   for (const [recordKind, recordId] of sources) {
