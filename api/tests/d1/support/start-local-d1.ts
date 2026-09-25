@@ -2,6 +2,7 @@ import { splitSqlStatements } from "@/lib/database/split-sql-statements"
 import { Miniflare } from "miniflare"
 import {
   installWorkerdStdioGuard,
+  runningWorkerdPids,
   takeWorkerdStdioFailures,
 } from "@tests/d1/support/guard-workerd-stdio"
 import {
@@ -76,6 +77,8 @@ let scratchRoot: string | null = null
 type SharedRuntime = {
   runtime: Miniflare
   persist: string
+  /** 起動したworkerdのpid。これが動いていなければ、以降のファイルには新しいworkerdを使う。 */
+  pid: number | undefined
   nextMigrated: number
   nextEmpty: number
 }
@@ -183,6 +186,10 @@ async function reserve(migrated: number, empty: number): Promise<SharedRuntime> 
   let current = shared === null ? null : await shared.catch(() => null)
   if (
     current === null ||
+    // bun test は test がtimeoutすると動いている子プロセスを全て止める。止められたworkerdは
+    // Miniflareが作り直すが、作り直す前の要求は届かないため、次のファイルからは新しいworkerdを使う。
+    current.pid === undefined ||
+    !runningWorkerdPids().includes(current.pid) ||
     current.nextMigrated + migrated > RUNTIME_MIGRATED_SLOT_COUNT ||
     current.nextEmpty + empty > RUNTIME_EMPTY_SLOT_COUNT
   ) {
@@ -219,10 +226,15 @@ async function createSharedRuntime(): Promise<SharedRuntime> {
     mkdirSync(join(persist, D1_OBJECT_DIRECTORY), { recursive: true })
     return persist
   }
+  const before = new Set(runningWorkerdPids())
   const { runtime, persist } = await startRuntime(preparePersist, {
     create: (directory) => createRuntime(directory, bindings),
   })
-  return { runtime, persist, nextMigrated: 0, nextEmpty: 0 }
+  // 起動を作り直した場合は、最後に起動したworkerdが使われる。
+  const pid = runningWorkerdPids()
+    .filter((candidate) => !before.has(candidate))
+    .at(-1)
+  return { runtime, persist, pid, nextMigrated: 0, nextEmpty: 0 }
 }
 
 function migratedBindingFor(index: number): string {

@@ -6,8 +6,8 @@ let installed = false
 
 const failures: unknown[] = []
 
-/** 動いているworkerdのpid。 */
-const running = new Set<number>()
+/** 動いているworkerdのpidと、その終了を待つpromise。 */
+const running = new Map<number, Promise<void>>()
 
 /**
  * Miniflareが起動するworkerdの子プロセスについて、起動とstdioの失敗を受け止める。
@@ -49,7 +49,12 @@ export function takeWorkerdStdioFailures(): unknown[] {
 
 /** 動いているworkerdのpid。止まった要求の記録や、testがworkerdの終了を再現する時に使う。 */
 export function runningWorkerdPids(): ReadonlyArray<number> {
-  return [...running]
+  return [...running.keys()]
+}
+
+/** 指定したworkerdが終了するまで待つ。既に終了していればすぐに返る。 */
+export function workerdExited(pid: number): Promise<void> {
+  return running.get(pid) ?? Promise.resolve()
 }
 
 function isWorkerd(command: unknown): boolean {
@@ -60,10 +65,18 @@ function guard(child: ChildProcess): void {
   child.on("error", (error: unknown) => {
     failures.push(error)
   })
-  if (child.pid !== undefined) running.add(child.pid)
-  child.on("exit", () => {
-    if (child.pid !== undefined) running.delete(child.pid)
-  })
+  const pid = child.pid
+  if (pid !== undefined) {
+    running.set(
+      pid,
+      new Promise<void>((resolve) => {
+        child.once("exit", () => {
+          running.delete(pid)
+          resolve()
+        })
+      }),
+    )
+  }
   for (const stream of child.stdio) {
     stream?.on("error", (error: unknown) => {
       failures.push(error)
