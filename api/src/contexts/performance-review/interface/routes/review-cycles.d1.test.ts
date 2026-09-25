@@ -16,7 +16,7 @@ let pool: LocalD1Pool
 setDefaultTimeout(30_000)
 
 beforeAll(async () => {
-  pool = await startLocalD1Pool(24)
+  pool = await startLocalD1Pool(4)
 })
 
 afterAll(async () => {
@@ -66,9 +66,9 @@ function adminToken(): Promise<string> {
   })
 }
 
-async function createCycle(period: string): Promise<Response> {
+async function createCycle(db: D1Database, period: string): Promise<Response> {
   return requestWithContext({
-    db: await createTestDb(),
+    db,
     jwtSecret,
     path: "/performance-review/review-cycles",
     token: await adminToken(),
@@ -77,9 +77,9 @@ async function createCycle(period: string): Promise<Response> {
   })
 }
 
-async function updateCycle(period: string): Promise<Response> {
+async function updateCycle(db: D1Database, period: string): Promise<Response> {
   return requestWithContext({
-    db: await createTestDb(),
+    db,
     jwtSecret,
     path: "/performance-review/review-cycles/01900032-0000-7000-8000-000000000003",
     token: await adminToken(),
@@ -87,6 +87,8 @@ async function updateCycle(period: string): Promise<Response> {
     body: { title: "期間書式の検証", period },
   })
 }
+
+// 1 件の DB の用意は CI で 2 秒を超える。表記ごとに用意すると test の制限に近づくため、test ごとに 1 件を使う。
 
 /** 目標とサイクルは period 文字列だけで突き合わせるため、揺れた表記を入口で弾く。 */
 const malformed = [
@@ -104,16 +106,18 @@ const malformed = [
 
 describe("POST /review-cycles の期間書式", () => {
   test("accepts YYYY-H1 and YYYY-H2", async () => {
+    const db = await createTestDb()
     for (const period of ["2026-H1", "2026-H2", "1999-H2"]) {
-      const response = await createCycle(period)
+      const response = await createCycle(db, period)
 
       expect(response.status).toBe(201)
     }
   })
 
   test("rejects a malformed period", async () => {
+    const db = await createTestDb()
     for (const period of malformed) {
-      const response = await createCycle(period)
+      const response = await createCycle(db, period)
 
       expect(response.status).toBe(400)
     }
@@ -122,14 +126,15 @@ describe("POST /review-cycles の期間書式", () => {
 
 describe("PUT /review-cycles/:cycleId の期間書式", () => {
   test("accepts YYYY-H1 and YYYY-H2", async () => {
-    const response = await updateCycle("2027-H1")
+    const response = await updateCycle(await createTestDb(), "2027-H1")
 
     expect(response.status).toBe(200)
   })
 
   test("rejects a malformed period", async () => {
+    const db = await createTestDb()
     for (const period of malformed) {
-      const response = await updateCycle(period)
+      const response = await updateCycle(db, period)
 
       expect(response.status).toBe(400)
     }

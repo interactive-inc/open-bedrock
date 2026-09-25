@@ -1,8 +1,9 @@
-import { Database } from "bun:sqlite"
+import type { Database } from "bun:sqlite"
 import { expect, test } from "bun:test"
-import { readdirSync, readFileSync } from "node:fs"
+import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { executeSql } from "../../scripts/sql-statements"
+import { createSqliteDatabaseBeforeMigration } from "@tests/api/support/migrated-sqlite-database"
 
 const MIGRATIONS_ROOT = resolve(import.meta.dir, "..", "..", "migrations")
 const TARGET = "0326_decouple_business_context_references.sql"
@@ -17,14 +18,8 @@ function triggerNames(database: Database, table: string): string[] {
 }
 
 test("業務間の列名参照の改名は行と値と保全triggerを保持する", () => {
-  const database = new Database(":memory:")
+  const database = createSqliteDatabaseBeforeMigration(TARGET)
   try {
-    const files = readdirSync(MIGRATIONS_ROOT)
-      .filter((file) => file.endsWith(".sql"))
-      .sort()
-    for (const file of files.filter((file) => file < TARGET))
-      executeSql(database, readFileSync(resolve(MIGRATIONS_ROOT, file), "utf8"), file)
-
     // 従業員台帳の用意は検査対象外のため、改名前後の値だけを見る。
     database.query("PRAGMA foreign_keys = OFF").run()
     database

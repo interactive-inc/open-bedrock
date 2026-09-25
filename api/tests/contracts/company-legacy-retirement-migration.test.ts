@@ -1,7 +1,11 @@
 import { Database } from "bun:sqlite"
 import { executeSql } from "../../scripts/sql-statements"
+import {
+  createSqliteDatabaseAfterMigrations,
+  listMigrationFiles,
+} from "@tests/api/support/migrated-sqlite-database"
 import { expect, test } from "bun:test"
-import { readFileSync, readdirSync } from "node:fs"
+import { readFileSync } from "node:fs"
 import { join } from "node:path"
 
 const retirementMigration = readFileSync(
@@ -61,15 +65,9 @@ function fixture() {
 }
 
 test("撤去前までの全migrationを適用したschemaで検査できる", () => {
-  using database = new Database(":memory:")
-  const directory = join(import.meta.dir, "../../migrations")
-  for (const filename of readdirSync(directory)
-    .filter(
-      (name) => name.endsWith(".sql") && name !== "0214_retire_company_legacy_definitions.sql",
-    )
-    .sort()) {
-    executeSql(database, readFileSync(join(directory, filename), "utf8"), filename)
-  }
+  using database = createSqliteDatabaseAfterMigrations(
+    listMigrationFiles().filter((name) => name !== "0214_retire_company_legacy_definitions.sql"),
+  )
   executeSql(database, retirementMigration, "legacy retirement")
   expect(
     database

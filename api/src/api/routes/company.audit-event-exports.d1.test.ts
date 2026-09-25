@@ -20,7 +20,7 @@ let pool: LocalD1Pool
 setDefaultTimeout(30_000)
 
 beforeAll(async () => {
-  pool = await startLocalD1Pool(31)
+  pool = await startLocalD1Pool(20)
 })
 
 afterAll(async () => {
@@ -308,8 +308,10 @@ describe("POST /audit-event-exports", () => {
       { from: exportRange.from, to: "2026-02-01T00:00:01Z" },
     ]
 
+    // 1 件の DB の用意は CI で 2 秒を超えるため、範囲ごとに作らず同じ DB へ送る。
+    // 拒否は書込みの前に起きることを、範囲ごとに監査行の件数で確かめる。
+    const { db } = await createTestDb()
     for (const body of invalidBodies) {
-      const { db } = await createTestDb()
       const before = await countAuditRows(db)
       const response = await request(db, await token(3), body)
 
@@ -325,8 +327,8 @@ describe("POST /audit-event-exports", () => {
   })
 
   test("rejects broken JSON and a non-object body with the fixed safe code", async () => {
+    const { db } = await createTestDb()
     for (const raw of ["{", "null", "[]"] as const) {
-      const { db } = await createTestDb()
       const response = await rawRequest(db, await token(3), raw)
 
       expect(response.status).toBe(400)

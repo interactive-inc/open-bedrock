@@ -1,8 +1,8 @@
 import type { Database } from "bun:sqlite"
-import { readdirSync, readFileSync } from "node:fs"
+import { readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { uuidSchema } from "@/lib/validation/uuid.schema"
-import { createMigratedSqliteDatabase } from "./migrated-sqlite-database"
+import { createSqliteDatabaseBeforeMigration } from "./migrated-sqlite-database"
 import { splitSqlStatements } from "@/lib/database/split-sql-statements"
 
 const MIGRATIONS_ROOT = resolve(import.meta.dir, "..", "..", "..", "migrations")
@@ -12,12 +12,7 @@ const MIGRATIONS_ROOT = resolve(import.meta.dir, "..", "..", "..", "migrations")
  * 行の用意は検査対象外のため、呼び出し側は外部キーと CHECK を外して最小の行を入れてよい。
  */
 export function databaseBefore(target: string): Database {
-  const schema = readdirSync(MIGRATIONS_ROOT)
-    .filter((file) => file.endsWith(".sql") && file < target)
-    .sort()
-    .map((file) => readFileSync(resolve(MIGRATIONS_ROOT, file), "utf8"))
-    .join("\n;\n")
-  return createMigratedSqliteDatabase(schema)
+  return createSqliteDatabaseBeforeMigration(target)
 }
 
 /** 対象の migration を 1 文ずつ当てる。D1 と同じく文の途中で失敗すれば例外を投げる。 */
