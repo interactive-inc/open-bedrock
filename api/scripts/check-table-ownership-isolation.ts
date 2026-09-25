@@ -157,7 +157,20 @@ async function listProductionSources(): Promise<{ context: string; path: string 
  * import境界の検査はSQL文字列と外部キーによる他contextへの依存を検出できないため、
  * 業務contextの物理除去が他の業務と基盤のtableを壊さないことをここで固定する。
  */
-export async function collectTableOwnershipViolations(): Promise<TableOwnershipViolation[]> {
+/** 全 migration を当てた DB を返す。検査は既定でこれを使い、test は同じ状態の複製を渡せる。 */
+function migrateAll(): Database {
+  const database = new Database(":memory:")
+  const migrationFiles = readdirSync(MIGRATIONS_ROOT)
+    .filter((file) => file.endsWith(".sql"))
+    .sort()
+  for (const file of migrationFiles)
+    executeSql(database, readFileSync(resolve(MIGRATIONS_ROOT, file), "utf8"), `migration ${file}`)
+  return database
+}
+
+export async function collectTableOwnershipViolations(
+  database: Database = migrateAll(),
+): Promise<TableOwnershipViolation[]> {
   const violations: TableOwnershipViolation[] = []
   const contexts = listContexts()
   const sources = await listProductionSources()
@@ -171,12 +184,6 @@ export async function collectTableOwnershipViolations(): Promise<TableOwnershipV
     }
   }
 
-  const database = new Database(":memory:")
-  const migrationFiles = readdirSync(MIGRATIONS_ROOT)
-    .filter((file) => file.endsWith(".sql"))
-    .sort()
-  for (const file of migrationFiles)
-    executeSql(database, readFileSync(resolve(MIGRATIONS_ROOT, file), "utf8"), `migration ${file}`)
   const tables = database
     .query<{ name: string }, []>(
       "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '\\_cf\\_%' ESCAPE '\\' ORDER BY name",

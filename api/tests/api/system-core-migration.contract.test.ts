@@ -16,12 +16,18 @@ function applyMigrations(database: Database, files: readonly string[]): void {
   }
 }
 
-test("released migrations preserve data and match the canonical System schema", () => {
-  const database = new Database(":memory:")
-  database.exec("PRAGMA foreign_keys = ON")
+// 既存の行を入れた後に残りの migration をすべて当てること自体が検査対象で、複製では置き換えられない。
+// 全 migration の適用は CI で 5 秒近くかかるため、既定の制限ではなくこの検査の所要時間に合わせる。
+const MIGRATING_EXISTING_ROWS_TIMEOUT_MS = 30_000
 
-  applyMigrations(database, migrationFiles.slice(0, 7))
-  database.exec(`
+test(
+  "released migrations preserve data and match the canonical System schema",
+  () => {
+    const database = new Database(":memory:")
+    database.exec("PRAGMA foreign_keys = ON")
+
+    applyMigrations(database, migrationFiles.slice(0, 7))
+    database.exec(`
     INSERT INTO system_accounts
       (id, status, token_version, created_at, updated_at)
     VALUES ('account-existing', 'active', 0, 100, 100);
@@ -39,36 +45,42 @@ test("released migrations preserve data and match the canonical System schema", 
     VALUES ('message-existing', 'system:test', 'Existing', 100);
   `)
 
-  applyMigrations(database, migrationFiles.slice(7))
+    applyMigrations(database, migrationFiles.slice(7))
 
-  expect(
-    database.query("SELECT id, closed_at FROM system_accounts WHERE id = 'account-existing'").get(),
-  ).toEqual({ id: "account-existing", closed_at: null })
-  expect(
-    database
-      .query(
-        "SELECT identity_id, can_receive_email FROM system_identity_profiles WHERE identity_id = 'identity-existing'",
+    expect(
+      database
+        .query("SELECT id, closed_at FROM system_accounts WHERE id = 'account-existing'")
+        .get(),
+    ).toEqual({ id: "account-existing", closed_at: null })
+    expect(
+      database
+        .query(
+          "SELECT identity_id, can_receive_email FROM system_identity_profiles WHERE identity_id = 'identity-existing'",
+        )
+        .get(),
+    ).toEqual({ identity_id: "identity-existing", can_receive_email: 1 })
+    expect(
+      database
+        .query(
+          "SELECT id, action_url, priority, dedupe_key FROM system_notification_messages WHERE id = 'message-existing'",
+        )
+        .get(),
+    ).toEqual({ id: "message-existing", action_url: null, priority: "normal", dedupe_key: null })
+
+    for (const declaration of Object.values(systemCoreSchema)) {
+      const table = getTableConfig(declaration)
+      const actualColumns = database
+        .query<{ name: string }, []>(`PRAGMA table_info(${table.name})`)
+        .all()
+        .map((column) => column.name)
+
+      expect(actualColumns.toSorted()).toEqual(
+        table.columns.map((column) => column.name).toSorted(),
       )
-      .get(),
-  ).toEqual({ identity_id: "identity-existing", can_receive_email: 1 })
-  expect(
-    database
-      .query(
-        "SELECT id, action_url, priority, dedupe_key FROM system_notification_messages WHERE id = 'message-existing'",
-      )
-      .get(),
-  ).toEqual({ id: "message-existing", action_url: null, priority: "normal", dedupe_key: null })
+    }
 
-  for (const declaration of Object.values(systemCoreSchema)) {
-    const table = getTableConfig(declaration)
-    const actualColumns = database
-      .query<{ name: string }, []>(`PRAGMA table_info(${table.name})`)
-      .all()
-      .map((column) => column.name)
-
-    expect(actualColumns.toSorted()).toEqual(table.columns.map((column) => column.name).toSorted())
-  }
-
-  expect(database.query("PRAGMA foreign_key_check").all()).toEqual([])
-  database.close()
-})
+    expect(database.query("PRAGMA foreign_key_check").all()).toEqual([])
+    database.close()
+  },
+  MIGRATING_EXISTING_ROWS_TIMEOUT_MS,
+)

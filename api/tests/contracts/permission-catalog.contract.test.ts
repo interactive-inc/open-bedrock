@@ -1,7 +1,7 @@
 import { PERMISSION_CATALOG } from "@/api/http/permissions/permission.catalog"
 import { PERMISSION_KEYS } from "@/api/http/permissions/permission-key.catalog"
 import { loadSchema } from "@tests/api/support/load-schema"
-import { createMigratedSqliteDatabase } from "@tests/api/support/migrated-sqlite-database"
+import { createFullyMigratedSqliteDatabase } from "@tests/api/support/migrated-sqlite-database"
 import { describe, expect, test } from "bun:test"
 import { readFileSync, readdirSync } from "node:fs"
 import { resolve } from "node:path"
@@ -74,7 +74,7 @@ describe("permission catalog contract", () => {
 
   test("system_iam_role_permissionsのseed行がすべてPERMISSION_KEYSに含まれる", () => {
     const keySet = new Set<string>(PERMISSION_KEYS)
-    const db = createMigratedSqliteDatabase(loadSchema())
+    const db = createFullyMigratedSqliteDatabase()
 
     const rows = db
       .query<{ permission_key: string }, []>(

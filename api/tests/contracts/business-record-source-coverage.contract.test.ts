@@ -1,14 +1,12 @@
-import { Database } from "bun:sqlite"
 import { Glob } from "bun"
 import { expect, test } from "bun:test"
 import { readdirSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { resolveTableOwner } from "../../scripts/check-table-ownership-isolation"
-import { executeSql } from "../../scripts/sql-statements"
+import { createFullyMigratedSqliteDatabase } from "@tests/api/support/migrated-sqlite-database"
 
 const PROJECT_ROOT = resolve(import.meta.dir, "..", "..")
 const CONTEXTS_ROOT = resolve(PROJECT_ROOT, "src", "contexts")
-const MIGRATIONS_ROOT = resolve(PROJECT_ROOT, "migrations")
 const FOUNDATION_CONTEXTS = new Set(["system", "company"])
 
 type Source = Readonly<{ context: string; file: string; text: string }>
@@ -22,16 +20,6 @@ async function readProductionSources(): Promise<Source[]> {
     sources.push({ context, file, text: readFileSync(resolve(CONTEXTS_ROOT, file), "utf8") })
   }
   return sources
-}
-
-function migrate(): Database {
-  const database = new Database(":memory:")
-  const files = readdirSync(MIGRATIONS_ROOT)
-    .filter((file) => file.endsWith(".sql"))
-    .sort()
-  for (const file of files)
-    executeSql(database, readFileSync(resolve(MIGRATIONS_ROOT, file), "utf8"), `migration ${file}`)
-  return database
 }
 
 function escape(value: string): string {
@@ -51,7 +39,7 @@ async function listBusinessTables() {
         declaredOwners.set(table, source.context)
     }
   }
-  const database = migrate()
+  const database = createFullyMigratedSqliteDatabase()
   const tables = database
     .query<{ name: string }, []>(
       "SELECT name FROM sqlite_master WHERE type='table' AND name NOT LIKE 'sqlite_%' AND name NOT LIKE '\\_cf\\_%' ESCAPE '\\' ORDER BY name",
