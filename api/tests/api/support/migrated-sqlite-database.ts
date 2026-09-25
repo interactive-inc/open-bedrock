@@ -2,6 +2,7 @@ import { Database } from "bun:sqlite"
 import { readdirSync, readFileSync } from "node:fs"
 import { resolve } from "node:path"
 import { executeSql } from "../../../scripts/sql-statements"
+import { loadSchema } from "./load-schema"
 
 type SchemaTemplate = {
   buffer: Uint8Array
@@ -120,6 +121,15 @@ export function createSqliteDatabaseAfterMigrations(
 export function warmMigratedSqliteTemplates(): void {
   createFullyMigratedSqliteDatabase().close()
   createFullyMigratedSqliteDatabase({ foreignKeys: true }).close()
+
+  // 互換ラッパーは loadSchema() の全文を createMigratedSqliteDatabase に渡す。全文を一度に当てた状態は
+  // 1 本ずつ当てた状態と schema・行・foreign_keys が同じで、migration が作る乱数の UUID だけが異なる。
+  // 同じ状態を登録し、全文の適用を test の中で行わない。
+  const full = sequenceTemplates.get(
+    sequenceKey(listMigrationFiles(), listMigrationFiles().length, false),
+  )
+  if (full !== undefined && !schemaTemplates.has(loadSchema()))
+    schemaTemplates.set(loadSchema(), full)
 }
 
 function sequenceKey(files: readonly string[], count: number, foreignKeys: boolean): string {
