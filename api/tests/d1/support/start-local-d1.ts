@@ -56,11 +56,15 @@ const MIGRATED_SLOT_COUNT = 64
 /**
  * 1つのworkerdに載せるmigration済みDBの枠数。複製先の database id を固定の枠にし、
  * そのSQLiteファイル名をtemplate作成時に一度だけ調べる。使い切ったらworkerdを作り直す。
+ *
+ * MiniflareはworkerdへDB数に比例する設定を標準入力で渡す。Bunはこの書込みを途中で
+ * 止めることがあり、設定が大きいほど起動が止まりやすいため、1つのworkerdの枠は
+ * 1ファイルの上限と同じ数に留める。
  */
-const RUNTIME_MIGRATED_SLOT_COUNT = 512
+const RUNTIME_MIGRATED_SLOT_COUNT = MIGRATED_SLOT_COUNT
 
 /** 1つのworkerdに載せる空DBの枠数。 */
-const RUNTIME_EMPTY_SLOT_COUNT = 128
+const RUNTIME_EMPTY_SLOT_COUNT = 32
 
 let migrationStatements: ReadonlyArray<ReadonlyArray<string>> | null = null
 
@@ -104,6 +108,10 @@ export async function startLocalD1(databases: LocalD1Databases): Promise<LocalD1
 
   if (migrated.length > MIGRATED_SLOT_COUNT) {
     throw new Error(`declare at most ${MIGRATED_SLOT_COUNT} migrated local D1 databases per file`)
+  }
+
+  if (empty.length > RUNTIME_EMPTY_SLOT_COUNT) {
+    throw new Error(`declare at most ${RUNTIME_EMPTY_SLOT_COUNT} empty local D1 databases per file`)
   }
 
   const source = migrated.length > 0 ? await buildTemplate() : null
