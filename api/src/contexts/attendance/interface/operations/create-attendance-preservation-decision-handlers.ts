@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { prepareCompanyRecordProcedureDecision } from "@/contexts/company/interface/operations/prepare-company-record-procedure-decision"
 import { z } from "zod"
 import { zValidator } from "@hono/zod-validator"
@@ -13,7 +14,7 @@ export function createAttendancePreservationDecisionHandlers(action: "approve" |
     zValidator(
       "param",
       z.strictObject({
-        id: z.coerce.number().int().positive().safe(),
+        id: uuidSchema,
         number: z.coerce.number().int().positive().safe(),
       }),
     ),

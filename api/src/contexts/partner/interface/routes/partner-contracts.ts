@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { CreateContract } from "@/contexts/partner/application/contract/create-contract"
 import { PartnerRepository } from "@/contexts/partner/infrastructure/repositories/partner.repository"
 import { ContractRepository } from "@/contexts/partner/infrastructure/repositories/contract/contract.repository"
@@ -75,10 +76,10 @@ export const GET = factory.createHandlers(
     const conditions: Array<SQL> = []
 
     if (query.partner_id !== undefined && query.partner_id !== "") {
-      const partnerId = Number(query.partner_id)
+      const partnerId = uuidSchema.safeParse(query.partner_id)
 
-      if (Number.isInteger(partnerId)) {
-        conditions.push(eq(contracts.partnerId, partnerId))
+      if (partnerId.success) {
+        conditions.push(eq(contracts.partnerId, partnerId.data))
       }
     }
 
@@ -126,7 +127,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "json",
     z.object({
-      partner_id: z.number().int().positive(),
+      partner_id: uuidSchema,
       title: z.string().min(1).max(500),
       contract_date: isoDate,
       starts_on: isoDate.optional(),

@@ -24,7 +24,15 @@ afterAll(async () => {
 
 test("欠番・複数ページを停止世代へ束縛し、解除して再停止しても旧ページを確定できない", async () => {
   const f = await createAttendanceRecordSourceFixture(await local.database("bound-pages"))
-  await f.database.prepare("UPDATE attendance_records SET id=900 WHERE id=2").run()
+  // 主キーは変更できないので、欠番は削除と別IDでの再作成で作る。
+  await f.database.batch([
+    f.database.prepare(
+      "DELETE FROM attendance_records WHERE id='01900016-0000-7000-8000-000000000002'",
+    ),
+    f.database.prepare(
+      "INSERT INTO attendance_records (id,employee_id,work_date,status) VALUES ('01900016-0000-7000-8000-000000000384','employee:worker','2026-08-31','closed')",
+    ),
+  ])
   const repository = openSystemRecordSourceFreezes({ env: f.context.env, assertions: [] })
   const command = {
     id: crypto.randomUUID(),
@@ -37,7 +45,7 @@ test("欠番・複数ページを停止世代へ束縛し、解除して再停�
   const input = {
     freezeId: command.id,
     sourceNamespace: command.sourceNamespace,
-    afterId: 0,
+    afterId: "01900016-0000-7000-8000-000000000000",
     limit: 1,
   }
   expect(await adapter.prepare(input)).toBeInstanceOf(Error)
@@ -46,15 +54,18 @@ test("欠番・複数ページを停止世代へ束縛し、解除して再停�
   ).toMatchObject({ kind: "created" })
   const first = await adapter.prepare(input)
   if (first instanceof Error) throw first
-  expect(first.recordIds).toEqual([1])
-  expect(first.nextAfterId).toBe(1)
-  const last = await adapter.prepare({ ...input, afterId: 1 })
+  expect(first.recordIds).toEqual(["01900016-0000-7000-8000-000000000001"])
+  expect(first.nextAfterId).toBe("01900016-0000-7000-8000-000000000001")
+  const last = await adapter.prepare({ ...input, afterId: "01900016-0000-7000-8000-000000000001" })
   if (last instanceof Error) throw last
-  expect(last.recordIds).toEqual([900])
+  expect(last.recordIds).toEqual(["01900016-0000-7000-8000-000000000384"])
   expect(last.nextAfterId).toBeNull()
   const all = await adapter.prepare({ ...input, limit: 100 })
   if (all instanceof Error) throw all
-  expect(all.recordIds).toEqual([1, 900])
+  expect(all.recordIds).toEqual([
+    "01900016-0000-7000-8000-000000000001",
+    "01900016-0000-7000-8000-000000000384",
+  ])
   expect(all.nextAfterId).toBeNull()
   expect(await adapter.prepare({ ...input, sourceNamespace: "other" })).toBeInstanceOf(Error)
   expect(await adapter.prepare({ ...input, limit: 101 })).toBeInstanceOf(Error)
@@ -98,7 +109,12 @@ test("空の停止対象は空ページを返すが、取得後の権限取消�
     f.clock.now,
   )
   const adapter = new ListFrozenAttendanceRecordPageAdapter(f.context)
-  const input = { freezeId: id, sourceNamespace: "example-source", afterId: 0, limit: 100 }
+  const input = {
+    freezeId: id,
+    sourceNamespace: "example-source",
+    afterId: "01900016-0000-7000-8000-000000000000",
+    limit: 100,
+  }
   const page = await adapter.prepare(input)
   if (page instanceof Error) throw page
   expect(page.recordIds).toEqual([])
@@ -116,7 +132,7 @@ test("100件の上限を超える原記録を重複なく全ページ取得す�
     f.database,
     `WITH RECURSIVE ids(n) AS (SELECT 3 UNION ALL SELECT n+1 FROM ids WHERE n<205)
     INSERT INTO attendance_records (id,employee_id,work_date,status)
-    SELECT n,'employee:worker','2026-09-01','closed' FROM ids`,
+    SELECT printf('01900016-0000-7000-8000-%012x', n),'employee:worker','2026-09-01','closed' FROM ids`,
   )
   const id = crypto.randomUUID()
   const repository = openSystemRecordSourceFreezes({ env: f.context.env, assertions: [] })
@@ -131,19 +147,21 @@ test("100件の上限を超える原記録を重複なく全ページ取得す�
     f.clock.now,
   )
   const adapter = new ListFrozenAttendanceRecordPageAdapter(f.context)
-  const pages: number[][] = []
-  for (const afterId of [0, 100, 200]) {
+  const recordId = (serial: number) =>
+    `01900016-0000-7000-8000-${serial.toString(16).padStart(12, "0")}`
+  const pages: string[][] = []
+  for (const after of [0, 100, 200]) {
     const page = await adapter.prepare({
       freezeId: id,
       sourceNamespace: "example-source",
-      afterId,
+      afterId: recordId(after),
       limit: 100,
     })
     if (page instanceof Error) throw page
     expect(page.recordIds.length).toBeLessThanOrEqual(100)
-    expect(page.nextAfterId).toBe(afterId === 200 ? null : afterId + 100)
+    expect(page.nextAfterId).toBe(after === 200 ? null : recordId(after + 100))
     pages.push([...page.recordIds])
     await f.database.batch([...page.assertions])
   }
-  expect(pages.flat()).toEqual(Array.from({ length: 205 }, (_, index) => index + 1))
+  expect(pages.flat()).toEqual(Array.from({ length: 205 }, (_, index) => recordId(index + 1)))
 })

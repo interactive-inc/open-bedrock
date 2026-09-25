@@ -47,7 +47,7 @@ export class ListFrozenAssetRecordPageAdapter {
         ...generation.assertions,
       ]
       const reads = await this.c.env.DB.batch<{
-        record_id: string | number
+        record_id: string
         stocktake_id?: string
         asset_code?: string
       }>(statements)
@@ -82,17 +82,16 @@ export class ListFrozenAssetRecordPageAdapter {
             values: [cursor, limit],
           }
     if (kind === "asset-lending-record") {
-      const after = cursor === null ? null : Number(cursor)
-      if (after !== null && (!Number.isSafeInteger(after) || String(after) !== cursor))
+      if (cursor !== null && !z.uuid().safeParse(cursor).success)
         return new Error("invalid lending cursor")
-      return after === null
+      return cursor === null
         ? {
-            sql: "SELECT id AS record_id FROM asset_lendings ORDER BY id LIMIT ?1",
+            sql: "SELECT id AS record_id FROM asset_lendings ORDER BY id COLLATE BINARY LIMIT ?1",
             values: [limit],
           }
         : {
-            sql: "SELECT id AS record_id FROM asset_lendings WHERE id>?1 ORDER BY id LIMIT ?2",
-            values: [after, limit],
+            sql: "SELECT id AS record_id FROM asset_lendings WHERE id COLLATE BINARY>?1 ORDER BY id COLLATE BINARY LIMIT ?2",
+            values: [cursor, limit],
           }
     }
     if (kind === "stocktake-record")

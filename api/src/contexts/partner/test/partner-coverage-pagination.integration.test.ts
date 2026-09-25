@@ -10,20 +10,27 @@ import { GET as preservedDossier } from "@system/interface/routes/system.preserv
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { drizzle } from "drizzle-orm/d1"
 
-test("負数・0を含む取引先11件と契約記録を分割照合し撤去確定する", async () => {
+/** 旧来の整数の並びと同じ辞書順になる固定の UUID。照合の続き位置を決まった値で確かめる。 */
+function partnerId(serial: number): string {
+  return `0190001d-0000-7000-8000-${String(serial).padStart(12, "0")}`
+}
+
+const CONTRACT_ID = "0190001e-0000-7000-8000-000000000001"
+
+test("取引先11件と契約記録を分割照合し撤去確定する", async () => {
   const { database, governance, creator, reviewer, definition, bindings, tokenFor, request } =
     await createPartnerPreservationFixture()
-  for (let id = -9; id <= 1; id++) {
+  for (let serial = 1; serial <= 11; serial++) {
     await database
       .prepare(`INSERT INTO partners
       (id,code,name,category,corporate_number,note,status,created_at)
       VALUES (?1,?2,?3,'supplier',NULL,NULL,'active','2026-09-01T00:00:00.000Z')`)
-      .bind(id, `vendor-${id}`, `Vendor ${id}`)
+      .bind(partnerId(serial), `vendor-${serial}`, `Vendor ${serial}`)
       .run()
   }
   await database.exec(`INSERT INTO partner_contracts
     (id,partner_id,title,contract_date,starts_on,ends_on,renewal_deadline,note,created_at)
-    VALUES (1,-9,'Service Agreement','2026-09-15','2026-10-01','2027-09-30',
+    VALUES ('${CONTRACT_ID}','${partnerId(1)}','Service Agreement','2026-09-15','2026-10-01','2027-09-30',
       '2027-08-31','Annual renewal','2026-09-15T12:00:00.000Z')`)
   const token = await tokenFor(creator.accountId)
   const stepUpToken = "f".repeat(64)
@@ -72,9 +79,9 @@ test("負数・0を含む取引先11件と契約記録を分割照合し撤去�
   const sources = [
     ...Array.from({ length: 11 }, (_, index) => ({
       kind: "partner-record" as const,
-      id: String(index - 9),
+      id: partnerId(index + 1),
     })),
-    { kind: "partner-contract-record" as const, id: "1" },
+    { kind: "partner-contract-record" as const, id: CONTRACT_ID },
   ]
   for (const source of sources) {
     const path = `/partner/records/${source.kind}/${encodeURIComponent(source.id)}/preservation-requests`
@@ -136,7 +143,11 @@ test("負数・0を含む取引先11件と契約記録を分割照合し撤去�
     post(coveragePath, { purpose: "archive", recordKind, records })
   const first = await cover("partner-record", partnerMappings.slice(0, 10))
   if (first.status !== 200) throw new Error(await first.text())
-  expect(await first.json()).toMatchObject({ sequence: 1, nextCursor: "0", recordCount: 10 })
+  expect(await first.json()).toMatchObject({
+    sequence: 1,
+    nextCursor: partnerId(10),
+    recordCount: 10,
+  })
   expect((await cover("partner-record", partnerMappings.slice(0, 1))).status).toBe(409)
   const second = await cover("partner-record", partnerMappings.slice(10))
   if (second.status !== 200) throw new Error(await second.text())

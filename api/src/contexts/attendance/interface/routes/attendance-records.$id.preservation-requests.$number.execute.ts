@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { revalidateCompanyRecordPreservationExecution } from "@/contexts/company/interface/operations/revalidate-company-record-preservation-execution"
 import { executeSystemRecordPreservation } from "@system/interface/operations/execute-system-record-preservation"
 import { RecordPreservationExecutionError } from "@system/application/records/errors"
@@ -14,7 +15,7 @@ export const POST = attendanceFactory.createHandlers(
   zValidator(
     "param",
     z.strictObject({
-      id: z.coerce.number().int().positive().safe(),
+      id: uuidSchema,
       number: z.coerce.number().int().positive().safe(),
     }),
   ),

@@ -28,7 +28,7 @@ afterAll(async () => {
 const jwtSecret = "attendance-clock-in-route-test-secret"
 
 const attendanceRecordResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   work_date: z.string(),
   clock_in_at: z.string().nullable(),

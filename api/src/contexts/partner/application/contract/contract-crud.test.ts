@@ -42,7 +42,7 @@ async function seedPartner(context: PartnerTestContext): Promise<Partner> {
   return result
 }
 
-async function seedContract(context: PartnerTestContext, partnerId: number): Promise<Contract> {
+async function seedContract(context: PartnerTestContext, partnerId: string): Promise<Contract> {
   const result = await new CreateContract(context).run({
     session: makeTestSession("root"),
     contract: {
@@ -73,7 +73,7 @@ describe("CreateContract", () => {
     const result = await new CreateContract(context).run({
       session: makeTestSession("root"),
       contract: {
-        partnerId: partner.id ?? 0,
+        partnerId: partner.id ?? "",
         title: "Supply Agreement",
         contractDate: "2026-01-10",
         startsOn: null,
@@ -91,7 +91,7 @@ describe("CreateContract", () => {
     }
 
     expect(result.title).toBe("Supply Agreement")
-    expect(result.partnerId).toBe(partner.id ?? 0)
+    expect(result.partnerId).toBe(partner.id ?? "")
     expect(result.id).not.toBeNull()
   })
 
@@ -103,7 +103,7 @@ describe("CreateContract", () => {
     const result = await new CreateContract(context).run({
       session: makeTestSession("member"),
       contract: {
-        partnerId: partner.id ?? 0,
+        partnerId: partner.id ?? "",
         title: "Supply Agreement",
         contractDate: "2026-01-10",
         startsOn: null,
@@ -123,7 +123,7 @@ describe("CreateContract", () => {
     const result = await new CreateContract(context).run({
       session: makeTestSession("root"),
       contract: {
-        partnerId: 9999,
+        partnerId: "0190001d-0000-7000-8000-00000000270f",
         title: "Ghost Contract",
         contractDate: "2026-01-10",
         startsOn: null,
@@ -144,7 +144,7 @@ describe("UpdateContract", () => {
 
     const partner = await seedPartner(context)
 
-    const contract = await seedContract(context, partner.id ?? 0)
+    const contract = await seedContract(context, partner.id ?? "")
 
     if (contract.id === null) {
       throw new Error("id is null")
@@ -178,7 +178,7 @@ describe("UpdateContract", () => {
 
     const partner = await seedPartner(context)
 
-    const contract = await seedContract(context, partner.id ?? 0)
+    const contract = await seedContract(context, partner.id ?? "")
 
     if (contract.id === null) {
       throw new Error("id is null")
@@ -205,7 +205,7 @@ describe("UpdateContract", () => {
 
     const result = await new UpdateContract(context).run({
       session: makeTestSession("root"),
-      id: 9999,
+      id: "0190001d-0000-7000-8000-00000000270f",
       details: {
         title: "Missing",
         contractDate: "2026-01-15",

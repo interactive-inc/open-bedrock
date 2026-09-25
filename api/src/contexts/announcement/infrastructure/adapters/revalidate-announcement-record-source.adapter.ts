@@ -23,7 +23,7 @@ export class RevalidateAnnouncementRecordSourceAdapter {
       )
 
     const current = await new CaptureAnnouncementRecordAdapter(this.c).prepare({
-      announcementId: Number(source.props.recordId),
+      announcementId: source.props.recordId,
       sourceNamespace: this.c.sourceNamespace,
     })
     if (current instanceof Error) return current

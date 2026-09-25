@@ -38,14 +38,14 @@ test("停止世代から原文・来歴・digestを取得し、解除後にペ�
   const input = {
     freezeId: command.id,
     sourceNamespace: command.sourceNamespace,
-    afterId: 0,
+    afterId: "01900016-0000-7000-8000-000000000000",
     limit: 1,
   }
   const first = await adapter.prepare(input)
   if (first instanceof Error) throw first
   expect(first.records).toHaveLength(1)
-  expect(first.nextAfterId).toBe(1)
-  const last = await adapter.prepare({ ...input, afterId: 1 })
+  expect(first.nextAfterId).toBe("01900016-0000-7000-8000-000000000001")
+  const last = await adapter.prepare({ ...input, afterId: "01900016-0000-7000-8000-000000000001" })
   if (last instanceof Error) throw last
   expect(last.nextAfterId).toBeNull()
   const contents = [...first.records, ...last.records]
@@ -55,11 +55,11 @@ test("停止世代から原文・来歴・digestを取得し、解除後にペ�
     ).not.toBeInstanceOf(Error)
     const raw = await f.database
       .prepare("SELECT * FROM attendance_records WHERE id=?1")
-      .bind(Number(record.source.props.recordId))
+      .bind(record.source.props.recordId)
       .first()
     expect(JSON.parse(new TextDecoder().decode(record.content))).toEqual({
       format: "attendance-record",
-      version: 2,
+      version: 3,
       record: raw,
     })
     expect(record.source.props.sourceRevision).toBeNull()
@@ -68,7 +68,10 @@ test("停止世代から原文・来歴・digestを取得し、解除後にペ�
   expect(await adapter.prepare({ ...input, limit: 11 })).toBeInstanceOf(Error)
   await f.database.batch([...first.assertions])
   await new ReleaseRecordSourceFreeze({ repository }).execute(command, f.clock.now)
-  await execSql(f.database, "UPDATE attendance_records SET note='New source' WHERE id=1")
+  await execSql(
+    f.database,
+    "UPDATE attendance_records SET note='New source' WHERE id='01900016-0000-7000-8000-000000000001'",
+  )
   expect(await adapter.prepare(input)).toBeInstanceOf(Error)
   expect(
     await f.database

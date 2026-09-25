@@ -73,7 +73,7 @@ describe("career posting persistence on local D1", () => {
 
     const applied = await applicationRepository.create(
       CareerApplication.create({
-        postingId: withApplied.id ?? -1,
+        postingId: withApplied.id ?? "",
         applicantId: toWorkforceEmployeeId(10),
         message: null,
       }),
@@ -81,21 +81,21 @@ describe("career posting persistence on local D1", () => {
 
     expect(applied).toBeInstanceOf(CareerApplication)
     expect(await postingRepository.deleteIfNoAppliedApplications(withApplied)).toBe(null)
-    expect(await postingRepository.findById(withApplied.id ?? -1)).toBeInstanceOf(CareerPosting)
+    expect(await postingRepository.findById(withApplied.id ?? "")).toBeInstanceOf(CareerPosting)
 
     const withRejected = await createPosting(context)
 
     await db
       .prepare(
-        "INSERT INTO career_applications (posting_id, applicant_id, message, status) VALUES (?1, ?2, NULL, 'rejected')",
+        "INSERT INTO career_applications (id, posting_id, applicant_id, message, status) VALUES (?3, ?1, ?2, NULL, 'rejected')",
       )
-      .bind(withRejected.id, "10")
+      .bind(withRejected.id, "10", crypto.randomUUID())
       .run()
 
     expect(await postingRepository.deleteIfNoAppliedApplications(withRejected)).toBe(true)
-    expect(await postingRepository.findById(withRejected.id ?? -1)).toBe(null)
+    expect(await postingRepository.findById(withRejected.id ?? "")).toBe(null)
     expect(
-      await applicationRepository.countByPostingIdAndStatus(withRejected.id ?? -1, "rejected"),
+      await applicationRepository.countByPostingIdAndStatus(withRejected.id ?? "", "rejected"),
     ).toBe(0)
   })
 })

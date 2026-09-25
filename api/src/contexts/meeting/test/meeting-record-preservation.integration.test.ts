@@ -13,17 +13,17 @@ test("会議3台帳を停止中に人の承認で保全し、業務コードを�
     await createMeetingPreservationFixture()
   await database.exec(`INSERT INTO meetings
     (id,code,name,cadence,description,status,created_at)
-    VALUES (1,'board','Board','monthly','Leadership meeting','active','2026-09-01T00:00:00.000Z')`)
+    VALUES ('0190001b-0000-7000-8000-000000000001','board','Board','monthly','Leadership meeting','active','2026-09-01T00:00:00.000Z')`)
   await database
     .prepare(`INSERT INTO meeting_minutes_records
       (id,meeting_id,held_on,title,attendees,body_md,author_employee_id,created_at)
-      VALUES (2,1,'2026-09-15','September','Alice, Bob','# Minutes',?1,
+      VALUES ('0190001c-0000-7000-8000-000000000002','0190001b-0000-7000-8000-000000000001','2026-09-15','September','Alice, Bob','# Minutes',?1,
         '2026-09-15T12:00:00.000Z')`)
     .bind(creator.employeeId)
     .run()
   await database.exec(`INSERT INTO decision_records
     (id,title,decided_on,context,decision,consequences,status,superseded_by_id,created_at)
-    VALUES (3,'Policy','2026-09-15','Governance','Approved','Publish','current',NULL,
+    VALUES ('0190001a-0000-7000-8000-000000000003','Policy','2026-09-15','Governance','Approved','Publish','current',NULL,
       '2026-09-15T13:00:00.000Z')`)
   const token = await tokenFor(creator.accountId)
   const stepUpToken = "e".repeat(64)
@@ -61,9 +61,9 @@ test("会議3台帳を停止中に人の承認で保全し、業務コードを�
     )
   }
   const sources = [
-    ["meeting-record", "1"],
-    ["meeting-minutes-record", "2"],
-    ["meeting-decision-record", "3"],
+    ["meeting-record", "0190001b-0000-7000-8000-000000000001"],
+    ["meeting-minutes-record", "0190001c-0000-7000-8000-000000000002"],
+    ["meeting-decision-record", "0190001a-0000-7000-8000-000000000003"],
   ] as const
   const preservedIds: string[] = []
   for (const [recordKind, recordId] of sources) {

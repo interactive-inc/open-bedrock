@@ -3,9 +3,9 @@ import type { EmployeeCertificationRow } from "@/contexts/certification/infrastr
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number(),
+  id: z.string(),
   employeeId: zEmployeeId,
-  certificationId: z.number(),
+  certificationId: z.string(),
   acquiredOn: z.string(),
   expiresOn: z.string().nullable(),
   note: z.string().nullable(),

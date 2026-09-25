@@ -101,7 +101,9 @@ test("停止と解除のHTTP操作は再認証を要求し、同じ世代の再�
   expect((await request("/freezes", true, "Changed reason")).status).toBe(409)
   expect(
     await f.database
-      .prepare("UPDATE attendance_records SET note='blocked' WHERE id=1")
+      .prepare(
+        "UPDATE attendance_records SET note='blocked' WHERE id='01900016-0000-7000-8000-000000000001'",
+      )
       .run()
       .catch((error: unknown) => error),
   ).toBeInstanceOf(Error)
@@ -120,7 +122,11 @@ test("停止と解除のHTTP操作は再認証を要求し、同じ世代の再�
   )
   expect((await read(id)).status).toBe(403)
   expect(
-    await f.database.prepare("UPDATE attendance_records SET note='resumed' WHERE id=1").run(),
+    await f.database
+      .prepare(
+        "UPDATE attendance_records SET note='resumed' WHERE id='01900016-0000-7000-8000-000000000001'",
+      )
+      .run(),
   ).toMatchObject({ success: true })
   expect(
     await f.database

@@ -39,7 +39,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
         lte(attendanceRecords.workDate, range.to),
       ),
     )
-    .orderBy(asc(attendanceRecords.id))
+    .orderBy(
+      asc(attendanceRecords.workDate),
+      asc(attendanceRecords.clockInAt),
+      asc(attendanceRecords.id),
+    )
 
   const records = rows.map((row) => AttendanceRecord.fromRow(row))
 

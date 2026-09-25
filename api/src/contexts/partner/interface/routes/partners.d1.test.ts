@@ -27,7 +27,7 @@ afterAll(async () => {
 const jwtSecret = "partner-route-test-secret"
 
 const partnerResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   code: z.string(),
   name: z.string(),
   category: z.string().nullable(),
@@ -209,10 +209,15 @@ describe("POST /partners", () => {
 
 describe("PUT /partners/:id", () => {
   test("updates a partner as admin", async () => {
-    const response = await request("/partner/partners/1", await tokenFor(1), "PUT", {
-      name: "Renamed Acme",
-      category: "supplier",
-    })
+    const response = await request(
+      "/partner/partners/0190001d-0000-7000-8000-000000000001",
+      await tokenFor(1),
+      "PUT",
+      {
+        name: "Renamed Acme",
+        category: "supplier",
+      },
+    )
 
     expect(response.status).toBe(200)
 
@@ -226,9 +231,14 @@ describe("PUT /partners/:id", () => {
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/partner/partners/1", await tokenFor(5), "PUT", {
-      name: "Hijacked",
-    })
+    const response = await request(
+      "/partner/partners/0190001d-0000-7000-8000-000000000001",
+      await tokenFor(5),
+      "PUT",
+      {
+        name: "Hijacked",
+      },
+    )
 
     expect(response.status).toBe(403)
   })
@@ -236,19 +246,31 @@ describe("PUT /partners/:id", () => {
 
 describe("POST /partners/:id/archive", () => {
   test("archives a partner as admin", async () => {
-    const response = await request("/partner/partners/1/archive", await tokenFor(1), "POST")
+    const response = await request(
+      "/partner/partners/0190001d-0000-7000-8000-000000000001/archive",
+      await tokenFor(1),
+      "POST",
+    )
 
     expect(response.status).toBe(204)
   })
 
   test("returns 403 for a member", async () => {
-    const response = await request("/partner/partners/1/archive", await tokenFor(5), "POST")
+    const response = await request(
+      "/partner/partners/0190001d-0000-7000-8000-000000000001/archive",
+      await tokenFor(5),
+      "POST",
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 404 for unknown id", async () => {
-    const response = await request("/partner/partners/9999/archive", await tokenFor(1), "POST")
+    const response = await request(
+      "/partner/partners/0190001d-0000-7000-8000-00000000270f/archive",
+      await tokenFor(1),
+      "POST",
+    )
 
     expect(response.status).toBe(404)
   })

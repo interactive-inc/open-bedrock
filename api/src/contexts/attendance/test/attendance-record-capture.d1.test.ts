@@ -9,11 +9,11 @@ import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
 import { execSql } from "@tests/d1/support/exec-sql"
 
 const sourceMutations = [
-  "UPDATE attendance_records SET clock_out_at='2026-09-01T08:00:00Z',work_minutes=480,status='closed' WHERE id=1",
-  "UPDATE attendance_records SET note='Correction' WHERE id=1",
-  "UPDATE attendance_records SET work_date='2026-08-30' WHERE id=1",
-  "UPDATE attendance_records SET clock_in_at='2026-09-01T01:00:00Z' WHERE id=1",
-  "DELETE FROM attendance_records WHERE id=1",
+  "UPDATE attendance_records SET clock_out_at='2026-09-01T08:00:00Z',work_minutes=480,status='closed' WHERE id='01900016-0000-7000-8000-000000000001'",
+  "UPDATE attendance_records SET note='Correction' WHERE id='01900016-0000-7000-8000-000000000001'",
+  "UPDATE attendance_records SET work_date='2026-08-30' WHERE id='01900016-0000-7000-8000-000000000001'",
+  "UPDATE attendance_records SET clock_in_at='2026-09-01T01:00:00Z' WHERE id='01900016-0000-7000-8000-000000000001'",
+  "DELETE FROM attendance_records WHERE id='01900016-0000-7000-8000-000000000001'",
 ]
 
 const authorizationMutations = [
@@ -55,7 +55,10 @@ test("all original fields survive capture without invented revision or recorded 
   const f = await createAttendanceRecordSourceFixture(
     await local.database("all-original-fields-survive-capture-without"),
   )
-  for (const recordId of [1, 2]) {
+  for (const recordId of [
+    "01900016-0000-7000-8000-000000000001",
+    "01900016-0000-7000-8000-000000000002",
+  ]) {
     const captured = await f.capture.prepare({ ...f.input, recordId })
     if (captured instanceof Error) throw captured
     expect(
@@ -63,7 +66,7 @@ test("all original fields survive capture without invented revision or recorded 
     ).not.toBeInstanceOf(Error)
     expect(JSON.parse(new TextDecoder().decode(captured.content))).toEqual({
       format: "attendance-record",
-      version: 2,
+      version: 3,
       record: await f.database
         .prepare("SELECT * FROM attendance_records WHERE id=?1")
         .bind(recordId)
@@ -78,7 +81,7 @@ test("all original fields survive capture without invented revision or recorded 
     })
     await f.database.batch([...captured.assertions])
   }
-  for (const recordId of [0, -1, 1.5, Number.MAX_SAFE_INTEGER + 1, 999])
+  for (const recordId of ["0", "-1", "1.5", "not-a-uuid", "01900016-0000-7000-8000-0000000003e7"])
     expect(await f.capture.prepare({ ...f.input, recordId })).toBeInstanceOf(Error)
 })
 
@@ -121,9 +124,9 @@ test("revalidation retains capture time and rejects altered provenance or conten
     { sourceNamespace: "other-source" },
     { ownerContext: "other-context" },
     { recordKind: "other-record" },
-    { recordId: "01" },
+    { recordId: "01900016-0000-7000-8000-000000000002" },
     { formatId: "other-format" },
-    { formatVersion: 3 },
+    { formatVersion: 4 },
     { sourceRevision: "1" },
     { sourceRecordedAt: "2026-09-01T00:00:00Z" },
     { capturedAt: new Date(f.clock.now.getTime() + 1000).toISOString() },
@@ -141,20 +144,30 @@ test("inventory includes open and closed records and detects added or removed re
   )
   const initial = await f.inventory.prepare()
   if (initial instanceof Error) throw initial
-  expect(initial.recordIds).toEqual([1, 2])
+  expect(initial.recordIds).toEqual([
+    "01900016-0000-7000-8000-000000000001",
+    "01900016-0000-7000-8000-000000000002",
+  ])
   await f.database.batch([...initial.assertions])
   await execSql(
     f.database,
     `INSERT INTO attendance_records
-    (id,employee_id,work_date,note,status) VALUES (3,'employee:worker','2026-08-30','Unprovided times','closed')`,
+    (id,employee_id,work_date,note,status) VALUES ('01900016-0000-7000-8000-000000000003','employee:worker','2026-08-30','Unprovided times','closed')`,
   )
   expect(
     await f.database.batch([...initial.assertions]).catch((cause: unknown) => cause),
   ).toBeInstanceOf(Error)
   const added = await f.inventory.prepare()
   if (added instanceof Error) throw added
-  expect(added.recordIds).toEqual([1, 2, 3])
-  await execSql(f.database, "DELETE FROM attendance_records WHERE id=2")
+  expect(added.recordIds).toEqual([
+    "01900016-0000-7000-8000-000000000001",
+    "01900016-0000-7000-8000-000000000002",
+    "01900016-0000-7000-8000-000000000003",
+  ])
+  await execSql(
+    f.database,
+    "DELETE FROM attendance_records WHERE id='01900016-0000-7000-8000-000000000002'",
+  )
   expect(
     await f.database.batch([...added.assertions]).catch((cause: unknown) => cause),
   ).toBeInstanceOf(Error)
@@ -245,11 +258,11 @@ test("DBの整数を丸めず保存し、隣接する大きな整数の変更も
   )
   await execSql(
     f.database,
-    "UPDATE attendance_records SET work_minutes=9007199254740993 WHERE id=1",
+    "UPDATE attendance_records SET work_minutes=9007199254740993 WHERE id='01900016-0000-7000-8000-000000000001'",
   )
   const first = await f.capture.prepare(f.input)
   if (first instanceof Error) throw first
-  expect(first.source.props.formatVersion).toBe(2)
+  expect(first.source.props.formatVersion).toBe(3)
   expect(new TextDecoder().decode(first.content)).toContain('"work_minutes":9007199254740993')
   expect(await PreservedRecordContentValue.create(first.source, first.content)).not.toBeInstanceOf(
     Error,
@@ -260,7 +273,7 @@ test("DBの整数を丸めず保存し、隣接する大きな整数の変更も
   expect(await f.capture.prepare({ ...f.input, formatVersion: 1 })).toBeInstanceOf(Error)
   await execSql(
     f.database,
-    "UPDATE attendance_records SET work_minutes=9007199254740992 WHERE id=1",
+    "UPDATE attendance_records SET work_minutes=9007199254740992 WHERE id='01900016-0000-7000-8000-000000000001'",
   )
   const second = await f.capture.prepare(f.input)
   if (second instanceof Error) throw second
@@ -279,7 +292,11 @@ test("既存の版1の承認対象は元の本文とdigestで再検証する", a
   const original = CanonicalSystemJsonValue.create({
     format: "attendance-record",
     version: 1,
-    record: await f.database.prepare("SELECT * FROM attendance_records WHERE id=1").first(),
+    record: await f.database
+      .prepare(
+        "SELECT id, employee_id, work_date, clock_in_at, clock_out_at, work_minutes, note, status FROM attendance_records WHERE id='01900016-0000-7000-8000-000000000001'",
+      )
+      .first(),
   })
   if (original instanceof Error) throw original
   const content = new TextEncoder().encode(original.toString())
@@ -294,6 +311,9 @@ test("既存の版1の承認対象は元の本文とdigestで再検証する", a
   expect(revalidated.source.props).toEqual(source.props)
   expect(revalidated.content).toEqual(content)
   await f.database.batch([...revalidated.assertions])
-  await execSql(f.database, "UPDATE attendance_records SET note='Corrected' WHERE id=1")
+  await execSql(
+    f.database,
+    "UPDATE attendance_records SET note='Corrected' WHERE id='01900016-0000-7000-8000-000000000001'",
+  )
   expect(await f.revalidate.prepare(source)).toBeInstanceOf(Error)
 })

@@ -16,6 +16,15 @@ import {
 } from "@/contexts/certification/domain/definitions/certification-record-kind.definition"
 
 // 複数ページの保全・承認・再検証を実HTTPとDBで通すため、個別に実行時間を確保する。
+/** 旧来の整数の並びと同じ辞書順になる固定の UUID。照合の続き位置を決まった値で確かめる。 */
+function definitionId(serial: number): string {
+  return `01900019-0000-7000-8000-${String(serial).padStart(12, "0")}`
+}
+
+function holdingId(serial: number): string {
+  return `01900021-0000-7000-8000-${String(serial).padStart(12, "0")}`
+}
+
 test("資格定義・従業員資格を全件保全し、人の承認を経て2台帳を撤去確定する", async () => {
   const {
     clock,
@@ -48,14 +57,14 @@ test("資格定義・従業員資格を全件保全し、人の承認を経て2�
       .prepare(`INSERT INTO certification_definitions
       (id,code,name,issuer,description,created_at)
       VALUES (?1,?2,?3,'Example issuer',NULL,'2026-01-01T00:00:00.000Z')`)
-      .bind(id, code, `Certification ${id}`)
+      .bind(definitionId(id), code, `Certification ${id}`)
       .run()
   }
   await database
     .prepare(`INSERT INTO employee_certifications
     (id,employee_id,certification_id,acquired_on,expires_on,note,created_at)
-    VALUES (1,?1,1,'2026-01-02','2027-01-02','Original evidence','2026-01-02T00:00:00.000Z')`)
-    .bind(creatorPerson.employeeId)
+    VALUES (?2,?1,?3,'2026-01-02','2027-01-02','Original evidence','2026-01-02T00:00:00.000Z')`)
+    .bind(creatorPerson.employeeId, holdingId(1), definitionId(1))
     .run()
   const at = clock()
   const token = await tokenFor(creator)
@@ -105,8 +114,8 @@ test("資格定義・従業員資格を全件保全し、人の承認を経て2�
     database
       .prepare(`INSERT INTO employee_certifications
       (id,employee_id,certification_id,acquired_on,expires_on,note,created_at)
-      VALUES (2,?1,2,'2026-01-04',NULL,NULL,'2026-01-04T00:00:00.000Z')`)
-      .bind(creatorPerson.employeeId)
+      VALUES (?2,?1,?3,'2026-01-04',NULL,NULL,'2026-01-04T00:00:00.000Z')`)
+      .bind(creatorPerson.employeeId, holdingId(2), definitionId(2))
       .run(),
   ).rejects.toThrow("certification_record_source_frozen")
   expect(
@@ -123,7 +132,7 @@ test("資格定義・従業員資格を全件保全し、人の承認を経て2�
   ).toBe(409)
   expect(
     (
-      await apiRequest("/certification/certification-definitions/1", {
+      await apiRequest(`/certification/certification-definitions/${definitionId(1)}`, {
         method: "PUT",
         body: {
           name: "Must not change",
@@ -133,7 +142,7 @@ test("資格定義・従業員資格を全件保全し、人の承認を経て2�
   ).toBe(409)
   expect(
     (
-      await apiRequest("/certification/employee-certifications/1", {
+      await apiRequest(`/certification/employee-certifications/${holdingId(1)}`, {
         method: "DELETE",
       })
     ).status,
@@ -143,9 +152,9 @@ test("資格定義・従業員資格を全件保全し、人の承認を経て2�
   > = [
     ...Array.from({ length: 11 }, (_, index) => ({
       recordKind: "certification-record" as const,
-      recordId: String(index + 1),
+      recordId: definitionId(index + 1),
     })),
-    { recordKind: "employee-certification-record", recordId: "1" },
+    { recordKind: "employee-certification-record", recordId: holdingId(1) },
   ]
   const mappings: Array<{
     recordKind: CertificationRecordKind
@@ -231,7 +240,7 @@ test("資格定義・従業員資格を全件保全し、人の承認を経て2�
   if (firstCoverage.status !== 200) throw new Error(await firstCoverage.text())
   expect(await firstCoverage.json()).toMatchObject({
     sequence: 1,
-    nextCursor: "10",
+    nextCursor: definitionId(10),
     recordCount: 10,
   })
   expect(

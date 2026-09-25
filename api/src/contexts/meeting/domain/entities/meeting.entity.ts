@@ -2,7 +2,7 @@ import type { MeetingRow } from "@/contexts/meeting/infrastructure/schema/meetin
 import { z } from "zod"
 
 const zProps = z.object({
-  id: z.number().nullable(),
+  id: z.string().nullable(),
   code: z.string(),
   name: z.string(),
   cadence: z.string().nullable(),

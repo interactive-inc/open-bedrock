@@ -10,7 +10,7 @@ type Context = Readonly<{
 
 export type Command = {
   session: CompanySessionValue
-  id: number
+  id: string
 }
 
 export type Archived = { reason: "archived" }

@@ -19,7 +19,11 @@ export class AttendanceRecordRepository {
         .where(
           and(eq(attendanceRecords.employeeId, employeeId), eq(attendanceRecords.status, "open")),
         )
-        .orderBy(asc(attendanceRecords.id))
+        .orderBy(
+          asc(attendanceRecords.workDate),
+          asc(attendanceRecords.clockInAt),
+          asc(attendanceRecords.id),
+        )
         .limit(1)
 
       const row = rows.at(0)
@@ -35,6 +39,7 @@ export class AttendanceRecordRepository {
       const rows = await this.c.var.database
         .insert(attendanceRecords)
         .values({
+          id: crypto.randomUUID(),
           employeeId: attendanceRecord.employeeId,
           workDate: attendanceRecord.workDate,
           clockInAt: attendanceRecord.clockInAt,

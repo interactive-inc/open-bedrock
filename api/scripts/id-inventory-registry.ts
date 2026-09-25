@@ -166,6 +166,20 @@ const PROCEDURE_REQUEST_KEY = external(
 )
 
 export const SOFT_REFERENCES: Readonly<Record<string, SoftReference>> = {
+  "announcements.legacy_id": LEGACY_PRIMARY_KEY,
+  "asset_lendings.legacy_id": LEGACY_PRIMARY_KEY,
+  "attendance_records.legacy_id": LEGACY_PRIMARY_KEY,
+  "career_applications.legacy_id": LEGACY_PRIMARY_KEY,
+  "career_postings.legacy_id": LEGACY_PRIMARY_KEY,
+  "certification_definitions.legacy_id": LEGACY_PRIMARY_KEY,
+  "decision_records.legacy_id": LEGACY_PRIMARY_KEY,
+  "employee_certifications.legacy_id": LEGACY_PRIMARY_KEY,
+  "meeting_minutes_records.legacy_id": LEGACY_PRIMARY_KEY,
+  "meetings.legacy_id": LEGACY_PRIMARY_KEY,
+  "partner_contracts.legacy_id": LEGACY_PRIMARY_KEY,
+  "partners.legacy_id": LEGACY_PRIMARY_KEY,
+  "regulation_versions.legacy_id": LEGACY_PRIMARY_KEY,
+  "regulations.legacy_id": LEGACY_PRIMARY_KEY,
   "commendations.legacy_id": LEGACY_PRIMARY_KEY,
   "company_calendar_days.legacy_id": LEGACY_PRIMARY_KEY,
   "disciplinary_actions.legacy_id": LEGACY_PRIMARY_KEY,

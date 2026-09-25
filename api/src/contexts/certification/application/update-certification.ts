@@ -14,7 +14,7 @@ export class UpdateCertification {
   }
 
   async run(props: {
-    id: number
+    id: string
     name: string
     issuer: string | null
     description: string | null

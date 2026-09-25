@@ -29,7 +29,7 @@ test("attendance submission requires both source and preservation permission and
   expect(body.source).toMatchObject({
     ownerContext: "attendance",
     recordKind: "attendance-record",
-    recordId: "1",
+    recordId: "01900016-0000-7000-8000-000000000001",
     sourceRevision: null,
     sourceRecordedAt: null,
   })
@@ -47,9 +47,14 @@ test("attendance submission requires both source and preservation permission and
       })
     ).status,
   ).toBe(409)
-  expect((await f.request("/attendance-records/2/preservation-requests", f.command)).status).toBe(
-    409,
-  )
+  expect(
+    (
+      await f.request(
+        "/attendance-records/01900016-0000-7000-8000-000000000002/preservation-requests",
+        f.command,
+      )
+    ).status,
+  ).toBe(409)
   const parallel = { ...f.command, key: crypto.randomUUID() }
   const responses = await Promise.all([f.request(f.path, parallel), f.request(f.path, parallel)])
   expect(responses.map((response) => response.status).sort((left, right) => left - right)).toEqual([
@@ -72,7 +77,9 @@ test("a source update during encrypted upload cannot leave an accepted preservat
   const originalPut = f.bucket.put.bind(f.bucket)
   f.bucket.put = async (key, value, options) => {
     const written = await originalPut(key, value, options)
-    await f.database.exec("UPDATE attendance_records SET note='Changed during upload' WHERE id=1")
+    await f.database.exec(
+      "UPDATE attendance_records SET note='Changed during upload' WHERE id='01900016-0000-7000-8000-000000000001'",
+    )
     return written
   }
   expect((await f.request(f.path, f.command)).status).toBe(409)

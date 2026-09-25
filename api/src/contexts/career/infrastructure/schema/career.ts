@@ -1,10 +1,11 @@
+import { uuidCheckPredicate } from "@/lib/validation/uuid.schema"
 import type {
   EmployeeId,
   OrganizationUnitId,
 } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { organizationUnits } from "@/contexts/company/infrastructure/schema/organization"
-import type { InferSelectModel } from "drizzle-orm"
-import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import { sql, type InferSelectModel } from "drizzle-orm"
+import { check, integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
 
 /**
  * 社内公募（募集部署・必要スキル・公開状態）。
@@ -12,32 +13,49 @@ import { integer, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core
  * 公開 operation で会社営業日に有効な単位かを検査する。
  * dept_id と dept_name は組織単位を参照できなかった頃の旧記録で、保持するが書き込まない。
  */
-export const careerPostings = sqliteTable("career_postings", {
-  id: integer("id").primaryKey(),
-  title: text("title").notNull(),
-  deptId: integer("dept_id"),
-  deptName: text("dept_name"),
-  organizationUnitId: text("organization_unit_id")
-    .$type<OrganizationUnitId>()
-    .references(() => organizationUnits.id, { onDelete: "restrict" }),
-  requiredSkills: text("required_skills"),
-  status: text("status").notNull(),
-})
+export const careerPostings = sqliteTable(
+  "career_postings",
+  {
+    id: text("id").primaryKey().notNull(),
+    title: text("title").notNull(),
+    deptId: integer("dept_id"),
+    deptName: text("dept_name"),
+    organizationUnitId: text("organization_unit_id")
+      .$type<OrganizationUnitId>()
+      .references(() => organizationUnits.id, { onDelete: "restrict" }),
+    requiredSkills: text("required_skills"),
+    status: text("status").notNull(),
+    /** 作成日時。主キーの UUID は順序を持たないため、一覧の作成順に使う。 */
+    createdAt: text("created_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    /** 主キーを UUID へ移す前の整数の主キー。移行前の証跡を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
+  },
+  () => [check("career_postings_id_uuid", sql.raw(uuidCheckPredicate("id")))],
+)
 
 export type CareerPostingRow = InferSelectModel<typeof careerPostings>
 
-/** 公募への応募（応募者・メッセージ・状態）。id は AUTOINCREMENT。 */
+/** 公募への応募（応募者・メッセージ・状態）。posting_id は同じ業務の公募の UUID を外部キーなしで指す。 */
 export const careerApplications = sqliteTable(
   "career_applications",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
-    postingId: integer("posting_id").notNull(),
+    id: text("id").primaryKey().notNull(),
+    postingId: text("posting_id").notNull(),
     applicantId: text("applicant_id").$type<EmployeeId>().notNull(),
     message: text("message"),
     status: text("status").notNull(),
+    /** 作成日時。主キーの UUID は順序を持たないため、一覧の作成順に使う。 */
+    createdAt: text("created_at")
+      .notNull()
+      .$defaultFn(() => new Date().toISOString()),
+    /** 主キーを UUID へ移す前の整数の主キー。移行前の証跡を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
   },
   // 同一公募への重複応募を防ぐ。
   (table) => [
+    check("career_applications_id_uuid", sql.raw(uuidCheckPredicate("id"))),
     uniqueIndex("idx_career_applications_posting_applicant").on(table.postingId, table.applicantId),
   ],
 )

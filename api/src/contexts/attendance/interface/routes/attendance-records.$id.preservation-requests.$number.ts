@@ -1,3 +1,4 @@
+import { uuidSchema } from "@/lib/validation/uuid.schema"
 import { prepareCompanyRecordProcedureDecision } from "@/contexts/company/interface/operations/prepare-company-record-procedure-decision"
 import { SystemForbiddenError, SystemHTTPException } from "@system/interface/errors"
 import { z } from "zod"
@@ -14,7 +15,7 @@ export const GET = attendanceFactory.createHandlers(
   zValidator(
     "param",
     z.strictObject({
-      id: z.coerce.number().int().positive().safe(),
+      id: uuidSchema,
       number: z.coerce.number().int().positive().safe(),
     }),
   ),

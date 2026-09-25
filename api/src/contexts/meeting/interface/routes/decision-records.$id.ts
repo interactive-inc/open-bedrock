@@ -2,7 +2,7 @@ import { UpdateDecision } from "@/contexts/meeting/application/decision/update-d
 import { factory } from "@/api/http/factory"
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { NotFoundError, UnauthorizedError } from "@/lib/http/errors"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { zAppDecision } from "@/contexts/meeting/interface/http/response-schemas"
@@ -18,7 +18,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const decisionId = validateIntParam(c.req.param("id"), "decision")
+  const decisionId = validateUuidParam(c.req.param("id"), "decision")
 
   const rows = await c.var.database
     .select()
@@ -68,7 +68,7 @@ export const PUT = factory.createHandlers(
       throw new UnauthorizedError()
     }
 
-    const decisionId = validateIntParam(c.req.param("id"), "decision")
+    const decisionId = validateUuidParam(c.req.param("id"), "decision")
 
     const json = c.req.valid("json")
 

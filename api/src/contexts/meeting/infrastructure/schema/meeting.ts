@@ -1,20 +1,26 @@
+import { uuidCheckPredicate } from "@/lib/validation/uuid.schema"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import type { InferSelectModel } from "drizzle-orm"
-import { index, integer, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { sql, type InferSelectModel } from "drizzle-orm"
+import { check, index, sqliteTable, text } from "drizzle-orm/sqlite-core"
 
 /** 会議体マスタ（定例会議などの器。cadence は開催頻度メモ） */
 export const meetings = sqliteTable(
   "meetings",
   {
-    id: integer("id").primaryKey(),
+    id: text("id").primaryKey().notNull(),
     code: text("code").notNull().unique(),
     name: text("name").notNull(),
     cadence: text("cadence"),
     description: text("description"),
     status: text("status").notNull(),
     createdAt: text("created_at").notNull(),
+    /** 主キーを UUID へ移す前の整数の主キー。移行前の証跡を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
   },
-  (table) => [index("idx_meetings_status").on(table.status)],
+  (table) => [
+    check("meetings_id_uuid", sql.raw(uuidCheckPredicate("id"))),
+    index("idx_meetings_status").on(table.status),
+  ],
 )
 
 export type MeetingRow = InferSelectModel<typeof meetings>
@@ -23,16 +29,21 @@ export type MeetingRow = InferSelectModel<typeof meetings>
 export const meetingMinutes = sqliteTable(
   "meeting_minutes_records",
   {
-    id: integer("id").primaryKey(),
-    meetingId: integer("meeting_id").notNull(),
+    id: text("id").primaryKey().notNull(),
+    meetingId: text("meeting_id").notNull(),
     heldOn: text("held_on").notNull(),
     title: text("title").notNull(),
     attendees: text("attendees"),
     bodyMd: text("body_md").notNull(),
     authorEmployeeId: text("author_employee_id").$type<EmployeeId>().notNull(),
     createdAt: text("created_at").notNull(),
+    /** 主キーを UUID へ移す前の整数の主キー。移行前の証跡を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
   },
-  (table) => [index("idx_meeting_minutes_meeting").on(table.meetingId)],
+  (table) => [
+    check("meeting_minutes_records_id_uuid", sql.raw(uuidCheckPredicate("id"))),
+    index("idx_meeting_minutes_meeting").on(table.meetingId),
+  ],
 )
 
 export type MeetingMinutesRow = InferSelectModel<typeof meetingMinutes>
@@ -41,17 +52,22 @@ export type MeetingMinutesRow = InferSelectModel<typeof meetingMinutes>
 export const decisions = sqliteTable(
   "decision_records",
   {
-    id: integer("id").primaryKey(),
+    id: text("id").primaryKey().notNull(),
     title: text("title").notNull(),
     decidedOn: text("decided_on").notNull(),
     context: text("context").notNull(),
     decision: text("decision").notNull(),
     consequences: text("consequences"),
     status: text("status").notNull(),
-    supersededById: integer("superseded_by_id"),
+    supersededById: text("superseded_by_id"),
     createdAt: text("created_at").notNull(),
+    /** 主キーを UUID へ移す前の整数の主キー。移行前の証跡を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
   },
-  (table) => [index("idx_decisions_status").on(table.status)],
+  (table) => [
+    check("decision_records_id_uuid", sql.raw(uuidCheckPredicate("id"))),
+    index("idx_decisions_status").on(table.status),
+  ],
 )
 
 export type DecisionRow = InferSelectModel<typeof decisions>

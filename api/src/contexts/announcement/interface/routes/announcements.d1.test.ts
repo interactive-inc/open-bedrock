@@ -28,7 +28,7 @@ afterAll(async () => {
 const jwtSecret = "announcement-route-test-secret"
 
 const listItemSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   status: z.string(),
   published_on: z.string().nullable(),
@@ -42,7 +42,7 @@ const listSchema = z.object({
 })
 
 const announcementSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   title: z.string(),
   body_md: z.string(),
   status: z.string(),
@@ -142,7 +142,10 @@ describe("GET /announcements", () => {
 
 describe("GET /announcements/:id", () => {
   test("member can read a published announcement", async () => {
-    const response = await request("/announcement/announcements/1", await tokenFor(5))
+    const response = await request(
+      "/announcement/announcements/01900014-0000-7000-8000-000000000001",
+      await tokenFor(5),
+    )
 
     expect(response.status).toBe(200)
 
@@ -152,13 +155,19 @@ describe("GET /announcements/:id", () => {
   })
 
   test("member gets 404 for a draft announcement", async () => {
-    const response = await request("/announcement/announcements/3", await tokenFor(5))
+    const response = await request(
+      "/announcement/announcements/01900014-0000-7000-8000-000000000003",
+      await tokenFor(5),
+    )
 
     expect(response.status).toBe(404)
   })
 
   test("admin can read a draft announcement", async () => {
-    const response = await request("/announcement/announcements/3", await tokenFor(1))
+    const response = await request(
+      "/announcement/announcements/01900014-0000-7000-8000-000000000003",
+      await tokenFor(1),
+    )
 
     expect(response.status).toBe(200)
   })
@@ -194,10 +203,15 @@ describe("POST /announcements", () => {
 
 describe("PUT /announcements/:id", () => {
   test("admin updates title and body", async () => {
-    const response = await request("/announcement/announcements/3", await tokenFor(1), "PUT", {
-      title: "Updated Draft",
-      body_md: "updated body",
-    })
+    const response = await request(
+      "/announcement/announcements/01900014-0000-7000-8000-000000000003",
+      await tokenFor(1),
+      "PUT",
+      {
+        title: "Updated Draft",
+        body_md: "updated body",
+      },
+    )
 
     expect(response.status).toBe(200)
 
@@ -211,10 +225,15 @@ describe("PUT /announcements/:id", () => {
   })
 
   test("member is forbidden", async () => {
-    const response = await request("/announcement/announcements/3", await tokenFor(5), "PUT", {
-      title: "x",
-      body_md: "y",
-    })
+    const response = await request(
+      "/announcement/announcements/01900014-0000-7000-8000-000000000003",
+      await tokenFor(5),
+      "PUT",
+      {
+        title: "x",
+        body_md: "y",
+      },
+    )
 
     expect(response.status).toBe(403)
   })
@@ -229,7 +248,7 @@ describe("POST /announcements/:id/publish", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/announcement/announcements/3/publish",
+      path: "/announcement/announcements/01900014-0000-7000-8000-000000000003/publish",
       token: await tokenFor(1),
       method: "POST",
       now,
@@ -261,7 +280,7 @@ describe("POST /announcements/:id/publish", () => {
 
   test("member is forbidden", async () => {
     const response = await request(
-      "/announcement/announcements/3/publish",
+      "/announcement/announcements/01900014-0000-7000-8000-000000000003/publish",
       await tokenFor(5),
       "POST",
     )
@@ -273,7 +292,7 @@ describe("POST /announcements/:id/publish", () => {
 describe("POST /announcements/:id/archive", () => {
   test("admin archives an announcement", async () => {
     const response = await request(
-      "/announcement/announcements/1/archive",
+      "/announcement/announcements/01900014-0000-7000-8000-000000000001/archive",
       await tokenFor(1),
       "POST",
     )

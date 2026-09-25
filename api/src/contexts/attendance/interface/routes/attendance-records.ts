@@ -176,7 +176,11 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
       .select()
       .from(attendanceRecords)
       .where(where)
-      .orderBy(asc(attendanceRecords.id))
+      .orderBy(
+        asc(attendanceRecords.workDate),
+        asc(attendanceRecords.clockInAt),
+        asc(attendanceRecords.id),
+      )
       .limit(limit)
       .offset(offset),
     c.var.database.select({ total: count() }).from(attendanceRecords).where(where),

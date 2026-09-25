@@ -5,7 +5,7 @@ import { verifyBearer } from "@/api/http/verify-bearer"
 import { NotFoundError, UnauthorizedError } from "@/lib/http/errors"
 import { ApplicationError } from "@/lib/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
-import { validateIntParam } from "@/lib/http/validate-int-param"
+import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { zAppAnnouncement } from "@/contexts/announcement/interface/http/response-schemas"
 import { eq } from "drizzle-orm"
 import { zValidator } from "@hono/zod-validator"
@@ -20,7 +20,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
     throw new UnauthorizedError()
   }
 
-  const announcementId = validateIntParam(c.req.param("id"), "announcement")
+  const announcementId = validateUuidParam(c.req.param("id"), "announcement")
 
   const rows = await c.var.database
     .select()
@@ -73,7 +73,7 @@ export const PUT = factory.createHandlers(
 
     const updated = await new UpdateAnnouncement(c).run({
       session: session,
-      announcementId: validateIntParam(c.req.param("id"), "announcement"),
+      announcementId: validateUuidParam(c.req.param("id"), "announcement"),
       title: json.title,
       bodyMd: json.body_md,
     })

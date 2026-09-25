@@ -79,7 +79,7 @@ export const GET = factory.createHandlers(
     ])
 
     // 各規程の最新版（version 最大）を 1 クエリで引いて突き合わせる。
-    const latestByRegulationId = new Map<number, { version: number; effectiveOn: string }>()
+    const latestByRegulationId = new Map<string, { version: number; effectiveOn: string }>()
 
     if (rows.length > 0) {
       const versionRows = await c.var.database

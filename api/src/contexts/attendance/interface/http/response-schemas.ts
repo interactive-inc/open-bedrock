@@ -4,7 +4,7 @@ import { recordSourceFreezeSnapshotSchema } from "@system/domain/schemas/records
 
 /** 勤怠記録 1 件のレスポンス。 */
 export const zAppAttendanceRecord = z.object({
-  id: z.number(),
+  id: z.uuid(),
   employee_id: zEmployeeId,
   work_date: z.string(),
   clock_in_at: z.string().nullable(),

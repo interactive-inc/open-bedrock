@@ -75,7 +75,9 @@ function insertStatement(db: D1Database, freeze: RecordSourceFreezeEntity, repla
 
 test("停止前に準備した打刻更新もDBで拒否し、取得・照合は停止中も続けられる", async () => {
   const f = await createAttendanceRecordSourceFixture(await local.database("prepared-update"))
-  const queued = f.database.prepare("UPDATE attendance_records SET note='Queued update' WHERE id=1")
+  const queued = f.database.prepare(
+    "UPDATE attendance_records SET note='Queued update' WHERE id='01900016-0000-7000-8000-000000000001'",
+  )
   const freeze = freezeEntity()
   expect(
     await insertStatement(f.database, freeze)
@@ -88,19 +90,26 @@ test("停止前に準備した打刻更新もDBで拒否し、取得・照合は
   ])
   for (const statement of [
     queued,
-    f.database.prepare("DELETE FROM attendance_records WHERE id=1"),
+    f.database.prepare(
+      "DELETE FROM attendance_records WHERE id='01900016-0000-7000-8000-000000000001'",
+    ),
     f.database.prepare(`INSERT INTO attendance_records (id,employee_id,work_date,clock_in_at,status)
-      VALUES (3,'employee:worker','2026-09-03','2026-09-03T00:00:00Z','closed')`),
+      VALUES ('01900016-0000-7000-8000-000000000003','employee:worker','2026-09-03','2026-09-03T00:00:00Z','closed')`),
   ])
     expect(await statement.run().catch((error: unknown) => error)).toBeInstanceOf(Error)
   expect(
     await f.database
-      .prepare("SELECT note FROM attendance_records WHERE id=1")
+      .prepare(
+        "SELECT note FROM attendance_records WHERE id='01900016-0000-7000-8000-000000000001'",
+      )
       .first<string>("note"),
   ).toBe("Original note")
   const inventory = await f.inventory.prepare()
   if (inventory instanceof Error) throw inventory
-  expect(inventory.recordIds).toEqual([1, 2])
+  expect(inventory.recordIds).toEqual([
+    "01900016-0000-7000-8000-000000000001",
+    "01900016-0000-7000-8000-000000000002",
+  ])
   const captured = await f.capture.prepare(f.input)
   if (captured instanceof Error) throw captured
   await f.database.batch([...inventory.assertions, ...captured.assertions])
@@ -170,7 +179,9 @@ test("解除は監査と原子的に確定し、再停止は別世代となり�
   ).toBe(1)
   await f.database.batch([auditStatement(f.database, released, freeze), update])
   await f.database
-    .prepare("UPDATE attendance_records SET note='Updated after release' WHERE id=1")
+    .prepare(
+      "UPDATE attendance_records SET note='Updated after release' WHERE id='01900016-0000-7000-8000-000000000001'",
+    )
     .run()
   const next = freezeEntity()
   await f.database.batch([
@@ -180,7 +191,9 @@ test("解除は監査と原子的に確定し、再停止は別世代となり�
   expect(next.matchesActiveGeneration(freeze.snapshot)).toBe(false)
   expect(
     await f.database
-      .prepare("UPDATE attendance_records SET note='Late update' WHERE id=1")
+      .prepare(
+        "UPDATE attendance_records SET note='Late update' WHERE id='01900016-0000-7000-8000-000000000001'",
+      )
       .run()
       .catch((error: unknown) => error),
   ).toBeInstanceOf(Error)

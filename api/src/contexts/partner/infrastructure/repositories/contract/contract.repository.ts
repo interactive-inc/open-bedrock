@@ -6,7 +6,7 @@ import { eq } from "drizzle-orm"
 export class ContractRepository {
   constructor(private readonly c: Context) {}
 
-  async findById(id: number): Promise<Contract | null | Error> {
+  async findById(id: string): Promise<Contract | null | Error> {
     try {
       const rows = await this.c.var.database
         .select()
@@ -27,6 +27,7 @@ export class ContractRepository {
       const rows = await this.c.var.database
         .insert(contracts)
         .values({
+          id: crypto.randomUUID(),
           partnerId: contract.partnerId,
           title: contract.title,
           contractDate: contract.contractDate,
