@@ -537,7 +537,9 @@ describe("POST /audit-event-exports", () => {
     expect(unavailable.headers.get("Content-Disposition")).toBeNull()
   }, 20_000)
 
-  test("keeps 50,000 rows and the formal worst shape within their full-request budgets", async () => {
+  // どちらの形も 1 回の書き出しが手元で 2〜3 秒、CI で 3 倍ほどかかる。2 つを 1 つの test に入れると
+  // 20 秒の制限に届くため、形ごとに分けてそれぞれの制限で測る。
+  test("keeps 50,000 rows within the full-request budget", async () => {
     const fiftyThousand = await createTestDb(false)
     await insertBulkRows(fiftyThousand.db, 50_000)
     fiftyThousand.resetQueries()
@@ -546,7 +548,9 @@ describe("POST /audit-event-exports", () => {
     expect(fiftyThousand.queries()).toBe(23)
     expect(fiftyThousand.queries()).toBeLessThanOrEqual(28)
     expect(fiftyThousand.queries()).toBeLessThanOrEqual(33)
+  }, 20_000)
 
+  test("keeps the formal worst shape within the full-request budget", async () => {
     const formalWorst = await createTestDb(false)
     await insertFormalWorstRows(formalWorst.db)
     formalWorst.resetQueries()
