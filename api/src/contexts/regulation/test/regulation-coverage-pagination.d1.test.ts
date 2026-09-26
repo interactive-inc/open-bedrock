@@ -53,7 +53,7 @@ test("規程11件と改定版を分割照合し撤去確定する", async () => 
   await database
     .prepare(`INSERT INTO system_step_up_grants
       (id,account_id,token_hash,method,issued_at,expires_at)
-      VALUES ('regulation-coverage-step-up',?1,?2,'external_identity',?3,?4)`)
+      VALUES ('bb0c6593-18f1-4f65-b34e-b9fa45363b02',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const post = (path: string, body: unknown) =>

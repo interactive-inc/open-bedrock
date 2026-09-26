@@ -93,7 +93,7 @@ test("入退社手続き6台帳を分割照合し撤去確定する", async () =
   await database
     .prepare(`INSERT INTO system_step_up_grants
       (id,account_id,token_hash,method,issued_at,expires_at)
-      VALUES ('onboarding-coverage-step-up',?1,?2,'external_identity',?3,?4)`)
+      VALUES ('50a66764-a45f-43e3-8e90-970a5a4d792d',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const post = (path: string, body: unknown) =>

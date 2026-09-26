@@ -104,7 +104,7 @@ test("代理承認で保存した記録は業務撤去後も委任条件を返�
   const readerContext = context
   const input = {
     proof,
-    accountId: "account:manager",
+    accountId: "31a1342c-776f-4a19-8ca8-8ad48aa33449",
     permissionKeys: new Set(["system:procedure:read"]),
     at: new Date(),
   }

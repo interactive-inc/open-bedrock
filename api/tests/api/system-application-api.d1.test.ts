@@ -2,6 +2,7 @@ import { withCurrentDecisionTarget } from "@tests/api/support/with-current-decis
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
+import { testAccountId } from "@system/test/system-test-id.test-support"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import {
   createLifecycleRouteDb,
@@ -87,7 +88,7 @@ async function createDb(
     },
     decisionPolicy: policy,
     completionOperationKey: null,
-    createdByAccountId: zAccountId.parse("1"),
+    createdByAccountId: zAccountId.parse(testAccountId(1)),
     createdAt: new Date(now),
   })
   if (definition instanceof Error) throw definition
@@ -452,16 +453,16 @@ describe("System application API composition", () => {
         .prepare("SELECT actor_account_id, represented_account_id FROM system_human_attestations")
         .first<{ actor_account_id: string; represented_account_id: string }>(),
     ).toEqual({
-      actor_account_id: "2",
-      represented_account_id: "1",
+      actor_account_id: testAccountId(2),
+      represented_account_id: testAccountId(1),
     })
   })
 
   test.each([
-    { accountId: "1", change: "missing" },
-    { accountId: "2", change: "missing" },
-    { accountId: "1", change: "future" },
-    { accountId: "2", change: "future" },
+    { accountId: testAccountId(1), change: "missing" },
+    { accountId: testAccountId(2), change: "missing" },
+    { accountId: testAccountId(1), change: "future" },
+    { accountId: testAccountId(2), change: "future" },
   ])(
     "代理判断の保存直前に人のPrincipalが変わった場合は全体を取り消す: %j",
     async ({ accountId, change }) => {
@@ -563,7 +564,9 @@ describe("System application API composition", () => {
       async function (this: SystemD1WorkflowAdapter, input) {
         interception.mockRestore()
         await db
-          .prepare("UPDATE company_employees SET employee_code = 'RENAMED' WHERE id = '1'")
+          .prepare(
+            "UPDATE company_employees SET employee_code = 'RENAMED' WHERE id = '01900062-0000-7000-8000-000000000001'",
+          )
           .run()
         return this.decide(input)
       },
@@ -613,7 +616,7 @@ describe("System application API composition", () => {
          ends_on, is_void, recorded_by_action_id, recorded_at)
         SELECT period_id, revision + 1, employment_period_id, employee_id, 'leave', starts_on,
           ends_on, is_void, recorded_by_action_id, recorded_at + 1
-        FROM company_employee_status_period_versions WHERE employee_id = '1'`)
+        FROM company_employee_status_period_versions WHERE employee_id = '01900062-0000-7000-8000-000000000001'`)
           .run()
         return this.decide(input)
       },
@@ -822,7 +825,7 @@ describe("System application API composition", () => {
         .prepare(
           `SELECT count(*) AS count
            FROM system_delegations
-           WHERE delegator_account_id = '1' AND revoked_at IS NULL`,
+           WHERE delegator_account_id = '01900061-0000-7000-8000-000000000001' AND revoked_at IS NULL`,
         )
         .first<number>("count"),
     ).toBe(1)

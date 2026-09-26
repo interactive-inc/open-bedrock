@@ -21,6 +21,7 @@ const schema = `
 
   CREATE TABLE system_accounts (
     id TEXT PRIMARY KEY NOT NULL CHECK (length(id) BETWEEN 1 AND 255),
+    legacy_id TEXT UNIQUE,
     status TEXT NOT NULL CHECK (status IN ('active', 'suspended', 'locked')),
     token_version INTEGER NOT NULL DEFAULT 0 CHECK (token_version >= 0),
     closed_at INTEGER,

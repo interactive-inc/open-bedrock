@@ -15,6 +15,7 @@ import { openSystemProcedures } from "@system/interface/operations/open-system-p
 import { CompleteApprovedPersonnelActionRequest } from "@/contexts/company/application/employee-lifecycle/procedure/complete-approved-personnel-action-request"
 import { PersonnelActionPersistenceAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter"
 import { CompanyConflictError } from "@/contexts/company/domain/errors"
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { ApplyOrganizationResourceAdoption } from "@/contexts/company/application/organization/apply-organization-resource-adoption"
@@ -218,7 +219,7 @@ describe("Company公開責務による人事発令", () => {
       {
         ...base,
         type: "organization-unit",
-        id: "period:approval-team",
+        id: testDerivedId("resource", "period:approval-team"),
         attributes: {
           organizationUnitId: "0190005f-0000-7000-8000-7999329aec63",
           code: "APPROVAL-TEAM",
@@ -230,7 +231,7 @@ describe("Company公開責務による人事発令", () => {
       {
         ...base,
         type: "assignment",
-        id: "assignment:approved",
+        id: testDerivedId("resource", "assignment:approved"),
         attributes: {
           employeeId: c.target.employeeId,
           employmentId,
@@ -247,7 +248,7 @@ describe("Company公開責務による人事発令", () => {
       {
         ...base,
         type: "position",
-        id: "position:approved-lead",
+        id: testDerivedId("resource", "position:approved-lead"),
         attributes: { code: "APPROVED-LEAD", officialName: "Approved Lead", jobId: null },
       },
     ])
@@ -298,7 +299,7 @@ describe("Company公開責務による人事発令", () => {
     expect(persistedRequest?.base_company_revision).toBe(companyRevision)
     expect(JSON.parse(persistedRequest?.payload_json ?? "null")).toMatchObject({
       positionReference: {
-        resourceId: "position:approved-lead",
+        resourceId: testDerivedId("resource", "position:approved-lead"),
         resourceRevision: 1,
         organizationRevision: companyRevision,
         effectiveOn: c.input.action.eventOn,
@@ -390,7 +391,7 @@ describe("Company公開責務による人事発令", () => {
     })
     if (started instanceof Error) throw started
     const fingerprint = await lifecycleSha256(
-      stableLifecycleJson({ employeeId: "prospective:LEGACY", input: action }),
+      stableLifecycleJson({ employeeId: "8133a32c-c033-495a-a30c-fab86c859d03", input: action }),
     )
     await c.database
       .prepare(`INSERT INTO company_personnel_action_requests
@@ -581,7 +582,7 @@ describe("Company公開責務による人事発令", () => {
             {
               organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
               type: "position",
-              id: "position:concurrent-definition",
+              id: testDerivedId("resource", "position:concurrent-definition"),
               revision: 1,
               state: "active",
               effectiveFrom: c.input.action.eventOn,

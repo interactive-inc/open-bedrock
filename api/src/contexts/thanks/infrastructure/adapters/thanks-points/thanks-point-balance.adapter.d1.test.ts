@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { ThanksPointBalanceAdapter } from "@/contexts/thanks/infrastructure/adapters/thanks-points/thanks-point-balance.adapter"
@@ -45,7 +46,7 @@ async function seedReceived(
 ): Promise<void> {
   await context.var.database.insert(thanks).values({
     id: crypto.randomUUID(),
-    senderEmployeeId: toWorkforceEmployeeId(99),
+    senderEmployeeId: toWorkforceEmployeeId(testEmployeeId(99)),
     recipientEmployeeId,
     message: "テスト",
     points,
@@ -78,7 +79,7 @@ async function seedRedemption(
 
   await context.var.database.insert(thanksRedemptions).values({
     id: crypto.randomUUID(),
-    employeeId: toWorkforceEmployeeId(props.employeeId),
+    employeeId: toWorkforceEmployeeId(testEmployeeId(props.employeeId)),
     rewardId,
     pointCost: props.pointCost,
     status: props.status,
@@ -96,7 +97,7 @@ describe("ThanksPointBalanceAdapter.getBalance", () => {
     )
 
     const balance = await new ThanksPointBalanceAdapter(context).getBalance(
-      toWorkforceEmployeeId(5),
+      toWorkforceEmployeeId(testEmployeeId(5)),
     )
 
     expect(balance).toBe(0)
@@ -105,11 +106,11 @@ describe("ThanksPointBalanceAdapter.getBalance", () => {
   test("sums received points", async () => {
     const { context } = await createLocalD1Context(local, "sums-received-points")
 
-    await seedReceived(context, toWorkforceEmployeeId(5), 100)
-    await seedReceived(context, toWorkforceEmployeeId(5), 20)
+    await seedReceived(context, toWorkforceEmployeeId(testEmployeeId(5)), 100)
+    await seedReceived(context, toWorkforceEmployeeId(testEmployeeId(5)), 20)
 
     const balance = await new ThanksPointBalanceAdapter(context).getBalance(
-      toWorkforceEmployeeId(5),
+      toWorkforceEmployeeId(testEmployeeId(5)),
     )
 
     expect(balance).toBe(120)
@@ -121,11 +122,11 @@ describe("ThanksPointBalanceAdapter.getBalance", () => {
       "counts-only-points-received-by-the-given",
     )
 
-    await seedReceived(context, toWorkforceEmployeeId(5), 100)
-    await seedReceived(context, toWorkforceEmployeeId(6), 999)
+    await seedReceived(context, toWorkforceEmployeeId(testEmployeeId(5)), 100)
+    await seedReceived(context, toWorkforceEmployeeId(testEmployeeId(6)), 999)
 
     const balance = await new ThanksPointBalanceAdapter(context).getBalance(
-      toWorkforceEmployeeId(5),
+      toWorkforceEmployeeId(testEmployeeId(5)),
     )
 
     expect(balance).toBe(100)
@@ -134,11 +135,11 @@ describe("ThanksPointBalanceAdapter.getBalance", () => {
   test("deducts fulfilled redemptions", async () => {
     const { context } = await createLocalD1Context(local, "deducts-fulfilled-redemptions")
 
-    await seedReceived(context, toWorkforceEmployeeId(5), 100)
+    await seedReceived(context, toWorkforceEmployeeId(testEmployeeId(5)), 100)
     await seedRedemption(context, { employeeId: 5, pointCost: 30, status: "fulfilled" })
 
     const balance = await new ThanksPointBalanceAdapter(context).getBalance(
-      toWorkforceEmployeeId(5),
+      toWorkforceEmployeeId(testEmployeeId(5)),
     )
 
     expect(balance).toBe(70)
@@ -150,11 +151,11 @@ describe("ThanksPointBalanceAdapter.getBalance", () => {
       "deducts-pending-redemptions-so-reserved-points",
     )
 
-    await seedReceived(context, toWorkforceEmployeeId(5), 100)
+    await seedReceived(context, toWorkforceEmployeeId(testEmployeeId(5)), 100)
     await seedRedemption(context, { employeeId: 5, pointCost: 30, status: "pending" })
 
     const balance = await new ThanksPointBalanceAdapter(context).getBalance(
-      toWorkforceEmployeeId(5),
+      toWorkforceEmployeeId(testEmployeeId(5)),
     )
 
     expect(balance).toBe(70)
@@ -163,11 +164,11 @@ describe("ThanksPointBalanceAdapter.getBalance", () => {
   test("does not deduct rejected redemptions", async () => {
     const { context } = await createLocalD1Context(local, "does-not-deduct-rejected-redemptions")
 
-    await seedReceived(context, toWorkforceEmployeeId(5), 100)
+    await seedReceived(context, toWorkforceEmployeeId(testEmployeeId(5)), 100)
     await seedRedemption(context, { employeeId: 5, pointCost: 30, status: "rejected" })
 
     const balance = await new ThanksPointBalanceAdapter(context).getBalance(
-      toWorkforceEmployeeId(5),
+      toWorkforceEmployeeId(testEmployeeId(5)),
     )
 
     expect(balance).toBe(100)
@@ -176,11 +177,11 @@ describe("ThanksPointBalanceAdapter.getBalance", () => {
   test("deducts only the given employee's redemptions", async () => {
     const { context } = await createLocalD1Context(local, "deducts-only-the-given-employee")
 
-    await seedReceived(context, toWorkforceEmployeeId(5), 100)
+    await seedReceived(context, toWorkforceEmployeeId(testEmployeeId(5)), 100)
     await seedRedemption(context, { employeeId: 6, pointCost: 30, status: "fulfilled" })
 
     const balance = await new ThanksPointBalanceAdapter(context).getBalance(
-      toWorkforceEmployeeId(5),
+      toWorkforceEmployeeId(testEmployeeId(5)),
     )
 
     expect(balance).toBe(100)
@@ -195,7 +196,7 @@ describe("ThanksPointBalanceAdapter.getBalance", () => {
 
     await context.var.database.insert(thanksPointBudgets).values({
       id: crypto.randomUUID(),
-      employeeId: toWorkforceEmployeeId(5),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(5)),
       period: "2026-01",
       grantedPoints: 400,
       consumedPoints: 250,
@@ -203,7 +204,7 @@ describe("ThanksPointBalanceAdapter.getBalance", () => {
     })
 
     const balance = await new ThanksPointBalanceAdapter(context).getBalance(
-      toWorkforceEmployeeId(5),
+      toWorkforceEmployeeId(testEmployeeId(5)),
     )
 
     expect(balance).toBe(0)

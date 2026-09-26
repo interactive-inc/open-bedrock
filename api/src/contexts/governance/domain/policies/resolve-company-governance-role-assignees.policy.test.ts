@@ -42,21 +42,21 @@ describe("Company governance role assignees", () => {
         resource("responsibility-assignment", "assignment:2", {
           responsibilityId: responsibility.id,
           holderType: "employee",
-          holderId: "employee:2",
+          holderId: "86cf8dfa-151f-424b-ae22-fa25a715308d",
           authorityScopeId: scope.id,
           delegationAllowed: false,
         }),
         resource("responsibility-assignment", "assignment:1", {
           responsibilityId: responsibility.id,
           holderType: "employee",
-          holderId: "employee:1",
+          holderId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
           authorityScopeId: null,
           delegationAllowed: false,
         }),
       ],
       employees: [
-        { id: "employee:2", code: "E002", name: "Second" },
-        { id: "employee:1", code: "E001", name: "First" },
+        { id: "86cf8dfa-151f-424b-ae22-fa25a715308d", code: "E002", name: "Second" },
+        { id: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1", code: "E001", name: "First" },
       ],
       departments: [{ id: "0190005f-0000-7000-8000-9ce54195b83b", code: "SECURITY" }],
     })
@@ -64,14 +64,14 @@ describe("Company governance role assignees", () => {
     expect(result).toEqual([
       {
         assignmentId: "assignment:1",
-        employeeId: "employee:1",
+        employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
         employeeCode: "E001",
         employeeName: "First",
         departmentCode: null,
       },
       {
         assignmentId: "assignment:2",
-        employeeId: "employee:2",
+        employeeId: "86cf8dfa-151f-424b-ae22-fa25a715308d",
         employeeCode: "E002",
         employeeName: "Second",
         departmentCode: "SECURITY",

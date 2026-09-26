@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { ApproveRedemption } from "@/contexts/thanks/application/thanks-points/approve-redemption"
@@ -47,7 +48,7 @@ afterAll(async () => {
 async function seedBalance(context: Context, employeeId: EmployeeId, points: number) {
   await context.var.database.insert(thanks).values({
     id: crypto.randomUUID(),
-    senderEmployeeId: toWorkforceEmployeeId(99),
+    senderEmployeeId: toWorkforceEmployeeId(testEmployeeId(99)),
     recipientEmployeeId: employeeId,
     message: "テスト",
     points,
@@ -85,7 +86,7 @@ function ports(context: Context) {
 
 async function requestPending(context: Context, employeeId: number, rewardId: string) {
   const pending = await new RequestRedemption(ports(context)).run({
-    employeeId: toWorkforceEmployeeId(employeeId),
+    employeeId: toWorkforceEmployeeId(testEmployeeId(employeeId)),
     rewardId,
     createdAt: "2026-02-01T00:00:00.000Z",
   })
@@ -109,14 +110,14 @@ describe("thanks redemption SQL on local D1", () => {
       withCompanyOrganization: true,
     })
 
-    await seedBalance(context, toWorkforceEmployeeId(5), 200)
+    await seedBalance(context, toWorkforceEmployeeId(testEmployeeId(5)), 200)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 3 })
 
     const pending = await requestPending(context, 5, rewardId)
 
     const duplicate = await new RequestRedemption(ports(context)).run({
-      employeeId: toWorkforceEmployeeId(5),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(5)),
       rewardId,
       createdAt: "2026-02-02T00:00:00.000Z",
     })
@@ -126,7 +127,7 @@ describe("thanks redemption SQL on local D1", () => {
     const approved = await new ApproveRedemption(ports(context)).execute({
       session: makeTestSession("root"),
       redemptionId: pending.id ?? "",
-      deciderId: toWorkforceEmployeeId(2),
+      deciderId: toWorkforceEmployeeId(testEmployeeId(2)),
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
 
@@ -138,7 +139,7 @@ describe("thanks redemption SQL on local D1", () => {
     const rejected = await new RejectRedemption(ports(context)).execute({
       session: makeTestSession("root"),
       redemptionId: pending.id ?? "",
-      deciderId: toWorkforceEmployeeId(2),
+      deciderId: toWorkforceEmployeeId(testEmployeeId(2)),
       decidedAt: "2026-02-03T00:00:00.000Z",
     })
 
@@ -150,8 +151,8 @@ describe("thanks redemption SQL on local D1", () => {
       withCompanyOrganization: true,
     })
 
-    await seedBalance(context, toWorkforceEmployeeId(5), 100)
-    await seedBalance(context, toWorkforceEmployeeId(6), 100)
+    await seedBalance(context, toWorkforceEmployeeId(testEmployeeId(5)), 100)
+    await seedBalance(context, toWorkforceEmployeeId(testEmployeeId(6)), 100)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 1 })
 
@@ -161,7 +162,7 @@ describe("thanks redemption SQL on local D1", () => {
     const first = await new ApproveRedemption(ports(context)).execute({
       session: makeTestSession("root"),
       redemptionId: firstPending.id ?? "",
-      deciderId: toWorkforceEmployeeId(2),
+      deciderId: toWorkforceEmployeeId(testEmployeeId(2)),
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
 
@@ -170,7 +171,7 @@ describe("thanks redemption SQL on local D1", () => {
     const second = await new ApproveRedemption(ports(context)).execute({
       session: makeTestSession("root"),
       redemptionId: secondPending.id ?? "",
-      deciderId: toWorkforceEmployeeId(2),
+      deciderId: toWorkforceEmployeeId(testEmployeeId(2)),
       decidedAt: "2026-02-02T00:01:00.000Z",
     })
 
@@ -188,7 +189,7 @@ describe("thanks redemption SQL on local D1", () => {
     })
 
     // 残高 50 ぴったりで申請する。approve 時は自身の pending を除外して再計算する。
-    await seedBalance(context, toWorkforceEmployeeId(5), 50)
+    await seedBalance(context, toWorkforceEmployeeId(testEmployeeId(5)), 50)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 3 })
 
@@ -197,26 +198,26 @@ describe("thanks redemption SQL on local D1", () => {
     // 別の fulfilled 行で残高を食いつぶす
     await context.var.database.insert(thanksRedemptions).values({
       id: crypto.randomUUID(),
-      employeeId: toWorkforceEmployeeId(5),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(5)),
       rewardId,
       pointCost: 50,
       status: "fulfilled",
       createdAt: "2026-01-15T00:00:00.000Z",
       decidedAt: "2026-01-16T00:00:00.000Z",
-      deciderId: toWorkforceEmployeeId(2),
+      deciderId: toWorkforceEmployeeId(testEmployeeId(2)),
     })
 
     const result = await new ApproveRedemption(ports(context)).execute({
       session: makeTestSession("root"),
       redemptionId: pending.id ?? "",
-      deciderId: toWorkforceEmployeeId(2),
+      deciderId: toWorkforceEmployeeId(testEmployeeId(2)),
       decidedAt: "2026-02-02T00:00:00.000Z",
     })
 
     expectApplicationError(result, ConflictError, "insufficient_balance")
 
     // 事前チェック後に無効化された報酬は、条件付きINSERTが isActive を再確認して弾く。
-    await seedBalance(context, toWorkforceEmployeeId(6), 100)
+    await seedBalance(context, toWorkforceEmployeeId(testEmployeeId(6)), 100)
     await context.var.database
       .update(thanksRewards)
       .set({ isActive: false })
@@ -224,7 +225,7 @@ describe("thanks redemption SQL on local D1", () => {
 
     const inserted = await new ThanksRedemptionRepository(context).createIfSufficientBalance(
       ThanksRedemption.create({
-        employeeId: toWorkforceEmployeeId(6),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(6)),
         rewardId,
         pointCost: 50,
         createdAt: "2026-02-03T00:00:00.000Z",
@@ -242,7 +243,7 @@ describe("ThanksRedemptionRepository.createIfSufficientBalance", () => {
       "creates-a-pending-redemption-when-balance-and-st",
     )
 
-    await seedBalance(context, toWorkforceEmployeeId(5), 100)
+    await seedBalance(context, toWorkforceEmployeeId(testEmployeeId(5)), 100)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 1 })
 
@@ -250,7 +251,7 @@ describe("ThanksRedemptionRepository.createIfSufficientBalance", () => {
 
     const created = await repository.createIfSufficientBalance(
       ThanksRedemption.create({
-        employeeId: toWorkforceEmployeeId(5),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(5)),
         rewardId,
         pointCost: 50,
         createdAt: "2026-01-02T00:00:00.000Z",
@@ -268,7 +269,7 @@ describe("ThanksRedemptionRepository.createIfSufficientBalance", () => {
       "rejects-with-out-of-stock-when-the-reward-stock",
     )
 
-    await seedBalance(context, toWorkforceEmployeeId(5), 100)
+    await seedBalance(context, toWorkforceEmployeeId(testEmployeeId(5)), 100)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 0 })
 
@@ -276,7 +277,7 @@ describe("ThanksRedemptionRepository.createIfSufficientBalance", () => {
 
     const created = await repository.createIfSufficientBalance(
       ThanksRedemption.create({
-        employeeId: toWorkforceEmployeeId(5),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(5)),
         rewardId,
         pointCost: 50,
         createdAt: "2026-01-02T00:00:00.000Z",
@@ -289,7 +290,7 @@ describe("ThanksRedemptionRepository.createIfSufficientBalance", () => {
   test("treats null stock as unlimited", async () => {
     const { context } = await createLocalD1Context(local, "treats-null-stock-as-unlimited")
 
-    await seedBalance(context, toWorkforceEmployeeId(5), 100)
+    await seedBalance(context, toWorkforceEmployeeId(testEmployeeId(5)), 100)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: null })
 
@@ -297,7 +298,7 @@ describe("ThanksRedemptionRepository.createIfSufficientBalance", () => {
 
     const created = await repository.createIfSufficientBalance(
       ThanksRedemption.create({
-        employeeId: toWorkforceEmployeeId(5),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(5)),
         rewardId,
         pointCost: 50,
         createdAt: "2026-01-02T00:00:00.000Z",
@@ -313,7 +314,7 @@ describe("ThanksRedemptionRepository.createIfSufficientBalance", () => {
       "rejects-with-insufficient-balance-when-the-balan",
     )
 
-    await seedBalance(context, toWorkforceEmployeeId(5), 30)
+    await seedBalance(context, toWorkforceEmployeeId(testEmployeeId(5)), 30)
 
     const rewardId = await seedReward(context, { pointCost: 50, stock: 1 })
 
@@ -321,7 +322,7 @@ describe("ThanksRedemptionRepository.createIfSufficientBalance", () => {
 
     const created = await repository.createIfSufficientBalance(
       ThanksRedemption.create({
-        employeeId: toWorkforceEmployeeId(5),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(5)),
         rewardId,
         pointCost: 50,
         createdAt: "2026-01-02T00:00:00.000Z",

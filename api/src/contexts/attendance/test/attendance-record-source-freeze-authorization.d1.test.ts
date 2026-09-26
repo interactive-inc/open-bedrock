@@ -37,7 +37,7 @@ test("外部IdPの再認証を受け付け、準備後のgrant取消では停止
   await f.database
     .prepare(`INSERT INTO system_step_up_grants
     (id,account_id,token_hash,method,issued_at,expires_at,last_used_at)
-    VALUES ('freeze-grant','account:recorder',?1,'external_identity',?2,?3,?2)`)
+    VALUES ('07afcf7f-493b-4b51-991e-f4e50166f9b2','cc97e08f-b4a0-4e2a-9a79-31e6d95f9208',?1,'external_identity',?2,?3,?2)`)
     .bind(hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const adapterContext = f.context
@@ -46,7 +46,9 @@ test("外部IdPの再認証を受け付け、準備後のgrant取消では停止
   if (proof instanceof Error || proof === "forbidden") throw new Error("external step-up rejected")
   await f.database.batch([...proof.assertions])
   await f.database
-    .prepare("UPDATE system_step_up_grants SET revoked_at=?1 WHERE id='freeze-grant'")
+    .prepare(
+      "UPDATE system_step_up_grants SET revoked_at=?1 WHERE id='07afcf7f-493b-4b51-991e-f4e50166f9b2'",
+    )
     .bind(now.getTime())
     .run()
   expect(await prepareSystemRecordSourceFreezeAuthorization(adapterContext, input)).toBe(
@@ -99,7 +101,10 @@ test("閲覧権限だけの主体・機械・未使用grantを拒否し、読取
   expect(
     await prepareSystemRecordSourceFreezeAuthorization(adapterContext, {
       ...input,
-      authentication: { ...f.authentication, machineCredentialId: "machine" },
+      authentication: {
+        ...f.authentication,
+        machineCredentialId: "eedf65eb-08b4-48bb-91c8-a783b1b07b90",
+      },
     }),
   ).toBe("forbidden")
   const proof = await prepareSystemRecordSourceFreezeAuthorization(adapterContext, input)
@@ -109,7 +114,7 @@ test("閲覧権限だけの主体・機械・未使用grantを拒否し、読取
   if (hash instanceof Error) throw hash
   await f.database
     .prepare(`INSERT INTO system_step_up_grants (id,account_id,token_hash,method,issued_at,expires_at)
-    VALUES ('unused-grant','account:recorder',?1,'external_identity',?2,?3)`)
+    VALUES ('adf4fc44-4488-4a06-ac14-3f1f3f222180','cc97e08f-b4a0-4e2a-9a79-31e6d95f9208',?1,'external_identity',?2,?3)`)
     .bind(hash, now.getTime(), now.getTime() + 60_000)
     .run()
   expect(

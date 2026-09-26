@@ -40,7 +40,7 @@ test("入社手続きテンプレートを停止中に人の承認で保全し�
   await database
     .prepare(`INSERT INTO system_step_up_grants
       (id,account_id,token_hash,method,issued_at,expires_at)
-      VALUES ('onboarding-test-step-up',?1,?2,'external_identity',?3,?4)`)
+      VALUES ('968192f8-52ae-4e4e-afdf-1296aee027fd',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const frozen = await app.request(

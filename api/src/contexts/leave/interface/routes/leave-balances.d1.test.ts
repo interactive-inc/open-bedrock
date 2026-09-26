@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { createTestToken } from "@tests/api/support/create-test-token"
@@ -68,7 +69,7 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "leave_balances", [
     {
       id: crypto.randomUUID(),
-      employee_id: "20",
+      employee_id: testEmployeeId(20),
       fiscal_year: "2026",
       leave_type: "annual",
       granted_days: 20,
@@ -118,7 +119,10 @@ async function getRequest(path: string, token: string | null): Promise<Response>
 
 describe("GET /leave-balances", () => {
   test("manager reads a report's balance via employee_id", async () => {
-    const response = await getRequest("/leave/leave-balances?employee_id=20", await tokenFor(2))
+    const response = await getRequest(
+      `/leave/leave-balances?employee_id=${testEmployeeId(20)}`,
+      await tokenFor(2),
+    )
 
     expect(response.status).toBe(200)
 
@@ -133,13 +137,19 @@ describe("GET /leave-balances", () => {
   })
 
   test("member requesting another employee's balance is forbidden", async () => {
-    const response = await getRequest("/leave/leave-balances?employee_id=23", await tokenFor(20))
+    const response = await getRequest(
+      `/leave/leave-balances?employee_id=${testEmployeeId(23)}`,
+      await tokenFor(20),
+    )
 
     expect(response.status).toBe(403)
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await getRequest("/leave/leave-balances?employee_id=20", null)
+    const response = await getRequest(
+      `/leave/leave-balances?employee_id=${testEmployeeId(20)}`,
+      null,
+    )
 
     expect(response.status).toBe(401)
   })

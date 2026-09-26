@@ -113,7 +113,7 @@ export async function createCompanyAssignmentResourceTestContext(
   const assignment: Extract<Resource, { type: "assignment" }> = {
     organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "assignment",
-    id: "assignment:public",
+    id: "0a8c2e5f-3b7d-4e19-8c6a-5d2f9b1e7a40",
     revision: 1,
     state: "active",
     effectiveFrom: "2030-01-01",

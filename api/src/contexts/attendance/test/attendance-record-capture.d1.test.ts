@@ -23,7 +23,7 @@ const authorizationMutations = [
   "UPDATE system_role_bindings SET revoked_at=1",
   `UPDATE system_role_bindings SET revoked_at=1;
       INSERT INTO system_role_bindings (id,account_id,role_id,resource_type,resource_id,created_at)
-      VALUES ('9980a578-84f0-4eda-8679-144756c99e1d','account:recorder','0a05519b-05c9-4925-8b15-fcb647569867','employee','employee:worker',1)`,
+      VALUES ('9980a578-84f0-4eda-8679-144756c99e1d','cc97e08f-b4a0-4e2a-9a79-31e6d95f9208','0a05519b-05c9-4925-8b15-fcb647569867','employee','aea9e258-3d37-4735-a897-5d1eb8aa7c29',1)`,
 ]
 
 let local: LocalD1
@@ -152,7 +152,7 @@ test("inventory includes open and closed records and detects added or removed re
   await execSql(
     f.database,
     `INSERT INTO attendance_records
-    (id,employee_id,work_date,note,status) VALUES ('01900016-0000-7000-8000-000000000003','employee:worker','2026-08-30','Unprovided times','closed')`,
+    (id,employee_id,work_date,note,status) VALUES ('01900016-0000-7000-8000-000000000003','aea9e258-3d37-4735-a897-5d1eb8aa7c29','2026-08-30','Unprovided times','closed')`,
   )
   expect(
     await f.database.batch([...initial.assertions]).catch((cause: unknown) => cause),

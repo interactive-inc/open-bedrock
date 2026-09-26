@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { ShiftSwapRequest } from "@/contexts/shift/domain/entities/shift-swap-request.entity"
 import { ShiftSwapRequestRepository } from "@/contexts/shift/infrastructure/repositories/shift-swap-request.repository"
@@ -41,8 +42,8 @@ describe("ShiftSwapRequestRepository", () => {
 
     const created = await repository.create(
       createSwapRequest({
-        requesterEmployeeId: toWorkforceEmployeeId(1),
-        targetEmployeeId: toWorkforceEmployeeId(2),
+        requesterEmployeeId: toWorkforceEmployeeId(testEmployeeId(1)),
+        targetEmployeeId: toWorkforceEmployeeId(testEmployeeId(2)),
         date: "2026-05-31",
         note: null,
       }),
@@ -67,7 +68,7 @@ describe("ShiftSwapRequestRepository", () => {
     }
 
     expect(found.status).toBe("pending")
-    expect(found.targetEmployeeId).toBe(toWorkforceEmployeeId(2))
+    expect(found.targetEmployeeId).toBe(toWorkforceEmployeeId(testEmployeeId(2)))
   })
 
   test("create returns null when a pending request already exists for the same pair and date", async () => {
@@ -80,8 +81,8 @@ describe("ShiftSwapRequestRepository", () => {
 
     const first = await repository.create(
       createSwapRequest({
-        requesterEmployeeId: toWorkforceEmployeeId(1),
-        targetEmployeeId: toWorkforceEmployeeId(2),
+        requesterEmployeeId: toWorkforceEmployeeId(testEmployeeId(1)),
+        targetEmployeeId: toWorkforceEmployeeId(testEmployeeId(2)),
         date: "2026-06-01",
         note: null,
       }),
@@ -91,8 +92,8 @@ describe("ShiftSwapRequestRepository", () => {
 
     const duplicate = await repository.create(
       createSwapRequest({
-        requesterEmployeeId: toWorkforceEmployeeId(1),
-        targetEmployeeId: toWorkforceEmployeeId(2),
+        requesterEmployeeId: toWorkforceEmployeeId(testEmployeeId(1)),
+        targetEmployeeId: toWorkforceEmployeeId(testEmployeeId(2)),
         date: "2026-06-01",
         note: "second attempt",
       }),
@@ -111,8 +112,8 @@ describe("ShiftSwapRequestRepository", () => {
 
     const first = await repository.create(
       createSwapRequest({
-        requesterEmployeeId: toWorkforceEmployeeId(1),
-        targetEmployeeId: toWorkforceEmployeeId(2),
+        requesterEmployeeId: toWorkforceEmployeeId(testEmployeeId(1)),
+        targetEmployeeId: toWorkforceEmployeeId(testEmployeeId(2)),
         date: "2026-06-02",
         note: null,
       }),
@@ -135,8 +136,8 @@ describe("ShiftSwapRequestRepository", () => {
     // Now a new pending request for the same pair/date should succeed
     const second = await repository.create(
       createSwapRequest({
-        requesterEmployeeId: toWorkforceEmployeeId(1),
-        targetEmployeeId: toWorkforceEmployeeId(2),
+        requesterEmployeeId: toWorkforceEmployeeId(testEmployeeId(1)),
+        targetEmployeeId: toWorkforceEmployeeId(testEmployeeId(2)),
         date: "2026-06-02",
         note: "re-request after approval",
       }),

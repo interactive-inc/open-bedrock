@@ -1,3 +1,4 @@
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { createCompanyPlaceTestContext } from "@/contexts/company/test/company-place.test-support"
@@ -16,14 +17,18 @@ export function createCompanyReportingReferenceTestContext(schemaSql?: string) {
       {
         ...company.common,
         type: "employee",
-        id: `employee:${id}`,
+        id: testDerivedId("employee", id),
         attributes: { personId: `person:${id}` },
       },
       {
         ...company.common,
         type: "employment",
-        id: `employment:${id}`,
-        attributes: { employeeId: `employee:${id}`, status: "ACTIVE", employmentType: "FULL_TIME" },
+        id: testDerivedId("employment", id),
+        attributes: {
+          employeeId: testDerivedId("employee", id),
+          status: "ACTIVE",
+          employmentType: "FULL_TIME",
+        },
       },
     ],
   )
@@ -33,8 +38,8 @@ export function createCompanyReportingReferenceTestContext(schemaSql?: string) {
     id: "reporting:worker",
     effectiveTo: restoreCalendarDate("2030-07-01"),
     attributes: {
-      employeeId: "employee:worker",
-      managerEmployeeId: "employee:manager",
+      employeeId: testDerivedId("employee", "worker"),
+      managerEmployeeId: testDerivedId("employee", "manager"),
       organizationUnitId: "0190005f-0000-7000-8000-3d39a82ae356",
     },
   }

@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -92,19 +93,22 @@ async function createTestDb(): Promise<D1Database> {
 
 function adminToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: toWorkforceEmployeeId(1),
+    employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
+    accountId: 1,
   })
 }
 
 function authorToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: toWorkforceEmployeeId(2),
+    employeeId: toWorkforceEmployeeId(testEmployeeId(2)),
+    accountId: 2,
   })
 }
 
 function otherMemberToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: toWorkforceEmployeeId(3),
+    employeeId: toWorkforceEmployeeId(testEmployeeId(3)),
+    accountId: 3,
   })
 }
 
@@ -159,7 +163,7 @@ describe("POST /meetings/:code/minutes", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.author_employee_id).toBe(toWorkforceEmployeeId(3))
+      expect(parsed.data.author_employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(3)))
       expect(parsed.data.meeting_id).toBe("0190001b-0000-7000-8000-000000000001")
     }
   })

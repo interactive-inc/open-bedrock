@@ -47,7 +47,7 @@ test("会議室2台帳を停止中に人の承認で保全し、業務コード�
   await database
     .prepare(`INSERT INTO system_step_up_grants
       (id,account_id,token_hash,method,issued_at,expires_at)
-      VALUES ('room-test-step-up',?1,?2,'external_identity',?3,?4)`)
+      VALUES ('058cebcb-0647-493b-8ea9-93534ddcb9bc',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const frozen = await app.request(

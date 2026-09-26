@@ -1,3 +1,4 @@
+import { testAccountId } from "@system/test/system-test-id.test-support"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import {
   SYSTEM_ACCESS_TOKEN_AUDIENCE,
@@ -29,7 +30,7 @@ export async function createTestToken(
 ): Promise<string> {
   if (options?.expirationTime === undefined) {
     const token = await new SystemAccessTokenIssuer(secret).issue({
-      accountId: zAccountId.parse(String(payload.accountId ?? payload.employeeId)),
+      accountId: zAccountId.parse(testAccountId(payload.accountId ?? payload.employeeId)),
       tokenVersion: payload.tokenVersion ?? 0,
       now: new Date(),
     })
@@ -45,7 +46,7 @@ export async function createTestToken(
     issuedAtMs: Date.now(),
   })
     .setProtectedHeader({ alg: "HS256", typ: ACCESS_TOKEN_TYPE })
-    .setSubject(String(payload.accountId ?? payload.employeeId))
+    .setSubject(testAccountId(payload.accountId ?? payload.employeeId))
     .setIssuer(SYSTEM_ACCESS_TOKEN_ISSUER)
     .setAudience(SYSTEM_ACCESS_TOKEN_AUDIENCE)
     .setJti(crypto.randomUUID())

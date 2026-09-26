@@ -29,7 +29,7 @@ async function createFixture(kind: "agent" | "service" | "connector" = "service"
   fixture.sqlite
     .query(
       `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-       VALUES ('machine-account', 'active', 0, ?1, ?1)`,
+       VALUES ('13943a8c-a101-4ba6-82d3-560dfa60c19b', 'active', 0, ?1, ?1)`,
     )
     .run(createdAt)
   if (kind === "connector") {
@@ -45,14 +45,14 @@ async function createFixture(kind: "agent" | "service" | "connector" = "service"
     .query(
       `INSERT INTO system_principals
        (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
-       VALUES ('machine-principal', 'machine-account', ?1, 'Automation', ?2, 1, ?3, ?3)`,
+       VALUES ('9a98bc39-03b1-4115-9d64-7bd9817b3a8d', '13943a8c-a101-4ba6-82d3-560dfa60c19b', ?1, 'Automation', ?2, 1, ?3, ?3)`,
     )
     .run(kind, kind === "connector" ? "connector-1" : null, createdAt)
   fixture.sqlite
     .query(
       `INSERT INTO system_machine_credentials
        (id, principal_id, name, secret_hash, status, created_at, updated_at, expires_at)
-       VALUES ('credential-1', 'machine-principal', 'Primary', ?1, 'active', ?2, ?2, ?3)`,
+       VALUES ('ad6a0f96-902f-4999-84f6-2b9eb703c2ed', '9a98bc39-03b1-4115-9d64-7bd9817b3a8d', 'Primary', ?1, 'active', ?2, ?2, ?3)`,
     )
     .run(hash, createdAt, expiresAt)
   fixture.sqlite.exec(`
@@ -62,7 +62,7 @@ async function createFixture(kind: "agent" | "service" | "connector" = "service"
     VALUES ('04635707-bd54-47ea-81d4-38426e3ce8a2', 'iam:read');
     INSERT INTO system_role_bindings
     (id, account_id, role_id, created_at, revoked_at)
-    VALUES ('72da13a4-abc7-476f-8499-074d4f8a8854', 'machine-account', '04635707-bd54-47ea-81d4-38426e3ce8a2', 1, NULL);
+    VALUES ('72da13a4-abc7-476f-8499-074d4f8a8854', '13943a8c-a101-4ba6-82d3-560dfa60c19b', '04635707-bd54-47ea-81d4-38426e3ce8a2', 1, NULL);
   `)
   const app = systemFactory.createApp()
   app.use("*", async (context, next) => {
@@ -76,7 +76,10 @@ async function createFixture(kind: "agent" | "service" | "connector" = "service"
       JWT_SECRET: secret,
       NOW: clock.at.toISOString(),
     })
-  const issue = (credentialId = "credential-1", credentialSecret = rawCredential) =>
+  const issue = (
+    credentialId = "ad6a0f96-902f-4999-84f6-2b9eb703c2ed",
+    credentialSecret = rawCredential,
+  ) =>
     request("/system/machine-sessions", {
       method: "POST",
       headers: { "content-type": "application/json" },
@@ -102,15 +105,17 @@ describe("System machine access token", () => {
     context.fixture.sqlite
       .query(`INSERT INTO system_machine_credentials
       (id, principal_id, name, secret_hash, status, created_at, updated_at)
-      VALUES ('credential-2', 'machine-principal', 'Secondary', ?1, 'active', ?2, ?2)`)
+      VALUES ('64571a17-dadf-476c-b4ab-d793d738ef0c', '9a98bc39-03b1-4115-9d64-7bd9817b3a8d', 'Secondary', ?1, 'active', ?2, ?2)`)
       .run(secondHash, context.clock.at.getTime())
-    const secondToken = await issuedToken(await context.issue("credential-2", secondSecret))
+    const secondToken = await issuedToken(
+      await context.issue("64571a17-dadf-476c-b4ab-d793d738ef0c", secondSecret),
+    )
     expect((await context.read(firstToken)).status).toBe(200)
     expect((await context.read(secondToken)).status).toBe(200)
     expect(
       await new SystemMachineCredentialRepository(context.fixture.context).revoke(
-        "machine-principal",
-        "credential-1",
+        "9a98bc39-03b1-4115-9d64-7bd9817b3a8d",
+        "ad6a0f96-902f-4999-84f6-2b9eb703c2ed",
         context.clock.at,
         [],
       ),
@@ -124,12 +129,12 @@ describe("System machine access token", () => {
     async (kind) => {
       const context = await createFixture(kind)
       const token = await issuedToken(await context.issue())
-      expect(decodeJwt(token).machineCredentialId).toBe("credential-1")
+      expect(decodeJwt(token).machineCredentialId).toBe("ad6a0f96-902f-4999-84f6-2b9eb703c2ed")
       expect((await context.read(token)).status).toBe(200)
       expect(
         await new SystemMachineCredentialRepository(context.fixture.context).revoke(
-          "machine-principal",
-          "credential-1",
+          "9a98bc39-03b1-4115-9d64-7bd9817b3a8d",
+          "ad6a0f96-902f-4999-84f6-2b9eb703c2ed",
           context.clock.at,
           [],
         ),
@@ -173,7 +178,7 @@ describe("System machine access token", () => {
     await issuedToken(await context.issue())
     for (const machineCredentialId of [undefined, "unknown-credential"]) {
       const token = await new SystemAccessTokenIssuer(secret).issue({
-        accountId: zAccountId.parse("machine-account"),
+        accountId: zAccountId.parse("13943a8c-a101-4ba6-82d3-560dfa60c19b"),
         tokenVersion: 0,
         machineCredentialId,
         now: context.clock.at,
@@ -198,7 +203,7 @@ describe("System machine access token", () => {
       const context = await createFixture("connector")
       const result = await new SystemMachineCredentialRepository(
         context.fixture.context,
-      ).authenticate("credential-1", context.hash, context.clock.at, () => {
+      ).authenticate("ad6a0f96-902f-4999-84f6-2b9eb703c2ed", context.hash, context.clock.at, () => {
         if (change === "suspend") {
           context.fixture.sqlite.exec("UPDATE system_accounts SET status = 'suspended'")
         } else if (change === "version") {

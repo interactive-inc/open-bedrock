@@ -8,10 +8,10 @@ VALUES ('ad4f6cb1-774b-43ae-950f-80e9bc67c66d', 'seed:public-workforce',
 INSERT INTO company_resource_revisions
   (organization_id, resource_type, resource_id, revision, organization_revision, state,
    effective_from, effective_to, attributes_json, command_id, actor_account_id, reason, recorded_at)
-SELECT 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d', 'person', 'person:seed:' || employee.id, 1, 3, 'active',
+SELECT 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d', 'person', '01900065' || substr(employee.id, 9), 1, 3, 'active',
   employment.hire_date, NULL,
   json_object('officialName', employee.official_name, 'email', employee.email, 'phone', employee.phone),
-  'seed:public-workforce', '1', 'Confirmed development sample', 1767225600000
+  'seed:public-workforce', '01900061-0000-7000-8000-000000000001', 'Confirmed development sample', 1767225600000
 FROM company_employees employee
 JOIN company_employments employment ON employment.employee_id = employee.id;
 
@@ -27,8 +27,8 @@ INSERT INTO company_resource_revisions
    effective_from, effective_to, attributes_json, command_id, actor_account_id, reason, recorded_at)
 SELECT 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d', 'employee', employee.id, 1, 3, 'active',
   employment.hire_date, NULL,
-  json_object('personId', 'person:seed:' || employee.id, 'employeeCode', employee.employee_code),
-  'seed:public-workforce', '1', 'Confirmed development sample', 1767225600000
+  json_object('personId', '01900065' || substr(employee.id, 9), 'employeeCode', employee.employee_code),
+  'seed:public-workforce', '01900061-0000-7000-8000-000000000001', 'Confirmed development sample', 1767225600000
 FROM company_employees employee
 JOIN company_employments employment ON employment.employee_id = employee.id;
 
@@ -55,7 +55,7 @@ SELECT 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d', 'employment', employment.id, 1, 3
   json_object('employeeId', employment.employee_id, 'status',
     CASE WHEN employment.status = 'TERMINATED' THEN 'ACTIVE' ELSE employment.status END,
     'employmentType', employment.employment_type, 'officialName', employment.contract_name),
-  'seed:public-workforce', '1', 'Confirmed development sample', 1767225600000
+  'seed:public-workforce', '01900061-0000-7000-8000-000000000001', 'Confirmed development sample', 1767225600000
 FROM company_employments employment;
 
 INSERT INTO company_resource_heads
@@ -76,10 +76,10 @@ JOIN company_employee_lifecycle_revisions lifecycle ON lifecycle.employee_id = e
 INSERT INTO company_resource_revisions
   (organization_id, resource_type, resource_id, revision, organization_revision, state,
    effective_from, effective_to, attributes_json, command_id, actor_account_id, reason, recorded_at)
-SELECT 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d', 'account-employee-link', 'link:seed:' || link.account_id, 1, 3,
+SELECT 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d', 'account-employee-link', '01900066' || substr(link.account_id, 9), 1, 3,
   'active', employment.hire_date, NULL,
   json_object('accountId', link.account_id, 'employeeId', link.employee_id),
-  'seed:public-workforce', '1', 'Confirmed development sample', 1767225600000
+  'seed:public-workforce', '01900061-0000-7000-8000-000000000001', 'Confirmed development sample', 1767225600000
 FROM company_account_employee_links link
 JOIN company_employments employment ON employment.employee_id = link.employee_id;
 
@@ -114,7 +114,7 @@ INSERT INTO company_resource_revisions
 SELECT 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d', 'employment', id, 2, 4, 'active', termination_date,
   NULL, json_object('employeeId', employee_id, 'status', 'TERMINATED',
     'employmentType', employment_type, 'officialName', contract_name),
-  'seed:public-workforce-termination', '1', 'Confirmed development sample', 1767225600000
+  'seed:public-workforce-termination', '01900061-0000-7000-8000-000000000001', 'Confirmed development sample', 1767225600000
 FROM company_employments WHERE status = 'TERMINATED';
 
 UPDATE company_resource_heads

@@ -17,7 +17,7 @@ import { describe, expect, test } from "bun:test"
 const now = new Date("2026-01-01T00:00:00.000Z")
 const rootAccountId = zAccountId.parse("system-guard-root")
 const secondRootAccountId = zAccountId.parse("system-guard-root-2")
-const actorAccountId = zAccountId.parse("system-guard-actor")
+const actorAccountId = zAccountId.parse("80578462-3441-4701-8709-0fff05cbe826")
 
 function createRootRole(): IamRoleEntity {
   const role = IamRoleEntity.create({

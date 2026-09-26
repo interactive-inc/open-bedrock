@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { OneOnOne } from "@/contexts/one-on-one/domain/entities/one-on-one.entity"
@@ -35,8 +36,8 @@ describe("OneOnOneRepository on local D1", () => {
     const repository = new OneOnOneRepository(context)
 
     const created = OneOnOne.create({
-      memberId: toWorkforceEmployeeId(2),
-      managerId: toWorkforceEmployeeId(1),
+      memberId: toWorkforceEmployeeId(testEmployeeId(2)),
+      managerId: toWorkforceEmployeeId(testEmployeeId(1)),
       heldAt: "2026-03-15T10:00:00.000Z",
       topics: "progress review",
       managerNote: null,
@@ -68,8 +69,8 @@ describe("OneOnOneRepository on local D1", () => {
     expect(reloaded.nextAction).toBe("action item")
 
     const other = OneOnOne.create({
-      memberId: toWorkforceEmployeeId(2),
-      managerId: toWorkforceEmployeeId(1),
+      memberId: toWorkforceEmployeeId(testEmployeeId(2)),
+      managerId: toWorkforceEmployeeId(testEmployeeId(1)),
       heldAt: "2026-03-16T10:00:00.000Z",
       topics: null,
       managerNote: null,
@@ -84,8 +85,8 @@ describe("OneOnOneRepository on local D1", () => {
 
 function createOneOnOne(): OneOnOne {
   const result = OneOnOne.create({
-    memberId: toWorkforceEmployeeId(1),
-    managerId: toWorkforceEmployeeId(2),
+    memberId: toWorkforceEmployeeId(testEmployeeId(1)),
+    managerId: toWorkforceEmployeeId(testEmployeeId(2)),
     heldAt: "2026-01-01T00:00:00.000Z",
     topics: "今期の振り返り",
     managerNote: null,

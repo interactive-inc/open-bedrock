@@ -14,12 +14,14 @@ export async function seedSystemStepUpGrant(
   ).join("")
   const tokenHash = await new SystemPrincipalSecretService().hashRawSecret(rawToken)
   if (tokenHash instanceof Error) throw tokenHash
+  // grant id は UUID の CHECK があるため、Account ごとに決まる UUID を digest から作る。
+  const grantId = `${rawToken.slice(0, 8)}-${rawToken.slice(8, 12)}-4${rawToken.slice(13, 16)}-8${rawToken.slice(17, 20)}-${rawToken.slice(20, 32)}`
   fixture.sqlite
     .query(
       `INSERT INTO system_step_up_grants
          (id, account_id, token_hash, method, issued_at, expires_at, last_used_at, revoked_at)
        VALUES (?1, ?2, ?3, 'password', ?4, ?5, NULL, NULL)`,
     )
-    .run(`step-up:${accountId}`, accountId, tokenHash, now.getTime(), now.getTime() + 300_000)
+    .run(grantId, accountId, tokenHash, now.getTime(), now.getTime() + 300_000)
   return rawToken
 }

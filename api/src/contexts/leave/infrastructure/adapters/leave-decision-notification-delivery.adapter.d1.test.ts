@@ -40,11 +40,11 @@ async function fixture(name: string) {
   const f = { ...prepared, db: prepared.database }
   await execSql(
     f.db,
-    `INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('notification-worker','active',0,0,0);
-    INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at) VALUES ('notification-principal','notification-worker','service','Notification worker',1,0,0);
-    INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES ('92800b2d-97e7-4243-8a57-785b3e31b34b','notification-worker','custom','Notification worker',0,0);
+    `INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('7bf31c30-81d1-47de-baad-b7d6d68085e2','active',0,0,0);
+    INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at) VALUES ('c0cdc9be-a029-4704-9ece-8c2648426691','7bf31c30-81d1-47de-baad-b7d6d68085e2','service','Notification worker',1,0,0);
+    INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES ('92800b2d-97e7-4243-8a57-785b3e31b34b','7bf31c30-81d1-47de-baad-b7d6d68085e2','custom','Notification worker',0,0);
     INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('92800b2d-97e7-4243-8a57-785b3e31b34b','batch:execute'),('92800b2d-97e7-4243-8a57-785b3e31b34b','employee:read'),('92800b2d-97e7-4243-8a57-785b3e31b34b','leave:read:all');
-    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('01fed7f6-b372-4c2b-83ba-c5e22f432953','notification-worker','92800b2d-97e7-4243-8a57-785b3e31b34b',0);`,
+    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('01fed7f6-b372-4c2b-83ba-c5e22f432953','7bf31c30-81d1-47de-baad-b7d6d68085e2','92800b2d-97e7-4243-8a57-785b3e31b34b',0);`,
   )
   await f.prepareCompletion()
   expect(await f.complete()).toEqual({ status: "approved", replayed: false })
@@ -52,7 +52,7 @@ async function fixture(name: string) {
   const run = () =>
     new LeaveDecisionNotificationDeliveryAdapter({
       env: f.context.env,
-      accountId: zAccountId.parse("notification-worker"),
+      accountId: zAccountId.parse("7bf31c30-81d1-47de-baad-b7d6d68085e2"),
       clock: () => clock.at,
     }).run(10)
   const count = () =>
@@ -207,7 +207,7 @@ test("定期配送は明示設定とApp有効化を必要とする", async () =>
     ...input,
     env: {
       ...input.env,
-      LEAVE_NOTIFICATION_SERVICE_ACCOUNT_ID: "notification-worker",
+      LEAVE_NOTIFICATION_SERVICE_ACCOUNT_ID: "7bf31c30-81d1-47de-baad-b7d6d68085e2",
       DISABLED_DEFAULT_APPS: "leave",
     },
   }
@@ -227,7 +227,7 @@ for (const mutation of ["recipient", "permission"]) {
     const f = await fixture(`revoked-${mutation}`)
     const adapter = new LeaveDecisionNotificationDeliveryAdapter({
       env: f.context.env,
-      accountId: zAccountId.parse("notification-worker"),
+      accountId: zAccountId.parse("7bf31c30-81d1-47de-baad-b7d6d68085e2"),
       clock: () => f.clock.at,
     })
     const prepare = adapter.prepare.bind(adapter)

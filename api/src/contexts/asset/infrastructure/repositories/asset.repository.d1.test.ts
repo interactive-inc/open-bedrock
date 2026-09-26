@@ -1,4 +1,5 @@
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { Asset } from "@/contexts/asset/domain/entities/asset.entity"
 import { AssetRepository } from "@/contexts/asset/infrastructure/repositories/asset.repository"
 import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
@@ -146,7 +147,7 @@ describe("AssetRepository", () => {
 
     const lent = await repository.lendFromStock({
       assetCode: "PC-002",
-      employeeId: toWorkforceEmployeeId(1),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
       lentAt: "2026-01-01T00:00:00.000Z",
     })
 
@@ -157,7 +158,7 @@ describe("AssetRepository", () => {
     }
 
     expect(lent.status).toBe("lent")
-    expect(lent.holderEmployeeId).toBe(toWorkforceEmployeeId(1))
+    expect(lent.holderEmployeeId).toBe(toWorkforceEmployeeId(testEmployeeId(1)))
 
     const lendings = await context.var.database
       .select()
@@ -180,13 +181,13 @@ describe("AssetRepository", () => {
 
     await repository.lendFromStock({
       assetCode: "PC-003",
-      employeeId: toWorkforceEmployeeId(1),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
       lentAt: "2026-01-01T00:00:00.000Z",
     })
 
     const second = await repository.lendFromStock({
       assetCode: "PC-003",
-      employeeId: toWorkforceEmployeeId(2),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(2)),
       lentAt: "2026-01-02T00:00:00.000Z",
     })
 
@@ -205,7 +206,7 @@ describe("AssetRepository", () => {
       throw new Error("findByCode failed")
     }
 
-    expect(found.holderEmployeeId).toBe(toWorkforceEmployeeId(1))
+    expect(found.holderEmployeeId).toBe(toWorkforceEmployeeId(testEmployeeId(1)))
   })
 
   test("returnFromLent returns the asset to stock and closes the open lending", async () => {
@@ -220,7 +221,7 @@ describe("AssetRepository", () => {
 
     await repository.lendFromStock({
       assetCode: "PC-004",
-      employeeId: toWorkforceEmployeeId(1),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
       lentAt: "2026-01-01T00:00:00.000Z",
     })
 
@@ -276,7 +277,7 @@ describe("AssetRepository", () => {
 
     await repository.lendFromStock({
       assetCode: "PC-006",
-      employeeId: toWorkforceEmployeeId(1),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
       lentAt: "2026-01-01T00:00:00.000Z",
     })
 
@@ -315,7 +316,7 @@ describe("AssetRepository", () => {
 
     await repository.lendFromStock({
       assetCode: "PC-007",
-      employeeId: toWorkforceEmployeeId(1),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
       lentAt: "2026-01-01T00:00:00.000Z",
     })
 

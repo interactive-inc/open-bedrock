@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { isCanonicalCompanyResourceAttributes } from "@/contexts/company/domain/definitions/is-canonical-company-resource-attributes.definition"
 
 const employment = {
-  employeeId: "employee:sample",
+  employeeId: "0f14aa5e-0dc2-4bd8-a42b-ce8d40c20d34",
   employmentType: "FULL_TIME",
   status: "ACTIVE",
 }

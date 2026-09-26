@@ -1,3 +1,4 @@
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import { POST as resubmitPreservation } from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.resubmit"
 import { POST as withdrawPreservation } from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.withdraw"
 import { POST as rejectPreservation } from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.reject"
@@ -61,41 +62,41 @@ export async function createLicenseFixture(database: D1Database) {
     await database
       .prepare(`INSERT INTO system_accounts (id,status,token_version,created_at,updated_at)
       VALUES (?1,'active',0,0,0)`)
-      .bind(`account:${suffix}`)
+      .bind(testDerivedId("account", suffix))
       .run()
     await database
       .prepare(`INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at)
       VALUES (?1,?2,'human',?3,1,0,0)`)
-      .bind(`principal:${suffix}`, `account:${suffix}`, suffix)
+      .bind(testDerivedId("principal", suffix), testDerivedId("account", suffix), suffix)
       .run()
     await database
       .prepare(`INSERT INTO company_employees (id,official_name,employee_code,email,phone,created_at,updated_at)
       VALUES (?1,?2,?3,NULL,NULL,0,0)`)
-      .bind(`employee:${suffix}`, suffix, suffix.toUpperCase())
+      .bind(testDerivedId("employee", suffix), suffix, suffix.toUpperCase())
       .run()
     await database
       .prepare(`INSERT INTO company_employments (id,employee_id,contract_name,employment_type,hire_date,status,created_at,updated_at)
       VALUES (?1,?2,'Employment','FULL_TIME','2020-01-01','ACTIVE',0,0)`)
-      .bind(`employment:${suffix}`, `employee:${suffix}`)
+      .bind(testDerivedId("employment", suffix), testDerivedId("employee", suffix))
       .run()
     await database
       .prepare("INSERT INTO company_account_employee_links (account_id,employee_id) VALUES (?1,?2)")
-      .bind(`account:${suffix}`, `employee:${suffix}`)
+      .bind(testDerivedId("account", suffix), testDerivedId("employee", suffix))
       .run()
     const initial = await prepareUnpublishedEmployment(database, {
-      employeeId: restoreWorkforceId("employee", `employee:${suffix}`),
-      employmentId: restoreWorkforceId("employment", `employment:${suffix}`),
+      employeeId: restoreWorkforceId("employee", testDerivedId("employee", suffix)),
+      employmentId: restoreWorkforceId("employment", testDerivedId("employment", suffix)),
       effectiveOn: restoreCalendarDate("2020-01-01"),
       status: "active",
       occurredAt: new Date("2020-01-01T00:00:00Z"),
-      actorAccountId: "account:manager",
+      actorAccountId: "31a1342c-776f-4a19-8ca8-8ad48aa33449",
       operationId: `initial:${suffix}`,
       reason: "Recorded employment",
     })
     await database.batch([...initial])
     await publishTestEmployeeResources(database, {
-      employeeId: `employee:${suffix}`,
-      employmentId: `employment:${suffix}`,
+      employeeId: testDerivedId("employee", suffix),
+      employmentId: testDerivedId("employment", suffix),
       officialName: suffix,
       employeeCode: suffix.toUpperCase(),
       employmentType: "FULL_TIME",
@@ -104,8 +105,8 @@ export async function createLicenseFixture(database: D1Database) {
       recordedAt: 0,
     })
     await publishTestAccountEmployeeLink(database, {
-      accountId: `account:${suffix}`,
-      employeeId: `employee:${suffix}`,
+      accountId: testDerivedId("account", suffix),
+      employeeId: testDerivedId("employee", suffix),
       effectiveFrom: "2020-01-01",
       recordedAt: 0,
     })
@@ -113,7 +114,7 @@ export async function createLicenseFixture(database: D1Database) {
   await execSql(
     database,
     `INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('badb286f-9bbd-40a1-8d5d-60bf1eec5299','account:manager','7a047d56-30bc-4028-888d-2294d2d80c99',0);`,
+    VALUES ('badb286f-9bbd-40a1-8d5d-60bf1eec5299','31a1342c-776f-4a19-8ca8-8ad48aa33449','7a047d56-30bc-4028-888d-2294d2d80c99',0);`,
   )
   const app = softwareLicenseFactory
     .createApp()
@@ -163,7 +164,7 @@ export async function createLicenseFixture(database: D1Database) {
         ? null
         : await new SystemAccessTokenIssuer(secret).issue({
             accountId: zAccountId.parse(
-              options.accountId ?? `account:${options.actor ?? "manager"}`,
+              options.accountId ?? testDerivedId("account", options.actor ?? "manager"),
             ),
             tokenVersion: 0,
             now: new Date(),
@@ -200,7 +201,7 @@ export async function createLicenseFixture(database: D1Database) {
       name: "Example Service",
       plan_name: "Team",
       seats: 1,
-      owner_employee_id: "employee:manager",
+      owner_employee_id: testDerivedId("employee", "manager"),
     },
   })
   if (created.status !== 201)
@@ -209,7 +210,7 @@ export async function createLicenseFixture(database: D1Database) {
   const retire = async (suffix: string) => {
     const employeeRevision = await database
       .prepare("SELECT revision FROM company_employee_lifecycle_revisions WHERE employee_id=?1")
-      .bind(`employee:${suffix}`)
+      .bind(testDerivedId("employee", suffix))
       .first<number>("revision")
     const organizationRevision = await database
       .prepare("SELECT revision FROM company_organization_lifecycle_states WHERE id=1")
@@ -229,11 +230,11 @@ export async function createLicenseFixture(database: D1Database) {
       },
     }).apply({
       session: {
-        accountId: zAccountId.parse("account:manager"),
-        employeeId: restoreWorkforceId("employee", "employee:manager"),
+        accountId: zAccountId.parse("31a1342c-776f-4a19-8ca8-8ad48aa33449"),
+        employeeId: restoreWorkforceId("employee", testDerivedId("employee", "manager")),
         hasPermission: () => true,
       },
-      employeeId: restoreWorkforceId("employee", `employee:${suffix}`),
+      employeeId: restoreWorkforceId("employee", testDerivedId("employee", suffix)),
       idempotencyKey: `retire:${suffix}`,
       expectedEmployeeRevision: employeeRevision,
       expectedOrganizationRevision: organizationRevision,

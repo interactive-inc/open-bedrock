@@ -10,6 +10,20 @@ import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/t
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import type { PersonnelActionInput } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
 import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
+
+/** 期間と公開資源の ID は UUID の制約を満たす固定値にする。 */
+const fixtureIds = {
+  legacyOne: deterministicCompanyId("test-assignment", "assignment:legacy-one"),
+  legacyTwo: deterministicCompanyId("test-assignment", "assignment:legacy-two"),
+  independent: deterministicCompanyId("test-assignment", "assignment:independent"),
+  missingPeriod: deterministicCompanyId("test-assignment", "missing:period"),
+  missingAssignment: deterministicCompanyId("test-assignment", "missing:assignment"),
+  differentTarget: deterministicCompanyId("test-assignment", "different:target"),
+  unknownPeriod: deterministicCompanyId("test-assignment", "unknown:period"),
+  unknownTarget: deterministicCompanyId("test-assignment", "unknown:target"),
+  existingReporting: deterministicCompanyId("test-assignment", "reporting:existing"),
+}
 
 async function fixture(secondStartsOn = "2030-04-01", managerRetires = false) {
   const base = await createCompanyAssignmentResourceTestContext()
@@ -58,21 +72,21 @@ async function fixture(secondStartsOn = "2030-04-01", managerRetires = false) {
     .first<number>("revision")
   const legacy = [
     {
-      id: "assignment:legacy-one",
+      id: fixtureIds.legacyOne,
       revision: 1,
       startsOn: "2030-01-01",
       endsOn: null,
       manager: base.people[1]!.employeeId,
     },
     {
-      id: "assignment:legacy-one",
+      id: fixtureIds.legacyOne,
       revision: 2,
       startsOn: "2030-02-01",
       endsOn: "2030-04-01",
       manager: base.people[1]!.employeeId,
     },
     {
-      id: "assignment:legacy-two",
+      id: fixtureIds.legacyTwo,
       revision: 1,
       startsOn: secondStartsOn,
       endsOn: null,
@@ -91,14 +105,14 @@ async function fixture(secondStartsOn = "2030-04-01", managerRetires = false) {
     base.database
       .prepare(`INSERT INTO company_organization_change_operations
       (id, expected_revision, change_count, applied_count, resulting_revision, status, recorded_at, actor_account_id, reason)
-      VALUES ('legacy:adoption-source', ?1, 3, 0, ?1 + 3, 'PENDING', 0, ?2, 'Record original assignment history')`)
+      VALUES ('1aa341cd-aeb9-472f-ac59-fedce3329f48', ?1, 3, 0, ?1 + 3, 'PENDING', 0, ?2, 'Record original assignment history')`)
       .bind(revision, base.creator.accountId),
     ...legacy.map((period) =>
       base.database
         .prepare(`INSERT INTO company_organization_assignment_period_versions
       (period_id, revision, employment_id, employee_id, organization_unit_id, assignment_type, position_title, manager_employee_id,
        starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
-      VALUES (?1, ?2, ?3, ?4, '0190005f-0000-7000-8000-bb90379dc3be', 'PRIMARY', 'Coordinator', ?5, ?6, ?7, 0, 'legacy:adoption-source', 0)`)
+      VALUES (?1, ?2, ?3, ?4, '0190005f-0000-7000-8000-bb90379dc3be', 'PRIMARY', 'Coordinator', ?5, ?6, ?7, 0, '1aa341cd-aeb9-472f-ac59-fedce3329f48', 0)`)
         .bind(
           period.id,
           period.revision,
@@ -110,7 +124,7 @@ async function fixture(secondStartsOn = "2030-04-01", managerRetires = false) {
         ),
     ),
     base.database.prepare(
-      "UPDATE company_organization_change_operations SET status = 'COMPLETED' WHERE id = 'legacy:adoption-source'",
+      "UPDATE company_organization_change_operations SET status = 'COMPLETED' WHERE id = '1aa341cd-aeb9-472f-ac59-fedce3329f48'",
     ),
   ])
   if (managerRetires) await base.database.exec(assignmentGuard)
@@ -210,7 +224,7 @@ test("既存の公開所属IDへ複数期間を接続し、証跡失敗と再送
   })
   const existing: CompanyResourceProps = {
     ...f.assignment,
-    id: "assignment:independent",
+    id: fixtureIds.independent,
     effectiveFrom: restoreCalendarDate("2030-02-01"),
     effectiveTo: restoreCalendarDate("2030-04-01"),
     attributes: {
@@ -250,25 +264,31 @@ test("既存の公開所属IDへ複数期間を接続し、証跡失敗と再送
     expectedRevision: preview.expectedRevision,
     snapshotDigest: preview.snapshotDigest,
     mappings: [
-      { periodId: "assignment:legacy-one", existingResourceId: existing.id },
-      { periodId: "assignment:legacy-two", existingResourceId: existing.id },
+      { periodId: fixtureIds.legacyOne, existingResourceId: existing.id },
+      { periodId: fixtureIds.legacyTwo, existingResourceId: existing.id },
     ],
   }
   const before = await f.persisted()
   for (const mappings of [
     [body.mappings[0]!],
     [body.mappings[0]!, body.mappings[0]!],
-    [{ periodId: "missing:period", existingResourceId: existing.id }],
-    body.mappings.map((mapping) => ({ ...mapping, existingResourceId: "missing:assignment" })),
+    [{ periodId: fixtureIds.missingPeriod, existingResourceId: existing.id }],
+    body.mappings.map((mapping) => ({
+      ...mapping,
+      existingResourceId: fixtureIds.missingAssignment,
+    })),
   ]) {
     expect(Number((await f.adopt("assignment:existing", { ...body, mappings })).status)).toBe(422)
     expect(await f.persisted()).toEqual(before)
   }
   for (const replacement of [
-    { placeholder: "?13", sql: "json_set(?13, '$[0].existingResourceId', 'different:target')" },
     {
       placeholder: "?13",
-      sql: "json_insert(?13, '$[#]', json_object('periodId', 'unknown:period', 'existingResourceId', 'unknown:target'))",
+      sql: `json_set(?13, '$[0].existingResourceId', '${fixtureIds.differentTarget}')`,
+    },
+    {
+      placeholder: "?13",
+      sql: `json_insert(?13, '$[#]', json_object('periodId', '${fixtureIds.unknownPeriod}', 'existingResourceId', '${fixtureIds.unknownTarget}'))`,
     },
     { placeholder: "?10", sql: "json_remove(?10, '$.publicAssignments')" },
   ]) {
@@ -308,7 +328,7 @@ test("既存の公開所属IDへ複数期間を接続し、証跡失敗と再送
     (
       await f.database
         .prepare(
-          "SELECT resource_id, source_revision FROM company_assignment_period_bindings WHERE period_id IN ('assignment:legacy-one', 'assignment:legacy-two') ORDER BY period_id",
+          `SELECT resource_id, source_revision FROM company_assignment_period_bindings WHERE period_id IN ('${fixtureIds.legacyOne}', '${fixtureIds.legacyTwo}') ORDER BY period_id`,
         )
         .all()
     ).results,
@@ -376,7 +396,7 @@ describe("既存の所属・上長履歴の公開正本への接続", () => {
     expect(f.first.snapshot.periods).toHaveLength(3)
     const source = await f.database
       .prepare(
-        "SELECT * FROM company_organization_assignment_period_versions WHERE recorded_by_action_id = 'legacy:adoption-source' ORDER BY period_id, revision",
+        "SELECT * FROM company_organization_assignment_period_versions WHERE recorded_by_action_id = '1aa341cd-aeb9-472f-ac59-fedce3329f48' ORDER BY period_id, revision",
       )
       .all()
     const beforeReads = await Promise.all(
@@ -395,7 +415,7 @@ describe("既存の所属・上長履歴の公開正本への接続", () => {
       (
         await f.database
           .prepare(
-            "SELECT * FROM company_organization_assignment_period_versions WHERE recorded_by_action_id = 'legacy:adoption-source' ORDER BY period_id, revision",
+            "SELECT * FROM company_organization_assignment_period_versions WHERE recorded_by_action_id = '1aa341cd-aeb9-472f-ac59-fedce3329f48' ORDER BY period_id, revision",
           )
           .all()
       ).results,
@@ -590,7 +610,7 @@ describe("既存の所属・上長履歴の公開正本への接続", () => {
     )
     await broken.database
       .prepare(
-        "DELETE FROM company_organization_assignment_period_versions WHERE period_id = 'assignment:legacy-one' AND revision = 1",
+        `DELETE FROM company_organization_assignment_period_versions WHERE period_id = '${fixtureIds.legacyOne}' AND revision = 1`,
       )
       .run()
     const missing = await broken.preview()
@@ -616,7 +636,7 @@ describe("既存の所属・上長履歴の公開正本への接続", () => {
               {
                 organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
                 type: "reporting-relation",
-                id: "reporting:existing",
+                id: fixtureIds.existingReporting,
                 revision: 1,
                 state: "active",
                 effectiveFrom: "2030-02-01",

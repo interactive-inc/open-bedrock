@@ -130,6 +130,8 @@ dashboard query は、集計値と drill-down の両方に認可を適用する�
 - 監査、保全本文、照合ページ、案件、提案 digest などの変更不能な証跡は、置き換え前の主キーを含んでいても書き換えない。証跡が指す旧主キーから現在の記録へは `legacy_id` で辿る
 - `legacy_id` は所有業務の保全本文に含める。記録を撤去した後も、保全本文によって旧主キーと現在の主キーを結び付ける
 - 所有業務が撤去の書込み停止中である間は主キーを置き換えない
+- Account、Principal、社員、雇用、人事の発令、組織の変更操作も UUID を主キーとする。以前の整数や接頭辞付きの ID（`principal:`、`employment:`、`person:`、`link:` など）は `legacy_id` に保持し、同じ文字列で互いを指していた ID（雇用とその期間と資源など）は同じ新しい UUID へ移した
+- 同じ入力から毎回同じ行を指す必要がある ID（期間、初期の発令、資源、組織の変更操作）は、入力の SHA-256 から作る UUID（RFC 9562 の version 8）とする。trigger が操作を見つけるための旧来の鍵（`org-resource:<fingerprint>` など）は組織の変更操作の `operation_key` に保持する
 - 導入ごとに一つだけの会社組織と会社全体の組織単位は、どの導入でも同じ既知の UUID を ID とする。会社組織は `ad4f6cb1-774b-43ae-950f-80e9bc67c66d`、会社全体の組織単位は `282ccd01-cb30-4d0a-84b4-c675bbbe473c` とし、`api/src/contexts/company/domain/definitions/company-organization-identity.definition.ts` の定数だけから参照する。値の変更はテストで拒否する。以前の ID である `organization:default` と `company:root` は、それぞれの行の `legacy_id` に保持する
 
 ## 業務撤去時の原記録
@@ -159,4 +161,4 @@ dashboard query は、集計値と drill-down の両方に認可を適用する�
 
 時間、版、来歴、監査の実装状態は [能力台帳](./capability-map.md) に記録し、各ドメインの schema、migration、テストと一致させる。履歴再構成と改変検出は、schema、migration、テストで検証する。
 
-主キーを UUID にしていない table は `api/tests/contracts/uuid-primary-key.contract.test.ts` の未変換一覧と恒久的な例外に列挙し、その table の主キーは上記の識別子の規則をまだ満たさない。
+採番器、singleton、秘密値の照合鍵を除くすべての table は UUID の主キーを持つ。例外は `api/scripts/id-inventory-registry.ts` に理由とともに列挙し、`api/tests/contracts/uuid-primary-key.contract.test.ts` が UUID でない主キーを拒否する。

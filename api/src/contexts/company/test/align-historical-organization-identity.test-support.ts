@@ -2,6 +2,8 @@ import {
   COMPANY_DEFAULT_ORGANIZATION_ID,
   COMPANY_ROOT_ORGANIZATION_UNIT_ID,
 } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
+import { companyOperationId } from "@/contexts/company/domain/definitions/company-operation-id.definition"
 
 const LEGACY_ORGANIZATION_ID = "organization:default"
 const LEGACY_ROOT_ORGANIZATION_UNIT_ID = "company:root"
@@ -92,6 +94,22 @@ export async function alignHistoricalOrganizationIdentity(database: D1Database):
           COMPANY_ROOT_ORGANIZATION_UNIT_ID,
         )
         .run()
+      // 初期データの操作と組織期間の ID も、現行の書込みが照合する UUID へ揃える。
+      await database
+        .prepare(
+          `UPDATE "${name}" SET "${column}" = CASE "${column}"
+             WHEN ?1 THEN ?2 WHEN ?3 THEN ?4 WHEN ?5 THEN ?6 END
+           WHERE "${column}" IN (?1, ?3, ?5)`,
+        )
+        .bind(
+          "initialization:organization:default",
+          companyOperationId("initialization:organization:default"),
+          "initialization:company:root",
+          companyOperationId("initialization:company:root"),
+          "company:root:initial",
+          deterministicCompanyId("initial-period", "company:root:initial"),
+        )
+        .run()
     }
   }
   // 現行の書込みは legacy_id の列を含めて組織と組織単位を読み書きするため、検査用に空の列だけを足す。
@@ -102,6 +120,16 @@ export async function alignHistoricalOrganizationIdentity(database: D1Database):
     if (column === null)
       await database.prepare(`ALTER TABLE ${table} ADD COLUMN legacy_id TEXT`).run()
   }
+  // 操作の ID を UUID へ移す前の schema には旧来の鍵の列が無い。現行の書込みが渡すため、空の列だけを足す。
+  const operationKey = await database
+    .prepare(
+      "SELECT name FROM pragma_table_info('company_organization_change_operations') WHERE name = 'operation_key'",
+    )
+    .first<{ name: string }>()
+  if (operationKey === null)
+    await database
+      .prepare("ALTER TABLE company_organization_change_operations ADD COLUMN operation_key TEXT")
+      .run()
   for (const view of views) await database.prepare(replaced(view.sql)).run()
   for (const trigger of triggers) await database.prepare(replaced(trigger.sql)).run()
   await database.prepare("PRAGMA foreign_keys = ON").run()

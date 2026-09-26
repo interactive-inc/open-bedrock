@@ -1,3 +1,4 @@
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
@@ -29,6 +30,15 @@ const principalSql = ["system-integration.sql", "system-principal.sql"]
   .join("\n")
 const organizationId = COMPANY_DEFAULT_ORGANIZATION_ID
 const asOf = restoreCalendarDate("2026-01-01")
+const accountIds = {
+  active: "f916f832-e97a-448a-a4c4-399ca2b9d39d",
+  suspended: "7725d648-f2f9-4559-83eb-ac1326a169c0",
+} as const
+const employeeIds = {
+  active: "51102976-22e7-44e7-bb93-c33967b91fa6",
+  suspended: deterministicCompanyId("employee", "suspended"),
+} as const
+const responsibilityId = deterministicCompanyId("responsibility", "approve")
 
 describe("Company authority resolution HTTP", () => {
   test("候補取得と期間照合の間の変更は409で拒否し、同じ照会を再試行できる", async () => {
@@ -44,14 +54,14 @@ describe("Company authority resolution HTTP", () => {
               const change = CompanyResourceChangeEntity.create({
                 commandId: "command:concurrent-authority",
                 expectedRevision: 1,
-                actorAccountId: "account:active",
+                actorAccountId: "f916f832-e97a-448a-a4c4-399ca2b9d39d",
                 reason: "Confirmed responsibility correction",
                 recordedAt: 2,
                 resources: [
                   {
                     organizationId,
                     type: "responsibility",
-                    id: "responsibility:approve",
+                    id: responsibilityId,
                     revision: 2,
                     state: "active",
                     effectiveFrom: asOf,
@@ -96,7 +106,7 @@ describe("Company authority resolution HTTP", () => {
     expect(retried.status).toBe(200)
     expect(await retried.json()).toMatchObject({
       snapshot: { organizationRevision: 2 },
-      candidates: [{ accountId: "account:active" }],
+      candidates: [{ accountId: "f916f832-e97a-448a-a4c4-399ca2b9d39d" }],
     })
   })
 
@@ -105,7 +115,7 @@ describe("Company authority resolution HTTP", () => {
     await seed(database)
     await database.exec("DROP TRIGGER company_account_employee_resource_bindings_delete_guard")
     await database.exec(
-      "DELETE FROM company_account_employee_resource_bindings WHERE account_id = 'account:active'",
+      "DELETE FROM company_account_employee_resource_bindings WHERE account_id = 'f916f832-e97a-448a-a4c4-399ca2b9d39d'",
     )
     const response = await createApp().request(
       "/company/authority-resolutions",
@@ -180,7 +190,12 @@ describe("Company authority resolution HTTP", () => {
       status: 200,
       body: {
         snapshot: { organizationRevision: 1 },
-        candidates: [{ employeeId: "employee:active", accountId: "account:active" }],
+        candidates: [
+          {
+            employeeId: "51102976-22e7-44e7-bb93-c33967b91fa6",
+            accountId: "f916f832-e97a-448a-a4c4-399ca2b9d39d",
+          },
+        ],
       },
     })
 
@@ -206,8 +221,8 @@ function createApp() {
     context.set(
       "companyActor",
       CompanyActorValue.restore({
-        accountId: "account:active",
-        employeeId: "employee:active",
+        accountId: "f916f832-e97a-448a-a4c4-399ca2b9d39d",
+        employeeId: "51102976-22e7-44e7-bb93-c33967b91fa6",
         organizationIds: [organizationId],
         capabilities: ["company:read"],
       }),
@@ -234,8 +249,8 @@ async function seed(
 ): Promise<void> {
   await database.exec(
     `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-     VALUES ('account:active', 'active', 0, ${principal.accountCreatedAt}, ${principal.accountCreatedAt}),
-            ('account:suspended', 'suspended', 0, 1, 1);
+     VALUES ('f916f832-e97a-448a-a4c4-399ca2b9d39d', 'active', 0, ${principal.accountCreatedAt}, ${principal.accountCreatedAt}),
+            ('7725d648-f2f9-4559-83eb-ac1326a169c0', 'suspended', 0, 1, 1);
      INSERT INTO company_organizations
        (id, revision, name, representative_name, created_at, updated_at)
      VALUES ('${organizationId}', 0, '', '', 1, 1);`,
@@ -243,7 +258,7 @@ async function seed(
   if (principal.kind !== "missing")
     await database
       .prepare(`INSERT INTO system_principals (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
-      VALUES ('principal:active', 'account:active', ?, 'Example Human', NULL, 1, ?, ?)`)
+      VALUES ('6fb1c67b-f36a-44c3-89e4-584eefce94ac', 'f916f832-e97a-448a-a4c4-399ca2b9d39d', ?, 'Example Human', NULL, 1, ?, ?)`)
       .bind(principal.kind, principal.principalCreatedAt, principal.principalCreatedAt)
       .run()
   const base = {
@@ -257,7 +272,7 @@ async function seed(
     {
       ...base,
       type: "responsibility",
-      id: "responsibility:approve",
+      id: responsibilityId,
       attributes: { code: "APPROVE", officialName: "Approval" },
     },
   ]
@@ -266,21 +281,24 @@ async function seed(
       {
         ...base,
         type: "person",
-        id: `person:${state}`,
+        id: deterministicCompanyId("person", state),
         attributes: { officialName: `Example ${state}` },
       },
       {
         ...base,
         type: "employee",
-        id: `employee:${state}`,
-        attributes: { personId: `person:${state}`, employeeCode: state.toUpperCase() },
+        id: employeeIds[state],
+        attributes: {
+          personId: deterministicCompanyId("person", state),
+          employeeCode: state.toUpperCase(),
+        },
       },
       {
         ...base,
         type: "employment",
-        id: `employment:${state}`,
+        id: deterministicCompanyId("employment", state),
         attributes: {
-          employeeId: `employee:${state}`,
+          employeeId: employeeIds[state],
           status: "ACTIVE",
           employmentType: "FULL_TIME",
         },
@@ -288,17 +306,20 @@ async function seed(
       {
         ...base,
         type: "account-employee-link",
-        id: `account-link:${state}`,
-        attributes: { accountId: `account:${state}`, employeeId: `employee:${state}` },
+        id: deterministicCompanyId("account-link", state),
+        attributes: {
+          accountId: accountIds[state],
+          employeeId: employeeIds[state],
+        },
       },
       {
         ...base,
         type: "responsibility-assignment",
-        id: `responsibility-assignment:${state}`,
+        id: deterministicCompanyId("responsibility-assignment", state),
         attributes: {
-          responsibilityId: "responsibility:approve",
+          responsibilityId,
           holderType: "employee",
-          holderId: `employee:${state}`,
+          holderId: employeeIds[state],
           authorityScopeId: null,
           delegationAllowed: false,
         },
@@ -308,7 +329,7 @@ async function seed(
   const change = CompanyResourceChangeEntity.create({
     commandId: "command:authority-seed",
     expectedRevision: 0,
-    actorAccountId: "account:active",
+    actorAccountId: "f916f832-e97a-448a-a4c4-399ca2b9d39d",
     reason: "authority test seed",
     recordedAt: 1,
     resources,

@@ -13,6 +13,7 @@ import { AUDIT_CSV_MAX_BYTES } from "@/contexts/company/domain/definitions/to-au
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
 import { execSql } from "@tests/d1/support/exec-sql"
+import { testAccountId } from "@system/test/system-test-id.test-support"
 
 let pool: LocalD1Pool
 
@@ -87,7 +88,7 @@ async function grantPermission(
            (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
          VALUES (?1, ?2, ?3, NULL, NULL, 0, NULL)`,
       )
-      .bind(crypto.randomUUID(), String(accountId), roleId),
+      .bind(crypto.randomUUID(), testAccountId(accountId), roleId),
   ])
 }
 
@@ -562,7 +563,8 @@ describe("POST /audit-event-exports", () => {
     // 大きな行の本文を短くした分、分割読取りの回数が 2 回減る。
     expect(formalWorst.queries()).toBe(29)
     expect(formalWorst.queries()).toBeLessThanOrEqual(33)
-  }, 20_000)
+    // 予算は問い合わせの回数で検査する。CI の実行時間は揺れるため、時間の上限は広く取る。
+  }, 60_000)
 
   test("prioritizes unavailable over success, overflow and denied outcomes", async () => {
     const success = await createTestDb()

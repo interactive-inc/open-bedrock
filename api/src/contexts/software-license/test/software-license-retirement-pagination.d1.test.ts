@@ -1,3 +1,4 @@
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"
@@ -32,7 +33,7 @@ afterAll(async () => {
 test("11件のサービス台帳を全件保全し、人の承認・取消・再提出を経て原記録を残して撤去確定する", async () => {
   const { f, governance, reviewer, definition, conditions } =
     await createLicensePreservationFixture(await pool.next())
-  const creator = zAccountId.parse("account:manager")
+  const creator = zAccountId.parse(testDerivedId("account", "manager"))
   await execSql(
     f.database,
     `INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES
@@ -84,7 +85,7 @@ test("11件のサービス台帳を全件保全し、人の承認・取消・再
   if (hash instanceof Error) throw hash
   await f.database
     .prepare(`INSERT INTO system_step_up_grants
-    (id,account_id,token_hash,method,issued_at,expires_at) VALUES ('pagination-grant',?1,?2,'external_identity',?3,?4)`)
+    (id,account_id,token_hash,method,issued_at,expires_at) VALUES ('9b4508ab-4bbb-4298-b4d7-7670fdb483de',?1,?2,'external_identity',?3,?4)`)
     .bind(creator, hash, at.getTime(), at.getTime() + 60_000)
     .run()
   const bindings = {

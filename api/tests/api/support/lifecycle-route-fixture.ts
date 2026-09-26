@@ -1,3 +1,5 @@
+import { testDerivedId } from "@system/test/system-test-id.test-support"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { seedDepartments } from "@tests/api/support/company/seed-departments.test-support"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { seedOrgDepartments } from "@tests/api/support/company/seed-org-departments.test-support"
@@ -43,7 +45,7 @@ export async function createLifecycleRouteDb(
   })
   await seedIamForEmployees(db)
   const expectedRevision = await readOrganizationRevision(db)
-  const operationId = `test:lifecycle-route:${expectedRevision}`
+  const operationId = testDerivedId("lifecycle-route-operation", expectedRevision)
   const organizationStatements: D1PreparedStatement[] = []
   if (
     options?.subjectAssignmentStartsOn !== undefined ||
@@ -56,8 +58,8 @@ export async function createLifecycleRouteDb(
              (period_id, revision, employment_id, employee_id, organization_unit_id,
               assignment_type, position_title, manager_employee_id, starts_on, ends_on,
               is_void, recorded_by_action_id, recorded_at)
-           VALUES ('test:assignment:5:primary:D003', 2, 'test:5:employment', '5',
-                   '0190005e-0000-7000-8000-000044303033', 'PRIMARY', 'シニアエンジニア', '4', ?1, ?2, 0, ?3, 2)`,
+           VALUES ('test:assignment:01900062-0000-7000-8000-000000000005:primary:D003', 2, '${testDerivedId("employment", testEmployeeId(5))}', '01900062-0000-7000-8000-000000000005',
+                   '0190005e-0000-7000-8000-000044303033', 'PRIMARY', 'シニアエンジニア', '01900062-0000-7000-8000-000000000004', ?1, ?2, 0, ?3, 2)`,
         )
         .bind(
           options.subjectAssignmentStartsOn ?? "2025-01-01",
@@ -74,7 +76,7 @@ export async function createLifecycleRouteDb(
              (period_id, revision, employment_id, employee_id, organization_unit_id,
               responsibility_type, starts_on, ends_on, is_void,
               recorded_by_action_id, recorded_at)
-           VALUES ('test:responsibility:4:manager:D003', 2, 'test:4:employment', '4',
+           VALUES ('test:responsibility:01900062-0000-7000-8000-000000000004:manager:D003', 2, '${testDerivedId("employment", testEmployeeId(4))}', '01900062-0000-7000-8000-000000000004',
                    '0190005e-0000-7000-8000-000044303033', 'MANAGER', '2025-01-01', ?1, 0, ?2, 2)`,
         )
         .bind(options.managerEndsOn, operationId),
@@ -84,8 +86,8 @@ export async function createLifecycleRouteDb(
              (period_id, revision, employment_id, employee_id, organization_unit_id,
               assignment_type, position_title, manager_employee_id, starts_on, ends_on,
               is_void, recorded_by_action_id, recorded_at)
-           VALUES ('test:assignment:4:primary:D003', 2, 'test:4:employment', '4',
-                   '0190005e-0000-7000-8000-000044303033', 'PRIMARY', '開発マネージャー', '1',
+           VALUES ('test:assignment:01900062-0000-7000-8000-000000000004:primary:D003', 2, '${testDerivedId("employment", testEmployeeId(4))}', '01900062-0000-7000-8000-000000000004',
+                   '0190005e-0000-7000-8000-000044303033', 'PRIMARY', '開発マネージャー', '01900062-0000-7000-8000-000000000001',
                    '2025-01-01', ?1, 0, ?2, 2)`,
         )
         .bind(options.managerEndsOn, operationId),
@@ -95,8 +97,8 @@ export async function createLifecycleRouteDb(
              (period_id, revision, employment_id, employee_id, organization_unit_id,
               assignment_type, position_title, manager_employee_id, starts_on, ends_on,
               is_void, recorded_by_action_id, recorded_at)
-           VALUES ('test:assignment:5:primary:D003', 2, 'test:5:employment', '5',
-                   '0190005e-0000-7000-8000-000044303033', 'PRIMARY', 'シニアエンジニア', '4',
+           VALUES ('test:assignment:01900062-0000-7000-8000-000000000005:primary:D003', 2, '${testDerivedId("employment", testEmployeeId(5))}', '01900062-0000-7000-8000-000000000005',
+                   '0190005e-0000-7000-8000-000044303033', 'PRIMARY', 'シニアエンジニア', '01900062-0000-7000-8000-000000000004',
                    '2025-01-01', ?1, 0, ?2, 2)`,
         )
         .bind(options.managerEndsOn, operationId),
@@ -136,8 +138,8 @@ export async function createLifecycleRouteDb(
           `INSERT INTO company_employee_status_period_versions
              (period_id, revision, employment_period_id, employee_id, status, starts_on,
               ends_on, is_void, recorded_by_action_id, recorded_at)
-           VALUES ('test:4:status', 2, 'test:4:employment', '4', 'active', '2025-01-01',
-                   ?1, 0, 'test:4:initial-state', 2)`,
+           VALUES ('${testDerivedId("status", testEmployeeId(4))}', 2, '${testDerivedId("employment", testEmployeeId(4))}', '01900062-0000-7000-8000-000000000004', 'active', '2025-01-01',
+                   ?1, 0, '${testDerivedId("initial-state", testEmployeeId(4))}', 2)`,
         )
         .bind(options.managerEndsOn),
       db
@@ -145,8 +147,8 @@ export async function createLifecycleRouteDb(
           `INSERT INTO company_employment_period_versions
              (period_id, revision, employee_id, starts_on, ends_on, is_void,
               recorded_by_action_id, recorded_at)
-           VALUES ('test:4:employment', 2, '4', '2025-01-01', ?1, 0,
-                   'test:4:initial-state', 2)`,
+           VALUES ('${testDerivedId("employment", testEmployeeId(4))}', 2, '01900062-0000-7000-8000-000000000004', '2025-01-01', ?1, 0,
+                   '${testDerivedId("initial-state", testEmployeeId(4))}', 2)`,
         )
         .bind(options.managerEndsOn),
     ])

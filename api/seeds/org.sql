@@ -5,7 +5,7 @@ INSERT INTO company_organization_change_operations (
   recorded_at, request_fingerprint, actor_account_id, reason, evidence_references_json
 )
 SELECT
-  'initialization:company-organization',
+  '0190006b-0000-7000-8000-000000000001',
   revision,
   26,
   0,
@@ -33,28 +33,28 @@ INSERT INTO company_organization_unit_period_versions (
   recorded_by_action_id, recorded_at
 )
 VALUES
-  ('department:D001:initial', 1, '0190005e-0000-7000-8000-000044303031', 'D001', '経営企画部', 'DEPARTMENT', '282ccd01-cb30-4d0a-84b4-c675bbbe473c', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000),
-  ('department:D002:initial', 1, '0190005e-0000-7000-8000-000044303032', 'D002', '人事部', 'DEPARTMENT', '0190005e-0000-7000-8000-000044303031', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000),
-  ('department:D003:initial', 1, '0190005e-0000-7000-8000-000044303033', 'D003', '開発部', 'DEPARTMENT', '0190005e-0000-7000-8000-000044303031', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000),
-  ('department:D004:initial', 1, '0190005e-0000-7000-8000-000044303034', 'D004', '営業部', 'DEPARTMENT', '0190005e-0000-7000-8000-000044303031', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000),
-  ('department:D005:initial', 1, '0190005e-0000-7000-8000-000044303035', 'D005', 'カスタマーサクセス部', 'DEPARTMENT', '0190005e-0000-7000-8000-000044303034', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000),
-  ('department:D006:initial', 1, '0190005e-0000-7000-8000-000044303036', 'D006', '総務部', 'DEPARTMENT', '0190005e-0000-7000-8000-000044303031', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000);
+  ('department:D001:initial', 1, '0190005e-0000-7000-8000-000044303031', 'D001', '経営企画部', 'DEPARTMENT', '282ccd01-cb30-4d0a-84b4-c675bbbe473c', '2026-01-01', NULL, 0, '0190006b-0000-7000-8000-000000000001', 1767225600000),
+  ('department:D002:initial', 1, '0190005e-0000-7000-8000-000044303032', 'D002', '人事部', 'DEPARTMENT', '0190005e-0000-7000-8000-000044303031', '2026-01-01', NULL, 0, '0190006b-0000-7000-8000-000000000001', 1767225600000),
+  ('department:D003:initial', 1, '0190005e-0000-7000-8000-000044303033', 'D003', '開発部', 'DEPARTMENT', '0190005e-0000-7000-8000-000044303031', '2026-01-01', NULL, 0, '0190006b-0000-7000-8000-000000000001', 1767225600000),
+  ('department:D004:initial', 1, '0190005e-0000-7000-8000-000044303034', 'D004', '営業部', 'DEPARTMENT', '0190005e-0000-7000-8000-000044303031', '2026-01-01', NULL, 0, '0190006b-0000-7000-8000-000000000001', 1767225600000),
+  ('department:D005:initial', 1, '0190005e-0000-7000-8000-000044303035', 'D005', 'カスタマーサクセス部', 'DEPARTMENT', '0190005e-0000-7000-8000-000044303034', '2026-01-01', NULL, 0, '0190006b-0000-7000-8000-000000000001', 1767225600000),
+  ('department:D006:initial', 1, '0190005e-0000-7000-8000-000044303036', 'D006', '総務部', 'DEPARTMENT', '0190005e-0000-7000-8000-000044303031', '2026-01-01', NULL, 0, '0190006b-0000-7000-8000-000000000001', 1767225600000);
 
 WITH assignments(employee_id, department_code, position_title, manager_employee_id) AS (
   VALUES
-    ('1', 'D001', '最高技術責任者', NULL),
-    ('2', 'D002', '人事マネージャー', '1'),
-    ('3', 'D002', '人事担当', '2'),
-    ('4', 'D003', '開発マネージャー', '1'),
-    ('5', 'D003', 'シニアエンジニア', '4'),
-    ('6', 'D003', 'エンジニア', '4'),
-    ('9', 'D004', '営業マネージャー', '1'),
-    ('10', 'D004', '営業担当', '9'),
-    ('13', 'D005', 'カスタマーサクセスマネージャー', '9'),
-    ('15', 'D005', 'カスタマーサクセス担当', '13'),
-    ('16', 'D006', '総務マネージャー', NULL),
-    ('17', 'D002', '人事担当', '2'),
-    ('99', 'D006', '総務担当', '16')
+    ('01900062-0000-7000-8000-000000000001', 'D001', '最高技術責任者', NULL),
+    ('01900062-0000-7000-8000-000000000002', 'D002', '人事マネージャー', '01900062-0000-7000-8000-000000000001'),
+    ('01900062-0000-7000-8000-000000000003', 'D002', '人事担当', '01900062-0000-7000-8000-000000000002'),
+    ('01900062-0000-7000-8000-000000000004', 'D003', '開発マネージャー', '01900062-0000-7000-8000-000000000001'),
+    ('01900062-0000-7000-8000-000000000005', 'D003', 'シニアエンジニア', '01900062-0000-7000-8000-000000000004'),
+    ('01900062-0000-7000-8000-000000000006', 'D003', 'エンジニア', '01900062-0000-7000-8000-000000000004'),
+    ('01900062-0000-7000-8000-000000000009', 'D004', '営業マネージャー', '01900062-0000-7000-8000-000000000001'),
+    ('01900062-0000-7000-8000-00000000000a', 'D004', '営業担当', '01900062-0000-7000-8000-000000000009'),
+    ('01900062-0000-7000-8000-00000000000d', 'D005', 'カスタマーサクセスマネージャー', '01900062-0000-7000-8000-000000000009'),
+    ('01900062-0000-7000-8000-00000000000f', 'D005', 'カスタマーサクセス担当', '01900062-0000-7000-8000-00000000000d'),
+    ('01900062-0000-7000-8000-000000000010', 'D006', '総務マネージャー', NULL),
+    ('01900062-0000-7000-8000-000000000011', 'D002', '人事担当', '01900062-0000-7000-8000-000000000002'),
+    ('01900062-0000-7000-8000-000000000063', 'D006', '総務担当', '01900062-0000-7000-8000-000000000010')
 )
 INSERT INTO company_organization_assignment_period_versions (
   period_id, revision, employment_id, employee_id, organization_unit_id,
@@ -64,7 +64,7 @@ INSERT INTO company_organization_assignment_period_versions (
 SELECT
   'assignment-period:seed-assignment-' || employee_id,
   1,
-  'employment:seed-employment-' || employee_id,
+  '01900064' || substr(employee_id, 9),
   employee_id,
   '0190005e-0000-7000-8000-' || substr('000000000000' || lower(hex(department_code)), -12),
   'PRIMARY',
@@ -73,18 +73,18 @@ SELECT
   '2026-01-01',
   NULL,
   0,
-  'initialization:company-organization',
+  '0190006b-0000-7000-8000-000000000001',
   1767225600000
 FROM assignments;
 
 WITH managers(employee_id, department_code) AS (
   VALUES
-    ('1', 'D001'),
-    ('2', 'D002'),
-    ('4', 'D003'),
-    ('9', 'D004'),
-    ('13', 'D005'),
-    ('16', 'D006')
+    ('01900062-0000-7000-8000-000000000001', 'D001'),
+    ('01900062-0000-7000-8000-000000000002', 'D002'),
+    ('01900062-0000-7000-8000-000000000004', 'D003'),
+    ('01900062-0000-7000-8000-000000000009', 'D004'),
+    ('01900062-0000-7000-8000-00000000000d', 'D005'),
+    ('01900062-0000-7000-8000-000000000010', 'D006')
 )
 INSERT INTO company_organization_responsibility_period_versions (
   period_id, revision, employment_id, employee_id, organization_unit_id,
@@ -94,14 +94,14 @@ INSERT INTO company_organization_responsibility_period_versions (
 SELECT
   'responsibility-period:seed-responsibility-' || department_code,
   1,
-  'employment:seed-employment-' || employee_id,
+  '01900064' || substr(employee_id, 9),
   employee_id,
   '0190005e-0000-7000-8000-' || substr('000000000000' || lower(hex(department_code)), -12),
   'MANAGER',
   '2026-01-01',
   NULL,
   0,
-  'initialization:company-organization',
+  '0190006b-0000-7000-8000-000000000001',
   1767225600000
 FROM managers;
 
@@ -113,17 +113,17 @@ INSERT INTO company_organization_responsibility_period_versions (
 VALUES (
   'responsibility-period:people-operations:3',
   1,
-  'employment:seed-employment-3',
-  '3',
+  '01900064-0000-7000-8000-000000000003',
+  '01900062-0000-7000-8000-000000000003',
   '0190005e-0000-7000-8000-000044303032',
   'PEOPLE_OPERATIONS',
   '2026-01-01',
   NULL,
   0,
-  'initialization:company-organization',
+  '0190006b-0000-7000-8000-000000000001',
   1767225600000
 );
 
 UPDATE company_organization_change_operations
 SET status = 'COMPLETED'
-WHERE id = 'initialization:company-organization';
+WHERE id = '0190006b-0000-7000-8000-000000000001';

@@ -209,7 +209,7 @@ describe("Account対応の公開履歴と会社の参照", () => {
       {
         ...f.resource,
         revision: 2,
-        attributes: { ...f.resource.attributes, accountId: "account:missing" },
+        attributes: { ...f.resource.attributes, accountId: "edc7ed60-7891-449f-a5fe-4f9e49b81a2a" },
       },
       { ...f.resource, effectiveFrom: "2020-01-01", revision: 2 },
     ]) {
@@ -272,15 +272,15 @@ describe("Account対応の公開履歴と会社の参照", () => {
       {
         ...common,
         type: "employee",
-        id: "employee:new-link",
+        id: "7e872dde-51a8-4551-a45f-35639886d177",
         attributes: { personId: "person:new-link", employeeCode: "LINK-NEW" },
       },
       {
         ...common,
         type: "employment",
-        id: "employment:new-link",
+        id: "4b5c6d7e-8f9a-4b0c-9d1e-2f3a4b5c6d7e",
         attributes: {
-          employeeId: "employee:new-link",
+          employeeId: "7e872dde-51a8-4551-a45f-35639886d177",
           employmentType: "FULL_TIME",
           status: "ACTIVE",
         },
@@ -289,15 +289,18 @@ describe("Account対応の公開履歴と会社の参照", () => {
     const next = {
       ...common,
       type: "account-employee-link",
-      id: "link:new",
-      attributes: { accountId: "account:new-link", employeeId: "employee:new-link" },
+      id: "5c6d7e8f-9a0b-4c1d-8e2f-3a4b5c6d7e8f",
+      attributes: {
+        accountId: "58dc1933-304b-4601-992a-beed89f1b842",
+        employeeId: "7e872dde-51a8-4551-a45f-35639886d177",
+      },
     } satisfies Parameters<typeof f.post>[0]
     const withoutAccount = await f.persisted()
     expect(Number((await f.post(next, "link:missing-account")).status)).toBe(422)
     expect(await f.persisted()).toBe(withoutAccount)
     await f.database
       .prepare(
-        "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('account:new-link', 'active', 0, 0, 0)",
+        "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('58dc1933-304b-4601-992a-beed89f1b842', 'active', 0, 0, 0)",
       )
       .run()
     const before = await f.persisted()
@@ -316,8 +319,8 @@ describe("Account対応の公開履歴と会社の参照", () => {
       await new CompanyEmployeeDirectoryReadAdapter({
         env: f.context.env,
         asOf: restoreCalendarDate("2030-01-01"),
-      }).findForAccountIds([zAccountId.parse("account:new-link")]),
-    ).toMatchObject([{ employee: { id: "employee:new-link" } }])
+      }).findForAccountIds([zAccountId.parse("58dc1933-304b-4601-992a-beed89f1b842")]),
+    ).toMatchObject([{ employee: { id: "7e872dde-51a8-4551-a45f-35639886d177" } }])
     for (const sql of [
       "UPDATE company_account_employee_resource_bindings SET account_id = 'account:changed'",
       "DELETE FROM company_account_employee_resource_bindings",

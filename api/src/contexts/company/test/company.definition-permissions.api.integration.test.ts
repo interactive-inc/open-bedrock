@@ -44,7 +44,7 @@ function createApp(
     c.set(
       "companyActor",
       CompanyActorValue.restore({
-        accountId: "account-1",
+        accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
         employeeId: null,
         organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
         capabilities,

@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { AntisocialCheck } from "@/contexts/antisocial-check/domain/entities/antisocial-check.entity"
@@ -26,7 +27,7 @@ describe("AntisocialCheckRepository on local D1", () => {
 
     const created = await repository.create(
       AntisocialCheck.create({
-        requesterId: toWorkforceEmployeeId(5),
+        requesterId: toWorkforceEmployeeId(testEmployeeId(5)),
         partnerName: "Example Trading Co.",
         partnerAddress: null,
         representativeName: null,

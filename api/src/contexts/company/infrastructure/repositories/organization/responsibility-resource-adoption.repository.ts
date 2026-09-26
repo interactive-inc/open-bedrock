@@ -146,6 +146,7 @@ export class ResponsibilityResourceAdoptionRepository {
       return this.invalid(new Error("responsibility definitions or source ownership do not match"))
     const change = OrganizationWorkforceChangeEntity.restore({
       operationId: first.period.recordedByActionId,
+      operationKey: `responsibility-adoption:${command.props.snapshotDigest}`,
       expectedRevision: snapshot.props.value.lifecycleRevision,
       asOf: restoreCalendarDate(command.props.observedOn),
       recordedAt: command.props.recordedAt,

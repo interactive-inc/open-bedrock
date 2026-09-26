@@ -31,19 +31,19 @@ const person: CompanyResourceProps = {
 const employee: CompanyResourceProps = {
   ...person,
   type: "employee",
-  id: "employee:1",
+  id: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
   attributes: { personId: person.id, employeeCode: "E001" },
 }
 const employment: CompanyResourceProps = {
   ...person,
   type: "employment",
-  id: "employment:1",
+  id: "4b97a400-e084-4aa7-9ec9-c3344438b6c8",
   attributes: { employeeId: employee.id, status: "ACTIVE", employmentType: "FULL_TIME" },
 }
 const assignment: CompanyResourceProps = {
   ...person,
   type: "assignment",
-  id: "assignment:1",
+  id: "4d97c3a4-cd21-4db1-b20c-9766c3a051f3",
   attributes: {
     employeeId: employee.id,
     employmentId: employment.id,
@@ -73,7 +73,7 @@ function command(
     resources,
     commandId,
     expectedRevision,
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "従業員台帳の変更",
     recordedAt: Date.parse("2026-09-06T00:00:00Z"),
   })
@@ -411,7 +411,7 @@ describe("Company workforce resourceの参照整合性", () => {
               ...employment,
               revision: 2,
               attributes: {
-                employeeId: "employee:missing",
+                employeeId: "a5438ed0-be24-4fee-afe4-037ae70145b7",
                 status: "ACTIVE",
                 employmentType: "FULL_TIME",
               },
@@ -437,7 +437,7 @@ describe("Company workforce resourceの参照整合性", () => {
       const otherPerson = { ...person, id: "person:2" }
       const otherEmployee = {
         ...employee,
-        id: "employee:2",
+        id: "86cf8dfa-151f-424b-ae22-fa25a715308d",
         attributes: { personId: otherPerson.id },
       }
       expect(
@@ -538,7 +538,7 @@ describe("Company workforce resourceの参照整合性", () => {
       const { repository } = fixture()
       const otherEmployee = {
         ...employee,
-        id: "employee:2",
+        id: "86cf8dfa-151f-424b-ae22-fa25a715308d",
         attributes: { personId: person.id, employeeCode: "E002" },
       }
       const unit: CompanyResourceProps = {
@@ -581,7 +581,7 @@ describe("Company workforce resourceの参照整合性", () => {
             position,
             office,
             ...(type === "organizational-authority"
-              ? [{ ...assignment, id: "assignment:authority-basis" }]
+              ? [{ ...assignment, id: "74630569-1c55-45c1-a16f-7e1d955fc37c" }]
               : []),
           ]),
         ),
@@ -620,7 +620,7 @@ describe("Company workforce resourceの参照整合性", () => {
     const { repository } = fixture()
     const manager = {
       ...employee,
-      id: "employee:manager",
+      id: "3b4998e1-9d0a-4f19-9ade-044faa2d8620",
       attributes: { personId: person.id, employeeCode: "E003" },
     }
     const reporting: CompanyResourceProps = {
@@ -635,7 +635,7 @@ describe("Company workforce resourceの参照整合性", () => {
     }
     const managerEmployment = {
       ...employment,
-      id: "employment:manager",
+      id: "ae3a296c-d93a-4ca2-983e-03faf5da61e5",
       attributes: { ...employment.attributes, employeeId: manager.id },
     }
     expect(
@@ -662,14 +662,14 @@ describe("Company workforce resourceの参照整合性", () => {
     const { database, repository } = fixture()
     await database
       .prepare(
-        "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('account:1', 'active', 0, 0, 0)",
+        "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('c0975461-26d2-43a1-86d2-124bd000d9c9', 'active', 0, 0, 0)",
       )
       .run()
     const link: CompanyResourceProps = {
       ...person,
-      id: "link:1",
+      id: "29851eda-2a1b-4d95-964e-d5115f5bf377",
       type: "account-employee-link",
-      attributes: { employeeId: employee.id, accountId: "account:1" },
+      attributes: { employeeId: employee.id, accountId: "c0975461-26d2-43a1-86d2-124bd000d9c9" },
     }
     expect(await repository.write(command([person, employee, link]))).toMatchObject({
       kind: "applied",
@@ -702,7 +702,9 @@ describe("Company workforce resourceの参照整合性", () => {
     expect(await repository.write(command([person]))).toMatchObject({ kind: "applied" })
     const results = await Promise.all([
       repository.write(command([employee], 1, "command:first")),
-      repository.write(command([{ ...employee, id: "employee:2" }], 1, "command:second")),
+      repository.write(
+        command([{ ...employee, id: "86cf8dfa-151f-424b-ae22-fa25a715308d" }], 1, "command:second"),
+      ),
     ])
     expect(results.filter((result) => result.kind === "applied")).toHaveLength(1)
     expect(results.filter((result) => result.kind === "conflict")).toHaveLength(1)

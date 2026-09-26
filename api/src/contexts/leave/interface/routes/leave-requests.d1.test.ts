@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -157,7 +158,7 @@ describe("POST /leave-requests", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
       expect(parsed.data.days).toBe(5)
       expect(parsed.data.status).toBe("draft")
       expect(parsed.data.approver_id).toBeNull()
@@ -360,7 +361,7 @@ async function createScopeTestDb(): Promise<D1Database> {
   await seedD1(db, "leave_requests", [
     {
       id: "01900049-0000-7000-8000-000000000064",
-      employee_id: "20",
+      employee_id: testEmployeeId(20),
       leave_type: "annual",
       start_date: "2026-06-01",
       end_date: "2026-06-02",
@@ -373,14 +374,14 @@ async function createScopeTestDb(): Promise<D1Database> {
     },
     {
       id: "01900049-0000-7000-8000-000000000065",
-      employee_id: "21",
+      employee_id: testEmployeeId(21),
       leave_type: "special",
       start_date: "2026-07-01",
       end_date: "2026-07-01",
       days: 1,
       reason: null,
       status: "approved",
-      approver_id: "2",
+      approver_id: testEmployeeId(2),
       decided_comment: "ok",
       created_at: "2026-05-21T00:00:00Z",
     },
@@ -415,7 +416,7 @@ describe("GET /leave-requests", () => {
     const response = await requestWithContext({
       db: await createScopeTestDb(),
       jwtSecret,
-      path: "/leave/leave-requests?employee_id=20",
+      path: `/leave/leave-requests?employee_id=${testEmployeeId(20)}`,
       token: await tokenFor(2),
     })
 
@@ -427,7 +428,9 @@ describe("GET /leave-requests", () => {
 
     if (parsed.success) {
       expect(
-        parsed.data.data.every((item) => item.applicant_id === toWorkforceEmployeeId(20)),
+        parsed.data.data.every(
+          (item) => item.applicant_id === toWorkforceEmployeeId(testEmployeeId(20)),
+        ),
       ).toBe(true)
     }
   })
@@ -436,7 +439,7 @@ describe("GET /leave-requests", () => {
     const response = await requestWithContext({
       db: await createScopeTestDb(),
       jwtSecret,
-      path: "/leave/leave-requests?employee_id=21",
+      path: `/leave/leave-requests?employee_id=${testEmployeeId(21)}`,
       token: await tokenFor(20),
     })
 
@@ -464,7 +467,10 @@ describe("GET /leave-requests", () => {
         .map((item) => item.applicant_id)
         .sort((left, right) => left.localeCompare(right))
 
-      expect(applicantIds).toEqual([toWorkforceEmployeeId(20), toWorkforceEmployeeId(21)])
+      expect(applicantIds).toEqual([
+        toWorkforceEmployeeId(testEmployeeId(20)),
+        toWorkforceEmployeeId(testEmployeeId(21)),
+      ])
     }
   })
 

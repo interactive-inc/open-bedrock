@@ -5,7 +5,7 @@ const initial = {
   id: "00000000-0000-4000-8000-000000000001",
   sourceNamespace: "example-record-source",
   ownerContext: "example-business",
-  actorAccountId: "operator-account",
+  actorAccountId: "df97195b-6fbe-475a-9293-f76fae1d4d5d",
   reason: "Preserve records before retiring the source",
   createdAt: "2026-09-01T00:00:00.000Z",
   auditEventId: "00000000-0000-4000-8000-000000000002",
@@ -14,7 +14,7 @@ const initial = {
 }
 
 const release = {
-  actorAccountId: "other-operator-account",
+  actorAccountId: "0577b586-229a-435a-9088-dcc77f6cc2ec",
   reason: "Resume source writes before starting another collection",
   at: "2026-09-02T00:00:00.000Z",
   auditEventId: "00000000-0000-4000-8000-000000000003",

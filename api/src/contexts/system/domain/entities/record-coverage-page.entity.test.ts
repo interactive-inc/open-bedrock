@@ -25,7 +25,7 @@ const firstInput = () => ({
   nextCursor: "page-two",
   purpose: "archive",
   checkedAt: source.capturedAt,
-  actorAccountId: "account:operator",
+  actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
   records: [{ preservedRecordId: crypto.randomUUID(), source }],
 })
 

@@ -1,3 +1,4 @@
+import { testAccountId } from "@system/test/system-test-id.test-support"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
@@ -349,7 +350,7 @@ async function grantDepartmentReader(db: D1Database, accountId: number): Promise
          (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
        VALUES (?2, ?1, '5e0f7c3a-1d2b-4c5d-8e6f-000000000900', NULL, NULL, 0, NULL)`,
     )
-    .bind(String(accountId), crypto.randomUUID())
+    .bind(testAccountId(accountId), crypto.randomUUID())
     .run()
 }
 

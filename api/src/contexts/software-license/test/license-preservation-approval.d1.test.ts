@@ -53,7 +53,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
           reason: "Archive access",
           grants: [
             {
-              accountId: "account:manager",
+              accountId: "31a1342c-776f-4a19-8ca8-8ad48aa33449",
               actions: ["read", "export"],
               purposes: ["archive"],
               validFrom: new Date().toISOString(),
@@ -173,7 +173,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     .get("/system/preserved-records/:recordId/dossier", ...preservedDossier)
     .get("/system/proposals/:number/versions/:version", ...proposalHistory)
   const token = await new SystemAccessTokenIssuer("preservation-isolated-export-test").issue({
-    accountId: zAccountId.parse("account:manager"),
+    accountId: zAccountId.parse("31a1342c-776f-4a19-8ca8-8ad48aa33449"),
     tokenVersion: 0,
     now: new Date(),
   })
@@ -297,12 +297,12 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     recordId: receipt.record_id,
     caseId: receipt.case_id,
     proposalDigest: proposal.decision_target.proposal_digest,
-    executedByAccountId: "account:manager",
+    executedByAccountId: "31a1342c-776f-4a19-8ca8-8ad48aa33449",
   })
   const approvalReaderContext = { env: environment }
   const approvalInput = {
     proof,
-    accountId: "account:manager",
+    accountId: "31a1342c-776f-4a19-8ca8-8ad48aa33449",
     permissionKeys: new Set(["system:procedure:read"]),
     at: new Date(),
   }
@@ -328,7 +328,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   expect(
     await prepareSystemPreservedRecordApprovalHistory(approvalReaderContext, {
       ...approvalInput,
-      accountId: "unrelated-reader",
+      accountId: "0d2519c5-e3ce-4f56-85a1-0b474dc2f72e",
     }),
   ).toBeInstanceOf(Error)
   expect(
@@ -340,7 +340,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   expect(
     await prepareSystemPreservedRecordApprovalHistory(approvalReaderContext, {
       ...approvalInput,
-      accountId: "unrelated-reader",
+      accountId: "0d2519c5-e3ce-4f56-85a1-0b474dc2f72e",
       permissionKeys: new Set(["system:procedure:read", "system:procedure:read:all"]),
     }),
   ).not.toBeInstanceOf(Error)
@@ -374,7 +374,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   if (originalHold === null || originalHold instanceof Error) throw new Error("hold missing")
   const releasedHold = originalHold.release({
     operationId: crypto.randomUUID(),
-    actorAccountId: "account:manager",
+    actorAccountId: "31a1342c-776f-4a19-8ca8-8ad48aa33449",
     at: new Date().toISOString(),
     reason: "Release after archive review",
     auditEventId: crypto.randomUUID(),
@@ -426,7 +426,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   await fixture.f.database.batch([completeRetention.guard])
   const auditValue = SystemAuditDisclosureValue.evaluate({
     policies: [],
-    accountId: "account:manager",
+    accountId: "31a1342c-776f-4a19-8ca8-8ad48aa33449",
     purpose: "archive",
     at: new Date(),
   })
@@ -453,7 +453,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   const dossierReaderContext = retentionContext
   const dossierInput = {
     record: storedRecord,
-    accountId: "account:manager",
+    accountId: "31a1342c-776f-4a19-8ca8-8ad48aa33449",
     permissionKeys: new Set(["system:procedure:read"]),
     at: new Date(),
     auditDisclosure,
@@ -497,7 +497,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     },
   ]) {
     const restrictedPolicy = SystemAuditDisclosurePolicyEntity.create({
-      scope: "account:manager",
+      scope: "31a1342c-776f-4a19-8ca8-8ad48aa33449",
       commandId: crypto.randomUUID(),
       revision: 1,
       enabled: true,
@@ -505,14 +505,14 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
       allowedPurposes: ["archive"],
       expiresAt: null,
       reason: "Restrict archive disclosure",
-      actorAccountId: "account:manager",
+      actorAccountId: "31a1342c-776f-4a19-8ca8-8ad48aa33449",
       recordedAt: new Date().toISOString(),
       auditEventId: crypto.randomUUID(),
     })
     if (restrictedPolicy instanceof Error) throw restrictedPolicy
     const restrictedValue = SystemAuditDisclosureValue.evaluate({
       policies: [restrictedPolicy],
-      accountId: "account:manager",
+      accountId: "31a1342c-776f-4a19-8ca8-8ad48aa33449",
       purpose: "archive",
       at: new Date(),
     })
@@ -774,7 +774,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   expect(excludedHistory.exclusions).toContainEqual({
     taskKey: candidateEvidence.taskKey,
     round: candidateEvidence.round,
-    accountId: zAccountId.parse("account:manager"),
+    accountId: zAccountId.parse("31a1342c-776f-4a19-8ca8-8ad48aa33449"),
     reason: "creator",
   })
   await fixture.f.database.batch([excludedHistory.candidatesGuard])
@@ -783,7 +783,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     .prepare(
       "UPDATE system_decision_task_exclusions SET reason='policy' WHERE case_id=?1 AND excluded_account_id=?2",
     )
-    .bind(receipt.case_id, "account:manager")
+    .bind(receipt.case_id, "31a1342c-776f-4a19-8ca8-8ad48aa33449")
     .run()
   expect(
     await fixture.f.database

@@ -61,7 +61,7 @@ async function fixture() {
       .bind(
         ...row,
         JSON.stringify({
-          employeeId: "employee:one",
+          employeeId: "9e174baf-3240-4253-9cba-16bc3e431cca",
           employmentType: "FULL_TIME",
           status: "ACTIVE",
         }),
@@ -118,7 +118,9 @@ test("既存契約の一部でも公開履歴へ未接続なら部分集計を�
   const database = await fixture()
   const repository = new CompanyEmploymentMovementsRepository({ env: { DB: database } })
   await database
-    .prepare("INSERT INTO company_employments VALUES ('employment:unconnected', 'employee:one')")
+    .prepare(
+      "INSERT INTO company_employments VALUES ('employment:unconnected', '9e174baf-3240-4253-9cba-16bc3e431cca')",
+    )
     .run()
   await database
     .prepare(

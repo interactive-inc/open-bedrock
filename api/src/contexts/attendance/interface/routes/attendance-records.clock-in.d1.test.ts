@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -119,7 +120,7 @@ describe("POST /attendance-records/clock-in", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(10))
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(10)))
       expect(parsed.data.work_date).toBe("2026-05-29")
       expect(parsed.data.clock_in_at).toBe("2026-05-29T09:00:00Z")
       expect(parsed.data.status).toBe("open")

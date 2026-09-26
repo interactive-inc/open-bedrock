@@ -8,6 +8,7 @@ import { AbortWhenPreviousStatementChangedNoRowsAdapter } from "@/contexts/compa
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 import { z } from "zod"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 
 const date = z.string().refine(isCalendarDate)
 const periodRow = z.object({
@@ -369,7 +370,7 @@ export class CompanyEmploymentResourceProjectionAdapter {
       if (key instanceof Error) return key
       const digest = await ProposalDigestValue.create(key)
       if (digest instanceof Error) return digest
-      periods.set(`resource-status:${digest.toString()}`, period)
+      periods.set(deterministicCompanyId("resource-status", digest.toString()), period)
     }
     const previousById = new Map(props.previous.map((period) => [period.period_id, period]))
     const statements: D1PreparedStatement[] = []

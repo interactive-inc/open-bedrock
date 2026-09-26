@@ -10,6 +10,8 @@ import {
   readOrganizationRevision,
 } from "@tests/api/support/lifecycle-route-fixture"
 import { createTestContextForDatabase } from "@tests/api/support/create-context-for-database"
+import { testAccountId } from "@system/test/system-test-id.test-support"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
@@ -31,7 +33,7 @@ describe("退職予約から実際の在籍認可まで", () => {
   test("人事発令で未来の退職を確定しても退職日中は利用でき、翌日から既存tokenも拒否する", async () => {
     const database = await createLifecycleRouteDb(await pool.next())
     const context = createTestContextForDatabase(database)
-    const employeeId = toWorkforceEmployeeId(5)
+    const employeeId = toWorkforceEmployeeId(testEmployeeId(5))
     const expectedEmployeeRevision = await database
       .prepare("SELECT revision FROM company_employee_lifecycle_revisions WHERE employee_id = ?1")
       .bind(employeeId)
@@ -39,8 +41,8 @@ describe("退職予約から実際の在籍認可まで", () => {
     if (expectedEmployeeRevision === null) throw new Error("missing lifecycle revision")
     const command = {
       session: {
-        accountId: zAccountId.parse("1"),
-        employeeId: toWorkforceEmployeeId(1),
+        accountId: zAccountId.parse(testAccountId(1)),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         hasPermission: (permission: string) => permission === "employee:lifecycle:apply",
       },
       employeeId,
@@ -77,7 +79,7 @@ describe("退職予約から実際の在籍認可まで", () => {
     ).toBe("TERMINATED")
 
     const jwtSecret = "lifecycle-access-integration-secret"
-    const token = await createTestToken(jwtSecret, { employeeId })
+    const token = await createTestToken(jwtSecret, { employeeId, accountId: 5 })
     for (const scenario of [
       { now: "2026-09-30T14:59:59Z", status: 200, employment: "ACTIVE" },
       { now: "2026-09-30T15:00:00Z", status: 401, employment: "TERMINATED" },

@@ -15,7 +15,7 @@ const identityIssuer = "https://identity-provider.example/"
 const identityAudience = "urn:system:identity-login"
 const now = new Date("2026-01-01T00:00:00.000Z")
 const nowEpoch = Math.floor(now.getTime() / 1_000)
-const accountId = "identity-session-account"
+const accountId = "d5b441be-4549-465f-ab69-7d4b147b7cb0"
 const subject = "external-subject-1"
 
 function createFixture(
@@ -41,7 +41,7 @@ function createFixture(
     .query(
       `INSERT INTO system_identity_bindings
          (id, account_id, provider, subject, created_at, activated_at, revoked_at)
-       VALUES ('external-identity', ?1, 'oidc', ?2, ?3, ?3, NULL)`,
+       VALUES ('0a83182e-c8a7-40d5-be3b-adeffed2ef84', ?1, 'oidc', ?2, ?3, ?3, NULL)`,
     )
     .run(accountId, subject, now.getTime())
 

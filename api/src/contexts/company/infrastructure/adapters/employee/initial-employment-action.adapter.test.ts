@@ -14,8 +14,8 @@ const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
   .map((file) => readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8"))
   .join("\n")
 const item = {
-  employeeId: restoreWorkforceId("employee", "employee:one"),
-  employmentId: restoreWorkforceId("employment", "employment:one"),
+  employeeId: restoreWorkforceId("employee", "8d0f7b9e-3c4a-4f1b-9e2d-6a5b4c3d2e10"),
+  employmentId: restoreWorkforceId("employment", "3e7a1c5d-9b2f-4d6e-8a1c-0f9e8d7c6b52"),
   officialName: "Example Person",
   employeeCode: "one",
   email: "you@example.com",
@@ -24,8 +24,8 @@ const item = {
   status: "leave" as const,
   effectiveOn: restoreCalendarDate("2026-09-01"),
   occurredAt: new Date("2026-08-01T00:00:00Z"),
-  actorAccountId: "account:operator",
-  operationId: "initial:one",
+  actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
+  operationId: "83db9b6a-0a4a-4d6f-8188-437800b466a1",
   reason: "Confirmed new employment",
   lifecycleRevision: 0,
 }

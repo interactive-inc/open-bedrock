@@ -68,6 +68,7 @@
     "src/contexts/company/domain/definitions/calendar-date.definition.ts",
     "src/contexts/company/domain/definitions/company-audit-event.definition.ts",
     "src/contexts/company/domain/definitions/company-audit-record.definition.ts",
+    "src/contexts/company/domain/definitions/company-operation-id.definition.ts",
     "src/contexts/company/domain/definitions/company-organization-identity.definition.test.ts",
     "src/contexts/company/domain/definitions/company-organization-identity.definition.ts",
     "src/contexts/company/domain/definitions/company-personnel-session.definition.ts",

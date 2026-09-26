@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
@@ -124,7 +125,7 @@ describe("POST /training-enrollments", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(9))
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(9)))
       expect(parsed.data.status).toBe("enrolled")
     }
   })
@@ -166,7 +167,7 @@ describe("POST /training-enrollments", () => {
 
     const body = trainingEnrollmentResponseSchema.parse(await response.json())
 
-    expect(body.employee_id).toBe(toWorkforceEmployeeId(5))
+    expect(body.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
   })
 
   test("a member assigning another employee is forbidden", async () => {

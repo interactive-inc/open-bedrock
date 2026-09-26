@@ -15,7 +15,7 @@ import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/defin
 export function createCompanyPlaceHttpTestClient(
   database: D1Database,
   actor = CompanyActorValue.restore({
-    accountId: "account:operator",
+    accountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     employeeId: null,
     organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:read", "company:write"],

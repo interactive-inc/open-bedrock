@@ -52,7 +52,7 @@ test("シフト3台帳を停止中に人の承認で保全し、業務コード�
   await database
     .prepare(`INSERT INTO system_step_up_grants
       (id,account_id,token_hash,method,issued_at,expires_at)
-      VALUES ('shift-test-step-up',?1,?2,'external_identity',?3,?4)`)
+      VALUES ('ac6a4be0-40cd-496d-8eb8-b64d6e5dc3eb',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const frozen = await app.request(

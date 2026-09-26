@@ -5,10 +5,10 @@ import { describe, expect, test } from "bun:test"
 describe("SystemAuditEventEntity.create", () => {
   test("creates an immutable storage-independent event for a string AccountEntity ID", () => {
     const event = SystemAuditEventEntity.create({
-      actorAccountId: "account-1",
+      actorAccountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
       action: "auth.session.logout",
       targetType: "account",
-      targetId: "account-1",
+      targetId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
       outcome: "succeeded",
       reasonCode: null,
       authorizationJson: null,
@@ -22,10 +22,10 @@ describe("SystemAuditEventEntity.create", () => {
     if (event instanceof Error) return
 
     expect(event).toMatchObject({
-      actorAccountId: "account-1",
+      actorAccountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
       action: "auth.session.logout",
       targetType: "account",
-      targetId: "account-1",
+      targetId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
       outcome: "succeeded",
       metadataJson: '{"source":"api"}',
       occurredAtEpochMilliseconds: 1_767_225_600_123,

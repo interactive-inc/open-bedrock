@@ -12,7 +12,10 @@ function taskInput(overrides: Readonly<Record<string, unknown>> = {}) {
     caseId: "case-1",
     key: "manager-approval",
     round: 1,
-    candidateAccountIds: ["account-2", "account-3"],
+    candidateAccountIds: [
+      "4b0518fd-9017-4afc-addd-bb50998b0273",
+      "ee078b4a-d2be-4588-bfcd-2be84263fbb5",
+    ],
     excludedAccountIds: ["account-1"],
     requiredApprovals: 2,
     proposalDigest: DIGEST,
@@ -61,15 +64,15 @@ describe("DecisionTaskEntity", () => {
     const task = requireTask(taskInput())
     const first = requireAttestation({
       id: "decision-1",
-      actorAccountId: "account-2",
-      representedAccountId: "account-2",
+      actorAccountId: "4b0518fd-9017-4afc-addd-bb50998b0273",
+      representedAccountId: "4b0518fd-9017-4afc-addd-bb50998b0273",
       delegationId: null,
       action: "approve",
     })
     const second = requireAttestation({
       id: "decision-2",
-      actorAccountId: "account-4",
-      representedAccountId: "account-3",
+      actorAccountId: "3b6fc2cd-f24a-4654-9aa3-71d2b459d3be",
+      representedAccountId: "ee078b4a-d2be-4588-bfcd-2be84263fbb5",
       delegationId: "delegation-1",
       action: "approve",
     })
@@ -82,15 +85,15 @@ describe("DecisionTaskEntity", () => {
     const task = requireTask(taskInput())
     const rejection = requireAttestation({
       id: "decision-1",
-      actorAccountId: "account-2",
-      representedAccountId: "account-2",
+      actorAccountId: "4b0518fd-9017-4afc-addd-bb50998b0273",
+      representedAccountId: "4b0518fd-9017-4afc-addd-bb50998b0273",
       delegationId: null,
       action: "reject",
     })
     const returned = requireAttestation({
       id: "decision-2",
-      actorAccountId: "account-3",
-      representedAccountId: "account-3",
+      actorAccountId: "ee078b4a-d2be-4588-bfcd-2be84263fbb5",
+      representedAccountId: "ee078b4a-d2be-4588-bfcd-2be84263fbb5",
       delegationId: null,
       action: "return",
     })
@@ -102,7 +105,12 @@ describe("DecisionTaskEntity", () => {
   test("合議では参加定足数を満たし、成立不能になるまで少数の反対で閉じない", () => {
     const task = requireTask(
       taskInput({
-        candidateAccountIds: ["account-2", "account-3", "account-4", "account-5"],
+        candidateAccountIds: [
+          "4b0518fd-9017-4afc-addd-bb50998b0273",
+          "ee078b4a-d2be-4588-bfcd-2be84263fbb5",
+          "3b6fc2cd-f24a-4654-9aa3-71d2b459d3be",
+          "account-5",
+        ],
         requiredApprovals: 3,
         requiredParticipants: 3,
         negativeDecisionRule: "approval-impossible",
@@ -110,15 +118,15 @@ describe("DecisionTaskEntity", () => {
     )
     const rejection = requireAttestation({
       id: "decision-1",
-      actorAccountId: "account-2",
-      representedAccountId: "account-2",
+      actorAccountId: "4b0518fd-9017-4afc-addd-bb50998b0273",
+      representedAccountId: "4b0518fd-9017-4afc-addd-bb50998b0273",
       delegationId: null,
       action: "reject",
     })
     const secondRejection = requireAttestation({
       id: "decision-2",
-      actorAccountId: "account-3",
-      representedAccountId: "account-3",
+      actorAccountId: "ee078b4a-d2be-4588-bfcd-2be84263fbb5",
+      representedAccountId: "ee078b4a-d2be-4588-bfcd-2be84263fbb5",
       delegationId: null,
       action: "reject",
     })
@@ -130,7 +138,11 @@ describe("DecisionTaskEntity", () => {
   test("賛成数だけでなく参加定足数も満たしてから合議を承認する", () => {
     const task = requireTask(
       taskInput({
-        candidateAccountIds: ["account-2", "account-3", "account-4"],
+        candidateAccountIds: [
+          "4b0518fd-9017-4afc-addd-bb50998b0273",
+          "ee078b4a-d2be-4588-bfcd-2be84263fbb5",
+          "3b6fc2cd-f24a-4654-9aa3-71d2b459d3be",
+        ],
         requiredApprovals: 2,
         requiredParticipants: 3,
         negativeDecisionRule: "approval-impossible",
@@ -138,22 +150,22 @@ describe("DecisionTaskEntity", () => {
     )
     const first = requireAttestation({
       id: "decision-1",
-      actorAccountId: "account-2",
-      representedAccountId: "account-2",
+      actorAccountId: "4b0518fd-9017-4afc-addd-bb50998b0273",
+      representedAccountId: "4b0518fd-9017-4afc-addd-bb50998b0273",
       delegationId: null,
       action: "approve",
     })
     const second = requireAttestation({
       id: "decision-2",
-      actorAccountId: "account-3",
-      representedAccountId: "account-3",
+      actorAccountId: "ee078b4a-d2be-4588-bfcd-2be84263fbb5",
+      representedAccountId: "ee078b4a-d2be-4588-bfcd-2be84263fbb5",
       delegationId: null,
       action: "approve",
     })
     const third = requireAttestation({
       id: "decision-3",
-      actorAccountId: "account-4",
-      representedAccountId: "account-4",
+      actorAccountId: "3b6fc2cd-f24a-4654-9aa3-71d2b459d3be",
+      representedAccountId: "3b6fc2cd-f24a-4654-9aa3-71d2b459d3be",
       delegationId: null,
       action: "reject",
     })
@@ -164,10 +176,19 @@ describe("DecisionTaskEntity", () => {
 
   test("候補重複、除外主体、quorum超過を拒否する", () => {
     expect(
-      DecisionTaskEntity.create(taskInput({ candidateAccountIds: ["account-2", "account-2"] })),
+      DecisionTaskEntity.create(
+        taskInput({
+          candidateAccountIds: [
+            "4b0518fd-9017-4afc-addd-bb50998b0273",
+            "4b0518fd-9017-4afc-addd-bb50998b0273",
+          ],
+        }),
+      ),
     ).toBeInstanceOf(InvalidSystemWorkflowError)
     expect(
-      DecisionTaskEntity.create(taskInput({ excludedAccountIds: ["account-1", "account-2"] })),
+      DecisionTaskEntity.create(
+        taskInput({ excludedAccountIds: ["account-1", "4b0518fd-9017-4afc-addd-bb50998b0273"] }),
+      ),
     ).toBeInstanceOf(InvalidSystemWorkflowError)
     expect(DecisionTaskEntity.create(taskInput({ requiredApprovals: 3 }))).toBeInstanceOf(
       InvalidSystemWorkflowError,
@@ -178,22 +199,22 @@ describe("DecisionTaskEntity", () => {
     const task = requireTask(taskInput())
     const first = requireAttestation({
       id: "decision-1",
-      actorAccountId: "account-2",
-      representedAccountId: "account-2",
+      actorAccountId: "4b0518fd-9017-4afc-addd-bb50998b0273",
+      representedAccountId: "4b0518fd-9017-4afc-addd-bb50998b0273",
       delegationId: null,
       action: "approve",
     })
     const duplicate = requireAttestation({
       id: "decision-2",
-      actorAccountId: "account-2",
-      representedAccountId: "account-3",
+      actorAccountId: "4b0518fd-9017-4afc-addd-bb50998b0273",
+      representedAccountId: "ee078b4a-d2be-4588-bfcd-2be84263fbb5",
       delegationId: "delegation-1",
       action: "approve",
     })
     const ineligible = requireAttestation({
       id: "decision-3",
-      actorAccountId: "account-4",
-      representedAccountId: "account-4",
+      actorAccountId: "3b6fc2cd-f24a-4654-9aa3-71d2b459d3be",
+      representedAccountId: "3b6fc2cd-f24a-4654-9aa3-71d2b459d3be",
       delegationId: null,
       action: "approve",
     })
@@ -206,15 +227,15 @@ describe("DecisionTaskEntity", () => {
     const task = requireTask(taskInput())
     const rejection = requireAttestation({
       id: "decision-1",
-      actorAccountId: "account-2",
-      representedAccountId: "account-2",
+      actorAccountId: "4b0518fd-9017-4afc-addd-bb50998b0273",
+      representedAccountId: "4b0518fd-9017-4afc-addd-bb50998b0273",
       delegationId: null,
       action: "reject",
     })
     const ineligible = requireAttestation({
       id: "decision-2",
-      actorAccountId: "account-4",
-      representedAccountId: "account-4",
+      actorAccountId: "3b6fc2cd-f24a-4654-9aa3-71d2b459d3be",
+      representedAccountId: "3b6fc2cd-f24a-4654-9aa3-71d2b459d3be",
       delegationId: null,
       action: "approve",
     })

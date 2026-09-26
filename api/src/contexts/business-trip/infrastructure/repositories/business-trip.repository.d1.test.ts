@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { BusinessTrip } from "@/contexts/business-trip/domain/entities/business-trip.entity"
@@ -20,7 +21,7 @@ afterAll(async () => {
 
 function trip(travelerId: number, startDate: string, endDate: string): BusinessTrip {
   const created = BusinessTrip.create({
-    travelerId: toWorkforceEmployeeId(travelerId),
+    travelerId: toWorkforceEmployeeId(testEmployeeId(travelerId)),
     destination: "Osaka Branch",
     startDate,
     endDate,
@@ -50,7 +51,7 @@ describe("BusinessTripRepository on local D1", () => {
     )
 
     const overlapping = await repository.findOverlapping({
-      travelerId: toWorkforceEmployeeId(5),
+      travelerId: toWorkforceEmployeeId(testEmployeeId(5)),
       startDate: "2026-06-12",
       endDate: "2026-06-14",
       excludeBusinessTripId: null,
@@ -61,7 +62,7 @@ describe("BusinessTripRepository on local D1", () => {
     ])
 
     const excludingSelf = await repository.findOverlapping({
-      travelerId: toWorkforceEmployeeId(5),
+      travelerId: toWorkforceEmployeeId(testEmployeeId(5)),
       startDate: "2026-06-12",
       endDate: "2026-06-14",
       excludeBusinessTripId: first.id,

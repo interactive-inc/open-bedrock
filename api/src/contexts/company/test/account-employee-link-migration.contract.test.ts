@@ -91,10 +91,10 @@ describe("Account対応の履歴接続migration", () => {
     await c.revise()
     await c.database.exec(`
       INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-        VALUES ('legacy-account', 'active', 0, 0, 0);
+        VALUES ('2f6d8a1c-4b3e-4c5d-9e7f-8a9b0c1d2e3f', 'active', 0, 0, 0);
       INSERT INTO company_employees (id, official_name, employee_code, email, phone, created_at, updated_at)
-        VALUES ('legacy-employee', 'Legacy Person', NULL, NULL, NULL, 0, 0);
-      INSERT INTO company_account_employee_links (account_id, employee_id) VALUES ('legacy-account', 'legacy-employee');
+        VALUES ('5a4b3c2d-1e0f-4a9b-8c7d-6e5f4a3b2c1d', 'Legacy Person', NULL, NULL, NULL, 0, 0);
+      INSERT INTO company_account_employee_links (account_id, employee_id) VALUES ('2f6d8a1c-4b3e-4c5d-9e7f-8a9b0c1d2e3f', '5a4b3c2d-1e0f-4a9b-8c7d-6e5f4a3b2c1d');
     `)
     const anchors = (
       await c.database
@@ -117,7 +117,7 @@ describe("Account対応の履歴接続migration", () => {
         FROM company_account_employee_link_periods WHERE ${column} = ?1
           AND (starts_on IS NULL OR starts_on <= '2030-01-01')
           AND (ends_on IS NULL OR '2030-01-01' < ends_on)`)
-        .bind("legacy-account")
+        .bind("2f6d8a1c-4b3e-4c5d-9e7f-8a9b0c1d2e3f")
         .all<{ detail: string }>()
       expect(plan.results.some((row) => /^SCAN (resource|latest|later)\b/.test(row.detail))).toBe(
         false,
@@ -154,7 +154,14 @@ describe("Account対応の履歴接続migration", () => {
           )
           .all()
       ).results,
-    ).toEqual([{ account_id: "legacy-account", starts_on: null, ends_on: null, source: "legacy" }])
+    ).toEqual([
+      {
+        account_id: "2f6d8a1c-4b3e-4c5d-9e7f-8a9b0c1d2e3f",
+        starts_on: null,
+        ends_on: null,
+        source: "legacy",
+      },
+    ])
     expect((await c.database.prepare("PRAGMA foreign_key_check").all()).results).toEqual([])
   })
 

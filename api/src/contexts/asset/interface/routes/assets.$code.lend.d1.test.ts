@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { seedAssetLendings } from "@/contexts/asset/test/seed/seed-asset-lendings.test-support"
@@ -129,7 +130,7 @@ describe("POST /assets/:code/lend", () => {
 
     if (parsed.success) {
       expect(parsed.data.status).toBe("lent")
-      expect(parsed.data.holder_employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(parsed.data.holder_employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
     }
   })
 

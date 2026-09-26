@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -117,7 +118,7 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "leave_balances", [
     {
       id: crypto.randomUUID(),
-      employee_id: "5",
+      employee_id: testEmployeeId(5),
       fiscal_year: "2026",
       leave_type: "annual",
       granted_days: 20,
@@ -126,7 +127,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: crypto.randomUUID(),
-      employee_id: "5",
+      employee_id: testEmployeeId(5),
       fiscal_year: "2026",
       leave_type: "special",
       granted_days: 5,
@@ -196,7 +197,7 @@ describe("GET /leave-requests/:id", () => {
 
     if (parsed.success) {
       expect(parsed.data.id).toBe("01900049-0000-7000-8000-000000000001")
-      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
     }
   })
 
@@ -208,7 +209,7 @@ describe("GET /leave-requests/:id", () => {
       .prepare(
         `INSERT OR IGNORE INTO system_role_bindings
            (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-         SELECT ?1, '4', role.id, NULL, NULL, 0, NULL
+         SELECT ?1, '01900061-0000-7000-8000-000000000004', role.id, NULL, NULL, 0, NULL
          FROM system_iam_roles AS role WHERE role.key = 'company:manager'`,
       )
       .bind(crypto.randomUUID())
@@ -241,7 +242,7 @@ describe("GET /leave-requests/:id", () => {
 
     if (parsed.success) {
       expect(parsed.data.id).toBe("01900049-0000-7000-8000-000000000001")
-      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
     }
   })
 
@@ -262,7 +263,7 @@ describe("GET /leave-requests/:id", () => {
       .prepare(
         `INSERT OR IGNORE INTO system_role_bindings
            (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-         SELECT ?1, '2', role.id, NULL, NULL, 0, NULL
+         SELECT ?1, '01900061-0000-7000-8000-000000000002', role.id, NULL, NULL, 0, NULL
          FROM system_iam_roles AS role WHERE role.key = 'company:hr'`,
       )
       .bind(crypto.randomUUID())
@@ -295,7 +296,7 @@ describe("GET /leave-requests/:id", () => {
 
     if (parsed.success) {
       expect(parsed.data.id).toBe("01900049-0000-7000-8000-000000000001")
-      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
     }
   })
 
@@ -379,7 +380,7 @@ describe("PUT /leave-requests/:id", () => {
     await seedD1(db, "leave_requests", [
       {
         id: "01900049-0000-7000-8000-000000000064",
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         leave_type: "annual",
         start_date: "2026-07-01",
         end_date: "2026-07-03",

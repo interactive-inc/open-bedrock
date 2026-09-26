@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -106,7 +107,7 @@ const attendanceListResponseSchema = z.object({
 describe("GET /attendance-records", () => {
   test("privileged role can read another employee via employee_id", async () => {
     const response = await getRequest(
-      "/attendance/attendance-records?employee_id=5",
+      `/attendance/attendance-records?employee_id=${testEmployeeId(5)}`,
       await tokenFor(1),
     )
 
@@ -120,14 +121,16 @@ describe("GET /attendance-records", () => {
       expect(parsed.data.data.length).toBe(2)
       expect(parsed.data.total).toBe(2)
       expect(
-        parsed.data.data.every((record) => record.employee_id === toWorkforceEmployeeId(5)),
+        parsed.data.data.every(
+          (record) => record.employee_id === toWorkforceEmployeeId(testEmployeeId(5)),
+        ),
       ).toBe(true)
     }
   })
 
   test("member requesting another employee_id is forbidden", async () => {
     const response = await getRequest(
-      "/attendance/attendance-records?employee_id=9",
+      `/attendance/attendance-records?employee_id=${testEmployeeId(9)}`,
       await tokenFor(5),
     )
 
@@ -136,7 +139,7 @@ describe("GET /attendance-records", () => {
 
   test("manager can read a report's attendance (E004 over E005)", async () => {
     const response = await getRequest(
-      "/attendance/attendance-records?employee_id=5",
+      `/attendance/attendance-records?employee_id=${testEmployeeId(5)}`,
       await tokenFor(4),
     )
 
@@ -148,14 +151,16 @@ describe("GET /attendance-records", () => {
 
     if (parsed.success) {
       expect(
-        parsed.data.data.every((record) => record.employee_id === toWorkforceEmployeeId(5)),
+        parsed.data.data.every(
+          (record) => record.employee_id === toWorkforceEmployeeId(testEmployeeId(5)),
+        ),
       ).toBe(true)
     }
   })
 
   test("manager cannot read a non-report's attendance (E004 not over E009)", async () => {
     const response = await getRequest(
-      "/attendance/attendance-records?employee_id=9",
+      `/attendance/attendance-records?employee_id=${testEmployeeId(9)}`,
       await tokenFor(4),
     )
 
@@ -285,7 +290,10 @@ describe("GET /attendance-records?scope=reports", () => {
         .map((record) => record.employee_id)
         .sort((left, right) => left.localeCompare(right))
 
-      expect(employeeIds).toEqual([toWorkforceEmployeeId(20), toWorkforceEmployeeId(21)])
+      expect(employeeIds).toEqual([
+        toWorkforceEmployeeId(testEmployeeId(20)),
+        toWorkforceEmployeeId(testEmployeeId(21)),
+      ])
     }
   })
 

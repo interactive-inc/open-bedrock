@@ -18,11 +18,11 @@ const archiveSql = companySql.slice(
 test("保全記録の所属・参照先と不変性をDBで強制し、元台帳がなくても原記録を保持する", async () => {
   const db = createCompanyD1TestDatabase(`PRAGMA foreign_keys=ON;
     CREATE TABLE company_organizations(id TEXT PRIMARY KEY); INSERT INTO company_organizations VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}');
-    CREATE TABLE company_employees(id TEXT PRIMARY KEY); INSERT INTO company_employees VALUES ('employee:one');
-    CREATE TABLE system_accounts(id TEXT PRIMARY KEY); INSERT INTO system_accounts VALUES ('account:reviewer');
+    CREATE TABLE company_employees(id TEXT PRIMARY KEY); INSERT INTO company_employees VALUES ('9e174baf-3240-4253-9cba-16bc3e431cca');
+    CREATE TABLE system_accounts(id TEXT PRIMARY KEY); INSERT INTO system_accounts VALUES ('a63d1b89-54f5-4001-8ed7-f2077c91340d');
     ${archiveSql}`)
   const sourceJson = JSON.stringify({
-    employeeId: "employee:one",
+    employeeId: "9e174baf-3240-4253-9cba-16bc3e431cca",
     organizationRevision: 8,
     awards: [],
   })
@@ -31,7 +31,7 @@ test("保全記録の所属・参照先と不変性をDBで強制し、元台帳
       .prepare(`INSERT INTO company_grade_award_archives
     (organization_id, command_id, employee_id, fingerprint, actor_account_id, reason, observed_on,
      observed_company_revision, snapshot_digest, source_json, recorded_at) VALUES
-    ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'archive:one', 'employee:one', ?1, 'account:reviewer', 'Preserve original records',
+    ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'archive:one', '9e174baf-3240-4253-9cba-16bc3e431cca', ?1, 'a63d1b89-54f5-4001-8ed7-f2077c91340d', 'Preserve original records',
     '2030-01-01', 8, ?1, ?2, 1)`)
       .bind("a".repeat(64), sourceJson)
   await insert().run()

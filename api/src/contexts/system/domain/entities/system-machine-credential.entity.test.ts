@@ -7,7 +7,7 @@ const usedAt = new Date("2026-08-31T00:01:00.000Z")
 function createCredential(): SystemMachineCredentialEntity {
   const credential = SystemMachineCredentialEntity.create({
     id: "credential:1",
-    principalId: "principal:service",
+    principalId: "706562a0-8521-4b2d-81db-70207dd894b4",
     name: "automation",
     secretHash: "a".repeat(64),
     status: "active",

@@ -62,7 +62,7 @@ test("会議体11件と議事録・意思決定を分割照合し撤去確定す
   await database
     .prepare(`INSERT INTO system_step_up_grants
       (id,account_id,token_hash,method,issued_at,expires_at)
-      VALUES ('meeting-coverage-step-up',?1,?2,'external_identity',?3,?4)`)
+      VALUES ('14b3a55e-8284-4f4a-a1e4-46dde0730e55',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const post = (path: string, body: unknown) =>

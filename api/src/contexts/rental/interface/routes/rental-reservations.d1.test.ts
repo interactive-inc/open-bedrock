@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -113,7 +114,7 @@ describe("POST /rental-reservations", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.requester_id).toBe(toWorkforceEmployeeId(4))
+      expect(parsed.data.requester_id).toBe(toWorkforceEmployeeId(testEmployeeId(4)))
       expect(parsed.data.item_name).toBe("Tripod")
       expect(parsed.data.purpose).toBe("Photo shoot")
       expect(parsed.data.status).toBe("requested")

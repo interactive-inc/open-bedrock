@@ -189,7 +189,7 @@ describe("System root bootstrap", () => {
     const { application, database } = createFixture()
     database.run(
       `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-       VALUES ('existing-account', 'active', 0, 1, 1)`,
+       VALUES ('c1cf1957-9ca8-4876-91d3-809100404574', 'active', 0, 1, 1)`,
     )
 
     expect(

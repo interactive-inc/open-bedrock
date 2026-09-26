@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { LeaveRequest } from "@/contexts/leave/domain/entities/leave-request.entity"
@@ -37,7 +38,7 @@ describe("LeaveRequestRepository", () => {
 
     const created = await repository.create(
       LeaveRequest.create({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         leaveType: "annual",
         startDate: "2026-02-01",
         endDate: "2026-02-03",
@@ -105,13 +106,13 @@ describe("LeaveRequestRepository", () => {
     test("matches an overlapping pending request for the same employee", async () => {
       const created = await createPending({
         database: "overlap-same-employee",
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         startDate: "2026-02-01",
         endDate: "2026-02-05",
       })
 
       const result = await created.repository.findOverlapping({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         startDate: "2026-02-03",
         endDate: "2026-02-07",
       })
@@ -126,13 +127,13 @@ describe("LeaveRequestRepository", () => {
     test("excludes the request identified by excludeId", async () => {
       const created = await createPending({
         database: "overlap-exclude-id",
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         startDate: "2026-02-01",
         endDate: "2026-02-05",
       })
 
       const result = await created.repository.findOverlapping({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         startDate: "2026-02-02",
         endDate: "2026-02-04",
         excludeId: created.id,
@@ -152,11 +153,11 @@ describe("LeaveRequestRepository", () => {
         .prepare(`INSERT INTO leave_requests
         (id,employee_id,leave_type,start_date,end_date,days,unit,hours,consumed_days,reason,status,created_at)
         VALUES ('01900049-0000-7000-8000-0000000000aa',?1,'annual','2026-02-01','2026-02-05',5,'full_day',NULL,5,NULL,'rejected','2026-01-01T00:00:00.000Z')`)
-        .bind(toWorkforceEmployeeId(1))
+        .bind(toWorkforceEmployeeId(testEmployeeId(1)))
         .run()
 
       const result = await repository.findOverlapping({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         startDate: "2026-02-02",
         endDate: "2026-02-04",
       })
@@ -171,13 +172,13 @@ describe("LeaveRequestRepository", () => {
     test("ignores other employees' requests", async () => {
       const created = await createPending({
         database: "overlap-other-employee",
-        employeeId: toWorkforceEmployeeId(10),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(10)),
         startDate: "2026-02-01",
         endDate: "2026-02-05",
       })
 
       const result = await created.repository.findOverlapping({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         startDate: "2026-02-02",
         endDate: "2026-02-04",
       })
@@ -192,13 +193,13 @@ describe("LeaveRequestRepository", () => {
     test("treats a shared boundary date as an overlap", async () => {
       const created = await createPending({
         database: "overlap-shared-boundary",
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         startDate: "2026-02-01",
         endDate: "2026-02-03",
       })
 
       const result = await created.repository.findOverlapping({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         startDate: "2026-02-03",
         endDate: "2026-02-05",
       })
@@ -213,13 +214,13 @@ describe("LeaveRequestRepository", () => {
     test("does not match an adjacent (non-overlapping) period", async () => {
       const created = await createPending({
         database: "overlap-adjacent-period",
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         startDate: "2026-02-01",
         endDate: "2026-02-03",
       })
 
       const result = await created.repository.findOverlapping({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         startDate: "2026-02-04",
         endDate: "2026-02-06",
       })

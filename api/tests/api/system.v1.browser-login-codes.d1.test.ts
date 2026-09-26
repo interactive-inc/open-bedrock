@@ -120,7 +120,7 @@ describe("POST /system/browser-login-codes", () => {
     const codeHash = await systemLoginCodeHash(body.code)
     if (codeHash instanceof Error) throw codeHash
 
-    expect(row?.account_id).toBe("1")
+    expect(row?.account_id).toBe("01900061-0000-7000-8000-000000000001")
     expect(row?.expires_at).toBe(nowEpoch * 1_000 + 60_000)
     // 生 code は保存されず、ハッシュのみが主キーとして残る。
     expect(row?.code_hash).toBe(codeHash)
@@ -133,7 +133,7 @@ describe("POST /system/browser-login-codes", () => {
       .prepare(
         `INSERT INTO system_identity_bindings
            (id, account_id, provider, subject, created_at, activated_at, revoked_at)
-         VALUES ('oidc:external-account-1', '1', 'oidc', 'external-account-1', 0, 0, NULL)`,
+         VALUES ('901eb3e0-e0f6-4eeb-bb44-fcc76780da2d', '01900061-0000-7000-8000-000000000001', 'oidc', 'external-account-1', 0, 0, NULL)`,
       )
       .run()
 
@@ -157,7 +157,7 @@ describe("POST /system/browser-login-codes", () => {
       .first<{ account_id: string }>()
 
     expect(body.expires_in).toBe(60)
-    expect(row?.account_id).toBe("1")
+    expect(row?.account_id).toBe("01900061-0000-7000-8000-000000000001")
   })
 
   test("別API向けの外部access tokenではone-time codeを発行しない", async () => {

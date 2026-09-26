@@ -7,7 +7,7 @@ import { describe, expect, test } from "bun:test"
 import { hc } from "hono/client"
 
 const now = new Date("2026-01-01T00:00:00.000Z")
-const accountId = zAccountId.parse("system-middleware-account")
+const accountId = zAccountId.parse("967ce6b6-442d-48f9-ad4b-f934103f1012")
 const jwtSecret = "system-session-test-jwt-secret"
 
 describe("authenticateSystemAccessToken", () => {

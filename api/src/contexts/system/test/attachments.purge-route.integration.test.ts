@@ -43,7 +43,10 @@ type Fixture = Readonly<{
 async function createFixture(options: { storageConfigured?: boolean } = {}): Promise<Fixture> {
   const db = createSystemAttachmentTestDatabase()
 
-  for (const accountId of ["account-admin", "account-member"]) {
+  for (const accountId of [
+    "3bca86aa-5332-4a10-bacb-a2b82d961613",
+    "054361de-dcc9-4d31-9703-2a1237a8b6dd",
+  ]) {
     await db
       .prepare(
         `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
@@ -70,7 +73,7 @@ async function createFixture(options: { storageConfigured?: boolean } = {}): Pro
   await db
     .prepare(
       `INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-       VALUES ('09ef108e-50f8-4909-8969-532bd57c6cc9', 'account-admin', 'be72ba18-7abe-47f1-8371-b41cff620297', NULL, NULL, ?1, NULL)`,
+       VALUES ('09ef108e-50f8-4909-8969-532bd57c6cc9', '3bca86aa-5332-4a10-bacb-a2b82d961613', 'be72ba18-7abe-47f1-8371-b41cff620297', NULL, NULL, ?1, NULL)`,
     )
     .bind(uploadedAt.getTime())
     .run()
@@ -130,7 +133,7 @@ async function createFixture(options: { storageConfigured?: boolean } = {}): Pro
           ATTACHMENT_KEKS: createSystemAttachmentTestKekEnvironment(1),
         },
       }).run({
-        ownerAccountId: "account-member",
+        ownerAccountId: "054361de-dcc9-4d31-9703-2a1237a8b6dd",
         fileName: "領収書.pdf",
         contentType: "application/pdf",
         content: new TextEncoder().encode("%PDF-1.7 領収書"),
@@ -161,7 +164,7 @@ describe("POST /system/attachments/purge-unlinked", () => {
       env: { DB: fixture.db },
     }).prepare({
       attachmentIds: [id],
-      ownerAccountId: "account-member",
+      ownerAccountId: "054361de-dcc9-4d31-9703-2a1237a8b6dd",
       linkedAttachmentIds: new Set(),
       at: purgeAt,
     })
@@ -178,7 +181,9 @@ describe("POST /system/attachments/purge-unlinked", () => {
     }
     const response = await fixture.request("/system/attachments/purge-unlinked", {
       method: "POST",
-      headers: { authorization: `Bearer ${await fixture.tokenOf("account-admin")}` },
+      headers: {
+        authorization: `Bearer ${await fixture.tokenOf("3bca86aa-5332-4a10-bacb-a2b82d961613")}`,
+      },
     })
     expect(response.status).toBe(200)
     expect(result).toBeInstanceOf(Error)
@@ -202,7 +207,9 @@ describe("POST /system/attachments/purge-unlinked", () => {
     try {
       const response = await fixture.request("/system/attachments/purge-unlinked", {
         method: "POST",
-        headers: { authorization: `Bearer ${await fixture.tokenOf("account-admin")}` },
+        headers: {
+          authorization: `Bearer ${await fixture.tokenOf("3bca86aa-5332-4a10-bacb-a2b82d961613")}`,
+        },
       })
       expect(response.status).toBe(200)
       expect(await responseJson(response)).toEqual({ purged_count: 0 })
@@ -220,7 +227,7 @@ describe("POST /system/attachments/purge-unlinked", () => {
 
     expect(fixture.bucket.size()).toBe(1)
 
-    const token = await fixture.tokenOf("account-admin")
+    const token = await fixture.tokenOf("3bca86aa-5332-4a10-bacb-a2b82d961613")
 
     const response = await fixture.request("/system/attachments/purge-unlinked", {
       method: "POST",
@@ -235,7 +242,9 @@ describe("POST /system/attachments/purge-unlinked", () => {
   test("本体削除の失敗後は紐付けを拒否し、次回の掃除で回収する", async () => {
     const fixture = await createFixture()
     const id = await fixture.storePending()
-    const headers = { authorization: `Bearer ${await fixture.tokenOf("account-admin")}` }
+    const headers = {
+      authorization: `Bearer ${await fixture.tokenOf("3bca86aa-5332-4a10-bacb-a2b82d961613")}`,
+    }
     fixture.bucket.failDelete = true
     const failed = await fixture.request("/system/attachments/purge-unlinked", {
       method: "POST",
@@ -264,7 +273,9 @@ describe("POST /system/attachments/purge-unlinked", () => {
   test("DB行削除の失敗後も本体の削除と完了を再試行できる", async () => {
     const fixture = await createFixture()
     const id = await fixture.storePending()
-    const headers = { authorization: `Bearer ${await fixture.tokenOf("account-admin")}` }
+    const headers = {
+      authorization: `Bearer ${await fixture.tokenOf("3bca86aa-5332-4a10-bacb-a2b82d961613")}`,
+    }
     await fixture.db
       .prepare(`CREATE TRIGGER test_block_attachment_removal BEFORE DELETE ON system_attachments
       BEGIN SELECT RAISE(ABORT, 'test removal failure'); END`)
@@ -303,7 +314,9 @@ describe("POST /system/attachments/purge-unlinked", () => {
       .run()
     const response = await fixture.request("/system/attachments/purge-unlinked", {
       method: "POST",
-      headers: { authorization: `Bearer ${await fixture.tokenOf("account-admin")}` },
+      headers: {
+        authorization: `Bearer ${await fixture.tokenOf("3bca86aa-5332-4a10-bacb-a2b82d961613")}`,
+      },
     })
     expect(response.status).toBe(200)
     expect(await responseJson(response)).toEqual({ purged_count: 1 })
@@ -316,7 +329,9 @@ describe("POST /system/attachments/purge-unlinked", () => {
   test("二つの掃除が同じ本体を選んでも回収数を二重に数えない", async () => {
     const fixture = await createFixture()
     const id = await fixture.storePending()
-    const headers = { authorization: `Bearer ${await fixture.tokenOf("account-admin")}` }
+    const headers = {
+      authorization: `Bearer ${await fixture.tokenOf("3bca86aa-5332-4a10-bacb-a2b82d961613")}`,
+    }
     let waiting = 0
     let release: () => void = () => {}
     const bothDeleting = new Promise<void>((resolve) => {
@@ -345,7 +360,9 @@ describe("POST /system/attachments/purge-unlinked", () => {
     const id = await fixture.storePending()
     const response = await fixture.request("/system/attachments/purge-unlinked", {
       method: "POST",
-      headers: { authorization: `Bearer ${await fixture.tokenOf("account-admin")}` },
+      headers: {
+        authorization: `Bearer ${await fixture.tokenOf("3bca86aa-5332-4a10-bacb-a2b82d961613")}`,
+      },
     })
     expect(response.status).toBe(503)
     const row = await fixture.attachments.findById(id)
@@ -360,7 +377,7 @@ describe("POST /system/attachments/purge-unlinked", () => {
 
     await fixture.storePending()
 
-    const token = await fixture.tokenOf("account-member")
+    const token = await fixture.tokenOf("054361de-dcc9-4d31-9703-2a1237a8b6dd")
 
     const response = await fixture.request("/system/attachments/purge-unlinked", {
       method: "POST",

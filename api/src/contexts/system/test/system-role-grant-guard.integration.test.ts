@@ -18,7 +18,7 @@ test("Account 停止・role 変更・禁止権限の追加後は同じ batch の
   )
   await database.exec(`
     INSERT INTO system_accounts (id, status, token_version, closed_at, created_at, updated_at)
-      VALUES ('account-1', 'active', 0, NULL, 1, 1);
+      VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'active', 0, NULL, 1, 1);
     INSERT INTO system_iam_roles (id, key, kind, resource_type, name, created_at, updated_at)
       VALUES ('a290ac92-bf4b-434b-8443-8b6ceeb1cb85', 'example:member', 'managed', 'example:facility', 'Example member', 1, 1);
     INSERT INTO test_grant_effect (id, value) VALUES (1, 0);
@@ -28,7 +28,7 @@ test("Account 停止・role 変更・禁止権限の追加後は同じ batch の
   const guard = (roleId = "a290ac92-bf4b-434b-8443-8b6ceeb1cb85") => {
     const statement = prepareSystemRoleGrantGuard({
       database,
-      accountId: "account-1",
+      accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
       roleId,
       resourceType: "example:facility",
       forbiddenPermissionKeys: ["system:admin"],
@@ -57,7 +57,7 @@ test("Account 停止・role 変更・禁止権限の追加後は同じ batch の
 
   await database
     .prepare(
-      "UPDATE system_accounts SET status = 'suspended', token_version = 1, updated_at = 2 WHERE id = 'account-1'",
+      "UPDATE system_accounts SET status = 'suspended', token_version = 1, updated_at = 2 WHERE id = 'd5858208-e680-4db8-a05d-8bf4f900c24e'",
     )
     .run()
   await expect(orm.batch([guard(), write])).rejects.toThrow()
@@ -65,7 +65,7 @@ test("Account 停止・role 変更・禁止権限の追加後は同じ batch の
 
   await database
     .prepare(
-      "UPDATE system_accounts SET status = 'active', token_version = 2, updated_at = 3 WHERE id = 'account-1'",
+      "UPDATE system_accounts SET status = 'active', token_version = 2, updated_at = 3 WHERE id = 'd5858208-e680-4db8-a05d-8bf4f900c24e'",
     )
     .run()
   await orm.batch([guard(), write])

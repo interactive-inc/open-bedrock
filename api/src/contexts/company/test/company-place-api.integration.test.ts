@@ -93,7 +93,7 @@ test.each(["read-only", "other-organization"])(
   async (kind) => {
     const f = createCompanyPlaceTestContext()
     const actor = CompanyActorValue.restore({
-      accountId: "account:operator",
+      accountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
       employeeId: null,
       organizationIds:
         kind === "other-organization"

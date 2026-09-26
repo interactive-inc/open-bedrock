@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { seedCareerSheets } from "@/contexts/career/test/seed/seed-career-sheets.test-support"
@@ -103,7 +104,7 @@ describe("GET /career-sheets/me", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
       expect(parsed.data.goals_text?.length).toBeGreaterThan(0)
       expect(parsed.data.strengths_text?.length).toBeGreaterThan(0)
     }
@@ -122,7 +123,7 @@ describe("GET /career-sheets/me", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(1))
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(1)))
       expect(parsed.data.goals_text).toBe(null)
       expect(parsed.data.strengths_text).toBe(null)
       expect(parsed.data.updated_at).toBe(null)

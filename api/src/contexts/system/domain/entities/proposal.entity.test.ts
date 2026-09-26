@@ -4,7 +4,7 @@ import { InvalidSystemProposalError } from "@system/domain/errors"
 import { ProposalEntity } from "@system/domain/entities/proposal.entity"
 import { proposalIdSchema } from "@system/domain/schemas/workflow/proposal-id.schema"
 
-const accountId = zAccountId.parse("account-1")
+const accountId = zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e")
 
 describe("ProposalEntity", () => {
   test("同じJSON意味を同じcanonical bodyとSHA-256 digestへ固定する", async () => {

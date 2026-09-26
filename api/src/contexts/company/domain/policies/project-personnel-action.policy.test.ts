@@ -1,3 +1,4 @@
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import type { LifecycleSchedule } from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
 import type { OrganizationUnitPeriod } from "@/contexts/company/domain/definitions/organization-unit.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
@@ -56,7 +57,7 @@ function fixture() {
     "0190005f-0000-7000-8000-42298cf34a48",
   )
   const schedules = [managerId, workerId].map((employeeId): LifecycleSchedule => {
-    const employmentId = restoreWorkforceId("employment", `employment:${employeeId}`)
+    const employmentId = restoreWorkforceId("employment", testDerivedId("employment", employeeId))
     const period = {
       revision: 1,
       startsOn: "2030-01-01",

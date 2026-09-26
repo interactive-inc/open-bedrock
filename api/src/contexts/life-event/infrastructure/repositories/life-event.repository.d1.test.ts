@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { LifeEvent } from "@/contexts/life-event/domain/entities/life-event.entity"
@@ -26,7 +27,7 @@ describe("LifeEventRepository on local D1", () => {
 
     const created = await repository.create(
       LifeEvent.create({
-        employeeId: toWorkforceEmployeeId(5),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(5)),
         eventType: "marriage",
         eventDate: "2026-05-10",
         detail: "氏名変更の手続きを予定",

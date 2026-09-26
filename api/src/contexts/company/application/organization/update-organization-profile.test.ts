@@ -13,7 +13,7 @@ test("別organizationへのプロフィール変更を保存前に拒否する",
   const write = spyOn(OrganizationProfileChangeRepository.prototype, "change")
   const update = new UpdateOrganizationProfile({
     actor: CompanyActorValue.restore({
-      accountId: "account:operator",
+      accountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
       employeeId: null,
       organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
       capabilities: ["company:admin"],

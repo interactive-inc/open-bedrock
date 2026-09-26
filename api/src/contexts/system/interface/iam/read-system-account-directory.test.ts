@@ -7,53 +7,53 @@ test("System Account directoryは外部IdPを含む有効IdentityとAccount状�
   try {
     fixture.sqlite.run(
       `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES
-       ('active-account', 'active', 0, 0, 100),
-       ('suspended-account', 'suspended', 0, 0, 150),
-       ('no-identity', 'active', 0, 0, 0)`,
+       ('34eb5dc4-74f0-4b35-ad3f-3ea77e9dc455', 'active', 0, 0, 100),
+       ('5647424c-10fc-4bb9-b3e6-9b6357137cb0', 'suspended', 0, 0, 150),
+       ('c4216367-b2fc-4e43-ad42-303c0cd2e31e', 'active', 0, 0, 0)`,
     )
     fixture.sqlite.run(
       `INSERT INTO system_identity_bindings
          (id, account_id, provider, subject, created_at, activated_at, revoked_at) VALUES
-       ('google-active', 'active-account', 'google', 'google-subject', 0, 1, NULL),
-       ('password-revoked', 'active-account', 'password', 'password-subject', 0, 1, 50),
-       ('oidc-pending', 'suspended-account', 'oidc', 'oidc-subject', 0, NULL, NULL)`,
+       ('fcee67fb-2e39-410b-87f0-6ca92bf06575', '34eb5dc4-74f0-4b35-ad3f-3ea77e9dc455', 'google', 'google-subject', 0, 1, NULL),
+       ('98831416-954e-4749-a0fd-dc7999d849ca', '34eb5dc4-74f0-4b35-ad3f-3ea77e9dc455', 'password', 'password-subject', 0, 1, 50),
+       ('b96496df-e6f2-49c9-8028-9ce82f36db05', '5647424c-10fc-4bb9-b3e6-9b6357137cb0', 'oidc', 'oidc-subject', 0, NULL, NULL)`,
     )
     fixture.sqlite.run(
       `INSERT INTO system_identity_profiles (identity_id, email, updated_at) VALUES
-       ('google-active', 'active@example.test', 10),
-       ('password-revoked', 'revoked@example.test', 10),
-       ('oidc-pending', 'pending@example.test', 10)`,
+       ('fcee67fb-2e39-410b-87f0-6ca92bf06575', 'active@example.test', 10),
+       ('98831416-954e-4749-a0fd-dc7999d849ca', 'revoked@example.test', 10),
+       ('b96496df-e6f2-49c9-8028-9ce82f36db05', 'pending@example.test', 10)`,
     )
 
     const result = await readSystemAccountDirectory({
       database: fixture.context.env.DB,
       accountIds: [
-        "active-account",
-        "suspended-account",
-        "no-identity",
+        "34eb5dc4-74f0-4b35-ad3f-3ea77e9dc455",
+        "5647424c-10fc-4bb9-b3e6-9b6357137cb0",
+        "c4216367-b2fc-4e43-ad42-303c0cd2e31e",
         "missing",
-        "active-account",
+        "34eb5dc4-74f0-4b35-ad3f-3ea77e9dc455",
       ],
     })
     expect(result).toEqual([
       {
-        id: "active-account",
+        id: "34eb5dc4-74f0-4b35-ad3f-3ea77e9dc455",
         status: "active",
         updatedAt: new Date(100),
         hasLoginIdentity: true,
         email: "active@example.test",
       },
       {
-        id: "no-identity",
-        status: "active",
-        updatedAt: new Date(0),
+        id: "5647424c-10fc-4bb9-b3e6-9b6357137cb0",
+        status: "suspended",
+        updatedAt: new Date(150),
         hasLoginIdentity: false,
         email: null,
       },
       {
-        id: "suspended-account",
-        status: "suspended",
-        updatedAt: new Date(150),
+        id: "c4216367-b2fc-4e43-ad42-303c0cd2e31e",
+        status: "active",
+        updatedAt: new Date(0),
         hasLoginIdentity: false,
         email: null,
       },

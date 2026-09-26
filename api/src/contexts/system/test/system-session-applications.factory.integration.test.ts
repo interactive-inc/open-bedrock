@@ -6,7 +6,7 @@ import {
 import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import { describe, expect, test } from "bun:test"
 
-const accountId = zAccountId.parse("factory-account")
+const accountId = zAccountId.parse("1902ea86-de46-444b-9896-a4308a8781fb")
 const issuedAt = new Date("2026-01-01T00:00:00.000Z")
 const rotatedAt = new Date("2026-01-02T00:00:00.000Z")
 const revokedAt = new Date("2026-01-02T00:00:01.000Z")

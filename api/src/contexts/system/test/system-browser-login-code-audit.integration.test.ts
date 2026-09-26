@@ -5,7 +5,7 @@ import { createSystemD1TestDatabase } from "@system/test/create-system-d1-test-d
 import { describe, expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 
-const accountId = zAccountId.parse("account-browser")
+const accountId = zAccountId.parse("fcd3b186-db56-4b04-8df7-acf9afd0c292")
 const codeHash = "a".repeat(64)
 const createdAt = new Date(1_000)
 const expiresAt = new Date(61_000)
@@ -15,7 +15,7 @@ async function createDatabase(): Promise<D1Database> {
     readFileSync(new URL("../infrastructure/schema/system-core.sql", import.meta.url), "utf8"),
   )
   await database.exec(
-    `INSERT INTO system_accounts (id, status, token_version, closed_at, created_at, updated_at) VALUES ('account-browser', 'active', 0, NULL, 1, 1);`,
+    `INSERT INTO system_accounts (id, status, token_version, closed_at, created_at, updated_at) VALUES ('fcd3b186-db56-4b04-8df7-acf9afd0c292', 'active', 0, NULL, 1, 1);`,
   )
   return database
 }
@@ -52,18 +52,18 @@ describe("System browser login code audit", () => {
 
     expect(await readAudits(database)).toEqual([
       {
-        actor_account_id: "account-browser",
+        actor_account_id: "fcd3b186-db56-4b04-8df7-acf9afd0c292",
         action: "auth.browser_login_code.created",
         target_type: "account",
-        target_id: "account-browser",
+        target_id: "fcd3b186-db56-4b04-8df7-acf9afd0c292",
         outcome: "succeeded",
         occurred_at: 1_000,
       },
       {
-        actor_account_id: "account-browser",
+        actor_account_id: "fcd3b186-db56-4b04-8df7-acf9afd0c292",
         action: "auth.browser_login_code.consumed",
         target_type: "account",
-        target_id: "account-browser",
+        target_id: "fcd3b186-db56-4b04-8df7-acf9afd0c292",
         outcome: "succeeded",
         occurred_at: 2_000,
       },
@@ -93,7 +93,7 @@ describe("System browser login code audit", () => {
     const database = await createDatabase()
     const context = { env: { DB: database } }
     await database.exec(
-      `INSERT INTO system_browser_login_codes (code_hash, account_id, created_at, expires_at) VALUES ('${"b".repeat(64)}', 'account-browser', 1000, 61000);`,
+      `INSERT INTO system_browser_login_codes (code_hash, account_id, created_at, expires_at) VALUES ('${"b".repeat(64)}', 'fcd3b186-db56-4b04-8df7-acf9afd0c292', 1000, 61000);`,
     )
     await database.exec("DROP TABLE system_audit_events;")
 

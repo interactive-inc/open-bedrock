@@ -1,6 +1,7 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { seedD1 } from "@tests/api/support/seed-d1"
@@ -80,7 +81,7 @@ async function createScopeTestDb(): Promise<D1Database> {
   for (let day = 1; day <= 12; day++) {
     records.push({
       id: crypto.randomUUID(),
-      employee_id: "20",
+      employee_id: testEmployeeId(20),
       work_date: `2026-06-${String(day).padStart(2, "0")}`,
       clock_in_at: null,
       clock_out_at: null,
@@ -92,7 +93,7 @@ async function createScopeTestDb(): Promise<D1Database> {
   for (let day = 1; day <= 22; day++) {
     records.push({
       id: crypto.randomUUID(),
-      employee_id: "21",
+      employee_id: testEmployeeId(21),
       work_date: `2026-06-${String(day).padStart(2, "0")}`,
       clock_in_at: null,
       clock_out_at: null,
@@ -152,9 +153,9 @@ describe("GET /attendance-records/overtime-summary", () => {
 
       const byId = new Map(parsed.data.entries.map((entry) => [entry.employee_id, entry]))
 
-      expect(byId.get(toWorkforceEmployeeId(20))?.overtime_minutes).toBe(0)
-      expect(byId.get(toWorkforceEmployeeId(21))?.total_work_minutes).toBe(13200)
-      expect(byId.get(toWorkforceEmployeeId(21))?.overtime_minutes).toBe(2640)
+      expect(byId.get(toWorkforceEmployeeId(testEmployeeId(20)))?.overtime_minutes).toBe(0)
+      expect(byId.get(toWorkforceEmployeeId(testEmployeeId(21)))?.total_work_minutes).toBe(13200)
+      expect(byId.get(toWorkforceEmployeeId(testEmployeeId(21)))?.overtime_minutes).toBe(2640)
     }
   })
 
@@ -199,7 +200,7 @@ describe("GET /attendance-records/overtime-summary", () => {
 
     if (parsed.success) {
       expect(parsed.data.entries.length).toBe(1)
-      expect(parsed.data.entries[0]?.employee_id).toBe(toWorkforceEmployeeId(21))
+      expect(parsed.data.entries[0]?.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(21)))
       expect(parsed.data.entries[0]?.overtime_minutes).toBe(2640)
     }
   })

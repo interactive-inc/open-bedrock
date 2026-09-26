@@ -1,3 +1,5 @@
+import { testAccountId } from "@system/test/system-test-id.test-support"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
 import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"
@@ -31,7 +33,7 @@ test("knowledge revision append preserves replay, rejects stale edits and rolls 
   await f.db
     .prepare(`INSERT INTO knowledge_articles (id,title,category,tags,body_md,author_id,created_at)
     VALUES ('01900042-0000-7000-8000-000000000001','Procedure','Operations',NULL,'Original',?1,'2026-01-01T00:00:00Z')`)
-    .bind(toWorkforceEmployeeId(1))
+    .bind(toWorkforceEmployeeId(testEmployeeId(1)))
     .run()
   const repository = new KnowledgeArticleRepository(f.context)
   const original = await repository.findById("01900042-0000-7000-8000-000000000001")
@@ -44,14 +46,14 @@ test("knowledge revision append preserves replay, rejects stale edits and rolls 
   })
   const input = {
     expectedRevision: 1,
-    actorAccountId: "1",
+    actorAccountId: testAccountId(1),
     commandId: "knowledge:first",
     reason: "Review complete",
     requestJson: JSON.stringify({ body: "Reviewed", expectedRevision: 1 }),
     at: new Date(),
     assertions: [
       f.db.prepare(
-        "SELECT CASE WHEN EXISTS(SELECT 1 FROM system_accounts WHERE id='1' AND status='active') THEN 1 ELSE json_extract('{}','actor_inactive') END",
+        "SELECT CASE WHEN EXISTS(SELECT 1 FROM system_accounts WHERE id='01900061-0000-7000-8000-000000000001' AND status='active') THEN 1 ELSE json_extract('{}','actor_inactive') END",
       ),
     ],
   }
@@ -135,11 +137,11 @@ test("knowledge creation saves its first revision and audit atomically and prese
     category: "Operations",
     tags: null,
     bodyMd: "Original text",
-    authorId: toWorkforceEmployeeId(1),
+    authorId: toWorkforceEmployeeId(testEmployeeId(1)),
     createdAt: new Date().toISOString(),
   })
   const input = {
-    actorAccountId: "1",
+    actorAccountId: testAccountId(1),
     commandId: "create:knowledge",
     reason: "New procedure",
     requestJson: '{"operation":"create"}',
@@ -188,11 +190,11 @@ test("concurrent knowledge creation preserves separate commands and deduplicates
     category: "Operations",
     tags: null,
     bodyMd: "Recorded text",
-    authorId: toWorkforceEmployeeId(1),
+    authorId: toWorkforceEmployeeId(testEmployeeId(1)),
     createdAt: new Date().toISOString(),
   })
   const input = {
-    actorAccountId: "1",
+    actorAccountId: testAccountId(1),
     commandId: "concurrent:first",
     reason: "Record instructions",
     requestJson: '{"operation":"create"}',

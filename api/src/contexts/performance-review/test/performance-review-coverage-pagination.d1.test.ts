@@ -51,7 +51,7 @@ test("人事評価8台帳を分割照合し撤去確定する", async () => {
   await database
     .prepare(`INSERT INTO system_step_up_grants
       (id,account_id,token_hash,method,issued_at,expires_at)
-      VALUES ('performance-review-coverage-step-up',?1,?2,'external_identity',?3,?4)`)
+      VALUES ('9b6eac10-c498-491c-b75f-6d6a82e04665',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const post = (path: string, body: unknown) =>

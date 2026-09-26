@@ -1,5 +1,8 @@
 import { describe, expect, test } from "bun:test"
-import { createEmployeeAdoptionFixture } from "@/contexts/company/test/employee-resource-adoption.test-support"
+import {
+  adoptionEmployeeId,
+  createEmployeeAdoptionFixture,
+} from "@/contexts/company/test/employee-resource-adoption.test-support"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 import { createTestToken } from "@tests/api/support/create-test-token"
@@ -23,7 +26,7 @@ describe("employee adoption at the authenticated API root", () => {
         method,
         path:
           "/company/employee-resource-adoptions" +
-          (method === "GET" ? "?employee_id=employee:adoption" : ""),
+          (method === "GET" ? `?employee_id=${adoptionEmployeeId}` : ""),
         ...(method === "POST"
           ? { body: input, headers: { "idempotency-key": "root-adoption" } }
           : {}),

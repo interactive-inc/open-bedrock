@@ -1,3 +1,4 @@
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import { publishTestAccountEmployeeLink } from "@tests/api/support/company/publish-test-account-employee-link"
 import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
@@ -48,7 +49,7 @@ export async function publishTestEmployeeResources(
     .first<number>("revision")
   if (organizationRevision === null) throw new Error("test Company organization is missing")
 
-  const personId = `test:${input.employeeId}:person`
+  const personId = testDerivedId("person", input.employeeId)
   const resources = [
     {
       type: "person",

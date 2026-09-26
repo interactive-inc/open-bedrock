@@ -29,7 +29,7 @@ test("等級と役職の限定資格は他の定義を読まず変更せず、�
     context.set(
       "companyActor",
       CompanyActorValue.restore({
-        accountId: "account:operator",
+        accountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
         employeeId: null,
         organizationIds: [state.organizationId],
         capabilities: [],
@@ -85,8 +85,8 @@ test("等級と役職の限定資格は他の定義を読まず変更せず、�
                 type: "grade-assignment",
                 id: "assignment:test",
                 attributes: {
-                  employeeId: "employee:test",
-                  employmentId: "employment:test",
+                  employeeId: "d47aa389-c802-4a4a-bf7c-c359b764474b",
+                  employmentId: "cdc317d0-f2a5-47e3-bbaa-4718f418c374",
                   gradeId: "grade:test",
                 },
               },

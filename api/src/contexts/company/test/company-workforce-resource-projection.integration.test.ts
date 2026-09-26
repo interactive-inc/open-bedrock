@@ -29,17 +29,21 @@ import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
 import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 
 const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
   .filter((file) => file.endsWith(".sql"))
   .sort()
   .map((file) => readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8"))
   .join("\n")
-const employeeId = restoreWorkforceId("employee", "employee:resource")
+const employeeId = restoreWorkforceId(
+  "employee",
+  deterministicCompanyId("test-employee", "resource"),
+)
 const organizationId = COMPANY_DEFAULT_ORGANIZATION_ID
 const actor = CompanyActorValue.restore({
-  accountId: "account:operator",
-  employeeId: "employee:operator",
+  accountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
+  employeeId: "956ba876-937f-459d-b143-0e2f29d25f74",
   organizationIds: [organizationId],
   capabilities: ["company:read", "company:write"],
   permissions: ["employee:read"],
@@ -73,7 +77,7 @@ const employee: Resource = {
 const employment: Resource = {
   ...person,
   type: "employment",
-  id: "employment:resource",
+  id: deterministicCompanyId("test-employment", "resource"),
   attributes: { employeeId, status: "ACTIVE", employmentType: "FULL_TIME" },
 }
 
@@ -245,7 +249,7 @@ function fixture(companyActor = actor) {
       return new DirectPersonnelActionAdapter(lifecycleContext).apply({
         session: {
           accountId: zAccountId.parse(actor.accountId),
-          employeeId: restoreWorkforceId("employee", "employee:operator"),
+          employeeId: restoreWorkforceId("employee", "956ba876-937f-459d-b143-0e2f29d25f74"),
           hasPermission: (permission) => permission === "employee:lifecycle:apply",
         },
         employeeId,
@@ -271,8 +275,8 @@ describe("公開Company APIから実際の従業員台帳と在籍判定まで",
     expect((await f.readCorrectionTarget(4)).status).toBe(400)
     const limited = fixture(
       CompanyActorValue.restore({
-        accountId: "account:operator",
-        employeeId: "employee:operator",
+        accountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
+        employeeId: "956ba876-937f-459d-b143-0e2f29d25f74",
         organizationIds: [organizationId],
         capabilities: ["company:read"],
       }),
@@ -1269,7 +1273,14 @@ describe("公開Company APIから実際の従業員台帳と在籍判定まで",
   test("重なる雇用と未対応の雇用区分を拒否し、同じEmployeeの台帳を壊さない", async () => {
     const f = fixture()
     await f.initialize()
-    expect((await f.write({ ...employment, id: "employment:overlap" }, 3)).status).toBe(422)
+    expect(
+      (
+        await f.write(
+          { ...employment, id: deterministicCompanyId("test-employment", "overlap") },
+          3,
+        )
+      ).status,
+    ).toBe(422)
     expect(
       (
         await f.write(
@@ -1300,19 +1311,27 @@ describe("公開Company APIから実際の従業員台帳と在籍判定まで",
       (await f.write({ ...employment, revision: 2, effectiveTo: "2026-04-01" }, 3)).status,
     ).toBe(201)
     expect(
-      (await f.write({ ...employment, id: "employment:rehire", effectiveFrom: "2026-05-01" }, 4))
-        .status,
+      (
+        await f.write(
+          {
+            ...employment,
+            id: deterministicCompanyId("test-employment", "rehire"),
+            effectiveFrom: "2026-05-01",
+          },
+          4,
+        )
+      ).status,
     ).toBe(201)
     expect(await f.access("2026-04-15T00:00:00Z")).toBeNull()
     expect(await f.directory("2026-04-15T00:00:00Z")).toMatchObject({
       employment: { id: employment.id, status: "TERMINATED" },
     })
     expect(await f.directory("2026-05-01T00:00:00Z")).toMatchObject({
-      employment: { id: "employment:rehire", status: "ACTIVE" },
+      employment: { id: deterministicCompanyId("test-employment", "rehire"), status: "ACTIVE" },
     })
     const overlapping = {
       ...employment,
-      id: "employment:closed-overlap",
+      id: deterministicCompanyId("test-employment", "closed-overlap"),
       effectiveFrom: "2026-03-01",
       effectiveTo: "2026-03-15",
     }
@@ -1331,7 +1350,7 @@ describe("公開Company APIから実際の従業員台帳と在籍判定まで",
       employment: { id: employment.id, status: "ACTIVE" },
     })
     expect(await f.directory("2026-05-01T00:00:00Z")).toMatchObject({
-      employment: { id: "employment:rehire", status: "ACTIVE" },
+      employment: { id: deterministicCompanyId("test-employment", "rehire"), status: "ACTIVE" },
     })
   })
 

@@ -8,7 +8,12 @@ const GRANT_TOKEN_MAX_AGE_SECONDS = 120
 
 describe("mcp-grant-token", () => {
   test("発行したトークンを検証するとAccount世代とchallengeが復元できる", async () => {
-    const token = await createMcpGrantToken("user-1", 3, "challenge-abc", SECRET)
+    const token = await createMcpGrantToken(
+      "50ea5eee-5cb5-4870-911a-e57ee3f7a81a",
+      3,
+      "challenge-abc",
+      SECRET,
+    )
 
     const payload = await verifyMcpGrantToken(token, SECRET)
 
@@ -18,14 +23,19 @@ describe("mcp-grant-token", () => {
       return
     }
 
-    expect(payload.accountId).toBe("user-1")
+    expect(payload.accountId).toBe("50ea5eee-5cb5-4870-911a-e57ee3f7a81a")
     expect(payload.tokenVersion).toBe(3)
     expect(payload.challenge).toBe("challenge-abc")
     expect(payload.purpose).toBe("mcp-grant")
   })
 
   test("有効期限は 120 秒", async () => {
-    const token = await createMcpGrantToken("user-1", 0, "challenge-abc", SECRET)
+    const token = await createMcpGrantToken(
+      "50ea5eee-5cb5-4870-911a-e57ee3f7a81a",
+      0,
+      "challenge-abc",
+      SECRET,
+    )
 
     const payload = await verifyMcpGrantToken(token, SECRET)
 
@@ -38,7 +48,7 @@ describe("mcp-grant-token", () => {
 
   test("別の secret で署名されたトークンは拒否する", async () => {
     const token = await createMcpGrantToken(
-      "user-1",
+      "50ea5eee-5cb5-4870-911a-e57ee3f7a81a",
       0,
       "challenge-abc",
       "another-test-secret-value",
@@ -48,7 +58,12 @@ describe("mcp-grant-token", () => {
   })
 
   test("改竄したトークンは拒否する", async () => {
-    const token = await createMcpGrantToken("user-1", 0, "challenge-abc", SECRET)
+    const token = await createMcpGrantToken(
+      "50ea5eee-5cb5-4870-911a-e57ee3f7a81a",
+      0,
+      "challenge-abc",
+      SECRET,
+    )
     const tampered = `${token.slice(0, -4)}AAAA`
 
     expect(await verifyMcpGrantToken(tampered, SECRET)).toBeInstanceOf(Error)
@@ -59,7 +74,7 @@ describe("mcp-grant-token", () => {
 
     const token = await signJwtToken(
       {
-        userId: "user-1",
+        userId: "50ea5eee-5cb5-4870-911a-e57ee3f7a81a",
         challenge: "challenge-abc",
         purpose: "mcp-grant",
         exp: expiredAt,
@@ -80,7 +95,7 @@ describe("mcp-grant-token", () => {
     const nowSeconds = Math.floor(Date.now() / 1000)
     const sessionToken = await signJwtToken(
       {
-        sub: "user-1",
+        sub: "50ea5eee-5cb5-4870-911a-e57ee3f7a81a",
         ver: 0,
         purpose: "web-session",
         iss: "system",
@@ -100,7 +115,7 @@ describe("mcp-grant-token", () => {
 
     const token = await signJwtToken(
       {
-        userId: "user-1",
+        userId: "50ea5eee-5cb5-4870-911a-e57ee3f7a81a",
         challenge: "challenge-abc",
         purpose: "other-purpose",
         exp: nowSeconds + 120,
@@ -127,7 +142,7 @@ describe("mcp-grant-token", () => {
 
     const payload = btoa(
       JSON.stringify({
-        userId: "victim",
+        userId: "e07db87f-636f-45f2-a7fc-757c52ee9784",
         challenge: "challenge-abc",
         purpose: "mcp-grant",
         exp: nowSeconds + 120,
@@ -150,7 +165,7 @@ describe("mcp-grant-token", () => {
 
     const token = await signJwtToken(
       {
-        userId: "user-1",
+        userId: "50ea5eee-5cb5-4870-911a-e57ee3f7a81a",
         challenge: "",
         purpose: "mcp-grant",
         exp: nowSeconds + 120,

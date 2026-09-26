@@ -1,5 +1,9 @@
 import { expect, test } from "bun:test"
-import { createEmployeeAdoptionBatchFixture } from "@/contexts/company/test/employee-resource-adoption-batch.test-support"
+import {
+  batchEmployeeId,
+  batchEmploymentId,
+  createEmployeeAdoptionBatchFixture,
+} from "@/contexts/company/test/employee-resource-adoption-batch.test-support"
 import type { AdoptionResource } from "@/contexts/company/test/employee-resource-adoption.test-support"
 import { CompanyEmploymentResourceHistoryAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-employment-resource-history.adapter"
 import { CompanyEmploymentResourceTimelineValue } from "@/contexts/company/domain/values/company-employment-resource-timeline.value"
@@ -8,7 +12,8 @@ import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/defin
 async function fixture() {
   const imported: AdoptionResource[] = []
   const context = await createEmployeeAdoptionBatchFixture(2, 0, (resource) => {
-    if (!resource.id.endsWith("batch-1")) return resource
+    if (!["person:batch-1", batchEmployeeId(1), batchEmploymentId(1)].includes(resource.id))
+      return resource
     const stale = {
       ...resource,
       effectiveFrom: "2026-07-31",
@@ -34,7 +39,7 @@ async function fixture() {
     correctedInput: {
       ...input,
       employees: input.employees.map((employee) =>
-        employee.employeeId === "employee:batch-1" ? { ...employee, corrections } : employee,
+        employee.employeeId === batchEmployeeId(1) ? { ...employee, corrections } : employee,
       ),
     },
   }
@@ -53,14 +58,14 @@ test("原履歴を保全して訂正と全員の接続を原子的に保存し�
   expect(after[4]?.length).toBe((original[4]?.length ?? 0) + 4)
   expect(after[1]).toEqual(
     expect.arrayContaining([
-      expect.objectContaining({ resource_id: "employee:batch-1", resource_revision: 2 }),
-      expect.objectContaining({ resource_id: "employment:batch-1", resource_revision: 3 }),
+      expect.objectContaining({ resource_id: batchEmployeeId(1), resource_revision: 2 }),
+      expect.objectContaining({ resource_id: batchEmploymentId(1), resource_revision: 3 }),
     ]),
   )
   expect(after[4]).toEqual(
     expect.arrayContaining([
       expect.objectContaining({
-        resource_id: "employment:batch-1",
+        resource_id: batchEmploymentId(1),
         revision: 3,
         actor_account_id: context.actor.accountId,
         command_id: expect.stringMatching(/^employee-adoption-batch-part:[a-f0-9]{64}:3$/),
@@ -71,7 +76,7 @@ test("原履歴を保全して訂正と全員の接続を原子的に保存し�
   expect(await context.legacy()).toEqual(legacy)
   const history = await new CompanyEmploymentResourceHistoryAdapter(context.database).read({
     organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
-    id: "employment:batch-1",
+    id: batchEmploymentId(1),
   })
   if (history instanceof Error) throw history
   expect(history[0]?.attributes["status"]).toBe("RETIRED")
@@ -87,7 +92,7 @@ test("訂正後の最後の監査保存に失敗しても訂正版と接続を�
   const context = await fixture()
   await context.database
     .exec(`CREATE TRIGGER reject_corrected_receipt BEFORE INSERT ON company_employee_resource_adoptions
-    WHEN NEW.employee_id = 'employee:batch-1' BEGIN SELECT RAISE(ABORT, 'injected failure'); END`)
+    WHEN NEW.employee_id = '${batchEmployeeId(1)}' BEGIN SELECT RAISE(ABORT, 'injected failure'); END`)
   const before = await context.state()
   const legacy = await context.legacy()
   expect((await context.post(context.correctedInput)).status).toBe(503)
@@ -103,9 +108,15 @@ test("元の版の上書き・版の欠落・別人への名寄せ・台帳に�
   for (const change of [
     { revision: 1 },
     { revision: 9 },
-    { id: "employment:other" },
+    { id: batchEmploymentId(99) },
     { effectiveFrom: "2019-01-01" },
-    { attributes: { employeeId: "employee:other", employmentType: "PART_TIME", status: "ACTIVE" } },
+    {
+      attributes: {
+        employeeId: "1953cffc-119b-42c7-bbab-82c56499e4ac",
+        employmentType: "PART_TIME",
+        status: "ACTIVE",
+      },
+    },
   ]) {
     const employees = context.correctedInput.employees.map((employee) => ({
       ...employee,

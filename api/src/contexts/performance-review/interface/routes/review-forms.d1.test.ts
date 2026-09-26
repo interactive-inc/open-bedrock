@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { z } from "zod"
@@ -61,8 +62,8 @@ async function createTestDb(): Promise<D1Database> {
     {
       id: "01900033-0000-7000-8000-000000000001",
       cycle_id: "01900032-0000-7000-8000-000000000001",
-      subject_employee_id: "5",
-      reviewer_employee_id: "5",
+      subject_employee_id: testEmployeeId(5),
+      reviewer_employee_id: testEmployeeId(5),
       reviewer_type: "self",
       answers: "[]",
       score: 70,
@@ -73,8 +74,8 @@ async function createTestDb(): Promise<D1Database> {
     {
       id: "01900033-0000-7000-8000-000000000002",
       cycle_id: "01900032-0000-7000-8000-000000000001",
-      subject_employee_id: "5",
-      reviewer_employee_id: "4",
+      subject_employee_id: testEmployeeId(5),
+      reviewer_employee_id: testEmployeeId(4),
       reviewer_type: "manager",
       answers: "[]",
       score: 90,
@@ -115,7 +116,7 @@ async function request(path: string, token: string | null): Promise<Response> {
 describe("GET /review-forms?subject_employee_id=", () => {
   test("admin sees all forms including hidden ones", async () => {
     const response = await request(
-      "/performance-review/review-forms?subject_employee_id=5",
+      `/performance-review/review-forms?subject_employee_id=${testEmployeeId(5)}`,
       await adminToken(),
     )
 
@@ -135,7 +136,7 @@ describe("GET /review-forms?subject_employee_id=", () => {
 
   test("subject only sees disclosed forms", async () => {
     const response = await request(
-      "/performance-review/review-forms?subject_employee_id=5",
+      `/performance-review/review-forms?subject_employee_id=${testEmployeeId(5)}`,
       await subjectToken(),
     )
 
@@ -159,7 +160,7 @@ describe("GET /review-forms?subject_employee_id=", () => {
 
   test("another employee is forbidden", async () => {
     const response = await request(
-      "/performance-review/review-forms?subject_employee_id=5",
+      `/performance-review/review-forms?subject_employee_id=${testEmployeeId(5)}`,
       await otherToken(),
     )
 
@@ -173,7 +174,10 @@ describe("GET /review-forms?subject_employee_id=", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/performance-review/review-forms?subject_employee_id=5", null)
+    const response = await request(
+      `/performance-review/review-forms?subject_employee_id=${testEmployeeId(5)}`,
+      null,
+    )
 
     expect(response.status).toBe(401)
   })

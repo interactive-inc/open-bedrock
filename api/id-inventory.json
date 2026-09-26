@@ -3,21 +3,18 @@
     "tables": 206,
     "primaryKeyKinds": {
       "allocator-singleton-secret": 11,
-      "composite": 1,
-      "text-prefixed": 7,
-      "text-uuid": 169,
-      "text-uuid-candidate": 18
+      "text-uuid": 195
     },
     "declaredForeignKeys": 272,
     "softReferences": {
       "cross-context": 17,
       "external": 32,
       "historical": 10,
-      "not-reference": 97,
+      "not-reference": 104,
       "polymorphic": 18,
       "same-context": 79
     },
-    "triggers": 791,
+    "triggers": 804,
     "views": 25,
     "indexes": 290
   },
@@ -347,8 +344,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false,
+        "kind": "text-uuid",
+        "uuidEnforced": true,
         "inheritsFrom": "company_employees"
       },
       "foreignKeys": {
@@ -483,8 +480,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false,
+        "kind": "text-uuid",
+        "uuidEnforced": true,
         "inheritsFrom": "system_accounts"
       },
       "foreignKeys": {
@@ -526,8 +523,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-prefixed",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -604,8 +601,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-prefixed",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -695,7 +692,7 @@
           }
         ],
         "kind": "text-uuid",
-        "uuidEnforced": false,
+        "uuidEnforced": true,
         "inheritsFrom": "company_resource_heads"
       },
       "foreignKeys": {
@@ -1157,8 +1154,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false,
+        "kind": "text-uuid",
+        "uuidEnforced": true,
         "inheritsFrom": "company_employees"
       },
       "foreignKeys": {
@@ -1283,8 +1280,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -1719,11 +1716,19 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "employee_code",
           "classification": "not-reference"
         }
       ],
-      "triggers": ["company_workforce_connection_completions_requires_connection"],
+      "triggers": [
+        "company_employees_identity_update",
+        "company_employees_legacy_id_insert",
+        "company_workforce_connection_completions_requires_connection"
+      ],
       "views": [],
       "indexes": ["company_employees_employee_code_uniq"]
     },
@@ -1736,8 +1741,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -1809,8 +1814,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-prefixed",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -1842,9 +1847,16 @@
           }
         ]
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
         "company_employments_employee_immutable",
+        "company_employments_identity_update",
+        "company_employments_legacy_id_insert",
         "company_employments_organization_period_guard",
         "company_organization_assignment_period_versions_guard",
         "company_organization_change_operations_completion_guard",
@@ -1917,8 +1929,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false,
+        "kind": "text-uuid",
+        "uuidEnforced": true,
         "inheritsFrom": "system_identity_bindings"
       },
       "foreignKeys": {
@@ -2123,8 +2135,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-prefixed",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -2157,6 +2169,14 @@
       },
       "softReferences": [
         {
+          "column": "operation_key",
+          "classification": "not-reference"
+        },
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "actor_account_id",
           "classification": "cross-context",
           "target": "system_accounts"
@@ -2171,9 +2191,11 @@
         "company_organization_change_operations_command_immutable",
         "company_organization_change_operations_completed_count_immutable",
         "company_organization_change_operations_completion_guard",
+        "company_organization_change_operations_identity_update",
         "company_organization_change_operations_immutable",
         "company_organization_change_operations_immutable_delete",
         "company_organization_change_operations_insert_guard",
+        "company_organization_change_operations_legacy_id_insert",
         "company_organization_resource_operation_commit_guard",
         "company_organization_resource_operation_guard",
         "company_organization_responsibility_period_versions_guard",
@@ -2273,7 +2295,7 @@
           }
         ],
         "kind": "text-uuid",
-        "uuidEnforced": false,
+        "uuidEnforced": true,
         "inheritsFrom": "company_organization_units"
       },
       "foreignKeys": {
@@ -2665,8 +2687,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -2729,8 +2751,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-prefixed",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -2756,6 +2778,10 @@
         ]
       },
       "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
         {
           "column": "employee_id",
           "classification": "same-context",
@@ -2787,7 +2813,12 @@
           "target": "company_organization_change_operations"
         }
       ],
-      "triggers": ["company_personnel_actions_no_delete", "company_personnel_actions_no_update"],
+      "triggers": [
+        "company_personnel_actions_identity_update",
+        "company_personnel_actions_legacy_id_insert",
+        "company_personnel_actions_no_delete",
+        "company_personnel_actions_no_update"
+      ],
       "views": [],
       "indexes": [
         "idx_company_personnel_actions_employee_timeline",
@@ -2854,8 +2885,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-prefixed",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -3147,8 +3178,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-prefixed",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -3237,7 +3268,7 @@
           }
         ],
         "kind": "text-uuid",
-        "uuidEnforced": false,
+        "uuidEnforced": true,
         "inheritsFrom": "company_resource_heads"
       },
       "foreignKeys": {
@@ -3460,16 +3491,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "resource_type",
-            "type": "TEXT"
-          },
-          {
-            "name": "resource_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -3506,7 +3533,8 @@
         "company_responsibility_lifecycle_completion_guard",
         "company_responsibility_source_revision_guard",
         "company_workforce_connection_completions_requires_connection",
-        "company_workforce_projection_guard"
+        "company_workforce_projection_guard",
+        "company_workforce_resource_bindings_identity_update"
       ],
       "views": [
         "company_employment_authority_violations",
@@ -6560,8 +6588,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -6608,8 +6636,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -6922,9 +6950,16 @@
           }
         ]
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
         "company_account_employee_resource_owner_guard",
+        "system_accounts_identity_update",
+        "system_accounts_legacy_id_insert",
         "system_accounts_monotonic_security_state",
         "system_attestation_requires_human",
         "system_audit_disclosure_revision_insert",
@@ -7259,8 +7294,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -8150,8 +8185,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -8234,8 +8269,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false,
+        "kind": "text-uuid",
+        "uuidEnforced": true,
         "inheritsFrom": "system_identity_bindings"
       },
       "foreignKeys": {
@@ -8438,8 +8473,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -8783,8 +8818,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false,
+        "kind": "text-uuid",
+        "uuidEnforced": true,
         "inheritsFrom": "system_identity_bindings"
       },
       "foreignKeys": {
@@ -8816,8 +8851,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -8916,8 +8951,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -8967,11 +9002,18 @@
           }
         ]
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
         "system_attestation_requires_human",
         "system_decision_candidate_requires_human",
         "system_machine_credentials_principal_guard",
+        "system_principals_identity_update",
+        "system_principals_legacy_id_insert",
         "system_principals_revision_step",
         "system_work_revision_insert"
       ],
@@ -10263,8 +10305,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -10300,8 +10342,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [

@@ -26,7 +26,9 @@ test.each(["approver", "service"])(
     if (reviewer === undefined || assignment === undefined)
       throw new Error("missing reviewer fixture")
     const executorAccountId =
-      executorKind === "service" ? zAccountId.parse("archive-service") : reviewer.accountId
+      executorKind === "service"
+        ? zAccountId.parse("3c9d7e5f-1a2b-4c3d-8e4f-5a6b7c8d9e0f")
+        : reviewer.accountId
     if (executorKind === "service") {
       await c.database
         .prepare(
@@ -36,7 +38,7 @@ test.each(["approver", "service"])(
         .run()
       await c.database
         .prepare(
-          "INSERT INTO system_principals(id,account_id,kind,name,revision,created_at,updated_at) VALUES ('archive-service-principal',?1,'service','Archive service',1,0,0)",
+          "INSERT INTO system_principals(id,account_id,kind,name,revision,created_at,updated_at) VALUES ('7b6f98fd-b1b2-4d49-9243-abe80daa23d1',?1,'service','Archive service',1,0,0)",
         )
         .bind(executorAccountId)
         .run()

@@ -10,6 +10,7 @@ import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
 import { execSql } from "@tests/d1/support/exec-sql"
+import { testAccountId } from "@system/test/system-test-id.test-support"
 
 let pool: LocalD1Pool
 
@@ -103,7 +104,7 @@ async function grantPermission(
            (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
          VALUES (?1, ?2, ?3, NULL, NULL, 0, NULL)`,
       )
-      .bind(crypto.randomUUID(), String(accountId), roleId),
+      .bind(crypto.randomUUID(), testAccountId(accountId), roleId),
   ])
 }
 
@@ -190,7 +191,7 @@ describe("GET /audit-events", () => {
     await db
       .prepare(
         `DELETE FROM system_role_bindings
-         WHERE account_id = '4'
+         WHERE account_id = '${testAccountId(4)}'
            AND role_id = (SELECT id FROM system_iam_roles WHERE key = 'company:late-reader')`,
       )
       .run()

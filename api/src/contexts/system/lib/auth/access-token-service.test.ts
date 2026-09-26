@@ -12,12 +12,16 @@ const profile = Object.freeze({
 
 describe("AccessTokenService", () => {
   test("機械credentialの来歴を署名し、web・mobile用途への混入を拒否する", async () => {
-    const input = { accountId: "account-1", tokenVersion: 0, machineCredentialId: "credential-1" }
+    const input = {
+      accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
+      tokenVersion: 0,
+      machineCredentialId: "ad6a0f96-902f-4999-84f6-2b9eb703c2ed",
+    }
     const service = new AccessTokenService({ profile })
     const token = await service.create(input, secret, now)
     if (token instanceof Error) throw token
     expect(await service.verify(token, secret, now)).toMatchObject({
-      machineCredentialId: "credential-1",
+      machineCredentialId: "ad6a0f96-902f-4999-84f6-2b9eb703c2ed",
     })
     for (const purpose of ["web-session", "mobile-session"] satisfies Array<
       AccessTokenProfile["purpose"]
@@ -34,7 +38,11 @@ describe("AccessTokenService", () => {
 
   test("Accountだけを主体にして固定profileの短命tokenを往復する", async () => {
     const service = new AccessTokenService({ profile })
-    const token = await service.create({ accountId: "account-1", tokenVersion: 7 }, secret, now)
+    const token = await service.create(
+      { accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e", tokenVersion: 7 },
+      secret,
+      now,
+    )
     expect(token).not.toBeInstanceOf(Error)
     if (token instanceof Error) return
 
@@ -42,7 +50,7 @@ describe("AccessTokenService", () => {
     expect(claims).not.toBeInstanceOf(Error)
     if (claims instanceof Error) return
 
-    expect(String(claims.sub)).toBe("account-1")
+    expect(String(claims.sub)).toBe("d5858208-e680-4db8-a05d-8bf4f900c24e")
     expect(claims.ver).toBe(7)
     expect(claims.iss).toBe(profile.issuer)
     expect(claims.aud).toBe(profile.audience)
@@ -58,7 +66,11 @@ describe("AccessTokenService", () => {
     const source = new AccessTokenService({
       profile: { ...profile, maxAgeSeconds: 120 },
     })
-    const token = await source.create({ accountId: "account-1", tokenVersion: 0 }, secret, now)
+    const token = await source.create(
+      { accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e", tokenVersion: 0 },
+      secret,
+      now,
+    )
     expect(token).not.toBeInstanceOf(Error)
     if (token instanceof Error) return
 
@@ -83,7 +95,7 @@ describe("AccessTokenService", () => {
   test("空のsecretと不正なprofileをfail closedで拒否する", async () => {
     expect(
       await new AccessTokenService({ profile }).create(
-        { accountId: "account-1", tokenVersion: 0 },
+        { accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e", tokenVersion: 0 },
         "",
         now,
       ),
@@ -91,7 +103,11 @@ describe("AccessTokenService", () => {
     expect(
       await new AccessTokenService({
         profile: { ...profile, maxAgeSeconds: 0 },
-      }).create({ accountId: "account-1", tokenVersion: 0 }, secret, now),
+      }).create(
+        { accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e", tokenVersion: 0 },
+        secret,
+        now,
+      ),
     ).toBeInstanceOf(Error)
   })
 

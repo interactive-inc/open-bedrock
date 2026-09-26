@@ -1,3 +1,4 @@
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import { CompanyGovernanceProcedureTaskAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-governance-procedure-task.adapter"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CompanyGovernanceAuthorityError } from "@/contexts/company/domain/errors"
@@ -32,19 +33,19 @@ describe("CompanyGovernanceProcedureTaskAdapter", () => {
       negativeDecisionRule: "approval-impossible",
       delegationPolicy: "forbidden",
       returnPolicy: "forbidden",
-      excludedAccountIds: ["account:subject"],
+      excludedAccountIds: ["98cc1f96-23d3-43ad-857a-a7a808dd81b9"],
     })
     expect(task.candidates.map((candidate) => String(candidate.accountId))).toEqual([
-      "account:1",
-      "account:2",
-      "account:3",
+      testDerivedId("account", "1"),
+      testDerivedId("account", "2"),
+      testDerivedId("account", "3"),
     ])
     expect(new Set(task.candidates.map((candidate) => candidate.eligibilityDigest)).size).toBe(3)
 
     const persistence = createSystemDecisionTask({
       task,
       caseId: systemCaseIdSchema.parse("case:governance"),
-      createdByAccountId: zAccountId.parse("account:creator"),
+      createdByAccountId: zAccountId.parse(testDerivedId("account", "creator")),
       proposalDigest: proposalDigestSchema.parse("a".repeat(64)),
     })
     expect(persistence).not.toBeInstanceOf(Error)
@@ -102,14 +103,14 @@ function collectiveResolution(): CompanyGovernanceAuthorityResolution {
       organizationRevision: 7,
     },
     candidates: ["1", "2", "3"].map((suffix) => ({
-      employeeId: `employee:${suffix}`,
-      accountId: `account:${suffix}`,
+      employeeId: testDerivedId("employee", suffix),
+      accountId: testDerivedId("account", suffix),
       qualifications: [qualification("assignment:committee")],
     })),
     exclusions: [
       {
-        employeeId: "employee:subject",
-        accountId: "account:subject",
+        employeeId: "941c55ea-bd99-4df1-b682-3301bea54b4e",
+        accountId: "98cc1f96-23d3-43ad-857a-a7a808dd81b9",
         reason: "subject",
       },
     ],
@@ -128,7 +129,7 @@ function qualification(assignmentId: string): CompanyGovernanceAuthorityQualific
     authorityScopeId: null,
     authorityScopeRevision: null,
     delegationAllowed: false,
-    employmentId: "employment:member",
+    employmentId: "ae1dfa77-f4a1-4bd4-bb70-940db83597aa",
     employmentRevision: 1,
     accountEmployeeLinkId: "link:member",
     accountEmployeeLinkRevision: 1,

@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { Resignation } from "@/contexts/resignation/domain/entities/resignation.entity"
 import { ResignationRepository } from "@/contexts/resignation/infrastructure/repositories/resignation.repository"
@@ -25,7 +26,7 @@ describe("ResignationRepository on local D1", () => {
     const repository = new ResignationRepository(context)
 
     const resignation = Resignation.create({
-      employeeId: toWorkforceEmployeeId(5),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(5)),
       resignationDate: "2026-09-30",
       lastWorkingDate: "2026-09-20",
       reason: "Career change",
@@ -36,7 +37,7 @@ describe("ResignationRepository on local D1", () => {
 
     const duplicate = await repository.create(
       Resignation.create({
-        employeeId: toWorkforceEmployeeId(5),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(5)),
         resignationDate: "2026-10-31",
         lastWorkingDate: null,
         reason: null,
@@ -53,7 +54,9 @@ describe("ResignationRepository on local D1", () => {
     expect(found.status).toBe("requested")
     expect(found.reason).toBe("Career change")
 
-    const pending = await repository.findPendingByEmployeeId(toWorkforceEmployeeId(5))
+    const pending = await repository.findPendingByEmployeeId(
+      toWorkforceEmployeeId(testEmployeeId(5)),
+    )
 
     expect(pending instanceof Resignation ? pending.id : pending).toBe(resignation.id)
 

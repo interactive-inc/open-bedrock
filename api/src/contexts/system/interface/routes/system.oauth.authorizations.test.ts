@@ -24,13 +24,15 @@ function createOidcClientRegistry(): OidcClientRegistryValue {
 describe("POST /oauth/authorizations", () => {
   test("認証済みAccountの同意をcanonical codeとSystem監査へ記録する", async () => {
     const fixture = new SystemSessionTestContext()
-    fixture.sqlite.exec("INSERT INTO system_accounts VALUES ('account-1', 'active', 0, NULL, 0, 0)")
+    fixture.sqlite.exec(
+      "INSERT INTO system_accounts (id, status, token_version, closed_at, created_at, updated_at) VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'active', 0, NULL, 0, 0)",
+    )
     const app = systemFactory
       .createApp()
       .use("*", async (context, next) => {
         context.set("database", drizzle(fixture.context.env.DB, { schema: systemCoreSchema }))
         context.set("now", () => now)
-        context.set("userId", "account-1")
+        context.set("userId", "d5858208-e680-4db8-a05d-8bf4f900c24e")
         context.set("accountTokenVersion", 0)
         context.set("role", "system:root")
         context.set("permissions", new Set(["system:admin"]))
@@ -81,7 +83,7 @@ describe("POST /oauth/authorizations", () => {
     expect(new URL(body.redirect_uri).searchParams.get("code")).toHaveLength(43)
     expect(
       fixture.sqlite.query("SELECT account_id FROM system_oidc_authorization_codes").get(),
-    ).toEqual({ account_id: "account-1" })
+    ).toEqual({ account_id: "d5858208-e680-4db8-a05d-8bf4f900c24e" })
     expect(fixture.sqlite.query("SELECT action, outcome FROM system_audit_events").get()).toEqual({
       action: "auth.oidc.authorization",
       outcome: "succeeded",

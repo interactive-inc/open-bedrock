@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -120,7 +121,9 @@ describe("GET /review-forms/me", () => {
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(2)
       expect(
-        parsed.data.data.every((form) => form.reviewer_employee_id === toWorkforceEmployeeId(4)),
+        parsed.data.data.every(
+          (form) => form.reviewer_employee_id === toWorkforceEmployeeId(testEmployeeId(4)),
+        ),
       ).toBe(true)
     }
   })

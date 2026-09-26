@@ -389,7 +389,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
   const issuedAt = Date.now()
   await f.database
     .prepare(
-      "INSERT INTO system_step_up_grants (id,account_id,token_hash,method,issued_at,expires_at,last_used_at) VALUES ('coverage-grant',?1,?2,'external_identity',?3,?4,?3)",
+      "INSERT INTO system_step_up_grants (id,account_id,token_hash,method,issued_at,expires_at,last_used_at) VALUES ('8de5cb8a-68d6-46a8-ad7c-a3e1924f3fc0',?1,?2,'external_identity',?3,?4,?3)",
     )
     .bind(creator, hash, issuedAt, issuedAt + 60000)
     .run()

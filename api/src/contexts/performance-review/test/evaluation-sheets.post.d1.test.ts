@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -109,9 +110,9 @@ describe("POST /evaluation-sheets", () => {
     const response = await createSheet(
       db,
       {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "1",
+        primary_evaluator_id: testEmployeeId(1),
       },
       token,
     )
@@ -123,8 +124,8 @@ describe("POST /evaluation-sheets", () => {
     expect(body.success).toBe(true)
 
     if (body.success) {
-      expect(body.data.employee_id).toBe(toWorkforceEmployeeId(5))
-      expect(body.data.primary_evaluator_id).toBe(toWorkforceEmployeeId(1))
+      expect(body.data.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
+      expect(body.data.primary_evaluator_id).toBe(toWorkforceEmployeeId(testEmployeeId(1)))
       expect(body.data.status).toBe("draft")
       expect(body.data.revision).toBe(1)
     }
@@ -137,7 +138,7 @@ describe("POST /evaluation-sheets", () => {
     const response = await createSheet(
       db,
       {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
       },
       token,
@@ -150,7 +151,7 @@ describe("POST /evaluation-sheets", () => {
     expect(body.success).toBe(true)
 
     if (body.success) {
-      expect(body.data.primary_evaluator_id).toBe(toWorkforceEmployeeId(1))
+      expect(body.data.primary_evaluator_id).toBe(toWorkforceEmployeeId(testEmployeeId(1)))
     }
   })
 
@@ -161,9 +162,9 @@ describe("POST /evaluation-sheets", () => {
     const first = await createSheet(
       db,
       {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "1",
+        primary_evaluator_id: testEmployeeId(1),
       },
       token,
     )
@@ -173,9 +174,9 @@ describe("POST /evaluation-sheets", () => {
     const second = await createSheet(
       db,
       {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "1",
+        primary_evaluator_id: testEmployeeId(1),
       },
       token,
     )
@@ -190,9 +191,9 @@ describe("POST /evaluation-sheets", () => {
     const response = await createSheet(
       db,
       {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "5",
+        primary_evaluator_id: testEmployeeId(5),
       },
       token,
     )
@@ -211,10 +212,10 @@ describe("POST /evaluation-sheets", () => {
     const response = await createSheet(
       db,
       {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "1",
-        secondary_evaluator_id: "1",
+        primary_evaluator_id: testEmployeeId(1),
+        secondary_evaluator_id: testEmployeeId(1),
       },
       token,
     )
@@ -233,9 +234,9 @@ describe("POST /evaluation-sheets", () => {
     const response = await createSheet(
       db,
       {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "1",
+        primary_evaluator_id: testEmployeeId(1),
       },
       token,
     )

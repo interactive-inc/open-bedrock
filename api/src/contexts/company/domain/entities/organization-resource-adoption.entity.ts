@@ -1,3 +1,5 @@
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
+import { companyOperationId } from "@/contexts/company/domain/definitions/company-operation-id.definition"
 import { z } from "zod"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
@@ -83,8 +85,8 @@ export class OrganizationResourceAdoptionEntity {
     const changes: CompanyResourceChangeEntity[] = []
     for (const period of source.periods) {
       if (
-        (period.recordedByActionId === "initialization:organization:default" ||
-          period.recordedByActionId === "initialization:company:root") &&
+        (period.recordedByActionId === companyOperationId("initialization:organization:default") ||
+          period.recordedByActionId === companyOperationId("initialization:company:root")) &&
         period.actorAccountId === "system:initialization" &&
         period.recordedAt === 0
       ) {
@@ -99,7 +101,7 @@ export class OrganizationResourceAdoptionEntity {
           source.organizationUnit.id !== COMPANY_ROOT_ORGANIZATION_UNIT_ID ||
           source.organizationUnit.createdAt !== 0 ||
           period.organizationUnitId !== source.organizationUnit.id ||
-          period.periodId !== "company:root:initial" ||
+          period.periodId !== deterministicCompanyId("initial-period", "company:root:initial") ||
           period.startsOn !== "1970-01-01" ||
           period.parentOrganizationUnitId !== null ||
           period.kind !== "COMPANY" ||

@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -90,11 +91,11 @@ async function createSheetWithEvaluators(
     token,
     method: "POST",
     body: {
-      employee_id: "5",
+      employee_id: testEmployeeId(5),
       period: "2026-H1",
-      primary_evaluator_id: "4",
+      primary_evaluator_id: testEmployeeId(4),
       ...(secondaryId !== null
-        ? { secondary_evaluator_id: toWorkforceEmployeeId(secondaryId) }
+        ? { secondary_evaluator_id: toWorkforceEmployeeId(testEmployeeId(secondaryId)) }
         : {}),
     },
   })
@@ -498,9 +499,9 @@ describe("createWithAuditLog readback", () => {
       token: adminTk,
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
       },
     })
 
@@ -514,7 +515,7 @@ describe("createWithAuditLog readback", () => {
     expect(created.id).toMatch(
       /^[0-9a-f]{8}-[0-9a-f]{4}-4[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/,
     )
-    expect(created.employee_id).toBe(toWorkforceEmployeeId(5))
+    expect(created.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
 
     // GET with the returned ID
     const getRes = await requestWithContext({
@@ -533,7 +534,7 @@ describe("createWithAuditLog readback", () => {
     }
 
     expect(fetched.id).toBe(created.id)
-    expect(fetched.employee_id).toBe(toWorkforceEmployeeId(5))
+    expect(fetched.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
   })
 
   test("readback id is correct when extra audit row diverges counters", async () => {
@@ -548,9 +549,9 @@ describe("createWithAuditLog readback", () => {
       token: adminTk,
       method: "POST",
       body: {
-        employee_id: "4",
+        employee_id: testEmployeeId(4),
         period: "2026-H1",
-        primary_evaluator_id: "5",
+        primary_evaluator_id: testEmployeeId(5),
       },
     })
     expect(res1.status).toBe(201)
@@ -565,7 +566,7 @@ describe("createWithAuditLog readback", () => {
       )
       .bind(
         sheet1.id,
-        "1",
+        testEmployeeId(1),
         "manual_diverge",
         null,
         null,
@@ -583,9 +584,9 @@ describe("createWithAuditLog readback", () => {
       token: adminTk,
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
       },
     })
     expect(res2.status).toBe(201)
@@ -605,7 +606,7 @@ describe("createWithAuditLog readback", () => {
     expect(getRes.status).toBe(200)
     const fetched = (await getRes.json()) as { id: string; employee_id: EmployeeId }
     expect(fetched.id).toBe(sheet2.id)
-    expect(fetched.employee_id).toBe(toWorkforceEmployeeId(5))
+    expect(fetched.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
   })
 
   test("createWithAuditLog rolls back sheet when audit insert fails (trigger)", async () => {
@@ -635,9 +636,9 @@ describe("createWithAuditLog readback", () => {
       token: adminTk,
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-ROLLBACK",
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
       },
     })
 
@@ -672,9 +673,9 @@ describe("weight sum validation", () => {
       token: adminTk,
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
       },
     })
 
@@ -731,9 +732,9 @@ describe("weight sum validation", () => {
       token: adminTk,
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
       },
     })
 
@@ -784,9 +785,9 @@ describe("weight sum validation", () => {
       token: adminTk,
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
       },
     })
 
@@ -854,9 +855,9 @@ describe("weight sum validation", () => {
       token: adminTk,
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
       },
     })
 
@@ -928,9 +929,9 @@ describe("sheet status guard for goals", () => {
       token: adminTk,
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
       },
     })
 
@@ -976,9 +977,9 @@ describe("sheet status guard for goals", () => {
       token: adminTk,
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
       },
     })
 
@@ -1000,7 +1001,7 @@ describe("sheet status guard for goals", () => {
     const goalsRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-review/performance-goals?period=2026-H1&employee_id=5",
+      path: `/performance-review/performance-goals?period=2026-H1&employee_id=${testEmployeeId(5)}`,
       token: ownerTk,
       method: "GET",
     })
@@ -1035,9 +1036,9 @@ describe("linked-goal audit logs", () => {
       token: adminTk,
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
       },
     })
     const sheet = (await sheetRes.json()) as { id: number }
@@ -1089,9 +1090,9 @@ describe("linked-goal audit logs", () => {
       token: adminTk,
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
       },
     })
     const sheet = (await sheetRes.json()) as { id: number }
@@ -1166,9 +1167,9 @@ describe("linked-goal audit logs", () => {
       token: adminTk,
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
       },
     })
     const sheet = (await sheetRes.json()) as { id: number }
@@ -1236,9 +1237,9 @@ describe("atomic operations with sheet status guard", () => {
       token: adminTk,
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
       },
     })
     const sheet = (await sheetRes.json()) as { id: number; revision: number }
@@ -1252,7 +1253,7 @@ describe("atomic operations with sheet status guard", () => {
     const goalsRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-review/performance-goals?period=2026-H1&employee_id=5",
+      path: `/performance-review/performance-goals?period=2026-H1&employee_id=${testEmployeeId(5)}`,
       token: ownerTk,
       method: "GET",
     })
@@ -1291,9 +1292,9 @@ describe("atomic operations with sheet status guard", () => {
       token: adminTk,
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
       },
     })
     const sheet = (await sheetRes.json()) as { id: number; revision: number }
@@ -1327,9 +1328,9 @@ describe("atomic operations with sheet status guard", () => {
       token: adminTk,
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         period: "2026-H1",
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
       },
     })
     const sheet = (await sheetRes.json()) as { id: number; revision: number }
@@ -1342,7 +1343,7 @@ describe("atomic operations with sheet status guard", () => {
     const goalsRes = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-review/performance-goals?period=2026-H1&employee_id=5",
+      path: `/performance-review/performance-goals?period=2026-H1&employee_id=${testEmployeeId(5)}`,
       token: ownerTk,
       method: "GET",
     })
@@ -1399,14 +1400,14 @@ describe("lifecycle evaluator validation", () => {
       path: "/performance-review/evaluation-sheets",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: "5", period: "2026-JST-BEFORE" },
+      body: { employee_id: testEmployeeId(5), period: "2026-JST-BEFORE" },
       now: "2026-01-01T14:59:59.000Z",
     })
 
     // 上長自動解決で employee 4 が見つかり、シート作成成功
     expect(res.status).toBe(201)
     const created = (await res.json()) as { primary_evaluator_id: EmployeeId }
-    expect(created.primary_evaluator_id).toBe(toWorkforceEmployeeId(4))
+    expect(created.primary_evaluator_id).toBe(toWorkforceEmployeeId(testEmployeeId(4)))
   })
 
   test("JST boundary: UTC 15:00 → business date Jan-2 (assignment expired)", async () => {
@@ -1420,7 +1421,7 @@ describe("lifecycle evaluator validation", () => {
       path: "/performance-review/evaluation-sheets",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: "5", period: "2026-JST-AFTER" },
+      body: { employee_id: testEmployeeId(5), period: "2026-JST-AFTER" },
       now: "2026-01-01T15:00:00.000Z",
     })
 
@@ -1440,7 +1441,7 @@ describe("lifecycle evaluator validation", () => {
       path: "/performance-review/evaluation-sheets",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: "5", period: "2026-H1" },
+      body: { employee_id: testEmployeeId(5), period: "2026-H1" },
     })
 
     expect(res.status).toBe(400)
@@ -1458,7 +1459,7 @@ describe("lifecycle evaluator validation", () => {
       path: "/performance-review/evaluation-sheets",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: "5", period: "2026-H1" },
+      body: { employee_id: testEmployeeId(5), period: "2026-H1" },
     })
 
     expect(res.status).toBe(400)
@@ -1475,7 +1476,11 @@ describe("lifecycle evaluator validation", () => {
       path: "/performance-review/evaluation-sheets",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: "5", period: "2026-H1", primary_evaluator_id: "4" },
+      body: {
+        employee_id: testEmployeeId(5),
+        period: "2026-H1",
+        primary_evaluator_id: testEmployeeId(4),
+      },
     })
 
     expect(res.status).toBe(400)

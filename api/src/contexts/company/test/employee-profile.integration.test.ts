@@ -1,4 +1,5 @@
 import { describe, expect, test, spyOn } from "bun:test"
+import { testAccountId } from "@system/test/system-test-id.test-support"
 import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { Hono } from "hono"
@@ -29,7 +30,7 @@ const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
   .sort()
   .map((file) => readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8"))
   .join("\n")
-const employeeId = "employee:profile"
+const employeeId = "ac40a5a7-eb38-4dde-bd13-dfc0a5613148"
 const responseSchema = z.object({
   name: z.string(),
   phone: z.string().nullable(),
@@ -39,10 +40,10 @@ const responseSchema = z.object({
 async function fixture() {
   const database = createCompanyD1TestDatabase(schemaSql)
   await database.exec(`INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-    VALUES ('account:profile', 'active', 0, 0, 0), ('account:unlinked', 'active', 0, 0, 0)`)
+    VALUES ('e419466c-18a7-4fec-a665-7bf591769bf4', 'active', 0, 0, 0), ('2ccf9e1e-fbf0-4aae-a773-d07276461938', 'active', 0, 0, 0)`)
   const clock = { now: new Date("2026-06-01T15:00:00Z") }
   const actor = CompanyActorValue.restore({
-    accountId: "account:profile",
+    accountId: "e419466c-18a7-4fec-a665-7bf591769bf4",
     employeeId,
     organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: [],
@@ -106,7 +107,7 @@ async function fixture() {
       {
         organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "employment",
-        id: "employment:profile",
+        id: "5b1c2d3e-4f50-4a61-8b72-9c8d7e6f5a41",
         revision: 1,
         state: "active",
         effectiveFrom: restoreCalendarDate("2026-01-01"),
@@ -116,12 +117,12 @@ async function fixture() {
       {
         organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "account-employee-link",
-        id: "link:profile",
+        id: "5b1c2d3e-4f50-4a61-8b72-9c8d7e6f5a42",
         revision: 1,
         state: "active",
         effectiveFrom: restoreCalendarDate("2026-01-01"),
         effectiveTo: null,
-        attributes: { accountId: "account:profile", employeeId },
+        attributes: { accountId: "e419466c-18a7-4fec-a665-7bf591769bf4", employeeId },
       },
     ],
   })
@@ -130,8 +131,8 @@ async function fixture() {
     kind: "applied",
   })
   await database.exec(`INSERT INTO company_account_profiles (organization_id, account_id, display_name, created_at, updated_at)
-      VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account:profile', 'Example Person', 0, 0),
-      ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account:unlinked', 'Unlinked Person', 0, 0);`)
+      VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'e419466c-18a7-4fec-a665-7bf591769bf4', 'Example Person', 0, 0),
+      ('${COMPANY_DEFAULT_ORGANIZATION_ID}', '2ccf9e1e-fbf0-4aae-a773-d07276461938', 'Unlinked Person', 0, 0);`)
   const read = (path = "/company/my-profile") => app.request(path, {}, environment)
   const version = async () => {
     const response = await read()
@@ -204,15 +205,15 @@ test("Account表示名も会社営業日の人物履歴を使い、将来の改�
     const names = await new ReadCompanyAccountDisplayNamesAdapter({
       database: context.database,
       organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
-      accountIds: ["account:profile", "account:unlinked"],
+      accountIds: ["e419466c-18a7-4fec-a665-7bf591769bf4", "2ccf9e1e-fbf0-4aae-a773-d07276461938"],
       now: instant,
       timeZone: "Asia/Tokyo",
     }).readCompanyAccountDisplayNames()
     if (names instanceof Error) throw names
-    expect(names.get("account:profile")).toBe(
+    expect(names.get("e419466c-18a7-4fec-a665-7bf591769bf4")).toBe(
       instant.endsWith("14:59:59Z") ? "Example Person" : "Future Person",
     )
-    expect(names.get("account:unlinked")).toBe("Unlinked Person")
+    expect(names.get("2ccf9e1e-fbf0-4aae-a773-d07276461938")).toBe("Unlinked Person")
   }
 })
 
@@ -221,11 +222,11 @@ test("人物履歴の開始前は接続済みAccountの古いprofileを表示せ
   const names = await new ReadCompanyAccountDisplayNamesAdapter({
     database: context.database,
     organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
-    accountIds: ["account:profile", "account:unlinked"],
+    accountIds: ["e419466c-18a7-4fec-a665-7bf591769bf4", "2ccf9e1e-fbf0-4aae-a773-d07276461938"],
     now: "2025-12-31T14:59:59Z",
     timeZone: "Asia/Tokyo",
   }).readCompanyAccountDisplayNames()
-  expect([...names]).toEqual([["account:unlinked", "Unlinked Person"]])
+  expect([...names]).toEqual([["2ccf9e1e-fbf0-4aae-a773-d07276461938", "Unlinked Person"]])
 })
 
 test("旧Account対応表と互換ビューを除いても公開対応と人物履歴から表示名を取得する", async () => {
@@ -233,17 +234,19 @@ test("旧Account対応表と互換ビューを除いても公開対応と人物�
   // 移行後の旧台帳撤去を再現するため、テストDBだけの削除ガードを外す。
   await context.database.exec("DROP TRIGGER IF EXISTS company_account_employee_links_delete_guard")
   await context.database
-    .prepare("DELETE FROM company_account_employee_links WHERE account_id = 'account:profile'")
+    .prepare(
+      "DELETE FROM company_account_employee_links WHERE account_id = 'e419466c-18a7-4fec-a665-7bf591769bf4'",
+    )
     .run()
   await context.database.exec("DROP VIEW IF EXISTS company_account_employee_link_periods")
   const names = await new ReadCompanyAccountDisplayNamesAdapter({
     database: context.database,
     organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
-    accountIds: ["account:profile"],
+    accountIds: ["e419466c-18a7-4fec-a665-7bf591769bf4"],
     now: "2026-06-01T00:00:00Z",
     timeZone: "Asia/Tokyo",
   }).readCompanyAccountDisplayNames()
-  expect(names.get("account:profile")).toBe("Example Person")
+  expect(names.get("e419466c-18a7-4fec-a665-7bf591769bf4")).toBe("Example Person")
 })
 
 test("Account表示名の参照範囲と複数会社の優先順を守り、大量のIDも一つの参照で扱う", async () => {
@@ -251,8 +254,8 @@ test("Account表示名の参照範囲と複数会社の優先順を守り、大�
   await context.database.exec(`INSERT INTO company_organizations
     (id, revision, name, representative_name, created_at, updated_at)
     VALUES ('01900060-0000-7000-8000-3feeb980fa36', 0, 'Other', 'Other', 0, 0);
-    INSERT INTO company_account_profiles (organization_id, account_id, display_name, created_at, updated_at) VALUES ('01900060-0000-7000-8000-3feeb980fa36', 'account:profile', 'Other organization name', 0, 0)`)
-  const accountIds = Array.from({ length: 150 }, (_, index) => `account:bulk:${index}`)
+    INSERT INTO company_account_profiles (organization_id, account_id, display_name, created_at, updated_at) VALUES ('01900060-0000-7000-8000-3feeb980fa36', 'e419466c-18a7-4fec-a665-7bf591769bf4', 'Other organization name', 0, 0)`)
+  const accountIds = Array.from({ length: 150 }, (_, index) => testAccountId(`bulk-${index}`))
   for (const id of accountIds) {
     await context.database.batch([
       context.database
@@ -277,7 +280,11 @@ test("Account表示名の参照範囲と複数会社の優先順を守り、大�
     const names = await new ReadCompanyAccountDisplayNamesAdapter({
       database: context.database,
       organizationIds,
-      accountIds: ["account:profile", ...accountIds, "account:profile"],
+      accountIds: [
+        "e419466c-18a7-4fec-a665-7bf591769bf4",
+        ...accountIds,
+        "e419466c-18a7-4fec-a665-7bf591769bf4",
+      ],
       now: "2026-06-01T00:00:00Z",
       timeZone: "Asia/Tokyo",
     }).readCompanyAccountDisplayNames()
@@ -288,7 +295,7 @@ test("Account表示名の参照範囲と複数会社の優先順を守り、大�
       expect(names.size).toBe(0)
     } else {
       expect(names.size).toBe(151)
-      expect(names.get("account:profile")).toBe(
+      expect(names.get("e419466c-18a7-4fec-a665-7bf591769bf4")).toBe(
         organizationIds.length === 1 && organizationIds[0] === COMPANY_DEFAULT_ORGANIZATION_ID
           ? "Example Person"
           : "Other organization name",
@@ -304,7 +311,7 @@ test("会社timezoneが不明なAccount名を推測して返さない", async ()
     const rejected = await new ReadCompanyAccountDisplayNamesAdapter({
       database: context.database,
       organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
-      accountIds: ["account:profile"],
+      accountIds: ["e419466c-18a7-4fec-a665-7bf591769bf4"],
       now: "2026-06-01T00:00:00Z",
       timeZone,
     })
@@ -326,12 +333,12 @@ test("Account対応の終了日には古いprofile名へ戻らず、会社上の
       {
         organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "account-employee-link",
-        id: "link:profile",
+        id: "5b1c2d3e-4f50-4a61-8b72-9c8d7e6f5a42",
         revision: 2,
         state: "active",
         effectiveFrom: restoreCalendarDate("2026-01-01"),
         effectiveTo: restoreCalendarDate("2026-07-01"),
-        attributes: { accountId: "account:profile", employeeId },
+        attributes: { accountId: "e419466c-18a7-4fec-a665-7bf591769bf4", employeeId },
       },
     ],
   })
@@ -344,7 +351,7 @@ test("Account対応の終了日には古いprofile名へ戻らず、会社上の
   const names = await new ReadCompanyAccountDisplayNamesAdapter({
     database: context.database,
     organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
-    accountIds: ["account:profile"],
+    accountIds: ["e419466c-18a7-4fec-a665-7bf591769bf4"],
     now: "2026-06-30T15:00:00Z",
     timeZone: "Asia/Tokyo",
   }).readCompanyAccountDisplayNames()
@@ -352,7 +359,7 @@ test("Account対応の終了日には古いprofile名へ戻らず、会社上の
   expect(
     await context.database
       .prepare(
-        "SELECT display_name FROM company_account_profiles WHERE account_id = 'account:profile'",
+        "SELECT display_name FROM company_account_profiles WHERE account_id = 'e419466c-18a7-4fec-a665-7bf591769bf4'",
       )
       .first<string>("display_name"),
   ).toBe("Example Person")
@@ -374,12 +381,12 @@ test("Account対応の空白期間と再接続を公開revisionだけで判定�
         {
           organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "account-employee-link",
-          id: "link:profile",
+          id: "5b1c2d3e-4f50-4a61-8b72-9c8d7e6f5a42",
           revision,
           state,
           effectiveFrom: restoreCalendarDate(effectiveFrom),
           effectiveTo: null,
-          attributes: { accountId: "account:profile", employeeId },
+          attributes: { accountId: "e419466c-18a7-4fec-a665-7bf591769bf4", employeeId },
         },
       ],
     })
@@ -396,11 +403,11 @@ test("Account対応の空白期間と再接続を公開revisionだけで判定�
     const names = await new ReadCompanyAccountDisplayNamesAdapter({
       database: context.database,
       organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
-      accountIds: ["account:profile"],
+      accountIds: ["e419466c-18a7-4fec-a665-7bf591769bf4"],
       now,
       timeZone: "Asia/Tokyo",
     }).readCompanyAccountDisplayNames()
-    expect(names.get("account:profile")).toBe(expectedName)
+    expect(names.get("e419466c-18a7-4fec-a665-7bf591769bf4")).toBe(expectedName)
   }
 })
 
@@ -412,7 +419,9 @@ describe("employee profile writes share the public Person history", () => {
       "DROP TRIGGER IF EXISTS company_account_employee_links_delete_guard",
     )
     await context.database
-      .prepare("DELETE FROM company_account_employee_links WHERE account_id = 'account:profile'")
+      .prepare(
+        "DELETE FROM company_account_employee_links WHERE account_id = 'e419466c-18a7-4fec-a665-7bf591769bf4'",
+      )
       .run()
     const response = await context.write(
       { name: "Changed Person", profile },
@@ -438,8 +447,8 @@ describe("employee profile writes share the public Person history", () => {
           .all<{ account_id: string; display_name: string }>()
       ).results,
     ).toEqual([
-      { account_id: "account:profile", display_name: "Changed Person" },
-      { account_id: "account:unlinked", display_name: "Unlinked Person" },
+      { account_id: "2ccf9e1e-fbf0-4aae-a773-d07276461938", display_name: "Unlinked Person" },
+      { account_id: "e419466c-18a7-4fec-a665-7bf591769bf4", display_name: "Changed Person" },
     ])
     const history = await new D1CompanyResourceRepository({ database: context.database }).findMany({
       organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
@@ -454,7 +463,7 @@ describe("employee profile writes share the public Person history", () => {
         )
         .first<{ actor_account_id: string; reason: string; effective_from: string }>(),
     ).toEqual({
-      actor_account_id: "account:profile",
+      actor_account_id: "e419466c-18a7-4fec-a665-7bf591769bf4",
       reason: "officialName: Confirm corrected personal details",
       effective_from: "2026-06-02",
     })
@@ -511,18 +520,22 @@ describe("employee profile writes share the public Person history", () => {
     const context = await fixture()
     const profile = await context.version()
     expect(
-      (await context.write({ phone: null, profile: { ...profile, employeeId: "employee:other" } }))
-        .status,
+      (
+        await context.write({
+          phone: null,
+          profile: { ...profile, employeeId: "1953cffc-119b-42c7-bbab-82c56499e4ac" },
+        })
+      ).status,
     ).toBe(403)
     context.actors.current = CompanyActorValue.restore({
-      accountId: "account:profile",
+      accountId: "e419466c-18a7-4fec-a665-7bf591769bf4",
       employeeId,
       organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
       capabilities: ["company:admin"],
     })
     expect((await context.write({ phone: null, profile })).status).toBe(403)
     context.actors.current = CompanyActorValue.restore({
-      accountId: "account:profile",
+      accountId: "e419466c-18a7-4fec-a665-7bf591769bf4",
       employeeId,
       organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: [],
@@ -744,11 +757,11 @@ describe("employee profile writes share the public Person history", () => {
   test("公開正本に未接続の従業員は版を返さず、片方だけ更新しない", async () => {
     const context = await fixture()
     await context.database.exec(
-      "INSERT INTO company_employees (id, official_name, employee_code, email, phone, created_at, updated_at) VALUES ('employee:legacy', 'Legacy Person', 'LEGACY-001', NULL, NULL, 0, 0);",
+      "INSERT INTO company_employees (id, official_name, employee_code, email, phone, created_at, updated_at) VALUES ('f16bf60f-1a1b-4eaf-96be-b9006f755c00', 'Legacy Person', 'LEGACY-001', NULL, NULL, 0, 0);",
     )
     context.actors.current = CompanyActorValue.restore({
-      accountId: "account:profile",
-      employeeId: "employee:legacy",
+      accountId: "e419466c-18a7-4fec-a665-7bf591769bf4",
+      employeeId: "f16bf60f-1a1b-4eaf-96be-b9006f755c00",
       organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: [],
     })
@@ -762,7 +775,7 @@ describe("employee profile writes share the public Person history", () => {
         await context.write({
           phone: "020-2000-2000",
           profile: {
-            employeeId: "employee:legacy",
+            employeeId: "f16bf60f-1a1b-4eaf-96be-b9006f755c00",
             personRevision: 1,
             organizationRevision: 1,
             effectiveOn: "2026-06-02",
@@ -773,7 +786,9 @@ describe("employee profile writes share the public Person history", () => {
     expect(await context.counts()).toEqual({ revisions: 1, receipts: 1, organization_revision: 1 })
     expect(
       await context.database
-        .prepare("SELECT phone FROM company_employees WHERE id = 'employee:legacy'")
+        .prepare(
+          "SELECT phone FROM company_employees WHERE id = 'f16bf60f-1a1b-4eaf-96be-b9006f755c00'",
+        )
         .first<{ phone: string | null }>(),
     ).toEqual({ phone: null })
   })

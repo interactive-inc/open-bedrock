@@ -1,6 +1,7 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
+import { testAccountId } from "@system/test/system-test-id.test-support"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
@@ -75,7 +76,7 @@ async function seedBrowserLoginCode(
       `INSERT INTO system_browser_login_codes (code_hash, account_id, created_at, expires_at)
        VALUES (?1, ?2, ?3, ?4)`,
     )
-    .bind(codeHash, String(accountId), createdAt, expiresAt)
+    .bind(codeHash, testAccountId(accountId), createdAt, expiresAt)
     .run()
 }
 
@@ -180,7 +181,7 @@ describe("POST /system/browser-sessions", () => {
       .prepare(
         `UPDATE system_accounts
          SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
-         WHERE id = 1`,
+         WHERE id = '01900061-0000-7000-8000-000000000001'`,
       )
       .run()
 

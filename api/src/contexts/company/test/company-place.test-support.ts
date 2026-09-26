@@ -82,7 +82,7 @@ export function createCompanyPlaceTestContext(schemaSql?: string) {
     const command = CompanyResourceChangeEntity.create({
       ...props,
       commandId: props.commandId ?? `command:${props.expectedRevision}`,
-      actorAccountId: "account:operator",
+      actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
       reason: "Confirm place history",
       recordedAt: Date.parse("2030-06-01T00:00:00Z"),
     })

@@ -40,11 +40,11 @@ async function fixture() {
   await f.assignEmployeeCode()
   await execSql(
     f.database,
-    `INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('worker:lifecycle','active',0,0,0);
-    INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at) VALUES ('principal:lifecycle','worker:lifecycle','service','Worker',1,0,0);
+    `INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('90b29e53-49a8-4878-b438-759dc4c5ad8e','active',0,0,0);
+    INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at) VALUES ('7a47cd0b-3642-442c-bae8-ab0aee238d0a','90b29e53-49a8-4878-b438-759dc4c5ad8e','service','Worker',1,0,0);
     INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES ('f3199ee8-3001-41b1-8cbb-acb2b91f7209','onboarding:worker','custom','Worker',0,0);
     INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('f3199ee8-3001-41b1-8cbb-acb2b91f7209','batch:execute'),('f3199ee8-3001-41b1-8cbb-acb2b91f7209','employee:read'),('f3199ee8-3001-41b1-8cbb-acb2b91f7209','onboarding:manage');
-    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('aa91674e-8345-4820-86f8-daffd9b981a3','worker:lifecycle','f3199ee8-3001-41b1-8cbb-acb2b91f7209',0);
+    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('aa91674e-8345-4820-86f8-daffd9b981a3','90b29e53-49a8-4878-b438-759dc4c5ad8e','f3199ee8-3001-41b1-8cbb-acb2b91f7209',0);
     INSERT INTO onboarding_templates (id,code,name,kind) VALUES ('0190003c-0000-7000-8000-000000015f91','auto-join','Join','join'),('0190003c-0000-7000-8000-000000015f92','auto-leave','Leave','leave');
     INSERT INTO onboarding_template_tasks (id,template_code,code,title,sort_order) VALUES ('01900038-0000-7000-8000-000000000101','auto-join','join-task','Prepare access',1),('01900038-0000-7000-8000-000000000102','auto-leave','leave-task','Confirm return',1);
     INSERT INTO onboarding_lifecycle_template_bindings (id,effect_type,template_code,updated_at) VALUES ('01900040-0000-7000-8000-000000000001','hire','auto-join',0),('01900040-0000-7000-8000-000000000002','retired','auto-leave',0);`,
@@ -54,7 +54,7 @@ async function fixture() {
     ENABLED_OPT_IN_APPS: "onboarding",
     DB: f.database,
     COMPANY_TIME_ZONE: "Asia/Tokyo",
-    ONBOARDING_SERVICE_ACCOUNT_ID: "worker:lifecycle",
+    ONBOARDING_SERVICE_ACCOUNT_ID: "90b29e53-49a8-4878-b438-759dc4c5ad8e",
     ONBOARDING_AUTOMATION_FROM: "2030-06-01T00:00:00.000Z",
   }
   const run = () => runScheduledOnboarding({ env, clock: () => clock.at })
@@ -479,15 +479,15 @@ test("dead letterを人のstep-upと管理権限で一度だけ再投入し、�
   if (failed === null) throw new Error("failed job missing")
   await execSql(
     f.database,
-    `INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('operator:retry','active',0,0,0);
-    INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at) VALUES ('principal:retry','operator:retry','human','Operator',1,0,0);
+    `INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('1b92afe6-d99f-4875-9771-44dc2d319a6d','active',0,0,0);
+    INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at) VALUES ('4ba9154c-04dd-4d4d-982a-bb69f3dee864','1b92afe6-d99f-4875-9771-44dc2d319a6d','human','Operator',1,0,0);
     INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES ('e956d921-2edc-4105-8eec-a5c5c1cc13d3','onboarding:retry','custom','Operator',0,0);
     INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('e956d921-2edc-4105-8eec-a5c5c1cc13d3','system:admin');
-    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('15631ade-b548-40b8-82e9-dc71591ad471','operator:retry','e956d921-2edc-4105-8eec-a5c5c1cc13d3',0);`,
+    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('15631ade-b548-40b8-82e9-dc71591ad471','1b92afe6-d99f-4875-9771-44dc2d319a6d','e956d921-2edc-4105-8eec-a5c5c1cc13d3',0);`,
   )
   const secret = "lifecycle-test-jwt-secret"
   const accessToken = await new SystemAccessTokenIssuer(secret).issue({
-    accountId: zAccountId.parse("operator:retry"),
+    accountId: zAccountId.parse("1b92afe6-d99f-4875-9771-44dc2d319a6d"),
     tokenVersion: 0,
     now: new Date(),
   })
@@ -497,7 +497,7 @@ test("dead letterを人のstep-upと管理権限で一度だけ再投入し、�
   if (stepUpHash instanceof Error) throw stepUpHash
   await f.database
     .prepare(`INSERT INTO system_step_up_grants (id,account_id,token_hash,method,issued_at,expires_at)
-    VALUES ('grant:retry','operator:retry',?1,'password',?2,?3)`)
+    VALUES ('eb4501d3-7446-4e6e-8b44-36187f8bb977','1b92afe6-d99f-4875-9771-44dc2d319a6d',?1,'password',?2,?3)`)
     .bind(stepUpHash, f.clock.at.getTime(), f.clock.at.getTime() + 300000)
     .run()
   const app = new Hono<HonoEnv>()

@@ -8,6 +8,8 @@ export const systemPrincipals = sqliteTable(
   "system_principals",
   {
     id: text("id").primaryKey(),
+    /** 主キーを UUID へ移す前の値。移行前の記録を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
     accountId: text("account_id")
       .notNull()
       .unique()

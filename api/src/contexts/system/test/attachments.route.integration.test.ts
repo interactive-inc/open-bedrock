@@ -36,7 +36,10 @@ async function createFixture(
   const db = createSystemAttachmentTestDatabase()
   const clock = { current: machineKind === null && !external ? now : new Date() }
 
-  for (const accountId of ["account-owner", "account-other"]) {
+  for (const accountId of [
+    "4f810255-55d5-43c8-b43f-2df5e7bf5a3c",
+    "cd2c4c4e-c038-4a89-8411-6f779077ac7e",
+  ]) {
     await db
       .prepare(
         `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
@@ -58,7 +61,7 @@ async function createFixture(
     await db
       .prepare(`INSERT INTO system_principals
       (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
-      VALUES ('principal-owner', 'account-owner', ?1, 'Test machine', ?2, 1, ?3, ?3)`)
+      VALUES ('f198534a-16c4-4f9b-8359-9a8b4b474f09', '4f810255-55d5-43c8-b43f-2df5e7bf5a3c', ?1, 'Test machine', ?2, 1, ?3, ?3)`)
       .bind(
         machineKind,
         machineKind === "connector" ? "test-connector" : null,
@@ -68,7 +71,7 @@ async function createFixture(
     await db
       .prepare(`INSERT INTO system_machine_credentials
       (id, principal_id, name, secret_hash, status, created_at, updated_at, last_used_at)
-      VALUES ('credential-owner', 'principal-owner', 'Test credential', ?1, 'active', ?2, ?2, ?2)`)
+      VALUES ('f8b52809-c05c-4f1e-9219-7113b325d70c', 'f198534a-16c4-4f9b-8359-9a8b4b474f09', 'Test credential', ?1, 'active', ?2, ?2, ?2)`)
       .bind("a".repeat(64), clock.current.getTime())
       .run()
   }
@@ -78,7 +81,7 @@ async function createFixture(
     await db
       .prepare(`INSERT INTO system_identity_bindings
       (id,account_id,provider,subject,created_at,activated_at,revoked_at)
-      VALUES ('external-owner','account-owner','oidc','external-owner',0,0,NULL)`)
+      VALUES ('91ad8cd2-a9b3-40ad-a5fa-a3546a76df4e','4f810255-55d5-43c8-b43f-2df5e7bf5a3c','oidc','91ad8cd2-a9b3-40ad-a5fa-a3546a76df4e',0,0,NULL)`)
       .run()
   }
   const bucket = new SystemAttachmentTestBucket()
@@ -151,15 +154,19 @@ async function createFixture(
           .setProtectedHeader({ alg: "EdDSA", typ: "at+jwt", kid: externalKey.keyId })
           .setIssuer("https://identity.example.com")
           .setAudience("https://api.example.com")
-          .setSubject("external-owner")
+          .setSubject("91ad8cd2-a9b3-40ad-a5fa-a3546a76df4e")
           .setJti(crypto.randomUUID())
           .setIssuedAt(issuedAt)
           .setExpirationTime(issuedAt + 300)
           .sign(externalKey.signingKey)
       }
-      if (machineKind !== null && accountId === "account-owner") {
+      if (machineKind !== null && accountId === "4f810255-55d5-43c8-b43f-2df5e7bf5a3c") {
         const token = await new AccessTokenService({ profile: SYSTEM_ACCESS_TOKEN_PROFILE }).create(
-          { accountId, tokenVersion: 0, machineCredentialId: "credential-owner" },
+          {
+            accountId,
+            tokenVersion: 0,
+            machineCredentialId: "f8b52809-c05c-4f1e-9219-7113b325d70c",
+          },
           jwtSecret,
           clock.current,
         )
@@ -217,7 +224,7 @@ describe("POST /attachments", () => {
   test("認証済みなら添付を預けられ、暗号文だけが保管される", async () => {
     const fixture = await createFixture()
 
-    const token = await fixture.tokenOf("account-owner")
+    const token = await fixture.tokenOf("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
 
     const response = await fixture.request("/attachments", {
       method: "POST",
@@ -255,7 +262,7 @@ describe("POST /attachments", () => {
   test("許可していない形式を拒否する", async () => {
     const fixture = await createFixture()
 
-    const token = await fixture.tokenOf("account-owner")
+    const token = await fixture.tokenOf("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
 
     const response = await fixture.request("/attachments", {
       method: "POST",
@@ -270,7 +277,7 @@ describe("POST /attachments", () => {
   test("file フィールドが無ければ拒否する", async () => {
     const fixture = await createFixture()
 
-    const token = await fixture.tokenOf("account-owner")
+    const token = await fixture.tokenOf("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
 
     const response = await fixture.request("/attachments", {
       method: "POST",
@@ -290,7 +297,7 @@ describe("GET /attachments/:attachmentId", () => {
   ]
   test.each([...machineKinds])("有効な%sも本人の添付を読める", async (kind) => {
     const fixture = await createFixture(kind)
-    const token = await fixture.tokenOf("account-owner")
+    const token = await fixture.tokenOf("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
     const created = await fixture.request("/attachments", {
       method: "POST",
       headers: { authorization: `Bearer ${token}` },
@@ -310,9 +317,9 @@ describe("GET /attachments/:attachmentId", () => {
       .first<{ authorization_json: string; metadata_json: string }>()
     expect(JSON.parse(audit?.authorization_json ?? "null")).toEqual({
       policy: "owner-unlinked",
-      accountId: "account-owner",
+      accountId: "4f810255-55d5-43c8-b43f-2df5e7bf5a3c",
       tokenVersion: 0,
-      machineCredentialId: "credential-owner",
+      machineCredentialId: "f8b52809-c05c-4f1e-9219-7113b325d70c",
     })
     expect(JSON.parse(audit?.metadata_json ?? "null")).toEqual({
       sha256: expect.stringMatching(/^[0-9a-f]{64}$/),
@@ -324,7 +331,7 @@ describe("GET /attachments/:attachmentId", () => {
     "本体取得中の機械認証変更%sで開示を拒否する",
     async (change) => {
       const fixture = await createFixture(change === "connector-disabled" ? "connector" : "agent")
-      const token = await fixture.tokenOf("account-owner")
+      const token = await fixture.tokenOf("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
       const created = await fixture.request("/attachments", {
         method: "POST",
         headers: { authorization: `Bearer ${token}` },
@@ -334,13 +341,13 @@ describe("GET /attachments/:attachmentId", () => {
       const body = await createdBody(created)
       if (change === "expired") {
         await fixture.db.exec(`UPDATE system_machine_credentials SET expires_at = created_at + 1000
-        WHERE id = 'credential-owner'`)
+        WHERE id = 'f8b52809-c05c-4f1e-9219-7113b325d70c'`)
       }
       fixture.afterObjectRead(async () => {
         if (change === "revoked") {
           await fixture.db
             .exec(`UPDATE system_machine_credentials SET status = 'revoked', revoked_at = updated_at
-          WHERE id = 'credential-owner'`)
+          WHERE id = 'f8b52809-c05c-4f1e-9219-7113b325d70c'`)
         }
         if (change === "expired") fixture.advanceClock(1000)
         if (change === "connector-disabled") {
@@ -361,7 +368,7 @@ describe("GET /attachments/:attachmentId", () => {
 
   test.each(["ABORT", "IGNORE"])("閲覧監査のINSERTが%sなら平文を返さない", async (failure) => {
     const fixture = await createFixture()
-    const token = await fixture.tokenOf("account-owner")
+    const token = await fixture.tokenOf("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
     const created = await fixture.request("/attachments", {
       method: "POST",
       headers: { authorization: `Bearer ${token}` },
@@ -384,14 +391,14 @@ describe("GET /attachments/:attachmentId", () => {
   test.each([
     ["業務へ紐付いた", "status = 'linked', linked_at = 1"],
     ["消去された", "status = 'erased', wrapped_dek = NULL, wrapped_dek_iv = NULL, erased_at = 1"],
-    ["所有者が変わった", "owner_account_id = 'account-other'"],
+    ["所有者が変わった", "owner_account_id = 'cd2c4c4e-c038-4a89-8411-6f779077ac7e'"],
     ["名前が変わった", "file_name = 'changed.pdf'"],
     ["内容digestが変わった", "plaintext_sha256 = 'changed'"],
     ["容量が変わった", "byte_size = byte_size + 1"],
     ["鍵が変わった", "wrapped_dek = 'changed'"],
   ])("本体取得中に%s添付は開示しない", async (_name, changes) => {
     const fixture = await createFixture()
-    const token = await fixture.tokenOf("account-owner")
+    const token = await fixture.tokenOf("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
     const created = await fixture.request("/attachments", {
       method: "POST",
       headers: { authorization: `Bearer ${token}` },
@@ -419,7 +426,7 @@ describe("GET /attachments/:attachmentId", () => {
     ["トークン失効", "token_version = token_version + 1"],
   ])("本体取得中にAccountが%sされたら開示しない", async (_name, changes) => {
     const fixture = await createFixture()
-    const token = await fixture.tokenOf("account-owner")
+    const token = await fixture.tokenOf("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
     const created = await fixture.request("/attachments", {
       method: "POST",
       headers: { authorization: `Bearer ${token}` },
@@ -427,7 +434,9 @@ describe("GET /attachments/:attachmentId", () => {
     })
     const body = await createdBody(created)
     fixture.afterObjectRead(async () => {
-      await fixture.db.exec(`UPDATE system_accounts SET ${changes} WHERE id = 'account-owner'`)
+      await fixture.db.exec(
+        `UPDATE system_accounts SET ${changes} WHERE id = '4f810255-55d5-43c8-b43f-2df5e7bf5a3c'`,
+      )
     })
 
     const response = await fixture.request(`/attachments/${body.id}`, {
@@ -441,7 +450,7 @@ describe("GET /attachments/:attachmentId", () => {
 
   test("監査保存と最終検査の間で紐付いた場合は監査も巻き戻す", async () => {
     const fixture = await createFixture()
-    const token = await fixture.tokenOf("account-owner")
+    const token = await fixture.tokenOf("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
     const created = await fixture.request("/attachments", {
       method: "POST",
       headers: { authorization: `Bearer ${token}` },
@@ -470,7 +479,7 @@ describe("GET /attachments/:attachmentId", () => {
 
   test("監査保存中にトークンが失効した場合も全体を巻き戻す", async () => {
     const fixture = await createFixture()
-    const token = await fixture.tokenOf("account-owner")
+    const token = await fixture.tokenOf("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
     const created = await fixture.request("/attachments", {
       method: "POST",
       headers: { authorization: `Bearer ${token}` },
@@ -491,14 +500,16 @@ describe("GET /attachments/:attachmentId", () => {
     expect(await fixture.auditActions(body.id)).toEqual([])
     expect(
       await fixture.db
-        .prepare("SELECT token_version FROM system_accounts WHERE id = 'account-owner'")
+        .prepare(
+          "SELECT token_version FROM system_accounts WHERE id = '4f810255-55d5-43c8-b43f-2df5e7bf5a3c'",
+        )
         .first<number>("token_version"),
     ).toBe(0)
   })
 
   test("保存された容量が本体と異なる場合は開示しない", async () => {
     const fixture = await createFixture()
-    const token = await fixture.tokenOf("account-owner")
+    const token = await fixture.tokenOf("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
     const created = await fixture.request("/attachments", {
       method: "POST",
       headers: { authorization: `Bearer ${token}` },
@@ -522,7 +533,7 @@ describe("GET /attachments/:attachmentId", () => {
   test("預けた本人は紐づけ前の添付を取り出せる", async () => {
     const fixture = await createFixture()
 
-    const token = await fixture.tokenOf("account-owner")
+    const token = await fixture.tokenOf("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
 
     const created = await fixture.request("/attachments", {
       method: "POST",
@@ -545,7 +556,7 @@ describe("GET /attachments/:attachmentId", () => {
   test("他人の添付は見えない", async () => {
     const fixture = await createFixture()
 
-    const ownerToken = await fixture.tokenOf("account-owner")
+    const ownerToken = await fixture.tokenOf("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
 
     const created = await fixture.request("/attachments", {
       method: "POST",
@@ -555,7 +566,7 @@ describe("GET /attachments/:attachmentId", () => {
 
     const body = await createdBody(created)
 
-    const otherToken = await fixture.tokenOf("account-other")
+    const otherToken = await fixture.tokenOf("cd2c4c4e-c038-4a89-8411-6f779077ac7e")
 
     const response = await fixture.request(`/attachments/${body.id}`, {
       headers: { authorization: `Bearer ${otherToken}` },
@@ -567,7 +578,7 @@ describe("GET /attachments/:attachmentId", () => {
   test("取り出しを監査に記録する", async () => {
     const fixture = await createFixture()
 
-    const token = await fixture.tokenOf("account-owner")
+    const token = await fixture.tokenOf("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
 
     const created = await fixture.request("/attachments", {
       method: "POST",
@@ -590,7 +601,7 @@ describe("GET /attachments/:attachmentId", () => {
   test("存在しない添付は 404", async () => {
     const fixture = await createFixture()
 
-    const token = await fixture.tokenOf("account-owner")
+    const token = await fixture.tokenOf("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
 
     const response = await fixture.request("/attachments/00000000-0000-4000-8000-000000000000", {
       headers: { authorization: `Bearer ${token}` },
@@ -603,7 +614,7 @@ describe("GET /attachments/:attachmentId", () => {
 for (const change of ["none", "revoked", "expired"] as const) {
   test(`外部tokenの添付取得は認証の変化を開示直前に検査する: ${change}`, async () => {
     const fixture = await createFixture(null, true)
-    const token = await fixture.tokenOf("account-owner")
+    const token = await fixture.tokenOf("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
     const headers = { authorization: `Bearer ${token}` }
     const created = await fixture.request("/attachments", {
       method: "POST",
@@ -615,7 +626,9 @@ for (const change of ["none", "revoked", "expired"] as const) {
     fixture.afterObjectRead(async () => {
       if (change === "revoked")
         await fixture.db
-          .prepare("UPDATE system_identity_bindings SET revoked_at=?1 WHERE id='external-owner'")
+          .prepare(
+            "UPDATE system_identity_bindings SET revoked_at=?1 WHERE id='91ad8cd2-a9b3-40ad-a5fa-a3546a76df4e'",
+          )
           .bind(Date.now())
           .run()
       if (change === "expired") fixture.advanceClock(301_000)

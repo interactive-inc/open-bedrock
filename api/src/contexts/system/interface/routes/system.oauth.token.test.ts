@@ -59,21 +59,21 @@ describe("POST /oauth/token", () => {
       .query(
         `INSERT INTO system_accounts
            (id, status, token_version, created_at, updated_at)
-         VALUES ('account-1', 'active', 0, ?1, ?1)`,
+         VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'active', 0, ?1, ?1)`,
       )
       .run(now.getTime())
     fixture.sqlite
       .query(
         `INSERT INTO system_identity_bindings
            (id, account_id, provider, subject, created_at, activated_at, revoked_at)
-         VALUES ('identity-1', 'account-1', 'password', 'person@example.com', ?1, ?1, NULL)`,
+         VALUES ('637b1ce9-daa9-4063-8cb0-1190607a2ceb', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'password', 'person@example.com', ?1, ?1, NULL)`,
       )
       .run(now.getTime())
     fixture.sqlite
       .query(
         `INSERT INTO system_identity_profiles
            (identity_id, email, email_verified, last_used_at, updated_at)
-         VALUES ('identity-1', 'person@example.com', 1, ?1, ?1)`,
+         VALUES ('637b1ce9-daa9-4063-8cb0-1190607a2ceb', 'person@example.com', 1, ?1, ?1)`,
       )
       .run(now.getTime())
     fixture.sqlite
@@ -81,7 +81,7 @@ describe("POST /oauth/token", () => {
         `INSERT INTO system_oidc_authorization_codes
            (code_hash, issuer, client_id, redirect_uri, account_id, code_challenge,
             nonce, scope, expires_at, created_at)
-         VALUES (?1, ?2, ?3, ?4, 'account-1', ?5, 'nonce-with-enough-entropy',
+         VALUES (?1, ?2, ?3, ?4, 'd5858208-e680-4db8-a05d-8bf4f900c24e', ?5, 'nonce-with-enough-entropy',
                  'openid profile email', ?6, ?7)`,
       )
       .run(

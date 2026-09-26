@@ -56,7 +56,7 @@ test("募集11件と応募者記録を分割照合し撤去確定する", async 
   await database
     .prepare(`INSERT INTO system_step_up_grants
       (id,account_id,token_hash,method,issued_at,expires_at)
-      VALUES ('recruitment-coverage-step-up',?1,?2,'external_identity',?3,?4)`)
+      VALUES ('a936df5b-1ee9-4af9-85c9-0403cf53dc86',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const post = (path: string, body: unknown) =>

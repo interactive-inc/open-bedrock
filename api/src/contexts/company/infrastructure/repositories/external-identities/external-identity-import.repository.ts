@@ -1,3 +1,4 @@
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
 import type {
   ExternalIdentityImportEntity,
@@ -390,7 +391,7 @@ export class ExternalIdentityImportRepository {
     if (account instanceof Error) return { kind: "unavailable", cause: account }
     const employeeId = crypto.randomUUID()
     const employmentId = crypto.randomUUID()
-    const personId = `person:${employeeId}`
+    const personId = deterministicCompanyId("person", employeeId)
     const effectiveFrom = restoreCalendarDate(input.newEmployee.hireDate)
     const resources: CompanyResourceProps[] = [
       {
@@ -430,7 +431,7 @@ export class ExternalIdentityImportRepository {
       {
         organizationId,
         type: "account-employee-link",
-        id: `account-link:${employeeId}`,
+        id: deterministicCompanyId("account-link", employeeId),
         revision: 1,
         state: "active",
         effectiveFrom: context.effectiveOn < effectiveFrom ? effectiveFrom : context.effectiveOn,

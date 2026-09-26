@@ -21,7 +21,7 @@ function change(
     expectedRevision: 0,
     asOf,
     recordedAt: 10,
-    actorAccountId: "account:1",
+    actorAccountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
     reason: "Create company root",
     evidenceReferences: [],
     organizationUnits: [{ id: organizationUnitId, createdAt: 10 }],

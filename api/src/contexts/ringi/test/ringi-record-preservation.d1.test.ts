@@ -42,7 +42,7 @@ test("稟議起案を停止中に人の承認で保全し、業務コードを�
   await database
     .prepare(`INSERT INTO system_step_up_grants
       (id,account_id,token_hash,method,issued_at,expires_at)
-      VALUES ('ringi-test-step-up',?1,?2,'external_identity',?3,?4)`)
+      VALUES ('396f4a08-2cda-4133-a558-b13ed6919314',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const frozen = await app.request(

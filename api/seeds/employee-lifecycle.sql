@@ -5,7 +5,7 @@ INSERT INTO company_personnel_actions
    requested_by_employee_id, source_type, source_application_id, corrects_action_id,
    operation_id, payload_fingerprint, summary_json)
 SELECT
-  'seed-lifecycle-action-' || employee.id,
+  '01900067' || substr(employee.id, 9),
   employee.id,
   'initial_state',
   '2026-01-01',
@@ -15,7 +15,7 @@ SELECT
   'system',
   NULL,
   NULL,
-  'seed-lifecycle-operation-' || employee.id,
+  '01900068' || substr(employee.id, 9),
   '0000000000000000000000000000000000000000000000000000000000000000',
   json_object(
     'kind', 'initial_state',
@@ -53,7 +53,7 @@ SELECT
   employment.hire_date,
   employment.termination_date,
   0,
-  'seed-lifecycle-action-' || employment.employee_id,
+  '01900067' || substr(employment.employee_id, 9),
   1767225600
 FROM company_employments employment;
 
@@ -61,7 +61,7 @@ INSERT INTO company_employee_status_period_versions
   (period_id, revision, employment_period_id, employee_id, status, starts_on,
    ends_on, is_void, recorded_by_action_id, recorded_at)
 SELECT
-  'seed-status-' || employment.employee_id,
+  '01900069' || substr(employment.employee_id, 9),
   1,
   employment.id,
   employment.employee_id,
@@ -69,7 +69,7 @@ SELECT
   employment.hire_date,
   employment.termination_date,
   0,
-  'seed-lifecycle-action-' || employment.employee_id,
+  '01900067' || substr(employment.employee_id, 9),
   1767225600
 FROM company_employments employment;
 

@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
@@ -1087,7 +1088,7 @@ describe("atomicity", () => {
         `INSERT INTO thanks_redemptions (id, employee_id, reward_id, point_cost, status, created_at)
          VALUES (?, ?, ?, ?, 'pending', datetime('now'))`,
       )
-      .bind(secondRedemptionId, "5", rewardId, 60)
+      .bind(secondRedemptionId, testEmployeeId(5), rewardId, 60)
       .run()
 
     // 2 件目の pending の id を取得。

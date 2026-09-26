@@ -8,13 +8,13 @@ test("表示用の氏名と従業員 code を、接続済みは公開 resource�
   await f.database
     .prepare(
       `INSERT INTO company_employees (id, official_name, employee_code, email, phone, created_at, updated_at)
-       VALUES ('employee:unconnected', 'Unconnected Person', 'LEGACY-9', NULL, NULL, 0, 0)`,
+       VALUES ('31cf526f-0921-48a3-be38-c1458aaf2671', 'Unconnected Person', 'LEGACY-9', NULL, NULL, 0, 0)`,
     )
     .run()
 
   const profiles = await readCompanyEmployeeProfiles({
     database: f.database,
-    employeeIds: [f.creator.employeeId, "employee:unconnected", "employee:missing"],
+    employeeIds: [f.creator.employeeId, "31cf526f-0921-48a3-be38-c1458aaf2671", "employee:missing"],
     asOf: "2030-06-01" as never,
   })
   if (profiles instanceof Error) throw profiles
@@ -23,7 +23,7 @@ test("表示用の氏名と従業員 code を、接続済みは公開 resource�
     employeeCode: "EMPLOYEE-001",
     officialName: expect.stringMatching(/\S/),
   })
-  expect(profiles.get("employee:unconnected" as never)).toEqual({
+  expect(profiles.get("31cf526f-0921-48a3-be38-c1458aaf2671" as never)).toEqual({
     officialName: "Unconnected Person",
     employeeCode: "LEGACY-9",
   })

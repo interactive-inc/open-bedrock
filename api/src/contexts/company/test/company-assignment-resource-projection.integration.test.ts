@@ -570,13 +570,13 @@ describe("公開Assignmentと業務の所属期間", () => {
       f.database
         .prepare(`INSERT INTO company_organization_change_operations
         (id, expected_revision, change_count, applied_count, resulting_revision, status, recorded_at)
-        VALUES ('legacy:manager', ?1, 1, 0, ?1 + 1, 'PENDING', 0)`)
+        VALUES ('ea66152b-3d44-49e9-ad70-6a7b129d43ed', ?1, 1, 0, ?1 + 1, 'PENDING', 0)`)
         .bind(revision),
       f.database
         .prepare(`INSERT INTO company_organization_assignment_period_versions
         (period_id, revision, employment_id, employee_id, organization_unit_id, assignment_type, position_title,
           manager_employee_id, starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
-        VALUES ('assignment:legacy-manager', 1, ?1, ?2, ?3, 'PRIMARY', 'Coordinator', ?4, '2030-01-01', NULL, 0, 'legacy:manager', 0)`)
+        VALUES ('assignment:legacy-manager', 1, ?1, ?2, ?3, 'PRIMARY', 'Coordinator', ?4, '2030-01-01', NULL, 0, 'ea66152b-3d44-49e9-ad70-6a7b129d43ed', 0)`)
         .bind(
           f.assignment.attributes.employmentId,
           f.people[0]!.employeeId,
@@ -584,7 +584,7 @@ describe("公開Assignmentと業務の所属期間", () => {
           f.people[1]!.employeeId,
         ),
       f.database.prepare(
-        "UPDATE company_organization_change_operations SET status = 'COMPLETED' WHERE id = 'legacy:manager'",
+        "UPDATE company_organization_change_operations SET status = 'COMPLETED' WHERE id = 'ea66152b-3d44-49e9-ad70-6a7b129d43ed'",
       ),
     ])
     expect(
@@ -1889,17 +1889,17 @@ describe("公開Assignmentと業務の所属期間", () => {
         f.database
           .prepare(`INSERT INTO company_organization_change_operations
         (id, expected_revision, change_count, applied_count, resulting_revision, status, recorded_at, actor_account_id, reason)
-        SELECT 'action:unmirrored', revision, 1, 0, revision + 1, 'PENDING', 0, ?1, 'Unmirrored assignment change'
+        SELECT '6d2e8f41-7a3b-4c9d-8e15-3f0a9b7c2d64', revision, 1, 0, revision + 1, 'PENDING', 0, ?1, 'Unmirrored assignment change'
         FROM company_organization_lifecycle_states WHERE id = 1`)
           .bind(f.creator.accountId),
         f.database.prepare(`INSERT INTO company_organization_assignment_period_versions
         (period_id, revision, employment_id, employee_id, organization_unit_id, assignment_type, position_title,
          manager_employee_id, starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
         SELECT period_id, revision + 1, employment_id, employee_id, organization_unit_id, assignment_type, 'Unmirrored',
-          manager_employee_id, starts_on, ends_on, is_void, 'action:unmirrored', 0
+          manager_employee_id, starts_on, ends_on, is_void, '6d2e8f41-7a3b-4c9d-8e15-3f0a9b7c2d64', 0
         FROM company_organization_assignment_period_versions WHERE revision = 1`),
         f.database.prepare(
-          "UPDATE company_organization_change_operations SET status = 'COMPLETED' WHERE id = 'action:unmirrored'",
+          "UPDATE company_organization_change_operations SET status = 'COMPLETED' WHERE id = '6d2e8f41-7a3b-4c9d-8e15-3f0a9b7c2d64'",
         ),
       ])
       .then(

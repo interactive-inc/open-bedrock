@@ -2,7 +2,7 @@ import { PreservedRecordDisclosurePolicyEntity } from "@system/domain/entities/p
 import { expect, test } from "bun:test"
 
 const grant = {
-  accountId: "viewer-1",
+  accountId: "e16b99c2-9319-4546-b0bf-16327ec68ad1",
   actions: ["read"],
   purposes: ["records-review"],
   validFrom: "2026-09-13T01:00:00.000Z",
@@ -14,14 +14,14 @@ const input = {
   recordId: crypto.randomUUID(),
   status: "active",
   publishedAt: "2026-09-13T00:00:00.000Z",
-  actorAccountId: "policy-operator",
+  actorAccountId: "b3945737-78d1-499f-af4b-6961a126f2fe",
   reason: "Authorized record review",
   auditEventId: crypto.randomUUID(),
   grants: [grant],
 }
 const request = {
   recordId: input.recordId,
-  accountId: "viewer-1",
+  accountId: "e16b99c2-9319-4546-b0bf-16327ec68ad1",
   action: "read",
   purpose: "records-review",
   at: new Date(grant.validFrom),
@@ -32,7 +32,7 @@ test("本人・記録・用途・操作が一致する有効期間だけ開示�
   if (policy instanceof Error) throw policy
   expect(policy.permits(request)).toBe(true)
   for (const denied of [
-    { ...request, accountId: "system-admin" },
+    { ...request, accountId: "98a22f43-e45d-43b9-9095-c0832b6e912b" },
     { ...request, recordId: crypto.randomUUID() },
     { ...request, action: "export" },
     { ...request, purpose: "other-purpose" },

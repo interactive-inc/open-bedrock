@@ -94,7 +94,7 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
   if (hash instanceof Error) throw hash
   await database
     .prepare(`INSERT INTO system_step_up_grants
-    (id,account_id,token_hash,method,issued_at,expires_at) VALUES ('pagination-grant',?1,?2,'external_identity',?3,?4)`)
+    (id,account_id,token_hash,method,issued_at,expires_at) VALUES ('9b4508ab-4bbb-4298-b4d7-7670fdb483de',?1,?2,'external_identity',?3,?4)`)
     .bind(creator, hash, at.getTime(), at.getTime() + 60_000)
     .run()
   const post = (path: string, id: string, body: unknown) =>

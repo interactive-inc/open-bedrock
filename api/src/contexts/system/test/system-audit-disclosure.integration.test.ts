@@ -1,3 +1,4 @@
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import { expect, spyOn, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
 import { createSystemAttachmentTestDatabase } from "@system/test/create-system-attachment-test-database.test-support"
@@ -35,7 +36,11 @@ async function fixture() {
   const db = createSystemAttachmentTestDatabase()
   const database = drizzle(db)
   const clock = { now: at }
-  for (const id of ["admin", "reader", "other"]) {
+  for (const id of [
+    "282b84eb-787d-4655-a88b-c072960fc970",
+    "f43d89f4-ac52-411f-828b-78838556ce92",
+    "28689052-c77f-42e5-8f85-1b461d9f5514",
+  ]) {
     await db
       .prepare(
         "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES (?1, 'active', 0, 100, 100)",
@@ -46,7 +51,7 @@ async function fixture() {
       .prepare(
         "INSERT INTO system_principals (id, account_id, kind, name, revision, created_at, updated_at) VALUES (?1, ?2, 'human', 'Test operator', 1, 100, 100)",
       )
-      .bind(`principal:${id}`, id)
+      .bind(testDerivedId("principal", id), id)
       .run()
     await db
       .prepare(
@@ -56,7 +61,10 @@ async function fixture() {
       .run()
     await db
       .prepare("INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES (?1, ?2)")
-      .bind(roleIdOf(id), id === "admin" ? "system:admin" : "audit:read")
+      .bind(
+        roleIdOf(id),
+        id === "282b84eb-787d-4655-a88b-c072960fc970" ? "system:admin" : "audit:read",
+      )
       .run()
     await db
       .prepare(
@@ -67,7 +75,7 @@ async function fixture() {
   }
   await db
     .prepare(`INSERT INTO system_audit_events (event_id, actor_account_id, action, target_type, target_id, outcome, reason_code, authorization_json, before_json, after_json, metadata_json, occurred_at)
-    VALUES (?1, 'other', 'records.updated', 'records:entry', 'private-target', 'succeeded', 'private-reason', '{"role":"private-role"}', '{"value":"private-before"}', '{"value":"private-after"}', '{"value":"private-metadata"}', 1000)`)
+    VALUES (?1, '28689052-c77f-42e5-8f85-1b461d9f5514', 'records.updated', 'records:entry', 'private-target', 'succeeded', 'private-reason', '{"role":"private-role"}', '{"value":"private-before"}', '{"value":"private-after"}', '{"value":"private-metadata"}', 1000)`)
     .bind(eventId)
     .run()
   const app = systemFactory
@@ -113,13 +121,13 @@ async function fixture() {
       "content-type": "application/json",
     }
   }
-  const admin = await headers("admin"),
-    reader = await headers("reader"),
-    other = await headers("other")
+  const admin = await headers("282b84eb-787d-4655-a88b-c072960fc970"),
+    reader = await headers("f43d89f4-ac52-411f-828b-78838556ce92"),
+    other = await headers("28689052-c77f-42e5-8f85-1b461d9f5514")
   const request = (path: string, init: RequestInit = {}) =>
     app.request(path, init, { DB: db, JWT_SECRET: jwtSecret })
   const command = {
-    scope: "reader",
+    scope: "f43d89f4-ac52-411f-828b-78838556ce92",
     commandId: crypto.randomUUID(),
     expectedRevision: 0,
     enabled: true,
@@ -163,25 +171,35 @@ test("同じ依頼の同時送信は一度だけ保存し、同じ版への別�
 
 test("人の管理資格・再認証と期待版を検査し、再送は一つの設定・監査に収束する", async () => {
   const f = await fixture()
-  const absent = await f.request("/system/audit-disclosure-policies?scope=reader", {
-    headers: f.admin,
-  })
+  const absent = await f.request(
+    "/system/audit-disclosure-policies?scope=f43d89f4-ac52-411f-828b-78838556ce92",
+    {
+      headers: f.admin,
+    },
+  )
   expect(absent.status).toBe(200)
   expect(auditDisclosureCurrentPolicyResponseSchema.parse(await absent.json())).toEqual({
     policy: null,
   })
   expect(
-    (await f.request("/system/audit-disclosure-policies?scope=reader", { headers: f.reader }))
-      .status,
+    (
+      await f.request(
+        "/system/audit-disclosure-policies?scope=f43d89f4-ac52-411f-828b-78838556ce92",
+        { headers: f.reader },
+      )
+    ).status,
   ).toBe(403)
   expect((await f.publish(f.command, f.reader)).status).toBe(403)
   expect((await f.publish(f.command, { ...f.admin, "x-system-step-up": "" })).status).toBe(403)
   const created = await f.publish()
   expect(created.status).toBe(201)
   const initial = auditDisclosurePolicyResponseSchema.parse(await created.json())
-  const current = await f.request("/system/audit-disclosure-policies?scope=reader", {
-    headers: f.admin,
-  })
+  const current = await f.request(
+    "/system/audit-disclosure-policies?scope=f43d89f4-ac52-411f-828b-78838556ce92",
+    {
+      headers: f.admin,
+    },
+  )
   expect(auditDisclosureCurrentPolicyResponseSchema.parse(await current.json())).toEqual({
     policy: initial.policy,
   })
@@ -210,7 +228,7 @@ test("人の管理資格・再認証と期待版を検査し、再送は一つ�
   ).toEqual({ count: 2 })
   await f.db
     .prepare("UPDATE system_role_bindings SET revoked_at = ?1 WHERE id = ?2")
-    .bind(at.getTime(), bindingIdOf("admin"))
+    .bind(at.getTime(), bindingIdOf("282b84eb-787d-4655-a88b-c072960fc970"))
     .run()
   expect((await f.publish()).status).toBe(403)
 })
@@ -258,7 +276,9 @@ test("一覧・詳細・検索件数へ開示制御を適用し、目的省略�
   expect(await detail.json()).toMatchObject({ actor_account_id: null, metadata_json: null })
   const other = await f.read("", f.other)
   expect(await other.json()).toMatchObject({
-    events: [{ actor_account_id: "other", target_id: "private-target" }],
+    events: [
+      { actor_account_id: "28689052-c77f-42e5-8f85-1b461d9f5514", target_id: "private-target" },
+    ],
   })
   f.clock.now = new Date(at.getTime() + 1000)
   expect((await f.read("&purpose=review")).status).toBe(403)
@@ -316,7 +336,7 @@ test("読取後の設定変更では成功監査も応答本文も返さない",
 test("読取資格のsnapshotは付与元・Account変更をtransactionで再検査する", async () => {
   const f = await fixture()
   const proof = await new SystemAuditDisclosureReadAdapter({ env: { DB: f.db } }).prepare({
-    accountId: "reader",
+    accountId: "f43d89f4-ac52-411f-828b-78838556ce92",
     tokenVersion: 0,
     permission: "audit:read",
     purpose: null,
@@ -325,7 +345,7 @@ test("読取資格のsnapshotは付与元・Account変更をtransactionで再検
   if (proof instanceof Error) throw proof
   await f.db
     .prepare("DELETE FROM system_iam_role_permissions WHERE role_id = ?1")
-    .bind(roleIdOf("reader"))
+    .bind(roleIdOf("f43d89f4-ac52-411f-828b-78838556ce92"))
     .run()
   const page = await new SystemAuditEventQueryAdapter({ env: { DB: f.db } }).findById(
     eventId,
@@ -373,7 +393,9 @@ test("保存前に管理資格が失効した場合は再送を含めて拒否�
   const spy = spyOn(SystemAuditDisclosurePolicyRepository.prototype, "append").mockImplementation(
     async function (this: SystemAuditDisclosurePolicyRepository, ...args) {
       await f.db
-        .prepare("UPDATE system_accounts SET token_version = 1, updated_at = ?1 WHERE id = 'admin'")
+        .prepare(
+          "UPDATE system_accounts SET token_version = 1, updated_at = ?1 WHERE id = '282b84eb-787d-4655-a88b-c072960fc970'",
+        )
         .bind(at.getTime())
         .run()
       return original.apply(this, args)

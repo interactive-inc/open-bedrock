@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -234,7 +235,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
 
     if (parsed.success) {
       expect(parsed.data.goal_id).toBe("01900030-0000-7000-8000-000000000003")
-      expect(parsed.data.evaluator_id).toBe(toWorkforceEmployeeId(9))
+      expect(parsed.data.evaluator_id).toBe(toWorkforceEmployeeId(testEmployeeId(9)))
       expect(parsed.data.kind).toBe("self")
       expect(parsed.data.score).toBe(80)
       expect(parsed.data.created_at).toBe(fixedNow)
@@ -259,7 +260,7 @@ describe("POST /performance-goals/:goalId/evaluations", () => {
     const listResponse = await requestWithContext({
       db,
       jwtSecret,
-      path: "/performance-review/performance-goals?employee_id=5&period=2026-H1",
+      path: `/performance-review/performance-goals?employee_id=${testEmployeeId(5)}&period=2026-H1`,
       token: await tokenFor(1),
     })
 

@@ -12,7 +12,7 @@ const deliverySql = readFileSync(
   "utf8",
 )
 const now = new Date("2026-01-01T00:00:00.000Z")
-const accountId = zAccountId.parse("account:1")
+const accountId = zAccountId.parse("c0975461-26d2-43a1-86d2-124bd000d9c9")
 
 describe("SystemDeliveryRepository", () => {
   test("jobを冪等登録し、lease失敗をdead letterと同じtransactionで確定する", async () => {
@@ -97,7 +97,7 @@ function createFixture(): Readonly<{ database: D1Database }> {
   sqlite.exec(deliverySql)
   sqlite.exec(
     `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-     VALUES ('account:1', 'active', 0, 1, 1);`,
+     VALUES ('c0975461-26d2-43a1-86d2-124bd000d9c9', 'active', 0, 1, 1);`,
   )
   return { database: wrapSystemD1TestDatabase(sqlite) }
 }

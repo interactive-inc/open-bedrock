@@ -4,6 +4,7 @@ import { CompanyPersonnelReportingChangeValue } from "@/contexts/company/domain/
 import { CompanyReportingRelationTimelineValue } from "@/contexts/company/domain/values/company-reporting-relation-timeline.value"
 import { CompanyValidationError } from "@/contexts/company/domain/errors"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 
@@ -80,7 +81,7 @@ export class AssignmentReportingAdoptionChangeValue {
       if (digest instanceof Error) return digest
       const existing = scopes.find((scope) => this.matches(scope, period))
       const scope = existing ?? {
-        resourceId: `reporting-adoption:${digest.toString()}`,
+        resourceId: deterministicCompanyId("reporting-adoption", digest.toString()),
         employeeId: period.employeeId,
         employmentId: period.employmentId,
         organizationUnitId: period.organizationUnitId,

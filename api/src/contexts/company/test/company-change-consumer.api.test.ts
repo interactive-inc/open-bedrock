@@ -82,7 +82,7 @@ function fixture() {
     context.set(
       "companyActor",
       CompanyActorValue.restore({
-        accountId: "account:reader",
+        accountId: "1227c813-1159-4405-9f5b-5e54df944b9a",
         employeeId: null,
         organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
         capabilities: ["company:read"],
@@ -107,7 +107,7 @@ function fixture() {
       const command = CompanyResourceChangeEntity.create({
         commandId: `consumer:${revision}`,
         expectedRevision: revision - 1,
-        actorAccountId: "account:operator",
+        actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
         reason: "Confirmed correction",
         recordedAt: revision,
         resources,
@@ -148,16 +148,20 @@ function resources(revision: number): CompanyResourceProps[] {
       ...base,
       state: "active",
       type: "employee",
-      id: "employee:test",
+      id: "d47aa389-c802-4a4a-bf7c-c359b764474b",
       attributes: { personId: "person:test", employeeCode: "E001" },
     },
     {
       ...base,
       state: "active",
       type: "employment",
-      id: "employment:test",
+      id: "cdc317d0-f2a5-47e3-bbaa-4718f418c374",
       effectiveTo: revision === 1 ? null : restoreCalendarDate("2030-10-01"),
-      attributes: { employeeId: "employee:test", status: "ACTIVE", employmentType: "FULL_TIME" },
+      attributes: {
+        employeeId: "d47aa389-c802-4a4a-bf7c-c359b764474b",
+        status: "ACTIVE",
+        employmentType: "FULL_TIME",
+      },
     },
     {
       ...base,
@@ -188,11 +192,11 @@ function resources(revision: number): CompanyResourceProps[] {
       ...base,
       state: "active",
       type: "assignment",
-      id: "assignment:test",
+      id: "9b4f2d0a-5e6c-4b8d-9f0a-1b2c3d4e5f60",
       effectiveTo: revision === 1 ? null : restoreCalendarDate("2030-10-01"),
       attributes: {
-        employeeId: "employee:test",
-        employmentId: "employment:test",
+        employeeId: "d47aa389-c802-4a4a-bf7c-c359b764474b",
+        employmentId: "cdc317d0-f2a5-47e3-bbaa-4718f418c374",
         organizationUnitId: "0190005f-0000-7000-8000-3d39a82ae356",
         assignmentType: "PRIMARY",
         positionTitle: revision === 1 ? "Member" : "Coordinator",
@@ -221,12 +225,12 @@ function resources(revision: number): CompanyResourceProps[] {
       ...base,
       state: "active",
       type: "responsibility-assignment",
-      id: "assignment:approve",
+      id: "0c5a3e1b-6f7d-4c9e-8a1b-2c3d4e5f6071",
       effectiveTo: revision === 1 ? null : restoreCalendarDate("2030-10-01"),
       attributes: {
         responsibilityId: "responsibility:approve",
         holderType: "employee",
-        holderId: "employee:test",
+        holderId: "d47aa389-c802-4a4a-bf7c-c359b764474b",
         authorityScopeId: "scope:amount",
         delegationAllowed: revision === 1,
       },
@@ -332,12 +336,15 @@ test("独立した利用者が変更APIと公開台帳だけで属性・期間�
   expect(resumed.published["person:person:test"]?.attributes).toEqual({
     officialName: "Corrected name",
   })
-  expect(resumed.published["employment:employment:test"]?.effectiveTo).toBe("2030-10-01")
-  expect(resumed.published["assignment:assignment:test"]?.attributes.positionTitle).toBe(
-    "Coordinator",
+  expect(resumed.published["employment:cdc317d0-f2a5-47e3-bbaa-4718f418c374"]?.effectiveTo).toBe(
+    "2030-10-01",
   )
   expect(
-    resumed.published["responsibility-assignment:assignment:approve"]?.attributes.delegationAllowed,
+    resumed.published["assignment:9b4f2d0a-5e6c-4b8d-9f0a-1b2c3d4e5f60"]?.attributes.positionTitle,
+  ).toBe("Coordinator")
+  expect(
+    resumed.published["responsibility-assignment:0c5a3e1b-6f7d-4c9e-8a1b-2c3d4e5f6071"]?.attributes
+      .delegationAllowed,
   ).toBe(false)
   await complete({ request, consumer: resumed, limit: 2, effectiveOn })
   await complete({ request, consumer: second, limit: 3, effectiveOn })
@@ -373,12 +380,12 @@ test("変更を受信した日と発効日を分け、将来発効・遡及訂�
     expect(state.published["person:person:test"]?.attributes.officialName).toBe(
       effectiveOn === "2030-06-01" ? "Corrected name" : "Future name",
     )
-    expect(state.published["employment:employment:test"] === undefined).toBe(
+    expect(state.published["employment:cdc317d0-f2a5-47e3-bbaa-4718f418c374"] === undefined).toBe(
       effectiveOn === "2030-11-01",
     )
   }
   const old = await snapshot({ request: f.request, revision: 1, effectiveOn: "2030-11-01" })
   expect(old["person:person:test"]?.attributes.officialName).toBe("Original name")
-  expect(old["employment:employment:test"]?.effectiveTo).toBeNull()
+  expect(old["employment:cdc317d0-f2a5-47e3-bbaa-4718f418c374"]?.effectiveTo).toBeNull()
   expect(old["company-profile:profile:test"]).toBeDefined()
 })

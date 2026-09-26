@@ -5,8 +5,8 @@ import { describe, expect, test } from "bun:test"
 describe("CompanyActorValue", () => {
   test("owns organization scope and capability checks", () => {
     const actor = CompanyActorValue.restore({
-      accountId: "account:1",
-      employeeId: "employee:1",
+      accountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
+      employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
       organizationIds: ["01900060-0000-7000-8000-e53d7d4223a9"],
       capabilities: ["company:read"],
     })
@@ -22,7 +22,7 @@ describe("CompanyActorValue", () => {
 
   test("company administrator satisfies every Company capability", () => {
     const actor = CompanyActorValue.restore({
-      accountId: "account:1",
+      accountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
       employeeId: null,
       organizationIds: ["*"],
       capabilities: ["company:admin"],
@@ -36,7 +36,7 @@ describe("CompanyActorValue", () => {
 
   test("workforce update does not imply broad Company write", () => {
     const actor = CompanyActorValue.restore({
-      accountId: "account:basic-editor",
+      accountId: "76e2eea1-f607-4020-90cf-7433ebf4d242",
       employeeId: null,
       organizationIds: ["01900060-0000-7000-8000-e53d7d4223a9"],
       capabilities: ["company:workforce:update"],
@@ -49,7 +49,7 @@ describe("CompanyActorValue", () => {
   test("rejects ambiguous or duplicated actor claims", () => {
     expect(() =>
       CompanyActorValue.restore({
-        accountId: "account:1",
+        accountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
         employeeId: null,
         organizationIds: [
           "01900060-0000-7000-8000-e53d7d4223a9",

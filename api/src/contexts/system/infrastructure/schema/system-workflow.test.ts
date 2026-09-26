@@ -39,7 +39,7 @@ function insertCase(database: Database, id: string = "9055d4a0-416c-40c4-814b-0c
     `INSERT INTO system_cases
        (id, subject_context, subject_kind, subject_id, subject_version,
         proposal_digest, created_by_account_id, status, created_at, updated_at)
-     VALUES (?, 'request', 'change', 'resource-1', '1', ?, 'creator', 'pending', 100, 100)`,
+     VALUES (?, 'request', 'change', 'resource-1', '1', ?, '3d1063a4-6a8f-4d72-af2a-90c6e9594c0e', 'pending', 100, 100)`,
     [id, digest],
   )
 }
@@ -198,7 +198,11 @@ describe("System workflow schema", () => {
 
   test("自己判断とquorum未達を拒否し、十分なappend-only証明だけで承認する", () => {
     const database = createDatabase()
-    for (const accountId of ["creator", "approver-1", "approver-2"]) {
+    for (const accountId of [
+      "3d1063a4-6a8f-4d72-af2a-90c6e9594c0e",
+      "cd94d0e3-fa4d-4f4a-9bdd-0c8920d7e370",
+      "5d54bef5-3b82-48f0-b6ab-fd17d86efaae",
+    ]) {
       insertAccount(database, accountId)
     }
     insertCase(database)
@@ -206,22 +210,24 @@ describe("System workflow schema", () => {
     database.run(
       `INSERT INTO system_decision_task_exclusions
          (case_id, task_key, round, excluded_account_id, reason)
-       VALUES ('9055d4a0-416c-40c4-814b-0c6df2d0f691', 'review', 1, 'creator', 'creator')`,
+       VALUES ('9055d4a0-416c-40c4-814b-0c6df2d0f691', 'review', 1, '3d1063a4-6a8f-4d72-af2a-90c6e9594c0e', 'creator')`,
     )
 
-    expect(() => insertCandidate(database, { accountId: "creator" })).toThrow()
-    insertCandidate(database, { accountId: "approver-1" })
-    insertCandidate(database, { accountId: "approver-2" })
+    expect(() =>
+      insertCandidate(database, { accountId: "3d1063a4-6a8f-4d72-af2a-90c6e9594c0e" }),
+    ).toThrow()
+    insertCandidate(database, { accountId: "cd94d0e3-fa4d-4f4a-9bdd-0c8920d7e370" })
+    insertCandidate(database, { accountId: "5d54bef5-3b82-48f0-b6ab-fd17d86efaae" })
     expect(() =>
       insertAttestation(database, {
         id: "e8a2de88-6993-4b2c-8a16-f5c965fdaf9a",
-        actorAccountId: "creator",
+        actorAccountId: "3d1063a4-6a8f-4d72-af2a-90c6e9594c0e",
       }),
     ).toThrow()
 
     insertAttestation(database, {
       id: "179f4e84-128d-4195-8079-ad07689d8214",
-      actorAccountId: "approver-1",
+      actorAccountId: "cd94d0e3-fa4d-4f4a-9bdd-0c8920d7e370",
     })
     expect(() =>
       database.run(
@@ -232,7 +238,7 @@ describe("System workflow schema", () => {
     ).toThrow()
     insertAttestation(database, {
       id: "d7d7270f-1273-4385-8785-7416603f95ab",
-      actorAccountId: "approver-2",
+      actorAccountId: "5d54bef5-3b82-48f0-b6ab-fd17d86efaae",
     })
     database.run(
       `UPDATE system_decision_tasks
@@ -265,7 +271,12 @@ describe("System workflow schema", () => {
 
   test("合議体の参加定足数と否決成立条件をDB制約でも強制する", () => {
     const database = createDatabase()
-    for (const accountId of ["creator", "member-1", "member-2", "member-3"]) {
+    for (const accountId of [
+      "3d1063a4-6a8f-4d72-af2a-90c6e9594c0e",
+      "27765443-04ad-448d-886f-508bd79e0120",
+      "5002cf9e-386b-4e54-9bd4-18c982cd8ffe",
+      "3526979d-29e7-4a5d-a366-4c29cec4e661",
+    ]) {
       insertAccount(database, accountId)
     }
     insertCase(database)
@@ -274,17 +285,21 @@ describe("System workflow schema", () => {
       requiredParticipants: 3,
       negativeDecisionRule: "approval-impossible",
     })
-    for (const accountId of ["member-1", "member-2", "member-3"]) {
+    for (const accountId of [
+      "27765443-04ad-448d-886f-508bd79e0120",
+      "5002cf9e-386b-4e54-9bd4-18c982cd8ffe",
+      "3526979d-29e7-4a5d-a366-4c29cec4e661",
+    ]) {
       insertCandidate(database, { accountId })
     }
 
     insertAttestation(database, {
       id: "f017996c-9c91-427a-8d8f-c17cd881a98d",
-      actorAccountId: "member-1",
+      actorAccountId: "27765443-04ad-448d-886f-508bd79e0120",
     })
     insertAttestation(database, {
       id: "410fdfab-e815-4702-8e92-782d7ddd57eb",
-      actorAccountId: "member-2",
+      actorAccountId: "5002cf9e-386b-4e54-9bd4-18c982cd8ffe",
     })
     expect(() =>
       database.run(
@@ -295,7 +310,7 @@ describe("System workflow schema", () => {
     ).toThrow()
     insertAttestation(database, {
       id: "be3b3f5f-8db1-403e-8afc-5fbb589162ef",
-      actorAccountId: "member-3",
+      actorAccountId: "3526979d-29e7-4a5d-a366-4c29cec4e661",
       action: "reject",
     })
     database.run(
@@ -316,31 +331,35 @@ describe("System workflow schema", () => {
 
   test("Taskで禁止した代理判断と差戻しを証明の保存前に拒否する", () => {
     const database = createDatabase()
-    for (const accountId of ["creator", "represented", "delegate"]) {
+    for (const accountId of [
+      "3d1063a4-6a8f-4d72-af2a-90c6e9594c0e",
+      "800004f4-f74e-455c-8f5b-7b8d0fcacb99",
+      "70880624-dc0d-4666-920d-25fe6073f6d3",
+    ]) {
       insertAccount(database, accountId)
     }
     insertCase(database)
     insertTask(database, { delegationPolicy: "forbidden", returnPolicy: "forbidden" })
-    insertCandidate(database, { accountId: "represented" })
+    insertCandidate(database, { accountId: "800004f4-f74e-455c-8f5b-7b8d0fcacb99" })
     database.run(
       `INSERT INTO system_delegations
          (id, delegator_account_id, delegate_account_id, scope_context, scope_kind,
           scope_id, scope_version, starts_at, ends_at, created_at)
-       VALUES ('60155d0b-2209-4fc6-84ce-574b18b3669d', 'represented', 'delegate', NULL, NULL, NULL, NULL, 100, 200, 100)`,
+       VALUES ('60155d0b-2209-4fc6-84ce-574b18b3669d', '800004f4-f74e-455c-8f5b-7b8d0fcacb99', '70880624-dc0d-4666-920d-25fe6073f6d3', NULL, NULL, NULL, NULL, 100, 200, 100)`,
     )
 
     expect(() =>
       insertAttestation(database, {
         id: "79ea95b1-db7c-4cbd-85c5-71d4dd0f3962",
-        actorAccountId: "delegate",
-        representedAccountId: "represented",
+        actorAccountId: "70880624-dc0d-4666-920d-25fe6073f6d3",
+        representedAccountId: "800004f4-f74e-455c-8f5b-7b8d0fcacb99",
         delegationId: "60155d0b-2209-4fc6-84ce-574b18b3669d",
       }),
     ).toThrow()
     expect(() =>
       insertAttestation(database, {
         id: "ff4b5b01-1013-48e9-8dcf-527f45fd5dc6",
-        actorAccountId: "represented",
+        actorAccountId: "800004f4-f74e-455c-8f5b-7b8d0fcacb99",
         action: "return",
       }),
     ).toThrow()
@@ -349,35 +368,39 @@ describe("System workflow schema", () => {
 
   test("時点と対象scopeが一致する委任だけを人間の判断証明として受理する", () => {
     const database = createDatabase()
-    for (const accountId of ["creator", "represented", "delegate"]) {
+    for (const accountId of [
+      "3d1063a4-6a8f-4d72-af2a-90c6e9594c0e",
+      "800004f4-f74e-455c-8f5b-7b8d0fcacb99",
+      "70880624-dc0d-4666-920d-25fe6073f6d3",
+    ]) {
       insertAccount(database, accountId)
     }
     insertCase(database)
     insertTask(database)
-    insertCandidate(database, { accountId: "represented" })
+    insertCandidate(database, { accountId: "800004f4-f74e-455c-8f5b-7b8d0fcacb99" })
     database.run(
       `INSERT INTO system_delegations
          (id, delegator_account_id, delegate_account_id, scope_context, scope_kind,
           scope_id, scope_version, starts_at, ends_at, created_at)
        VALUES
-         ('fbf75845-6da4-4232-83a1-1bf2eb7bee85', 'represented', 'delegate', 'request', 'change',
+         ('fbf75845-6da4-4232-83a1-1bf2eb7bee85', '800004f4-f74e-455c-8f5b-7b8d0fcacb99', '70880624-dc0d-4666-920d-25fe6073f6d3', 'request', 'change',
           'dbcd34b4-9c95-419a-8fc3-d992cd5566d7', '1', 100, 200, 100),
-         ('6478384b-2355-44fc-841b-44e5033523c0', 'represented', 'delegate', 'request', 'change',
+         ('6478384b-2355-44fc-841b-44e5033523c0', '800004f4-f74e-455c-8f5b-7b8d0fcacb99', '70880624-dc0d-4666-920d-25fe6073f6d3', 'request', 'change',
           'resource-1', '1', 100, 200, 100)`,
     )
 
     expect(() =>
       insertAttestation(database, {
         id: "913d3abc-038c-41b3-8547-da800c90904d",
-        actorAccountId: "delegate",
-        representedAccountId: "represented",
+        actorAccountId: "70880624-dc0d-4666-920d-25fe6073f6d3",
+        representedAccountId: "800004f4-f74e-455c-8f5b-7b8d0fcacb99",
         delegationId: "fbf75845-6da4-4232-83a1-1bf2eb7bee85",
       }),
     ).toThrow()
     insertAttestation(database, {
       id: "450f0cfe-4197-4a3c-8b71-6837136cb370",
-      actorAccountId: "delegate",
-      representedAccountId: "represented",
+      actorAccountId: "70880624-dc0d-4666-920d-25fe6073f6d3",
+      representedAccountId: "800004f4-f74e-455c-8f5b-7b8d0fcacb99",
       delegationId: "6478384b-2355-44fc-841b-44e5033523c0",
     })
     expect(() =>
@@ -395,13 +418,17 @@ describe("System workflow schema", () => {
 
   test("escalation開始前の判断、証拠のない差戻し、未承認実行を拒否する", () => {
     const database = createDatabase()
-    for (const accountId of ["creator", "approver", "executor"]) {
+    for (const accountId of [
+      "3d1063a4-6a8f-4d72-af2a-90c6e9594c0e",
+      "bb6754f0-9453-43d6-ad7a-7e3620497686",
+      "41f77d26-5935-4a9b-ae22-309bbf0a232a",
+    ]) {
       insertAccount(database, accountId)
     }
     insertCase(database)
     insertTask(database)
     insertCandidate(database, {
-      accountId: "approver",
+      accountId: "bb6754f0-9453-43d6-ad7a-7e3620497686",
       source: "escalation",
       eligibleFrom: 150,
     })
@@ -409,7 +436,7 @@ describe("System workflow schema", () => {
     expect(() =>
       insertAttestation(database, {
         id: "af839528-bb2d-482b-8a17-fcc3fe68b8a6",
-        actorAccountId: "approver",
+        actorAccountId: "bb6754f0-9453-43d6-ad7a-7e3620497686",
         decidedAt: 149,
       }),
     ).toThrow()
@@ -425,14 +452,14 @@ describe("System workflow schema", () => {
         `INSERT INTO system_execution_authorizations
            (id, case_id, operation_key, proposal_digest, granted_to_account_id,
             granted_at, expires_at)
-         VALUES ('9d6bb95e-846d-46cd-8c1c-93e17a72d6d2', '9055d4a0-416c-40c4-814b-0c6df2d0f691', 'execute', ?, 'executor', 150, 200)`,
+         VALUES ('9d6bb95e-846d-46cd-8c1c-93e17a72d6d2', '9055d4a0-416c-40c4-814b-0c6df2d0f691', 'execute', ?, '41f77d26-5935-4a9b-ae22-309bbf0a232a', 150, 200)`,
         [digest],
       ),
     ).toThrow()
 
     insertAttestation(database, {
       id: "b03592be-4cc7-4cfd-8152-81c8d6a94c6a",
-      actorAccountId: "approver",
+      actorAccountId: "bb6754f0-9453-43d6-ad7a-7e3620497686",
       action: "return",
       decidedAt: 150,
     })
@@ -454,23 +481,33 @@ describe("System workflow schema", () => {
 
   test("複数Taskの否定判断ではCase全体のrejectをreturnより優先する", () => {
     const database = createDatabase()
-    for (const accountId of ["creator", "rejector", "returner"]) {
+    for (const accountId of [
+      "3d1063a4-6a8f-4d72-af2a-90c6e9594c0e",
+      "25a0eac6-846e-4166-8577-7e0e7c071775",
+      "bf3a7fda-132f-43eb-879b-589e4cd67ad7",
+    ]) {
       insertAccount(database, accountId)
     }
     insertCase(database)
     insertTask(database, { taskKey: "risk-review" })
     insertTask(database, { taskKey: "content-review" })
-    insertCandidate(database, { accountId: "rejector", taskKey: "risk-review" })
-    insertCandidate(database, { accountId: "returner", taskKey: "content-review" })
+    insertCandidate(database, {
+      accountId: "25a0eac6-846e-4166-8577-7e0e7c071775",
+      taskKey: "risk-review",
+    })
+    insertCandidate(database, {
+      accountId: "bf3a7fda-132f-43eb-879b-589e4cd67ad7",
+      taskKey: "content-review",
+    })
     insertAttestation(database, {
       id: "f728b04b-0762-4f58-8416-0949e5d69662",
-      actorAccountId: "rejector",
+      actorAccountId: "25a0eac6-846e-4166-8577-7e0e7c071775",
       taskKey: "risk-review",
       action: "reject",
     })
     insertAttestation(database, {
       id: "ec974926-f447-4645-8f52-7d29a1787a92",
-      actorAccountId: "returner",
+      actorAccountId: "bf3a7fda-132f-43eb-879b-589e4cd67ad7",
       taskKey: "content-review",
       action: "return",
     })
@@ -506,7 +543,7 @@ describe("System workflow schema", () => {
 
   test("取消時にopen taskを残さず、再割当roundを取消済みroundの次だけに限定する", () => {
     const database = createDatabase()
-    insertAccount(database, "creator")
+    insertAccount(database, "3d1063a4-6a8f-4d72-af2a-90c6e9594c0e")
     insertCase(database)
     insertTask(database)
 
@@ -558,15 +595,19 @@ describe("System workflow schema", () => {
 
   test("承認digestへ発行した実行許可を期限内に一度だけ消費して実行済みにする", () => {
     const database = createDatabase()
-    for (const accountId of ["creator", "approver", "executor"]) {
+    for (const accountId of [
+      "3d1063a4-6a8f-4d72-af2a-90c6e9594c0e",
+      "bb6754f0-9453-43d6-ad7a-7e3620497686",
+      "41f77d26-5935-4a9b-ae22-309bbf0a232a",
+    ]) {
       insertAccount(database, accountId)
     }
     insertCase(database)
     insertTask(database)
-    insertCandidate(database, { accountId: "approver" })
+    insertCandidate(database, { accountId: "bb6754f0-9453-43d6-ad7a-7e3620497686" })
     insertAttestation(database, {
       id: "065b73d6-94bb-424f-8c91-d5e7b2289ec3",
-      actorAccountId: "approver",
+      actorAccountId: "bb6754f0-9453-43d6-ad7a-7e3620497686",
     })
     database.run(
       `UPDATE system_decision_tasks
@@ -580,7 +621,7 @@ describe("System workflow schema", () => {
       `INSERT INTO system_execution_authorizations
          (id, case_id, operation_key, proposal_digest, granted_to_account_id,
           granted_at, expires_at)
-       VALUES ('9d6bb95e-846d-46cd-8c1c-93e17a72d6d2', '9055d4a0-416c-40c4-814b-0c6df2d0f691', 'execute', ?, 'executor', 120, 200)`,
+       VALUES ('9d6bb95e-846d-46cd-8c1c-93e17a72d6d2', '9055d4a0-416c-40c4-814b-0c6df2d0f691', 'execute', ?, '41f77d26-5935-4a9b-ae22-309bbf0a232a', 120, 200)`,
       [digest],
     )
 

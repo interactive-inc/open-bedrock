@@ -5,6 +5,22 @@ import { EmployeeResourceAdoptionSnapshotAdapter } from "@/contexts/company/infr
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
+
+/** 一括接続の追加従業員の ID。index は 1 から始まる。 */
+export function batchEmployeeId(index: number): string {
+  return deterministicCompanyId("test-employee", `batch-${index}`)
+}
+
+/** 一括接続の追加従業員の雇用 ID。 */
+export function batchEmploymentId(index: number): string {
+  return deterministicCompanyId("test-employment", `batch-${index}`)
+}
+
+/** 一括接続の追加従業員に対応する Account の ID。 */
+export function batchAccountId(index: number): string {
+  return deterministicCompanyId("test-account", `batch-${index}`)
+}
 
 /** 公開Account対応だけが先に存在し、全員の接続を同時に必要とする会社を用意する。 */
 export async function createEmployeeAdoptionBatchFixture(
@@ -14,11 +30,16 @@ export async function createEmployeeAdoptionBatchFixture(
 ) {
   const context = await createEmployeeAdoptionFixture()
   const resources: AdoptionResource[] = [...context.resources]
-  const employees = [{ employeeId: "employee:adoption", accountId: "account:adoption" }]
+  const employees = [
+    {
+      employeeId: "50737555-5956-4b7d-8755-4e3b9660f143",
+      accountId: "7a0b75ec-d7b9-4f49-b023-432c8f109a40",
+    },
+  ]
   for (const index of Array.from({ length: count - 1 }, (_, offset) => offset + 1)) {
-    const employeeId = restoreWorkforceId("employee", `employee:batch-${index}`)
-    const employmentId = restoreWorkforceId("employment", `employment:batch-${index}`)
-    const accountId = `account:batch-${index}`
+    const employeeId = restoreWorkforceId("employee", batchEmployeeId(index))
+    const employmentId = restoreWorkforceId("employment", batchEmploymentId(index))
+    const accountId = batchAccountId(index)
     const officialName = `Person ${index}`
     const employeeCode = `BATCH-${index}`
     await context.database.batch([
@@ -54,7 +75,7 @@ export async function createEmployeeAdoptionBatchFixture(
       status: "active",
       occurredAt: new Date("2020-01-01T00:00:00Z"),
       actorAccountId: context.actor.accountId,
-      operationId: `historical-${index}`,
+      operationId: deterministicCompanyId("test-operation", `historical-${index}`),
       reason: "Confirmed historical registration",
     })
     await context.database.batch([...initial])
@@ -107,7 +128,7 @@ export async function createEmployeeAdoptionBatchFixture(
         .prepare(`INSERT INTO company_resource_revisions
         (organization_id, resource_type, resource_id, revision, organization_revision,
          state, effective_from, effective_to, attributes_json, command_id, actor_account_id, reason, recorded_at)
-        VALUES (?1, ?2, ?3, ?4, ?4, ?5, ?6, ?7, ?8, 'confirmed-history-import', 'account:adoption', ?9, 10)`)
+        VALUES (?1, ?2, ?3, ?4, ?4, ?5, ?6, ?7, ?8, 'confirmed-history-import', '7a0b75ec-d7b9-4f49-b023-432c8f109a40', ?9, 10)`)
         .bind(
           resource.organizationId,
           resource.type,
@@ -149,7 +170,7 @@ export async function createEmployeeAdoptionBatchFixture(
     ),
   )
   for (const employee of employees) {
-    const resourceId = `account-link:${employee.employeeId}`
+    const resourceId = deterministicCompanyId("account-link", employee.employeeId)
     await seedResource({
       organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "account-employee-link",

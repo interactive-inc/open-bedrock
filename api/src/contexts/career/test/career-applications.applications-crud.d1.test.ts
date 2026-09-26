@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { seedCareerApplications } from "@/contexts/career/test/seed/seed-career-applications.test-support"
@@ -127,7 +128,7 @@ describe("GET /career-applications/me", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0].applicant_id).toBe(toWorkforceEmployeeId(6))
+      expect(parsed.data.data[0].applicant_id).toBe(toWorkforceEmployeeId(testEmployeeId(6)))
     }
   })
 

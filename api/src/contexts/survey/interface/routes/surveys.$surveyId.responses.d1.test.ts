@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -83,13 +84,15 @@ async function createTestDb(): Promise<D1Database> {
 
 function memberToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: toWorkforceEmployeeId(13),
+    employeeId: toWorkforceEmployeeId(testEmployeeId(13)),
+    accountId: 13,
   })
 }
 
 function repeaterToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: toWorkforceEmployeeId(5),
+    employeeId: toWorkforceEmployeeId(testEmployeeId(5)),
+    accountId: 5,
   })
 }
 
@@ -126,7 +129,7 @@ describe("POST /surveys/:surveyId/responses", () => {
 
     if (parsed.success) {
       expect(parsed.data.survey_id).toBe("01900026-0000-7000-8000-000000000002")
-      expect(parsed.data.respondent_id).toBe(toWorkforceEmployeeId(13))
+      expect(parsed.data.respondent_id).toBe(toWorkforceEmployeeId(testEmployeeId(13)))
       expect(parsed.data.submitted_at).toBe("2026-01-01T00:00:00.000Z")
     }
   })

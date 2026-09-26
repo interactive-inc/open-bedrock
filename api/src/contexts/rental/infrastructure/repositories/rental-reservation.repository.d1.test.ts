@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { RentalReservation } from "@/contexts/rental/domain/entities/rental-reservation.entity"
 import { RentalReservationRepository } from "@/contexts/rental/infrastructure/repositories/rental-reservation.repository"
@@ -49,7 +50,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const reservation = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Projector",
       startDate: "2026-06-10",
       endDate: "2026-06-12",
@@ -78,7 +79,7 @@ describe("RentalReservationRepository", () => {
     }
 
     expect(found.id).toBe(reservation.id)
-    expect(found.requesterId).toBe(toWorkforceEmployeeId(1))
+    expect(found.requesterId).toBe(toWorkforceEmployeeId(testEmployeeId(1)))
     expect(found.itemName).toBe("Projector")
     expect(found.startDate).toBe("2026-06-10")
     expect(found.endDate).toBe("2026-06-12")
@@ -105,7 +106,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const r1 = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Laptop",
       startDate: "2026-06-15",
       endDate: "2026-06-20",
@@ -114,7 +115,7 @@ describe("RentalReservationRepository", () => {
     })
 
     const r2 = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(2),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(2)),
       itemName: "Camera",
       startDate: "2026-06-18",
       endDate: "2026-06-19",
@@ -123,7 +124,7 @@ describe("RentalReservationRepository", () => {
     })
 
     const r3 = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Monitor",
       startDate: "2026-06-10",
       endDate: "2026-06-12",
@@ -144,7 +145,7 @@ describe("RentalReservationRepository", () => {
     await repository.create(r3)
 
     const result = await repository.findByRequesterId({
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       limit: 50,
       offset: 0,
     })
@@ -169,7 +170,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const result = await repository.findByRequesterId({
-      requesterId: toWorkforceEmployeeId(9999),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(9999)),
       limit: 50,
       offset: 0,
     })
@@ -190,7 +191,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const reservation = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Projector",
       startDate: "2026-06-10",
       endDate: "2026-06-12",
@@ -254,7 +255,7 @@ describe("RentalReservationRepository", () => {
 
     const target = new RentalReservation({
       id: "20000000-0000-4000-8000-000000000001",
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Updated Item",
       startDate: "2026-07-01",
       endDate: "2026-07-05",
@@ -277,7 +278,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const reservation = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Camera",
       startDate: "2026-06-18",
       endDate: "2026-06-19",
@@ -339,7 +340,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const reservation = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Laptop",
       startDate: "2026-06-15",
       endDate: "2026-06-20",
@@ -375,7 +376,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const existing = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Projector",
       startDate: "2026-06-10",
       endDate: "2026-06-15",
@@ -412,7 +413,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const existing = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Projector",
       startDate: "2026-06-10",
       endDate: "2026-06-15",
@@ -449,7 +450,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const existing = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Projector",
       startDate: "2026-06-10",
       endDate: "2026-06-15",
@@ -485,7 +486,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const reservation = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Projector",
       startDate: "2026-06-10",
       endDate: "2026-06-12",
@@ -516,7 +517,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const existing = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Projector",
       startDate: "2026-06-10",
       endDate: "2026-06-15",
@@ -531,7 +532,7 @@ describe("RentalReservationRepository", () => {
     await repository.create(existing)
 
     const overlapping = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(2),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(2)),
       itemName: "Projector",
       startDate: "2026-06-12",
       endDate: "2026-06-18",
@@ -561,7 +562,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const existing = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Projector",
       startDate: "2026-06-10",
       endDate: "2026-06-15",
@@ -576,7 +577,7 @@ describe("RentalReservationRepository", () => {
     await repository.create(existing)
 
     const other = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(2),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(2)),
       itemName: "Camera",
       startDate: "2026-06-10",
       endDate: "2026-06-15",
@@ -615,7 +616,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const reservation = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(2),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(2)),
       itemName: "Projector",
       startDate: "2026-06-12",
       endDate: "2026-06-18",
@@ -641,7 +642,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const existing = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Projector",
       startDate: "2026-06-10",
       endDate: "2026-06-12",
@@ -657,7 +658,7 @@ describe("RentalReservationRepository", () => {
 
     // 新予約の start_date が既存の end_date と一致する境界は inclusive 比較で重複扱い。
     const touching = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(2),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(2)),
       itemName: "Projector",
       startDate: "2026-06-12",
       endDate: "2026-06-15",
@@ -680,7 +681,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const a = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Projector",
       startDate: "2026-06-10",
       endDate: "2026-06-12",
@@ -689,7 +690,7 @@ describe("RentalReservationRepository", () => {
     })
 
     const b = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Projector",
       startDate: "2026-06-20",
       endDate: "2026-06-25",
@@ -729,7 +730,7 @@ describe("RentalReservationRepository", () => {
     const repository = new RentalReservationRepository(context)
 
     const reservation = RentalReservation.create({
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Projector",
       startDate: "2026-06-10",
       endDate: "2026-06-15",
@@ -789,7 +790,7 @@ describe("RentalReservationRepository", () => {
 
     const target = new RentalReservation({
       id: "50000000-0000-4000-8000-000000000001",
-      requesterId: toWorkforceEmployeeId(1),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(1)),
       itemName: "Updated Item",
       startDate: "2026-07-01",
       endDate: "2026-07-05",

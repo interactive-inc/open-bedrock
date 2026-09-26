@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { seedAssetLendings } from "@/contexts/asset/test/seed/seed-asset-lendings.test-support"
@@ -123,7 +124,7 @@ describe("GET /assets/holdings", () => {
 
       const first = parsed.data.data.find((row) => row.asset_code === "A0001")
 
-      expect(first?.holder_employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(first?.holder_employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
       expect(first?.lent_at).toBe("2026-04-01T09:00:00Z")
     }
   })

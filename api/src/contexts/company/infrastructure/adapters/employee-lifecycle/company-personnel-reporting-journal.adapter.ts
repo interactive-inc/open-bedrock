@@ -76,7 +76,7 @@ export class CompanyPersonnelReportingJournalAdapter {
         if (scopes.some((scope) => this.matches(scope, period))) continue
         if (period.managerEmployeeId === null) continue
         scopes.push({
-          resource_id: `personnel-reporting:${crypto.randomUUID()}`,
+          resource_id: crypto.randomUUID(),
           employee_id: period.employeeId,
           employment_id: period.employmentPeriodId,
           organization_unit_id: period.organizationUnitId,

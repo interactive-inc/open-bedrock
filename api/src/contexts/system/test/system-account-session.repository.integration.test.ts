@@ -3,7 +3,7 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { AccountEntity } from "@system/domain/entities/account.entity"
 import { describe, expect, test } from "bun:test"
 
-const accountId = zAccountId.parse("account-1")
+const accountId = zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e")
 
 function repository(
   account: Awaited<ReturnType<SystemAccountRepository["find"]>>,

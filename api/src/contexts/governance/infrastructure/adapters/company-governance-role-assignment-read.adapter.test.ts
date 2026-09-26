@@ -38,7 +38,7 @@ test("Companyの指定版だけから責務任命と人物名を解決する", a
           organizationRevision: 7,
           resources: [
             resource("person", "person:1", { officialName: "First" }),
-            resource("employee", "employee:1", {
+            resource("employee", "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1", {
               personId: "person:1",
               employeeCode: "E001",
             }),
@@ -46,7 +46,7 @@ test("Companyの指定版だけから責務任命と人物名を解決する", a
             resource("responsibility-assignment", "assignment:1", {
               responsibilityId: responsibility.id,
               holderType: "employee",
-              holderId: "employee:1",
+              holderId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
               authorityScopeId: null,
               delegationAllowed: false,
             }),
@@ -66,7 +66,7 @@ test("Companyの指定版だけから責務任命と人物名を解決する", a
     assignees: [
       {
         assignmentId: "assignment:1",
-        employeeId: "employee:1",
+        employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
         employeeCode: "E001",
         employeeName: "First",
         departmentCode: null,

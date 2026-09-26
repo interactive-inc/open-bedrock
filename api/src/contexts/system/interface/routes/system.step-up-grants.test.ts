@@ -15,7 +15,7 @@ const nowEpoch = Math.floor(now.getTime() / 1_000)
 const identityKey = await createSystemIdentityTestKey("step-up-key")
 const identityIssuer = "https://identity-provider.example/"
 const identityAudience = "urn:system:identity-login"
-const accountId = zAccountId.parse("external-step-up-account")
+const accountId = zAccountId.parse("6c047840-0ba9-4c7a-8491-8dda0db0dc15")
 const subject = "external-step-up-subject"
 const jwtSecret = "external-step-up-jwt-secret"
 
@@ -125,7 +125,7 @@ function seedIdentity(fixture: SystemSessionTestContext): void {
     .query(
       `INSERT INTO system_identity_bindings
          (id, account_id, provider, subject, created_at, activated_at, revoked_at)
-       VALUES ('external-step-up-identity', ?1, 'oidc', ?2, ?3, ?3, NULL)`,
+       VALUES ('f40b56a8-d467-4da0-83dd-155622b36082', ?1, 'oidc', ?2, ?3, ?3, NULL)`,
     )
     .run(accountId, subject, now.getTime())
 }

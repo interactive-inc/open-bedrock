@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { RoomReservation } from "@/contexts/room/domain/entities/room-reservation.entity"
 import { RoomReservationRepository } from "@/contexts/room/infrastructure/repositories/room-reservation.repository"
@@ -43,7 +44,7 @@ describe("RoomReservationRepository", () => {
 
     const reservation = createReservation({
       roomId: "01900022-0000-7000-8000-000000000001",
-      reserverId: toWorkforceEmployeeId(1),
+      reserverId: toWorkforceEmployeeId(testEmployeeId(1)),
       startAt: "2026-01-01T10:00:00.000Z",
       endAt: "2026-01-01T11:00:00.000Z",
       purpose: "定例会議",
@@ -68,7 +69,7 @@ describe("RoomReservationRepository", () => {
 
     const existing = createReservation({
       roomId: "01900022-0000-7000-8000-000000000001",
-      reserverId: toWorkforceEmployeeId(1),
+      reserverId: toWorkforceEmployeeId(testEmployeeId(1)),
       startAt: "2026-01-01T10:00:00.000Z",
       endAt: "2026-01-01T11:00:00.000Z",
       purpose: "既存予約",
@@ -82,7 +83,7 @@ describe("RoomReservationRepository", () => {
 
     const overlapping = createReservation({
       roomId: "01900022-0000-7000-8000-000000000001",
-      reserverId: toWorkforceEmployeeId(2),
+      reserverId: toWorkforceEmployeeId(testEmployeeId(2)),
       startAt: "2026-01-01T10:30:00.000Z",
       endAt: "2026-01-01T11:30:00.000Z",
       purpose: "重複予約",
@@ -103,7 +104,7 @@ describe("RoomReservationRepository", () => {
 
     const reservation = createReservation({
       roomId: "01900022-0000-7000-8000-000000000001",
-      reserverId: toWorkforceEmployeeId(1),
+      reserverId: toWorkforceEmployeeId(testEmployeeId(1)),
       startAt: "2026-01-01T10:00:00.000Z",
       endAt: "2026-01-01T11:00:00.000Z",
       purpose: "定例会議",
@@ -143,7 +144,7 @@ describe("RoomReservationRepository", () => {
 
     const existing = createReservation({
       roomId: "01900022-0000-7000-8000-000000000001",
-      reserverId: toWorkforceEmployeeId(2),
+      reserverId: toWorkforceEmployeeId(testEmployeeId(2)),
       startAt: "2026-01-01T14:00:00.000Z",
       endAt: "2026-01-01T15:00:00.000Z",
       purpose: "他の人の予約",
@@ -157,7 +158,7 @@ describe("RoomReservationRepository", () => {
 
     const target = createReservation({
       roomId: "01900022-0000-7000-8000-000000000001",
-      reserverId: toWorkforceEmployeeId(1),
+      reserverId: toWorkforceEmployeeId(testEmployeeId(1)),
       startAt: "2026-01-01T10:00:00.000Z",
       endAt: "2026-01-01T11:00:00.000Z",
       purpose: "自分の予約",
@@ -191,7 +192,7 @@ describe("RoomReservationRepository", () => {
 
     const reservation = createReservation({
       roomId: "01900022-0000-7000-8000-000000000001",
-      reserverId: toWorkforceEmployeeId(1),
+      reserverId: toWorkforceEmployeeId(testEmployeeId(1)),
       startAt: "2026-01-01T10:00:00.000Z",
       endAt: "2026-01-01T11:00:00.000Z",
       purpose: "定例会議",

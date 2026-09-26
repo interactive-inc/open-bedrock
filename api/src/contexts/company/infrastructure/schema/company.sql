@@ -646,8 +646,8 @@ END;
 
 -- Company workforce identity and period projections.
 CREATE TABLE company_employees (
-  id TEXT PRIMARY KEY NOT NULL
-    CHECK (length(id) BETWEEN 1 AND 128),
+  id TEXT PRIMARY KEY NOT NULL,
+  legacy_id TEXT UNIQUE,
   official_name TEXT NOT NULL
     CHECK (length(official_name) BETWEEN 1 AND 200 AND trim(official_name) = official_name),
   employee_code TEXT
@@ -662,14 +662,24 @@ CREATE TABLE company_employees (
     CHECK (phone IS NULL OR (length(phone) BETWEEN 1 AND 64 AND trim(phone) = phone)),
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
-    CHECK (updated_at >= created_at)
+    CHECK (updated_at >= created_at),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_employees_legacy_id_insert
+BEFORE INSERT ON company_employees
+WHEN NEW.legacy_id IS NOT NULL
+BEGIN SELECT RAISE(ABORT, 'record_legacy_id_immutable'); END;
+CREATE TRIGGER company_employees_identity_update
+BEFORE UPDATE OF id, legacy_id ON company_employees
+WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE UNIQUE INDEX company_employees_employee_code_uniq
   ON company_employees(employee_code);
 
 CREATE TABLE company_employments (
   id TEXT PRIMARY KEY NOT NULL,
+  legacy_id TEXT UNIQUE,
   employee_id TEXT NOT NULL
     REFERENCES company_employees(id) ON DELETE RESTRICT,
   contract_name TEXT NOT NULL
@@ -684,8 +694,17 @@ CREATE TABLE company_employments (
     CHECK (created_at >= 0),
   updated_at INTEGER NOT NULL
     CHECK (updated_at >= created_at),
-  CHECK (termination_date IS NULL OR hire_date <= termination_date)
+  CHECK (termination_date IS NULL OR hire_date <= termination_date),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_employments_legacy_id_insert
+BEFORE INSERT ON company_employments
+WHEN NEW.legacy_id IS NOT NULL
+BEGIN SELECT RAISE(ABORT, 'record_legacy_id_immutable'); END;
+CREATE TRIGGER company_employments_identity_update
+BEFORE UPDATE OF id, legacy_id ON company_employments
+WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE UNIQUE INDEX company_employments_employee_active_unique
   ON company_employments(employee_id)
@@ -701,7 +720,8 @@ CREATE TABLE company_account_employee_links (
   account_id TEXT PRIMARY KEY NOT NULL
     REFERENCES system_accounts(id) ON DELETE RESTRICT,
   employee_id TEXT NOT NULL
-    REFERENCES company_employees(id) ON DELETE RESTRICT
+    REFERENCES company_employees(id) ON DELETE RESTRICT,
+  CHECK (length(account_id) = 36 AND account_id NOT GLOB '*[^0-9a-f-]*' AND substr(account_id, 9, 1) = '-' AND substr(account_id, 14, 1) = '-' AND substr(account_id, 19, 1) = '-' AND substr(account_id, 24, 1) = '-' AND length(replace(account_id, '-', '')) = 32 AND substr(account_id, 15, 1) GLOB '[1-8]' AND substr(account_id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE INDEX company_account_employee_links_employee_idx
@@ -710,8 +730,9 @@ CREATE INDEX company_account_employee_links_employee_idx
 CREATE UNIQUE INDEX company_account_employee_links_employee_uniq
   ON company_account_employee_links(employee_id);
 
-CREATE TABLE "company_personnel_actions" (
-  id TEXT PRIMARY KEY,
+CREATE TABLE company_personnel_actions (
+  id TEXT PRIMARY KEY NOT NULL,
+  legacy_id TEXT UNIQUE,
   employee_id TEXT NOT NULL,
   kind TEXT NOT NULL CHECK (kind IN (
     'hire', 'rehire', 'primary_assignment_started', 'transferred',
@@ -737,8 +758,17 @@ CREATE TABLE "company_personnel_actions" (
     OR (source_type != 'application' AND source_application_id IS NULL)
   ),
   CHECK (corrects_action_id IS NULL OR corrects_action_id != id),
-  CHECK (recorded_by_account_id IS NULL OR length(recorded_by_account_id) BETWEEN 1 AND 255)
+  CHECK (recorded_by_account_id IS NULL OR length(recorded_by_account_id) BETWEEN 1 AND 255),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_personnel_actions_legacy_id_insert
+BEFORE INSERT ON company_personnel_actions
+WHEN NEW.legacy_id IS NOT NULL
+BEGIN SELECT RAISE(ABORT, 'record_legacy_id_immutable'); END;
+CREATE TRIGGER company_personnel_actions_identity_update
+BEFORE UPDATE OF id, legacy_id ON company_personnel_actions
+WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE INDEX idx_company_personnel_actions_employee_timeline
   ON company_personnel_actions(employee_id, event_on, recorded_at, id);
@@ -751,10 +781,11 @@ CREATE UNIQUE INDEX uq_company_personnel_actions_source_application
   ON company_personnel_actions(source_application_id)
   WHERE source_application_id IS NOT NULL;
 
-CREATE TABLE "company_employee_lifecycle_revisions" (
-  employee_id TEXT PRIMARY KEY,
+CREATE TABLE company_employee_lifecycle_revisions (
+  employee_id TEXT PRIMARY KEY NOT NULL,
   revision INTEGER NOT NULL DEFAULT 0 CHECK (revision >= 0),
-  updated_at INTEGER NOT NULL
+  updated_at INTEGER NOT NULL,
+  CHECK (length(employee_id) = 36 AND employee_id NOT GLOB '*[^0-9a-f-]*' AND substr(employee_id, 9, 1) = '-' AND substr(employee_id, 14, 1) = '-' AND substr(employee_id, 19, 1) = '-' AND substr(employee_id, 24, 1) = '-' AND length(replace(employee_id, '-', '')) = 32 AND substr(employee_id, 15, 1) GLOB '[1-8]' AND substr(employee_id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE TABLE company_employment_period_versions (
@@ -825,6 +856,8 @@ CREATE INDEX idx_company_employee_status_period_versions_employment
   ON company_employee_status_period_versions(employment_period_id, period_id, revision DESC);
 
 CREATE TABLE company_workforce_resource_bindings (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   resource_type TEXT NOT NULL CHECK (resource_type IN ('employee', 'employment')),
   resource_id TEXT NOT NULL,
   organization_id TEXT NOT NULL,
@@ -832,12 +865,17 @@ CREATE TABLE company_workforce_resource_bindings (
   resource_revision INTEGER NOT NULL CHECK (resource_revision > 0),
   lifecycle_revision INTEGER NOT NULL CHECK (lifecycle_revision >= 0),
   last_action_id TEXT,
-  PRIMARY KEY (resource_type, resource_id),
+  UNIQUE (resource_type, resource_id),
   FOREIGN KEY (organization_id, resource_type, resource_id)
     REFERENCES company_resource_heads(organization_id, resource_type, resource_id)
     ON DELETE RESTRICT,
-  CHECK (resource_type != 'employee' OR resource_id = employee_id)
+  CHECK (resource_type != 'employee' OR resource_id = employee_id),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_workforce_resource_bindings_identity_update
+BEFORE UPDATE OF id ON company_workforce_resource_bindings
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE INDEX company_workforce_resource_bindings_employee_idx
   ON company_workforce_resource_bindings(employee_id, resource_type);
@@ -965,7 +1003,8 @@ CREATE TABLE company_external_identity_sources (
   organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE RESTRICT,
   source_revision INTEGER NOT NULL CHECK (source_revision > 0),
   source_digest TEXT NOT NULL CHECK (length(source_digest) = 64 AND source_digest NOT GLOB '*[^0-9a-f]*'),
-  updated_at INTEGER NOT NULL CHECK (updated_at >= 0)
+  updated_at INTEGER NOT NULL CHECK (updated_at >= 0),
+  CHECK (length(identity_id) = 36 AND identity_id NOT GLOB '*[^0-9a-f-]*' AND substr(identity_id, 9, 1) = '-' AND substr(identity_id, 14, 1) = '-' AND substr(identity_id, 19, 1) = '-' AND substr(identity_id, 24, 1) = '-' AND length(replace(identity_id, '-', '')) = 32 AND substr(identity_id, 15, 1) GLOB '[1-8]' AND substr(identity_id, 20, 1) GLOB '[89ab]')
 );
 
 DROP TRIGGER IF EXISTS company_external_identity_imports_no_update;
@@ -1072,8 +1111,10 @@ BEFORE UPDATE OF id ON company_organization_assignment_period_versions
 WHEN NEW.id IS NOT OLD.id
 BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
-CREATE TABLE "company_organization_change_operations" (
-  id TEXT PRIMARY KEY NOT NULL CHECK (length(id) BETWEEN 1 AND 128),
+CREATE TABLE company_organization_change_operations (
+  id TEXT PRIMARY KEY NOT NULL,
+  operation_key TEXT UNIQUE CHECK (operation_key IS NULL OR length(operation_key) BETWEEN 1 AND 256),
+  legacy_id TEXT UNIQUE,
   expected_revision INTEGER NOT NULL CHECK (expected_revision >= 0),
   change_count INTEGER NOT NULL CHECK (change_count >= 1),
   applied_count INTEGER NOT NULL DEFAULT 0 CHECK (applied_count BETWEEN 0 AND change_count),
@@ -1089,7 +1130,17 @@ CHECK (
 ), actor_account_id TEXT NOT NULL DEFAULT 'system:initialization'
 CHECK (length(actor_account_id) BETWEEN 1 AND 255 AND trim(actor_account_id) = actor_account_id), reason TEXT NOT NULL DEFAULT 'Initialize organization change'
 CHECK (length(reason) BETWEEN 1 AND 1000 AND trim(reason) = reason), evidence_references_json TEXT NOT NULL DEFAULT '[]'
-CHECK (json_valid(evidence_references_json) AND json_type(evidence_references_json) = 'array'));
+CHECK (json_valid(evidence_references_json) AND json_type(evidence_references_json) = 'array'),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
+);
+CREATE TRIGGER company_organization_change_operations_legacy_id_insert
+BEFORE INSERT ON company_organization_change_operations
+WHEN NEW.legacy_id IS NOT NULL
+BEGIN SELECT RAISE(ABORT, 'record_legacy_id_immutable'); END;
+CREATE TRIGGER company_organization_change_operations_identity_update
+BEFORE UPDATE OF id, legacy_id ON company_organization_change_operations
+WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE TABLE "company_organization_lifecycle_states" (
   id INTEGER PRIMARY KEY CHECK (id = 1),
@@ -1749,7 +1800,8 @@ INSERT INTO company_organization_lifecycle_states (id, revision, updated_at) VAL
 CREATE TABLE company_organization_resource_bindings (
   organization_unit_id TEXT PRIMARY KEY NOT NULL REFERENCES company_organization_units(id) ON DELETE RESTRICT,
   organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE RESTRICT CHECK (organization_id = 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'),
-  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0)
+  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
+  CHECK (length(organization_unit_id) = 36 AND organization_unit_id NOT GLOB '*[^0-9a-f-]*' AND substr(organization_unit_id, 9, 1) = '-' AND substr(organization_unit_id, 14, 1) = '-' AND substr(organization_unit_id, 19, 1) = '-' AND substr(organization_unit_id, 24, 1) = '-' AND length(replace(organization_unit_id, '-', '')) = 32 AND substr(organization_unit_id, 15, 1) GLOB '[1-8]' AND substr(organization_unit_id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE TABLE company_organization_resource_adoptions (
@@ -2259,7 +2311,8 @@ CREATE TABLE company_assignment_resource_bindings (
   organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE RESTRICT CHECK (organization_id = 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'),
   employee_id TEXT NOT NULL REFERENCES company_employees(id) ON DELETE RESTRICT,
   resource_revision INTEGER NOT NULL CHECK (resource_revision >= 1),
-  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0)
+  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
+  CHECK (length(resource_id) = 36 AND resource_id NOT GLOB '*[^0-9a-f-]*' AND substr(resource_id, 9, 1) = '-' AND substr(resource_id, 14, 1) = '-' AND substr(resource_id, 19, 1) = '-' AND substr(resource_id, 24, 1) = '-' AND length(replace(resource_id, '-', '')) = 32 AND substr(resource_id, 15, 1) GLOB '[1-8]' AND substr(resource_id, 20, 1) GLOB '[89ab]')
 );
 CREATE INDEX company_assignment_resource_bindings_employee_idx ON company_assignment_resource_bindings(employee_id);
 CREATE TABLE company_assignment_period_bindings (
@@ -2267,7 +2320,8 @@ CREATE TABLE company_assignment_period_bindings (
   resource_id TEXT NOT NULL REFERENCES company_assignment_resource_bindings(resource_id) ON DELETE RESTRICT,
   period_revision INTEGER NOT NULL CHECK (period_revision >= 1),
   source_revision INTEGER NOT NULL CHECK (source_revision >= 1),
-  FOREIGN KEY (period_id, period_revision) REFERENCES company_organization_assignment_period_versions(period_id, revision) ON DELETE RESTRICT
+  FOREIGN KEY (period_id, period_revision) REFERENCES company_organization_assignment_period_versions(period_id, revision) ON DELETE RESTRICT,
+  CHECK (length(period_id) = 36 AND period_id NOT GLOB '*[^0-9a-f-]*' AND substr(period_id, 9, 1) = '-' AND substr(period_id, 14, 1) = '-' AND substr(period_id, 19, 1) = '-' AND substr(period_id, 24, 1) = '-' AND length(replace(period_id, '-', '')) = 32 AND substr(period_id, 15, 1) GLOB '[1-8]' AND substr(period_id, 20, 1) GLOB '[89ab]')
 );
 CREATE INDEX company_assignment_period_bindings_resource_idx ON company_assignment_period_bindings(resource_id);
 
@@ -2365,10 +2419,13 @@ CREATE TABLE company_personnel_reporting_bindings (
   employment_id TEXT NOT NULL REFERENCES company_employments(id) ON DELETE RESTRICT,
   organization_unit_id TEXT NOT NULL REFERENCES company_organization_units(id) ON DELETE RESTRICT,
   assignment_type TEXT NOT NULL CHECK (assignment_type IN ('PRIMARY', 'CONCURRENT')),
-  recorded_by_action_id TEXT NOT NULL REFERENCES company_personnel_actions(id) ON DELETE RESTRICT,
+  recorded_by_action_id TEXT REFERENCES company_personnel_actions(id) ON DELETE RESTRICT,
+  recorded_by_adoption_id TEXT REFERENCES company_assignment_resource_adoptions(command_id) ON DELETE RESTRICT,
+  CHECK ((recorded_by_action_id IS NULL) != (recorded_by_adoption_id IS NULL)),
   UNIQUE (employee_id, employment_id, organization_unit_id, assignment_type),
   FOREIGN KEY (organization_id, resource_type, resource_id)
-    REFERENCES company_resource_heads(organization_id, resource_type, resource_id) ON DELETE RESTRICT
+    REFERENCES company_resource_heads(organization_id, resource_type, resource_id) ON DELETE RESTRICT,
+  CHECK (length(resource_id) = 36 AND resource_id NOT GLOB '*[^0-9a-f-]*' AND substr(resource_id, 9, 1) = '-' AND substr(resource_id, 14, 1) = '-' AND substr(resource_id, 19, 1) = '-' AND substr(resource_id, 24, 1) = '-' AND length(replace(resource_id, '-', '')) = 32 AND substr(resource_id, 15, 1) GLOB '[1-8]' AND substr(resource_id, 20, 1) GLOB '[89ab]')
 );
 
 DROP TRIGGER IF EXISTS company_personnel_reporting_binding_update_guard;
@@ -2807,7 +2864,8 @@ CREATE TABLE company_account_employee_resource_bindings (
   employee_id TEXT NOT NULL UNIQUE REFERENCES company_employees(id) ON DELETE RESTRICT,
   recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
   FOREIGN KEY (organization_id, resource_type, resource_id)
-    REFERENCES company_resource_heads(organization_id, resource_type, resource_id) ON DELETE RESTRICT
+    REFERENCES company_resource_heads(organization_id, resource_type, resource_id) ON DELETE RESTRICT,
+  CHECK (length(resource_id) = 36 AND resource_id NOT GLOB '*[^0-9a-f-]*' AND substr(resource_id, 9, 1) = '-' AND substr(resource_id, 14, 1) = '-' AND substr(resource_id, 19, 1) = '-' AND substr(resource_id, 24, 1) = '-' AND length(replace(resource_id, '-', '')) = 32 AND substr(resource_id, 15, 1) GLOB '[1-8]' AND substr(resource_id, 20, 1) GLOB '[89ab]')
 );
 CREATE TABLE _company_account_link_copy_check (ok INTEGER NOT NULL CHECK (ok = 1));
 INSERT INTO _company_account_link_copy_check (ok)
@@ -3209,7 +3267,7 @@ SELECT json_extract('{}', 'company_organization_resource_operation_incomplete')
 FROM company_command_receipts receipt
 JOIN company_organizations organization ON organization.id = receipt.organization_id
 JOIN company_organization_change_operations operation
-  ON operation.id = 'org-resource:' || receipt.fingerprint
+  ON operation.id = (SELECT key_operation.id FROM company_organization_change_operations key_operation WHERE key_operation.operation_key = 'org-resource:' || receipt.fingerprint)
 WHERE receipt.organization_revision <= organization.revision AND operation.status != 'COMPLETED'
 LIMIT 1;
 
@@ -3287,7 +3345,7 @@ BEGIN
   WHERE EXISTS (
     SELECT 1 FROM company_command_receipts receipt
     JOIN company_organization_change_operations operation
-      ON operation.id = 'org-resource:' || receipt.fingerprint
+      ON operation.id = (SELECT key_operation.id FROM company_organization_change_operations key_operation WHERE key_operation.operation_key = 'org-resource:' || receipt.fingerprint)
     WHERE receipt.organization_id = NEW.id AND receipt.organization_revision = NEW.revision
       AND operation.status != 'COMPLETED'
   );
@@ -3474,7 +3532,8 @@ CREATE TABLE company_responsibility_resource_bindings (
   responsibility_id TEXT NOT NULL,
   authority_scope_id TEXT NOT NULL,
   resource_revision INTEGER NOT NULL CHECK (resource_revision >= 1),
-  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0)
+  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
+  CHECK (length(resource_id) = 36 AND resource_id NOT GLOB '*[^0-9a-f-]*' AND substr(resource_id, 9, 1) = '-' AND substr(resource_id, 14, 1) = '-' AND substr(resource_id, 19, 1) = '-' AND substr(resource_id, 24, 1) = '-' AND length(replace(resource_id, '-', '')) = 32 AND substr(resource_id, 15, 1) GLOB '[1-8]' AND substr(resource_id, 20, 1) GLOB '[89ab]')
 );
 CREATE INDEX company_responsibility_resource_bindings_employee_idx ON company_responsibility_resource_bindings(employee_id);
 CREATE TABLE company_responsibility_period_bindings (
@@ -3482,7 +3541,8 @@ CREATE TABLE company_responsibility_period_bindings (
   resource_id TEXT NOT NULL REFERENCES company_responsibility_resource_bindings(resource_id) ON DELETE RESTRICT,
   period_revision INTEGER NOT NULL CHECK (period_revision >= 1),
   source_revision INTEGER NOT NULL CHECK (source_revision >= 1),
-  FOREIGN KEY (period_id, period_revision) REFERENCES company_organization_responsibility_period_versions(period_id, revision) ON DELETE RESTRICT
+  FOREIGN KEY (period_id, period_revision) REFERENCES company_organization_responsibility_period_versions(period_id, revision) ON DELETE RESTRICT,
+  CHECK (length(period_id) = 36 AND period_id NOT GLOB '*[^0-9a-f-]*' AND substr(period_id, 9, 1) = '-' AND substr(period_id, 14, 1) = '-' AND substr(period_id, 19, 1) = '-' AND substr(period_id, 24, 1) = '-' AND length(replace(period_id, '-', '')) = 32 AND substr(period_id, 15, 1) GLOB '[1-8]' AND substr(period_id, 20, 1) GLOB '[89ab]')
 );
 CREATE INDEX company_responsibility_period_bindings_resource_idx ON company_responsibility_period_bindings(resource_id);
 
@@ -3794,7 +3854,7 @@ END;
 DROP TRIGGER IF EXISTS company_responsibility_adoption_completion_guard;
 CREATE TRIGGER company_responsibility_adoption_completion_guard
 BEFORE UPDATE OF status ON company_organization_change_operations
-WHEN NEW.status = 'COMPLETED' AND NEW.id GLOB 'responsibility-adoption:*'
+WHEN NEW.status = 'COMPLETED' AND NEW.operation_key GLOB 'responsibility-adoption:*'
 BEGIN
   SELECT RAISE(ABORT, 'responsibility adoption evidence is missing')
   WHERE NOT EXISTS (SELECT 1 FROM company_responsibility_resource_adoptions adoption WHERE adoption.operation_id = NEW.id);

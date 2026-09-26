@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
@@ -15,7 +16,7 @@ export const seedGoalEvaluations: ReadonlyArray<SeedGoalEvaluation> = [
   {
     id: "01900031-0000-7000-8000-000000000001",
     goalId: "01900030-0000-7000-8000-000000000004",
-    evaluatorId: toWorkforceEmployeeId(9),
+    evaluatorId: toWorkforceEmployeeId(testEmployeeId(9)),
     kind: "self",
     score: 90,
     comment: "計画通り自動化を完了した",
@@ -24,7 +25,7 @@ export const seedGoalEvaluations: ReadonlyArray<SeedGoalEvaluation> = [
   {
     id: "01900031-0000-7000-8000-000000000002",
     goalId: "01900030-0000-7000-8000-000000000004",
-    evaluatorId: toWorkforceEmployeeId(4),
+    evaluatorId: toWorkforceEmployeeId(testEmployeeId(4)),
     kind: "manager",
     score: 85,
     comment: "品質が安定しており良い成果",
@@ -33,7 +34,7 @@ export const seedGoalEvaluations: ReadonlyArray<SeedGoalEvaluation> = [
   {
     id: "01900031-0000-7000-8000-000000000003",
     goalId: "01900030-0000-7000-8000-000000000004",
-    evaluatorId: toWorkforceEmployeeId(4),
+    evaluatorId: toWorkforceEmployeeId(testEmployeeId(4)),
     kind: "final",
     score: 88,
     comment: "最終評価A",

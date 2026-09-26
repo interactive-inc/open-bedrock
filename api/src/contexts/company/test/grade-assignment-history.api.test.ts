@@ -24,19 +24,27 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
   const repository = new D1CompanyResourceRepository({ database })
   const specifications: Pick<CompanyResourceProps, "type" | "id" | "attributes">[] = [
     { type: "person", id: "person:test", attributes: { officialName: "Person" } },
-    { type: "employee", id: "employee:test", attributes: { personId: "person:test" } },
+    {
+      type: "employee",
+      id: "d47aa389-c802-4a4a-bf7c-c359b764474b",
+      attributes: { personId: "person:test" },
+    },
     {
       type: "employment",
-      id: "employment:test",
-      attributes: { employeeId: "employee:test", status: "ACTIVE", employmentType: "FULL_TIME" },
+      id: "cdc317d0-f2a5-47e3-bbaa-4718f418c374",
+      attributes: {
+        employeeId: "d47aa389-c802-4a4a-bf7c-c359b764474b",
+        status: "ACTIVE",
+        employmentType: "FULL_TIME",
+      },
     },
     { type: "grade", id: "grade:test", attributes: { code: "G1", officialName: "Grade" } },
     {
       type: "grade-assignment",
       id: "grade-assignment:first",
       attributes: {
-        employeeId: "employee:test",
-        employmentId: "employment:test",
+        employeeId: "d47aa389-c802-4a4a-bf7c-c359b764474b",
+        employmentId: "cdc317d0-f2a5-47e3-bbaa-4718f418c374",
         gradeId: "grade:test",
       },
     },
@@ -44,16 +52,16 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
       type: "grade-assignment",
       id: "grade-assignment:second",
       attributes: {
-        employeeId: "employee:test",
-        employmentId: "employment:test",
+        employeeId: "d47aa389-c802-4a4a-bf7c-c359b764474b",
+        employmentId: "cdc317d0-f2a5-47e3-bbaa-4718f418c374",
         gradeId: "grade:test",
       },
     },
   ]
   const state: { actor: CompanyActorValue | undefined } = {
     actor: CompanyActorValue.restore({
-      accountId: "account:reader",
-      employeeId: "employee:test",
+      accountId: "1227c813-1159-4405-9f5b-5e54df944b9a",
+      employeeId: "d47aa389-c802-4a4a-bf7c-c359b764474b",
       organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: [],
     }),
@@ -73,7 +81,7 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
     const command = CompanyResourceChangeEntity.create({
       commandId: `history:${revision}`,
       expectedRevision: revision - 1,
-      actorAccountId: "account:operator",
+      actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
       reason: `Confirmed reason ${revision}`,
       recordedAt: revision,
       resources: specifications
@@ -95,7 +103,7 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
     expect(await repository.write(command)).toMatchObject({ kind: "applied" })
     if (revision === 2) {
       const first = await app.request(
-        "/history?employee_id=employee:test&organization_revision=2&limit=1",
+        "/history?employee_id=d47aa389-c802-4a4a-bf7c-c359b764474b&organization_revision=2&limit=1",
         { headers },
         { DB: database },
       )
@@ -108,7 +116,7 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
             id: "grade-assignment:first",
             revision: 1,
             commandId: "history:1",
-            actorAccountId: "account:operator",
+            actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
             reason: "Confirmed reason 1",
             recordedAt: 1,
           },
@@ -117,7 +125,7 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
     }
   }
   const remaining = await app.request(
-    "/history?employee_id=employee:test&organization_revision=2&offset=1",
+    "/history?employee_id=d47aa389-c802-4a4a-bf7c-c359b764474b&organization_revision=2&offset=1",
     { headers },
     { DB: database },
   )
@@ -133,7 +141,7 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
     ],
   })
   const cancelled = await app.request(
-    "/history?employee_id=employee:test&organization_revision=3&offset=4",
+    "/history?employee_id=d47aa389-c802-4a4a-bf7c-c359b764474b&organization_revision=3&offset=4",
     { headers },
     { DB: database },
   )
@@ -153,7 +161,7 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
     "",
   ]) {
     const invalid = await app.request(
-      `/history?employee_id=employee:test&${query}`,
+      `/history?employee_id=d47aa389-c802-4a4a-bf7c-c359b764474b&${query}`,
       { headers },
       { DB: database },
     )
@@ -166,7 +174,7 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
   )
   expect(other.status).toBe(403)
   state.actor = CompanyActorValue.restore({
-    accountId: "account:reader",
+    accountId: "1227c813-1159-4405-9f5b-5e54df944b9a",
     employeeId: null,
     organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: [],
@@ -175,7 +183,7 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
   expect(
     (
       await app.request(
-        "/history?employee_id=employee:test&organization_revision=2",
+        "/history?employee_id=d47aa389-c802-4a4a-bf7c-c359b764474b&organization_revision=2",
         { headers },
         { DB: database },
       )
@@ -184,7 +192,7 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
   expect(
     (
       await app.request(
-        "/history?employee_id=employee:test&organization_revision=2",
+        "/history?employee_id=d47aa389-c802-4a4a-bf7c-c359b764474b&organization_revision=2",
         { headers: { "x-company-organization-id": "01900060-0000-7000-8000-12268fccf2cc" } },
         { DB: database },
       )
@@ -194,15 +202,15 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
   expect(
     (
       await app.request(
-        "/history?employee_id=employee:test&organization_revision=2",
+        "/history?employee_id=d47aa389-c802-4a4a-bf7c-c359b764474b&organization_revision=2",
         { headers },
         { DB: database },
       )
     ).status,
   ).toBe(401)
   state.actor = CompanyActorValue.restore({
-    accountId: "account:reader",
-    employeeId: "employee:test",
+    accountId: "1227c813-1159-4405-9f5b-5e54df944b9a",
+    employeeId: "d47aa389-c802-4a4a-bf7c-c359b764474b",
     organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: [],
   })
@@ -212,7 +220,7 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
   expect(
     (
       await app.request(
-        "/history?employee_id=employee:test&organization_revision=2",
+        "/history?employee_id=d47aa389-c802-4a4a-bf7c-c359b764474b&organization_revision=2",
         { headers },
         { DB: database },
       )

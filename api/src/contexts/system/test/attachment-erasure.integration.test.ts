@@ -1,3 +1,4 @@
+import { testAccountId, testDerivedId } from "@system/test/system-test-id.test-support"
 import { readFileSync } from "node:fs"
 import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
@@ -27,11 +28,11 @@ import { SystemAttachmentTestBucket } from "@system/test/system-attachment-test-
 
 // 読取資格は実時刻でも有効期間を確かめるため、実時刻を使う。
 const now = new Date(Math.floor(Date.now() / 1_000) * 1_000)
-const subjectAccountId = "acc_subject"
-const officerAccountId = "acc_privacy_officer"
-const rootAccountId = "acc_root"
-const memberAccountId = "acc_member"
-const reviewerAccountId = "acc_reviewer"
+const subjectAccountId = testAccountId("acc_subject")
+const officerAccountId = testAccountId("acc_privacy_officer")
+const rootAccountId = testAccountId("acc_root")
+const memberAccountId = testAccountId("acc_member")
+const reviewerAccountId = testAccountId("acc_reviewer")
 
 function authentication(accountId: string) {
   return {
@@ -80,7 +81,7 @@ async function createFixture() {
       .prepare(
         "INSERT INTO system_principals(id,account_id,kind,name,revision,created_at,updated_at) VALUES (?1,?2,'human',?2,1,0,0)",
       )
-      .bind(`principal:${accountId}`, accountId)
+      .bind(testDerivedId("principal", accountId), accountId)
       .run()
   }
   await db.exec(`

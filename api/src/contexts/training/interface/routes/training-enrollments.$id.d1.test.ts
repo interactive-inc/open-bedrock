@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
@@ -122,7 +123,7 @@ describe("GET /training-enrollments/:id", () => {
     const body = trainingEnrollmentResponseSchema.parse(await response.json())
 
     expect(body.id).toBe("0190002d-0000-7000-8000-000000000001")
-    expect(body.employee_id).toBe(toWorkforceEmployeeId(5))
+    expect(body.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
   })
 
   test("a privileged role reads another's enrollment and returns 200", async () => {

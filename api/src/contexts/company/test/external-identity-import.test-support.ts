@@ -27,8 +27,8 @@ export async function createExternalIdentityImportTestContext(
   database = createCompanyD1TestDatabase(schemaSql),
 ) {
   const now = new Date()
-  const accountId = zAccountId.parse("external-import-service")
-  const credentialId = "external-import-credential"
+  const accountId = zAccountId.parse("26c690b3-a723-4977-b299-36862160bfce")
+  const credentialId = "a5a88835-2a43-4022-bc5c-370a679ccb3c"
   const rawSecret = "1".repeat(64)
   const hash = await new SystemPrincipalSecretService().hashRawSecret(rawSecret)
   if (hash instanceof Error) throw hash
@@ -53,14 +53,25 @@ export async function createExternalIdentityImportTestContext(
     if (columns.results.length > 0 && !columns.results.some((column) => column.name === "id"))
       await database.exec(`ALTER TABLE ${table} ADD COLUMN id TEXT`)
   }
+  // 主キーを UUID へ移す前の schema には旧 ID の列が無い。現行の System の読取は列を選ぶため、空の列だけを足す。
+  for (const table of ["system_accounts", "system_principals"]) {
+    const columns = await database
+      .prepare(`SELECT name FROM pragma_table_info('${table}')`)
+      .all<{ name: string }>()
+    if (
+      columns.results.length > 0 &&
+      !columns.results.some((column) => column.name === "legacy_id")
+    )
+      await database.exec(`ALTER TABLE ${table} ADD COLUMN legacy_id TEXT`)
+  }
   await database.exec(`
     INSERT INTO company_organizations (id, revision, name, representative_name, created_at, updated_at)
       SELECT '${COMPANY_DEFAULT_ORGANIZATION_ID}', 0, 'Example organization', 'Example representative', 0, 0
       WHERE NOT EXISTS (SELECT 1 FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}');
     INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-      VALUES ('external-import-service', 'active', 0, 0, 0);
+      VALUES ('26c690b3-a723-4977-b299-36862160bfce', 'active', 0, 0, 0);
     INSERT INTO system_principals (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
-      VALUES ('external-import-principal', 'external-import-service', 'service', 'Directory synchronization', NULL, 1, 0, 0);
+      VALUES ('4eaf6317-da6a-455b-9025-8f0615ccbeaf', '26c690b3-a723-4977-b299-36862160bfce', 'service', 'Directory synchronization', NULL, 1, 0, 0);
     INSERT INTO system_iam_roles (id, key, kind, resource_type, name, created_at, updated_at)
       VALUES ('ac330a23-4c0c-4f72-8aa8-3c4a92f58ff8', 'custom:import-global', 'custom', NULL, 'Account grants', 0, 0),
         ('8ca6d30f-174b-40e1-870b-df888721f554', 'custom:import-provider', 'custom', 'system:identity_provider', 'Provider writer', 0, 0),
@@ -70,18 +81,18 @@ export async function createExternalIdentityImportTestContext(
         ('8ca6d30f-174b-40e1-870b-df888721f554', 'account:manage'), ('8ca6d30f-174b-40e1-870b-df888721f554', 'employee:write'),
         ('1f178fc9-9b4d-4247-8dc8-8f1344bf445d', 'org:read'), ('1f178fc9-9b4d-4247-8dc8-8f1344bf445d', 'employee:read');
     INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-      VALUES ('b63cf0e2-c63e-4834-8bc0-840f72f13aa4', 'external-import-service', 'ac330a23-4c0c-4f72-8aa8-3c4a92f58ff8', NULL, NULL, 0, NULL);
+      VALUES ('b63cf0e2-c63e-4834-8bc0-840f72f13aa4', '26c690b3-a723-4977-b299-36862160bfce', 'ac330a23-4c0c-4f72-8aa8-3c4a92f58ff8', NULL, NULL, 0, NULL);
   `)
   await database
     .prepare(`INSERT INTO system_role_bindings
     (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-    VALUES ('721e4694-365f-47cd-8983-0743ec63c76d', 'external-import-service', '8ca6d30f-174b-40e1-870b-df888721f554', 'system:identity_provider', ?1, 0, NULL)`)
+    VALUES ('721e4694-365f-47cd-8983-0743ec63c76d', '26c690b3-a723-4977-b299-36862160bfce', '8ca6d30f-174b-40e1-870b-df888721f554', 'system:identity_provider', ?1, 0, NULL)`)
     .bind(providerScope)
     .run()
   await database
     .prepare(`INSERT INTO system_machine_credentials
     (id, principal_id, name, secret_hash, status, created_at, updated_at)
-    VALUES (?1, 'external-import-principal', 'Primary', ?2, 'active', 0, 0)`)
+    VALUES (?1, '4eaf6317-da6a-455b-9025-8f0615ccbeaf', 'Primary', ?2, 'active', 0, 0)`)
     .bind(credentialId, hash)
     .run()
   const app = systemFactory.createApp().post("/system/machine-sessions", ...POST)

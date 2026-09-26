@@ -1,3 +1,5 @@
+import { testAccountId, testDerivedId } from "@system/test/system-test-id.test-support"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { publishTestAccountEmployeeLink } from "@tests/api/support/company/publish-test-account-employee-link"
 import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
@@ -28,17 +30,21 @@ export async function seedIamForEmployees(
            (id, status, token_version, created_at, updated_at)
          VALUES (?1, 'active', 0, 0, 0)`,
       )
-      .bind(String(employee.id))
+      .bind(testAccountId(employee.id))
       .run()
 
     await db
       .prepare(
         `INSERT INTO system_principals
            (id, account_id, kind, name, revision, created_at, updated_at)
-         VALUES ('test:human:' || ?1, ?1, 'human', ?1, 1, 0, 0)
+         VALUES (?2, ?1, 'human', ?3, 1, 0, 0)
          ON CONFLICT(account_id) DO NOTHING`,
       )
-      .bind(String(employee.id))
+      .bind(
+        testAccountId(employee.id),
+        testDerivedId("principal", employee.id),
+        String(employee.id),
+      )
       .run()
 
     await db
@@ -46,12 +52,12 @@ export async function seedIamForEmployees(
         `INSERT OR IGNORE INTO company_account_employee_links (account_id, employee_id)
          VALUES (?1, ?2)`,
       )
-      .bind(String(employee.id), String(employee.id))
+      .bind(testAccountId(employee.id), testEmployeeId(employee.id))
       .run()
 
     await publishTestAccountEmployeeLink(db, {
-      accountId: String(employee.id),
-      employeeId: String(employee.id),
+      accountId: testAccountId(employee.id),
+      employeeId: testEmployeeId(employee.id),
       effectiveFrom: "2024-01-01",
       recordedAt: 0,
     })
@@ -64,34 +70,38 @@ export async function seedIamForEmployees(
          FROM company_employees
          WHERE id = ?2`,
       )
-      .bind(String(employee.id), String(employee.id))
+      .bind(testAccountId(employee.id), testEmployeeId(employee.id))
       .run()
 
     await db
       .prepare(
         `INSERT OR IGNORE INTO system_identity_bindings
            (id, account_id, provider, subject, created_at, activated_at, revoked_at)
-         VALUES ('password:' || ?1, ?1, 'password', lower(?2), 0, 0, NULL)`,
+         VALUES (?3, ?1, 'password', lower(?2), 0, 0, NULL)`,
       )
-      .bind(String(employee.id), employee.email)
+      .bind(
+        testAccountId(employee.id),
+        employee.email,
+        testDerivedId("password-identity", employee.id),
+      )
       .run()
 
     await db
       .prepare(
         `INSERT OR IGNORE INTO system_identity_profiles
            (identity_id, email, email_verified, can_receive_email, last_used_at, updated_at)
-         VALUES ('password:' || ?1, ?2, 1, 1, NULL, 0)`,
+         VALUES (?1, ?2, 1, 1, NULL, 0)`,
       )
-      .bind(String(employee.id), employee.email)
+      .bind(testDerivedId("password-identity", employee.id), employee.email)
       .run()
 
     await db
       .prepare(
         `INSERT OR IGNORE INTO system_password_credentials
            (identity_id, password_hash, changed_at, created_at, updated_at)
-         VALUES ('password:' || ?1, ?2, 0, 0, 0)`,
+         VALUES (?1, ?2, 0, 0, 0)`,
       )
-      .bind(String(employee.id), employee.passwordHash)
+      .bind(testDerivedId("password-identity", employee.id), employee.passwordHash)
       .run()
 
     await db
@@ -99,12 +109,12 @@ export async function seedIamForEmployees(
         `INSERT OR IGNORE INTO company_employments
            (id, employee_id, contract_name, employment_type, hire_date, status,
             termination_date, created_at, updated_at)
-         SELECT 'test:' || ?1 || ':employment', ?1, official_name, 'FULL_TIME',
+         SELECT ?2, ?1, official_name, 'FULL_TIME',
                 '1970-01-01', 'ACTIVE', NULL, 0, 0
          FROM company_employees
          WHERE id = ?1`,
       )
-      .bind(String(employee.id))
+      .bind(testEmployeeId(employee.id), testDerivedId("employment", testEmployeeId(employee.id)))
       .run()
 
     await db
@@ -115,7 +125,7 @@ export async function seedIamForEmployees(
                 NULL, NULL, 0, NULL
          FROM system_iam_roles AS role WHERE role.key = 'company:' || ?2`,
       )
-      .bind(String(employee.id), employee.role, crypto.randomUUID())
+      .bind(testAccountId(employee.id), employee.role, crypto.randomUUID())
       .run()
   }
 }

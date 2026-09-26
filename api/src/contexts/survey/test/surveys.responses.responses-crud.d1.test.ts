@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -107,14 +108,16 @@ async function createTestDb(): Promise<D1Database> {
 /** 回答 id=1 (survey 1, open) の回答者本人。 */
 function ownerToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: toWorkforceEmployeeId(5),
+    employeeId: toWorkforceEmployeeId(testEmployeeId(5)),
+    accountId: 5,
   })
 }
 
 /** 他人（回答 id=1 の回答者ではない）。 */
 function otherToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: toWorkforceEmployeeId(13),
+    employeeId: toWorkforceEmployeeId(testEmployeeId(13)),
+    accountId: 13,
   })
 }
 
@@ -170,7 +173,7 @@ describe("GET /surveys/responses/me", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0].respondent_id).toBe(toWorkforceEmployeeId(5))
+      expect(parsed.data.data[0].respondent_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
     }
   })
 

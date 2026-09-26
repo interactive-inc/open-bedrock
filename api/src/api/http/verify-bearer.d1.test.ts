@@ -39,7 +39,7 @@ async function createTestDb(): Promise<D1Database> {
     .prepare(
       `INSERT INTO system_identity_bindings
          (id, account_id, provider, subject, created_at, activated_at, revoked_at)
-       VALUES ('oidc:employee-5', '5', 'oidc', 'external-subject-5', 0, 0, NULL)`,
+       VALUES ('181c7819-425d-4fcf-9536-4e11f2f906f2', '01900061-0000-7000-8000-000000000005', 'oidc', 'external-subject-5', 0, 0, NULL)`,
     )
     .run()
 
@@ -103,22 +103,26 @@ describe("verifyBearer", () => {
     const issuedAt = new Date()
     const rawSecretHash = await new SystemPrincipalSecretService().hashRawSecret("1".repeat(64))
     if (rawSecretHash instanceof Error) throw rawSecretHash
-    await db.prepare("DELETE FROM system_principals WHERE account_id = '5'").run()
+    await db
+      .prepare(
+        "DELETE FROM system_principals WHERE account_id = '01900061-0000-7000-8000-000000000005'",
+      )
+      .run()
     await db
       .prepare(`INSERT INTO system_principals
       (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
-      VALUES ('service-5', '5', 'service', 'Automation', NULL, 1, 0, 0)`)
+      VALUES ('3b401d49-72bf-4ca1-9357-5397ff1504bf', '01900061-0000-7000-8000-000000000005', 'service', 'Automation', NULL, 1, 0, 0)`)
       .run()
     await db
       .prepare(`INSERT INTO system_machine_credentials
       (id, principal_id, name, secret_hash, status, created_at, updated_at, last_used_at)
-      VALUES ('credential-5', 'service-5', 'Primary', ?1, 'active', 0, ?2, ?2)`)
+      VALUES ('606f6c4c-06c7-4bfe-be7f-15069daaa8c8', '3b401d49-72bf-4ca1-9357-5397ff1504bf', 'Primary', ?1, 'active', 0, ?2, ?2)`)
       .bind(rawSecretHash, issuedAt.getTime())
       .run()
     const token = await new SystemAccessTokenIssuer(jwtSecret).issue({
-      accountId: zAccountId.parse("5"),
+      accountId: zAccountId.parse("01900061-0000-7000-8000-000000000005"),
       tokenVersion: 0,
-      machineCredentialId: "credential-5",
+      machineCredentialId: "606f6c4c-06c7-4bfe-be7f-15069daaa8c8",
       now: issuedAt,
     })
     if (token instanceof Error) throw token
@@ -127,7 +131,7 @@ describe("verifyBearer", () => {
     expect((await call()).status).toBe(200)
     await db
       .prepare(
-        "UPDATE system_machine_credentials SET status = 'revoked', revoked_at = updated_at WHERE id = 'credential-5'",
+        "UPDATE system_machine_credentials SET status = 'revoked', revoked_at = updated_at WHERE id = '606f6c4c-06c7-4bfe-be7f-15069daaa8c8'",
       )
       .run()
     expect((await call()).status).toBe(401)
@@ -221,17 +225,23 @@ describe("verifyBearer", () => {
       await call(
         await createTestToken(jwtSecret, {
           employeeId: toWorkforceEmployeeId(5),
-          accountId: "account-not-registered",
+          accountId: "feb94168-568d-4822-878b-95bf6b96f262",
         }),
       ),
     ).toEqual(rejected)
 
     const token = await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(5) })
-    await db.prepare("UPDATE system_accounts SET token_version = 1 WHERE id = '5'").run()
+    await db
+      .prepare(
+        "UPDATE system_accounts SET token_version = 1 WHERE id = '01900061-0000-7000-8000-000000000005'",
+      )
+      .run()
     const revoked = await call(token)
 
     await db
-      .prepare("UPDATE system_accounts SET status = 'suspended', token_version = 2 WHERE id = '5'")
+      .prepare(
+        "UPDATE system_accounts SET status = 'suspended', token_version = 2 WHERE id = '01900061-0000-7000-8000-000000000005'",
+      )
       .run()
     const inactive = await call(
       await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(5), tokenVersion: 2 }),
@@ -302,7 +312,9 @@ for (const path of ["/company/current-profile", "/system/notifications/unread-co
     const token = await externalToken()
     expect((await externalRequest({ db, token, path })).status).toBe(200)
     await db
-      .prepare("UPDATE system_identity_bindings SET revoked_at = ?1 WHERE id = 'oidc:employee-5'")
+      .prepare(
+        "UPDATE system_identity_bindings SET revoked_at = ?1 WHERE id = '181c7819-425d-4fcf-9536-4e11f2f906f2'",
+      )
       .bind(new Date(now).getTime())
       .run()
     expect((await externalRequest({ db, token, path })).status).toBe(401)

@@ -11,19 +11,19 @@ function fixture() {
   sqlite.exec(readFileSync(new URL("../../schema/system-integration.sql", import.meta.url), "utf8"))
   sqlite.exec(readFileSync(new URL("../../schema/system-principal.sql", import.meta.url), "utf8"))
   sqlite.exec(`INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-    VALUES ('actor:1', 'active', 0, 100, 100);
+    VALUES ('55823b7f-711d-4dbd-af39-039ee6e1b4ff', 'active', 0, 100, 100);
     INSERT INTO system_principals (id, account_id, kind, name, revision, created_at, updated_at)
-    VALUES ('principal:1', 'actor:1', 'service', 'Operator', 1, 100, 100);
+    VALUES ('308954f7-a233-4860-85cb-026577024347', '55823b7f-711d-4dbd-af39-039ee6e1b4ff', 'service', 'Operator', 1, 100, 100);
     INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at)
     VALUES ('4e74c1bb-6f90-452e-852b-b723b635cc75', 'operator', 'custom', 'Operator', 100, 100);
     INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('4e74c1bb-6f90-452e-852b-b723b635cc75', 'records:write'), ('4e74c1bb-6f90-452e-852b-b723b635cc75', 'records:read');
     INSERT INTO system_role_bindings (id, account_id, role_id, created_at)
-    VALUES ('d50d88aa-2e8e-4e9b-8d15-2a1fb3ed6a4c', 'actor:1', '4e74c1bb-6f90-452e-852b-b723b635cc75', 100);
+    VALUES ('d50d88aa-2e8e-4e9b-8d15-2a1fb3ed6a4c', '55823b7f-711d-4dbd-af39-039ee6e1b4ff', '4e74c1bb-6f90-452e-852b-b723b635cc75', 100);
     CREATE TABLE test_records (id TEXT PRIMARY KEY);`)
   const database = wrapSystemD1TestDatabase(sqlite)
   const adapter = new SystemServiceOperationAuthorizationAdapter({ env: { DB: database } })
   const input = {
-    accountId: "actor:1",
+    accountId: "55823b7f-711d-4dbd-af39-039ee6e1b4ff",
     tokenVersion: 0,
     permissions: ["records:read", "records:write"],
     now: new Date(1000),
@@ -41,7 +41,7 @@ test("現在のServiceの権限を合成し、global管理者も同じ保存条�
     const proof = await adapter.prepare(input)
     if (proof === "forbidden" || proof instanceof Error)
       throw new Error("authorization failed", { cause: proof })
-    expect(proof.principalId).toBe("principal:1")
+    expect(proof.principalId).toBe("308954f7-a233-4860-85cb-026577024347")
     await database.batch([
       ...proof.assertions,
       database.prepare("INSERT INTO test_records VALUES (?)").bind(String(admin)),
@@ -54,11 +54,11 @@ test("現在のServiceの権限を合成し、global管理者も同じ保存条�
 test("期限・対象scope・Principalの種別・token版を検査する", async () => {
   for (const mutation of [
     "UPDATE system_role_bindings SET revoked_at = 1000",
-    "DELETE FROM system_role_bindings; INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('83f6f682-d347-44f5-8ab9-56d0627d83f6', 'actor:1', '4e74c1bb-6f90-452e-852b-b723b635cc75', 'records', 'record:1', 100)",
+    "DELETE FROM system_role_bindings; INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('83f6f682-d347-44f5-8ab9-56d0627d83f6', '55823b7f-711d-4dbd-af39-039ee6e1b4ff', '4e74c1bb-6f90-452e-852b-b723b635cc75', 'records', 'record:1', 100)",
     "UPDATE system_principals SET kind = 'agent', revision = 2",
     "UPDATE system_principals SET kind = 'human', revision = 2",
     "UPDATE system_accounts SET status = 'suspended', token_version = 1, updated_at = 1001",
-    "DELETE FROM system_role_bindings; INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('e8cba4cb-45b1-4a1d-8533-4df69478f14b', 'actor:1', '4e74c1bb-6f90-452e-852b-b723b635cc75', 1001)",
+    "DELETE FROM system_role_bindings; INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('e8cba4cb-45b1-4a1d-8533-4df69478f14b', '55823b7f-711d-4dbd-af39-039ee6e1b4ff', '4e74c1bb-6f90-452e-852b-b723b635cc75', 1001)",
     "UPDATE system_accounts SET token_version = 1",
     "DELETE FROM system_iam_role_permissions WHERE permission_key = 'records:write'",
   ]) {

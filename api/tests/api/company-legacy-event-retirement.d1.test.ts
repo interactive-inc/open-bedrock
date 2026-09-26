@@ -1,5 +1,6 @@
 import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 import { requestWithContext } from "@tests/api/support/request-with-context"
@@ -25,7 +26,7 @@ test("旧人事注記は管理者も追加できず、記録日と適用日が�
     .prepare(`INSERT INTO company_personnel_annotations
     (id, employee_id, kind, effective_date, from_department_code, to_department_code, note, created_at)
     VALUES ('0190005c-0000-7000-8000-000000000011', ?, 'retire', '2020-01-01', ' OLD ', NULL, '  Original note  ', '2021-02-03T04:05:06Z')`)
-    .bind(toWorkforceEmployeeId(1))
+    .bind(testEmployeeId(1))
     .run()
   const before = await db.prepare("SELECT * FROM company_personnel_annotations ORDER BY id").all()
   const jwtSecret = "legacy-event-retirement-test-secret"
@@ -68,21 +69,21 @@ test("台帳にない対象の原記録も権限で参照でき、IDと空文字
   await db
     .prepare(`INSERT INTO company_personnel_annotations
     (id, employee_id, kind, effective_date, from_department_code, to_department_code, note, created_at) VALUES
-    ('0190005c-0000-7000-8000-000000000012', 'orphan:source', 'unknown-kind', '', ' OLD ', NULL, '', 'unknown timestamp')`)
+    ('0190005c-0000-7000-8000-000000000012', 'dafa69a8-72e4-473a-b21b-2bb0e452a2c8', 'unknown-kind', '', ' OLD ', NULL, '', 'unknown timestamp')`)
     .run()
   const jwtSecret = "annotation-read-test-secret"
   const token = await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(1) })
   const common = { db, jwtSecret, token }
   const response = await requestWithContext({
     ...common,
-    path: "/company/personnel-annotations?employee_id=orphan%3Asource&kind=unknown-kind",
+    path: "/company/personnel-annotations?employee_id=dafa69a8-72e4-473a-b21b-2bb0e452a2c8&kind=unknown-kind",
   })
   expect(response.status).toBe(200)
   expect(await response.json()).toMatchObject({
     data: [
       {
         id: "0190005c-0000-7000-8000-000000000012",
-        employee_id: "orphan:source",
+        employee_id: "dafa69a8-72e4-473a-b21b-2bb0e452a2c8",
         kind: "unknown-kind",
         effective_date: "",
         note: "",
@@ -99,7 +100,7 @@ test("台帳にない対象の原記録も権限で参照でき、IDと空文字
     (
       await requestWithContext({
         ...common,
-        path: "/company/personnel-annotations?employee_id=orphan%3Asource",
+        path: "/company/personnel-annotations?employee_id=dafa69a8-72e4-473a-b21b-2bb0e452a2c8",
         token: null,
       })
     ).status,
@@ -108,7 +109,7 @@ test("台帳にない対象の原記録も権限で参照でき、IDと空文字
     (
       await requestWithContext({
         ...common,
-        path: "/company/personnel-annotations?employee_id=orphan%3Asource&employee_code=E001",
+        path: "/company/personnel-annotations?employee_id=dafa69a8-72e4-473a-b21b-2bb0e452a2c8&employee_code=E001",
       })
     ).status,
   ).toBe(400)
@@ -142,7 +143,11 @@ test("他者の注記には閲覧権限が必要で、本人の対象IDだけは
     ).status,
   ).toBe(403)
   expect(
-    (await requestWithContext({ ...common, path: "/company/personnel-annotations?employee_id=2" }))
-      .status,
+    (
+      await requestWithContext({
+        ...common,
+        path: `/company/personnel-annotations?employee_id=${testEmployeeId(2)}`,
+      })
+    ).status,
   ).toBe(200)
 })

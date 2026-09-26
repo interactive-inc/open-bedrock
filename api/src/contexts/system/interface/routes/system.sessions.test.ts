@@ -15,7 +15,7 @@ import { hc } from "hono/client"
 const issuedAt = new Date("2026-01-01T00:00:00.000Z")
 const rotatedAt = new Date("2026-01-02T00:00:00.000Z")
 const revokedAt = new Date("2026-01-03T00:00:00.000Z")
-const accountId = "system-route-account"
+const accountId = "8fb81ded-072d-4ae1-968c-ace4dbec9950"
 const subject = "person@example.com"
 const password = "correct-password"
 const pepper = "system-session-test-pepper"
@@ -50,14 +50,14 @@ describe("System Session HTTP", () => {
       .query(
         `INSERT INTO system_identity_bindings
            (id, account_id, provider, subject, created_at, activated_at, revoked_at)
-         VALUES ('password-identity', ?1, 'password', ?2, ?3, ?3, NULL)`,
+         VALUES ('69157852-80fb-427d-8ef4-8047bd2d8c6a', ?1, 'password', ?2, ?3, ?3, NULL)`,
       )
       .run(accountId, subject, issuedAt.getTime())
     fixture.sqlite
       .query(
         `INSERT INTO system_password_credentials
            (identity_id, password_hash, changed_at, created_at, updated_at)
-         VALUES ('password-identity', ?1, ?2, ?2, ?2)`,
+         VALUES ('69157852-80fb-427d-8ef4-8047bd2d8c6a', ?1, ?2, ?2, ?2)`,
       )
       .run(passwordHash, issuedAt.getTime())
 
@@ -201,14 +201,14 @@ describe("System Session HTTP", () => {
       .query(
         `INSERT INTO system_identity_bindings
            (id, account_id, provider, subject, created_at, activated_at, revoked_at)
-         VALUES ('password-identity', ?1, 'password', ?2, ?3, ?3, NULL)`,
+         VALUES ('69157852-80fb-427d-8ef4-8047bd2d8c6a', ?1, 'password', ?2, ?3, ?3, NULL)`,
       )
       .run(accountId, subject, issuedAt.getTime())
     fixture.sqlite
       .query(
         `INSERT INTO system_password_credentials
            (identity_id, password_hash, changed_at, created_at, updated_at)
-         VALUES ('password-identity', ?1, ?2, ?2, ?2)`,
+         VALUES ('69157852-80fb-427d-8ef4-8047bd2d8c6a', ?1, ?2, ?2, ?2)`,
       )
       .run(passwordHash, issuedAt.getTime())
     const app = createApp()

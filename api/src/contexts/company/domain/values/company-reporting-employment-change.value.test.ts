@@ -8,7 +8,7 @@ import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/defin
 function version(
   revision: number,
   startsOn: string,
-  manager = "manager:one",
+  manager = "c58922fe-b891-4ee5-878e-e91b0cc75ca0",
   state: "active" | "void" = "active",
 ) {
   const resource = CompanyResourceEntity.create({
@@ -20,7 +20,7 @@ function version(
     effectiveFrom: restoreCalendarDate(startsOn),
     effectiveTo: null,
     attributes: {
-      employeeId: "employee:one",
+      employeeId: "9e174baf-3240-4253-9cba-16bc3e431cca",
       managerEmployeeId: manager,
       organizationUnitId: "0190005f-0000-7000-8000-c9ae95875c9c",
     },
@@ -35,7 +35,7 @@ function change(
   end = "2030-07-01",
 ) {
   const value = CompanyReportingEmploymentChangeValue.create({
-    employeeId: "manager:one",
+    employeeId: "c58922fe-b891-4ee5-878e-e91b0cc75ca0",
     history,
     basis,
     employments: [
@@ -72,7 +72,7 @@ describe("CompanyReportingEmploymentChangeValue", () => {
         period.managerEmployeeId,
       ]),
     ).toEqual([
-      ["2030-03-01", "2030-07-01", "manager:one"],
+      ["2030-03-01", "2030-07-01", "c58922fe-b891-4ee5-878e-e91b0cc75ca0"],
       ["2030-09-01", "2030-11-01", "manager:two"],
     ])
   })
@@ -81,7 +81,7 @@ describe("CompanyReportingEmploymentChangeValue", () => {
     const before = [version(1, "2030-03-01")]
     const history = [...before, ...change(before).resources]
     const value = CompanyReportingEmploymentChangeValue.create({
-      employeeId: "manager:one",
+      employeeId: "c58922fe-b891-4ee5-878e-e91b0cc75ca0",
       history,
       basis: history,
       employments: [
@@ -97,7 +97,7 @@ describe("CompanyReportingEmploymentChangeValue", () => {
   test("退職日の訂正では元の関係を復元し、空白と取消を維持する", () => {
     const before = [
       version(1, "2030-03-01"),
-      version(2, "2030-05-01", "manager:one", "void"),
+      version(2, "2030-05-01", "c58922fe-b891-4ee5-878e-e91b0cc75ca0", "void"),
       version(3, "2030-06-01"),
     ]
     const history = [...before, ...change(before).resources]
@@ -135,7 +135,7 @@ describe("CompanyReportingEmploymentChangeValue", () => {
   test("版の欠落と別resourceの混入を拒否する", () => {
     expect(
       CompanyReportingEmploymentChangeValue.create({
-        employeeId: "manager:one",
+        employeeId: "c58922fe-b891-4ee5-878e-e91b0cc75ca0",
         history: [version(2, "2030-03-01")],
         basis: [],
         employments: [],
@@ -144,7 +144,7 @@ describe("CompanyReportingEmploymentChangeValue", () => {
     const first = version(1, "2030-03-01")
     expect(
       CompanyReportingEmploymentChangeValue.create({
-        employeeId: "manager:one",
+        employeeId: "c58922fe-b891-4ee5-878e-e91b0cc75ca0",
         history: [first],
         basis: [version(1, "2030-03-01")],
         employments: [],

@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { Room } from "@/contexts/room/domain/entities/room.entity"
@@ -48,7 +49,7 @@ describe("RoomRepository on local D1", () => {
 
     const reservation = RoomReservation.create({
       roomId: created.id,
-      reserverId: toWorkforceEmployeeId(1),
+      reserverId: toWorkforceEmployeeId(testEmployeeId(1)),
       startAt: "2026-06-01T10:00:00.000Z",
       endAt: "2026-06-01T11:00:00.000Z",
       purpose: "Meeting",

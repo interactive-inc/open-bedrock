@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { contextStorage } from "hono/context-storage"
@@ -173,7 +174,7 @@ describe("POST /resignations", () => {
 
     if (parsed.success) {
       expect(parsed.data.status).toBe("requested")
-      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
       expect(parsed.data.last_working_date).toBe("2026-12-20")
     }
   })
@@ -272,7 +273,7 @@ describe("GET /resignations/me", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0].employee_id).toBe(toWorkforceEmployeeId(4))
+      expect(parsed.data.data[0].employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(4)))
     }
   })
 

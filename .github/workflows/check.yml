@@ -72,5 +72,6 @@ jobs:
         run: bun install --frozen-lockfile
 
       - name: api test
-        run: bun test --shard=${{ matrix.shard }}/4
+        # migration を再生する fixture が多く、既定の 5 秒では足りない。
+        run: bun test --timeout 15000 --shard=${{ matrix.shard }}/4
         working-directory: api

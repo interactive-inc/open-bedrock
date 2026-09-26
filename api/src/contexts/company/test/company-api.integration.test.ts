@@ -33,8 +33,8 @@ type TestEnv = {
 }
 
 const actor = CompanyActorValue.restore({
-  accountId: "account:1",
-  employeeId: "employee:1",
+  accountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
+  employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
   organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
   capabilities: ["company:read", "company:write"],
   permissions: ["employee:read", "employee:attributes:read"],
@@ -132,7 +132,7 @@ describe("canonical Company API", () => {
       ).status,
     ).toBe(201)
     const basicEditor = CompanyActorValue.restore({
-      accountId: "account:basic-editor",
+      accountId: "76e2eea1-f607-4020-90cf-7433ebf4d242",
       employeeId: null,
       organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:workforce:update"],
@@ -199,13 +199,13 @@ describe("canonical Company API", () => {
     const employee = {
       ...person,
       type: "employee" as const,
-      id: "employee:one",
+      id: "4d1c9a7e-2b3f-4e5a-8c6d-7e8f9a0b1c2d",
       attributes: { personId: person.id, employeeCode: "E001" },
     }
     const employment = {
       ...person,
       type: "employment" as const,
-      id: "employment:one",
+      id: "6e2d0b8f-3c4a-4f6b-9d7e-8f9a0b1c2d3e",
       attributes: {
         employeeId: employee.id,
         status: "ACTIVE" as const,
@@ -219,7 +219,7 @@ describe("canonical Company API", () => {
     expect(initial.status).toBe(201)
 
     const basicEditor = CompanyActorValue.restore({
-      accountId: "account:basic-editor",
+      accountId: "76e2eea1-f607-4020-90cf-7433ebf4d242",
       employeeId: null,
       organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:workforce:update"],
@@ -268,7 +268,7 @@ describe("canonical Company API", () => {
     const employee = {
       ...person,
       type: "employee" as const,
-      id: "employee:1",
+      id: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
       attributes: { personId: person.id, employeeCode: "E001" },
     }
     const employment: Parameters<
@@ -276,7 +276,7 @@ describe("canonical Company API", () => {
     >[0]["json"]["resources"][number] = {
       ...person,
       type: "employment" as const,
-      id: "employment:1",
+      id: "8f3e1c9a-4d5b-4a7c-8e8f-9a0b1c2d3e4f",
       attributes: {
         employeeId: employee.id,
         status: "ACTIVE" as const,
@@ -664,8 +664,8 @@ describe("canonical Company API", () => {
         reason: "invalid management cycle",
         resources: [
           organizationUnit,
-          reportingRelation("employee:1", "employee:2"),
-          reportingRelation("employee:2", "employee:1"),
+          reportingRelation("b4b9edaa-1e08-46d5-b0bc-1798cc369fd1", "employee:2"),
+          reportingRelation("employee:2", "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1"),
         ],
       },
     })
@@ -720,7 +720,7 @@ async function seedLegalEntity(database: D1Database): Promise<void> {
        VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'legal-entity', 'legal-entity:primary', 1, 1,
          'active', '2026-01-01', NULL,
          '{"officialName":"Example Corporation","jurisdictionCountryCode":"US","registrationNumber":null,"defaultCurrencyCode":"USD"}',
-         'command:legal-entity', 'account:1', 'register legal entity', 1)`,
+         'command:legal-entity', 'c0975461-26d2-43a1-86d2-124bd000d9c9', 'register legal entity', 1)`,
     ),
     database.prepare(
       `INSERT INTO company_resource_heads

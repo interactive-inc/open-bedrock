@@ -4,6 +4,8 @@ import { Database } from "bun:sqlite"
 import { readFileSync } from "node:fs"
 import { getTableConfig } from "drizzle-orm/sqlite-core"
 
+const RETAINED_MACHINE_ID = "a85ac8ae-2706-49ec-b35c-d3718a77bc20"
+
 const coreSql = readFileSync(new URL("./system-core.sql", import.meta.url), "utf8")
 const integrationSql = readFileSync(new URL("./system-integration.sql", import.meta.url), "utf8")
 const principalSql = readFileSync(new URL("./system-principal.sql", import.meta.url), "utf8")
@@ -44,22 +46,22 @@ describe("System principal schema", () => {
     const database = createDatabase()
     database.exec(
       `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-       VALUES ('account:human', 'active', 0, 1, 1), ('account:service', 'active', 0, 1, 1);
+       VALUES ('e6a43073-11e5-4a6a-970a-00d1517be641', 'active', 0, 1, 1), ('24bcd07d-9660-450b-9285-35ac93e4c27f', 'active', 0, 1, 1);
        INSERT INTO system_principals
          (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
        VALUES
-         ('principal:human', 'account:human', 'human', 'Human', NULL, 1, 1, 1),
-         ('principal:service', 'account:service', 'service', 'Service', NULL, 1, 1, 1);
+         ('44ce6e02-4a70-484d-ad0a-c525d6696568', 'e6a43073-11e5-4a6a-970a-00d1517be641', 'human', 'Human', NULL, 1, 1, 1),
+         ('706562a0-8521-4b2d-81db-70207dd894b4', '24bcd07d-9660-450b-9285-35ac93e4c27f', 'service', 'Service', NULL, 1, 1, 1);
        INSERT INTO system_machine_credentials
          (id, principal_id, name, secret_hash, status, created_at, updated_at,
           expires_at, last_used_at, revoked_at)
        VALUES
-         ('credential:service', 'principal:service', 'Primary', '${"a".repeat(64)}',
+         ('a85ac8ae-2706-49ec-b35c-d3718a77bc20', '706562a0-8521-4b2d-81db-70207dd894b4', 'Primary', '${"a".repeat(64)}',
           'active', 1, 1, NULL, NULL, NULL);
        INSERT INTO system_step_up_grants
          (id, account_id, token_hash, method, issued_at, expires_at, last_used_at, revoked_at)
        VALUES
-         ('step-up:1', 'account:human', '${"b".repeat(64)}', 'password', 1, 1000, NULL, NULL);`,
+         ('5e32da6a-cdd9-4fcf-b973-b80082165594', 'e6a43073-11e5-4a6a-970a-00d1517be641', '${"b".repeat(64)}', 'password', 1, 1000, NULL, NULL);`,
     )
 
     expect(() =>
@@ -67,15 +69,17 @@ describe("System principal schema", () => {
         `INSERT INTO system_machine_credentials
            (id, principal_id, name, secret_hash, status, created_at, updated_at,
             expires_at, last_used_at, revoked_at)
-         VALUES ('credential:human', 'principal:human', 'Invalid', '${"c".repeat(64)}',
+         VALUES ('c0f0895e-ff39-4a3d-a068-04920977e93b', '44ce6e02-4a70-484d-ad0a-c525d6696568', 'Invalid', '${"c".repeat(64)}',
            'active', 1, 1, NULL, NULL, NULL);`,
       ),
     ).toThrow("system_machine_credential_principal_invalid")
     expect(() =>
-      database.exec("DELETE FROM system_machine_credentials WHERE id = 'credential:service'"),
+      database.exec(`DELETE FROM system_machine_credentials WHERE id = '${RETAINED_MACHINE_ID}'`),
     ).toThrow("system_machine_credentials_are_retained")
-    expect(() => database.exec("DELETE FROM system_step_up_grants WHERE id = 'step-up:1'")).toThrow(
-      "system_step_up_grants_are_retained",
-    )
+    expect(() =>
+      database.exec(
+        "DELETE FROM system_step_up_grants WHERE id = '5e32da6a-cdd9-4fcf-b973-b80082165594'",
+      ),
+    ).toThrow("system_step_up_grants_are_retained")
   })
 })

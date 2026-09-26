@@ -25,7 +25,7 @@ function createDatabase(): Database {
   database.run(
     `INSERT INTO system_accounts
        (id, status, token_version, created_at, updated_at)
-     VALUES ('creator', 'active', 0, 100, 100)`,
+     VALUES ('3d1063a4-6a8f-4d72-af2a-90c6e9594c0e', 'active', 0, 100, 100)`,
   )
 
   return database
@@ -41,7 +41,7 @@ function insertDefinition(database: Database): void {
     `INSERT INTO system_procedure_definition_revisions
        (procedure_key, revision, title, category, input_schema_json,
         decision_policy_json, created_by_account_id, created_at)
-     VALUES ('change', 1, 'Change', 'operation', '{}', '{"steps":[]}', 'creator', 100)`,
+     VALUES ('change', 1, 'Change', 'operation', '{}', '{"steps":[]}', '3d1063a4-6a8f-4d72-af2a-90c6e9594c0e', 100)`,
   )
 }
 
@@ -49,13 +49,13 @@ function insertProposal(database: Database): void {
   database.run(
     `INSERT INTO system_proposal_series
        (id, procedure_key, created_by_account_id, created_at)
-     VALUES ('27ea4b6a-6e22-49b1-8303-ea9e8c5416a9', 'change', 'creator', 100)`,
+     VALUES ('27ea4b6a-6e22-49b1-8303-ea9e8c5416a9', 'change', '3d1063a4-6a8f-4d72-af2a-90c6e9594c0e', 100)`,
   )
   database.run(
     `INSERT INTO system_proposals
        (id, series_id, version, procedure_key, procedure_revision, body_json,
         digest, created_by_account_id, created_at)
-     VALUES ('e42be528-73db-4ad0-86f3-1083e6a413f2', '27ea4b6a-6e22-49b1-8303-ea9e8c5416a9', 1, 'change', 1, '{"reason":"safe"}', ?, 'creator', 100)`,
+     VALUES ('e42be528-73db-4ad0-86f3-1083e6a413f2', '27ea4b6a-6e22-49b1-8303-ea9e8c5416a9', 1, 'change', 1, '{"reason":"safe"}', ?, '3d1063a4-6a8f-4d72-af2a-90c6e9594c0e', 100)`,
     [digest],
   )
 }
@@ -138,7 +138,7 @@ describe("System procedure schema", () => {
       `INSERT INTO system_procedure_definition_revisions
          (procedure_key, revision, title, category, input_schema_json,
           decision_policy_json, created_by_account_id, created_at)
-       VALUES ('change', 2, 'Change v2', 'operation', '{}', '{}', 'creator', 110)`,
+       VALUES ('change', 2, 'Change v2', 'operation', '{}', '{}', '3d1063a4-6a8f-4d72-af2a-90c6e9594c0e', 110)`,
     )
     database.run(
       "UPDATE system_procedure_definitions SET current_revision = 2, updated_at = 110 WHERE key = 'change'",
@@ -163,7 +163,7 @@ describe("System procedure schema", () => {
       `INSERT INTO system_cases
          (id, subject_context, subject_kind, subject_id, subject_version,
           proposal_digest, created_by_account_id, status, created_at, updated_at)
-       VALUES ('9055d4a0-416c-40c4-814b-0c6df2d0f691', 'system', 'proposal', '27ea4b6a-6e22-49b1-8303-ea9e8c5416a9', '1', ?, 'creator', 'pending', 100, 100)`,
+       VALUES ('9055d4a0-416c-40c4-814b-0c6df2d0f691', 'system', 'proposal', '27ea4b6a-6e22-49b1-8303-ea9e8c5416a9', '1', ?, '3d1063a4-6a8f-4d72-af2a-90c6e9594c0e', 'pending', 100, 100)`,
       [digest],
     )
     database.run(
@@ -180,7 +180,7 @@ describe("System procedure schema", () => {
         `INSERT INTO system_proposals
            (id, series_id, version, procedure_key, procedure_revision, body_json,
             digest, created_by_account_id, supersedes_proposal_id, created_at)
-         VALUES ('5507637c-810c-4cf0-865f-2c2433bf6b06', '27ea4b6a-6e22-49b1-8303-ea9e8c5416a9', 3, 'change', 1, '{}', ?, 'creator', 'e42be528-73db-4ad0-86f3-1083e6a413f2', 120)`,
+         VALUES ('5507637c-810c-4cf0-865f-2c2433bf6b06', '27ea4b6a-6e22-49b1-8303-ea9e8c5416a9', 3, 'change', 1, '{}', ?, '3d1063a4-6a8f-4d72-af2a-90c6e9594c0e', 'e42be528-73db-4ad0-86f3-1083e6a413f2', 120)`,
         [digest],
       ),
     ).toThrow()
@@ -202,7 +202,7 @@ describe("System procedure schema", () => {
       `INSERT INTO system_cases
          (id, subject_context, subject_kind, subject_id, subject_version,
           proposal_digest, created_by_account_id, status, created_at, updated_at)
-       VALUES ('9055d4a0-416c-40c4-814b-0c6df2d0f691', 'system', 'proposal', 'wrong-series', '1', ?, 'creator', 'pending', 100, 100)`,
+       VALUES ('9055d4a0-416c-40c4-814b-0c6df2d0f691', 'system', 'proposal', 'wrong-series', '1', ?, '3d1063a4-6a8f-4d72-af2a-90c6e9594c0e', 'pending', 100, 100)`,
       [digest],
     )
 
@@ -221,7 +221,7 @@ test("record preservation Case requires the exact operation, subject and body ve
     try {
       insertDefinition(database)
       database.run(
-        "INSERT INTO system_proposal_series(id,procedure_key,created_by_account_id,created_at) VALUES ('27ea4b6a-6e22-49b1-8303-ea9e8c5416a9','change','creator',100)",
+        "INSERT INTO system_proposal_series(id,procedure_key,created_by_account_id,created_at) VALUES ('27ea4b6a-6e22-49b1-8303-ea9e8c5416a9','change','3d1063a4-6a8f-4d72-af2a-90c6e9594c0e',100)",
       )
       const body =
         scenario === "missing"
@@ -232,11 +232,11 @@ test("record preservation Case requires the exact operation, subject and body ve
               recordId: scenario === "record" ? "other" : "record-1",
             }
       database.run(
-        `INSERT INTO system_proposals(id,series_id,version,procedure_key,procedure_revision,body_json,digest,created_by_account_id,created_at) VALUES ('e42be528-73db-4ad0-86f3-1083e6a413f2','27ea4b6a-6e22-49b1-8303-ea9e8c5416a9',1,'change',1,?1,?2,'creator',100)`,
+        `INSERT INTO system_proposals(id,series_id,version,procedure_key,procedure_revision,body_json,digest,created_by_account_id,created_at) VALUES ('e42be528-73db-4ad0-86f3-1083e6a413f2','27ea4b6a-6e22-49b1-8303-ea9e8c5416a9',1,'change',1,?1,?2,'3d1063a4-6a8f-4d72-af2a-90c6e9594c0e',100)`,
         [JSON.stringify(body), digest],
       )
       database.run(
-        `INSERT INTO system_cases(id,subject_context,subject_kind,subject_id,subject_version,proposal_digest,created_by_account_id,status,created_at,updated_at) VALUES ('9055d4a0-416c-40c4-814b-0c6df2d0f691','system',?1,'record-1','1',?2,'creator','pending',100,100)`,
+        `INSERT INTO system_cases(id,subject_context,subject_kind,subject_id,subject_version,proposal_digest,created_by_account_id,status,created_at,updated_at) VALUES ('9055d4a0-416c-40c4-814b-0c6df2d0f691','system',?1,'record-1','1',?2,'3d1063a4-6a8f-4d72-af2a-90c6e9594c0e','pending',100,100)`,
         [scenario === "kind" ? "other" : "record-preservation", digest],
       )
       const link = () =>

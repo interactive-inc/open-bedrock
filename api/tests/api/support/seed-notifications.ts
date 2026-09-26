@@ -1,5 +1,6 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import { testAccountId } from "@system/test/system-test-id.test-support"
 
 type SeedNotification = {
   id: string
@@ -90,7 +91,7 @@ export async function seedSystemNotifications(db: D1Database): Promise<void> {
         )
         .bind(
           notification.id,
-          String(notification.recipientEmployeeId),
+          testAccountId(notification.recipientEmployeeId),
           deliveredAt,
           notification.isRead ? deliveredAt : null,
         )

@@ -3,6 +3,7 @@ import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"
 import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
 
 const migrations = join(import.meta.dir, "../../../../migrations")
@@ -37,7 +38,8 @@ test("migration preserves the existing text without inventing an editor or past 
   await db
     .prepare(`INSERT INTO knowledge_articles
     (id,title,category,tags,body_md,author_id,created_at)
-    VALUES (1,'Procedure','Operations',NULL,'Known current text','1','2020-01-01T00:00:00Z')`)
+    VALUES (1,'Procedure','Operations',NULL,'Known current text',?1,'2020-01-01T00:00:00Z')`)
+    .bind(testEmployeeId(1))
     .run()
   await applyMigrationFile(db, "0178_record_knowledge_article_revisions.sql")
 
@@ -58,7 +60,7 @@ test("migration preserves the existing text without inventing an editor or past 
     revision: 1,
     status: "active",
     bodyMd: "Known current text",
-    authorId: "1",
+    authorId: testEmployeeId(1),
     createdAt: "2020-01-01T00:00:00Z",
   })
   for (const command of [

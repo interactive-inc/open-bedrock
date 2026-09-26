@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
@@ -59,7 +60,7 @@ async function createCommendation(db: D1Database): Promise<string> {
     token: await tokenFor(1),
     method: "POST",
     body: {
-      employee_id: "5",
+      employee_id: testEmployeeId(5),
       title: "MVP",
       reason: "quarter contribution",
       awarded_on: "2026-06-01",
@@ -103,7 +104,7 @@ describe("commendations", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/commendation/commendations?employee_id=9",
+      path: `/commendation/commendations?employee_id=${testEmployeeId(9)}`,
       token: await tokenFor(5),
     })
 
@@ -119,7 +120,7 @@ describe("commendations", () => {
       path: "/commendation/commendations",
       token: await tokenFor(5),
       method: "POST",
-      body: { employee_id: "5", title: "x", reason: "y", awarded_on: "2026-06-01" },
+      body: { employee_id: testEmployeeId(5), title: "x", reason: "y", awarded_on: "2026-06-01" },
     })
 
     expect(response.status).toBe(403)

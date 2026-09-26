@@ -30,7 +30,7 @@ test("停止と解除の同時再送は履歴を増やさず、再停止は新�
     id: crypto.randomUUID(),
     sourceNamespace: "example-source",
     ownerContext: "attendance",
-    actorAccountId: "account:recorder",
+    actorAccountId: "cc97e08f-b4a0-4e2a-9a79-31e6d95f9208",
     reason: "Preserve the source",
   }
   const now = new Date()
@@ -98,7 +98,7 @@ test("再送にも現在のDB権限条件を要求し、監査保存失敗では
     id: crypto.randomUUID(),
     sourceNamespace: "example-source",
     ownerContext: "attendance",
-    actorAccountId: "account:recorder",
+    actorAccountId: "cc97e08f-b4a0-4e2a-9a79-31e6d95f9208",
     reason: "Preserve the source",
   }
   await execSql(

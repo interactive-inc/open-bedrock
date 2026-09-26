@@ -3,6 +3,7 @@ import { employeeProfileVersionSchema } from "@/contexts/company/domain/definiti
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 import { requestWithContext } from "@tests/api/support/request-with-context"
@@ -233,7 +234,10 @@ describe("POST /company/employee-registrations", () => {
         {
           id: employeeId,
           type: "employee",
-          attributes: { employeeCode: "E100", personId: `person:${employeeId}` },
+          attributes: {
+            employeeCode: "E100",
+            personId: deterministicCompanyId("person", employeeId),
+          },
         },
       ],
     })

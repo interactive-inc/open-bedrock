@@ -41,15 +41,15 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
     {
       ...base,
       type: "employee",
-      id: "employee:one",
+      id: "9e174baf-3240-4253-9cba-16bc3e431cca",
       attributes: { personId: "person:one", employeeCode: "E001" },
     },
     {
       ...base,
       type: "employment",
-      id: "employment:one",
+      id: "e7173538-06d6-4031-9c04-9915e8eaebbc",
       attributes: {
-        employeeId: "employee:one",
+        employeeId: "9e174baf-3240-4253-9cba-16bc3e431cca",
         status: "ACTIVE",
         employmentType: "FULL_TIME",
       },
@@ -58,7 +58,7 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
   const first = CompanyResourceChangeEntity.create({
     commandId: "names:initial",
     expectedRevision: 0,
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Register confirmed person",
     recordedAt: 1,
     resources,
@@ -72,17 +72,17 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
   const previous = await readCompanyEmploymentPersonNames({
     database,
     organizationId,
-    employmentIds: ["employment:one", "employment:missing"],
+    employmentIds: ["e7173538-06d6-4031-9c04-9915e8eaebbc", "employment:missing"],
     effectiveOn,
   })
   if (previous instanceof Error) throw previous
   expect(previous.organizationRevision).toBe(1)
-  expect([...previous.names]).toEqual([["employment:one", "Old Name"]])
+  expect([...previous.names]).toEqual([["e7173538-06d6-4031-9c04-9915e8eaebbc", "Old Name"]])
 
   const beforeHire = await readCompanyEmploymentPersonNames({
     database,
     organizationId,
-    employmentIds: ["employment:one"],
+    employmentIds: ["e7173538-06d6-4031-9c04-9915e8eaebbc"],
     effectiveOn: restoreCalendarDate("2029-12-31"),
     organizationRevision: previous.organizationRevision,
   })
@@ -92,7 +92,7 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
   const beforeHireWithEnded = await readCompanyEmploymentPersonNames({
     database,
     organizationId,
-    employmentIds: ["employment:one"],
+    employmentIds: ["e7173538-06d6-4031-9c04-9915e8eaebbc"],
     effectiveOn: restoreCalendarDate("2029-12-31"),
     includeEndedEmployments: true,
     organizationRevision: previous.organizationRevision,
@@ -103,7 +103,7 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
   const correction = CompanyResourceChangeEntity.create({
     commandId: "names:change",
     expectedRevision: 1,
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Confirmed name change",
     recordedAt: 2,
     resources: [
@@ -123,28 +123,28 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
   const current = await readCompanyEmploymentPersonNames({
     database,
     organizationId,
-    employmentIds: ["employment:one"],
+    employmentIds: ["e7173538-06d6-4031-9c04-9915e8eaebbc"],
     effectiveOn,
   })
   if (current instanceof Error) throw current
   expect(current.organizationRevision).toBe(2)
-  expect(current.names.get("employment:one")).toBe("New Name")
+  expect(current.names.get("e7173538-06d6-4031-9c04-9915e8eaebbc")).toBe("New Name")
 
   const historical = await readCompanyEmploymentPersonNames({
     database,
     organizationId,
-    employmentIds: ["employment:one"],
+    employmentIds: ["e7173538-06d6-4031-9c04-9915e8eaebbc"],
     effectiveOn,
     organizationRevision: previous.organizationRevision,
   })
   if (historical instanceof Error) throw historical
   expect(historical.organizationRevision).toBe(1)
-  expect(historical.names.get("employment:one")).toBe("Old Name")
+  expect(historical.names.get("e7173538-06d6-4031-9c04-9915e8eaebbc")).toBe("Old Name")
 
   const unknownRevision = await readCompanyEmploymentPersonNames({
     database,
     organizationId,
-    employmentIds: ["employment:one"],
+    employmentIds: ["e7173538-06d6-4031-9c04-9915e8eaebbc"],
     effectiveOn,
     organizationRevision: 3,
   })
@@ -153,7 +153,7 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
   const closure = CompanyResourceChangeEntity.create({
     commandId: "names:employment-ended",
     expectedRevision: 2,
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Confirmed employment end",
     recordedAt: 3,
     resources: [
@@ -173,7 +173,7 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
   const activeOnly = await readCompanyEmploymentPersonNames({
     database,
     organizationId,
-    employmentIds: ["employment:one"],
+    employmentIds: ["e7173538-06d6-4031-9c04-9915e8eaebbc"],
     effectiveOn,
   })
   if (activeOnly instanceof Error) throw activeOnly
@@ -182,13 +182,13 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
   const endedForAttribution = await readCompanyEmploymentPersonNames({
     database,
     organizationId,
-    employmentIds: ["employment:one"],
+    employmentIds: ["e7173538-06d6-4031-9c04-9915e8eaebbc"],
     effectiveOn,
     includeEndedEmployments: true,
   })
   if (endedForAttribution instanceof Error) throw endedForAttribution
   expect(endedForAttribution.organizationRevision).toBe(3)
-  expect(endedForAttribution.names.get("employment:one")).toBe("New Name")
+  expect(endedForAttribution.names.get("e7173538-06d6-4031-9c04-9915e8eaebbc")).toBe("New Name")
   const currentDirectory = await readCompanyEmploymentDirectory({
     database,
     organizationId,
@@ -207,7 +207,7 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
   if (endedDirectory instanceof Error) throw endedDirectory
   expect(endedDirectory.items).toMatchObject([
     {
-      employmentId: "employment:one",
+      employmentId: "e7173538-06d6-4031-9c04-9915e8eaebbc",
       personName: "New Name",
       status: "ACTIVE",
       startedOn: "2030-01-01",
@@ -236,30 +236,30 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
   const pinnedEnded = await readCompanyEmploymentPersonNames({
     database,
     organizationId,
-    employmentIds: ["employment:one"],
+    employmentIds: ["e7173538-06d6-4031-9c04-9915e8eaebbc"],
     effectiveOn,
     includeEndedEmployments: true,
     organizationRevision: 3,
   })
   if (pinnedEnded instanceof Error) throw pinnedEnded
-  expect([...pinnedEnded.names]).toEqual([["employment:one", "New Name"]])
+  expect([...pinnedEnded.names]).toEqual([["e7173538-06d6-4031-9c04-9915e8eaebbc", "New Name"]])
 
   const currentEmployment = await readCompanyEmploymentsByEmployee({
     database,
     organizationId,
-    employeeIds: ["employee:one", "employee:missing"],
+    employeeIds: ["9e174baf-3240-4253-9cba-16bc3e431cca", "employee:missing"],
     effectiveOn,
   })
   if (currentEmployment instanceof Error) throw currentEmployment
   expect([...currentEmployment.employmentIdsByEmployee]).toEqual([
-    ["employee:one", []],
+    ["9e174baf-3240-4253-9cba-16bc3e431cca", []],
     ["employee:missing", []],
   ])
 
   const pastEmployment = await readCompanyEmploymentsByEmployee({
     database,
     organizationId,
-    employeeIds: ["employee:one", "employee:missing"],
+    employeeIds: ["9e174baf-3240-4253-9cba-16bc3e431cca", "employee:missing"],
     effectiveOn,
     includeEndedEmployments: true,
     organizationRevision: 3,
@@ -267,30 +267,32 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
   if (pastEmployment instanceof Error) throw pastEmployment
   expect(pastEmployment.organizationRevision).toBe(3)
   expect([...pastEmployment.employmentIdsByEmployee]).toEqual([
-    ["employee:one", ["employment:one"]],
+    ["9e174baf-3240-4253-9cba-16bc3e431cca", ["e7173538-06d6-4031-9c04-9915e8eaebbc"]],
     ["employee:missing", []],
   ])
 
   const priorEmployment = await readCompanyEmploymentsByEmployee({
     database,
     organizationId,
-    employeeIds: ["employee:one"],
+    employeeIds: ["9e174baf-3240-4253-9cba-16bc3e431cca"],
     effectiveOn,
     organizationRevision: 2,
   })
   if (priorEmployment instanceof Error) throw priorEmployment
-  expect(priorEmployment.employmentIdsByEmployee.get("employee:one")).toEqual(["employment:one"])
+  expect(
+    priorEmployment.employmentIdsByEmployee.get("9e174baf-3240-4253-9cba-16bc3e431cca"),
+  ).toEqual(["e7173538-06d6-4031-9c04-9915e8eaebbc"])
 
   const rehire = CompanyResourceChangeEntity.create({
     commandId: "names:rehire",
     expectedRevision: 3,
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Confirmed new employment after leaving",
     recordedAt: 4,
     resources: [
       {
         ...resources[2]!,
-        id: "employment:rehire",
+        id: "f1a2b3c4-d5e6-4f70-8a9b-0c1d2e3f4a5b",
         effectiveFrom: restoreCalendarDate("2030-05-01"),
       },
     ],
@@ -304,23 +306,24 @@ test("雇用から人物氏名を同じ会社版で引き、改名後も旧版�
   const afterRehire = await readCompanyEmploymentsByEmployee({
     database,
     organizationId,
-    employeeIds: ["employee:one"],
+    employeeIds: ["9e174baf-3240-4253-9cba-16bc3e431cca"],
     effectiveOn,
   })
   if (afterRehire instanceof Error) throw afterRehire
-  expect(afterRehire.employmentIdsByEmployee.get("employee:one")).toEqual(["employment:rehire"])
+  expect(afterRehire.employmentIdsByEmployee.get("9e174baf-3240-4253-9cba-16bc3e431cca")).toEqual([
+    "f1a2b3c4-d5e6-4f70-8a9b-0c1d2e3f4a5b",
+  ])
   const allRecordedEmployments = await readCompanyEmploymentsByEmployee({
     database,
     organizationId,
-    employeeIds: ["employee:one"],
+    employeeIds: ["9e174baf-3240-4253-9cba-16bc3e431cca"],
     effectiveOn,
     includeEndedEmployments: true,
   })
   if (allRecordedEmployments instanceof Error) throw allRecordedEmployments
-  expect(allRecordedEmployments.employmentIdsByEmployee.get("employee:one")).toEqual([
-    "employment:one",
-    "employment:rehire",
-  ])
+  expect(
+    allRecordedEmployments.employmentIdsByEmployee.get("9e174baf-3240-4253-9cba-16bc3e431cca"),
+  ).toEqual(["e7173538-06d6-4031-9c04-9915e8eaebbc", "f1a2b3c4-d5e6-4f70-8a9b-0c1d2e3f4a5b"])
 })
 
 test("雇用状態が後日変わっても開始日は最初の確定期間から読む", async () => {
@@ -343,9 +346,9 @@ test("雇用状態が後日変わっても開始日は最初の確定期間か�
   const employment: CompanyResourceProps = {
     ...base,
     type: "employment",
-    id: "employment:one",
+    id: "e7173538-06d6-4031-9c04-9915e8eaebbc",
     attributes: {
-      employeeId: "employee:one",
+      employeeId: "9e174baf-3240-4253-9cba-16bc3e431cca",
       status: "ACTIVE",
       employmentType: "FULL_TIME",
     },
@@ -353,7 +356,7 @@ test("雇用状態が後日変わっても開始日は最初の確定期間か�
   const initial = CompanyResourceChangeEntity.create({
     commandId: "start:initial",
     expectedRevision: 0,
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Confirmed hire",
     recordedAt: 1,
     resources: [
@@ -361,7 +364,7 @@ test("雇用状態が後日変わっても開始日は最初の確定期間か�
       {
         ...base,
         type: "employee",
-        id: "employee:one",
+        id: "9e174baf-3240-4253-9cba-16bc3e431cca",
         attributes: { personId: "person:one", employeeCode: "E001" },
       },
       employment,
@@ -376,7 +379,7 @@ test("雇用状態が後日変わっても開始日は最初の確定期間か�
   const leave = CompanyResourceChangeEntity.create({
     commandId: "start:leave",
     expectedRevision: 1,
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Confirmed leave",
     recordedAt: 2,
     resources: [
@@ -399,7 +402,11 @@ test("雇用状態が後日変わっても開始日は最初の確定期間か�
   })
   if (current instanceof Error) throw current
   expect(current.items).toMatchObject([
-    { employmentId: "employment:one", status: "ON_LEAVE", startedOn: "2030-01-01" },
+    {
+      employmentId: "e7173538-06d6-4031-9c04-9915e8eaebbc",
+      status: "ON_LEAVE",
+      startedOn: "2030-01-01",
+    },
   ])
   const historical = await readCompanyEmploymentDirectory({
     database,
@@ -409,7 +416,11 @@ test("雇用状態が後日変わっても開始日は最初の確定期間か�
   })
   if (historical instanceof Error) throw historical
   expect(historical.items).toMatchObject([
-    { employmentId: "employment:one", status: "ACTIVE", startedOn: "2030-01-01" },
+    {
+      employmentId: "e7173538-06d6-4031-9c04-9915e8eaebbc",
+      status: "ACTIVE",
+      startedOn: "2030-01-01",
+    },
   ])
   expect(
     await readCompanyEmploymentStartDates({
@@ -423,7 +434,7 @@ test("雇用状態が後日変わっても開始日は最初の確定期間か�
     await readCompanyEmploymentStartDates({
       database,
       organizationId,
-      employmentIds: ["employment:one"],
+      employmentIds: ["e7173538-06d6-4031-9c04-9915e8eaebbc"],
       organizationRevision: -1,
     }),
   ).toBeInstanceOf(Error)

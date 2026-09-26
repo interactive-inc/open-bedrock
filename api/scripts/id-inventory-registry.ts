@@ -165,6 +165,15 @@ const PROCEDURE_REQUEST_KEY = external(
 
 export const SOFT_REFERENCES: Readonly<Record<string, SoftReference>> = {
   "system_batch_jobs.legacy_id": LEGACY_PRIMARY_KEY,
+  "system_accounts.legacy_id": LEGACY_PRIMARY_KEY,
+  "system_principals.legacy_id": LEGACY_PRIMARY_KEY,
+  "company_employees.legacy_id": LEGACY_PRIMARY_KEY,
+  "company_employments.legacy_id": LEGACY_PRIMARY_KEY,
+  "company_personnel_actions.legacy_id": LEGACY_PRIMARY_KEY,
+  "company_organization_change_operations.legacy_id": LEGACY_PRIMARY_KEY,
+  "company_organization_change_operations.operation_key": notReference(
+    "組織の変更操作を trigger が見つけるための旧来の鍵。ID はこの鍵から決まる UUID",
+  ),
   "company_personnel_annotations.legacy_id": LEGACY_PRIMARY_KEY,
   "company_lifecycle_outbox_entries.legacy_id": LEGACY_PRIMARY_KEY,
   "system_iam_roles.legacy_id": LEGACY_PRIMARY_KEY,

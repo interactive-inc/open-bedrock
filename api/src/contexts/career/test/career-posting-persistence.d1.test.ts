@@ -1,4 +1,5 @@
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { testOrganizationUnitId } from "@tests/api/support/company/test-organization-unit-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -79,7 +80,7 @@ describe("career posting persistence on local D1", () => {
     const applied = await applicationRepository.create(
       CareerApplication.create({
         postingId: withApplied.id ?? "",
-        applicantId: toWorkforceEmployeeId(10),
+        applicantId: toWorkforceEmployeeId(testEmployeeId(10)),
         message: null,
       }),
     )
@@ -94,7 +95,7 @@ describe("career posting persistence on local D1", () => {
       .prepare(
         "INSERT INTO career_applications (id, posting_id, applicant_id, message, status) VALUES (?3, ?1, ?2, NULL, 'rejected')",
       )
-      .bind(withRejected.id, "10", crypto.randomUUID())
+      .bind(withRejected.id, testEmployeeId(10), crypto.randomUUID())
       .run()
 
     expect(await postingRepository.deleteIfNoAppliedApplications(withRejected)).toBe(true)

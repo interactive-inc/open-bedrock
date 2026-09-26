@@ -1,6 +1,9 @@
 import { expect, spyOn, test } from "bun:test"
 import { z } from "zod"
-import { createEmployeeAdoptionBatchFixture } from "@/contexts/company/test/employee-resource-adoption-batch.test-support"
+import {
+  batchEmployeeId,
+  createEmployeeAdoptionBatchFixture,
+} from "@/contexts/company/test/employee-resource-adoption-batch.test-support"
 import { EmployeeResourceAdoptionSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/employee-resource-adoption/employee-resource-adoption-snapshot.adapter"
 
 test("大きい確認履歴を複数SQLへ分けても最後の証跡失敗で全件取り消し、DBの文字列・bind上限内で再試行する", async () => {
@@ -9,7 +12,7 @@ test("大きい確認履歴を複数SQLへ分けても最後の証跡失敗で�
   const before = await context.state()
   await context.database
     .exec(`CREATE TRIGGER fail_last_payload BEFORE INSERT ON company_employee_resource_adoptions
-    WHEN NEW.employee_id = 'employee:batch-9' BEGIN SELECT RAISE(ABORT, 'last payload failed'); END`)
+    WHEN NEW.employee_id = '${batchEmployeeId(9)}' BEGIN SELECT RAISE(ABORT, 'last payload failed'); END`)
   const intercepted = spyOn(context.database, "batch")
   try {
     expect((await context.post(input)).status).toBe(503)

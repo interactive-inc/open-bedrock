@@ -201,7 +201,7 @@ function fixture(existing: Database | null = null) {
       id: "grant-1",
       version: "1",
     },
-    actorAccountId: "operator",
+    actorAccountId: "70e2091f-b34d-4e08-abad-533415c4908c",
     finalizedAt: now,
     reason: "Preserve original",
     auditEventId: crypto.randomUUID(),
@@ -440,7 +440,7 @@ test("approved record execution binds intent and actor and atomically consumes a
         ),
       )
       f.sqlite.run(
-        "INSERT INTO system_accounts (id,status,created_at,updated_at) VALUES ('operator','active',0,0)",
+        "INSERT INTO system_accounts (id,status,created_at,updated_at) VALUES ('70e2091f-b34d-4e08-abad-533415c4908c','active',0,0)",
       )
       const command = { record: f.record, disclosure: f.policy, preservation: f.hold }
       const proposal = await RecordPreservationProposalValue.create(command)
@@ -449,7 +449,7 @@ test("approved record execution binds intent and actor and atomically consumes a
       f.sqlite.run(
         `INSERT INTO system_cases
         (id,subject_context,subject_kind,subject_id,subject_version,proposal_digest,created_by_account_id,status,created_at,updated_at)
-        VALUES ('9055d4a0-416c-40c4-814b-0c6df2d0f691','system','record-preservation',?1,'1',?2,'operator','approved',0,0)`,
+        VALUES ('9055d4a0-416c-40c4-814b-0c6df2d0f691','system','record-preservation',?1,'1',?2,'70e2091f-b34d-4e08-abad-533415c4908c','approved',0,0)`,
         [scenario === "subject" ? "other-record" : f.record.snapshot.id, digest],
       )
       const authorization = ExecutionAuthorizationEntity.create({
@@ -457,7 +457,10 @@ test("approved record execution binds intent and actor and atomically consumes a
         caseId: "9055d4a0-416c-40c4-814b-0c6df2d0f691",
         operationKey: scenario === "operation" ? "other-operation" : "system.record.preserve",
         proposalDigest: scenario === "digest" ? "c".repeat(64) : digest,
-        grantedToAccountId: scenario === "actor" ? "other-operator" : "operator",
+        grantedToAccountId:
+          scenario === "actor"
+            ? "258bbdaa-4348-4953-bc9b-523250d0062e"
+            : "70e2091f-b34d-4e08-abad-533415c4908c",
         grantedAt: new Date(Date.parse(now) - 1000),
         expiresAt: new Date(
           Date.parse(now) +

@@ -47,18 +47,26 @@ test(
 
     applyMigrations(database, migrationFiles.slice(7))
 
-    expect(
-      database
-        .query("SELECT id, closed_at FROM system_accounts WHERE id = 'account-existing'")
-        .get(),
-    ).toEqual({ id: "account-existing", closed_at: null })
+    // Account と本人の束縛の主キーは UUID へ移り、Account の移行前の値は legacy_id に残る。
+    const account = database
+      .query<{ id: string; closed_at: number | null }, []>(
+        "SELECT id, closed_at FROM system_accounts WHERE legacy_id = 'account-existing'",
+      )
+      .get()
+    expect(account?.closed_at).toBeNull()
+    expect(account?.id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
+    )
     expect(
       database
         .query(
-          "SELECT identity_id, can_receive_email FROM system_identity_profiles WHERE identity_id = 'identity-existing'",
+          `SELECT profile.can_receive_email
+           FROM system_identity_profiles profile
+           JOIN system_identity_bindings binding ON binding.id = profile.identity_id
+           WHERE binding.account_id = ?1 AND binding.subject = 'existing@example.test'`,
         )
-        .get(),
-    ).toEqual({ identity_id: "identity-existing", can_receive_email: 1 })
+        .get(account?.id ?? ""),
+    ).toEqual({ can_receive_email: 1 })
     expect(
       database
         .query(

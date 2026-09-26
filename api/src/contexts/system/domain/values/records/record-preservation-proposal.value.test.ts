@@ -30,7 +30,7 @@ const input = {
     id: "grant-1",
     version: "1",
   },
-  actorAccountId: "archive-operator",
+  actorAccountId: "a3e16d2a-d110-49b0-9ecb-e7b88a1c35ce",
   finalizedAt: "2026-09-13T00:00:01.000Z",
   reason: "Preserve confirmed source",
   auditEventId: crypto.randomUUID(),
@@ -92,7 +92,7 @@ test("approval digest binds source, preservation and disclosure intent", async (
     {
       grants: [
         {
-          accountId: "viewer",
+          accountId: "eb2aaac2-352f-4196-8e01-adea61c54466",
           actions: ["read"],
           purposes: ["review"],
           validFrom: input.finalizedAt,
@@ -148,7 +148,7 @@ test("approved intent restores without fabricated execution metadata and rejects
         ...body.disclosure,
         grants: [
           {
-            accountId: "viewer",
+            accountId: "eb2aaac2-352f-4196-8e01-adea61c54466",
             actions: ["read"],
             purposes: ["review"],
             validFrom: input.finalizedAt,
@@ -184,7 +184,9 @@ test("execution derives fresh audit metadata while preserving approved intent an
   const reconstructed = await RecordPreservationProposalValue.create(retry)
   if (reconstructed instanceof Error) throw reconstructed
   expect(reconstructed.props.digest.equals(original.props.digest)).toBe(true)
-  expect(original.toFinalization({ actorAccountId: "another-actor", at })).toBeInstanceOf(Error)
+  expect(
+    original.toFinalization({ actorAccountId: "13174c44-fe69-4065-9e59-6319c84a1f8a", at }),
+  ).toBeInstanceOf(Error)
   expect(
     original.toFinalization({ actorAccountId: input.actorAccountId, at: new Date("invalid") }),
   ).toBeInstanceOf(Error)
@@ -256,7 +258,7 @@ test("request composition pins server source, storage and actor without acceptin
         ...request.disclosure,
         grants: [
           {
-            accountId: "another-reader",
+            accountId: "97ba13d4-1f7c-4866-a108-1bbb5acccef8",
             actions: ["read"],
             purposes: ["review"],
             validFrom: input.finalizedAt,
@@ -272,7 +274,7 @@ test("request composition pins server source, storage and actor without acceptin
   if (replay instanceof Error) throw replay
   expect(replay.props.canonical.toString()).toBe(composed.props.canonical.toString())
   for (const injected of [
-    { actorAccountId: "other-actor" },
+    { actorAccountId: "b9a2c0c4-a088-4df7-8cf4-59447b86c1cf" },
     { source: { ...input.source, contentDigest: "c".repeat(64) } },
     { attachmentId: crypto.randomUUID() },
     { approved: true },

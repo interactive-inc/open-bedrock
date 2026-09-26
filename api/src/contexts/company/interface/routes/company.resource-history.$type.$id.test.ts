@@ -38,7 +38,7 @@ test("資源履歴は取消と訂正元・原資料を含み、会社版を固�
     const change = CompanyResourceChangeEntity.create({
       commandId: `history:${revision}`,
       expectedRevision: revision - 1,
-      actorAccountId: "account:editor",
+      actorAccountId: "15e25dcc-26bd-46c1-a7c4-0ab16283c5c5",
       reason: `record ${revision}`,
       recordedAt: revision,
       evidenceReferences: props.correction
@@ -68,7 +68,7 @@ test("資源履歴は取消と訂正元・原資料を含み、会社版を固�
     context.set(
       "companyActor",
       CompanyActorValue.restore({
-        accountId: "account:reader",
+        accountId: "1227c813-1159-4405-9f5b-5e54df944b9a",
         employeeId: null,
         organizationIds: [
           access.allowed ? COMPANY_DEFAULT_ORGANIZATION_ID : "01900060-0000-7000-8000-12268fccf2cc",

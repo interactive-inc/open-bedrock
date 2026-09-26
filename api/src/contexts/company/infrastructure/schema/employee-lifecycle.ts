@@ -14,6 +14,8 @@ export const personnelActions = sqliteTable(
   "company_personnel_actions",
   {
     id: text("id").primaryKey().$type<PersonnelActionId>(),
+    /** 主キーを UUID へ移す前の値。移行前の記録を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
     employeeId: text("employee_id").notNull().$type<EmployeeId>(),
     kind: text("kind").notNull().$type<PersonnelActionKind>(),
     eventOn: text("event_on").notNull(),

@@ -1,3 +1,5 @@
+import { testAccountId } from "@system/test/system-test-id.test-support"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -78,7 +80,7 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "shift_assignments", [
     {
       id: "01900024-0000-7000-8000-000000000001",
-      employee_id: "5",
+      employee_id: testEmployeeId(5),
       pattern_id: "01900023-0000-7000-8000-000000000001",
       date: "2026-06-01",
       note: null,
@@ -86,7 +88,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: "01900024-0000-7000-8000-000000000002",
-      employee_id: "4",
+      employee_id: testEmployeeId(4),
       pattern_id: "01900023-0000-7000-8000-000000000002",
       date: "2026-06-01",
       note: null,
@@ -173,7 +175,7 @@ async function createTestDbWithNullPatternIds(): Promise<D1Database> {
   await seedD1(db, "shift_assignments", [
     {
       id: "01900024-0000-7000-8000-000000000001",
-      employee_id: "5",
+      employee_id: testEmployeeId(5),
       pattern_id: null,
       date: "2026-06-01",
       note: null,
@@ -181,7 +183,7 @@ async function createTestDbWithNullPatternIds(): Promise<D1Database> {
     },
     {
       id: "01900024-0000-7000-8000-000000000002",
-      employee_id: "4",
+      employee_id: testEmployeeId(4),
       pattern_id: null,
       date: "2026-06-01",
       note: null,
@@ -230,7 +232,7 @@ async function createTestDbWithRequesterNullPatternId(): Promise<D1Database> {
   await seedD1(db, "shift_assignments", [
     {
       id: "01900024-0000-7000-8000-000000000001",
-      employee_id: "5",
+      employee_id: testEmployeeId(5),
       pattern_id: null,
       date: "2026-06-01",
       note: null,
@@ -238,7 +240,7 @@ async function createTestDbWithRequesterNullPatternId(): Promise<D1Database> {
     },
     {
       id: "01900024-0000-7000-8000-000000000002",
-      employee_id: "4",
+      employee_id: testEmployeeId(4),
       pattern_id: "01900023-0000-7000-8000-000000000002",
       date: "2026-06-01",
       note: null,
@@ -287,7 +289,7 @@ async function createTestDbWithPartialAssignment(): Promise<D1Database> {
   await seedD1(db, "shift_assignments", [
     {
       id: "01900024-0000-7000-8000-000000000001",
-      employee_id: "5",
+      employee_id: testEmployeeId(5),
       pattern_id: "01900023-0000-7000-8000-000000000001",
       date: "2026-06-01",
       note: null,
@@ -391,7 +393,7 @@ describe("POST /shift-swap-requests/:id/approve", () => {
     expect(results.length).toBe(2)
 
     const recipientIds = results.map((row) => row.recipient_account_id).sort()
-    expect(recipientIds).toEqual(["4", "5"])
+    expect(recipientIds).toEqual([testAccountId(4), testAccountId(5)])
 
     for (const row of results) {
       expect(row.kind).toBe("company:approval_result")

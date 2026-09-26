@@ -34,7 +34,7 @@ test("経費の停止APIは人の管理権限・再認証・名前空間を検�
   await c.database
     .prepare(`INSERT INTO system_step_up_grants
     (id,account_id,token_hash,method,issued_at,expires_at)
-    VALUES ('expense-freeze-route-grant',?1,?2,'external_identity',?3,?4)`)
+    VALUES ('ba994c0a-ee56-448d-b7b6-542b5d24bd3b',?1,?2,'external_identity',?3,?4)`)
     .bind(c.requester.accountId, hash, c.at.getTime(), c.at.getTime() + 60000)
     .run()
   await execSql(

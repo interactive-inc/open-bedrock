@@ -12,7 +12,7 @@ async function fixture() {
         .prepare(`INSERT INTO company_resource_revisions
           (organization_id, resource_type, resource_id, revision, organization_revision,
             state, effective_from, effective_to, attributes_json, command_id, actor_account_id, reason, recorded_at)
-          VALUES (?1, ?2, ?3, ?4, ?4, ?5, ?6, ?7, ?8, 'confirmed-history-import', 'account:adoption', 'Historical import', 10)`)
+          VALUES (?1, ?2, ?3, ?4, ?4, ?5, ?6, ?7, ?8, 'confirmed-history-import', '7a0b75ec-d7b9-4f49-b023-432c8f109a40', 'Historical import', 10)`)
         .bind(
           resource.organizationId,
           resource.type,
@@ -91,7 +91,7 @@ test("確認済みの公開履歴を再作成せず、既存の人物・雇用�
   expect(JSON.parse(receipt.source_json).publicResources).toHaveLength(5)
   expect(JSON.parse(receipt.source_json).publicResources[0]).toMatchObject({
     commandId: "confirmed-history-import",
-    actorAccountId: "account:adoption",
+    actorAccountId: "7a0b75ec-d7b9-4f49-b023-432c8f109a40",
     reason: "Historical import",
     recordedAt: 10,
   })

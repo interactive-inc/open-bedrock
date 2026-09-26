@@ -24,7 +24,7 @@ const input = () => ({
       recordCount: 0,
     },
   ],
-  actorAccountId: "account:operator",
+  actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
   createdAt: "2026-09-14T00:00:00Z",
   auditEventId: crypto.randomUUID(),
 })

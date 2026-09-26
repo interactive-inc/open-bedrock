@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
 import { AssignOnboarding } from "@/contexts/onboarding/application/assign-onboarding"
@@ -40,7 +41,7 @@ const employeeId = 10_000
 
 function directoryEntry(id: number, code: string): CompanyEmployeeDirectoryEntry {
   return {
-    id: toWorkforceEmployeeId(id),
+    id: toWorkforceEmployeeId(testEmployeeId(id)),
     officialName: "You",
     employeeCode: code,
     email: null,
@@ -68,7 +69,7 @@ type AssignmentTestContext = ReturnType<typeof createAssignmentTestContext>
 async function seedAssignment(context: AssignmentTestContext): Promise<OnboardingAssignment> {
   const created = await context.assignmentRepository.create(
     OnboardingAssignment.create({
-      employeeId: toWorkforceEmployeeId(employeeId),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(employeeId)),
       template,
       assignedAt: "2026-05-01T00:00:00.000Z",
     }),

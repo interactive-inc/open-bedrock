@@ -1187,7 +1187,7 @@ test("経費の全6種別を実認証で保全し、業務全テーブル撤去�
   await c.database
     .prepare(`INSERT INTO system_step_up_grants
     (id,account_id,token_hash,method,issued_at,expires_at,last_used_at)
-    VALUES ('coverage-grant',?1,?2,'external_identity',?3,?4,?3)`)
+    VALUES ('8de5cb8a-68d6-46a8-ad7c-a3e1924f3fc0',?1,?2,'external_identity',?3,?4,?3)`)
     .bind(c.requester.accountId, hash, c.at.getTime(), c.at.getTime() + 60000)
     .run()
   const freezeId = crypto.randomUUID()

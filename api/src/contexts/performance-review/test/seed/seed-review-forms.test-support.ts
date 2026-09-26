@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
@@ -19,8 +20,8 @@ export const seedReviewForms: ReadonlyArray<SeedReviewForm> = [
   {
     id: "01900033-0000-7000-8000-000000000001",
     cycleId: "01900032-0000-7000-8000-000000000001",
-    subjectEmployeeId: toWorkforceEmployeeId(5),
-    reviewerEmployeeId: toWorkforceEmployeeId(5),
+    subjectEmployeeId: toWorkforceEmployeeId(testEmployeeId(5)),
+    reviewerEmployeeId: toWorkforceEmployeeId(testEmployeeId(5)),
     reviewerType: "self",
     answers: [],
     score: null,
@@ -31,8 +32,8 @@ export const seedReviewForms: ReadonlyArray<SeedReviewForm> = [
   {
     id: "01900033-0000-7000-8000-000000000002",
     cycleId: "01900032-0000-7000-8000-000000000001",
-    subjectEmployeeId: toWorkforceEmployeeId(5),
-    reviewerEmployeeId: toWorkforceEmployeeId(4),
+    subjectEmployeeId: toWorkforceEmployeeId(testEmployeeId(5)),
+    reviewerEmployeeId: toWorkforceEmployeeId(testEmployeeId(4)),
     reviewerType: "manager",
     answers: [],
     score: null,
@@ -43,8 +44,8 @@ export const seedReviewForms: ReadonlyArray<SeedReviewForm> = [
   {
     id: "01900033-0000-7000-8000-000000000003",
     cycleId: "01900032-0000-7000-8000-000000000002",
-    subjectEmployeeId: toWorkforceEmployeeId(5),
-    reviewerEmployeeId: toWorkforceEmployeeId(4),
+    subjectEmployeeId: toWorkforceEmployeeId(testEmployeeId(5)),
+    reviewerEmployeeId: toWorkforceEmployeeId(testEmployeeId(4)),
     reviewerType: "manager",
     answers: ["優れた協調性"],
     score: 80,

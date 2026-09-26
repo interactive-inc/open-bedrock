@@ -17,7 +17,7 @@ import { hc } from "hono/client"
 
 const now = new Date("2026-01-01T00:00:00.000Z")
 const rootAccountId = zAccountId.parse("system-identity-root")
-const targetAccountId = zAccountId.parse("system-identity-target")
+const targetAccountId = zAccountId.parse("f8d6fd4f-d8aa-47c6-9c19-d77346485329")
 
 describe("System Identity HTTP", () => {
   test("外部・password Identityの作成・参照・失効とlast-activeをSystemだけで完結する", async () => {
@@ -34,7 +34,7 @@ describe("System Identity HTTP", () => {
       .query(
         `INSERT INTO system_identity_bindings
            (id, account_id, provider, subject, created_at, activated_at, revoked_at)
-         VALUES ('root-identity', ?1, 'password', 'root@example.com', ?2, ?2, NULL)`,
+         VALUES ('ac7f571e-ae97-4159-85e1-ba9cf4928de8', ?1, 'password', 'root@example.com', ?2, ?2, NULL)`,
       )
       .run(rootAccountId, now.getTime())
     fixture.sqlite

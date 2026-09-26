@@ -49,7 +49,7 @@ test("休暇の停止中に申請と残数の原文を人の承認後にSystem�
   await database
     .prepare(`INSERT INTO system_step_up_grants
       (id,account_id,token_hash,method,issued_at,expires_at)
-      VALUES ('leave-test-step-up',?1,?2,'external_identity',?3,?4)`)
+      VALUES ('176de1af-5892-484c-a0ee-01e62fb68577',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const freeze = await app.request(

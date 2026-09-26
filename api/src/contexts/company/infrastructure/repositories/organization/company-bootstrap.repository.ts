@@ -78,7 +78,7 @@ export class CompanyBootstrapRepository {
     if (snapshot === null) return this.conflict()
     const employeeId = crypto.randomUUID()
     const employmentId = crypto.randomUUID()
-    const assignmentPeriodId = `bootstrap-assignment:${employeeId}`
+    const assignmentPeriodId = deterministicCompanyId("bootstrap-assignment", employeeId)
     const companyResources = await new InitialCompanyResourceJournalAdapter(this.c.env.DB).prepare(
       command,
       snapshot,
@@ -236,7 +236,11 @@ export class CompanyBootstrapRepository {
         this.c.env.DB.prepare(`INSERT INTO company_organization_responsibility_period_versions
         (period_id, revision, employment_id, employee_id, organization_unit_id, responsibility_type, starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
         VALUES (?1, 1, ?2, ?3, ?4, ?5, ?6, NULL, 0, ?7, ?8)`).bind(
-          `bootstrap-responsibility:${responsibilityType.toLowerCase()}:${employeeId}`,
+          deterministicCompanyId(
+            "bootstrap-responsibility",
+            responsibilityType.toLowerCase(),
+            employeeId,
+          ),
           employmentId,
           employeeId,
           companyResources.root.organizationUnitId,

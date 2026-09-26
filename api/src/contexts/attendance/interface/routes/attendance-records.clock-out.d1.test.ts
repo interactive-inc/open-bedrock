@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -161,7 +162,15 @@ describe("POST /attendance-records/clock-out", () => {
       .prepare(
         "INSERT INTO attendance_records (id, employee_id, work_date, clock_in_at, clock_out_at, work_minutes, status) VALUES (?, ?, ?, ?, ?, ?, ?)",
       )
-      .bind("01900016-0000-7000-8000-0000000003e7", "10", "2026-05-30", null, null, null, "open")
+      .bind(
+        "01900016-0000-7000-8000-0000000003e7",
+        testEmployeeId(10),
+        "2026-05-30",
+        null,
+        null,
+        null,
+        "open",
+      )
       .run()
 
     const response = await send({
@@ -242,7 +251,8 @@ describe("POST /attendance-records/clock-out", () => {
     expect(outResponse.status).toBe(200)
 
     const row = await db
-      .prepare("SELECT note FROM attendance_records WHERE employee_id = 10 AND status = 'closed'")
+      .prepare("SELECT note FROM attendance_records WHERE employee_id = ?1 AND status = 'closed'")
+      .bind(testEmployeeId(10))
       .first<{ note: string | null }>()
 
     expect(row?.note).toBe("leaving early")
@@ -274,7 +284,8 @@ describe("POST /attendance-records/clock-out", () => {
     expect(outResponse.status).toBe(200)
 
     const row = await db
-      .prepare("SELECT note FROM attendance_records WHERE employee_id = 10 AND status = 'closed'")
+      .prepare("SELECT note FROM attendance_records WHERE employee_id = ?1 AND status = 'closed'")
+      .bind(testEmployeeId(10))
       .first<{ note: string | null }>()
 
     expect(row?.note).toBe("morning")

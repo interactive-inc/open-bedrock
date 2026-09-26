@@ -27,20 +27,24 @@ test("会社の各台帳は同じ会社版で取得でき、遡及更新後も�
       readFileSync(new URL("../infrastructure/schema/company.sql", import.meta.url), "utf8"),
   )
   await database.exec(
-    "INSERT INTO system_accounts (id, status, created_at, updated_at) VALUES ('account:test', 'active', 0, 0)",
+    "INSERT INTO system_accounts (id, status, created_at, updated_at) VALUES ('f1c2f755-e201-42b2-a586-2d79c0d8bbca', 'active', 0, 0)",
   )
   const repository = new D1CompanyResourceRepository({ database })
   const specifications: Pick<CompanyResourceProps, "type" | "id" | "attributes">[] = [
     { type: "person", id: "person:test", attributes: { officialName: "Person" } },
     {
       type: "employee",
-      id: "employee:test",
+      id: "d47aa389-c802-4a4a-bf7c-c359b764474b",
       attributes: { personId: "person:test", employeeCode: "E001" },
     },
     {
       type: "employment",
-      id: "employment:test",
-      attributes: { employeeId: "employee:test", status: "ACTIVE", employmentType: "FULL_TIME" },
+      id: "cdc317d0-f2a5-47e3-bbaa-4718f418c374",
+      attributes: {
+        employeeId: "d47aa389-c802-4a4a-bf7c-c359b764474b",
+        status: "ACTIVE",
+        employmentType: "FULL_TIME",
+      },
     },
     {
       type: "company-profile",
@@ -54,8 +58,11 @@ test("会社の各台帳は同じ会社版で取得でき、遡及更新後も�
     },
     {
       type: "account-employee-link",
-      id: "link:test",
-      attributes: { employeeId: "employee:test", accountId: "account:test" },
+      id: "2a3b4c5d-6e7f-4a8b-9c0d-1e2f3a4b5c6d",
+      attributes: {
+        employeeId: "d47aa389-c802-4a4a-bf7c-c359b764474b",
+        accountId: "f1c2f755-e201-42b2-a586-2d79c0d8bbca",
+      },
     },
     { type: "personnel-action", id: "action:test", attributes: { actionType: "HIRE" } },
   ]
@@ -63,7 +70,7 @@ test("会社の各台帳は同じ会社版で取得でき、遡及更新後も�
     const command = CompanyResourceChangeEntity.create({
       commandId: `resource-snapshot:${revision}`,
       expectedRevision: revision - 1,
-      actorAccountId: "account:operator",
+      actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
       reason: "Confirmed record correction",
       recordedAt: revision,
       resources: specifications.map((specification) => ({
@@ -85,7 +92,7 @@ test("会社の各台帳は同じ会社版で取得でき、遡及更新後も�
     context.set(
       "companyActor",
       CompanyActorValue.restore({
-        accountId: "account:reader",
+        accountId: "1227c813-1159-4405-9f5b-5e54df944b9a",
         employeeId: null,
         organizationIds: [
           state.authorized
@@ -188,17 +195,19 @@ test("会社の各台帳は同じ会社版で取得でき、遡及更新後も�
   expect(endedEmployment.status).toBe(200)
   expect(await endedEmployment.json()).toMatchObject({
     organizationRevision: 2,
-    resources: [{ id: "employment:test", revision: 2, effectiveTo: "2030-07-01" }],
+    resources: [
+      { id: "cdc317d0-f2a5-47e3-bbaa-4718f418c374", revision: 2, effectiveTo: "2030-07-01" },
+    ],
   })
   const employeeEmployment = await app.request(
-    "/employments?organization_revision=2&effective_on=2030-08-01&include_ended=true&employee_id=employee:test",
+    "/employments?organization_revision=2&effective_on=2030-08-01&include_ended=true&employee_id=d47aa389-c802-4a4a-bf7c-c359b764474b",
     { headers },
     { DB: database, COMPANY_TIME_ZONE: "UTC" },
   )
   expect(employeeEmployment.status).toBe(200)
   expect(await employeeEmployment.json()).toMatchObject({
     organizationRevision: 2,
-    resources: [{ id: "employment:test" }],
+    resources: [{ id: "cdc317d0-f2a5-47e3-bbaa-4718f418c374" }],
   })
   const unrelatedEmployee = await app.request(
     "/employments?organization_revision=2&effective_on=2030-08-01&include_ended=true&employee_id=employee:other",
@@ -211,7 +220,7 @@ test("会社の各台帳は同じ会社版で取得でき、遡及更新後も�
     resources: [],
   })
   const duplicateEmployee = await app.request(
-    "/employments?employee_id=employee:test&employee_id=employee:test",
+    "/employments?employee_id=d47aa389-c802-4a4a-bf7c-c359b764474b&employee_id=d47aa389-c802-4a4a-bf7c-c359b764474b",
     { headers },
     { DB: database, COMPANY_TIME_ZONE: "UTC" },
   )

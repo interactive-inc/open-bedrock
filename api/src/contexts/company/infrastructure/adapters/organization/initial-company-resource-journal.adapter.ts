@@ -74,7 +74,7 @@ export class InitialCompanyResourceJournalAdapter {
         "会社の組織履歴より前の在籍には履歴確認が必要です",
         "invalid_company_bootstrap_input",
       )
-    const currentPeriodId = `bootstrap-root:${fingerprint}`
+    const currentPeriodId = deterministicCompanyId("bootstrap-root", fingerprint)
     const closeOriginal = root.startsOn < write.observedOn
     const closedRoot: CompanyResourceProps = {
       ...originalRoot,
@@ -100,7 +100,11 @@ export class InitialCompanyResourceJournalAdapter {
         after: {
           periodId: restoreWorkforceId(
             "period",
-            `bootstrap-responsibility:${code.toLowerCase()}:${workforce.employeeId}`,
+            deterministicCompanyId(
+              "bootstrap-responsibility",
+              code.toLowerCase(),
+              workforce.employeeId,
+            ),
           ),
           revision: 1,
           employeeId: restoreWorkforceId("employee", workforce.employeeId),
@@ -132,7 +136,7 @@ export class InitialCompanyResourceJournalAdapter {
         {
           organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "account-employee-link",
-          id: `account-link:${workforce.employeeId}`,
+          id: deterministicCompanyId("account-link", workforce.employeeId),
           revision: 1,
           state: "active",
           effectiveFrom: restoreCalendarDate(write.observedOn),

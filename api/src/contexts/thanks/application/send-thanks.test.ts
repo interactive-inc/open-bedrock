@@ -1,3 +1,4 @@
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import type { CompanyEmployeeDirectoryEntry } from "@/contexts/company/domain/definitions/employee-directory-entry.definition"
@@ -11,12 +12,15 @@ import { describe, expect, test } from "bun:test"
 
 function activeEmployee(code: string, name: string): CompanyEmployeeDirectoryEntry {
   return {
-    id: toWorkforceEmployeeId(`employee:${code}`),
+    id: toWorkforceEmployeeId(testDerivedId("employee", code)),
     officialName: name,
     employeeCode: code,
     email: null,
     phone: null,
-    employment: { id: restoreWorkforceId("employment", `employment:${code}`), status: "ACTIVE" },
+    employment: {
+      id: restoreWorkforceId("employment", testDerivedId("employment", code)),
+      status: "ACTIVE",
+    },
     primaryAssignment: null,
   }
 }

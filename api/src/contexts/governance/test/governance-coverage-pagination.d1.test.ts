@@ -64,7 +64,7 @@ test("規程・ガバナンス8台帳を分割照合し撤去確定する", asyn
   await database
     .prepare(`INSERT INTO system_step_up_grants
       (id,account_id,token_hash,method,issued_at,expires_at)
-      VALUES ('governance-coverage-step-up',?1,?2,'external_identity',?3,?4)`)
+      VALUES ('65c1ffa0-2683-4510-9673-aa0168f57544',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const post = (path: string, body: unknown) =>

@@ -5,8 +5,8 @@ import { CompanyActorValue } from "@/contexts/company/domain/values/company-acto
 import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const actor = CompanyActorValue.restore({
-  accountId: "account:1",
-  employeeId: "employee:1",
+  accountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
+  employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
   organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
   capabilities: ["company:write"],
 })
@@ -53,7 +53,7 @@ test("ApplyOrganizationChangeは永続化経路の例外をunavailableへ閉じ�
 
 test("限定資格は人物を変更できるが法人資源との混在は再送でも拒否する", async () => {
   const workforceActor = CompanyActorValue.restore({
-    accountId: "account:basic-editor",
+    accountId: "76e2eea1-f607-4020-90cf-7433ebf4d242",
     employeeId: null,
     organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:workforce:update"],
@@ -103,7 +103,10 @@ test("限定資格は人物を変更できるが法人資源との混在は再�
           ...person,
           type: "account-employee-link",
           id: "account-link:one",
-          attributes: { accountId: "account:one", employeeId: "employee:one" },
+          attributes: {
+            accountId: "f3b9abc8-e975-4769-98eb-ffca70786ee5",
+            employeeId: "9e174baf-3240-4253-9cba-16bc3e431cca",
+          },
         },
       ],
     }),
@@ -136,7 +139,7 @@ test("限定資格は人物を変更できるが法人資源との混在は再�
 
 test("限定人事資格は根拠と訂正元を持つ雇用期間の取消・代替だけを確定できる", async () => {
   const workforceActor = CompanyActorValue.restore({
-    accountId: "account:basic-editor",
+    accountId: "76e2eea1-f607-4020-90cf-7433ebf4d242",
     employeeId: null,
     organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:workforce:update"],
@@ -159,7 +162,7 @@ test("限定人事資格は根拠と訂正元を持つ雇用期間の取消・�
     effectiveFrom: restoreCalendarDate("2026-02-01"),
     effectiveTo: null,
     attributes: {
-      employeeId: "employee:one",
+      employeeId: "9e174baf-3240-4253-9cba-16bc3e431cca",
       status: "ACTIVE",
       employmentType: "FULL_TIME",
     },

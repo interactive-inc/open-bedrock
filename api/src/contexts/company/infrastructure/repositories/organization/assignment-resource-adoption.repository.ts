@@ -123,6 +123,7 @@ export class AssignmentResourceAdoptionRepository {
     if (first === undefined) return this.invalid(new Error("empty assignment adoption"))
     const change = OrganizationWorkforceChangeEntity.restore({
       operationId: first.period.recordedByActionId,
+      operationKey: `assignment-adoption:${command.props.snapshotDigest}`,
       expectedRevision: snapshot.props.value.lifecycleRevision,
       asOf: restoreCalendarDate(command.props.observedOn),
       recordedAt: command.props.recordedAt,

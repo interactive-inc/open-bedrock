@@ -100,7 +100,7 @@ describe("NotificationDeliveryEntity", () => {
     ["nullable recipient", { ...validProps, recipientAccountId: null }],
     ["invalid delivery clock", { ...validProps, deliveredAt: new Date(Number.NaN) }],
     ["read before delivery", { ...validProps, readAt: new Date("2026-08-10T23:59:59.999Z") }],
-    ["retired user recipient", { ...validProps, userId: "user-1" }],
+    ["retired user recipient", { ...validProps, userId: "50ea5eee-5cb5-4870-911a-e57ee3f7a81a" }],
     [
       "omitted dismissal state",
       {

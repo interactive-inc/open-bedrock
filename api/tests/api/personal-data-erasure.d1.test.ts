@@ -5,6 +5,7 @@ import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
+import { testAccountId } from "@system/test/system-test-id.test-support"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
@@ -47,7 +48,7 @@ async function fixture() {
       .prepare(
         "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('085ed3fb-b610-4ab9-8c00-8e5966aa81b3', ?1, 'd0e5044b-a755-4028-8eda-79d08653462a', 0)",
       )
-      .bind(String(officer)),
+      .bind(testAccountId(officer)),
   ])
   const now = Date.now()
   for (const id of ["01900054-0000-7000-8000-00000000000a", "01900054-0000-7000-8000-00000000000b"])
@@ -59,7 +60,7 @@ async function fixture() {
          VALUES (?1, ?2, ?3, 'linked', 'application/pdf', 10, 'file.pdf', ?4, 'wrapped', 'wrapped-iv',
           'content-iv', 1, ?5, ?5)`,
       )
-      .bind(id, String(subject), `att/${id}`, "a".repeat(64), now)
+      .bind(id, testAccountId(subject), `att/${id}`, "a".repeat(64), now)
       .run()
   const policy = createCompanyProcedureDecisionPolicy({
     approverRoles: [],
@@ -91,7 +92,7 @@ async function fixture() {
     inputSchema: { fields: [] },
     decisionPolicy: policy,
     completionOperationKey: "system.attachment.erase",
-    createdByAccountId: zAccountId.parse("1"),
+    createdByAccountId: zAccountId.parse(testAccountId(1)),
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
   })
   if (definition instanceof Error) throw definition
@@ -241,7 +242,7 @@ test("最終承認者が消去権限を持つ場合は、承認の確定で鍵�
     .prepare(
       "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('63173b26-de09-4fd6-875c-03bcaea22fd4', ?1, 'd0e5044b-a755-4028-8eda-79d08653462a', 0)",
     )
-    .bind(String(approver))
+    .bind(testAccountId(approver))
     .run()
   const submitted = await c.request(
     officer,

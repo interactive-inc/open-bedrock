@@ -3,6 +3,8 @@ import { RetireEmployee } from "@/contexts/company/application/employee-lifecycl
 import { CompanyOperationError } from "@/contexts/company/domain/errors"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
+import { testAccountId } from "@system/test/system-test-id.test-support"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import {
   createLifecycleRouteDb,
@@ -116,7 +118,7 @@ async function createTestState(): Promise<TestState> {
     },
     decisionPolicy: policy,
     completionOperationKey: null,
-    createdByAccountId: zAccountId.parse("1"),
+    createdByAccountId: zAccountId.parse(testAccountId(1)),
     createdAt: new Date(now),
   })
   if (definition instanceof Error) throw definition
@@ -157,7 +159,7 @@ async function seedBrokenProposals(state: TestState, count: number): Promise<voi
   for (const employee of approverEmployees) {
     const employeeRevision = await state.db
       .prepare("SELECT revision FROM company_employee_lifecycle_revisions WHERE employee_id = ?1")
-      .bind(String(employee.id))
+      .bind(testEmployeeId(employee.id))
       .first<number>("revision")
     const organizationRevision = await state.db
       .prepare("SELECT revision FROM company_organization_lifecycle_states WHERE id = 1")
@@ -168,11 +170,11 @@ async function seedBrokenProposals(state: TestState, count: number): Promise<voi
 
     const retired = await new RetireEmployee(createTestContextForDatabase(state.db)).execute({
       session: {
-        accountId: zAccountId.parse(String(inspectorEmployeeId)),
-        employeeId: toWorkforceEmployeeId(inspectorEmployeeId),
+        accountId: zAccountId.parse(testAccountId(inspectorEmployeeId)),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(inspectorEmployeeId)),
         hasPermission: (permission) => permission === "employee:lifecycle:apply",
       },
-      employeeId: toWorkforceEmployeeId(employee.id),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(employee.id)),
       input: {
         kind: "retired",
         employeeCode: employee.code,

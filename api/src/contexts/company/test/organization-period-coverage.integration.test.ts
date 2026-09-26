@@ -27,7 +27,7 @@ async function fixture() {
       .prepare("SELECT revision FROM company_organization_lifecycle_states WHERE id = 1")
       .first<number>("revision")
     if (revision === null) throw new Error("organization revision missing")
-    const id = `coverage:${crypto.randomUUID()}`
+    const id = crypto.randomUUID()
     const changes = create(id)
     return f.database.batch([
       f.database
@@ -257,7 +257,7 @@ describe("両製品のDBで連続した組織・所属期間を参照する", ()
   test("他人の所属で責務の空白を埋めない", async () => {
     const f = await fixture()
     await f.database.exec(
-      "INSERT INTO company_employees (id, official_name, employee_code, created_at, updated_at) VALUES ('employee:other', 'Other Member', 'OTHER', 0, 0); INSERT INTO company_employments (id, employee_id, contract_name, employment_type, hire_date, status, created_at, updated_at) VALUES ('employment:other', 'employee:other', 'Other Member', 'PART_TIME', '2020-01-01', 'ACTIVE', 0, 0);",
+      "INSERT INTO company_employees (id, official_name, employee_code, created_at, updated_at) VALUES ('1953cffc-119b-42c7-bbab-82c56499e4ac', 'Other Member', 'OTHER', 0, 0); INSERT INTO company_employments (id, employee_id, contract_name, employment_type, hire_date, status, created_at, updated_at) VALUES ('8c13d695-9339-4f3e-a451-d2657893dbca', '1953cffc-119b-42c7-bbab-82c56499e4ac', 'Other Member', 'PART_TIME', '2020-01-01', 'ACTIVE', 0, 0);",
     )
     await f.operation((id) => [
       f.assignment(id, {
@@ -270,8 +270,8 @@ describe("両製品のDBで連続した組織・所属期間を参照する", ()
         periodId: "assignment:other",
         revision: 1,
         startsOn: "2026-08-01",
-        employeeId: "employee:other",
-        employmentId: "employment:other",
+        employeeId: "1953cffc-119b-42c7-bbab-82c56499e4ac",
+        employmentId: "8c13d695-9339-4f3e-a451-d2657893dbca",
       }),
     ])
     const before = await f.state()
