@@ -167,8 +167,11 @@ test("既存の移行証跡へ接続先を推測して補わず、新しい列�
     )
   }
   expect(
-    (await database.prepare("SELECT rowid, * FROM company_assignment_resource_adoptions").all())
-      .results,
+    (
+      await database
+        .prepare("SELECT rowid, * FROM company_assignment_resource_adoptions")
+        .all<Record<string, unknown>>()
+    ).results.map(({ id: _surrogateId, ...row }) => row),
   ).toEqual(before.map((row) => ({ ...row, mappings_json: null })))
   for (const sql of [
     "UPDATE company_assignment_resource_adoptions SET mappings_json = '[]'",

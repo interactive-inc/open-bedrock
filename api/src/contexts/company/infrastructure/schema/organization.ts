@@ -1,6 +1,6 @@
 import type { InferSelectModel } from "drizzle-orm"
 import { sql } from "drizzle-orm"
-import { check, index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { check, index, integer, sqliteTable, text, unique } from "drizzle-orm/sqlite-core"
 import { organizationUnitKinds } from "@/contexts/company/domain/definitions/organization-unit.definition"
 import { orgAssignmentTypes } from "@/contexts/company/domain/definitions/org-assignment-type.definition"
 import { organizationLifecycleState } from "@/contexts/company/infrastructure/schema/employee-lifecycle"
@@ -83,6 +83,9 @@ export type OrganizationUnitRow = InferSelectModel<typeof organizationUnits>
 export const organizationUnitPeriodVersions = sqliteTable(
   "company_organization_unit_period_versions",
   {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     periodId: text("period_id").notNull(),
     revision: integer("revision").notNull(),
     organizationUnitId: text("organization_unit_id")
@@ -104,7 +107,7 @@ export const organizationUnitPeriodVersions = sqliteTable(
     recordedAt: integer("recorded_at", { mode: "timestamp_ms" }).notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.periodId, table.revision] }),
+    unique().on(table.periodId, table.revision),
     index("company_organization_unit_period_versions_unit_idx").on(
       table.organizationUnitId,
       table.startsOn,
@@ -167,6 +170,9 @@ export type OrganizationUnitPeriodVersionRow = InferSelectModel<
 export const organizationAssignmentPeriodVersions = sqliteTable(
   "company_organization_assignment_period_versions",
   {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     periodId: text("period_id").notNull(),
     revision: integer("revision").notNull(),
     employmentId: text("employment_id").notNull(),
@@ -186,7 +192,7 @@ export const organizationAssignmentPeriodVersions = sqliteTable(
     recordedAt: integer("recorded_at", { mode: "timestamp_ms" }).notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.periodId, table.revision] }),
+    unique().on(table.periodId, table.revision),
     index("company_organization_assignment_period_versions_employee_idx").on(
       table.employeeId,
       table.startsOn,
@@ -245,6 +251,9 @@ export type OrganizationAssignmentPeriodVersionRow = InferSelectModel<
 export const organizationResponsibilityPeriodVersions = sqliteTable(
   "company_organization_responsibility_period_versions",
   {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     periodId: text("period_id").notNull(),
     revision: integer("revision").notNull(),
     employmentId: text("employment_id").notNull(),
@@ -262,7 +271,7 @@ export const organizationResponsibilityPeriodVersions = sqliteTable(
     recordedAt: integer("recorded_at", { mode: "timestamp_ms" }).notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.periodId, table.revision] }),
+    unique().on(table.periodId, table.revision),
     index("company_organization_responsibility_period_versions_employee_idx").on(
       table.employeeId,
       table.startsOn,

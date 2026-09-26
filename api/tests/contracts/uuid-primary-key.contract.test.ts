@@ -19,21 +19,14 @@ import { buildIdInventory } from "../../scripts/inventory-ids"
  */
 const NOT_YET_CONVERTED: ReadonlySet<string> = new Set([
   // integer
-  "company_lifecycle_outbox_entries",
-  "company_personnel_annotations",
   // text-uuid-candidate
   "career_sheets",
   "company_account_employee_links",
-  "company_assignment_resource_adoptions",
-  "company_bootstrap_receipts",
   "company_employee_lifecycle_revisions",
-  "company_employee_resource_adoptions",
   "company_employees",
   "company_employment_attributes",
   "company_external_identity_sources",
-  "company_organization_resource_adoptions",
   "company_personnel_action_requests",
-  "company_responsibility_resource_adoptions",
   "system_account_invitations",
   "system_accounts",
   "system_authentication_attempts",
@@ -58,23 +51,7 @@ const NOT_YET_CONVERTED: ReadonlySet<string> = new Set([
   "company_personnel_reporting_bindings",
   "company_responsibility_period_bindings",
   "company_responsibility_resource_bindings",
-  "company_workforce_connection_completions",
   // composite
-  "company_account_profiles",
-  "company_command_receipts",
-  "company_definition_resource_adoptions",
-  "company_employee_status_period_versions",
-  "company_employment_period_versions",
-  "company_external_identity_imports",
-  "company_grade_award_archives",
-  "company_organization_assignment_period_versions",
-  "company_organization_responsibility_period_versions",
-  "company_organization_unit_period_versions",
-  "company_profile_change_receipts",
-  "company_resource_heads",
-  "company_resource_revisions",
-  "company_responsibility_source_adoptions",
-  "company_responsibility_source_cutovers",
   "company_workforce_resource_bindings",
 ])
 

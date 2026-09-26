@@ -29,6 +29,9 @@ export const companyOrganizations = sqliteTable("company_organizations", {
 export const companyAccountProfiles = sqliteTable(
   "company_account_profiles",
   {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     organizationId: text("organization_id")
       .notNull()
       .references(() => companyOrganizations.id, {
@@ -43,7 +46,7 @@ export const companyAccountProfiles = sqliteTable(
     updatedAt: integer("updated_at").notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.organizationId, table.accountId] }),
+    unique().on(table.organizationId, table.accountId),
     index("company_account_profiles_account_idx").on(table.accountId),
     check(
       "company_account_profiles_display_name",
@@ -62,6 +65,9 @@ export const companyAccountProfiles = sqliteTable(
 export const companyResourceHeads = sqliteTable(
   "company_resource_heads",
   {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     organizationId: text("organization_id")
       .notNull()
       .references(() => companyOrganizations.id, {
@@ -79,9 +85,7 @@ export const companyResourceHeads = sqliteTable(
     updatedAt: integer("updated_at").notNull(),
   },
   (table) => [
-    primaryKey({
-      columns: [table.organizationId, table.resourceType, table.resourceId],
-    }),
+    unique().on(table.organizationId, table.resourceType, table.resourceId),
     index("company_resource_heads_type_effective_idx").on(
       table.organizationId,
       table.resourceType,
@@ -110,6 +114,9 @@ export const companyResourceHeads = sqliteTable(
 export const companyResourceRevisions = sqliteTable(
   "company_resource_revisions",
   {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     organizationId: text("organization_id")
       .notNull()
       .references(() => companyOrganizations.id, {
@@ -132,9 +139,7 @@ export const companyResourceRevisions = sqliteTable(
     recordedAt: integer("recorded_at").notNull(),
   },
   (table) => [
-    primaryKey({
-      columns: [table.organizationId, table.resourceType, table.resourceId, table.revision],
-    }),
+    unique().on(table.organizationId, table.resourceType, table.resourceId, table.revision),
     index("company_resource_revisions_org_revision_idx").on(
       table.organizationId,
       table.organizationRevision,
@@ -167,6 +172,9 @@ export const companyResourceRevisions = sqliteTable(
 export const companyCommandReceipts = sqliteTable(
   "company_command_receipts",
   {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     organizationId: text("organization_id")
       .notNull()
       .references(() => companyOrganizations.id, {
@@ -180,7 +188,7 @@ export const companyCommandReceipts = sqliteTable(
     recordedAt: integer("recorded_at").notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.organizationId, table.commandId] }),
+    unique().on(table.organizationId, table.commandId),
     check(
       "company_command_receipts_revision_valid",
       sql`${table.expectedRevision} >= 0 AND ${table.organizationRevision} > ${table.expectedRevision}`,
@@ -235,6 +243,9 @@ export const companyWorkforceResourceBindings = sqliteTable(
 export const companyExternalIdentityImports = sqliteTable(
   "company_external_identity_imports",
   {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     organizationId: text("organization_id")
       .notNull()
       .references(() => companyOrganizations.id, { onDelete: "restrict" }),
@@ -253,7 +264,7 @@ export const companyExternalIdentityImports = sqliteTable(
     recordedAt: integer("recorded_at").notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.organizationId, table.commandId] }),
+    unique().on(table.organizationId, table.commandId),
     check(
       "company_external_import_fingerprint",
       sql`length(${table.fingerprint}) = 64 AND ${table.fingerprint} NOT GLOB '*[^0-9a-f]*'`,
@@ -296,7 +307,10 @@ export const companyExternalIdentitySources = sqliteTable(
 export const companyEmployeeResourceAdoptions = sqliteTable(
   "company_employee_resource_adoptions",
   {
-    commandId: text("command_id").primaryKey(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    commandId: text("command_id").notNull().unique(),
     employeeId: text("employee_id")
       .notNull()
       .unique()
@@ -358,7 +372,10 @@ export const companyOrganizationResourceBindings = sqliteTable(
 export const companyOrganizationResourceAdoptions = sqliteTable(
   "company_organization_resource_adoptions",
   {
-    commandId: text("command_id").primaryKey(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    commandId: text("command_id").notNull().unique(),
     organizationUnitId: text("organization_unit_id")
       .notNull()
       .unique()
@@ -403,7 +420,10 @@ export const companyOrganizationResourceAdoptions = sqliteTable(
 export const companyBootstrapReceipts = sqliteTable(
   "company_bootstrap_receipts",
   {
-    commandId: text("command_id").primaryKey(),
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
+    commandId: text("command_id").notNull().unique(),
     organizationId: text("organization_id")
       .notNull()
       .unique()
@@ -440,6 +460,9 @@ export const companyBootstrapReceipts = sqliteTable(
 export const companyProfileChangeReceipts = sqliteTable(
   "company_profile_change_receipts",
   {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     organizationId: text("organization_id")
       .notNull()
       .references(() => companyOrganizations.id),
@@ -454,7 +477,7 @@ export const companyProfileChangeReceipts = sqliteTable(
     recordedAt: integer("recorded_at").notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.organizationId, table.commandId] }),
+    unique().on(table.organizationId, table.commandId),
     foreignKey({
       columns: [table.organizationId, table.commandId],
       foreignColumns: [companyCommandReceipts.organizationId, companyCommandReceipts.commandId],
@@ -474,6 +497,9 @@ export const companyProfileChangeReceipts = sqliteTable(
 export const companyDefinitionResourceAdoptions = sqliteTable(
   "company_definition_resource_adoptions",
   {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     organizationId: text("organization_id").notNull().default("organization:default"),
     commandId: text("command_id").notNull(),
     resourceType: text("resource_type").notNull(),
@@ -492,7 +518,7 @@ export const companyDefinitionResourceAdoptions = sqliteTable(
     recordedAt: integer("recorded_at").notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.organizationId, table.commandId] }),
+    unique().on(table.organizationId, table.commandId),
     unique().on(table.resourceType, table.definitionId),
     unique().on(table.organizationId, table.resourceType, table.resourceId),
     foreignKey({
@@ -539,6 +565,9 @@ export const companyDefinitionResourceAdoptions = sqliteTable(
 export const companyResponsibilitySourceAdoptions = sqliteTable(
   "company_responsibility_source_adoptions",
   {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     organizationId: text("organization_id").notNull().default("organization:default"),
     sourceContext: text("source_context").notNull(),
     sourceKind: text("source_kind").notNull(),
@@ -561,15 +590,13 @@ export const companyResponsibilitySourceAdoptions = sqliteTable(
     recordedAt: integer("recorded_at").notNull(),
   },
   (table) => [
-    primaryKey({
-      columns: [
-        table.organizationId,
-        table.sourceContext,
-        table.sourceKind,
-        table.sourceId,
-        table.sourceVersion,
-      ],
-    }),
+    unique().on(
+      table.organizationId,
+      table.sourceContext,
+      table.sourceKind,
+      table.sourceId,
+      table.sourceVersion,
+    ),
     unique().on(table.organizationId, table.commandId),
     foreignKey({
       columns: [table.organizationId, table.commandId],
@@ -625,6 +652,9 @@ export const companyResponsibilitySourceAdoptions = sqliteTable(
 export const companyResponsibilitySourceCutovers = sqliteTable(
   "company_responsibility_source_cutovers",
   {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     organizationId: text("organization_id").notNull().default("organization:default"),
     sourceContext: text("source_context").notNull(),
     sourceKind: text("source_kind").notNull(),
@@ -641,7 +671,7 @@ export const companyResponsibilitySourceCutovers = sqliteTable(
     completedAt: integer("completed_at").notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.organizationId, table.sourceContext, table.sourceKind] }),
+    unique().on(table.organizationId, table.sourceContext, table.sourceKind),
     check(
       "company_responsibility_source_cutover_organization",
       sql`${table.organizationId} = 'organization:default'`,
@@ -676,6 +706,9 @@ export const companyResponsibilitySourceCutovers = sqliteTable(
 export const companyGradeAwardArchives = sqliteTable(
   "company_grade_award_archives",
   {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     organizationId: text("organization_id")
       .notNull()
       .references(() => companyOrganizations.id),
@@ -695,7 +728,7 @@ export const companyGradeAwardArchives = sqliteTable(
     recordedAt: integer("recorded_at").notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.organizationId, table.commandId] }),
+    unique().on(table.organizationId, table.commandId),
     unique().on(table.organizationId, table.employeeId),
     check(
       "grade_award_archive_organization",

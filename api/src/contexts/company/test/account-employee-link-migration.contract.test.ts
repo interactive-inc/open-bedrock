@@ -102,8 +102,8 @@ describe("Account対応の履歴接続migration", () => {
         .prepare(
           "SELECT * FROM company_resource_revisions ORDER BY organization_revision, resource_type, resource_id, revision",
         )
-        .all()
-    ).results
+        .all<Record<string, unknown>>()
+    ).results.map(({ id: _surrogateId, ...row }) => row)
     await c.migrate()
     for (const column of ["account_id", "employee_id"]) {
       const plan = await c.database
@@ -132,8 +132,8 @@ describe("Account対応の履歴接続migration", () => {
           .prepare(
             "SELECT * FROM company_resource_revisions ORDER BY organization_revision, resource_type, resource_id, revision",
           )
-          .all()
-      ).results,
+          .all<Record<string, unknown>>()
+      ).results.map(({ id: _surrogateId, ...row }) => row),
     ).toEqual(history)
     expect(
       await new CompanyAccountEmployeeLinksReadAdapter({ env: { DB: c.database } }).findMany({

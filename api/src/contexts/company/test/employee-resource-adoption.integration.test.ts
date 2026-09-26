@@ -313,7 +313,7 @@ describe("existing employee resource adoption", () => {
     const f = await createEmployeeAdoptionFixture()
     await f.database
       .exec(`INSERT INTO company_employees (id, official_name, employee_code, created_at, updated_at) VALUES ('employee:other', 'Other', 'OTHER', 0, 0);
-      INSERT INTO company_employment_period_versions SELECT period_id, revision + 1, 'employee:other', starts_on, ends_on, is_void, recorded_by_action_id, recorded_at FROM company_employment_period_versions LIMIT 1;`)
+      INSERT INTO company_employment_period_versions (period_id, revision, employee_id, starts_on, ends_on, is_void, recorded_by_action_id, recorded_at) SELECT period_id, revision + 1, 'employee:other', starts_on, ends_on, is_void, recorded_by_action_id, recorded_at FROM company_employment_period_versions LIMIT 1;`)
     const snapshot = await new EmployeeResourceAdoptionSnapshotAdapter(f.database).find(
       adoptionEmployeeId,
     )

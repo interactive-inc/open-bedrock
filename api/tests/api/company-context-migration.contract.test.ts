@@ -111,7 +111,10 @@ test(
         .query("SELECT employee_id, status FROM company_employments WHERE employee_id = '7'")
         .get(),
     ).toEqual({ employee_id: "7", status: "ACTIVE" })
-    expect(database.query("SELECT id FROM company_personnel_annotations").get()).toEqual({ id: 11 })
+    // 人事の注記の主キーは UUID へ移り、移行前の整数の主キーは legacy_id に残る。
+    expect(
+      database.query("SELECT legacy_id AS id FROM company_personnel_annotations").get(),
+    ).toEqual({ id: "11" })
     // 予算の主キーは UUID へ移り、移行前の整数の主キーは legacy_id に残る。
     expect(
       database.query("SELECT legacy_id AS id, organization_unit_id FROM expense_budgets").get(),

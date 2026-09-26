@@ -36,6 +36,20 @@ export async function createExternalIdentityImportTestContext(
     DELETE FROM system_iam_roles
     WHERE length(id) <> 36 AND id NOT IN (SELECT role_id FROM system_role_bindings);
   `)
+  // 記録の table に UUID の代理キーを足す前の schema では id の列が無い。現行の書込みは drizzle の
+  // 定義どおり id を渡すため、検査用に空の列だけを足す。後続の migration の作り直しで主キーになる。
+  for (const table of [
+    "company_command_receipts",
+    "company_resource_heads",
+    "company_resource_revisions",
+    "company_account_profiles",
+  ]) {
+    const columns = await database
+      .prepare(`SELECT name FROM pragma_table_info('${table}')`)
+      .all<{ name: string }>()
+    if (columns.results.length > 0 && !columns.results.some((column) => column.name === "id"))
+      await database.exec(`ALTER TABLE ${table} ADD COLUMN id TEXT`)
+  }
   await database.exec(`
     INSERT INTO company_organizations (id, revision, name, representative_name, created_at, updated_at)
       SELECT 'organization:default', 0, 'Example organization', 'Example representative', 0, 0

@@ -3,22 +3,21 @@
     "tables": 206,
     "primaryKeyKinds": {
       "allocator-singleton-secret": 11,
-      "composite": 16,
-      "integer": 2,
-      "text-prefixed": 13,
-      "text-uuid": 141,
-      "text-uuid-candidate": 23
+      "composite": 1,
+      "text-prefixed": 10,
+      "text-uuid": 166,
+      "text-uuid-candidate": 18
     },
     "declaredForeignKeys": 272,
     "softReferences": {
       "cross-context": 17,
       "external": 32,
       "historical": 10,
-      "not-reference": 93,
+      "not-reference": 95,
       "polymorphic": 18,
       "same-context": 79
     },
-    "triggers": 762,
+    "triggers": 787,
     "views": 25,
     "indexes": 290
   },
@@ -567,16 +566,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "organization_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "account_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -596,7 +591,7 @@
         "incoming": []
       },
       "softReferences": [],
-      "triggers": [],
+      "triggers": ["company_account_profiles_identity_update"],
       "views": [],
       "indexes": ["company_account_profiles_account_idx"]
     },
@@ -645,12 +640,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "command_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -684,6 +679,7 @@
       "triggers": [
         "company_assignment_adoption_insert_guard",
         "company_assignment_resource_adoptions_delete_guard",
+        "company_assignment_resource_adoptions_identity_update",
         "company_assignment_resource_adoptions_update_guard"
       ],
       "views": [],
@@ -698,8 +694,9 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-prefixed",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": false,
+        "inheritsFrom": "company_resource_heads"
       },
       "foreignKeys": {
         "outgoing": [
@@ -965,12 +962,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "command_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -1002,6 +999,7 @@
         }
       ],
       "triggers": [
+        "company_bootstrap_receipts_identity_update",
         "company_bootstrap_receipts_immutable_delete",
         "company_bootstrap_receipts_immutable_update"
       ],
@@ -1045,16 +1043,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "organization_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "command_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -1094,6 +1088,7 @@
       ],
       "triggers": [
         "company_command_receipts_expected_revision",
+        "company_command_receipts_identity_update",
         "company_command_receipts_no_delete",
         "company_command_receipts_no_update",
         "company_definition_adoptions_insert_guard",
@@ -1108,16 +1103,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "organization_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "command_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -1151,7 +1142,8 @@
       "triggers": [
         "company_definition_adoptions_delete_guard",
         "company_definition_adoptions_insert_guard",
-        "company_definition_adoptions_update_guard"
+        "company_definition_adoptions_update_guard",
+        "company_definition_resource_adoptions_identity_update"
       ],
       "views": [],
       "indexes": []
@@ -1196,12 +1188,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "command_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -1227,6 +1219,7 @@
         }
       ],
       "triggers": [
+        "company_employee_resource_adoptions_identity_update",
         "company_employee_resource_adoptions_no_delete",
         "company_employee_resource_adoptions_no_update"
       ],
@@ -1238,16 +1231,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "period_id",
+            "name": "id",
             "type": "TEXT"
-          },
-          {
-            "name": "revision",
-            "type": "INTEGER"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -1275,6 +1264,7 @@
         }
       ],
       "triggers": [
+        "company_employee_status_period_versions_identity_update",
         "company_employee_status_period_versions_no_delete",
         "company_employee_status_period_versions_no_update"
       ],
@@ -1770,16 +1760,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "period_id",
+            "name": "id",
             "type": "TEXT"
-          },
-          {
-            "name": "revision",
-            "type": "INTEGER"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -1803,6 +1789,7 @@
       ],
       "triggers": [
         "company_assignment_employment_projection_guard",
+        "company_employment_period_versions_identity_update",
         "company_employment_period_versions_no_delete",
         "company_employment_period_versions_no_update",
         "company_workforce_projection_guard"
@@ -1877,16 +1864,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "organization_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "command_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -1918,6 +1901,7 @@
         }
       ],
       "triggers": [
+        "company_external_identity_imports_identity_update",
         "company_external_identity_imports_no_delete",
         "company_external_identity_imports_no_update"
       ],
@@ -1967,16 +1951,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "organization_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "command_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -2009,7 +1989,8 @@
       ],
       "triggers": [
         "company_grade_award_archive_no_delete",
-        "company_grade_award_archive_no_update"
+        "company_grade_award_archive_no_update",
+        "company_grade_award_archives_identity_update"
       ],
       "views": [],
       "indexes": []
@@ -2020,17 +2001,21 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
         "incoming": []
       },
       "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
         {
           "column": "personnel_action_id",
           "classification": "same-context",
@@ -2041,7 +2026,10 @@
           "classification": "not-reference"
         }
       ],
-      "triggers": [],
+      "triggers": [
+        "company_lifecycle_outbox_entries_identity_update",
+        "company_lifecycle_outbox_entries_legacy_id_insert"
+      ],
       "views": [],
       "indexes": [
         "idx_company_lifecycle_outbox_pending",
@@ -2053,16 +2041,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "period_id",
+            "name": "id",
             "type": "TEXT"
-          },
-          {
-            "name": "revision",
-            "type": "INTEGER"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -2114,6 +2098,7 @@
         "company_assignment_employment_projection_guard",
         "company_employments_organization_period_guard",
         "company_organization_assignment_period_versions_guard",
+        "company_organization_assignment_period_versions_identity_update",
         "company_organization_assignment_period_versions_immutable_delete",
         "company_organization_assignment_period_versions_immutable_update",
         "company_organization_assignment_period_versions_revision_state",
@@ -2240,12 +2225,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "command_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -2271,6 +2256,7 @@
         }
       ],
       "triggers": [
+        "company_organization_resource_adoptions_identity_update",
         "company_organization_resource_adoptions_no_delete",
         "company_organization_resource_adoptions_no_update"
       ],
@@ -2321,16 +2307,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "period_id",
+            "name": "id",
             "type": "TEXT"
-          },
-          {
-            "name": "revision",
-            "type": "INTEGER"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -2376,6 +2358,7 @@
         "company_employments_organization_period_guard",
         "company_organization_change_operations_completion_guard",
         "company_organization_responsibility_period_versions_guard",
+        "company_organization_responsibility_period_versions_identity_update",
         "company_organization_responsibility_period_versions_immutable_delete",
         "company_organization_responsibility_period_versions_immutable_update",
         "company_organization_responsibility_period_versions_revision_state",
@@ -2392,16 +2375,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "period_id",
+            "name": "id",
             "type": "TEXT"
-          },
-          {
-            "name": "revision",
-            "type": "INTEGER"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -2435,6 +2414,7 @@
       "triggers": [
         "company_organization_change_operations_completion_guard",
         "company_organization_resource_binding_guard",
+        "company_organization_unit_period_versions_identity_update",
         "company_organization_unit_period_versions_immutable_delete",
         "company_organization_unit_period_versions_immutable_update",
         "company_organization_unit_period_versions_revision_guard",
@@ -2807,17 +2787,21 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
         "incoming": []
       },
       "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
         {
           "column": "employee_id",
           "classification": "same-context",
@@ -2835,6 +2819,8 @@
         }
       ],
       "triggers": [
+        "company_personnel_annotations_identity_update",
+        "company_personnel_annotations_legacy_id_insert",
         "company_personnel_annotations_no_delete",
         "company_personnel_annotations_no_replace",
         "company_personnel_annotations_no_update"
@@ -2914,16 +2900,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "organization_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "command_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -2950,6 +2932,7 @@
       },
       "softReferences": [],
       "triggers": [
+        "company_profile_change_receipts_identity_update",
         "company_profile_change_receipts_immutable_delete",
         "company_profile_change_receipts_immutable_update"
       ],
@@ -2961,20 +2944,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "organization_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "resource_type",
-            "type": "TEXT"
-          },
-          {
-            "name": "resource_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -3031,6 +3006,7 @@
         "company_personnel_reporting_binding_insert_guard",
         "company_personnel_reporting_owner_guard",
         "company_profile_legacy_write_guard",
+        "company_resource_heads_identity_update",
         "company_resource_revisions_expected_revision",
         "company_workforce_resource_owner_guard",
         "company_workforce_resource_reference_guard",
@@ -3064,24 +3040,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "organization_id",
+            "name": "id",
             "type": "TEXT"
-          },
-          {
-            "name": "resource_type",
-            "type": "TEXT"
-          },
-          {
-            "name": "resource_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "revision",
-            "type": "INTEGER"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -3126,6 +3090,7 @@
         "company_organizational_office_reference_guard",
         "company_position_job_guard",
         "company_resource_revisions_expected_revision",
+        "company_resource_revisions_identity_update",
         "company_resource_revisions_no_delete",
         "company_resource_revisions_no_update",
         "company_responsibility_adoption_insert_guard",
@@ -3202,12 +3167,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "command_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -3242,7 +3207,8 @@
         "company_responsibility_adoption_completion_guard",
         "company_responsibility_adoption_delete_guard",
         "company_responsibility_adoption_insert_guard",
-        "company_responsibility_adoption_update_guard"
+        "company_responsibility_adoption_update_guard",
+        "company_responsibility_resource_adoptions_identity_update"
       ],
       "views": [],
       "indexes": []
@@ -3256,8 +3222,9 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-prefixed",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": false,
+        "inheritsFrom": "company_resource_heads"
       },
       "foreignKeys": {
         "outgoing": [
@@ -3326,28 +3293,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "organization_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "source_context",
-            "type": "TEXT"
-          },
-          {
-            "name": "source_kind",
-            "type": "TEXT"
-          },
-          {
-            "name": "source_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "source_version",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -3386,6 +3337,7 @@
       ],
       "triggers": [
         "company_responsibility_source_adoptions_delete_guard",
+        "company_responsibility_source_adoptions_identity_update",
         "company_responsibility_source_adoptions_insert_guard",
         "company_responsibility_source_adoptions_update_guard",
         "company_responsibility_source_cutovers_insert_guard",
@@ -3399,20 +3351,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "organization_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "source_context",
-            "type": "TEXT"
-          },
-          {
-            "name": "source_kind",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -3446,6 +3390,7 @@
       ],
       "triggers": [
         "company_responsibility_source_cutovers_delete_guard",
+        "company_responsibility_source_cutovers_identity_update",
         "company_responsibility_source_cutovers_insert_guard",
         "company_responsibility_source_cutovers_update_guard",
         "governance_responsibility_cutover_coverage_guard"
@@ -3458,13 +3403,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "organization_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "text-prefixed",
-        "uuidEnforced": false,
-        "inheritsFrom": "company_organizations"
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -3489,6 +3433,7 @@
         }
       ],
       "triggers": [
+        "company_workforce_connection_completions_identity_update",
         "company_workforce_connection_completions_no_delete",
         "company_workforce_connection_completions_no_update",
         "company_workforce_connection_completions_requires_connection"

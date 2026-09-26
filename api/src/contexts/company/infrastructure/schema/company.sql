@@ -16,6 +16,8 @@ CREATE TABLE company_organizations (
 );
 
 CREATE TABLE company_account_profiles (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE CASCADE ON UPDATE CASCADE,
   account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE CASCADE,
   display_name TEXT NOT NULL CHECK (
@@ -25,13 +27,20 @@ CREATE TABLE company_account_profiles (
   ),
   created_at INTEGER NOT NULL CHECK (created_at >= 0),
   updated_at INTEGER NOT NULL CHECK (updated_at >= created_at),
-  PRIMARY KEY (organization_id, account_id)
+  UNIQUE (organization_id, account_id),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_account_profiles_identity_update
+BEFORE UPDATE OF id ON company_account_profiles
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE INDEX company_account_profiles_account_idx
   ON company_account_profiles (account_id);
 
 CREATE TABLE company_resource_heads (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE RESTRICT ON UPDATE CASCADE,
   resource_type TEXT NOT NULL,
   resource_id TEXT NOT NULL,
@@ -42,8 +51,13 @@ CREATE TABLE company_resource_heads (
   effective_to TEXT CHECK (effective_to IS NULL OR effective_to > effective_from),
   attributes_json TEXT NOT NULL CHECK (json_valid(attributes_json)),
   updated_at INTEGER NOT NULL CHECK (updated_at >= 0),
-  PRIMARY KEY (organization_id, resource_type, resource_id)
+  UNIQUE (organization_id, resource_type, resource_id),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_resource_heads_identity_update
+BEFORE UPDATE OF id ON company_resource_heads
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE INDEX company_resource_heads_type_effective_idx
   ON company_resource_heads (organization_id, resource_type, effective_from, effective_to);
@@ -52,6 +66,8 @@ CREATE UNIQUE INDEX company_resource_heads_org_revision_idx
   ON company_resource_heads (organization_id, organization_revision, resource_type, resource_id);
 
 CREATE TABLE company_resource_revisions (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE RESTRICT ON UPDATE CASCADE,
   resource_type TEXT NOT NULL,
   resource_id TEXT NOT NULL,
@@ -64,12 +80,16 @@ CREATE TABLE company_resource_revisions (
   command_id TEXT NOT NULL,
   actor_account_id TEXT NOT NULL,
   reason TEXT NOT NULL CHECK (length(reason) BETWEEN 1 AND 2000),
-  evidence_references_json TEXT NOT NULL DEFAULT '[]'
-    CHECK (json_valid(evidence_references_json) AND json_type(evidence_references_json) = 'array'),
-  corrects_revision INTEGER CHECK (corrects_revision IS NULL OR (corrects_revision >= 1 AND corrects_revision < revision)),
-  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
-  PRIMARY KEY (organization_id, resource_type, resource_id, revision)
+  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0), evidence_references_json TEXT NOT NULL DEFAULT '[]'
+  CHECK (json_valid(evidence_references_json) AND json_type(evidence_references_json) = 'array'), corrects_revision INTEGER
+  CHECK (corrects_revision IS NULL OR (corrects_revision >= 1 AND corrects_revision < revision)),
+  UNIQUE (organization_id, resource_type, resource_id, revision),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_resource_revisions_identity_update
+BEFORE UPDATE OF id ON company_resource_revisions
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE UNIQUE INDEX company_resource_revisions_org_revision_idx
   ON company_resource_revisions (organization_id, organization_revision, resource_type, resource_id);
@@ -82,14 +102,21 @@ CREATE INDEX company_resource_revisions_account_link_idx
   WHERE resource_type = 'account-employee-link';
 
 CREATE TABLE company_command_receipts (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE RESTRICT ON UPDATE CASCADE,
   command_id TEXT NOT NULL,
   fingerprint TEXT NOT NULL CHECK (length(fingerprint) = 64),
   expected_revision INTEGER NOT NULL CHECK (expected_revision >= 0),
   organization_revision INTEGER NOT NULL CHECK (organization_revision = expected_revision + 1),
   recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
-  PRIMARY KEY (organization_id, command_id)
+  UNIQUE (organization_id, command_id),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_command_receipts_identity_update
+BEFORE UPDATE OF id ON company_command_receipts
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 /* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER company_organizations_revision_step
@@ -719,7 +746,9 @@ CREATE TABLE "company_employee_lifecycle_revisions" (
   updated_at INTEGER NOT NULL
 );
 
-CREATE TABLE "company_employment_period_versions" (
+CREATE TABLE company_employment_period_versions (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   period_id TEXT NOT NULL,
   revision INTEGER NOT NULL CHECK (revision > 0),
   employee_id TEXT NOT NULL,
@@ -734,16 +763,23 @@ CREATE TABLE "company_employment_period_versions" (
   is_void INTEGER NOT NULL DEFAULT 0 CHECK (is_void IN (0, 1)),
   recorded_by_action_id TEXT NOT NULL,
   recorded_at INTEGER NOT NULL,
-  PRIMARY KEY (period_id, revision),
-  CHECK (ends_on IS NULL OR starts_on < ends_on)
+  UNIQUE (period_id, revision),
+  CHECK (ends_on IS NULL OR starts_on < ends_on),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 ) WITHOUT ROWID;
+CREATE TRIGGER company_employment_period_versions_identity_update
+BEFORE UPDATE OF id ON company_employment_period_versions
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE INDEX idx_company_employment_period_versions_employee
   ON company_employment_period_versions(
     employee_id, starts_on, ends_on, period_id, revision DESC
   );
 
-CREATE TABLE "company_employee_status_period_versions" (
+CREATE TABLE company_employee_status_period_versions (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   period_id TEXT NOT NULL,
   revision INTEGER NOT NULL CHECK (revision > 0),
   employment_period_id TEXT NOT NULL,
@@ -760,9 +796,14 @@ CREATE TABLE "company_employee_status_period_versions" (
   is_void INTEGER NOT NULL DEFAULT 0 CHECK (is_void IN (0, 1)),
   recorded_by_action_id TEXT NOT NULL,
   recorded_at INTEGER NOT NULL,
-  PRIMARY KEY (period_id, revision),
-  CHECK (ends_on IS NULL OR starts_on < ends_on)
+  UNIQUE (period_id, revision),
+  CHECK (ends_on IS NULL OR starts_on < ends_on),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 ) WITHOUT ROWID;
+CREATE TRIGGER company_employee_status_period_versions_identity_update
+BEFORE UPDATE OF id ON company_employee_status_period_versions
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE INDEX idx_company_employee_status_period_versions_employee
   ON company_employee_status_period_versions(
@@ -889,6 +930,8 @@ BEGIN
 END;
 
 CREATE TABLE company_external_identity_imports (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE RESTRICT,
   command_id TEXT NOT NULL CHECK (length(command_id) BETWEEN 1 AND 200),
   fingerprint TEXT NOT NULL CHECK (length(fingerprint) = 64 AND fingerprint NOT GLOB '*[^0-9a-f]*'),
@@ -899,8 +942,13 @@ CREATE TABLE company_external_identity_imports (
   organization_revision INTEGER NOT NULL CHECK (organization_revision = expected_revision + 1),
   result_json TEXT NOT NULL CHECK (json_valid(result_json)),
   recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
-  PRIMARY KEY (organization_id, command_id)
+  UNIQUE (organization_id, command_id),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_external_identity_imports_identity_update
+BEFORE UPDATE OF id ON company_external_identity_imports
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 CREATE TABLE company_external_identity_sources (
   identity_id TEXT PRIMARY KEY NOT NULL REFERENCES system_identity_bindings(id) ON DELETE RESTRICT,
   organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE RESTRICT,
@@ -942,7 +990,9 @@ BEGIN
 END;
 
 CREATE TABLE company_employee_resource_adoptions (
-  command_id TEXT PRIMARY KEY NOT NULL CHECK (length(command_id) BETWEEN 1 AND 200),
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
+  command_id TEXT NOT NULL UNIQUE CHECK (length(command_id) BETWEEN 1 AND 200),
   employee_id TEXT NOT NULL UNIQUE REFERENCES company_employees(id) ON DELETE RESTRICT,
   fingerprint TEXT NOT NULL CHECK (length(fingerprint) = 64 AND fingerprint NOT GLOB '*[^0-9a-f]*'),
   actor_account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE RESTRICT,
@@ -952,8 +1002,13 @@ CREATE TABLE company_employee_resource_adoptions (
   observed_on TEXT NOT NULL CHECK (length(observed_on) = 10),
   snapshot_digest TEXT NOT NULL CHECK (length(snapshot_digest) = 64 AND snapshot_digest NOT GLOB '*[^0-9a-f]*'),
   source_json TEXT NOT NULL CHECK (json_valid(source_json) AND length(CAST(source_json AS BLOB)) <= 750000),
-  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0)
+  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_employee_resource_adoptions_identity_update
+BEFORE UPDATE OF id ON company_employee_resource_adoptions
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 DROP TRIGGER IF EXISTS company_employee_resource_adoptions_no_update;
 CREATE TRIGGER company_employee_resource_adoptions_no_update
@@ -969,7 +1024,9 @@ BEGIN
   SELECT RAISE(ABORT, 'employee resource adoption is immutable');
 END;
 
-CREATE TABLE "company_organization_assignment_period_versions" (
+CREATE TABLE company_organization_assignment_period_versions (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   period_id TEXT NOT NULL,
   revision INTEGER NOT NULL CHECK (revision >= 1),
   employment_id TEXT NOT NULL CHECK (length(employment_id) BETWEEN 1 AND 200),
@@ -991,13 +1048,18 @@ CREATE TABLE "company_organization_assignment_period_versions" (
   recorded_by_action_id TEXT NOT NULL
     REFERENCES company_organization_change_operations(id) ON DELETE RESTRICT,
   recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
-  PRIMARY KEY (period_id, revision),
+  UNIQUE (period_id, revision),
   CHECK (
     length(starts_on) = 10 AND date(starts_on) IS starts_on
     AND (ends_on IS NULL OR (length(ends_on) = 10 AND date(ends_on) IS ends_on))
     AND (ends_on IS NULL OR starts_on < ends_on)
-  )
+  ),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 ) WITHOUT ROWID;
+CREATE TRIGGER company_organization_assignment_period_versions_identity_update
+BEFORE UPDATE OF id ON company_organization_assignment_period_versions
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE TABLE "company_organization_change_operations" (
   id TEXT PRIMARY KEY NOT NULL CHECK (length(id) BETWEEN 1 AND 128),
@@ -1024,7 +1086,9 @@ CREATE TABLE "company_organization_lifecycle_states" (
   updated_at INTEGER NOT NULL
 );
 
-CREATE TABLE "company_organization_responsibility_period_versions" (
+CREATE TABLE company_organization_responsibility_period_versions (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   period_id TEXT NOT NULL,
   revision INTEGER NOT NULL CHECK (revision >= 1),
   employment_id TEXT NOT NULL CHECK (length(employment_id) BETWEEN 1 AND 200),
@@ -1042,15 +1106,22 @@ CREATE TABLE "company_organization_responsibility_period_versions" (
   recorded_by_action_id TEXT NOT NULL
     REFERENCES company_organization_change_operations(id) ON DELETE RESTRICT,
   recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
-  PRIMARY KEY (period_id, revision),
+  UNIQUE (period_id, revision),
   CHECK (
     length(starts_on) = 10 AND date(starts_on) IS starts_on
     AND (ends_on IS NULL OR (length(ends_on) = 10 AND date(ends_on) IS ends_on))
     AND (ends_on IS NULL OR starts_on < ends_on)
-  )
+  ),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 ) WITHOUT ROWID;
+CREATE TRIGGER company_organization_responsibility_period_versions_identity_update
+BEFORE UPDATE OF id ON company_organization_responsibility_period_versions
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
-CREATE TABLE "company_organization_unit_period_versions" (
+CREATE TABLE company_organization_unit_period_versions (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   period_id TEXT NOT NULL,
   revision INTEGER NOT NULL CHECK (revision >= 1),
   organization_unit_id TEXT NOT NULL
@@ -1069,7 +1140,7 @@ CREATE TABLE "company_organization_unit_period_versions" (
   recorded_by_action_id TEXT NOT NULL
     REFERENCES company_organization_change_operations(id) ON DELETE RESTRICT,
   recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
-  PRIMARY KEY (period_id, revision),
+  UNIQUE (period_id, revision),
   CHECK (
     length(starts_on) = 10 AND date(starts_on) IS starts_on
     AND (ends_on IS NULL OR (length(ends_on) = 10 AND date(ends_on) IS ends_on))
@@ -1078,8 +1149,13 @@ CREATE TABLE "company_organization_unit_period_versions" (
   CHECK (
     parent_organization_unit_id IS NULL
     OR parent_organization_unit_id != organization_unit_id
-  )
+  ),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 ) WITHOUT ROWID;
+CREATE TRIGGER company_organization_unit_period_versions_identity_update
+BEFORE UPDATE OF id ON company_organization_unit_period_versions
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE TABLE "company_organization_units" (
   id TEXT PRIMARY KEY NOT NULL CHECK (length(id) BETWEEN 1 AND 128),
@@ -1655,7 +1731,9 @@ CREATE TABLE company_organization_resource_bindings (
 );
 
 CREATE TABLE company_organization_resource_adoptions (
-  command_id TEXT PRIMARY KEY NOT NULL CHECK (length(command_id) BETWEEN 1 AND 200),
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
+  command_id TEXT NOT NULL UNIQUE CHECK (length(command_id) BETWEEN 1 AND 200),
   organization_unit_id TEXT NOT NULL UNIQUE REFERENCES company_organization_units(id) ON DELETE RESTRICT,
   fingerprint TEXT NOT NULL CHECK (length(fingerprint) = 64 AND fingerprint NOT GLOB '*[^0-9a-f]*'),
   actor_account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE RESTRICT,
@@ -1665,8 +1743,13 @@ CREATE TABLE company_organization_resource_adoptions (
   observed_on TEXT NOT NULL CHECK (length(observed_on) = 10),
   snapshot_digest TEXT NOT NULL CHECK (length(snapshot_digest) = 64 AND snapshot_digest NOT GLOB '*[^0-9a-f]*'),
   source_json TEXT NOT NULL CHECK (json_valid(source_json) AND length(CAST(source_json AS BLOB)) <= 750000),
-  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0)
+  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_organization_resource_adoptions_identity_update
+BEFORE UPDATE OF id ON company_organization_resource_adoptions
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 DROP TRIGGER IF EXISTS company_organization_resource_bindings_no_update;
 CREATE TRIGGER company_organization_resource_bindings_no_update
@@ -1756,7 +1839,9 @@ BEGIN
 END;
 
 CREATE TABLE company_bootstrap_receipts (
-  command_id TEXT PRIMARY KEY NOT NULL CHECK (length(command_id) BETWEEN 1 AND 200),
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
+  command_id TEXT NOT NULL UNIQUE CHECK (length(command_id) BETWEEN 1 AND 200),
   organization_id TEXT NOT NULL UNIQUE REFERENCES company_organizations(id) CHECK (organization_id = 'organization:default'),
   actor_account_id TEXT NOT NULL REFERENCES system_accounts(id),
   fingerprint TEXT NOT NULL CHECK (length(fingerprint) = 64 AND fingerprint NOT GLOB '*[^0-9a-f]*'),
@@ -1764,8 +1849,13 @@ CREATE TABLE company_bootstrap_receipts (
   organization_revision INTEGER NOT NULL CHECK (organization_revision > 0),
   declaration_json TEXT NOT NULL CHECK (json_valid(declaration_json)),
   source_json TEXT NOT NULL CHECK (json_valid(source_json) AND length(CAST(source_json AS BLOB)) <= 750000),
-  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0)
+  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_bootstrap_receipts_identity_update
+BEFORE UPDATE OF id ON company_bootstrap_receipts
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE TRIGGER company_bootstrap_receipts_immutable_update
 BEFORE UPDATE ON company_bootstrap_receipts
@@ -2109,6 +2199,8 @@ BEGIN
 END;
 
 CREATE TABLE company_profile_change_receipts (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   organization_id TEXT NOT NULL REFERENCES company_organizations(id),
   command_id TEXT NOT NULL,
   fingerprint TEXT NOT NULL CHECK (length(fingerprint) = 64 AND fingerprint NOT GLOB '*[^0-9a-f]*'),
@@ -2117,9 +2209,14 @@ CREATE TABLE company_profile_change_receipts (
   declaration_json TEXT NOT NULL CHECK (json_valid(declaration_json)),
   source_json TEXT NOT NULL CHECK (json_valid(source_json)),
   recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
-  PRIMARY KEY (organization_id, command_id),
-  FOREIGN KEY (organization_id, command_id) REFERENCES company_command_receipts(organization_id, command_id)
+  UNIQUE (organization_id, command_id),
+  FOREIGN KEY (organization_id, command_id) REFERENCES company_command_receipts(organization_id, command_id),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_profile_change_receipts_identity_update
+BEFORE UPDATE OF id ON company_profile_change_receipts
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 DROP TRIGGER IF EXISTS company_profile_change_receipts_immutable_update;
 CREATE TRIGGER company_profile_change_receipts_immutable_update
@@ -2477,7 +2574,9 @@ BEGIN
 END;
 
 CREATE TABLE company_assignment_resource_adoptions (
-  command_id TEXT PRIMARY KEY NOT NULL CHECK (length(command_id) BETWEEN 1 AND 200),
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
+  command_id TEXT NOT NULL UNIQUE CHECK (length(command_id) BETWEEN 1 AND 200),
   employee_id TEXT NOT NULL REFERENCES company_employees(id) ON DELETE RESTRICT,
   fingerprint TEXT NOT NULL CHECK (length(fingerprint) = 64),
   actor_account_id TEXT NOT NULL,
@@ -2488,9 +2587,14 @@ CREATE TABLE company_assignment_resource_adoptions (
   adopted_periods INTEGER NOT NULL CHECK (adopted_periods BETWEEN 1 AND 1000),
   snapshot_digest TEXT NOT NULL CHECK (length(snapshot_digest) = 64),
   source_json TEXT NOT NULL CHECK (json_valid(source_json)),
-  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
-  UNIQUE (employee_id, snapshot_digest)
+  recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0), mappings_json TEXT CHECK (mappings_json IS NULL OR (json_valid(mappings_json) AND json_type(mappings_json) = 'array')),
+  UNIQUE (employee_id, snapshot_digest),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_assignment_resource_adoptions_identity_update
+BEFORE UPDATE OF id ON company_assignment_resource_adoptions
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 DROP TRIGGER IF EXISTS company_assignment_resource_adoptions_update_guard;
 CREATE TRIGGER company_assignment_resource_adoptions_update_guard
@@ -3603,7 +3707,9 @@ BEGIN
 END;
 
 CREATE TABLE company_responsibility_resource_adoptions (
-  command_id TEXT PRIMARY KEY NOT NULL CHECK (length(command_id) BETWEEN 1 AND 200),
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
+  command_id TEXT NOT NULL UNIQUE CHECK (length(command_id) BETWEEN 1 AND 200),
   operation_id TEXT NOT NULL UNIQUE REFERENCES company_organization_change_operations(id) ON DELETE RESTRICT,
   employee_id TEXT NOT NULL REFERENCES company_employees(id) ON DELETE RESTRICT,
   fingerprint TEXT NOT NULL CHECK (length(fingerprint) = 64),
@@ -3617,8 +3723,13 @@ CREATE TABLE company_responsibility_resource_adoptions (
   source_json TEXT NOT NULL CHECK (json_valid(source_json) AND length(CAST(source_json AS BLOB)) <= 750000),
   mappings_json TEXT NOT NULL CHECK (json_valid(mappings_json) AND json_type(mappings_json) = 'array' AND json_array_length(mappings_json) = adopted_periods AND length(CAST(mappings_json AS BLOB)) <= 750000),
   recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
-  UNIQUE (employee_id, snapshot_digest)
+  UNIQUE (employee_id, snapshot_digest),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_responsibility_resource_adoptions_identity_update
+BEFORE UPDATE OF id ON company_responsibility_resource_adoptions
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 DROP TRIGGER IF EXISTS company_responsibility_adoption_insert_guard;
 CREATE TRIGGER company_responsibility_adoption_insert_guard
@@ -4157,6 +4268,8 @@ CREATE INDEX company_resource_revisions_org_revision_idx
   ON company_resource_revisions (organization_id, organization_revision, resource_type, resource_id);
 
 CREATE TABLE company_definition_resource_adoptions (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   organization_id TEXT NOT NULL DEFAULT 'organization:default' CHECK (organization_id = 'organization:default'),
   command_id TEXT NOT NULL,
   resource_type TEXT NOT NULL CHECK (resource_type IN ('grade', 'position')),
@@ -4174,14 +4287,19 @@ CREATE TABLE company_definition_resource_adoptions (
     AND json_extract(source_json, '$.definition.id') IS definition_id
     AND json_extract(source_json, '$.organizationRevision') IS expected_revision),
   recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
-  PRIMARY KEY (organization_id, command_id),
+  UNIQUE (organization_id, command_id),
   UNIQUE (resource_type, definition_id),
   UNIQUE (organization_id, resource_type, resource_id),
   FOREIGN KEY (organization_id, resource_type, resource_id)
     REFERENCES company_resource_heads(organization_id, resource_type, resource_id) ON DELETE RESTRICT,
   FOREIGN KEY (organization_id, command_id)
-    REFERENCES company_command_receipts(organization_id, command_id) ON DELETE RESTRICT
+    REFERENCES company_command_receipts(organization_id, command_id) ON DELETE RESTRICT,
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_definition_resource_adoptions_identity_update
+BEFORE UPDATE OF id ON company_definition_resource_adoptions
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 DROP TRIGGER IF EXISTS company_definition_adoptions_update_guard;
 CREATE TRIGGER company_definition_adoptions_update_guard
@@ -4218,6 +4336,8 @@ BEGIN
 END;
 
 CREATE TABLE company_grade_award_archives (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   organization_id TEXT NOT NULL REFERENCES company_organizations(id) CHECK (organization_id = 'organization:default'),
   command_id TEXT NOT NULL,
   employee_id TEXT NOT NULL REFERENCES company_employees(id),
@@ -4229,11 +4349,16 @@ CREATE TABLE company_grade_award_archives (
   snapshot_digest TEXT NOT NULL CHECK (length(snapshot_digest) = 64),
   source_json TEXT NOT NULL CHECK (json_valid(source_json)),
   recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
-  PRIMARY KEY (organization_id, command_id),
+  UNIQUE (organization_id, command_id),
   UNIQUE (organization_id, employee_id),
   CHECK (json_extract(source_json, '$.employeeId') IS employee_id),
-  CHECK (json_extract(source_json, '$.organizationRevision') IS observed_company_revision)
+  CHECK (json_extract(source_json, '$.organizationRevision') IS observed_company_revision),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_grade_award_archives_identity_update
+BEFORE UPDATE OF id ON company_grade_award_archives
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 DROP TRIGGER IF EXISTS company_grade_award_archive_no_update;
 CREATE TRIGGER company_grade_award_archive_no_update
@@ -4250,15 +4375,25 @@ BEGIN
 END;
 
 CREATE TABLE company_personnel_annotations (
-  id INTEGER PRIMARY KEY,
+  id TEXT PRIMARY KEY NOT NULL,
+  legacy_id TEXT UNIQUE,
   employee_id TEXT NOT NULL,
   kind TEXT NOT NULL,
   effective_date TEXT NOT NULL,
   from_department_code TEXT,
   to_department_code TEXT,
   note TEXT,
-  created_at TEXT NOT NULL
+  created_at TEXT NOT NULL,
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_personnel_annotations_legacy_id_insert
+BEFORE INSERT ON company_personnel_annotations
+WHEN NEW.legacy_id IS NOT NULL
+BEGIN SELECT RAISE(ABORT, 'record_legacy_id_immutable'); END;
+CREATE TRIGGER company_personnel_annotations_identity_update
+BEFORE UPDATE OF id, legacy_id ON company_personnel_annotations
+WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 CREATE INDEX idx_company_personnel_annotations_employee ON company_personnel_annotations(employee_id);
 CREATE INDEX idx_company_personnel_annotations_kind ON company_personnel_annotations(kind);
 
@@ -4367,6 +4502,8 @@ BEGIN
   );
 END;
 CREATE TABLE company_responsibility_source_adoptions (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   organization_id TEXT NOT NULL DEFAULT 'organization:default'
     CHECK (organization_id = 'organization:default'),
   source_context TEXT NOT NULL CHECK (length(trim(source_context)) BETWEEN 1 AND 100),
@@ -4391,14 +4528,19 @@ CREATE TABLE company_responsibility_source_adoptions (
   organization_revision INTEGER NOT NULL
     CHECK (organization_revision = expected_revision + 1),
   recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0),
-  PRIMARY KEY (organization_id, source_context, source_kind, source_id, source_version),
+  UNIQUE (organization_id, source_context, source_kind, source_id, source_version),
   UNIQUE (organization_id, command_id),
   FOREIGN KEY (organization_id, command_id)
     REFERENCES company_command_receipts(organization_id, command_id) ON DELETE RESTRICT,
   FOREIGN KEY (organization_id, resource_type, resource_id)
     REFERENCES company_resource_heads(organization_id, resource_type, resource_id) ON DELETE RESTRICT,
-  FOREIGN KEY (freeze_id) REFERENCES system_record_source_freezes(id) ON DELETE RESTRICT
+  FOREIGN KEY (freeze_id) REFERENCES system_record_source_freezes(id) ON DELETE RESTRICT,
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_responsibility_source_adoptions_identity_update
+BEFORE UPDATE OF id ON company_responsibility_source_adoptions
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE TRIGGER company_responsibility_source_adoptions_insert_guard
 BEFORE INSERT ON company_responsibility_source_adoptions
@@ -4444,6 +4586,8 @@ BEGIN
   SELECT RAISE(ABORT, 'company_responsibility_source_adoption_immutable');
 END;
 CREATE TABLE company_responsibility_source_cutovers (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   organization_id TEXT NOT NULL DEFAULT 'organization:default'
     CHECK (organization_id = 'organization:default'),
   source_context TEXT NOT NULL CHECK (length(trim(source_context)) BETWEEN 1 AND 100),
@@ -4462,10 +4606,15 @@ CREATE TABLE company_responsibility_source_cutovers (
   audit_event_id TEXT NOT NULL REFERENCES company_audit_events(event_id) ON DELETE RESTRICT,
   actor_account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE RESTRICT,
   completed_at INTEGER NOT NULL CHECK (completed_at >= 0),
-  PRIMARY KEY (organization_id, source_context, source_kind),
+  UNIQUE (organization_id, source_context, source_kind),
   UNIQUE (freeze_id),
-  FOREIGN KEY (freeze_id) REFERENCES system_record_source_freezes(id) ON DELETE RESTRICT
+  FOREIGN KEY (freeze_id) REFERENCES system_record_source_freezes(id) ON DELETE RESTRICT,
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER company_responsibility_source_cutovers_identity_update
+BEFORE UPDATE OF id ON company_responsibility_source_cutovers
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE TRIGGER company_responsibility_source_cutovers_insert_guard
 BEFORE INSERT ON company_responsibility_source_cutovers
