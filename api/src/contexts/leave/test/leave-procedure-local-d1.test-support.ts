@@ -153,16 +153,16 @@ export async function createLeaveProcedureDecisionLocalD1Context(local: LocalD1,
   if (binding instanceof Error) throw binding
   await runAll(c.database, [
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-      VALUES ('leave-decision-test','test:leave-decision','custom','Leave decision',0,0)`,
+      VALUES ('9e6932f2-bd06-4f30-8df5-8fd06fd885b6','test:leave-decision','custom','Leave decision',0,0)`,
     `INSERT INTO system_iam_role_permissions (role_id,permission_key)
-      VALUES ('leave-decision-test','leave:approve')`,
+      VALUES ('9e6932f2-bd06-4f30-8df5-8fd06fd885b6','leave:approve')`,
   ])
   for (const actor of c.people) {
     await c.database
       .prepare(
-        "INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES (?1,?2,'leave-decision-test',0)",
+        "INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES (?1,?2,'9e6932f2-bd06-4f30-8df5-8fd06fd885b6',0)",
       )
-      .bind(`leave-decision-test:${actor.accountId}`, actor.accountId)
+      .bind(crypto.randomUUID(), actor.accountId)
       .run()
   }
   await c.database

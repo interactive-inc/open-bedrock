@@ -57,12 +57,12 @@ async function createFixture(kind: "agent" | "service" | "connector" = "service"
     .run(hash, createdAt, expiresAt)
   fixture.sqlite.exec(`
     INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at)
-    VALUES ('reader-role', 'system:reader', 'custom', 'Reader', 1, 1);
+    VALUES ('04635707-bd54-47ea-81d4-38426e3ce8a2', 'system:reader', 'custom', 'Reader', 1, 1);
     INSERT INTO system_iam_role_permissions (role_id, permission_key)
-    VALUES ('reader-role', 'iam:read');
+    VALUES ('04635707-bd54-47ea-81d4-38426e3ce8a2', 'iam:read');
     INSERT INTO system_role_bindings
     (id, account_id, role_id, created_at, revoked_at)
-    VALUES ('reader-binding', 'machine-account', 'reader-role', 1, NULL);
+    VALUES ('72da13a4-abc7-476f-8499-074d4f8a8854', 'machine-account', '04635707-bd54-47ea-81d4-38426e3ce8a2', 1, NULL);
   `)
   const app = systemFactory.createApp()
   app.use("*", async (context, next) => {

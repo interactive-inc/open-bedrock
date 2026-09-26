@@ -124,7 +124,7 @@ test("評価テンプレートを停止中に人の承認で保全し、業務�
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('performance-review-test-manager','system:record:export');
+    VALUES ('f2b5cb7d-a83a-4823-80ed-24b9da2c2996','system:record:export');
     DROP TABLE evaluation_sheet_audit_logs;
     DROP TABLE evaluation_sheets;
     DROP TABLE evaluation_templates;

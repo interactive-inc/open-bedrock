@@ -199,13 +199,13 @@ test("人事評価8台帳を分割照合し撤去確定する", async () => {
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:performance-review-retirement-review','performance-review:retirement-review','custom','Record reviewer',0,0);
+    VALUES ('ed7a7e8f-1859-47e2-85ef-0f185ddcd27f','performance-review:retirement-review','custom','Record reviewer',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key)
-    VALUES ('role:performance-review-retirement-review','system:procedure:read')`,
+    VALUES ('ed7a7e8f-1859-47e2-85ef-0f185ddcd27f','system:procedure:read')`,
   )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-      VALUES ('binding:performance-review-retirement-review',?1,'role:performance-review-retirement-review',0)`)
+      VALUES ('8e4e43bb-c96f-4b30-8a67-f82dbf4a6b0d',?1,'ed7a7e8f-1859-47e2-85ef-0f185ddcd27f',0)`)
     .bind(reviewer.accountId)
     .run()
   const retirementPath = `/performance-review/retirement-plans/${plan.id}/requests`
@@ -273,7 +273,7 @@ test("人事評価8台帳を分割照合し撤去確定する", async () => {
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('performance-review-test-manager','system:record:export');
+    VALUES ('f2b5cb7d-a83a-4823-80ed-24b9da2c2996','system:record:export');
     DROP TABLE evaluation_sheet_audit_logs;
     DROP TABLE evaluation_sheets;
     DROP TABLE evaluation_templates;

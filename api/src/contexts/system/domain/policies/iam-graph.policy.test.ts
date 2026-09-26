@@ -5,13 +5,23 @@ import { RoleBindingEntity } from "@system/domain/entities/role-binding.entity"
 import { describe, expect, test } from "bun:test"
 
 const NOW = new Date("2026-08-11T00:00:00.000Z")
+/** role と割当の主キーは UUID のため、テストで読みやすい名前を決まった UUID へ対応させる。 */
+const namedIds = new Map<string, string>()
 
-function requireRole(id: string, permissionKeys: ReadonlyArray<string>): IamRoleEntity {
+function idOf(name: string): string {
+  const known = namedIds.get(name)
+  if (known !== undefined) return known
+  const id = `00000000-0000-4000-8000-${(namedIds.size + 1).toString(16).padStart(12, "0")}`
+  namedIds.set(name, id)
+  return id
+}
+
+function requireRole(name: string, permissionKeys: ReadonlyArray<string>): IamRoleEntity {
   const role = IamRoleEntity.create({
-    id,
-    key: `system:${id}`,
+    id: idOf(`role:${name}`),
+    key: `system:${name}`,
     kind: "managed",
-    name: id,
+    name,
     permissionKeys,
     createdAt: NOW,
     updatedAt: NOW,
@@ -21,13 +31,13 @@ function requireRole(id: string, permissionKeys: ReadonlyArray<string>): IamRole
 }
 
 function requireBinding(
-  id: string,
+  name: string,
   accountId: string,
   roleId: string,
   resource: Readonly<{ type: string; id: string }> | null = null,
 ): RoleBindingEntity {
   const binding = RoleBindingEntity.create({
-    id,
+    id: idOf(`binding:${name}`),
     accountId,
     roleId,
     resource,
@@ -86,7 +96,7 @@ describe("IamGraphPolicy permission evaluation", () => {
 
   test("global system:adminだけが全permissionを短絡する", () => {
     const root = requireRole("root", ["system:admin"])
-    const global = requireBinding("root-binding", "account-1", root.id)
+    const global = requireBinding("f16b950f-c6db-4760-8994-95cc8065169d", "account-1", root.id)
     const scoped = requireBinding("scoped-root", "account-2", root.id, {
       type: "example:resource",
       id: "facility-1",
@@ -144,13 +154,13 @@ describe("IamGraphPolicy integrity and last-root", () => {
     "破損graphをfail closedで拒否する: %s",
     (reason) => {
       const role = requireRole("root", ["system:admin"])
-      const binding = requireBinding("binding-1", "account-1", role.id)
+      const binding = requireBinding("ae18ee9b-62ff-4396-8971-165b0ac77248", "account-1", role.id)
       const roles = reason === "duplicate_role_id" ? [role, role] : [role]
       const bindings =
         reason === "duplicate_binding_id"
           ? [binding, binding]
           : reason === "unknown_binding_role"
-            ? [requireBinding("unknown", "account-1", "missing-role")]
+            ? [requireBinding("unknown", "account-1", idOf("role:missing"))]
             : [binding]
       const graph = IamGraphPolicy.create(roles, bindings)
 
@@ -221,14 +231,14 @@ describe("IamGraphPolicy integrity and last-root", () => {
     ).toBe("invalid_evaluation_input")
     expect(
       graph.getBindingRevocationRejection({
-        bindingId: "binding-1",
+        bindingId: "ae18ee9b-62ff-4396-8971-165b0ac77248",
         activeAccountIds: new Set([""]),
         at: NOW,
       }),
     ).toBe("invalid_evaluation_input")
     expect(
       graph.getBindingRevocationRejection({
-        bindingId: "binding-1",
+        bindingId: "ae18ee9b-62ff-4396-8971-165b0ac77248",
         activeAccountIds: new Set(),
         at: new Date(Number.NaN),
       }),

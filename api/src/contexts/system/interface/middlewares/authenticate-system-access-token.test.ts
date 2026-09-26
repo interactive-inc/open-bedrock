@@ -24,20 +24,20 @@ describe("authenticateSystemAccessToken", () => {
       .query(
         `INSERT INTO system_iam_roles
            (id, key, kind, name, created_at, updated_at)
-         VALUES ('role-1', 'system:reader', 'managed', 'System reader', ?1, ?1)`,
+         VALUES ('a290ac92-bf4b-434b-8443-8b6ceeb1cb85', 'system:reader', 'managed', 'System reader', ?1, ?1)`,
       )
       .run(now.getTime())
     fixture.sqlite
       .query(
         `INSERT INTO system_iam_role_permissions (role_id, permission_key)
-         VALUES ('role-1', 'system:read')`,
+         VALUES ('a290ac92-bf4b-434b-8443-8b6ceeb1cb85', 'system:read')`,
       )
       .run()
     fixture.sqlite
       .query(
         `INSERT INTO system_role_bindings
            (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-         VALUES ('binding-1', ?1, 'role-1', NULL, NULL, ?2, NULL)`,
+         VALUES ('ae18ee9b-62ff-4396-8971-165b0ac77248', ?1, 'a290ac92-bf4b-434b-8443-8b6ceeb1cb85', NULL, NULL, ?2, NULL)`,
       )
       .run(accountId, now.getTime())
 

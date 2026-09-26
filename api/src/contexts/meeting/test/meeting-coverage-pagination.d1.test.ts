@@ -222,13 +222,13 @@ test("会議体11件と議事録・意思決定を分割照合し撤去確定す
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:meeting-retirement-review','meeting:retirement-review','custom','Record reviewer',0,0);
+    VALUES ('75f816c9-6d33-42b6-8b33-4936b173cdfb','meeting:retirement-review','custom','Record reviewer',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key)
-    VALUES ('role:meeting-retirement-review','system:procedure:read')`,
+    VALUES ('75f816c9-6d33-42b6-8b33-4936b173cdfb','system:procedure:read')`,
   )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-      VALUES ('binding:meeting-retirement-review',?1,'role:meeting-retirement-review',0)`)
+      VALUES ('aaf59104-3c69-4d76-8f44-8d33086c99b2',?1,'75f816c9-6d33-42b6-8b33-4936b173cdfb',0)`)
     .bind(reviewer.accountId)
     .run()
   const retirementPath = `/meeting/retirement-plans/${plan.id}/requests`
@@ -296,7 +296,7 @@ test("会議体11件と議事録・意思決定を分割照合し撤去確定す
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('meeting-test-manager','system:record:export');
+    VALUES ('379192cc-a09d-4970-832c-9ce5f203eb03','system:record:export');
     DROP TABLE meeting_minutes_records;
     DROP TABLE decision_records;
     DROP TABLE meetings;`,

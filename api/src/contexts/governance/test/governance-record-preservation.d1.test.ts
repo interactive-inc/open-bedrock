@@ -121,7 +121,7 @@ test("規程機能を停止中に人の承認で保全し、業務コードを�
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('governance-test-manager','system:record:export');
+    VALUES ('29c09cfa-b882-46dd-8d44-fc3fe2fcd2dd','system:record:export');
     DROP TABLE governance_acknowledgements;
     DROP TABLE governance_capabilities;
     DROP TABLE governance_document_references;

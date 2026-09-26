@@ -1,7 +1,9 @@
 -- Product-neutral versioned procedures and immutable proposal bodies.
 
 CREATE TABLE system_procedure_definitions (
-  key TEXT PRIMARY KEY NOT NULL
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
+  key TEXT NOT NULL UNIQUE
     CHECK (
       length(key) BETWEEN 1 AND 100
       AND key NOT GLOB '*[^a-z0-9_-]*'
@@ -10,8 +12,14 @@ CREATE TABLE system_procedure_definitions (
   current_revision INTEGER NOT NULL CHECK (current_revision > 0),
   status TEXT NOT NULL CHECK (status IN ('active', 'retired')),
   created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL CHECK (updated_at >= created_at)
+  updated_at INTEGER NOT NULL CHECK (updated_at >= created_at),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+
+CREATE TRIGGER system_procedure_definitions_identity_update
+BEFORE UPDATE OF id ON system_procedure_definitions
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE INDEX system_procedure_definitions_status_idx
   ON system_procedure_definitions (status, updated_at);
@@ -72,6 +80,8 @@ BEGIN
 END;
 
 CREATE TABLE system_procedure_definition_revisions (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   procedure_key TEXT NOT NULL
     REFERENCES system_procedure_definitions(key) ON DELETE RESTRICT,
   revision INTEGER NOT NULL CHECK (revision > 0),
@@ -87,8 +97,14 @@ CREATE TABLE system_procedure_definition_revisions (
   created_by_account_id TEXT NOT NULL
     REFERENCES system_accounts(id) ON DELETE RESTRICT,
   created_at INTEGER NOT NULL,
-  PRIMARY KEY (procedure_key, revision)
+  UNIQUE (procedure_key, revision),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+
+CREATE TRIGGER system_procedure_definition_revisions_identity_update
+BEFORE UPDATE OF id ON system_procedure_definition_revisions
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE INDEX system_procedure_definition_revisions_creator_idx
   ON system_procedure_definition_revisions (created_by_account_id, created_at);
@@ -125,7 +141,8 @@ CREATE TABLE system_proposal_series (
     REFERENCES system_procedure_definitions(key) ON DELETE RESTRICT,
   created_by_account_id TEXT NOT NULL
     REFERENCES system_accounts(id) ON DELETE RESTRICT,
-  created_at INTEGER NOT NULL
+  created_at INTEGER NOT NULL,
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE INDEX system_proposal_series_definition_idx
@@ -168,7 +185,8 @@ CREATE TABLE system_proposals (
     OR (version > 1 AND supersedes_proposal_id IS NOT NULL)
   ),
   FOREIGN KEY (procedure_key, procedure_revision)
-    REFERENCES system_procedure_definition_revisions(procedure_key, revision) ON DELETE RESTRICT
+    REFERENCES system_procedure_definition_revisions(procedure_key, revision) ON DELETE RESTRICT,
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE UNIQUE INDEX system_proposals_series_version_uniq
@@ -252,7 +270,8 @@ CREATE TABLE system_proposal_cases (
     REFERENCES system_proposals(id) ON DELETE RESTRICT,
   case_id TEXT NOT NULL
     REFERENCES system_cases(id) ON DELETE RESTRICT,
-  linked_at INTEGER NOT NULL
+  linked_at INTEGER NOT NULL,
+  CHECK (length(proposal_id) = 36 AND proposal_id NOT GLOB '*[^0-9a-f-]*' AND substr(proposal_id, 9, 1) = '-' AND substr(proposal_id, 14, 1) = '-' AND substr(proposal_id, 19, 1) = '-' AND substr(proposal_id, 24, 1) = '-' AND length(replace(proposal_id, '-', '')) = 32 AND substr(proposal_id, 15, 1) GLOB '[1-8]' AND substr(proposal_id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE UNIQUE INDEX system_proposal_cases_case_uniq

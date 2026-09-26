@@ -38,14 +38,14 @@ async function fixture() {
   await db.batch([
     db.prepare(
       `INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at)
-       VALUES ('privacy-officer', 'test:privacy-officer', 'custom', 'Privacy officer', 0, 0)`,
+       VALUES ('d0e5044b-a755-4028-8eda-79d08653462a', 'test:privacy-officer', 'custom', 'Privacy officer', 0, 0)`,
     ),
     db.prepare(
-      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('privacy-officer', 'personal_data:erase')",
+      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('d0e5044b-a755-4028-8eda-79d08653462a', 'personal_data:erase')",
     ),
     db
       .prepare(
-        "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('privacy-binding', ?1, 'privacy-officer', 0)",
+        "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('085ed3fb-b610-4ab9-8c00-8e5966aa81b3', ?1, 'd0e5044b-a755-4028-8eda-79d08653462a', 0)",
       )
       .bind(String(officer)),
   ])
@@ -239,7 +239,7 @@ test("最終承認者が消去権限を持つ場合は、承認の確定で鍵�
   const c = await fixture()
   await c.db
     .prepare(
-      "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('approver-privacy', ?1, 'privacy-officer', 0)",
+      "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('63173b26-de09-4fd6-875c-03bcaea22fd4', ?1, 'd0e5044b-a755-4028-8eda-79d08653462a', 0)",
     )
     .bind(String(approver))
     .run()

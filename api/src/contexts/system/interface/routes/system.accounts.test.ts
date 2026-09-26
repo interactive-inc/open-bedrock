@@ -35,22 +35,22 @@ describe("System AccountEntity HTTP", () => {
       .query(
         `INSERT INTO system_iam_roles
            (id, key, kind, name, created_at, updated_at)
-         VALUES ('root-role', 'system:root', 'managed', 'System root', ?1, ?1)`,
+         VALUES ('af285551-000d-4320-8ea0-bbfbc6c96a81', 'system:root', 'managed', 'System root', ?1, ?1)`,
       )
       .run(now.getTime())
     fixture.sqlite
       .query(
         `INSERT INTO system_iam_role_permissions (role_id, permission_key)
-         VALUES ('root-role', 'iam:read'),
-                ('root-role', 'iam:write'),
-                ('root-role', 'system:admin')`,
+         VALUES ('af285551-000d-4320-8ea0-bbfbc6c96a81', 'iam:read'),
+                ('af285551-000d-4320-8ea0-bbfbc6c96a81', 'iam:write'),
+                ('af285551-000d-4320-8ea0-bbfbc6c96a81', 'system:admin')`,
       )
       .run()
     fixture.sqlite
       .query(
         `INSERT INTO system_role_bindings
            (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-         VALUES ('root-binding', ?1, 'root-role', NULL, NULL, ?2, NULL)`,
+         VALUES ('f16b950f-c6db-4760-8994-95cc8065169d', ?1, 'af285551-000d-4320-8ea0-bbfbc6c96a81', NULL, NULL, ?2, NULL)`,
       )
       .run(rootAccountId, now.getTime())
 
@@ -161,26 +161,26 @@ describe("System AccountEntity HTTP", () => {
       .query(
         `INSERT INTO system_iam_roles
            (id, key, kind, name, created_at, updated_at)
-         VALUES ('delegated-administrator-role', 'system:delegated-administrator', 'custom',
+         VALUES ('adbf4688-13c3-46e8-8262-1ed64af62d89', 'system:delegated-administrator', 'custom',
                  'Delegated administrator', ?1, ?1),
-                ('scoped-privileged-role', 'example:privileged', 'custom',
+                ('92d93d3c-f92a-4336-86b6-65d1d1556667', 'example:privileged', 'custom',
                  'Scoped privileged role', ?1, ?1)`,
       )
       .run(now.getTime())
     fixture.sqlite
       .query(
         `INSERT INTO system_iam_role_permissions (role_id, permission_key)
-         VALUES ('delegated-administrator-role', 'iam:write'),
-                ('scoped-privileged-role', 'example:privileged')`,
+         VALUES ('adbf4688-13c3-46e8-8262-1ed64af62d89', 'iam:write'),
+                ('92d93d3c-f92a-4336-86b6-65d1d1556667', 'example:privileged')`,
       )
       .run()
     fixture.sqlite
       .query(
         `INSERT INTO system_role_bindings
            (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-         VALUES ('delegated-administrator-binding', ?1, 'delegated-administrator-role',
+         VALUES ('d47efb56-f8b4-4b94-8844-caf7c69588bf', ?1, 'adbf4688-13c3-46e8-8262-1ed64af62d89',
                  NULL, NULL, ?3, NULL),
-                ('scoped-privileged-binding', ?2, 'scoped-privileged-role',
+                ('730ad3cb-8822-4e20-8e2e-868e04df129e', ?2, '92d93d3c-f92a-4336-86b6-65d1d1556667',
                  'example:organization', 'organization-1', ?3, NULL)`,
       )
       .run(delegatedAdministratorAccountId, scopedPrivilegedAccountId, now.getTime())

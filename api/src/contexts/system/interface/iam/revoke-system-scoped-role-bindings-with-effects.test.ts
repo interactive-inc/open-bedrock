@@ -21,8 +21,8 @@ function fixture() {
       .run(id)
   }
   for (const [id, resource] of [
-    ["global-role", null],
-    ["manager-role", "demo:resource"],
+    ["f8dc2e88-fc2d-4a67-8c0e-11db39f67d75", null],
+    ["848c3ab1-d54e-4ef8-82ff-dbc3e9f23620", "demo:resource"],
   ]) {
     test.sqlite
       .query(
@@ -36,10 +36,10 @@ function fixture() {
       .run(id)
   }
   test.sqlite.run(
-    "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('actor-binding', 'actor', 'global-role', 0)",
+    "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('36328491-0ba8-4a11-8b8d-26aff298e39b', 'actor', 'f8dc2e88-fc2d-4a67-8c0e-11db39f67d75', 0)",
   )
   test.sqlite.run(
-    "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('target-binding', 'target', 'manager-role', 'demo:resource', 'resource-1', 0)",
+    "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('f1a3ed01-15a3-41da-8ebb-2457a6038f84', 'target', '848c3ab1-d54e-4ef8-82ff-dbc3e9f23620', 'demo:resource', 'resource-1', 0)",
   )
   return test
 }
@@ -79,7 +79,7 @@ function insertInvitation(
       `INSERT INTO system_account_invitations
       (id, token, email, role_id, resource_type, resource_id, related_resource_id,
        accepted_by_account_id, expires_at, revoked_at, created_at, updated_at)
-     VALUES (?1, ?1, 'person@example.com', 'manager-role', 'demo:resource', ?2, ?3,
+     VALUES (?1, ?1, 'person@example.com', '848c3ab1-d54e-4ef8-82ff-dbc3e9f23620', 'demo:resource', ?2, ?3,
              ?4, ?5, ?6, 0, 0)`,
     )
     .run(
@@ -101,7 +101,9 @@ test("最後の管理者を外すと外部effectもロール失効もロール�
     ).toEqual({ updated_at: 0 })
     expect(
       test.sqlite
-        .query("SELECT revoked_at FROM system_role_bindings WHERE id='target-binding'")
+        .query(
+          "SELECT revoked_at FROM system_role_bindings WHERE id='f1a3ed01-15a3-41da-8ebb-2457a6038f84'",
+        )
         .get(),
     ).toEqual({ revoked_at: null })
   } finally {
@@ -113,7 +115,7 @@ test("別の管理者がいれば外部effect・履歴・監査を同時に保�
   const test = fixture()
   try {
     test.sqlite.run(
-      "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('other-binding', 'other', 'manager-role', 'demo:resource', 'resource-1', 0)",
+      "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('17e9fca7-165d-44c4-8e80-4b3d024c4554', 'other', '848c3ab1-d54e-4ef8-82ff-dbc3e9f23620', 'demo:resource', 'resource-1', 0)",
     )
     expect(await revoke(test)).toBe("revoked")
     expect(
@@ -121,7 +123,9 @@ test("別の管理者がいれば外部effect・履歴・監査を同時に保�
     ).toEqual({ updated_at: now.getTime() })
     expect(
       test.sqlite
-        .query("SELECT revoked_at FROM system_role_bindings WHERE id='target-binding'")
+        .query(
+          "SELECT revoked_at FROM system_role_bindings WHERE id='f1a3ed01-15a3-41da-8ebb-2457a6038f84'",
+        )
         .get(),
     ).toEqual({ revoked_at: now.getTime() })
     expect(
@@ -129,7 +133,9 @@ test("別の管理者がいれば外部effect・履歴・監査を同時に保�
     ).toEqual({ token_version: 1 })
     expect(
       test.sqlite
-        .query("SELECT count(*) AS count FROM system_audit_events WHERE target_id='target-binding'")
+        .query(
+          "SELECT count(*) AS count FROM system_audit_events WHERE target_id='f1a3ed01-15a3-41da-8ebb-2457a6038f84'",
+        )
         .get(),
     ).toEqual({ count: 1 })
   } finally {
@@ -141,13 +147,13 @@ test("招待の施設・関連資源を限定し、未使用の有効招待だ�
   const test = fixture()
   try {
     test.sqlite.run(
-      "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('other-binding', 'other', 'manager-role', 'demo:resource', 'resource-1', 0)",
+      "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('17e9fca7-165d-44c4-8e80-4b3d024c4554', 'other', '848c3ab1-d54e-4ef8-82ff-dbc3e9f23620', 'demo:resource', 'resource-1', 0)",
     )
     insertInvitation(test, "pending", "resource-1", "assignment-1")
     insertInvitation(test, "used", "resource-1", "assignment-1", "used")
     insertInvitation(test, "expired", "resource-1", "assignment-1", "expired")
     insertInvitation(test, "revoked", "resource-1", "assignment-1", "revoked")
-    insertInvitation(test, "other-resource", "resource-2", "assignment-1")
+    insertInvitation(test, "dbcd34b4-9c95-419a-8fc3-d992cd5566d7", "resource-2", "assignment-1")
     insertInvitation(test, "other-assignment", "resource-1", "assignment-2")
 
     expect(await revoke(test, ["assignment-1"])).toBe("revoked")
@@ -156,9 +162,9 @@ test("招待の施設・関連資源を限定し、未使用の有効招待だ�
         .query("SELECT id, revoked_at AS revokedAt FROM system_account_invitations ORDER BY id")
         .all(),
     ).toEqual([
+      { id: "dbcd34b4-9c95-419a-8fc3-d992cd5566d7", revokedAt: null },
       { id: "expired", revokedAt: null },
       { id: "other-assignment", revokedAt: null },
-      { id: "other-resource", revokedAt: null },
       { id: "pending", revokedAt: now.getTime() },
       { id: "revoked", revokedAt: 1 },
       { id: "used", revokedAt: null },
@@ -199,7 +205,7 @@ test("招待の読み取り後に同じ資源の招待が増えたら全変更�
   const test = fixture()
   try {
     test.sqlite.run(
-      "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('other-binding', 'other', 'manager-role', 'demo:resource', 'resource-1', 0)",
+      "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('17e9fca7-165d-44c4-8e80-4b3d024c4554', 'other', '848c3ab1-d54e-4ef8-82ff-dbc3e9f23620', 'demo:resource', 'resource-1', 0)",
     )
     insertInvitation(test, "original", "resource-1", "assignment-1")
     const base = test.context.env.DB
@@ -222,7 +228,9 @@ test("招待の読み取り後に同じ資源の招待が増えたら全変更�
     ])
     expect(
       test.sqlite
-        .query("SELECT revoked_at FROM system_role_bindings WHERE id = 'target-binding'")
+        .query(
+          "SELECT revoked_at FROM system_role_bindings WHERE id = 'f1a3ed01-15a3-41da-8ebb-2457a6038f84'",
+        )
         .get(),
     ).toEqual({ revoked_at: null })
     expect(

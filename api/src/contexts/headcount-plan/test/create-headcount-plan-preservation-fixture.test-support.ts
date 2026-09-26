@@ -69,15 +69,15 @@ export async function createHeadcountPlanPreservationFixture(database: D1Databas
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('headcount-plan-test-manager','headcount-plan:test-manager','custom','HeadcountPlan manager',0,0);
+    VALUES ('6d73f1b6-ecf1-42e1-8a0b-c1abca4b3871','headcount-plan:test-manager','custom','HeadcountPlan manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('headcount-plan-test-manager','headcount_plan:manage'),
-      ('headcount-plan-test-manager','system:admin'),
-      ('headcount-plan-test-manager','system:record:preserve'),
-      ('headcount-plan-test-manager','system:record:read'),
-      ('headcount-plan-test-manager','system:procedure:read');
+      ('6d73f1b6-ecf1-42e1-8a0b-c1abca4b3871','headcount_plan:manage'),
+      ('6d73f1b6-ecf1-42e1-8a0b-c1abca4b3871','system:admin'),
+      ('6d73f1b6-ecf1-42e1-8a0b-c1abca4b3871','system:record:preserve'),
+      ('6d73f1b6-ecf1-42e1-8a0b-c1abca4b3871','system:record:read'),
+      ('6d73f1b6-ecf1-42e1-8a0b-c1abca4b3871','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('headcount-plan-test-binding','${creator.accountId}','headcount-plan-test-manager',0);`,
+    VALUES ('516105c2-0cf1-4b22-863f-f82770cb8f3f','${creator.accountId}','6d73f1b6-ecf1-42e1-8a0b-c1abca4b3871',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

@@ -42,9 +42,9 @@ async function fixture(name: string) {
     f.db,
     `INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('notification-worker','active',0,0,0);
     INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at) VALUES ('notification-principal','notification-worker','service','Notification worker',1,0,0);
-    INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES ('notification-role','notification-worker','custom','Notification worker',0,0);
-    INSERT INTO system_iam_role_permissions VALUES ('notification-role','batch:execute'),('notification-role','employee:read'),('notification-role','leave:read:all');
-    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('notification-binding','notification-worker','notification-role',0);`,
+    INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES ('92800b2d-97e7-4243-8a57-785b3e31b34b','notification-worker','custom','Notification worker',0,0);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('92800b2d-97e7-4243-8a57-785b3e31b34b','batch:execute'),('92800b2d-97e7-4243-8a57-785b3e31b34b','employee:read'),('92800b2d-97e7-4243-8a57-785b3e31b34b','leave:read:all');
+    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('01fed7f6-b372-4c2b-83ba-c5e22f432953','notification-worker','92800b2d-97e7-4243-8a57-785b3e31b34b',0);`,
   )
   await f.prepareCompletion()
   expect(await f.complete()).toEqual({ status: "approved", replayed: false })
@@ -185,13 +185,13 @@ test("Serviceの休暇参照権限が失効したら配信せず、復旧後に�
   const f = await fixture("service-permission")
   await execSql(
     f.db,
-    "DELETE FROM system_iam_role_permissions WHERE role_id = 'notification-role' AND permission_key = 'leave:read:all'",
+    "DELETE FROM system_iam_role_permissions WHERE role_id = '92800b2d-97e7-4243-8a57-785b3e31b34b' AND permission_key = 'leave:read:all'",
   )
   expect(await f.run()).toEqual([expect.objectContaining({ status: "queued" })])
   expect(await f.count()).toBe(0)
   await execSql(
     f.db,
-    "INSERT INTO system_iam_role_permissions VALUES ('notification-role','leave:read:all')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('92800b2d-97e7-4243-8a57-785b3e31b34b','leave:read:all')",
   )
   f.clock.at = new Date(f.clock.at.getTime() + 60000)
   expect(await f.run()).toEqual([expect.objectContaining({ status: "succeeded" })])
@@ -244,7 +244,7 @@ for (const mutation of ["recipient", "permission"]) {
       } else {
         await execSql(
           f.db,
-          "DELETE FROM system_iam_role_permissions WHERE role_id = 'notification-role' AND permission_key = 'leave:read:all'",
+          "DELETE FROM system_iam_role_permissions WHERE role_id = '92800b2d-97e7-4243-8a57-785b3e31b34b' AND permission_key = 'leave:read:all'",
         )
       }
       return statements

@@ -21,7 +21,7 @@ const actorAccountId = zAccountId.parse("system-guard-actor")
 
 function createRootRole(): IamRoleEntity {
   const role = IamRoleEntity.create({
-    id: "root-role",
+    id: "af285551-000d-4320-8ea0-bbfbc6c96a81",
     key: "system:root",
     kind: "managed",
     name: "System root",
@@ -41,13 +41,13 @@ function createFixture(): SystemSessionTestContext {
     .query(
       `INSERT INTO system_iam_roles
          (id, key, kind, name, description, created_at, updated_at)
-       VALUES ('root-role', 'system:root', 'managed', 'System root', NULL, ?1, ?1)`,
+       VALUES ('af285551-000d-4320-8ea0-bbfbc6c96a81', 'system:root', 'managed', 'System root', NULL, ?1, ?1)`,
     )
     .run(now.getTime())
   fixture.sqlite
     .query(
       `INSERT INTO system_iam_role_permissions (role_id, permission_key)
-       VALUES ('root-role', 'iam:read'), ('root-role', 'iam:write'), ('root-role', 'system:admin')`,
+       VALUES ('af285551-000d-4320-8ea0-bbfbc6c96a81', 'iam:read'), ('af285551-000d-4320-8ea0-bbfbc6c96a81', 'iam:write'), ('af285551-000d-4320-8ea0-bbfbc6c96a81', 'system:admin')`,
     )
     .run()
 
@@ -55,6 +55,19 @@ function createFixture(): SystemSessionTestContext {
 }
 
 /** activeなaccount・activated identity・global root bindingの3点を揃えてrootを作る。 */
+/** 割当の主キーは UUID のため、root ごとに決まった値を使う。 */
+const bindingIds: Record<string, string> = {
+  root: "8d9a49af-964f-426a-88d1-d3de8279d573",
+  root2: "5e0f7c3a-1d2b-4c5d-8e6f-0000000000c2",
+  actor: "5e0f7c3a-1d2b-4c5d-8e6f-0000000000c3",
+}
+
+function bindingIdOf(suffix: string): string {
+  const id = bindingIds[suffix]
+  if (id === undefined) throw new Error(`unknown root fixture: ${suffix}`)
+  return id
+}
+
 function insertRoot(
   fixture: SystemSessionTestContext,
   accountId: string,
@@ -84,9 +97,9 @@ function insertRoot(
     .query(
       `INSERT INTO system_role_bindings
          (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-       VALUES (?1, ?2, 'root-role', NULL, NULL, ?3, NULL)`,
+       VALUES (?1, ?2, 'af285551-000d-4320-8ea0-bbfbc6c96a81', NULL, NULL, ?3, NULL)`,
     )
-    .run(`binding-${suffix}`, accountId, now.getTime())
+    .run(bindingIdOf(suffix), accountId, now.getTime())
 }
 
 function readBinding(
@@ -101,7 +114,7 @@ function readBinding(
           "SELECT account_id FROM system_role_bindings WHERE id = ?1",
         )
         .get(bindingId)?.account_id ?? "",
-    roleId: "root-role",
+    roleId: "af285551-000d-4320-8ea0-bbfbc6c96a81",
     resource: null,
     createdAt: now,
     revokedAt: null,
@@ -116,7 +129,7 @@ describe("System role binding last-root guard", () => {
     // actor≠targetにする。actorのidentityは未activateなので「残存するroot」に数えられない。
     insertRoot(fixture, actorAccountId, "actor", { activatedIdentity: false })
 
-    const binding = readBinding(fixture, "binding-root")
+    const binding = readBinding(fixture, "8d9a49af-964f-426a-88d1-d3de8279d573")
     expect(binding).not.toBeInstanceOf(Error)
     if (binding instanceof Error) return
 
@@ -128,7 +141,9 @@ describe("System role binding last-root guard", () => {
     // rollbackにより、bindingもtoken_versionも巻き戻っている。
     expect(
       fixture.sqlite
-        .query("SELECT revoked_at FROM system_role_bindings WHERE id = 'binding-root'")
+        .query(
+          "SELECT revoked_at FROM system_role_bindings WHERE id = '8d9a49af-964f-426a-88d1-d3de8279d573'",
+        )
         .get(),
     ).toEqual({ revoked_at: null })
     expect(
@@ -143,7 +158,7 @@ describe("System role binding last-root guard", () => {
     insertRoot(fixture, rootAccountId, "root")
     insertRoot(fixture, secondRootAccountId, "root2")
 
-    const binding = readBinding(fixture, "binding-root")
+    const binding = readBinding(fixture, "8d9a49af-964f-426a-88d1-d3de8279d573")
     expect(binding).not.toBeInstanceOf(Error)
     if (binding instanceof Error) return
 
@@ -159,7 +174,9 @@ describe("System role binding last-root guard", () => {
     expect(revocation).toBe("revoked")
     expect(
       fixture.sqlite
-        .query("SELECT revoked_at FROM system_role_bindings WHERE id = 'binding-root'")
+        .query(
+          "SELECT revoked_at FROM system_role_bindings WHERE id = '8d9a49af-964f-426a-88d1-d3de8279d573'",
+        )
         .get(),
     ).toEqual({ revoked_at: now.getTime() })
   })
@@ -178,27 +195,27 @@ describe("System role binding last-root guard", () => {
       .query(
         `INSERT INTO system_iam_roles
            (id, key, kind, name, description, created_at, updated_at)
-         VALUES ('reader-role', 'system:reader', 'custom', 'Reader', NULL, ?1, ?1)`,
+         VALUES ('04635707-bd54-47ea-81d4-38426e3ce8a2', 'system:reader', 'custom', 'Reader', NULL, ?1, ?1)`,
       )
       .run(now.getTime())
     fixture.sqlite
       .query(
         `INSERT INTO system_iam_role_permissions (role_id, permission_key)
-         VALUES ('reader-role', 'iam:read')`,
+         VALUES ('04635707-bd54-47ea-81d4-38426e3ce8a2', 'iam:read')`,
       )
       .run()
     fixture.sqlite
       .query(
         `INSERT INTO system_role_bindings
            (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-         VALUES ('binding-reader', ?1, 'reader-role', NULL, NULL, ?2, NULL)`,
+         VALUES ('b0ab0b5e-6e32-409a-8da8-c7fb74783ac6', ?1, '04635707-bd54-47ea-81d4-38426e3ce8a2', NULL, NULL, ?2, NULL)`,
       )
       .run(secondRootAccountId, now.getTime())
 
     const binding = RoleBindingEntity.create({
-      id: "binding-reader",
+      id: "b0ab0b5e-6e32-409a-8da8-c7fb74783ac6",
       accountId: secondRootAccountId,
-      roleId: "reader-role",
+      roleId: "04635707-bd54-47ea-81d4-38426e3ce8a2",
       resource: null,
       createdAt: now,
       revokedAt: null,
@@ -207,7 +224,7 @@ describe("System role binding last-root guard", () => {
     if (binding instanceof Error) return
 
     const readerRole = IamRoleEntity.create({
-      id: "reader-role",
+      id: "04635707-bd54-47ea-81d4-38426e3ce8a2",
       key: "system:reader",
       kind: "custom",
       name: "Reader",
@@ -230,7 +247,7 @@ describe("System role binding last-root guard", () => {
     insertRoot(fixture, rootAccountId, "root")
     insertRoot(fixture, secondRootAccountId, "root2")
 
-    const binding = readBinding(fixture, "binding-root")
+    const binding = readBinding(fixture, "8d9a49af-964f-426a-88d1-d3de8279d573")
     expect(binding).not.toBeInstanceOf(Error)
     if (binding instanceof Error) return
 
@@ -241,7 +258,9 @@ describe("System role binding last-root guard", () => {
     expect(revocation).toBe("forbidden")
     expect(
       fixture.sqlite
-        .query("SELECT revoked_at FROM system_role_bindings WHERE id = 'binding-root'")
+        .query(
+          "SELECT revoked_at FROM system_role_bindings WHERE id = '8d9a49af-964f-426a-88d1-d3de8279d573'",
+        )
         .get(),
     ).toEqual({ revoked_at: null })
   })

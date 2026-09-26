@@ -208,13 +208,13 @@ test("募集11件と応募者記録を分割照合し撤去確定する", async 
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:recruitment-retirement-review','recruitment:retirement-review','custom','Record reviewer',0,0);
+    VALUES ('348590d1-5092-4df7-8b81-781cebdef8e2','recruitment:retirement-review','custom','Record reviewer',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key)
-    VALUES ('role:recruitment-retirement-review','system:procedure:read')`,
+    VALUES ('348590d1-5092-4df7-8b81-781cebdef8e2','system:procedure:read')`,
   )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-      VALUES ('binding:recruitment-retirement-review',?1,'role:recruitment-retirement-review',0)`)
+      VALUES ('e2e53532-8af2-4626-8a70-153d1c52646d',?1,'348590d1-5092-4df7-8b81-781cebdef8e2',0)`)
     .bind(reviewer.accountId)
     .run()
   const retirementPath = `/recruitment/retirement-plans/${plan.id}/requests`
@@ -282,7 +282,7 @@ test("募集11件と応募者記録を分割照合し撤去確定する", async 
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('recruitment-test-manager','system:record:export');
+    VALUES ('ef9eb660-52d0-4c35-8d03-84764bb0f25a','system:record:export');
     DROP TABLE recruitment_candidates;
     DROP TABLE job_openings;`,
   )

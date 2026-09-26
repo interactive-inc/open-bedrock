@@ -201,13 +201,13 @@ test("稟議起案11件と実System案件対応を分割照合し撤去確定す
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:ringi-retirement-review','ringi:retirement-review','custom','Record reviewer',0,0);
+    VALUES ('a7f2d61b-b647-4543-8faa-62b4a3fcc40b','ringi:retirement-review','custom','Record reviewer',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key)
-    VALUES ('role:ringi-retirement-review','system:procedure:read')`,
+    VALUES ('a7f2d61b-b647-4543-8faa-62b4a3fcc40b','system:procedure:read')`,
   )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-      VALUES ('binding:ringi-retirement-review',?1,'role:ringi-retirement-review',0)`)
+      VALUES ('71dd9522-eb56-49e6-8eca-1078ca9fd21d',?1,'a7f2d61b-b647-4543-8faa-62b4a3fcc40b',0)`)
     .bind(reviewer.accountId)
     .run()
   const retirementPath = `/ringi/retirement-plans/${plan.id}/requests`
@@ -275,7 +275,7 @@ test("稟議起案11件と実System案件対応を分割照合し撤去確定す
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('ringi-test-manager','system:record:export');
+    VALUES ('1cd463e6-9cac-4ab8-8030-324e1cde582b','system:record:export');
     DROP TABLE ringi_procedure_bindings;
     DROP TABLE ringi_requests;`,
   )

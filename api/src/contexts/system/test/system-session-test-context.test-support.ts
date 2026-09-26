@@ -75,6 +75,7 @@ const schema = `
 
   CREATE TABLE system_iam_roles (
     id TEXT PRIMARY KEY NOT NULL,
+    legacy_id TEXT UNIQUE,
     key TEXT NOT NULL UNIQUE,
     kind TEXT NOT NULL,
     resource_type TEXT,
@@ -85,13 +86,15 @@ const schema = `
   );
 
   CREATE TABLE system_iam_role_permissions (
+    id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
     role_id TEXT NOT NULL,
     permission_key TEXT NOT NULL,
-    PRIMARY KEY (role_id, permission_key)
+    UNIQUE (role_id, permission_key)
   );
 
   CREATE TABLE system_role_bindings (
     id TEXT PRIMARY KEY NOT NULL,
+    legacy_id TEXT UNIQUE,
     account_id TEXT NOT NULL,
     role_id TEXT NOT NULL,
     resource_type TEXT,

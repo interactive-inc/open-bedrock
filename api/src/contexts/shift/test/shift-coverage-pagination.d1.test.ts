@@ -225,13 +225,13 @@ test("勤務パターン11件と割当・交代申請を分割照合し撤去確
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:shift-retirement-review','shift:retirement-review','custom','Record reviewer',0,0);
+    VALUES ('e07301c5-0f7d-4a18-833b-44f4bdb8bafe','shift:retirement-review','custom','Record reviewer',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key)
-    VALUES ('role:shift-retirement-review','system:procedure:read')`,
+    VALUES ('e07301c5-0f7d-4a18-833b-44f4bdb8bafe','system:procedure:read')`,
   )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-      VALUES ('binding:shift-retirement-review',?1,'role:shift-retirement-review',0)`)
+      VALUES ('ba9a1349-5fed-4596-849f-0ff80a2008d0',?1,'e07301c5-0f7d-4a18-833b-44f4bdb8bafe',0)`)
     .bind(reviewer.accountId)
     .run()
   const retirementPath = `/shift/retirement-plans/${plan.id}/requests`
@@ -299,7 +299,7 @@ test("勤務パターン11件と割当・交代申請を分割照合し撤去確
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('shift-test-manager','system:record:export');
+    VALUES ('0a67e863-4fc9-430e-810a-5a7d998532ca','system:record:export');
     DROP TABLE shift_assignments;
     DROP TABLE shift_swap_requests;
     DROP TABLE shift_patterns;`,

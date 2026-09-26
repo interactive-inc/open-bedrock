@@ -69,14 +69,14 @@ export async function createGovernancePreservationFixture(database: D1Database) 
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('governance-test-manager','governance:test-manager','custom','Governance manager',0,0);
+    VALUES ('29c09cfa-b882-46dd-8d44-fc3fe2fcd2dd','governance:test-manager','custom','Governance manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('governance-test-manager','system:admin'),
-      ('governance-test-manager','system:record:preserve'),
-      ('governance-test-manager','system:record:read'),
-      ('governance-test-manager','system:procedure:read');
+      ('29c09cfa-b882-46dd-8d44-fc3fe2fcd2dd','system:admin'),
+      ('29c09cfa-b882-46dd-8d44-fc3fe2fcd2dd','system:record:preserve'),
+      ('29c09cfa-b882-46dd-8d44-fc3fe2fcd2dd','system:record:read'),
+      ('29c09cfa-b882-46dd-8d44-fc3fe2fcd2dd','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('governance-test-binding','${creator.accountId}','governance-test-manager',0);`,
+    VALUES ('8dc2302c-88c9-499e-8b04-8228e0636827','${creator.accountId}','29c09cfa-b882-46dd-8d44-fc3fe2fcd2dd',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

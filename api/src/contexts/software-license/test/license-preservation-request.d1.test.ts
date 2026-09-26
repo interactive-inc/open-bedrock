@@ -28,7 +28,7 @@ test("HTTP preservation submission validates current authority and replays only 
   expect(bucket.size()).toBe(0)
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('license-test-manager','system:record:preserve')",
+    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('7a047d56-30bc-4028-888d-2294d2d80c99','system:record:preserve')",
   )
   const submitted = await f.request(path, command)
   if (submitted.status !== 201)

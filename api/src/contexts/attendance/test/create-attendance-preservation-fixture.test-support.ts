@@ -74,12 +74,12 @@ export async function createAttendancePreservationFixture(database: D1Database) 
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:attendance-archive','attendance:archive','custom','Archive operator',0,0);
-    INSERT INTO system_iam_role_permissions VALUES ('role:attendance-archive','attendance:read:all');`,
+    VALUES ('7cc94037-9f57-4c5b-8211-7c6c0e372ca5','attendance:archive','custom','Archive operator',0,0);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('7cc94037-9f57-4c5b-8211-7c6c0e372ca5','attendance:read:all');`,
   )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('binding:attendance-archive',?1,'role:attendance-archive',0)`)
+    VALUES ('78290c59-b99c-47c9-807d-48e166aaade8',?1,'7cc94037-9f57-4c5b-8211-7c6c0e372ca5',0)`)
     .bind(governance.creator.accountId)
     .run()
   await database

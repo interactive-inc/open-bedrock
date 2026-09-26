@@ -69,15 +69,15 @@ export async function createEmployeeWorkStylePreservationFixture(database: D1Dat
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('work-style-test-manager','work-style:test-manager','custom','EmployeeWorkStyle manager',0,0);
+    VALUES ('875e75ed-0145-4b49-8422-d93afbd0917b','work-style:test-manager','custom','EmployeeWorkStyle manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('work-style-test-manager','work_style:manage'),
-      ('work-style-test-manager','system:admin'),
-      ('work-style-test-manager','system:record:preserve'),
-      ('work-style-test-manager','system:record:read'),
-      ('work-style-test-manager','system:procedure:read');
+      ('875e75ed-0145-4b49-8422-d93afbd0917b','work_style:manage'),
+      ('875e75ed-0145-4b49-8422-d93afbd0917b','system:admin'),
+      ('875e75ed-0145-4b49-8422-d93afbd0917b','system:record:preserve'),
+      ('875e75ed-0145-4b49-8422-d93afbd0917b','system:record:read'),
+      ('875e75ed-0145-4b49-8422-d93afbd0917b','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('work-style-test-binding','${creator.accountId}','work-style-test-manager',0);`,
+    VALUES ('4f135458-9034-4acd-88fa-c4646c0136e4','${creator.accountId}','875e75ed-0145-4b49-8422-d93afbd0917b',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

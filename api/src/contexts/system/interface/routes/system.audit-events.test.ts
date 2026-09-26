@@ -28,20 +28,20 @@ describe("System Audit HTTP", () => {
       .query(
         `INSERT INTO system_iam_roles
            (id, key, kind, name, created_at, updated_at)
-         VALUES ('audit-reader', 'system:audit-reader', 'managed', 'Audit reader', ?1, ?1)`,
+         VALUES ('560a353d-f414-4b02-88dd-2517d0e3a1fe', 'system:audit-reader', 'managed', 'Audit reader', ?1, ?1)`,
       )
       .run(occurredAt.getTime())
     fixture.sqlite
       .query(
         `INSERT INTO system_iam_role_permissions (role_id, permission_key)
-         VALUES ('audit-reader', 'audit:read')`,
+         VALUES ('560a353d-f414-4b02-88dd-2517d0e3a1fe', 'audit:read')`,
       )
       .run()
     fixture.sqlite
       .query(
         `INSERT INTO system_role_bindings
            (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-         VALUES ('audit-binding', ?1, 'audit-reader', NULL, NULL, ?2, NULL)`,
+         VALUES ('50bf847c-b958-4039-83ef-e1a215188f70', ?1, '560a353d-f414-4b02-88dd-2517d0e3a1fe', NULL, NULL, ?2, NULL)`,
       )
       .run(readerAccountId, occurredAt.getTime())
 

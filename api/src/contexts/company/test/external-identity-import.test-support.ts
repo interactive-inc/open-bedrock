@@ -30,6 +30,12 @@ export async function createExternalIdentityImportTestContext(
   const rawSecret = "1".repeat(64)
   const hash = await new SystemPrincipalSecretService().hashRawSecret(rawSecret)
   if (hash instanceof Error) throw hash
+  // role の主キーを UUID へ移す前の schema では、migration が入れた管理 role の主キーが UUID でない。
+  // 取り込みは role の一覧を検証して読むため、どの割当も指していない旧来の role を先に外す。
+  await database.exec(`
+    DELETE FROM system_iam_roles
+    WHERE length(id) <> 36 AND id NOT IN (SELECT role_id FROM system_role_bindings);
+  `)
   await database.exec(`
     INSERT INTO company_organizations (id, revision, name, representative_name, created_at, updated_at)
       SELECT 'organization:default', 0, 'Example organization', 'Example representative', 0, 0
@@ -39,20 +45,20 @@ export async function createExternalIdentityImportTestContext(
     INSERT INTO system_principals (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
       VALUES ('external-import-principal', 'external-import-service', 'service', 'Directory synchronization', NULL, 1, 0, 0);
     INSERT INTO system_iam_roles (id, key, kind, resource_type, name, created_at, updated_at)
-      VALUES ('import-global', 'custom:import-global', 'custom', NULL, 'Account grants', 0, 0),
-        ('import-provider', 'custom:import-provider', 'custom', 'system:identity_provider', 'Provider writer', 0, 0),
-        ('import-member', 'custom:import-member', 'custom', NULL, 'Imported member', 0, 0);
+      VALUES ('ac330a23-4c0c-4f72-8aa8-3c4a92f58ff8', 'custom:import-global', 'custom', NULL, 'Account grants', 0, 0),
+        ('8ca6d30f-174b-40e1-870b-df888721f554', 'custom:import-provider', 'custom', 'system:identity_provider', 'Provider writer', 0, 0),
+        ('1f178fc9-9b4d-4247-8dc8-8f1344bf445d', 'custom:import-member', 'custom', NULL, 'Imported member', 0, 0);
     INSERT INTO system_iam_role_permissions (role_id, permission_key)
-      VALUES ('import-global', 'iam:write'), ('import-global', 'org:read'), ('import-global', 'employee:read'),
-        ('import-provider', 'account:manage'), ('import-provider', 'employee:write'),
-        ('import-member', 'org:read'), ('import-member', 'employee:read');
+      VALUES ('ac330a23-4c0c-4f72-8aa8-3c4a92f58ff8', 'iam:write'), ('ac330a23-4c0c-4f72-8aa8-3c4a92f58ff8', 'org:read'), ('ac330a23-4c0c-4f72-8aa8-3c4a92f58ff8', 'employee:read'),
+        ('8ca6d30f-174b-40e1-870b-df888721f554', 'account:manage'), ('8ca6d30f-174b-40e1-870b-df888721f554', 'employee:write'),
+        ('1f178fc9-9b4d-4247-8dc8-8f1344bf445d', 'org:read'), ('1f178fc9-9b4d-4247-8dc8-8f1344bf445d', 'employee:read');
     INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-      VALUES ('import-global-binding', 'external-import-service', 'import-global', NULL, NULL, 0, NULL);
+      VALUES ('b63cf0e2-c63e-4834-8bc0-840f72f13aa4', 'external-import-service', 'ac330a23-4c0c-4f72-8aa8-3c4a92f58ff8', NULL, NULL, 0, NULL);
   `)
   await database
     .prepare(`INSERT INTO system_role_bindings
     (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-    VALUES ('import-provider-binding', 'external-import-service', 'import-provider', 'system:identity_provider', ?1, 0, NULL)`)
+    VALUES ('721e4694-365f-47cd-8983-0743ec63c76d', 'external-import-service', '8ca6d30f-174b-40e1-870b-df888721f554', 'system:identity_provider', ?1, 0, NULL)`)
     .bind(providerScope)
     .run()
   await database
@@ -98,7 +104,7 @@ export async function createExternalIdentityImportTestContext(
         email: "you@example.com",
         name: "Example Person",
         accountId: null,
-        initialRoleId: iamRoleIdSchema.parse("import-member"),
+        initialRoleId: iamRoleIdSchema.parse("1f178fc9-9b4d-4247-8dc8-8f1344bf445d"),
         newEmployee: { hireDate: "2026-01-01", employmentType: "PART_TIME" },
       },
     ],

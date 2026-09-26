@@ -69,11 +69,11 @@ SELECT
 FROM system_identity_bindings
 WHERE provider = 'password';
 
--- E001=root、E003=hr、E002/E004=manager、その他=member。
+-- E001=root、E003=hr、E002/E004=manager、その他=member。割当の id は Account ごとに決まった UUID にする。
 INSERT INTO system_role_bindings
   (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
 SELECT
-  'seed:' || account.id || ':' || role.id,
+  '01900056-0000-7000-8000-' || printf('%012x', CAST(account.id AS INTEGER)),
   account.id,
   role.id,
   NULL,

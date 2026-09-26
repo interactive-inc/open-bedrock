@@ -72,13 +72,13 @@ async function createFixture() {
   await execSql(
     c.database,
     `INSERT INTO system_iam_roles (id, key, kind, resource_type, name, created_at, updated_at)
-    VALUES ('personnel-requester', 'custom:personnel-requester', 'custom', NULL, 'Personnel requester', 0, 0);
+    VALUES ('ec53b7f4-cfe1-49d7-89bf-f28f01cd035e', 'custom:personnel-requester', 'custom', NULL, 'Personnel requester', 0, 0);
     INSERT INTO system_iam_role_permissions (role_id, permission_key)
-    VALUES ('personnel-requester', 'employee:lifecycle:request'), ('personnel-requester', 'employee:lifecycle:read:all');`,
+    VALUES ('ec53b7f4-cfe1-49d7-89bf-f28f01cd035e', 'employee:lifecycle:request'), ('ec53b7f4-cfe1-49d7-89bf-f28f01cd035e', 'employee:lifecycle:read:all');`,
   )
   await c.database
     .prepare(`INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-    VALUES ('personnel-requester-binding', ?1, 'personnel-requester', NULL, NULL, 0, NULL)`)
+    VALUES ('912615c1-dc42-48a7-8319-47051ee0d5f8', ?1, 'ec53b7f4-cfe1-49d7-89bf-f28f01cd035e', NULL, NULL, 0, NULL)`)
     .bind(c.creator.accountId)
     .run()
   const policy = createCompanyProcedureDecisionPolicy({

@@ -69,15 +69,15 @@ export async function createFamilyCareLeavePreservationFixture(database: D1Datab
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('family-care-leave-test-manager','family-care-leave:test-manager','custom','FamilyCareLeave manager',0,0);
+    VALUES ('77788a48-60c9-4465-8fc8-1a786dd22595','family-care-leave:test-manager','custom','FamilyCareLeave manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('family-care-leave-test-manager','family_care_leave:manage'),
-      ('family-care-leave-test-manager','system:admin'),
-      ('family-care-leave-test-manager','system:record:preserve'),
-      ('family-care-leave-test-manager','system:record:read'),
-      ('family-care-leave-test-manager','system:procedure:read');
+      ('77788a48-60c9-4465-8fc8-1a786dd22595','family_care_leave:manage'),
+      ('77788a48-60c9-4465-8fc8-1a786dd22595','system:admin'),
+      ('77788a48-60c9-4465-8fc8-1a786dd22595','system:record:preserve'),
+      ('77788a48-60c9-4465-8fc8-1a786dd22595','system:record:read'),
+      ('77788a48-60c9-4465-8fc8-1a786dd22595','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('family-care-leave-test-binding','${creator.accountId}','family-care-leave-test-manager',0);`,
+    VALUES ('d34d3810-1e84-45d8-8ed8-96e2e995bd67','${creator.accountId}','77788a48-60c9-4465-8fc8-1a786dd22595',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

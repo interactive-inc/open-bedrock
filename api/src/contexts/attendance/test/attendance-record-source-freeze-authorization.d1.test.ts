@@ -28,7 +28,7 @@ test("外部IdPの再認証を受け付け、準備後のgrant取消では停止
   )
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('role:recorder','system:admin')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('0a05519b-05c9-4925-8b15-fcb647569867','system:admin')",
   )
   const raw = "a".repeat(64)
   const hash = await new SystemPrincipalSecretService().hashRawSecret(raw)
@@ -94,7 +94,7 @@ test("閲覧権限だけの主体・機械・未使用grantを拒否し、読取
   )
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('role:recorder','system:admin')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('0a05519b-05c9-4925-8b15-fcb647569867','system:admin')",
   )
   expect(
     await prepareSystemRecordSourceFreezeAuthorization(adapterContext, {

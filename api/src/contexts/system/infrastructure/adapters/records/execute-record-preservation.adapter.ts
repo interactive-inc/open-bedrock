@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { createExecutionAuthorizationId } from "@system/domain/schemas/workflow/execution-authorization-id.schema"
 import type { RecordPreservationExecutionContext } from "@system/configuration/record-preservation-execution-context"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
 import { PrepareSystemReadAuthorizationAdapter } from "@system/infrastructure/adapters/iam/prepare-system-read-authorization.adapter"
@@ -90,7 +91,7 @@ export class ExecuteRecordPreservationAdapter {
     const finalization = value.toFinalization({ actorAccountId: authentication.accountId, at })
     if (finalization instanceof Error) return new RecordPreservationExecutionError("conflict")
     const authorization = ExecutionAuthorizationEntity.create({
-      id: `record-preservation:${proposal.caseId}`,
+      id: await createExecutionAuthorizationId("record-preservation", proposal.caseId),
       caseId: proposal.caseId,
       operationKey: "system.record.preserve",
       proposalDigest: proposal.digest,

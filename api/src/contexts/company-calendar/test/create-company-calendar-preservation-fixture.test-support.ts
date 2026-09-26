@@ -69,15 +69,15 @@ export async function createCompanyCalendarDayPreservationFixture(database: D1Da
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('company-calendar-test-manager','company-calendar:test-manager','custom','CompanyCalendarDay manager',0,0);
+    VALUES ('b56b98a6-0d10-4cdb-87ce-a073c90e2405','company-calendar:test-manager','custom','CompanyCalendarDay manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('company-calendar-test-manager','calendar:manage'),
-      ('company-calendar-test-manager','system:admin'),
-      ('company-calendar-test-manager','system:record:preserve'),
-      ('company-calendar-test-manager','system:record:read'),
-      ('company-calendar-test-manager','system:procedure:read');
+      ('b56b98a6-0d10-4cdb-87ce-a073c90e2405','calendar:manage'),
+      ('b56b98a6-0d10-4cdb-87ce-a073c90e2405','system:admin'),
+      ('b56b98a6-0d10-4cdb-87ce-a073c90e2405','system:record:preserve'),
+      ('b56b98a6-0d10-4cdb-87ce-a073c90e2405','system:record:read'),
+      ('b56b98a6-0d10-4cdb-87ce-a073c90e2405','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('company-calendar-test-binding','${creator.accountId}','company-calendar-test-manager',0);`,
+    VALUES ('7296e30d-f80c-4507-8485-e144f69fba80','${creator.accountId}','b56b98a6-0d10-4cdb-87ce-a073c90e2405',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

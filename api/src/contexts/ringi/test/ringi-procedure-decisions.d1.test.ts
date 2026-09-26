@@ -107,7 +107,7 @@ test("保存時の権限失効で判断と監査を巻き戻す", async () => {
     async function (input) {
       await execSql(
         c.database,
-        "DELETE FROM system_iam_role_permissions WHERE role_id = 'ringi-test-role'",
+        "DELETE FROM system_iam_role_permissions WHERE role_id = '3bd53091-4841-4526-829a-deda79a2e849'",
       )
       return original(input)
     },
@@ -135,7 +135,7 @@ test("同時再送が一件へ収束し、権限喪失後の再送を拒否す�
   expect(results.filter((result) => !(result instanceof Error) && !result.replayed)).toHaveLength(1)
   await execSql(
     c.database,
-    "DELETE FROM system_iam_role_permissions WHERE role_id = 'ringi-test-role'",
+    "DELETE FROM system_iam_role_permissions WHERE role_id = '3bd53091-4841-4526-829a-deda79a2e849'",
   )
   expect(await c.recorder.run(c.decision(c.first))).toBeInstanceOf(ForbiddenError)
 })
@@ -259,7 +259,7 @@ test("規程設定の権限・期待版・監査の原子性を検査する", as
   expect(await publish.run(command)).toBeInstanceOf(ForbiddenError)
   await execSql(
     c.database,
-    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('ringi-test-role', 'ringi:procedure:manage')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('3bd53091-4841-4526-829a-deda79a2e849', 'ringi:procedure:manage')",
   )
   await execSql(
     c.database,

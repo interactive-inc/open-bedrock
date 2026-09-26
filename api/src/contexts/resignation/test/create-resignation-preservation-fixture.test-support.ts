@@ -69,15 +69,15 @@ export async function createResignationPreservationFixture(database: D1Database)
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('resignation-test-manager','resignation:test-manager','custom','Resignation manager',0,0);
+    VALUES ('f1822927-1e0c-4285-8ee8-54facf47dadb','resignation:test-manager','custom','Resignation manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('resignation-test-manager','resignation:manage'),
-      ('resignation-test-manager','system:admin'),
-      ('resignation-test-manager','system:record:preserve'),
-      ('resignation-test-manager','system:record:read'),
-      ('resignation-test-manager','system:procedure:read');
+      ('f1822927-1e0c-4285-8ee8-54facf47dadb','resignation:manage'),
+      ('f1822927-1e0c-4285-8ee8-54facf47dadb','system:admin'),
+      ('f1822927-1e0c-4285-8ee8-54facf47dadb','system:record:preserve'),
+      ('f1822927-1e0c-4285-8ee8-54facf47dadb','system:record:read'),
+      ('f1822927-1e0c-4285-8ee8-54facf47dadb','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('resignation-test-binding','${creator.accountId}','resignation-test-manager',0);`,
+    VALUES ('c0b3805b-9707-40df-8fd8-0884b7c16076','${creator.accountId}','f1822927-1e0c-4285-8ee8-54facf47dadb',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

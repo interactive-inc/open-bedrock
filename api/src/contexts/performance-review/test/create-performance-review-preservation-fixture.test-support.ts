@@ -69,14 +69,14 @@ export async function createPerformanceReviewPreservationFixture(database: D1Dat
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('performance-review-test-manager','performance-review:test-manager','custom','PerformanceReview manager',0,0);
+    VALUES ('f2b5cb7d-a83a-4823-80ed-24b9da2c2996','performance-review:test-manager','custom','PerformanceReview manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('performance-review-test-manager','system:admin'),
-      ('performance-review-test-manager','system:record:preserve'),
-      ('performance-review-test-manager','system:record:read'),
-      ('performance-review-test-manager','system:procedure:read');
+      ('f2b5cb7d-a83a-4823-80ed-24b9da2c2996','system:admin'),
+      ('f2b5cb7d-a83a-4823-80ed-24b9da2c2996','system:record:preserve'),
+      ('f2b5cb7d-a83a-4823-80ed-24b9da2c2996','system:record:read'),
+      ('f2b5cb7d-a83a-4823-80ed-24b9da2c2996','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('performance-review-test-binding','${creator.accountId}','performance-review-test-manager',0);`,
+    VALUES ('c79cddcf-15df-4e50-836a-79387a5f1f44','${creator.accountId}','f2b5cb7d-a83a-4823-80ed-24b9da2c2996',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

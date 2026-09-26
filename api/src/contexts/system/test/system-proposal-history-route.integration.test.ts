@@ -30,8 +30,10 @@ async function fixture() {
     INSERT INTO system_procedure_definition_revisions(procedure_key,revision,title,category,input_schema_json,decision_policy_json,created_by_account_id,created_at)
       VALUES ('change',1,'Change','operation','{}','{}','owner',100);
     INSERT INTO system_procedure_numbers(procedure_key) VALUES ('change');
-    INSERT INTO system_iam_role_permissions VALUES ('role:owner','system:procedure:read'),('role:other','system:procedure:read'),
-      ('role:recipient','system:procedure:read'),('role:recipient','system:procedure:read:all');
+    INSERT INTO system_iam_role_permissions (role_id, permission_key)
+      SELECT id, 'system:procedure:read' FROM system_iam_roles WHERE key IN ('role:owner','role:other','role:recipient');
+    INSERT INTO system_iam_role_permissions (role_id, permission_key)
+      SELECT id, 'system:procedure:read:all' FROM system_iam_roles WHERE key = 'role:recipient';
   `)
   const start = new StartSystemProcedure({
     writer: new SystemD1WorkflowAdapter({ env: { DB: f.db } }),
@@ -57,7 +59,7 @@ async function fixture() {
     excludedAccountIds: [],
   }
   const first = await start.run({
-    seriesId: "history-series",
+    seriesId: "c7a1e2f0-3b4d-4e5f-8a6b-7c8d9e0f1a2b",
     version: 1,
     procedureKey: "change",
     procedureRevision: 1,
@@ -187,7 +189,7 @@ test("参照中の権限取消は本文の開示と成功監査を拒否する",
   const spy = spyOn(SystemD1ProposalAdapter.prototype, "listTasks").mockImplementationOnce(
     async (caseId) => {
       const tasks = await original(caseId)
-      f.sqlite.exec("UPDATE system_role_bindings SET revoked_at=1000 WHERE id='binding:owner'")
+      f.sqlite.exec("UPDATE system_role_bindings SET revoked_at=1000 WHERE account_id='owner'")
       return tasks
     },
   )

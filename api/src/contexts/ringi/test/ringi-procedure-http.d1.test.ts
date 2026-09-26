@@ -137,7 +137,7 @@ test("取消と一覧の状態が一致し、失効した権限で再送でき�
   ).toMatchObject({ data: [{ id: c.id, status: "cancelled" }], total: 1 })
   await execSql(
     c.database,
-    "DELETE FROM system_iam_role_permissions WHERE role_id = 'ringi-test-role'",
+    "DELETE FROM system_iam_role_permissions WHERE role_id = '3bd53091-4841-4526-829a-deda79a2e849'",
   )
   expect(
     (
@@ -165,7 +165,7 @@ test("差戻し後は元の記録を残して修正版を一度だけ提出す�
   ])
   await execSql(
     c.database,
-    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('ringi-test-role', 'ringi:procedure:manage')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('3bd53091-4841-4526-829a-deda79a2e849', 'ringi:procedure:manage')",
   )
   const definition = await c.request(c.requester, "/ringi/ringi-procedures", "PUT", {
     expected_revision: 1,
@@ -289,7 +289,7 @@ test("機械Principalと規程の別編集入口は人の判断・App規程を�
   ).toBe(401)
   await execSql(
     c.database,
-    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('ringi-test-role', 'application_template:manage')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('3bd53091-4841-4526-829a-deda79a2e849', 'application_template:manage')",
   )
   const workflow = await c.request(
     c.requester,

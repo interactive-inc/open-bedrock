@@ -69,15 +69,15 @@ export async function createHealthCheckupPreservationFixture(database: D1Databas
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('health-checkup-test-manager','health-checkup:test-manager','custom','HealthCheckup manager',0,0);
+    VALUES ('24bb1b81-b98a-46b2-8777-cd7a9a335ca4','health-checkup:test-manager','custom','HealthCheckup manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('health-checkup-test-manager','health_checkup:manage'),
-      ('health-checkup-test-manager','system:admin'),
-      ('health-checkup-test-manager','system:record:preserve'),
-      ('health-checkup-test-manager','system:record:read'),
-      ('health-checkup-test-manager','system:procedure:read');
+      ('24bb1b81-b98a-46b2-8777-cd7a9a335ca4','health_checkup:manage'),
+      ('24bb1b81-b98a-46b2-8777-cd7a9a335ca4','system:admin'),
+      ('24bb1b81-b98a-46b2-8777-cd7a9a335ca4','system:record:preserve'),
+      ('24bb1b81-b98a-46b2-8777-cd7a9a335ca4','system:record:read'),
+      ('24bb1b81-b98a-46b2-8777-cd7a9a335ca4','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('health-checkup-test-binding','${creator.accountId}','health-checkup-test-manager',0);`,
+    VALUES ('8c73bc35-92a6-4954-8a73-ff132c794853','${creator.accountId}','24bb1b81-b98a-46b2-8777-cd7a9a335ca4',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

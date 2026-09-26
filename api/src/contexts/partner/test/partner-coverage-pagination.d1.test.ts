@@ -204,13 +204,13 @@ test("取引先11件と契約記録を分割照合し撤去確定する", async 
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:partner-retirement-review','partner:retirement-review','custom','Record reviewer',0,0);
+    VALUES ('20f1770e-770d-40ce-82b4-336de266caf0','partner:retirement-review','custom','Record reviewer',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key)
-    VALUES ('role:partner-retirement-review','system:procedure:read')`,
+    VALUES ('20f1770e-770d-40ce-82b4-336de266caf0','system:procedure:read')`,
   )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-      VALUES ('binding:partner-retirement-review',?1,'role:partner-retirement-review',0)`)
+      VALUES ('79e3a8b0-f27f-4c04-8c04-3c6f1af31d30',?1,'20f1770e-770d-40ce-82b4-336de266caf0',0)`)
     .bind(reviewer.accountId)
     .run()
   const retirementPath = `/partner/retirement-plans/${plan.id}/requests`
@@ -278,7 +278,7 @@ test("取引先11件と契約記録を分割照合し撤去確定する", async 
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('partner-test-manager','system:record:export');
+    VALUES ('6f34dffd-597f-49b3-8a9f-a074548a7ab6','system:record:export');
     DROP TABLE partner_contracts;
     DROP TABLE partners;`,
   )

@@ -36,7 +36,7 @@ test("代理承認で保存した記録は業務撤去後も委任条件を返�
     },
   ])
   await database.exec(
-    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('license-test-manager','system:record:preserve')",
+    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('7a047d56-30bc-4028-888d-2294d2d80c99','system:record:preserve')",
   )
   const submitted = await fixture.f.request(fixture.path, fixture.command)
   expect(submitted.status).toBe(201)
@@ -54,12 +54,12 @@ test("代理承認で保存した記録は業務撤去後も委任条件を返�
   await database
     .prepare(`INSERT INTO system_delegations
     (id,delegator_account_id,delegate_account_id,scope_context,scope_kind,scope_id,scope_version,starts_at,ends_at,created_at,revoked_at)
-    VALUES ('record-delegation',?1,?4,NULL,NULL,NULL,NULL,?2,?3,?2,NULL)`)
+    VALUES ('ca75018e-54c6-492a-803a-c192354d33b4',?1,?4,NULL,NULL,NULL,NULL,?2,?3,?2,NULL)`)
     .bind(fixture.reviewer.accountId, startsAt, endsAt, delegate.accountId)
     .run()
   await database
     .prepare(
-      "INSERT INTO system_delegation_procedure_scopes(delegation_id,procedure_key) VALUES ('record-delegation',?1)",
+      "INSERT INTO system_delegation_procedure_scopes(delegation_id,procedure_key) VALUES ('ca75018e-54c6-492a-803a-c192354d33b4',?1)",
     )
     .bind(fixture.definition.key)
     .run()
@@ -114,12 +114,12 @@ test("代理承認で保存した記録は業務撤去後も委任条件を返�
     {
       actorAccountId: delegate.accountId,
       representedAccountId: fixture.reviewer.accountId,
-      delegationId: "record-delegation",
+      delegationId: "ca75018e-54c6-492a-803a-c192354d33b4",
     },
   ])
   expect(history.delegations).toEqual([
     {
-      id: "record-delegation",
+      id: "ca75018e-54c6-492a-803a-c192354d33b4",
       delegatorAccountId: fixture.reviewer.accountId,
       delegateAccountId: delegate.accountId,
       scope: null,
@@ -151,7 +151,7 @@ test("代理承認で保存した記録は業務撤去後も委任条件を返�
   await database
     .prepare(`INSERT INTO system_delegations
     (id,delegator_account_id,delegate_account_id,scope_context,scope_kind,scope_id,scope_version,starts_at,ends_at,created_at,revoked_at)
-    VALUES ('newer-record-delegation',?1,?2,NULL,NULL,NULL,NULL,?3,?4,?3,NULL)`)
+    VALUES ('2f8b1b1c-5d9f-4ea5-8ec8-9fbbce85bd4d',?1,?2,NULL,NULL,NULL,NULL,?3,?4,?3,NULL)`)
     .bind(fixture.reviewer.accountId, delegate.accountId, startsAt + 1, endsAt)
     .run()
   expect(
@@ -162,7 +162,9 @@ test("代理承認で保存した記録は業務撤去後も委任条件を返�
     }),
   ).not.toBeInstanceOf(Error)
   await database
-    .prepare("UPDATE system_delegations SET revoked_at=?1 WHERE id='record-delegation'")
+    .prepare(
+      "UPDATE system_delegations SET revoked_at=?1 WHERE id='ca75018e-54c6-492a-803a-c192354d33b4'",
+    )
     .bind(decision.decidedAt.getTime() + 1)
     .run()
   expect(
@@ -182,15 +184,8 @@ test("代理承認で保存した記録は業務撤去後も委任条件を返�
   )
   await database.exec("DROP TRIGGER system_delegations_monotonic_lifecycle")
   await database
-    .prepare("UPDATE system_delegations SET revoked_at=?1 WHERE id='record-delegation'")
-    .bind(decision.decidedAt.getTime())
-    .run()
-  expect(await prepareSystemPreservedRecordApprovalHistory(readerContext, input)).toBeInstanceOf(
-    Error,
-  )
-  await database
     .prepare(
-      "UPDATE system_delegations SET revoked_at=NULL,ends_at=?1 WHERE id='record-delegation'",
+      "UPDATE system_delegations SET revoked_at=?1 WHERE id='ca75018e-54c6-492a-803a-c192354d33b4'",
     )
     .bind(decision.decidedAt.getTime())
     .run()
@@ -198,19 +193,30 @@ test("代理承認で保存した記録は業務撤去後も委任条件を返�
     Error,
   )
   await database
-    .prepare("UPDATE system_delegations SET ends_at=?1 WHERE id='record-delegation'")
+    .prepare(
+      "UPDATE system_delegations SET revoked_at=NULL,ends_at=?1 WHERE id='ca75018e-54c6-492a-803a-c192354d33b4'",
+    )
+    .bind(decision.decidedAt.getTime())
+    .run()
+  expect(await prepareSystemPreservedRecordApprovalHistory(readerContext, input)).toBeInstanceOf(
+    Error,
+  )
+  await database
+    .prepare(
+      "UPDATE system_delegations SET ends_at=?1 WHERE id='ca75018e-54c6-492a-803a-c192354d33b4'",
+    )
     .bind(endsAt)
     .run()
   await database.exec("DROP TRIGGER system_delegation_procedure_scopes_prevent_delete")
   await database.exec(
-    "DELETE FROM system_delegation_procedure_scopes WHERE delegation_id='record-delegation'",
+    "DELETE FROM system_delegation_procedure_scopes WHERE delegation_id='ca75018e-54c6-492a-803a-c192354d33b4'",
   )
   expect(
     await database.batch([history.delegationsGuard]).catch((cause: unknown) => cause),
   ).toBeInstanceOf(Error)
   await database
     .prepare(
-      "UPDATE system_delegations SET scope_context='system',scope_kind='record-preservation',scope_id=?1,scope_version='1' WHERE id='record-delegation'",
+      "UPDATE system_delegations SET scope_context='system',scope_kind='record-preservation',scope_id=?1,scope_version='1' WHERE id='ca75018e-54c6-492a-803a-c192354d33b4'",
     )
     .bind(receipt.record_id)
     .run()
@@ -223,13 +229,13 @@ test("代理承認で保存した記録は業務撤去後も委任条件を返�
     version: "1",
   })
   await database.exec(
-    "UPDATE system_delegations SET scope_id='different-record' WHERE id='record-delegation'",
+    "UPDATE system_delegations SET scope_id='different-record' WHERE id='ca75018e-54c6-492a-803a-c192354d33b4'",
   )
   expect(await prepareSystemPreservedRecordApprovalHistory(readerContext, input)).toBeInstanceOf(
     Error,
   )
   await database.exec(
-    "PRAGMA foreign_keys=OFF; DROP TRIGGER system_delegations_prevent_delete; DELETE FROM system_delegations WHERE id='record-delegation';",
+    "PRAGMA foreign_keys=OFF; DROP TRIGGER system_delegations_prevent_delete; DELETE FROM system_delegations WHERE id='ca75018e-54c6-492a-803a-c192354d33b4';",
   )
   expect(await prepareSystemPreservedRecordApprovalHistory(readerContext, input)).toBeInstanceOf(
     Error,

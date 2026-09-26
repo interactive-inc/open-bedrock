@@ -69,15 +69,15 @@ export async function createBusinessTripPreservationFixture(database: D1Database
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('business-trip-test-manager','business-trip:test-manager','custom','BusinessTrip manager',0,0);
+    VALUES ('c410ad7b-18bd-475d-8d17-a71413b8290f','business-trip:test-manager','custom','BusinessTrip manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('business-trip-test-manager','business_trip:manage'),
-      ('business-trip-test-manager','system:admin'),
-      ('business-trip-test-manager','system:record:preserve'),
-      ('business-trip-test-manager','system:record:read'),
-      ('business-trip-test-manager','system:procedure:read');
+      ('c410ad7b-18bd-475d-8d17-a71413b8290f','business_trip:manage'),
+      ('c410ad7b-18bd-475d-8d17-a71413b8290f','system:admin'),
+      ('c410ad7b-18bd-475d-8d17-a71413b8290f','system:record:preserve'),
+      ('c410ad7b-18bd-475d-8d17-a71413b8290f','system:record:read'),
+      ('c410ad7b-18bd-475d-8d17-a71413b8290f','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('business-trip-test-binding','${creator.accountId}','business-trip-test-manager',0);`,
+    VALUES ('c891d4ed-d838-42fe-8cfc-6151f5d4b20e','${creator.accountId}','c410ad7b-18bd-475d-8d17-a71413b8290f',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

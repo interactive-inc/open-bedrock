@@ -69,15 +69,15 @@ export async function createAntisocialCheckPreservationFixture(database: D1Datab
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('antisocial-check-test-manager','antisocial-check:test-manager','custom','AntisocialCheck manager',0,0);
+    VALUES ('c535be9a-af76-4337-8743-65c61e3029e3','antisocial-check:test-manager','custom','AntisocialCheck manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('antisocial-check-test-manager','antisocial_check:manage'),
-      ('antisocial-check-test-manager','system:admin'),
-      ('antisocial-check-test-manager','system:record:preserve'),
-      ('antisocial-check-test-manager','system:record:read'),
-      ('antisocial-check-test-manager','system:procedure:read');
+      ('c535be9a-af76-4337-8743-65c61e3029e3','antisocial_check:manage'),
+      ('c535be9a-af76-4337-8743-65c61e3029e3','system:admin'),
+      ('c535be9a-af76-4337-8743-65c61e3029e3','system:record:preserve'),
+      ('c535be9a-af76-4337-8743-65c61e3029e3','system:record:read'),
+      ('c535be9a-af76-4337-8743-65c61e3029e3','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('antisocial-check-test-binding','${creator.accountId}','antisocial-check-test-manager',0);`,
+    VALUES ('4ce690d3-ae31-4e20-8387-2a4301d0bb77','${creator.accountId}','c535be9a-af76-4337-8743-65c61e3029e3',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

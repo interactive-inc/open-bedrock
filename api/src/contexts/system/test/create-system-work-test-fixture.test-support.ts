@@ -37,11 +37,13 @@ export async function createSystemWorkTestFixture() {
         "INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at) VALUES (?1,?2,?3,'Test operator',1,100,100)",
       )
       .run(`principal:${account}`, account, account === "worker" ? "agent" : "human")
+    // role と割当の主キーは UUID。role は key の `role:<account>` で引ける。
+    const roleId = crypto.randomUUID()
     sqlite
       .query(
-        "INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES (?1,?1,'custom','Test role',100,100)",
+        "INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES (?1,?2,'custom','Test role',100,100)",
       )
-      .run(`role:${account}`)
+      .run(roleId, `role:${account}`)
     for (const permission of account === "admin"
       ? ["system:admin"]
       : [
@@ -52,13 +54,13 @@ export async function createSystemWorkTestFixture() {
           "system:work:manage",
         ])
       sqlite
-        .query("INSERT INTO system_iam_role_permissions VALUES (?1,?2)")
-        .run(`role:${account}`, permission)
+        .query("INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES (?1,?2)")
+        .run(roleId, permission)
     sqlite
       .query(
         "INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES (?1,?2,?3,100)",
       )
-      .run(`binding:${account}`, account, `role:${account}`)
+      .run(crypto.randomUUID(), account, roleId)
     if (account !== "worker") {
       const raw = await new SystemPrincipalSecretService().hashRawSecret(`${stepUpToken}${account}`)
       if (raw instanceof Error) throw raw

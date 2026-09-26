@@ -124,7 +124,7 @@ test("入社手続きテンプレートを停止中に人の承認で保全し�
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('onboarding-test-manager','system:record:export');
+    VALUES ('424962a0-2f17-4779-8f89-688b21730d9f','system:record:export');
     DROP TABLE onboarding_lifecycle_deliveries;
     DROP TABLE onboarding_tasks;
     DROP TABLE onboarding_assignments;

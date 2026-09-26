@@ -69,14 +69,14 @@ export async function createRecruitmentPreservationFixture(database: D1Database)
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('recruitment-test-manager','recruitment:test-manager','custom','Recruitment manager',0,0);
+    VALUES ('ef9eb660-52d0-4c35-8d03-84764bb0f25a','recruitment:test-manager','custom','Recruitment manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('recruitment-test-manager','system:admin'),
-      ('recruitment-test-manager','system:record:preserve'),
-      ('recruitment-test-manager','system:record:read'),
-      ('recruitment-test-manager','system:procedure:read');
+      ('ef9eb660-52d0-4c35-8d03-84764bb0f25a','system:admin'),
+      ('ef9eb660-52d0-4c35-8d03-84764bb0f25a','system:record:preserve'),
+      ('ef9eb660-52d0-4c35-8d03-84764bb0f25a','system:record:read'),
+      ('ef9eb660-52d0-4c35-8d03-84764bb0f25a','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('recruitment-test-binding','${creator.accountId}','recruitment-test-manager',0);`,
+    VALUES ('e8fc3003-4974-43a3-8931-f4fbed51243c','${creator.accountId}','ef9eb660-52d0-4c35-8d03-84764bb0f25a',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

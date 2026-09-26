@@ -110,11 +110,11 @@ export async function seedIamForEmployees(
       .prepare(
         `INSERT OR IGNORE INTO system_role_bindings
            (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-         SELECT 'test:' || ?1 || ':' || role.id, ?1, role.id,
+         SELECT ?3, ?1, role.id,
                 NULL, NULL, 0, NULL
          FROM system_iam_roles AS role WHERE role.key = 'company:' || ?2`,
       )
-      .bind(String(employee.id), employee.role)
+      .bind(String(employee.id), employee.role, crypto.randomUUID())
       .run()
   }
 }

@@ -142,7 +142,7 @@ test("シフト3台帳を停止中に人の承認で保全し、業務コード�
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('shift-test-manager','system:record:export');
+    VALUES ('0a67e863-4fc9-430e-810a-5a7d998532ca','system:record:export');
     DROP TABLE shift_assignments;
     DROP TABLE shift_swap_requests;
     DROP TABLE shift_patterns;`,

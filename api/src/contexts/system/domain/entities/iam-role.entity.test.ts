@@ -7,7 +7,7 @@ const UPDATED_AT = new Date("2026-08-11T00:01:00.000Z")
 
 function roleProps(overrides: Readonly<Record<string, unknown>> = {}) {
   return {
-    id: "role-1",
+    id: "a290ac92-bf4b-434b-8443-8b6ceeb1cb85",
     key: "system:operator",
     kind: "custom",
     name: "Operator",

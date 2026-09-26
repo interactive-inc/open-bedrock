@@ -52,9 +52,9 @@ export async function createLicenseFixture(database: D1Database) {
     `INSERT OR IGNORE INTO company_organizations (id,revision,name,representative_name,created_at,updated_at)
     VALUES ('organization:default',0,'Example',NULL,0,0);
     INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('license-test-manager','license:test-manager','custom','LicenseEntity Manager',0,0);
+    VALUES ('7a047d56-30bc-4028-888d-2294d2d80c99','license:test-manager','custom','LicenseEntity Manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('license-test-manager','license:manage'),('license-test-manager','license:read:all');`,
+      ('7a047d56-30bc-4028-888d-2294d2d80c99','license:manage'),('7a047d56-30bc-4028-888d-2294d2d80c99','license:read:all');`,
   )
   for (const suffix of ["manager", "member", "other"]) {
     await database
@@ -112,7 +112,7 @@ export async function createLicenseFixture(database: D1Database) {
   await execSql(
     database,
     `INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('license-test-binding','account:manager','license-test-manager',0);`,
+    VALUES ('badb286f-9bbd-40a1-8d5d-60bf1eec5299','account:manager','7a047d56-30bc-4028-888d-2294d2d80c99',0);`,
   )
   const app = softwareLicenseFactory
     .createApp()

@@ -273,13 +273,13 @@ test("入退社手続き6台帳を分割照合し撤去確定する", async () =
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:onboarding-retirement-review','onboarding:retirement-review','custom','Record reviewer',0,0);
+    VALUES ('052f0f2b-56cf-4e9b-812e-4029d7e6dded','onboarding:retirement-review','custom','Record reviewer',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key)
-    VALUES ('role:onboarding-retirement-review','system:procedure:read')`,
+    VALUES ('052f0f2b-56cf-4e9b-812e-4029d7e6dded','system:procedure:read')`,
   )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-      VALUES ('binding:onboarding-retirement-review',?1,'role:onboarding-retirement-review',0)`)
+      VALUES ('e77cd8b5-55bc-4e03-8a43-e2f5622644e4',?1,'052f0f2b-56cf-4e9b-812e-4029d7e6dded',0)`)
     .bind(reviewer.accountId)
     .run()
   const retirementPath = `/onboarding/retirement-plans/${plan.id}/requests`
@@ -348,7 +348,7 @@ test("入退社手続き6台帳を分割照合し撤去確定する", async () =
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('onboarding-test-manager','system:record:export');
+    VALUES ('424962a0-2f17-4779-8f89-688b21730d9f','system:record:export');
     DROP TABLE onboarding_lifecycle_deliveries;
     DROP TABLE onboarding_tasks;
     DROP TABLE onboarding_template_tasks;

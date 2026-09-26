@@ -69,15 +69,15 @@ export async function createItIncidentPreservationFixture(database: D1Database) 
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('it-incident-test-manager','it-incident:test-manager','custom','ItIncident manager',0,0);
+    VALUES ('6f693fd4-39e2-41e3-84a2-854c2a4bd022','it-incident:test-manager','custom','ItIncident manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('it-incident-test-manager','it_incident:manage'),
-      ('it-incident-test-manager','system:admin'),
-      ('it-incident-test-manager','system:record:preserve'),
-      ('it-incident-test-manager','system:record:read'),
-      ('it-incident-test-manager','system:procedure:read');
+      ('6f693fd4-39e2-41e3-84a2-854c2a4bd022','it_incident:manage'),
+      ('6f693fd4-39e2-41e3-84a2-854c2a4bd022','system:admin'),
+      ('6f693fd4-39e2-41e3-84a2-854c2a4bd022','system:record:preserve'),
+      ('6f693fd4-39e2-41e3-84a2-854c2a4bd022','system:record:read'),
+      ('6f693fd4-39e2-41e3-84a2-854c2a4bd022','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('it-incident-test-binding','${creator.accountId}','it-incident-test-manager',0);`,
+    VALUES ('f128e7ab-7a2a-4195-8d26-030e236bb858','${creator.accountId}','6f693fd4-39e2-41e3-84a2-854c2a4bd022',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

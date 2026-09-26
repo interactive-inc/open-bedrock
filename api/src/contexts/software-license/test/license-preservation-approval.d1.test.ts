@@ -41,7 +41,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   const fixture = await createLicensePreservationFixture(await pool.next())
   await execSql(
     fixture.f.database,
-    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('license-test-manager','system:record:preserve')",
+    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('7a047d56-30bc-4028-888d-2294d2d80c99','system:record:preserve')",
   )
   const submitted = await fixture.f.request(fixture.path, {
     ...fixture.command,
@@ -75,17 +75,17 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   ).toBe(403)
   await execSql(
     fixture.f.database,
-    "INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('preservation-review-reader','preservation:review-reader','custom','Review reader',0,0); INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('preservation-review-reader','system:procedure:read')",
+    "INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('e24a95b5-8f93-450d-8ee4-b3b95045d4fa','preservation:review-reader','custom','Review reader',0,0); INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('e24a95b5-8f93-450d-8ee4-b3b95045d4fa','system:procedure:read')",
   )
   await fixture.f.database
     .prepare(
-      "INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('preservation-review-reader',?1,'preservation-review-reader',0)",
+      "INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('e24a95b5-8f93-450d-8ee4-b3b95045d4fa',?1,'e24a95b5-8f93-450d-8ee4-b3b95045d4fa',0)",
     )
     .bind(fixture.reviewer.accountId)
     .run()
   await execSql(
     fixture.f.database,
-    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('license-test-manager','system:procedure:read')",
+    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('7a047d56-30bc-4028-888d-2294d2d80c99','system:procedure:read')",
   )
   expect((await fixture.f.request(readPath)).status).toBe(403)
   expect(originalReads).toHaveBeenCalledTimes(0)
@@ -159,7 +159,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   ).toBe("executed")
   await execSql(
     fixture.f.database,
-    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('license-test-manager','system:record:export'); DROP TABLE software_license_assignments; DROP TABLE software_license_changes; DROP TABLE software_licenses;",
+    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('7a047d56-30bc-4028-888d-2294d2d80c99','system:record:export'); DROP TABLE software_license_assignments; DROP TABLE software_license_changes; DROP TABLE software_licenses;",
   )
   const core = systemFactory
     .createApp()
@@ -189,7 +189,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   expect((await core.request(dossierPath, { headers }, environment)).status).toBe(403)
   await execSql(
     fixture.f.database,
-    "INSERT INTO system_iam_role_permissions(role_id, permission_key) VALUES ('license-test-manager', 'system:admin')",
+    "INSERT INTO system_iam_role_permissions(role_id, permission_key) VALUES ('7a047d56-30bc-4028-888d-2294d2d80c99', 'system:admin')",
   )
   const dossierResponse = await core.request(dossierPath, { headers }, environment)
   if (dossierResponse.status !== 200)
@@ -266,7 +266,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   const revokeDuringRead = spyOn(fixture.bucket, "get").mockImplementationOnce(async (key) => {
     await execSql(
       fixture.f.database,
-      "DELETE FROM system_iam_role_permissions WHERE role_id = 'license-test-manager' AND permission_key = 'system:admin'",
+      "DELETE FROM system_iam_role_permissions WHERE role_id = '7a047d56-30bc-4028-888d-2294d2d80c99' AND permission_key = 'system:admin'",
     )
     return originalGet(key)
   })
@@ -633,7 +633,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
 
   await execSql(
     fixture.f.database,
-    "DELETE FROM system_iam_role_permissions WHERE role_id='license-test-manager' AND permission_key='system:procedure:read'",
+    "DELETE FROM system_iam_role_permissions WHERE role_id='7a047d56-30bc-4028-888d-2294d2d80c99' AND permission_key='system:procedure:read'",
   )
   expect((await core.request(historyPath, { headers }, environment)).status).toBe(403)
   expect(
@@ -672,7 +672,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   ).toBe(403)
   await execSql(
     fixture.f.database,
-    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('preservation-review-reader','system:record:export')",
+    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('e24a95b5-8f93-450d-8ee4-b3b95045d4fa','system:record:export')",
   )
   const qualifiedWithoutDisclosure = await core.request(
     searchPath,
@@ -684,7 +684,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
   expect(qualifiedWithoutDisclosureBody).toEqual({ records: [], nextCursor: null })
   await execSql(
     fixture.f.database,
-    "DELETE FROM system_iam_role_permissions WHERE role_id='license-test-manager' AND permission_key='system:record:export'",
+    "DELETE FROM system_iam_role_permissions WHERE role_id='7a047d56-30bc-4028-888d-2294d2d80c99' AND permission_key='system:record:export'",
   )
   expect((await core.request(searchPath, { headers }, environment)).status).toBe(403)
   /** 移入済みDBの欠損を再現し、本文が残っていても承認との対応を推測しない。 */
@@ -845,7 +845,7 @@ test("会社の承認資格で保全を承認し、両製品共通のHTTP経路�
     .prepare(`INSERT INTO system_cases
     (id, subject_context, subject_kind, subject_id, subject_version, proposal_digest,
      created_by_account_id, status, created_at, updated_at)
-    SELECT 'duplicate-executed-case', subject_context, subject_kind, subject_id, subject_version,
+    SELECT '98d0eac1-b97a-4227-83d6-d70630922603', subject_context, subject_kind, subject_id, subject_version,
       proposal_digest, created_by_account_id, status, created_at, updated_at
     FROM system_cases WHERE id = ?1`)
     .bind(receipt.case_id)
@@ -868,18 +868,18 @@ test.each(["company", "permission"])(
     const fixture = await createLicensePreservationFixture(await pool.next())
     await execSql(
       fixture.f.database,
-      "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('license-test-manager','system:record:preserve')",
+      "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('7a047d56-30bc-4028-888d-2294d2d80c99','system:record:preserve')",
     )
     const submitted = await fixture.f.request(fixture.path, fixture.command)
     expect(submitted.status).toBe(201)
     const receipt = z.object({ number: z.number() }).parse(await submitted.json())
     await execSql(
       fixture.f.database,
-      "INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('review-reader','preservation:review-reader','custom','Review reader',0,0); INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('review-reader','system:procedure:read')",
+      "INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('4a8d544d-4f88-4ea5-852e-cf9aa5c5639d','preservation:review-reader','custom','Review reader',0,0); INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('4a8d544d-4f88-4ea5-852e-cf9aa5c5639d','system:procedure:read')",
     )
     await fixture.f.database
       .prepare(
-        "INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('review-reader',?1,'review-reader',0)",
+        "INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('4a8d544d-4f88-4ea5-852e-cf9aa5c5639d',?1,'4a8d544d-4f88-4ea5-852e-cf9aa5c5639d',0)",
       )
       .bind(fixture.reviewer.accountId)
       .run()
@@ -899,7 +899,7 @@ test.each(["company", "permission"])(
         } else {
           await execSql(
             fixture.f.database,
-            "DELETE FROM system_iam_role_permissions WHERE role_id='review-reader'",
+            "DELETE FROM system_iam_role_permissions WHERE role_id='4a8d544d-4f88-4ea5-852e-cf9aa5c5639d'",
           )
         }
         return this.append(record, assertions, completionAssertions)

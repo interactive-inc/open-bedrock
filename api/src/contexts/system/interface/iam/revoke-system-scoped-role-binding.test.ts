@@ -14,19 +14,19 @@ function createFixture() {
       .run(accountId)
   }
   fixture.sqlite.run(
-    "INSERT INTO system_iam_roles (id, key, kind, resource_type, name, created_at, updated_at) VALUES ('manager-role', 'manager-role', 'managed', 'demo:resource', 'Manager', 0, 0)",
+    "INSERT INTO system_iam_roles (id, key, kind, resource_type, name, created_at, updated_at) VALUES ('848c3ab1-d54e-4ef8-82ff-dbc3e9f23620', 'manager-role', 'managed', 'demo:resource', 'Manager', 0, 0)",
   )
   fixture.sqlite.run(
-    "INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at) VALUES ('global-role', 'global-role', 'managed', 'Global Manager', 0, 0)",
+    "INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at) VALUES ('f8dc2e88-fc2d-4a67-8c0e-11db39f67d75', 'global-role', 'managed', 'Global Manager', 0, 0)",
   )
   fixture.sqlite.run(
-    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('manager-role', 'demo:manage'), ('global-role', 'demo:manage')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('848c3ab1-d54e-4ef8-82ff-dbc3e9f23620', 'demo:manage'), ('f8dc2e88-fc2d-4a67-8c0e-11db39f67d75', 'demo:manage')",
   )
   fixture.sqlite.run(
-    "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('target-binding', 'target', 'manager-role', 'demo:resource', 'resource-1', 0)",
+    "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('f1a3ed01-15a3-41da-8ebb-2457a6038f84', 'target', '848c3ab1-d54e-4ef8-82ff-dbc3e9f23620', 'demo:resource', 'resource-1', 0)",
   )
   fixture.sqlite.run(
-    "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('actor-binding', 'actor', 'global-role', NULL, NULL, 0)",
+    "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('36328491-0ba8-4a11-8b8d-26aff298e39b', 'actor', 'f8dc2e88-fc2d-4a67-8c0e-11db39f67d75', NULL, NULL, 0)",
   )
   return fixture
 }
@@ -36,7 +36,7 @@ function revoke(fixture: SystemSessionTestContext, actorAccountId = "actor") {
     database: fixture.context.env.DB,
     actorAccountId,
     targetAccountId: "target",
-    bindingId: "target-binding",
+    bindingId: "f1a3ed01-15a3-41da-8ebb-2457a6038f84",
     resourceType: "demo:resource",
     resourceId: "resource-1",
     requiredPermissionKey: "demo:manage",
@@ -51,7 +51,9 @@ test("最後のresource管理者の取消は履歴もAccount版も変えず拒�
     expect(await revoke(fixture)).toBe("last_manager")
     expect(
       fixture.sqlite
-        .query("SELECT revoked_at FROM system_role_bindings WHERE id='target-binding'")
+        .query(
+          "SELECT revoked_at FROM system_role_bindings WHERE id='f1a3ed01-15a3-41da-8ebb-2457a6038f84'",
+        )
         .get(),
     ).toEqual({ revoked_at: null })
     expect(
@@ -66,12 +68,14 @@ test("別の管理者が残ると取消履歴・Account失効版・監査を一�
   const fixture = createFixture()
   try {
     fixture.sqlite.run(
-      "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('other-binding', 'other', 'manager-role', 'demo:resource', 'resource-1', 0)",
+      "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('17e9fca7-165d-44c4-8e80-4b3d024c4554', 'other', '848c3ab1-d54e-4ef8-82ff-dbc3e9f23620', 'demo:resource', 'resource-1', 0)",
     )
     expect(await revoke(fixture)).toBe("revoked")
     expect(
       fixture.sqlite
-        .query("SELECT revoked_at FROM system_role_bindings WHERE id='target-binding'")
+        .query(
+          "SELECT revoked_at FROM system_role_bindings WHERE id='f1a3ed01-15a3-41da-8ebb-2457a6038f84'",
+        )
         .get(),
     ).toEqual({ revoked_at: now.getTime() })
     expect(
@@ -79,7 +83,9 @@ test("別の管理者が残ると取消履歴・Account失効版・監査を一�
     ).toEqual({ token_version: 1 })
     expect(
       fixture.sqlite
-        .query("SELECT count(*) AS count FROM system_audit_events WHERE target_id='target-binding'")
+        .query(
+          "SELECT count(*) AS count FROM system_audit_events WHERE target_id='f1a3ed01-15a3-41da-8ebb-2457a6038f84'",
+        )
         .get(),
     ).toEqual({ count: 1 })
     expect(await revoke(fixture)).toBe("already_revoked")
@@ -94,7 +100,9 @@ test("resource管理権限のないAccountは取消できない", async () => {
     expect(await revoke(fixture, "other")).toBe("forbidden")
     expect(
       fixture.sqlite
-        .query("SELECT revoked_at FROM system_role_bindings WHERE id='target-binding'")
+        .query(
+          "SELECT revoked_at FROM system_role_bindings WHERE id='f1a3ed01-15a3-41da-8ebb-2457a6038f84'",
+        )
         .get(),
     ).toEqual({ revoked_at: null })
   } finally {
@@ -106,12 +114,14 @@ test("actorが持たない権限を含むroleはresource管理者でも取消で
   const fixture = createFixture()
   try {
     fixture.sqlite.run(
-      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('manager-role', 'system:admin')",
+      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('848c3ab1-d54e-4ef8-82ff-dbc3e9f23620', 'system:admin')",
     )
     expect(await revoke(fixture)).toBe("forbidden")
     expect(
       fixture.sqlite
-        .query("SELECT revoked_at FROM system_role_bindings WHERE id='target-binding'")
+        .query(
+          "SELECT revoked_at FROM system_role_bindings WHERE id='f1a3ed01-15a3-41da-8ebb-2457a6038f84'",
+        )
         .get(),
     ).toEqual({ revoked_at: null })
   } finally {

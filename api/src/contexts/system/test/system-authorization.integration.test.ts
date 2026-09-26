@@ -29,22 +29,24 @@ describe("canonical System authorization", () => {
     const database = createSystemD1TestDatabase(schema)
     await database.exec(`
       INSERT INTO system_accounts VALUES ('account-1', 'active', 0, NULL, 1000, 1000);
-      INSERT INTO system_iam_roles VALUES ('role-global', 'system:operator', 'managed', NULL, 'Operator', 1000, 1000);
-      INSERT INTO system_iam_roles VALUES ('role-scoped', 'example:manager', 'custom', 'example:organization', 'Manager', 1000, 1000);
-      INSERT INTO system_iam_role_permissions VALUES ('role-global', 'iam:read');
-      INSERT INTO system_iam_role_permissions VALUES ('role-scoped', 'example:write');
-      INSERT INTO system_role_bindings VALUES ('binding-global', 'account-1', 'role-global', NULL, NULL, 1000, NULL);
-      INSERT INTO system_role_bindings VALUES ('binding-scoped', 'account-1', 'role-scoped', 'example:organization', 'org-1', 1000, NULL);
+      INSERT INTO system_iam_roles VALUES ('f1cc5a29-2cdd-4294-8233-37aed4312992', 'system:operator', 'managed', NULL, 'Operator', 1000, 1000);
+      INSERT INTO system_iam_roles VALUES ('d0632d53-fa2d-4749-8436-96bd3cb5aef6', 'example:manager', 'custom', 'example:organization', 'Manager', 1000, 1000);
+      INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('f1cc5a29-2cdd-4294-8233-37aed4312992', 'iam:read');
+      INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('d0632d53-fa2d-4749-8436-96bd3cb5aef6', 'example:write');
+      INSERT INTO system_role_bindings VALUES ('852cc16d-b48a-4126-85cd-75f7ba82c433', 'account-1', 'f1cc5a29-2cdd-4294-8233-37aed4312992', NULL, NULL, 1000, NULL);
+      INSERT INTO system_role_bindings VALUES ('707b116e-f378-438a-8961-d7548f7597ce', 'account-1', 'd0632d53-fa2d-4749-8436-96bd3cb5aef6', 'example:organization', 'org-1', 1000, NULL);
     `)
     const repository = new SystemD1AuthorizationAdapter({ env: { DB: database } })
 
     const graph = await repository.loadForAccount(zAccountId.parse("account-1"))
     expect(graph).not.toBeInstanceOf(Error)
     if (graph === null || graph instanceof Error) throw graph
-    expect(graph.roles.find((role) => role.id === "role-global")?.resourceType).toBeNull()
-    expect(graph.roles.find((role) => role.id === "role-scoped")?.resourceType).toBe(
-      "example:organization",
-    )
+    expect(
+      graph.roles.find((role) => role.id === "f1cc5a29-2cdd-4294-8233-37aed4312992")?.resourceType,
+    ).toBeNull()
+    expect(
+      graph.roles.find((role) => role.id === "d0632d53-fa2d-4749-8436-96bd3cb5aef6")?.resourceType,
+    ).toBe("example:organization")
 
     const global = await repository.resolveForAccount({
       accountId: zAccountId.parse("account-1"),
@@ -72,7 +74,7 @@ describe("canonical System authorization", () => {
 
     await database.exec(`
       INSERT INTO system_iam_roles VALUES ('role-broken', 'example:broken', 'custom', 'example:site', 'Broken', 1000, 1000);
-      INSERT INTO system_iam_role_permissions VALUES ('role-broken', 'example:write');
+      INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('role-broken', 'example:write');
       INSERT INTO system_role_bindings VALUES ('binding-broken', 'account-1', 'role-broken', 'example:organization', 'org-1', 1000, NULL);
     `)
     expect(await repository.loadForAccount(zAccountId.parse("account-1"))).toBeInstanceOf(Error)

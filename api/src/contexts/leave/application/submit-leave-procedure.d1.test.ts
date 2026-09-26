@@ -24,14 +24,14 @@ test("本人が確認した休暇を提出し、同じ再送で案件を増や�
   const c = await createLeaveProcedureLocalD1Context(local, "submit")
   await c.database.batch([
     c.database.prepare(`INSERT INTO system_iam_roles
-    (id, key, kind, name, created_at, updated_at) VALUES ('leave-submit-role', 'test:leave-submit', 'custom', 'Leave submission', 0, 0)`),
+    (id, key, kind, name, created_at, updated_at) VALUES ('39ad7ee8-9560-4e9f-88de-592c25196124', 'test:leave-submit', 'custom', 'Leave submission', 0, 0)`),
     c.database.prepare(
-      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('leave-submit-role', 'leave:submit')",
+      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('39ad7ee8-9560-4e9f-88de-592c25196124', 'leave:submit')",
     ),
   ])
   await c.database
     .prepare(
-      "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('leave-submit-binding', ?1, 'leave-submit-role', 0)",
+      "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('2d4ea06b-d401-4b2f-8c41-a1eb6493bbb2', ?1, '39ad7ee8-9560-4e9f-88de-592c25196124', 0)",
     )
     .bind(c.creator.accountId)
     .run()
@@ -94,7 +94,9 @@ test("本人が確認した休暇を提出し、同じ再送で案件を増や�
     await c.database.prepare("SELECT count(*) AS count FROM system_cases").first<number>("count"),
   ).toBe(1)
   await c.database
-    .prepare("UPDATE system_role_bindings SET revoked_at = ?1 WHERE id = 'leave-submit-binding'")
+    .prepare(
+      "UPDATE system_role_bindings SET revoked_at = ?1 WHERE id = '2d4ea06b-d401-4b2f-8c41-a1eb6493bbb2'",
+    )
     .bind(c.at.getTime())
     .run()
   expect(await application.run(command)).toBeInstanceOf(Error)

@@ -69,16 +69,16 @@ export async function createCertificateRequestPreservationFixture(database: D1Da
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('certificate-request-test-manager','certificate-request:test-manager','custom','CertificateRequest manager',0,0);
+    VALUES ('cb159749-e8f4-4f7d-807f-ad76a3095a82','certificate-request:test-manager','custom','CertificateRequest manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('certificate-request-test-manager','certificate_request:create'),
-      ('certificate-request-test-manager','certificate_request:manage'),
-      ('certificate-request-test-manager','system:admin'),
-      ('certificate-request-test-manager','system:record:preserve'),
-      ('certificate-request-test-manager','system:record:read'),
-      ('certificate-request-test-manager','system:procedure:read');
+      ('cb159749-e8f4-4f7d-807f-ad76a3095a82','certificate_request:create'),
+      ('cb159749-e8f4-4f7d-807f-ad76a3095a82','certificate_request:manage'),
+      ('cb159749-e8f4-4f7d-807f-ad76a3095a82','system:admin'),
+      ('cb159749-e8f4-4f7d-807f-ad76a3095a82','system:record:preserve'),
+      ('cb159749-e8f4-4f7d-807f-ad76a3095a82','system:record:read'),
+      ('cb159749-e8f4-4f7d-807f-ad76a3095a82','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('certificate-request-test-binding','${creator.accountId}','certificate-request-test-manager',0);`,
+    VALUES ('8b925f1a-c4dd-4c8d-8f8e-3770270b985f','${creator.accountId}','cb159749-e8f4-4f7d-807f-ad76a3095a82',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

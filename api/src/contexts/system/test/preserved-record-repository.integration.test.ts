@@ -449,12 +449,12 @@ test("approved record execution binds intent and actor and atomically consumes a
       f.sqlite.run(
         `INSERT INTO system_cases
         (id,subject_context,subject_kind,subject_id,subject_version,proposal_digest,created_by_account_id,status,created_at,updated_at)
-        VALUES ('case-1','system','record-preservation',?1,'1',?2,'operator','approved',0,0)`,
+        VALUES ('9055d4a0-416c-40c4-814b-0c6df2d0f691','system','record-preservation',?1,'1',?2,'operator','approved',0,0)`,
         [scenario === "subject" ? "other-record" : f.record.snapshot.id, digest],
       )
       const authorization = ExecutionAuthorizationEntity.create({
         id: crypto.randomUUID(),
-        caseId: "case-1",
+        caseId: "9055d4a0-416c-40c4-814b-0c6df2d0f691",
         operationKey: scenario === "operation" ? "other-operation" : "system.record.preserve",
         proposalDigest: scenario === "digest" ? "c".repeat(64) : digest,
         grantedToAccountId: scenario === "actor" ? "other-operator" : "operator",

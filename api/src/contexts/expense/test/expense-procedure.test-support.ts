@@ -54,16 +54,16 @@ export async function createExpenseProcedureTestContext(
   await execSql(
     c.database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('expense-test-role','test:expense','custom','Expense approval',0,0);
+    VALUES ('bdf8c152-9f77-4cf5-85cf-a3495ca3645d','test:expense','custom','Expense approval',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-    ('expense-test-role','expense:submit'),('expense-test-role','expense:approve'),('expense-test-role','expense:procedure:manage');`,
+    ('bdf8c152-9f77-4cf5-85cf-a3495ca3645d','expense:submit'),('bdf8c152-9f77-4cf5-85cf-a3495ca3645d','expense:approve'),('bdf8c152-9f77-4cf5-85cf-a3495ca3645d','expense:procedure:manage');`,
   )
   for (const person of [requester, first, second])
     await c.database
       .prepare(
-        "INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES (?1,?2,'expense-test-role',0)",
+        "INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES (?1,?2,'bdf8c152-9f77-4cf5-85cf-a3495ca3645d',0)",
       )
-      .bind(`expense-test:${person.accountId}`, person.accountId)
+      .bind(crypto.randomUUID(), person.accountId)
       .run()
   const session = (person: typeof requester) => ({ ...person, hasPermission: () => true })
   const workflow = {

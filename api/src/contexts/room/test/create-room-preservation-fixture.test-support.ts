@@ -69,14 +69,14 @@ export async function createRoomPreservationFixture(database: D1Database) {
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('room-test-manager','room:test-manager','custom','Room manager',0,0);
+    VALUES ('3897f8c0-d867-4418-8c56-11215140f6f9','room:test-manager','custom','Room manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('room-test-manager','system:admin'),
-      ('room-test-manager','system:record:preserve'),
-      ('room-test-manager','system:record:read'),
-      ('room-test-manager','system:procedure:read');
+      ('3897f8c0-d867-4418-8c56-11215140f6f9','system:admin'),
+      ('3897f8c0-d867-4418-8c56-11215140f6f9','system:record:preserve'),
+      ('3897f8c0-d867-4418-8c56-11215140f6f9','system:record:read'),
+      ('3897f8c0-d867-4418-8c56-11215140f6f9','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('room-test-binding','${creator.accountId}','room-test-manager',0);`,
+    VALUES ('cd8dda69-d39d-4475-8978-239c3d1c10b9','${creator.accountId}','3897f8c0-d867-4418-8c56-11215140f6f9',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

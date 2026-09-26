@@ -65,12 +65,12 @@ export async function createExpensePreservationFixture(database: D1Database) {
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:expense-archive','expense:archive','custom','Archive operator',0,0);
-    INSERT INTO system_iam_role_permissions VALUES ('role:expense-archive','budget:manage');`,
+    VALUES ('6138765d-db53-4944-8523-0f6525050651','expense:archive','custom','Archive operator',0,0);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('6138765d-db53-4944-8523-0f6525050651','budget:manage');`,
   )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('binding:expense-archive',?1,'role:expense-archive',0)`)
+    VALUES ('0ba316d0-c044-4081-82f4-84e4ca41822c',?1,'6138765d-db53-4944-8523-0f6525050651',0)`)
     .bind(governance.creator.accountId)
     .run()
   await execSql(

@@ -26,14 +26,14 @@ export async function createRingiProcedureTestContext(database: D1Database) {
   await execSql(
     c.database,
     `INSERT INTO system_iam_roles
-    (id, key, kind, name, created_at, updated_at) VALUES ('ringi-test-role', 'test:ringi', 'custom', 'Ringi approval', 0, 0);
-    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('ringi-test-role', 'ringi:approve'), ('ringi-test-role', 'ringi:submit');`,
+    (id, key, kind, name, created_at, updated_at) VALUES ('3bd53091-4841-4526-829a-deda79a2e849', 'test:ringi', 'custom', 'Ringi approval', 0, 0);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('3bd53091-4841-4526-829a-deda79a2e849', 'ringi:approve'), ('3bd53091-4841-4526-829a-deda79a2e849', 'ringi:submit');`,
   )
   for (const person of [requester, first, second])
     await c.database
       .prepare(`INSERT INTO system_role_bindings
-      (id, account_id, role_id, created_at) VALUES (?1, ?2, 'ringi-test-role', 0)`)
-      .bind(`ringi-test:${person.accountId}`, person.accountId)
+      (id, account_id, role_id, created_at) VALUES (?1, ?2, '3bd53091-4841-4526-829a-deda79a2e849', 0)`)
+      .bind(crypto.randomUUID(), person.accountId)
       .run()
   const policy = createCompanyProcedureDecisionPolicy({
     approverRoles: [],

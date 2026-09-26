@@ -69,14 +69,14 @@ export async function createMeetingPreservationFixture(database: D1Database) {
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('meeting-test-manager','meeting:test-manager','custom','Meeting manager',0,0);
+    VALUES ('379192cc-a09d-4970-832c-9ce5f203eb03','meeting:test-manager','custom','Meeting manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('meeting-test-manager','system:admin'),
-      ('meeting-test-manager','system:record:preserve'),
-      ('meeting-test-manager','system:record:read'),
-      ('meeting-test-manager','system:procedure:read');
+      ('379192cc-a09d-4970-832c-9ce5f203eb03','system:admin'),
+      ('379192cc-a09d-4970-832c-9ce5f203eb03','system:record:preserve'),
+      ('379192cc-a09d-4970-832c-9ce5f203eb03','system:record:read'),
+      ('379192cc-a09d-4970-832c-9ce5f203eb03','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('meeting-test-binding','${creator.accountId}','meeting-test-manager',0);`,
+    VALUES ('eba1cdfe-8a4b-4097-8244-1bf593c68ff1','${creator.accountId}','379192cc-a09d-4970-832c-9ce5f203eb03',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

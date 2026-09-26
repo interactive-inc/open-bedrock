@@ -69,14 +69,14 @@ export async function createRegulationPreservationFixture(database: D1Database) 
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('regulation-test-manager','regulation:test-manager','custom','Regulation manager',0,0);
+    VALUES ('1bd9a9cd-7dc3-48c9-8f7e-227df225004f','regulation:test-manager','custom','Regulation manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('regulation-test-manager','system:admin'),
-      ('regulation-test-manager','system:record:preserve'),
-      ('regulation-test-manager','system:record:read'),
-      ('regulation-test-manager','system:procedure:read');
+      ('1bd9a9cd-7dc3-48c9-8f7e-227df225004f','system:admin'),
+      ('1bd9a9cd-7dc3-48c9-8f7e-227df225004f','system:record:preserve'),
+      ('1bd9a9cd-7dc3-48c9-8f7e-227df225004f','system:record:read'),
+      ('1bd9a9cd-7dc3-48c9-8f7e-227df225004f','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('regulation-test-binding','${creator.accountId}','regulation-test-manager',0);`,
+    VALUES ('53ce4f4f-8326-4981-8c41-ca3c0910df01','${creator.accountId}','1bd9a9cd-7dc3-48c9-8f7e-227df225004f',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

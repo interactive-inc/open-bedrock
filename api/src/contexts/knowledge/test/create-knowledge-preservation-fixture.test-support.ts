@@ -69,14 +69,14 @@ export async function createKnowledgePreservationFixture(database: D1Database) {
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('knowledge-test-manager','knowledge:test-manager','custom','Knowledge manager',0,0);
+    VALUES ('d4d26dcf-544a-46d6-8c4a-62ccb10db409','knowledge:test-manager','custom','Knowledge manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('knowledge-test-manager','system:admin'),
-      ('knowledge-test-manager','system:record:preserve'),
-      ('knowledge-test-manager','system:record:read'),
-      ('knowledge-test-manager','system:procedure:read');
+      ('d4d26dcf-544a-46d6-8c4a-62ccb10db409','system:admin'),
+      ('d4d26dcf-544a-46d6-8c4a-62ccb10db409','system:record:preserve'),
+      ('d4d26dcf-544a-46d6-8c4a-62ccb10db409','system:record:read'),
+      ('d4d26dcf-544a-46d6-8c4a-62ccb10db409','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('knowledge-test-binding','${creator.accountId}','knowledge-test-manager',0);`,
+    VALUES ('28311743-46bf-4ced-8e30-0edd4286aad9','${creator.accountId}','d4d26dcf-544a-46d6-8c4a-62ccb10db409',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

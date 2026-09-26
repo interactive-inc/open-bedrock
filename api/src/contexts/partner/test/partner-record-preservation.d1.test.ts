@@ -136,7 +136,7 @@ test("取引先2台帳を停止中に人の承認で保全し、業務コード�
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('partner-test-manager','system:record:export');
+    VALUES ('6f34dffd-597f-49b3-8a9f-a074548a7ab6','system:record:export');
     DROP TABLE partner_contracts;
     DROP TABLE partners;`,
   )

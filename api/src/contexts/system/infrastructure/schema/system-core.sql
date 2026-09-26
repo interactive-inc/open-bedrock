@@ -387,14 +387,12 @@ CREATE INDEX system_oidc_access_tokens_expires_idx
   ON system_oidc_access_tokens (expires_at);
 
 CREATE TABLE system_iam_roles (
-  id TEXT PRIMARY KEY NOT NULL
-    CHECK (length(id) BETWEEN 1 AND 255),
+  id TEXT PRIMARY KEY NOT NULL,
+  legacy_id TEXT UNIQUE,
   key TEXT NOT NULL
     CHECK (length(key) BETWEEN 3 AND 100),
   kind TEXT NOT NULL
     CHECK (kind IN ('managed', 'custom')),
-  resource_type TEXT
-    CHECK (resource_type IS NULL OR length(resource_type) BETWEEN 3 AND 100),
   name TEXT NOT NULL
     CHECK (length(name) BETWEEN 1 AND 100),
   description TEXT
@@ -402,18 +400,39 @@ CREATE TABLE system_iam_roles (
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
     CHECK (updated_at >= created_at)
+, resource_type TEXT
+  CHECK (resource_type IS NULL OR length(resource_type) BETWEEN 3 AND 100),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+
+CREATE TRIGGER system_iam_roles_legacy_id_insert
+BEFORE INSERT ON system_iam_roles
+WHEN NEW.legacy_id IS NOT NULL
+BEGIN SELECT RAISE(ABORT, 'record_legacy_id_immutable'); END;
+
+CREATE TRIGGER system_iam_roles_identity_update
+BEFORE UPDATE OF id, legacy_id ON system_iam_roles
+WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE UNIQUE INDEX system_iam_roles_key_uniq
   ON system_iam_roles (key);
 
 CREATE TABLE system_iam_role_permissions (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   role_id TEXT NOT NULL
     REFERENCES system_iam_roles(id) ON DELETE CASCADE,
   permission_key TEXT NOT NULL
     CHECK (length(permission_key) BETWEEN 3 AND 100),
-  PRIMARY KEY (role_id, permission_key)
+  UNIQUE (role_id, permission_key),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 ) WITHOUT ROWID;
+
+CREATE TRIGGER system_iam_role_permissions_identity_update
+BEFORE UPDATE OF id ON system_iam_role_permissions
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 /* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_iam_roles_immutable_identity
@@ -423,8 +442,8 @@ BEGIN
 END;
 
 CREATE TABLE system_role_bindings (
-  id TEXT PRIMARY KEY NOT NULL
-    CHECK (length(id) BETWEEN 1 AND 255),
+  id TEXT PRIMARY KEY NOT NULL,
+  legacy_id TEXT UNIQUE,
   account_id TEXT NOT NULL
     REFERENCES system_accounts(id) ON DELETE RESTRICT,
   role_id TEXT NOT NULL
@@ -440,8 +459,19 @@ CREATE TABLE system_role_bindings (
       AND length(resource_type) BETWEEN 3 AND 100
       AND length(resource_id) BETWEEN 1 AND 255
     )
-  )
+  ),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+
+CREATE TRIGGER system_role_bindings_legacy_id_insert
+BEFORE INSERT ON system_role_bindings
+WHEN NEW.legacy_id IS NOT NULL
+BEGIN SELECT RAISE(ABORT, 'record_legacy_id_immutable'); END;
+
+CREATE TRIGGER system_role_bindings_identity_update
+BEFORE UPDATE OF id, legacy_id ON system_role_bindings
+WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE UNIQUE INDEX system_role_bindings_active_uniq
   ON system_role_bindings (

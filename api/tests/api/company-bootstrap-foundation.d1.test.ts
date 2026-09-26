@@ -81,7 +81,7 @@ test("実APIでSystem初期化・ログインからCompany初期化・公開プ�
     database,
     `INSERT INTO system_role_bindings
     (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-    SELECT 'bootstrap-test:renewed-binding', account_id, role_id, resource_type, resource_id, created_at, NULL
+    SELECT '79ca132d-0acd-497b-8f78-3ef686197842', account_id, role_id, resource_type, resource_id, created_at, NULL
     FROM system_role_bindings`,
   )
   const created = await company(token)

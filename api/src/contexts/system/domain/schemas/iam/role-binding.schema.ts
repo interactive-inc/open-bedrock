@@ -1,7 +1,7 @@
 import { permissionKeySchema } from "@system/domain/values/iam/permission.value"
 import { z } from "zod"
 
-export const roleBindingIdSchema = z.string().min(1).max(255).brand<"RoleBindingId">()
+export const roleBindingIdSchema = z.uuid().brand<"RoleBindingId">()
 export type RoleBindingId = z.infer<typeof roleBindingIdSchema>
 
 export const roleBindingResourceSchema = z

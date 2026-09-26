@@ -69,15 +69,15 @@ export async function createCertificationPreservationFixture(database: D1Databas
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('certification-test-manager','certification:test-manager','custom','Certification manager',0,0);
+    VALUES ('fb090c04-3621-4802-8410-8aa90f34a889','certification:test-manager','custom','Certification manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('certification-test-manager','certification:manage'),
-      ('certification-test-manager','system:admin'),
-      ('certification-test-manager','system:record:preserve'),
-      ('certification-test-manager','system:record:read'),
-      ('certification-test-manager','system:procedure:read');
+      ('fb090c04-3621-4802-8410-8aa90f34a889','certification:manage'),
+      ('fb090c04-3621-4802-8410-8aa90f34a889','system:admin'),
+      ('fb090c04-3621-4802-8410-8aa90f34a889','system:record:preserve'),
+      ('fb090c04-3621-4802-8410-8aa90f34a889','system:record:read'),
+      ('fb090c04-3621-4802-8410-8aa90f34a889','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('certification-test-binding','${creator.accountId}','certification-test-manager',0);`,
+    VALUES ('1daf04d9-8542-4d74-8480-31bd187d66c5','${creator.accountId}','fb090c04-3621-4802-8410-8aa90f34a889',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

@@ -202,13 +202,13 @@ test("規程11件と改定版を分割照合し撤去確定する", async () => 
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:regulation-retirement-review','regulation:retirement-review','custom','Record reviewer',0,0);
+    VALUES ('49699cae-5310-4f11-84bd-72ffc0489e21','regulation:retirement-review','custom','Record reviewer',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key)
-    VALUES ('role:regulation-retirement-review','system:procedure:read')`,
+    VALUES ('49699cae-5310-4f11-84bd-72ffc0489e21','system:procedure:read')`,
   )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-      VALUES ('binding:regulation-retirement-review',?1,'role:regulation-retirement-review',0)`)
+      VALUES ('b8e03aad-94da-4e44-84cf-6ade2e863e81',?1,'49699cae-5310-4f11-84bd-72ffc0489e21',0)`)
     .bind(reviewer.accountId)
     .run()
   const retirementPath = `/regulation/retirement-plans/${plan.id}/requests`
@@ -276,7 +276,7 @@ test("規程11件と改定版を分割照合し撤去確定する", async () => 
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('regulation-test-manager','system:record:export');
+    VALUES ('1bd9a9cd-7dc3-48c9-8f7e-227df225004f','system:record:export');
     DROP TABLE regulation_versions;
     DROP TABLE regulations;`,
   )

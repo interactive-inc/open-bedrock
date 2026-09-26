@@ -27,12 +27,12 @@ async function fixture(name: string) {
   await execSql(
     c.database,
     `INSERT INTO system_iam_roles
-    (id, key, kind, name, created_at, updated_at) VALUES ('leave-publisher', 'test:leave-publisher', 'custom', 'Leave publisher', 0, 0);
-    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('leave-publisher', 'leave:procedure:manage');`,
+    (id, key, kind, name, created_at, updated_at) VALUES ('9e2a6b83-ab6c-4088-876d-6952f0b74e76', 'test:leave-publisher', 'custom', 'Leave publisher', 0, 0);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('9e2a6b83-ab6c-4088-876d-6952f0b74e76', 'leave:procedure:manage');`,
   )
   await c.database
     .prepare(
-      "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('leave-publisher-binding', ?1, 'leave-publisher', 0)",
+      "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('25abd740-4cb8-4281-8649-a2622d2a8906', ?1, '9e2a6b83-ab6c-4088-876d-6952f0b74e76', 0)",
     )
     .bind(c.creator.accountId)
     .run()
@@ -72,7 +72,9 @@ test("休暇規程の公開は明示した会社資格・版・権限を要求�
   expect((await c.request("PUT", body)).status).toBe(409)
   expect(await (await c.request("GET")).json()).toMatchObject({ revision: 2 })
   await c.database
-    .prepare("UPDATE system_role_bindings SET revoked_at = ?1 WHERE id = 'leave-publisher-binding'")
+    .prepare(
+      "UPDATE system_role_bindings SET revoked_at = ?1 WHERE id = '25abd740-4cb8-4281-8649-a2622d2a8906'",
+    )
     .bind(c.at.getTime())
     .run()
   expect((await c.request("GET")).status).toBe(403)
@@ -108,7 +110,7 @@ test("汎用テンプレートの管理権限から休暇規程を変更でき�
   const c = await fixture("template-permission")
   await execSql(
     c.database,
-    "DELETE FROM system_iam_role_permissions WHERE role_id = 'leave-publisher'; INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('leave-publisher', 'application_template:manage')",
+    "DELETE FROM system_iam_role_permissions WHERE role_id = '9e2a6b83-ab6c-4088-876d-6952f0b74e76'; INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('9e2a6b83-ab6c-4088-876d-6952f0b74e76', 'application_template:manage')",
   )
   for (const [path, body] of [
     [

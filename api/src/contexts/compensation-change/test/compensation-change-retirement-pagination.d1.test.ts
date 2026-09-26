@@ -57,12 +57,12 @@ test("給与改定記録を全件保全し、人の承認を経て1台帳を撤�
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:retirement-review','retirement:review','custom','Record reviewer',0,0);
-    INSERT INTO system_iam_role_permissions VALUES ('role:retirement-review','system:procedure:read')`,
+    VALUES ('34736f76-bafd-432f-82c8-5910781358ff','retirement:review','custom','Record reviewer',0,0);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('34736f76-bafd-432f-82c8-5910781358ff','system:procedure:read')`,
   )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('binding:retirement-review',?1,'role:retirement-review',0)`)
+    VALUES ('765a5b2a-4515-48b7-8e45-6f0284f1d313',?1,'34736f76-bafd-432f-82c8-5910781358ff',0)`)
     .bind(reviewer.accountId)
     .run()
   for (let id = 1; id <= 11; id++) {
@@ -475,7 +475,7 @@ test("給与改定記録を全件保全し、人の承認を経て1台帳を撤�
   ).toBe(409)
   await execSql(
     database,
-    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('compensation-change-test-manager','system:record:export'); DROP TABLE salary_revisions;",
+    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('86a34a82-3294-4dbd-8a77-e808623ac2bf','system:record:export'); DROP TABLE salary_revisions;",
   )
   const core = systemFactory
     .createApp()

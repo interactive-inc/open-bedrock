@@ -69,15 +69,15 @@ export async function createRentalReservationPreservationFixture(database: D1Dat
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('rental-test-manager','rental:test-manager','custom','RentalReservation manager',0,0);
+    VALUES ('429b94c6-43c5-454b-81f0-de0e00fac3e0','rental:test-manager','custom','RentalReservation manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('rental-test-manager','rental:manage'),
-      ('rental-test-manager','system:admin'),
-      ('rental-test-manager','system:record:preserve'),
-      ('rental-test-manager','system:record:read'),
-      ('rental-test-manager','system:procedure:read');
+      ('429b94c6-43c5-454b-81f0-de0e00fac3e0','rental:manage'),
+      ('429b94c6-43c5-454b-81f0-de0e00fac3e0','system:admin'),
+      ('429b94c6-43c5-454b-81f0-de0e00fac3e0','system:record:preserve'),
+      ('429b94c6-43c5-454b-81f0-de0e00fac3e0','system:record:read'),
+      ('429b94c6-43c5-454b-81f0-de0e00fac3e0','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('rental-test-binding','${creator.accountId}','rental-test-manager',0);`,
+    VALUES ('ad228e17-826b-4063-8f88-c60a8b82fdfb','${creator.accountId}','429b94c6-43c5-454b-81f0-de0e00fac3e0',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

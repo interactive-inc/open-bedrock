@@ -20,12 +20,12 @@ test("Account 停止・role 変更・禁止権限の追加後は同じ batch の
     INSERT INTO system_accounts (id, status, token_version, closed_at, created_at, updated_at)
       VALUES ('account-1', 'active', 0, NULL, 1, 1);
     INSERT INTO system_iam_roles (id, key, kind, resource_type, name, created_at, updated_at)
-      VALUES ('role-1', 'example:member', 'managed', 'example:facility', 'Example member', 1, 1);
+      VALUES ('a290ac92-bf4b-434b-8443-8b6ceeb1cb85', 'example:member', 'managed', 'example:facility', 'Example member', 1, 1);
     INSERT INTO test_grant_effect (id, value) VALUES (1, 0);
   `)
   const orm = drizzle(database)
   const write = orm.update(effect).set({ value: 1 }).where(eq(effect.id, 1))
-  const guard = (roleId = "role-1") => {
+  const guard = (roleId = "a290ac92-bf4b-434b-8443-8b6ceeb1cb85") => {
     const statement = prepareSystemRoleGrantGuard({
       database,
       accountId: "account-1",
@@ -39,17 +39,21 @@ test("Account 停止・role 変更・禁止権限の追加後は同じ batch の
   const value = () =>
     database.prepare("SELECT value FROM test_grant_effect WHERE id = 1").first<number>("value")
 
-  await expect(orm.batch([guard("missing-role"), write])).rejects.toThrow()
+  await expect(orm.batch([guard("5e0f7c3a-1d2b-4c5d-8e6f-0000000000d1"), write])).rejects.toThrow()
   expect(await value()).toBe(0)
 
   await database
     .prepare(
-      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('role-1', 'system:admin')",
+      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('a290ac92-bf4b-434b-8443-8b6ceeb1cb85', 'system:admin')",
     )
     .run()
   await expect(orm.batch([guard(), write])).rejects.toThrow()
   expect(await value()).toBe(0)
-  await database.prepare("DELETE FROM system_iam_role_permissions WHERE role_id = 'role-1'").run()
+  await database
+    .prepare(
+      "DELETE FROM system_iam_role_permissions WHERE role_id = 'a290ac92-bf4b-434b-8443-8b6ceeb1cb85'",
+    )
+    .run()
 
   await database
     .prepare(

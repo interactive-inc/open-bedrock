@@ -58,7 +58,7 @@ async function grantPermission(
   roleKey: string,
   permission: "audit:read" | "audit:export",
 ): Promise<void> {
-  const roleId = `test:${roleKey}`
+  const roleId = crypto.randomUUID()
   await db.batch([
     db
       .prepare(
@@ -79,7 +79,7 @@ async function grantPermission(
            (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
          VALUES (?1, ?2, ?3, NULL, NULL, 0, NULL)`,
       )
-      .bind(`test:${accountId}:${roleKey}`, String(accountId), roleId),
+      .bind(crypto.randomUUID(), String(accountId), roleId),
   ])
 }
 

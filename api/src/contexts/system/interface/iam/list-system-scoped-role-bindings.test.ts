@@ -11,17 +11,17 @@ test("Systemの公開読取は指定resource・時点・Accountの有効なbindi
       "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('target', 'active', 0, 0, 0), ('other', 'active', 0, 0, 0)",
     )
     fixture.sqlite.run(
-      "INSERT INTO system_iam_roles (id, key, kind, resource_type, name, created_at, updated_at) VALUES ('manager-role', 'demo:manager', 'managed', 'demo:resource', 'Manager', 0, 0)",
+      "INSERT INTO system_iam_roles (id, key, kind, resource_type, name, created_at, updated_at) VALUES ('848c3ab1-d54e-4ef8-82ff-dbc3e9f23620', 'demo:manager', 'managed', 'demo:resource', 'Manager', 0, 0)",
     )
     fixture.sqlite.run(
-      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('manager-role', 'demo:manage'), ('manager-role', 'demo:read')",
+      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('848c3ab1-d54e-4ef8-82ff-dbc3e9f23620', 'demo:manage'), ('848c3ab1-d54e-4ef8-82ff-dbc3e9f23620', 'demo:read')",
     )
     fixture.sqlite.run(
       `INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at) VALUES
-       ('active', 'target', 'manager-role', 'demo:resource', 'resource-1', 100, NULL),
-       ('future', 'other', 'manager-role', 'demo:resource', 'resource-1', 300, NULL),
-       ('revoked', 'other', 'manager-role', 'demo:resource', 'resource-1', 0, 50),
-       ('other-resource', 'other', 'manager-role', 'demo:resource', 'resource-2', 0, NULL)`,
+       ('5e0f7c3a-1d2b-4c5d-8e6f-0000000000a1', 'target', '848c3ab1-d54e-4ef8-82ff-dbc3e9f23620', 'demo:resource', 'resource-1', 100, NULL),
+       ('5e0f7c3a-1d2b-4c5d-8e6f-0000000000a2', 'other', '848c3ab1-d54e-4ef8-82ff-dbc3e9f23620', 'demo:resource', 'resource-1', 300, NULL),
+       ('5e0f7c3a-1d2b-4c5d-8e6f-0000000000a3', 'other', '848c3ab1-d54e-4ef8-82ff-dbc3e9f23620', 'demo:resource', 'resource-1', 0, 50),
+       ('dbcd34b4-9c95-419a-8fc3-d992cd5566d7', 'other', '848c3ab1-d54e-4ef8-82ff-dbc3e9f23620', 'demo:resource', 'resource-2', 0, NULL)`,
     )
 
     const result = await listSystemScopedRoleBindings({
@@ -32,9 +32,9 @@ test("Systemの公開読取は指定resource・時点・Accountの有効なbindi
     })
     expect(result).toEqual([
       {
-        id: "active",
+        id: "5e0f7c3a-1d2b-4c5d-8e6f-0000000000a1",
         accountId: "target",
-        roleId: "manager-role",
+        roleId: "848c3ab1-d54e-4ef8-82ff-dbc3e9f23620",
         resourceId: "resource-1",
         createdAt: new Date(100),
         permissionKeys: ["demo:manage", "demo:read"],
@@ -52,10 +52,10 @@ test("Systemの公開読取は指定resource・時点・Accountの有効なbindi
     expect(
       await readSystemRoleSummary({
         database: fixture.context.env.DB,
-        roleId: "manager-role",
+        roleId: "848c3ab1-d54e-4ef8-82ff-dbc3e9f23620",
       }),
     ).toEqual({
-      id: "manager-role",
+      id: "848c3ab1-d54e-4ef8-82ff-dbc3e9f23620",
       resourceType: "demo:resource",
       name: "Manager",
       kind: "managed",
@@ -68,7 +68,7 @@ test("Systemの公開読取は指定resource・時点・Accountの有効なbindi
       }),
     ).toEqual([
       {
-        id: "manager-role",
+        id: "848c3ab1-d54e-4ef8-82ff-dbc3e9f23620",
         resourceType: "demo:resource",
         name: "Manager",
         kind: "managed",

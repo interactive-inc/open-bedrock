@@ -69,15 +69,15 @@ export async function createCompensationChangePreservationFixture(database: D1Da
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('compensation-change-test-manager','compensation-change:test-manager','custom','CompensationChange manager',0,0);
+    VALUES ('86a34a82-3294-4dbd-8a77-e808623ac2bf','compensation-change:test-manager','custom','CompensationChange manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('compensation-change-test-manager','salary_revision:manage'),
-      ('compensation-change-test-manager','system:admin'),
-      ('compensation-change-test-manager','system:record:preserve'),
-      ('compensation-change-test-manager','system:record:read'),
-      ('compensation-change-test-manager','system:procedure:read');
+      ('86a34a82-3294-4dbd-8a77-e808623ac2bf','salary_revision:manage'),
+      ('86a34a82-3294-4dbd-8a77-e808623ac2bf','system:admin'),
+      ('86a34a82-3294-4dbd-8a77-e808623ac2bf','system:record:preserve'),
+      ('86a34a82-3294-4dbd-8a77-e808623ac2bf','system:record:read'),
+      ('86a34a82-3294-4dbd-8a77-e808623ac2bf','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('compensation-change-test-binding','${creator.accountId}','compensation-change-test-manager',0);`,
+    VALUES ('c1d6ca04-16fa-4443-8439-91121ce9ab4e','${creator.accountId}','86a34a82-3294-4dbd-8a77-e808623ac2bf',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

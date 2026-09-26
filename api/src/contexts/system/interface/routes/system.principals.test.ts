@@ -160,14 +160,14 @@ function seedRoot(fixture: SystemSessionTestContext): void {
   fixture.sqlite.exec(
     `INSERT INTO system_iam_roles
        (id, key, kind, name, created_at, updated_at)
-     VALUES ('principal-root-role', 'system:root', 'managed', 'System root', 1, 1);
+     VALUES ('7fc6245e-9a8a-419a-849e-d398ffef5c52', 'system:root', 'managed', 'System root', 1, 1);
      INSERT INTO system_iam_role_permissions (role_id, permission_key)
-     VALUES ('principal-root-role', 'iam:read'),
-            ('principal-root-role', 'iam:write'),
-            ('principal-root-role', 'system:admin');
+     VALUES ('7fc6245e-9a8a-419a-849e-d398ffef5c52', 'iam:read'),
+            ('7fc6245e-9a8a-419a-849e-d398ffef5c52', 'iam:write'),
+            ('7fc6245e-9a8a-419a-849e-d398ffef5c52', 'system:admin');
      INSERT INTO system_role_bindings
        (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-     VALUES ('principal-root-binding', 'principal-root-account', 'principal-root-role',
+     VALUES ('a0fa7364-472e-45da-8939-f513091033e4', 'principal-root-account', '7fc6245e-9a8a-419a-849e-d398ffef5c52',
              NULL, NULL, 1, NULL);`,
   )
 }

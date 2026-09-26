@@ -23,10 +23,10 @@ export async function createAttendanceRecordSourceFixture(database: D1Database) 
     INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at)
       VALUES ('principal:recorder','account:recorder','human','Recorder',1,0,0);
     INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-      VALUES ('role:recorder','attendance:test-recorder','custom','Recorder',0,0);
-    INSERT INTO system_iam_role_permissions VALUES ('role:recorder','attendance:read:all');
+      VALUES ('0a05519b-05c9-4925-8b15-fcb647569867','attendance:test-recorder','custom','Recorder',0,0);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('0a05519b-05c9-4925-8b15-fcb647569867','attendance:read:all');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-      VALUES ('binding:recorder','account:recorder','role:recorder',0);
+      VALUES ('25df26f0-af9b-43d9-8547-ddcff1987502','account:recorder','0a05519b-05c9-4925-8b15-fcb647569867',0);
     INSERT INTO company_employees (id,official_name,employee_code,email,phone,created_at,updated_at)
       VALUES ('employee:worker','Worker','WORKER',NULL,NULL,0,0);
     INSERT INTO attendance_records (id,employee_id,work_date,clock_in_at,clock_out_at,work_minutes,note,status)

@@ -1,4 +1,5 @@
 import type { SystemD1Context } from "@system/configuration/system-context"
+import { createExecutionAuthorizationId } from "@system/domain/schemas/workflow/execution-authorization-id.schema"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
 import type { SystemProposalView } from "@system/domain/definitions/workflow/system-proposal-view.definition"
 import { SYSTEM_AUDIT_ACTIONS } from "@system/domain/catalogs/audit/system-audit-action.catalog"
@@ -123,7 +124,7 @@ export class ExecuteAttachmentErasureAdapter {
     })
     if (audit instanceof Error) return new AttachmentErasureError("invalid", { cause: audit })
     const authorization = ExecutionAuthorizationEntity.create({
-      id: `attachment-erasure:${proposal.caseId}`,
+      id: await createExecutionAuthorizationId("attachment-erasure", proposal.caseId),
       caseId: proposal.caseId,
       operationKey: ATTACHMENT_ERASURE_OPERATION_KEY,
       proposalDigest: proposal.digest,

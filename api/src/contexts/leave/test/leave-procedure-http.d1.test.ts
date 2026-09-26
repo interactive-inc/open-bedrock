@@ -49,15 +49,15 @@ async function fixture(name: string) {
   await execSql(
     c.database,
     `INSERT INTO system_iam_roles
-(id, key, kind, name, created_at, updated_at) VALUES ('leave-flow', 'test:leave-flow', 'custom', 'Leave flow', 0, 0);
-INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('leave-flow', 'leave:submit'), ('leave-flow', 'leave:approve'), ('leave-flow', 'leave:read:all'), ('leave-flow', 'management_dashboard:view');`,
+(id, key, kind, name, created_at, updated_at) VALUES ('4f5cc7e6-9ec8-4618-8b88-8de8a66183f4', 'test:leave-flow', 'custom', 'Leave flow', 0, 0);
+INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('4f5cc7e6-9ec8-4618-8b88-8de8a66183f4', 'leave:submit'), ('4f5cc7e6-9ec8-4618-8b88-8de8a66183f4', 'leave:approve'), ('4f5cc7e6-9ec8-4618-8b88-8de8a66183f4', 'leave:read:all'), ('4f5cc7e6-9ec8-4618-8b88-8de8a66183f4', 'management_dashboard:view');`,
   )
   for (const actor of c.people) {
     await c.database
       .prepare(
-        "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES (?1, ?2, 'leave-flow', 0)",
+        "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES (?1, ?2, '4f5cc7e6-9ec8-4618-8b88-8de8a66183f4', 0)",
       )
-      .bind(`leave-flow:${actor.accountId}`, actor.accountId)
+      .bind(crypto.randomUUID(), actor.accountId)
       .run()
   }
   await c.database
@@ -306,7 +306,7 @@ test("差戻し後に修正した休暇を別番号で再提出し、元の内�
   const c = await fixture("resubmit-after-return")
   await execSql(
     c.database,
-    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('leave-flow', 'leave:procedure:manage')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('4f5cc7e6-9ec8-4618-8b88-8de8a66183f4', 'leave:procedure:manage')",
   )
   const participant = c.people[1]
   if (participant === undefined) throw new Error("participant missing")
@@ -499,7 +499,7 @@ test("二段階の承認では最後の段階だけが残数を確定し、古�
   const c = await fixture("two-stage")
   await execSql(
     c.database,
-    "INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES ('leave-flow','leave:procedure:manage')",
+    "INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES ('4f5cc7e6-9ec8-4618-8b88-8de8a66183f4','leave:procedure:manage')",
   )
   const base = createTestContextForDatabase(c.database)
   const published = await new PublishLeaveProcedure(base).run({

@@ -103,7 +103,7 @@ describe("稟議と共通の承認・実行基盤", () => {
     })
     await execSql(
       c.database,
-      "DELETE FROM system_iam_role_permissions WHERE role_id = 'ringi-test-role'",
+      "DELETE FROM system_iam_role_permissions WHERE role_id = '3bd53091-4841-4526-829a-deda79a2e849'",
     )
     expect(await application.run(command)).toBeInstanceOf(ForbiddenError)
   })
@@ -160,7 +160,7 @@ describe("稟議と共通の承認・実行基盤", () => {
     ).toBe(1)
     await execSql(
       c.database,
-      "DELETE FROM system_iam_role_permissions WHERE role_id = 'ringi-test-role'",
+      "DELETE FROM system_iam_role_permissions WHERE role_id = '3bd53091-4841-4526-829a-deda79a2e849'",
     )
     expect(await c.complete.run(c.command(c.id))).toBeInstanceOf(ForbiddenError)
     expect(await c.repository.findById(c.id)).toMatchObject({ status: "approved" })
@@ -263,7 +263,7 @@ describe("稟議と共通の承認・実行基盤", () => {
       if (change === "permission")
         await execSql(
           c.database,
-          "DELETE FROM system_iam_role_permissions WHERE role_id = 'ringi-test-role'",
+          "DELETE FROM system_iam_role_permissions WHERE role_id = '3bd53091-4841-4526-829a-deda79a2e849'",
         )
       else if (change === "principal")
         await c.database
@@ -311,7 +311,7 @@ describe("稟議と共通の承認・実行基盤", () => {
         if (change === "permission")
           await execSql(
             c.database,
-            "DELETE FROM system_iam_role_permissions WHERE role_id = 'ringi-test-role'",
+            "DELETE FROM system_iam_role_permissions WHERE role_id = '3bd53091-4841-4526-829a-deda79a2e849'",
           )
         else if (change === "audit")
           await execSql(

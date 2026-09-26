@@ -69,14 +69,14 @@ export async function createShiftPreservationFixture(database: D1Database) {
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('shift-test-manager','shift:test-manager','custom','Shift manager',0,0);
+    VALUES ('0a67e863-4fc9-430e-810a-5a7d998532ca','shift:test-manager','custom','Shift manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('shift-test-manager','system:admin'),
-      ('shift-test-manager','system:record:preserve'),
-      ('shift-test-manager','system:record:read'),
-      ('shift-test-manager','system:procedure:read');
+      ('0a67e863-4fc9-430e-810a-5a7d998532ca','system:admin'),
+      ('0a67e863-4fc9-430e-810a-5a7d998532ca','system:record:preserve'),
+      ('0a67e863-4fc9-430e-810a-5a7d998532ca','system:record:read'),
+      ('0a67e863-4fc9-430e-810a-5a7d998532ca','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('shift-test-binding','${creator.accountId}','shift-test-manager',0);`,
+    VALUES ('2b10a6eb-3561-408e-866a-71a6b861cc5e','${creator.accountId}','0a67e863-4fc9-430e-810a-5a7d998532ca',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

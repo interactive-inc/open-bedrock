@@ -69,15 +69,15 @@ export async function createAnnouncementPreservationFixture(database: D1Database
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('announcement-test-manager','announcement:test-manager','custom','Announcement manager',0,0);
+    VALUES ('b30b4f0d-3de3-4851-80e5-d678e8f09789','announcement:test-manager','custom','Announcement manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('announcement-test-manager','announcement:manage'),
-      ('announcement-test-manager','system:admin'),
-      ('announcement-test-manager','system:record:preserve'),
-      ('announcement-test-manager','system:record:read'),
-      ('announcement-test-manager','system:procedure:read');
+      ('b30b4f0d-3de3-4851-80e5-d678e8f09789','announcement:manage'),
+      ('b30b4f0d-3de3-4851-80e5-d678e8f09789','system:admin'),
+      ('b30b4f0d-3de3-4851-80e5-d678e8f09789','system:record:preserve'),
+      ('b30b4f0d-3de3-4851-80e5-d678e8f09789','system:record:read'),
+      ('b30b4f0d-3de3-4851-80e5-d678e8f09789','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('announcement-test-binding','${creator.accountId}','announcement-test-manager',0);`,
+    VALUES ('5725dcfe-74d7-4221-8b50-8ad80fc6ca3a','${creator.accountId}','b30b4f0d-3de3-4851-80e5-d678e8f09789',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

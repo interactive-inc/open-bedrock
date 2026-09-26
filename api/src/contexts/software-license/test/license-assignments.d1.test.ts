@@ -428,7 +428,9 @@ describe("software license usage ledger", () => {
     spyOn(LicenseAssignmentRepository.prototype, "write").mockImplementationOnce(
       async (assignment, options) => {
         await f.database
-          .prepare("UPDATE system_role_bindings SET revoked_at=?1 WHERE id='license-test-binding'")
+          .prepare(
+            "UPDATE system_role_bindings SET revoked_at=?1 WHERE id='badb286f-9bbd-40a1-8d5d-60bf1eec5299'",
+          )
           .bind(f.clock.now.getTime())
           .run()
         return write(assignment, options)

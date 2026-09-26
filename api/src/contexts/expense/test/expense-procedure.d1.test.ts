@@ -236,7 +236,7 @@ test("準備後の技術権限失効で判断・通知を保存せず、再付�
   ).mockImplementation(async function (this: ExpenseProcedureRepository, input) {
     await execSql(
       c.database,
-      "DELETE FROM system_iam_role_permissions WHERE role_id = 'expense-test-role' AND permission_key = 'expense:approve'",
+      "DELETE FROM system_iam_role_permissions WHERE role_id = 'bdf8c152-9f77-4cf5-85cf-a3495ca3645d' AND permission_key = 'expense:approve'",
     )
     return record(input)
   })
@@ -254,7 +254,7 @@ test("準備後の技術権限失効で判断・通知を保存せず、再付�
   ).toBe(0)
   await execSql(
     c.database,
-    "INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES ('expense-test-role','expense:approve')",
+    "INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES ('bdf8c152-9f77-4cf5-85cf-a3495ca3645d','expense:approve')",
   )
   expect(await expense.decide()).toMatchObject({ status: "pending" })
 })

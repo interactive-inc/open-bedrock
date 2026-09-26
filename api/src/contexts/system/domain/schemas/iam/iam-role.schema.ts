@@ -1,6 +1,6 @@
 import { z } from "zod"
 
-export const iamRoleIdSchema = z.string().min(1).max(255).brand<"IamRoleId">()
+export const iamRoleIdSchema = z.uuid().brand<"IamRoleId">()
 export type IamRoleId = z.infer<typeof iamRoleIdSchema>
 
 export const iamRoleKeySchema = z

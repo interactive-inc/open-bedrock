@@ -220,13 +220,13 @@ test("休暇申請11件と残数を停止世代ごとに分割照合し、空の
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:leave-retirement-review','leave:retirement-review','custom','Record reviewer',0,0);
+    VALUES ('c9d33201-4569-463d-8468-2077108e8635','leave:retirement-review','custom','Record reviewer',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key)
-    VALUES ('role:leave-retirement-review','system:procedure:read')`,
+    VALUES ('c9d33201-4569-463d-8468-2077108e8635','system:procedure:read')`,
   )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-      VALUES ('binding:leave-retirement-review',?1,'role:leave-retirement-review',0)`)
+      VALUES ('07e47585-6e29-4fce-8645-34e5d4ff0f28',?1,'c9d33201-4569-463d-8468-2077108e8635',0)`)
     .bind(reviewer.accountId)
     .run()
   const retirementPath = `/leave/retirement-plans/${plan.id}/requests`
@@ -294,7 +294,7 @@ test("休暇申請11件と残数を停止世代ごとに分割照合し、空の
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('leave-test-manager','system:record:export');
+    VALUES ('e8f97a27-aed2-4276-8b2e-8a173fe503c4','system:record:export');
     DROP TABLE leave_decision_notifications;
     DROP TABLE leave_procedure_bindings;
     DROP TABLE leave_balances;

@@ -4,7 +4,8 @@ CREATE TABLE system_delegation_procedure_scopes (
   delegation_id TEXT PRIMARY KEY NOT NULL
     REFERENCES system_delegations(id) ON DELETE RESTRICT,
   procedure_key TEXT NOT NULL
-    REFERENCES system_procedure_definitions(key) ON DELETE RESTRICT
+    REFERENCES system_procedure_definitions(key) ON DELETE RESTRICT,
+  CHECK (length(delegation_id) = 36 AND delegation_id NOT GLOB '*[^0-9a-f-]*' AND substr(delegation_id, 9, 1) = '-' AND substr(delegation_id, 14, 1) = '-' AND substr(delegation_id, 19, 1) = '-' AND substr(delegation_id, 24, 1) = '-' AND length(replace(delegation_id, '-', '')) = 32 AND substr(delegation_id, 15, 1) GLOB '[1-8]' AND substr(delegation_id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE UNIQUE INDEX system_delegation_procedure_scopes_pair_uniq

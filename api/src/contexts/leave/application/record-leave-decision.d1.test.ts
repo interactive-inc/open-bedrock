@@ -28,9 +28,9 @@ test.each(["approve", "reject"] as const)(
     if (binding instanceof Error) throw binding
     await c.database.batch([
       c.database.prepare(`INSERT INTO system_iam_roles
-    (id, key, kind, name, created_at, updated_at) VALUES ('leave-approve-role', 'test:leave-approve', 'custom', 'Leave decision', 0, 0)`),
+    (id, key, kind, name, created_at, updated_at) VALUES ('7fc307e2-3577-4f54-8b3f-23690ca2cd46', 'test:leave-approve', 'custom', 'Leave decision', 0, 0)`),
       c.database.prepare(
-        "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('leave-approve-role', 'leave:approve')",
+        "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('7fc307e2-3577-4f54-8b3f-23690ca2cd46', 'leave:approve')",
       ),
     ])
     await c.database
@@ -47,9 +47,9 @@ test.each(["approve", "reject"] as const)(
     for (const [index, actor] of c.people.slice(1, 3).entries()) {
       await c.database
         .prepare(
-          "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES (?1, ?2, 'leave-approve-role', 0)",
+          "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES (?1, ?2, '7fc307e2-3577-4f54-8b3f-23690ca2cd46', 0)",
         )
-        .bind(`leave-approval:${actor.accountId}`, actor.accountId)
+        .bind(crypto.randomUUID(), actor.accountId)
         .run()
       const command = {
         leaveRequestId: c.requestId,
@@ -119,7 +119,7 @@ test.each(["approve", "reject"] as const)(
         if (outsider === undefined) throw new Error("nonparticipant missing")
         await c.database
           .prepare(
-            "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('leave-outsider', ?1, 'leave-approve-role', 0)",
+            "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('0f611277-e48f-461e-8107-9d69c339a1ec', ?1, '7fc307e2-3577-4f54-8b3f-23690ca2cd46', 0)",
           )
           .bind(outsider.accountId)
           .run()
@@ -252,7 +252,7 @@ test.each(["approve", "reject"] as const)(
       ).toBe(1)
       await c.database
         .prepare(
-          "DELETE FROM system_role_bindings WHERE account_id = ?1 AND role_id = 'leave-approve-role'",
+          "DELETE FROM system_role_bindings WHERE account_id = ?1 AND role_id = '7fc307e2-3577-4f54-8b3f-23690ca2cd46'",
         )
         .bind(actor.accountId)
         .run()

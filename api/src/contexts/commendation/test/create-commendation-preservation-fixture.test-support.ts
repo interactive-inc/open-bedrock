@@ -69,15 +69,15 @@ export async function createCommendationPreservationFixture(database: D1Database
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('commendation-test-manager','commendation:test-manager','custom','Commendation manager',0,0);
+    VALUES ('de4fc17c-2333-449b-86b7-616440266b1c','commendation:test-manager','custom','Commendation manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('commendation-test-manager','commendation:manage'),
-      ('commendation-test-manager','system:admin'),
-      ('commendation-test-manager','system:record:preserve'),
-      ('commendation-test-manager','system:record:read'),
-      ('commendation-test-manager','system:procedure:read');
+      ('de4fc17c-2333-449b-86b7-616440266b1c','commendation:manage'),
+      ('de4fc17c-2333-449b-86b7-616440266b1c','system:admin'),
+      ('de4fc17c-2333-449b-86b7-616440266b1c','system:record:preserve'),
+      ('de4fc17c-2333-449b-86b7-616440266b1c','system:record:read'),
+      ('de4fc17c-2333-449b-86b7-616440266b1c','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('commendation-test-binding','${creator.accountId}','commendation-test-manager',0);`,
+    VALUES ('5b7ad629-3db7-4748-8cb4-07126803e379','${creator.accountId}','de4fc17c-2333-449b-86b7-616440266b1c',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

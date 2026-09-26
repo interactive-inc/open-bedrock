@@ -29,13 +29,13 @@ test.each(["grade", "position"] as const)(
     await execSql(
       db,
       `INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at)
-      VALUES ('definition-only', 'custom:definition-only', 'custom', 'Definition manager', 0, 0);
+      VALUES ('2361a5f0-b0e2-4c85-8029-2476ac5c16f1', 'custom:definition-only', 'custom', 'Definition manager', 0, 0);
       INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-      VALUES ('definition-only', '1', 'definition-only', NULL, NULL, 0, NULL);`,
+      VALUES ('2361a5f0-b0e2-4c85-8029-2476ac5c16f1', '1', '2361a5f0-b0e2-4c85-8029-2476ac5c16f1', NULL, NULL, 0, NULL);`,
     )
     await db
       .prepare(
-        "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('definition-only', ?)",
+        "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('2361a5f0-b0e2-4c85-8029-2476ac5c16f1', ?)",
       )
       .bind(`${type}:manage`)
       .run()
@@ -104,7 +104,9 @@ test.each(["grade", "position"] as const)(
       (await db.prepare("SELECT * FROM company_personnel_annotations ORDER BY id").all()).results,
     ).toEqual(originalEvents.results)
     await db
-      .prepare("DELETE FROM system_iam_role_permissions WHERE role_id = 'definition-only'")
+      .prepare(
+        "DELETE FROM system_iam_role_permissions WHERE role_id = '2361a5f0-b0e2-4c85-8029-2476ac5c16f1'",
+      )
       .run()
     expect(
       (

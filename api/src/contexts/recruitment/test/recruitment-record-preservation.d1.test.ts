@@ -136,7 +136,7 @@ test("採用2台帳を停止中に人の承認で保全し、業務コードを�
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('recruitment-test-manager','system:record:export');
+    VALUES ('ef9eb660-52d0-4c35-8d03-84764bb0f25a','system:record:export');
     DROP TABLE recruitment_candidates;
     DROP TABLE job_openings;`,
   )

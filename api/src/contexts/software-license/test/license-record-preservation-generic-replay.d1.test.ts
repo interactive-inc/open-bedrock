@@ -26,7 +26,7 @@ test("共通承認APIでも前段階の同一承認を再送でき、次段階�
   const fixture = await createLicensePreservationFixture(await pool.next(), "reject", true)
   await execSql(
     fixture.f.database,
-    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('license-test-manager','system:record:preserve')",
+    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('7a047d56-30bc-4028-888d-2294d2d80c99','system:record:preserve')",
   )
   const submitted = await fixture.f.request(fixture.path, fixture.command)
   expect(submitted.status).toBe(201)
@@ -98,7 +98,7 @@ test("共通承認の再送確認中に認証が失効した場合は受付結�
   const fixture = await createLicensePreservationFixture(await pool.next(), "reject", true)
   await execSql(
     fixture.f.database,
-    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('license-test-manager','system:record:preserve')",
+    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('7a047d56-30bc-4028-888d-2294d2d80c99','system:record:preserve')",
   )
   const submitted = await fixture.f.request(fixture.path, fixture.command)
   expect(submitted.status).toBe(201)
