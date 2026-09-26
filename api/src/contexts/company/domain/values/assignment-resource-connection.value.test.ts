@@ -5,10 +5,11 @@ import { AssignmentResourceConnectionValue } from "@/contexts/company/domain/val
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import type { OrgAssignmentPeriod } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 function resource(overrides: Partial<CompanyResourceProps> = {}) {
   const created = CompanyResourceEntity.create({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "assignment",
     id: "existing:assignment",
     revision: 1,
@@ -18,7 +19,7 @@ function resource(overrides: Partial<CompanyResourceProps> = {}) {
     attributes: {
       employeeId: "employee:1",
       employmentId: "employment:1",
-      organizationUnitId: "unit:1",
+      organizationUnitId: "0190005f-0000-7000-8000-2fcb85764fe2",
       assignmentType: "PRIMARY",
       positionTitle: "Staff",
     },
@@ -34,7 +35,10 @@ function period(overrides: Partial<OrgAssignmentPeriod> = {}): OrgAssignmentPeri
     revision: 1,
     employeeId: restoreWorkforceId("employee", "employee:1"),
     employmentId: restoreWorkforceId("employment", "employment:1"),
-    organizationUnitId: restoreWorkforceId("organization_unit", "unit:1"),
+    organizationUnitId: restoreWorkforceId(
+      "organization_unit",
+      "0190005f-0000-7000-8000-2fcb85764fe2",
+    ),
     assignmentType: "PRIMARY",
     positionTitle: "Staff",
     managerEmployeeId: null,
@@ -65,7 +69,7 @@ test("過去の所属内容の違いを、現在の一致で上書きしない",
   const current = resource({ revision: 2, effectiveFrom: restoreCalendarDate("2025-01-01") })
   const changes: ReadonlyArray<CompanyResourceProps["attributes"]> = [
     { employmentId: "employment:2" },
-    { organizationUnitId: "unit:2" },
+    { organizationUnitId: "0190005f-0000-7000-8000-c81109c4de10" },
     { assignmentType: "CONCURRENT" },
     { positionTitle: "Manager" },
   ]
@@ -85,7 +89,7 @@ test("同じ公開所属内の異動と役職変更を、対応する各期間�
       effectiveFrom: restoreCalendarDate("2025-01-01"),
       attributes: {
         ...resource().attributes,
-        organizationUnitId: "unit:2",
+        organizationUnitId: "0190005f-0000-7000-8000-c81109c4de10",
         positionTitle: "Manager",
       },
     }),
@@ -95,7 +99,10 @@ test("同じ公開所属内の異動と役職変更を、対応する各期間�
     period({
       periodId: restoreWorkforceId("period", "legacy:2"),
       startsOn: restoreCalendarDate("2025-01-01"),
-      organizationUnitId: restoreWorkforceId("organization_unit", "unit:2"),
+      organizationUnitId: restoreWorkforceId(
+        "organization_unit",
+        "0190005f-0000-7000-8000-c81109c4de10",
+      ),
       positionTitle: "Manager",
     }),
   ]

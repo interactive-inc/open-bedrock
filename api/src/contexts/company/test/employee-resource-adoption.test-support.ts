@@ -21,6 +21,7 @@ import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { createCompanyD1TestDatabaseTemplate } from "@/contexts/company/test/create-company-d1-test-database-template.test-support"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
   .filter((file) => file.endsWith(".sql"))
@@ -42,7 +43,7 @@ const employmentId = restoreWorkforceId("employment", "employment:adoption")
 const actor = CompanyActorValue.restore({
   accountId: "account:adoption",
   employeeId: adoptionEmployeeId,
-  organizationIds: ["organization:default"],
+  organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
   capabilities: ["company:admin"],
 })
 
@@ -61,7 +62,7 @@ export async function createEmployeeAdoptionFixture(
     externalRequestId: null,
   }
   await database.exec(`INSERT INTO company_organizations (id, revision, name, representative_name, created_at, updated_at)
-    VALUES ('organization:default', 0, 'Example', 'Example', 0, 0);
+    VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 0, 'Example', 'Example', 0, 0);
     INSERT INTO company_employees (id, official_name, employee_code, email, phone, created_at, updated_at)
     VALUES ('employee:adoption', 'Current Person', 'ADOPT-001', 'you@example.com', NULL, 0, 0);
     INSERT INTO company_employments (id, employee_id, contract_name, employment_type, hire_date, termination_date, status, created_at, updated_at)
@@ -69,7 +70,7 @@ export async function createEmployeeAdoptionFixture(
     INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('account:adoption', 'active', 0, 0, 0);
     INSERT INTO company_account_employee_links (account_id, employee_id) VALUES ('account:adoption', 'employee:adoption');
     INSERT INTO company_account_profiles (organization_id, account_id, display_name, created_at, updated_at)
-    VALUES ('organization:default', 'account:adoption', 'Current Person', 0, 0);`)
+    VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account:adoption', 'Current Person', 0, 0);`)
   const initial = await prepareUnpublishedEmployment(database, {
     employeeId: adoptionEmployeeId,
     employmentId,
@@ -117,7 +118,7 @@ export async function createEmployeeAdoptionFixture(
   )
   if (leave instanceof Error) throw leave
   const person: AdoptionResource = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "person",
     id: "person:adoption",
     revision: 1,

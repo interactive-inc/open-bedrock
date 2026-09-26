@@ -20,12 +20,12 @@ FROM company_organization_lifecycle_states
 WHERE id = 1;
 
 INSERT INTO company_organization_units (id, created_at) VALUES
-  ('department:D001', 1767225600000),
-  ('department:D002', 1767225600000),
-  ('department:D003', 1767225600000),
-  ('department:D004', 1767225600000),
-  ('department:D005', 1767225600000),
-  ('department:D006', 1767225600000);
+  ('0190005e-0000-7000-8000-000044303031', 1767225600000),
+  ('0190005e-0000-7000-8000-000044303032', 1767225600000),
+  ('0190005e-0000-7000-8000-000044303033', 1767225600000),
+  ('0190005e-0000-7000-8000-000044303034', 1767225600000),
+  ('0190005e-0000-7000-8000-000044303035', 1767225600000),
+  ('0190005e-0000-7000-8000-000044303036', 1767225600000);
 
 INSERT INTO company_organization_unit_period_versions (
   period_id, revision, organization_unit_id, code, official_name, kind,
@@ -33,12 +33,12 @@ INSERT INTO company_organization_unit_period_versions (
   recorded_by_action_id, recorded_at
 )
 VALUES
-  ('department:D001:initial', 1, 'department:D001', 'D001', '経営企画部', 'DEPARTMENT', 'company:root', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000),
-  ('department:D002:initial', 1, 'department:D002', 'D002', '人事部', 'DEPARTMENT', 'department:D001', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000),
-  ('department:D003:initial', 1, 'department:D003', 'D003', '開発部', 'DEPARTMENT', 'department:D001', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000),
-  ('department:D004:initial', 1, 'department:D004', 'D004', '営業部', 'DEPARTMENT', 'department:D001', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000),
-  ('department:D005:initial', 1, 'department:D005', 'D005', 'カスタマーサクセス部', 'DEPARTMENT', 'department:D004', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000),
-  ('department:D006:initial', 1, 'department:D006', 'D006', '総務部', 'DEPARTMENT', 'department:D001', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000);
+  ('department:D001:initial', 1, '0190005e-0000-7000-8000-000044303031', 'D001', '経営企画部', 'DEPARTMENT', '282ccd01-cb30-4d0a-84b4-c675bbbe473c', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000),
+  ('department:D002:initial', 1, '0190005e-0000-7000-8000-000044303032', 'D002', '人事部', 'DEPARTMENT', '0190005e-0000-7000-8000-000044303031', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000),
+  ('department:D003:initial', 1, '0190005e-0000-7000-8000-000044303033', 'D003', '開発部', 'DEPARTMENT', '0190005e-0000-7000-8000-000044303031', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000),
+  ('department:D004:initial', 1, '0190005e-0000-7000-8000-000044303034', 'D004', '営業部', 'DEPARTMENT', '0190005e-0000-7000-8000-000044303031', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000),
+  ('department:D005:initial', 1, '0190005e-0000-7000-8000-000044303035', 'D005', 'カスタマーサクセス部', 'DEPARTMENT', '0190005e-0000-7000-8000-000044303034', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000),
+  ('department:D006:initial', 1, '0190005e-0000-7000-8000-000044303036', 'D006', '総務部', 'DEPARTMENT', '0190005e-0000-7000-8000-000044303031', '2026-01-01', NULL, 0, 'initialization:company-organization', 1767225600000);
 
 WITH assignments(employee_id, department_code, position_title, manager_employee_id) AS (
   VALUES
@@ -66,7 +66,7 @@ SELECT
   1,
   'employment:seed-employment-' || employee_id,
   employee_id,
-  'department:' || department_code,
+  '0190005e-0000-7000-8000-' || substr('000000000000' || lower(hex(department_code)), -12),
   'PRIMARY',
   position_title,
   manager_employee_id,
@@ -96,7 +96,7 @@ SELECT
   1,
   'employment:seed-employment-' || employee_id,
   employee_id,
-  'department:' || department_code,
+  '0190005e-0000-7000-8000-' || substr('000000000000' || lower(hex(department_code)), -12),
   'MANAGER',
   '2026-01-01',
   NULL,
@@ -115,7 +115,7 @@ VALUES (
   1,
   'employment:seed-employment-3',
   '3',
-  'department:D002',
+  '0190005e-0000-7000-8000-000044303032',
   'PEOPLE_OPERATIONS',
   '2026-01-01',
   NULL,

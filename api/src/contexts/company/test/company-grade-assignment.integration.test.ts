@@ -3,6 +3,7 @@ import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/r
 import { expect, test } from "bun:test"
 import { createCompanyGradeAssignmentTestContext } from "@/contexts/company/test/company-grade-assignment.test-support"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test("等級定義と雇用への割当を一緒に保存し、将来の昇格・過去参照・再送を保つ", async () => {
   const f = await createCompanyGradeAssignmentTestContext()
@@ -141,14 +142,14 @@ test("将来の等級定義の改名でも割当期間を保ち、終了と後�
   ).toBe(201)
   const repository = new D1CompanyResourceRepository({ database: f.database })
   const past = await repository.findMany({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     types: ["grade"],
     effectiveOn: restoreCalendarDate("2030-07-31"),
   })
   if (!past.ok) throw past.cause
   expect(past.resources[0]?.attributes).toEqual(f.grade.attributes)
   const current = await repository.findMany({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     types: ["grade"],
     effectiveOn: restoreCalendarDate("2030-08-01"),
   })
@@ -178,7 +179,7 @@ test("同時更新を一つだけ確定し、会社範囲外からは成功済�
   f.setActor(
     CompanyActorValue.restore({
       ...f.creator,
-      organizationIds: ["organization:other"],
+      organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
       capabilities: ["company:admin"],
     }),
   )

@@ -4,6 +4,7 @@ import type { CompanyResourceProps } from "@/contexts/company/domain/entities/co
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 /** 法人・拠点・勤務場所と安定した組織IDを持つ、独立した会社台帳を作る。 */
 export function createCompanyPlaceTestContext(schemaSql?: string) {
@@ -18,7 +19,7 @@ export function createCompanyPlaceTestContext(schemaSql?: string) {
   const database = createCompanyD1TestDatabase(schema)
   const repository = new D1CompanyResourceRepository({ database })
   const common: Omit<CompanyResourceProps, "type" | "id" | "attributes"> = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     revision: 1,
     state: "active",
     effectiveFrom: restoreCalendarDate("2030-01-01"),
@@ -53,7 +54,7 @@ export function createCompanyPlaceTestContext(schemaSql?: string) {
     type: "organization-unit",
     id: "period:root",
     attributes: {
-      organizationUnitId: "unit:root",
+      organizationUnitId: "0190005f-0000-7000-8000-3d39a82ae356",
       code: "ROOT",
       officialName: "Company",
       kind: "COMPANY",
@@ -69,7 +70,7 @@ export function createCompanyPlaceTestContext(schemaSql?: string) {
       officialName: "Office",
       siteId: site.id,
       kind: "office",
-      organizationUnitId: "unit:root",
+      organizationUnitId: "0190005f-0000-7000-8000-3d39a82ae356",
     },
   }
   const resources = [legalEntity, site, unit, workplace]

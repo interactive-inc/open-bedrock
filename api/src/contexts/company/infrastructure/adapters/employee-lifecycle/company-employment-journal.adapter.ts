@@ -12,6 +12,7 @@ import { CompanyEmploymentResourceHistoryAdapter } from "@/contexts/company/infr
 import { AbortWhenPreviousStatementChangedNoRowsAdapter } from "@/contexts/company/infrastructure/adapters/database/abort-when-previous-statement-changed-no-rows.adapter"
 import { z } from "zod"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const bindingRow = z.object({
   organization_id: z.string(),
@@ -51,7 +52,7 @@ export class CompanyEmploymentJournalAdapter {
           FROM company_workforce_resource_bindings WHERE resource_type = 'employee' AND resource_id = ?1`)
           .bind(props.action.employeeId),
         this.c.prepare(
-          `SELECT revision FROM company_organizations WHERE id = 'organization:default'`,
+          `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
         ),
         this.c
           .prepare(`SELECT resource_id, organization_id, resource_revision, lifecycle_revision
@@ -129,7 +130,7 @@ export class CompanyEmploymentJournalAdapter {
         // 公開履歴と食い違う記録を作らないよう拒否し、記録の前なら保存時にも同じ条件を再検査する。
         const completed = await this.c
           .prepare(
-            "SELECT 1 FROM company_workforce_connection_completions WHERE organization_id = 'organization:default'",
+            `SELECT 1 FROM company_workforce_connection_completions WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
           )
           .first()
         if (completed !== null)
@@ -141,7 +142,7 @@ export class CompanyEmploymentJournalAdapter {
           statements: [
             this.c.prepare(`SELECT CASE WHEN EXISTS (
               SELECT 1 FROM company_workforce_connection_completions
-              WHERE organization_id = 'organization:default'
+              WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'
             ) THEN json_extract('', '$') ELSE 1 END`),
           ],
           bindings: [],
@@ -151,7 +152,7 @@ export class CompanyEmploymentJournalAdapter {
       }
       if (
         revision.data === null ||
-        employee.data.organization_id !== "organization:default" ||
+        employee.data.organization_id !== COMPANY_DEFAULT_ORGANIZATION_ID ||
         employee.data.lifecycle_revision !== props.revisions.employeeRevision ||
         employments.data.some(
           (binding) =>

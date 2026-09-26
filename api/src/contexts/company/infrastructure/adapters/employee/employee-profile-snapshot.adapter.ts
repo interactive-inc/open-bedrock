@@ -2,6 +2,7 @@ import { z } from "zod"
 import type { EmployeeProfileSnapshot } from "@/contexts/company/domain/entities/employee-profile-change.entity"
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Context = D1Database
 const rowSchema = z.object({
@@ -39,27 +40,27 @@ export class EmployeeProfileSnapshotAdapter {
       const row = await this.c
         .prepare(`WITH snapshot AS (
         SELECT coalesce(?3, revision) AS revision FROM company_organizations
-        WHERE id = 'organization:default' AND (?3 IS NULL OR revision >= ?3)
+        WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND (?3 IS NULL OR revision >= ?3)
       ), employee AS (
         SELECT resource.* FROM company_resource_revisions AS resource
         JOIN company_workforce_resource_bindings AS binding
           ON binding.organization_id = resource.organization_id
           AND binding.resource_id = resource.resource_id AND binding.resource_type = 'employee'
         CROSS JOIN snapshot
-        WHERE binding.employee_id = ?1 AND resource.organization_id = 'organization:default'
+        WHERE binding.employee_id = ?1 AND resource.organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'
           AND resource.resource_type = 'employee' AND resource.organization_revision <= snapshot.revision
           AND resource.effective_from <= ?2
         ORDER BY resource.effective_from DESC, resource.revision DESC LIMIT 1
       ), person AS (
         SELECT resource.* FROM company_resource_revisions AS resource CROSS JOIN snapshot
         JOIN employee ON resource.resource_id = json_extract(employee.attributes_json, '$.personId')
-        WHERE resource.organization_id = 'organization:default' AND resource.resource_type = 'person'
+        WHERE resource.organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND resource.resource_type = 'person'
           AND resource.organization_revision <= snapshot.revision AND resource.effective_from <= ?2
           AND employee.state = 'active' AND (employee.effective_to IS NULL OR employee.effective_to > ?2)
         ORDER BY resource.effective_from DESC, resource.revision DESC LIMIT 1
       ) SELECT snapshot.revision AS organization_revision,
         (SELECT max(revision) FROM company_resource_revisions
-          WHERE organization_id = 'organization:default' AND resource_type = 'person'
+          WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND resource_type = 'person'
             AND resource_id = person.resource_id AND organization_revision <= snapshot.revision) AS person_revision,
         person.revision AS effective_revision, person.resource_id AS person_id,
         json_extract(employee.attributes_json, '$.employeeCode') AS employee_code,
@@ -86,7 +87,7 @@ export class EmployeeProfileSnapshotAdapter {
       const attributes = attributesSchema.safeParse(JSON.parse(values.attributes_json))
       if (!attributes.success) return attributes.error
       const person = CompanyResourceEntity.create({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "person",
         id: values.person_id,
         revision: values.effective_revision,

@@ -6,6 +6,7 @@ import { initializeStandardCompanyTestState } from "@tests/api/support/initializ
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
 import { execSql } from "@tests/d1/support/exec-sql"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 let pool: LocalD1Pool
 
@@ -42,7 +43,7 @@ test.each(["grade", "position"] as const)(
     const jwtSecret = "definition-role-boundary-test-secret"
     const token = await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(1) })
     const common = { db, jwtSecret, token }
-    const headers = { "x-company-organization-id": "organization:default" }
+    const headers = { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID }
     const snapshot = await requestWithContext({
       ...common,
       path: `/company/definitions?type=${type}`,
@@ -56,7 +57,7 @@ test.each(["grade", "position"] as const)(
       reason: "Confirmed definition",
       resources: [
         {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type,
           id: `${type}:scoped`,
           revision: 1,

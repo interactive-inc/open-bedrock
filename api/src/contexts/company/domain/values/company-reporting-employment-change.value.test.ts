@@ -3,6 +3,7 @@ import { CompanyResourceEntity } from "@/contexts/company/domain/entities/compan
 import { CompanyReportingEmploymentChangeValue } from "@/contexts/company/domain/values/company-reporting-employment-change.value"
 import { CompanyReportingRelationTimelineValue } from "@/contexts/company/domain/values/company-reporting-relation-timeline.value"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 function version(
   revision: number,
@@ -11,7 +12,7 @@ function version(
   state: "active" | "void" = "active",
 ) {
   const resource = CompanyResourceEntity.create({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "reporting-relation",
     id: "reporting:one",
     revision,
@@ -21,7 +22,7 @@ function version(
     attributes: {
       employeeId: "employee:one",
       managerEmployeeId: manager,
-      organizationUnitId: "unit:one",
+      organizationUnitId: "0190005f-0000-7000-8000-c9ae95875c9c",
     },
   })
   if (resource instanceof Error) throw resource

@@ -57,7 +57,7 @@ export async function createLifecycleRouteDb(
               assignment_type, position_title, manager_employee_id, starts_on, ends_on,
               is_void, recorded_by_action_id, recorded_at)
            VALUES ('test:assignment:5:primary:D003', 2, 'test:5:employment', '5',
-                   'department:D003', 'PRIMARY', 'シニアエンジニア', '4', ?1, ?2, 0, ?3, 2)`,
+                   '0190005e-0000-7000-8000-000044303033', 'PRIMARY', 'シニアエンジニア', '4', ?1, ?2, 0, ?3, 2)`,
         )
         .bind(
           options.subjectAssignmentStartsOn ?? "2025-01-01",
@@ -75,7 +75,7 @@ export async function createLifecycleRouteDb(
               responsibility_type, starts_on, ends_on, is_void,
               recorded_by_action_id, recorded_at)
            VALUES ('test:responsibility:4:manager:D003', 2, 'test:4:employment', '4',
-                   'department:D003', 'MANAGER', '2025-01-01', ?1, 0, ?2, 2)`,
+                   '0190005e-0000-7000-8000-000044303033', 'MANAGER', '2025-01-01', ?1, 0, ?2, 2)`,
         )
         .bind(options.managerEndsOn, operationId),
       db
@@ -85,7 +85,7 @@ export async function createLifecycleRouteDb(
               assignment_type, position_title, manager_employee_id, starts_on, ends_on,
               is_void, recorded_by_action_id, recorded_at)
            VALUES ('test:assignment:4:primary:D003', 2, 'test:4:employment', '4',
-                   'department:D003', 'PRIMARY', '開発マネージャー', '1',
+                   '0190005e-0000-7000-8000-000044303033', 'PRIMARY', '開発マネージャー', '1',
                    '2025-01-01', ?1, 0, ?2, 2)`,
         )
         .bind(options.managerEndsOn, operationId),
@@ -96,7 +96,7 @@ export async function createLifecycleRouteDb(
               assignment_type, position_title, manager_employee_id, starts_on, ends_on,
               is_void, recorded_by_action_id, recorded_at)
            VALUES ('test:assignment:5:primary:D003', 2, 'test:5:employment', '5',
-                   'department:D003', 'PRIMARY', 'シニアエンジニア', '4',
+                   '0190005e-0000-7000-8000-000044303033', 'PRIMARY', 'シニアエンジニア', '4',
                    '2025-01-01', ?1, 0, ?2, 2)`,
         )
         .bind(options.managerEndsOn, operationId),

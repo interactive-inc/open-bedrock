@@ -7,6 +7,7 @@ import { ApplicationError, ValidationError } from "@/lib/errors"
 import { UnauthorizedError } from "@/lib/http/errors"
 import { toHttpException } from "@/lib/http/to-http-exception"
 import { verifyBearer } from "@/api/http/verify-bearer"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 // @authorization service - session を application service に渡して判定する
 export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
@@ -36,7 +37,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
         actor: CompanyActorValue.restore({
           accountId: String(props.session.accountId),
           employeeId: String(props.session.employeeId),
-          organizationIds: ["organization:default"],
+          organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
           capabilities: ["company:write"],
         }),
         database: c.env.DB,
@@ -49,7 +50,7 @@ export const DELETE = factory.createHandlers(verifyBearer, async (c) => {
           metadata: { assignment_id: props.assignmentId },
         }),
       }).revoke({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         commandId: props.commandId,
         expectedRevision: props.expectedRevision,
         assignmentId: props.assignmentId,

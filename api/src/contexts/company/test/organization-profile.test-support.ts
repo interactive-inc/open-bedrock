@@ -17,6 +17,7 @@ import {
 } from "@/contexts/company/interface/routes/company.profile"
 import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const sql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
   .filter((file) => file.endsWith(".sql"))
@@ -71,7 +72,7 @@ export async function createOrganizationProfileFixture() {
   )
   await database
     .prepare(
-      "UPDATE company_organizations SET name = ?1, representative_name = ?2 WHERE id = 'organization:default'",
+      `UPDATE company_organizations SET name = ?1, representative_name = ?2 WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
     )
     .bind(defaults.name, defaults.representativeName)
     .run()
@@ -80,7 +81,7 @@ export async function createOrganizationProfileFixture() {
     current: CompanyActorValue.restore({
       accountId: "account:profile",
       employeeId: null,
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:admin"],
     }),
   }
@@ -115,7 +116,7 @@ export async function createOrganizationProfileFixture() {
     client.company["organization-profile"].$put({ header: { "idempotency-key": key }, json: body })
   const publicRead = async (effectiveOn?: string) => {
     const response = await client.company.profile.$get({
-      header: { "x-company-organization-id": "organization:default" },
+      header: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID },
       query: effectiveOn === undefined ? {} : { effective_on: effectiveOn },
     })
     if (Number(response.status) !== 200) throw new Error(`public profile read: ${response.status}`)
@@ -133,13 +134,13 @@ export async function createOrganizationProfileFixture() {
   const baseline = () =>
     database
       .prepare(
-        "SELECT name, representative_name FROM company_organizations WHERE id = 'organization:default'",
+        `SELECT name, representative_name FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
       )
       .first<{ name: string; representative_name: string }>()
   const state = () =>
     database
       .prepare(
-        "SELECT revision, (SELECT count(*) FROM company_resource_revisions WHERE resource_type = 'company-profile') AS profiles, (SELECT count(*) FROM company_profile_change_receipts) AS receipts FROM company_organizations WHERE id = 'organization:default'",
+        `SELECT revision, (SELECT count(*) FROM company_resource_revisions WHERE resource_type = 'company-profile') AS profiles, (SELECT count(*) FROM company_profile_change_receipts) AS receipts FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
       )
       .first<{ revision: number; profiles: number; receipts: number }>()
   return {

@@ -213,13 +213,13 @@ describe("両製品のDBで連続した組織・所属期間を参照する", ()
       .operation(
         (id) => [
           f.database.prepare(
-            "INSERT INTO company_organization_units (id, created_at) VALUES ('unit:child', 0)",
+            "INSERT INTO company_organization_units (id, created_at) VALUES ('0190005f-0000-7000-8000-2924942897cc', 0)",
           ),
           f.unit(id, {
             periodId: "period:child",
             revision: 1,
             startsOn: "2020-01-01",
-            unitId: "unit:child",
+            unitId: "0190005f-0000-7000-8000-2924942897cc",
             code: "CHILD",
             kind: "DEPARTMENT",
             parentId: f.root.unitId,

@@ -4,6 +4,7 @@ import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/r
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test.each([false, true])(
   "将来の人物改訂と過去会社版を保持して現在情報を同期する: 監査失敗=%s",
@@ -12,7 +13,7 @@ test.each([false, true])(
     expect((await c.application.execute(c.input)).kind).toBe("applied")
     const repository = new D1CompanyResourceRepository({ database: c.database })
     const people = await repository.findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["person"],
     })
     if (!people.ok || people.resources[0] === undefined) throw new Error("missing person")
@@ -47,7 +48,7 @@ test.each([false, true])(
     const beforeRevision = c.input.expectedRevision + 3
     const read = async (date: string, organizationRevision?: number) => {
       const result = await repository.findMany({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         types: ["person"],
         ids: [person.id],
         effectiveOn: restoreCalendarDate(date),
@@ -78,7 +79,9 @@ test.each([false, true])(
       expect((await read(today))?.readText("officialName")).toBe("Example Person")
       expect(
         await c.database
-          .prepare("SELECT revision FROM company_organizations WHERE id='organization:default'")
+          .prepare(
+            `SELECT revision FROM company_organizations WHERE id='${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+          )
           .first<number>("revision"),
       ).toBe(beforeRevision)
       expect(

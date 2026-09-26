@@ -2,6 +2,7 @@ import { CompanyAccountProfileEntity } from "@/contexts/company/domain/entities/
 import { companyAccountProfiles } from "@/contexts/company/infrastructure/schema/company"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 /**
  * Account の発行と同じ batch へ載せる、会社上の表示名を作る文を返す公開境界。
@@ -23,7 +24,7 @@ export function buildCompanyAccountProfileUpsert(
   return database
     .insert(companyAccountProfiles)
     .values({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       accountId,
       displayName,
       createdAt: timestamp,

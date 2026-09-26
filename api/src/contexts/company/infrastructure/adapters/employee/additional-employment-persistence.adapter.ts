@@ -4,6 +4,7 @@ import type { EmploymentType } from "@/contexts/company/domain/definitions/emplo
 import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
 import { CompanyWorkforceResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-workforce-resource-projection.adapter"
 import { drizzle } from "drizzle-orm/d1"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Employment = Readonly<{
   employeeId: string
@@ -40,7 +41,7 @@ export class AdditionalEmploymentPersistenceAdapter {
         recordedAt: input.occurredAt.getTime(),
         resources: [
           {
-            organizationId: "organization:default",
+            organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
             type: "employment",
             id: input.employmentId,
             revision: 1,

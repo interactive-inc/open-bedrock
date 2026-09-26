@@ -1,3 +1,4 @@
+import type { companyOrganizationId } from "@/lib/api/company-organization-id"
 export type WorkflowApproverSelector =
   | { type: "role"; role_key: string }
   | { type: "employee"; employee_code: string }
@@ -22,7 +23,7 @@ export type ApplicationWorkflowStep = {
   key: string
   name: string
   governance_authority?: {
-    organization_id: "organization:default"
+    organization_id: typeof companyOrganizationId
     responsibility_code: string
     scope:
       | null

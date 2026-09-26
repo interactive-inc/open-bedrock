@@ -1,6 +1,7 @@
 import type { EmployeeResourceAdoptionConfirmation } from "@/contexts/company/domain/values/employee-resource-adoption-correction.value"
 import { CompanyValidationError } from "@/contexts/company/domain/errors"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Context = D1Database
 
@@ -49,7 +50,7 @@ export class EmployeeResourceAdoptionCorrectionAdapter {
           .prepare(`INSERT INTO company_resource_revisions
           (organization_id, resource_type, resource_id, revision, organization_revision,
            state, effective_from, effective_to, attributes_json, command_id, actor_account_id, reason, recorded_at)
-          SELECT 'organization:default', json_extract(value, '$.type'), json_extract(value, '$.id'),
+          SELECT '${COMPANY_DEFAULT_ORGANIZATION_ID}', json_extract(value, '$.type'), json_extract(value, '$.id'),
             json_extract(value, '$.revision'), ?2, json_extract(value, '$.state'),
             json_extract(value, '$.effectiveFrom'), json_extract(value, '$.effectiveTo'),
             json_extract(value, '$.attributesJson'), ?3, json_extract(value, '$.actorAccountId'),
@@ -64,7 +65,7 @@ export class EmployeeResourceAdoptionCorrectionAdapter {
           .prepare(`INSERT INTO company_resource_heads
           (organization_id, resource_type, resource_id, revision, organization_revision,
            state, effective_from, effective_to, attributes_json, updated_at)
-          SELECT 'organization:default', json_extract(value, '$.type'), json_extract(value, '$.id'),
+          SELECT '${COMPANY_DEFAULT_ORGANIZATION_ID}', json_extract(value, '$.type'), json_extract(value, '$.id'),
             json_extract(value, '$.revision'), ?2, json_extract(value, '$.state'),
             json_extract(value, '$.effectiveFrom'), json_extract(value, '$.effectiveTo'),
             json_extract(value, '$.attributesJson'), json_extract(value, '$.recordedAt')

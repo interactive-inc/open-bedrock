@@ -10,6 +10,8 @@ import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
+import { alignHistoricalMigrationSql } from "@/contexts/company/test/align-historical-organization-identity.test-support"
 
 async function fixture() {
   const files = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
@@ -26,13 +28,13 @@ async function fixture() {
   const auditMigrations = await prepareHistoricalCompanyResourceRevisionFixture(database)
   // 移行前schemaを現行writerで準備する間だけ、当時の対応表を読取用に投影する。
   await database.exec(`CREATE VIEW company_account_employee_resource_bindings AS
-    SELECT 'organization:default' AS organization_id, account_id, employee_id
+    SELECT '${COMPANY_DEFAULT_ORGANIZATION_ID}' AS organization_id, account_id, employee_id
     FROM company_account_employee_links`)
   const c = await createExternalIdentityImportTestContext("oidc", database)
   expect((await c.application.execute(c.input)).kind).toBe("applied")
   const repository = new D1CompanyResourceRepository({ database })
   const resources = await repository.findMany({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     types: ["account-employee-link"],
   })
   if (!resources.ok) throw resources.cause
@@ -40,7 +42,9 @@ async function fixture() {
   if (link === undefined) throw new Error("existing public correspondence missing")
   const revise = async (attributes = link.attributes) => {
     const revision = await database
-      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+      .prepare(
+        `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+      )
       .first<number>("revision")
     if (revision === null) throw new Error("organization missing")
     const change = CompanyResourceChangeEntity.create({
@@ -70,9 +74,11 @@ async function fixture() {
       if (file === first)
         await database.exec("DROP VIEW company_account_employee_resource_bindings")
       await database.batch(
-        splitSqlStatements(readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8")).map(
-          (sql) => database.prepare(sql),
-        ),
+        splitSqlStatements(
+          alignHistoricalMigrationSql(
+            readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8"),
+          ),
+        ).map((sql) => database.prepare(sql)),
       )
     }
   }

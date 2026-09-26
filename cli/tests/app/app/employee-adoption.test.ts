@@ -48,7 +48,7 @@ const body = {
   reason: "Confirmed history",
   resources: [
     {
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       type: "person",
       id: "person:adoption",
       revision: 1,
@@ -58,7 +58,7 @@ const body = {
       attributes: { officialName: "Example Person" },
     },
     {
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       type: "employee",
       id: "employee:adoption",
       revision: 1,

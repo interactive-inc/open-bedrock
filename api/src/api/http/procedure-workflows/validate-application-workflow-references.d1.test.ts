@@ -3,6 +3,7 @@ import { zApplicationWorkflow } from "@/contexts/company/domain/definitions/comp
 import { validateApplicationWorkflowReferences } from "@/api/http/procedure-workflows/validate-application-workflow-references"
 import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
 import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 let local: LocalD1
 
@@ -56,7 +57,7 @@ test("公開責務による定義は発行できる", async () => {
         name: "Review",
         approvers: [],
         governance_authority: {
-          organization_id: "organization:default",
+          organization_id: COMPANY_DEFAULT_ORGANIZATION_ID,
           responsibility_code: "REVIEWER",
           scope: null,
         },

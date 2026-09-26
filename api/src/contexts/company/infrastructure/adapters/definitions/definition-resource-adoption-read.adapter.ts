@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { CompanyUnavailableError } from "@/contexts/company/domain/errors"
 import { DefinitionResourceAdoptionSnapshotValue } from "@/contexts/company/domain/values/definition-resource-adoption-snapshot.value"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Context = Readonly<{ env: Readonly<{ DB: D1Database }> }>
 
@@ -15,7 +16,7 @@ export class DefinitionResourceAdoptionReadAdapter {
       const row = await this.c.env.DB.prepare(`SELECT command_id, resource_type, resource_id,
         definition_id, actor_account_id, reason, organization_revision, observed_on,
         snapshot_digest, source_json, recorded_at FROM company_definition_resource_adoptions
-        WHERE organization_id = 'organization:default' AND command_id = ?1`)
+        WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND command_id = ?1`)
         .bind(commandId)
         .first()
       if (row === null) return null

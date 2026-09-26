@@ -9,6 +9,7 @@ import { POST as POST_ORGANIZATION_CHANGE } from "@/contexts/company/interface/r
 import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 /** Companyの公開routeへActorを合成し、両製品で同じHTTP契約を検証する。 */
 export function createCompanyPlaceHttpTestClient(
@@ -16,7 +17,7 @@ export function createCompanyPlaceHttpTestClient(
   actor = CompanyActorValue.restore({
     accountId: "account:operator",
     employeeId: null,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:read", "company:write"],
   }),
 ) {
@@ -47,7 +48,7 @@ export function createCompanyPlaceHttpTestClient(
         method: props.resources === undefined ? "GET" : "POST",
         headers: {
           "content-type": "application/json",
-          "x-company-organization-id": props.organizationId ?? "organization:default",
+          "x-company-organization-id": props.organizationId ?? COMPANY_DEFAULT_ORGANIZATION_ID,
           "if-match": `"${props.revision ?? 0}"`,
           "idempotency-key": props.commandId ?? `http:${props.revision ?? 0}`,
         },

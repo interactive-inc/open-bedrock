@@ -82,13 +82,13 @@ const company = await app.request("/company/bootstrap", {
 }, env)
 assert.equal(company.status, 201, await company.text())
 for (const path of ["/company/employments", "/company/definitions", "/company/changes"]) {
-  const response = await app.request(path, { headers: { ...headers, "x-company-organization-id": "organization:default" } }, env)
+  const response = await app.request(path, { headers: { ...headers, "x-company-organization-id": "ad4f6cb1-774b-43ae-950f-80e9bc67c66d" } }, env)
   assert.equal(response.status, 200, `${path}: ${await response.text()}`)
 }
 const denied = await app.request("/system/proposals/1/versions/1", { headers }, env)
 assert.equal(denied.status, 403)
 for (const path of ["/leave/applications", "/attendance", "/onboarding"]) {
-  const response = await app.request(path, { headers: { ...headers, "x-company-organization-id": "organization:default" } }, env)
+  const response = await app.request(path, { headers: { ...headers, "x-company-organization-id": "ad4f6cb1-774b-43ae-950f-80e9bc67c66d" } }, env)
   assert.equal(response.status, 404, path)
 }
 console.log("Core Worker composition: bootstrap, password login, Company reads, authorization and absent business routes verified")

@@ -1,4 +1,5 @@
 import { OrganizationResourceAdoptionSnapshotValue } from "@/contexts/company/domain/values/organization-resource-adoption-snapshot.value"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 type Context = D1Database
 
 /** 台帳の履歴と版を同じSQLで読み、保存直前にも同じsnapshotを検査する。 */
@@ -30,7 +31,7 @@ export class OrganizationResourceAdoptionSnapshotAdapter {
   }
   private query(): string {
     return `SELECT json_object(
-      'organizationRevision', (SELECT revision FROM company_organizations WHERE id = 'organization:default'),
+      'organizationRevision', (SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'),
       'lifecycleRevision', (SELECT revision FROM company_organization_lifecycle_states WHERE id = 1),
       'pendingOperations', (SELECT count(*) FROM company_organization_change_operations WHERE status = 'PENDING'),
       'organizationUnit', json_object('id', unit.id, 'createdAt', unit.created_at),

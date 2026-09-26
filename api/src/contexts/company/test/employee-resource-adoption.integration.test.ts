@@ -7,6 +7,7 @@ import {
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import { EmployeeResourceAdoptionSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/employee-resource-adoption/employee-resource-adoption-snapshot.adapter"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const counts = (database: D1Database) =>
   database
@@ -147,7 +148,9 @@ describe("existing employee resource adoption", () => {
       .prepare("SELECT id FROM company_employments WHERE id <> 'employment:adoption'")
       .first<string>("id")
     const revision = await f.database
-      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+      .prepare(
+        `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+      )
       .first<number>("revision")
     const write = await f.app.request(
       "/company/employments",
@@ -155,7 +158,7 @@ describe("existing employee resource adoption", () => {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-company-organization-id": "organization:default",
+          "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID,
           "if-match": `"${revision}"`,
           "idempotency-key": "adopted-public",
         },
@@ -163,7 +166,7 @@ describe("existing employee resource adoption", () => {
           reason: "Confirmed future leave",
           resources: [
             {
-              organizationId: "organization:default",
+              organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
               type: "employment",
               id: newContract,
               revision: 2,
@@ -290,13 +293,13 @@ describe("existing employee resource adoption", () => {
       CompanyActorValue.restore({
         accountId: f.actor.accountId,
         employeeId: f.actor.employeeId,
-        organizationIds: ["organization:default"],
+        organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
         capabilities: ["company:write"],
       }),
       CompanyActorValue.restore({
         accountId: f.actor.accountId,
         employeeId: f.actor.employeeId,
-        organizationIds: ["organization:other"],
+        organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
         capabilities: ["company:admin"],
       }),
     ]) {

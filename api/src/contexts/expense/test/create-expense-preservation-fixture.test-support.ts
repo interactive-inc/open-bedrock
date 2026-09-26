@@ -8,6 +8,7 @@ import { openSystemProcedures } from "@system/interface/operations/open-system-p
 import { SystemAttachmentTestBucket } from "@system/test/system-attachment-test-bucket.test-support"
 import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-system-attachment-test-kek-environment.test-support"
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 /** 実認証、会社の期間付き責務、暗号化した保全本文を使う経費予算APIのfixture。 */
 export async function createExpensePreservationFixture(database: D1Database) {
@@ -38,7 +39,7 @@ export async function createExpensePreservationFixture(database: D1Database) {
         {
           ...governance.step,
           governance_authority: {
-            organization_id: "organization:default",
+            organization_id: COMPANY_DEFAULT_ORGANIZATION_ID,
             responsibility_code: "APPROVE",
             scope: null,
           },

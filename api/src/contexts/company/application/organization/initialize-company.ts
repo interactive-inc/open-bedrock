@@ -6,6 +6,7 @@ import { CompanyForbiddenError, CompanyUnavailableError } from "@/contexts/compa
 import type { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import type { CompanyBootstrapRepository } from "@/contexts/company/infrastructure/repositories/organization/company-bootstrap.repository"
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 type Context = Readonly<{
   actor: CompanyActorValue
   repository: CompanyBootstrapRepository
@@ -21,7 +22,7 @@ export class InitializeCompany {
   async execute(input: CompanyBootstrapInput) {
     if (
       !this.c.actor.hasCapability("company:admin") ||
-      !this.c.actor.canAccessOrganization("organization:default")
+      !this.c.actor.canAccessOrganization(COMPANY_DEFAULT_ORGANIZATION_ID)
     )
       return new CompanyForbiddenError()
     const observedOn = resolveCompanyBusinessDate({

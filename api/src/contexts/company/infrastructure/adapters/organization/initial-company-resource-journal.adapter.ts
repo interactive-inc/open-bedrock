@@ -9,6 +9,8 @@ import type { OrganizationResourceAdoptionSnapshotValue } from "@/contexts/compa
 import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
 import { CompanyConflictError, CompanyValidationError } from "@/contexts/company/domain/errors"
 import { drizzle } from "drizzle-orm/d1"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 type Context = D1Database
 
 /** 初期ルートの履歴を保全し、確認した会社名と会社文脈を同じ初期化へ保存する。 */
@@ -43,7 +45,7 @@ export class InitialCompanyResourceJournalAdapter {
       )
     const write = command.props
     const originalRoot: CompanyResourceProps = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "organization-unit",
       id: root.periodId,
       revision: root.revision,
@@ -110,7 +112,7 @@ export class InitialCompanyResourceJournalAdapter {
           isVoid: false,
           recordedByActionId: restoreWorkforceId(
             "personnel_action",
-            `bootstrap:organization:${workforce.employeeId}`,
+            deterministicCompanyId("bootstrap-organization", workforce.employeeId),
           ),
           recordedAt: write.recordedAt,
         },
@@ -128,7 +130,7 @@ export class InitialCompanyResourceJournalAdapter {
         closedRoot,
         currentRoot,
         {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "account-employee-link",
           id: `account-link:${workforce.employeeId}`,
           revision: 1,
@@ -138,9 +140,9 @@ export class InitialCompanyResourceJournalAdapter {
           attributes: { accountId: write.accountId, employeeId: workforce.employeeId },
         },
         {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "assignment",
-          id: `assignment:${workforce.assignmentPeriodId}`,
+          id: deterministicCompanyId("assignment", workforce.assignmentPeriodId),
           revision: 1,
           state: "active",
           effectiveFrom: restoreCalendarDate(write.effectiveOn),
@@ -154,7 +156,7 @@ export class InitialCompanyResourceJournalAdapter {
           },
         },
         {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "company-profile",
           id: "company-profile:default",
           revision: 1,
@@ -185,7 +187,7 @@ export class InitialCompanyResourceJournalAdapter {
         ...beginning.statements,
         this.c
           .prepare(
-            "INSERT INTO company_organization_resource_bindings (organization_unit_id, organization_id, recorded_at) VALUES (?1, 'organization:default', ?2)",
+            `INSERT INTO company_organization_resource_bindings (organization_unit_id, organization_id, recorded_at) VALUES (?1, '${COMPANY_DEFAULT_ORGANIZATION_ID}', ?2)`,
           )
           .bind(root.organizationUnitId, write.recordedAt),
         beginning.commit,
@@ -195,16 +197,19 @@ export class InitialCompanyResourceJournalAdapter {
         this.c
           .prepare(`INSERT INTO company_assignment_resource_bindings
           (resource_id, organization_id, employee_id, resource_revision, recorded_at)
-          VALUES (?1, 'organization:default', ?2, 1, ?3)`)
+          VALUES (?1, '${COMPANY_DEFAULT_ORGANIZATION_ID}', ?2, 1, ?3)`)
           .bind(
-            `assignment:${workforce.assignmentPeriodId}`,
+            deterministicCompanyId("assignment", workforce.assignmentPeriodId),
             workforce.employeeId,
             write.recordedAt,
           ),
         this.c
           .prepare(`INSERT INTO company_assignment_period_bindings
           (period_id, resource_id, period_revision, source_revision) VALUES (?1, ?2, 1, 1)`)
-          .bind(workforce.assignmentPeriodId, `assignment:${workforce.assignmentPeriodId}`),
+          .bind(
+            workforce.assignmentPeriodId,
+            deterministicCompanyId("assignment", workforce.assignmentPeriodId),
+          ),
         ...responsibilities.bindings,
         completion.commit,
       ],

@@ -33,6 +33,7 @@ import type {
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import type { EmploymentType } from "@/contexts/company/domain/definitions/employment-type.definition"
 import { splitAssignmentManagerPeriod } from "@/contexts/company/domain/policies/split-assignment-manager-period.policy"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 
 export type PersonnelActionProjection = {
   newEmploymentType: EmploymentType | null
@@ -84,7 +85,13 @@ function newPeriodId(
   periodType: keyof ProjectionContext["counters"],
 ): string {
   context.counters[periodType] += 1
-  return `${context.command.actionId}:${periodType}:${context.counters[periodType]}`
+  // 同じ発令から同じ期間の ID を作り、投影を再計算しても同じ行を指す。
+  return deterministicCompanyId(
+    "period",
+    context.command.actionId,
+    periodType,
+    context.counters[periodType],
+  )
 }
 
 function recordMutation(context: ProjectionContext, mutation: LifecycleVersionMutation): void {
@@ -208,7 +215,7 @@ function assignmentAt(
 }
 
 function addEmployment(context: ProjectionContext, startsOn: string): EmploymentPeriod {
-  const periodId = `employment:${newPeriodId(context, "employment")}`
+  const periodId = newPeriodId(context, "employment")
   const employment: EmploymentPeriod = {
     periodId,
     employmentId: restoreWorkforceId("employment", periodId),

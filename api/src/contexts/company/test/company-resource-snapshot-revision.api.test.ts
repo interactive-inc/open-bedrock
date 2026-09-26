@@ -15,6 +15,7 @@ import { GET as GET_2 } from "@/contexts/company/interface/routes/company.employ
 import { GET as GET_3 } from "@/contexts/company/interface/routes/company.profile"
 import { GET as GET_4 } from "@/contexts/company/interface/routes/company.account-employee-links"
 import { GET as GET_5 } from "@/contexts/company/interface/routes/company.legacy-personnel-action-records"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test("会社の各台帳は同じ会社版で取得でき、遡及更新後も旧版の内容と有効期間を保つ", async () => {
   const database = createCompanyD1TestDatabase(
@@ -67,7 +68,7 @@ test("会社の各台帳は同じ会社版で取得でき、遡及更新後も�
       recordedAt: revision,
       resources: specifications.map((specification) => ({
         ...specification,
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         revision,
         state: "active",
         effectiveFrom: restoreCalendarDate("2030-01-01"),
@@ -86,7 +87,11 @@ test("会社の各台帳は同じ会社版で取得でき、遡及更新後も�
       CompanyActorValue.restore({
         accountId: "account:reader",
         employeeId: null,
-        organizationIds: [state.authorized ? "organization:default" : "organization:other"],
+        organizationIds: [
+          state.authorized
+            ? COMPANY_DEFAULT_ORGANIZATION_ID
+            : "01900060-0000-7000-8000-12268fccf2cc",
+        ],
         capabilities: ["company:read"],
         permissions: state.employeeRead
           ? ["employee:read", "employee:attributes:read"]
@@ -113,7 +118,7 @@ test("会社の各台帳は同じ会社版で取得でき、遡及更新後も�
     "account-employee-links",
     "legacy-personnel-action-records",
   ]) {
-    const headers = { "x-company-organization-id": "organization:default" }
+    const headers = { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID }
     for (const revision of [1, 2]) {
       const response = await app.request(
         `/${path}?organization_revision=${revision}&effective_on=2030-06-01`,
@@ -157,7 +162,7 @@ test("会社の各台帳は同じ会社版で取得でき、遡及更新後も�
     state.authorized = true
   }
 
-  const headers = { "x-company-organization-id": "organization:default" }
+  const headers = { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID }
   state.employeeRead = false
   for (const path of [
     "people",

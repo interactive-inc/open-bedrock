@@ -14,6 +14,7 @@ import { Hono } from "hono"
 import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
   .filter((file) => file.endsWith(".sql"))
@@ -45,7 +46,7 @@ function createApp(
       CompanyActorValue.restore({
         accountId: "account-1",
         employeeId: null,
-        organizationIds: ["organization:default"],
+        organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
         capabilities,
         permissions: [],
       }),
@@ -80,12 +81,12 @@ describe("Company等級定義の権限", () => {
     const { binding, database } = createTestDatabase()
     const allowed = await createApp(database, ["company:read"]).request(
       "/definitions",
-      { headers: { "x-company-organization-id": "organization:default" } },
+      { headers: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID } },
       { DB: binding },
     )
     const denied = await createApp(database, []).request(
       "/definitions",
-      { headers: { "x-company-organization-id": "organization:default" } },
+      { headers: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID } },
       {
         DB: binding,
       },

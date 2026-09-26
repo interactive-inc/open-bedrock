@@ -2,9 +2,10 @@ import { ResponsibilitySourceLedgerAdapter } from "@/contexts/company/infrastruc
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { Database } from "bun:sqlite"
 import { expect, test } from "bun:test"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const source = {
-  organizationId: "organization:default",
+  organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
   sourceContext: "example-app",
   sourceKind: "example-record",
 } as const

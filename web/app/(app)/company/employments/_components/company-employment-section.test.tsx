@@ -16,7 +16,7 @@ afterEach(() => {
 })
 
 const activeEmployment: CompanyResource = {
-  organizationId: "organization:default",
+  organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
   type: "employment",
   id: "employment:1",
   revision: 1,
@@ -27,7 +27,7 @@ const activeEmployment: CompanyResource = {
 }
 
 const terminatedEmployment: CompanyResource = {
-  organizationId: "organization:default",
+  organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
   type: "employment",
   id: "employment:2",
   revision: 1,
@@ -40,7 +40,7 @@ const terminatedEmployment: CompanyResource = {
 describe("CompanyEmploymentSection", () => {
   test("在籍区分を日本語にし、雇用形態が無い行はハイフンにする", async () => {
     mocks.getCompanyEmploymentResources.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 5,
       resources: [activeEmployment, terminatedEmployment],
     })
@@ -55,7 +55,7 @@ describe("CompanyEmploymentSection", () => {
 
   test("status を指定すると api が絞り込みを持たないぶんを取得後に絞る", async () => {
     mocks.getCompanyEmploymentResources.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 5,
       resources: [activeEmployment, terminatedEmployment],
     })
@@ -69,7 +69,7 @@ describe("CompanyEmploymentSection", () => {
 
   test("絞り込みの結果が空でも登録の手段を示す", async () => {
     mocks.getCompanyEmploymentResources.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 5,
       resources: [],
     })

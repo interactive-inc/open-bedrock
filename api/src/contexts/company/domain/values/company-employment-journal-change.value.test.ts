@@ -4,6 +4,7 @@ import { CompanyEmploymentResourceTimelineValue } from "@/contexts/company/domai
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const employeeId = restoreWorkforceId("employee", "employee:journal")
 const employmentId = restoreWorkforceId("employment", "employment:journal")
@@ -27,7 +28,7 @@ const status = {
 } satisfies Parameters<typeof CompanyEmploymentJournalChangeValue.create>[0]["statuses"][number]
 function initial() {
   const value = CompanyResourceEntity.create({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "employment",
     id: employmentId,
     revision: 1,
@@ -43,7 +44,7 @@ function changes(
   props: Partial<Parameters<typeof CompanyEmploymentJournalChangeValue.create>[0]> = {},
 ) {
   return CompanyEmploymentJournalChangeValue.create({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     employment,
     statuses: [status],
     history: [initial()],

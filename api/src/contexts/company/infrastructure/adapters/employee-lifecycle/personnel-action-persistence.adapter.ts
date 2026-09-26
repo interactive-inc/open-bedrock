@@ -28,6 +28,7 @@ import type { ExecutionAuthorizationEntity } from "@system/domain/entities/execu
 import type { ProposalDigest } from "@system/domain/schemas/workflow/system-case-reference.schema"
 import { SystemD1AuthorizedExecutionAdapter } from "@system/infrastructure/adapters/workflow/system-d1-authorized-execution.adapter"
 import { CompanyPersonnelResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/company-personnel-resource-journal.adapter"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type CurrentLifecycleProjection = {
   status: "active" | "leave" | "retired"
@@ -623,7 +624,7 @@ export class PersonnelActionPersistenceAdapter {
       statements.unshift(
         this.c.env.DB.prepare(
           `SELECT CASE WHEN EXISTS (
-          SELECT 1 FROM company_organizations WHERE id = 'organization:default' AND revision = ?
+          SELECT 1 FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND revision = ?
         ) THEN 1 ELSE json_extract('', '$') END`,
         ).bind(props.command.expectedCompanyRevision),
       )

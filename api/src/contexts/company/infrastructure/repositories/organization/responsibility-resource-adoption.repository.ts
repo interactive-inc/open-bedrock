@@ -21,6 +21,7 @@ import {
 } from "@/contexts/company/domain/errors"
 import { drizzle } from "drizzle-orm/d1"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Context = CompanyContext
 export type ResponsibilityResourceAdoptionResult = Readonly<{
@@ -104,7 +105,7 @@ export class ResponsibilityResourceAdoptionRepository {
     if (responsibilities instanceof Error) return this.invalid(responsibilities)
     const occupied = await database
       .prepare(`SELECT 1 AS present FROM company_resource_heads
-      WHERE organization_id = 'organization:default' AND resource_type = 'responsibility-assignment'
+      WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND resource_type = 'responsibility-assignment'
         AND resource_id IN (SELECT value FROM json_each(?1)) LIMIT 1`)
       .bind(
         JSON.stringify(
@@ -131,7 +132,7 @@ export class ResponsibilityResourceAdoptionRepository {
         JOIN company_resource_heads scope ON scope.organization_id = responsibility.organization_id
         JOIN company_organization_resource_bindings unit ON unit.organization_id = responsibility.organization_id
         JOIN company_workforce_resource_bindings employment ON employment.organization_id = responsibility.organization_id
-        WHERE responsibility.organization_id = 'organization:default'
+        WHERE responsibility.organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'
           AND responsibility.resource_type = 'responsibility' AND responsibility.resource_id = json_extract(requested.value, '$.responsibilityId')
           AND json_extract(responsibility.attributes_json, '$.code') = json_extract(requested.value, '$.responsibilityType')
           AND scope.resource_type = 'authority-scope' AND scope.resource_id = json_extract(requested.value, '$.authorityScopeId')
@@ -193,7 +194,7 @@ export class ResponsibilityResourceAdoptionRepository {
           database
             .prepare(`INSERT INTO company_responsibility_resource_bindings
         (resource_id, organization_id, employee_id, employment_id, organization_unit_id, responsibility_type, responsibility_id, authority_scope_id, resource_revision, recorded_at)
-        VALUES (?1, 'organization:default', ?2, ?3, ?4, ?5, ?6, ?7, ?9, ?8)`)
+        VALUES (?1, '${COMPANY_DEFAULT_ORGANIZATION_ID}', ?2, ?3, ?4, ?5, ?6, ?7, ?9, ?8)`)
             .bind(
               entry.resource.id,
               entry.period.employeeId,

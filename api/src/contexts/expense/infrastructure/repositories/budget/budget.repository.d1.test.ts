@@ -1,5 +1,5 @@
 import { Budget } from "@/contexts/expense/domain/entities/budget.entity"
-import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
+import { testOrganizationUnitId } from "@tests/api/support/company/test-organization-unit-id"
 import { BudgetRepository } from "@/contexts/expense/infrastructure/repositories/budget/budget.repository"
 import { seedD1 } from "@tests/api/support/seed-d1"
 import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
@@ -34,7 +34,7 @@ function budget(props: {
   periodEnd: string
 }): Budget {
   return Budget.create({
-    organizationUnitId: toWorkforceOrganizationUnitId(props.organizationUnitCode),
+    organizationUnitId: testOrganizationUnitId(props.organizationUnitCode),
     fiscalPeriod: "2026",
     periodStart: props.periodStart,
     periodEnd: props.periodEnd,
@@ -71,7 +71,7 @@ describe("BudgetRepository", () => {
       throw new Error("findById failed")
     }
 
-    expect(found.organizationUnitId).toBe(toWorkforceOrganizationUnitId("D003"))
+    expect(found.organizationUnitId).toBe(testOrganizationUnitId("D003"))
     expect(found.amount).toBe(1_000_000)
   })
 
@@ -103,7 +103,7 @@ describe("BudgetRepository", () => {
     expect(updated.amount).toBe(2_000_000)
     expect(updated.name).toBe("revised")
     expect(updated.note).toBe("raised")
-    expect(updated.organizationUnitId).toBe(toWorkforceOrganizationUnitId("D003"))
+    expect(updated.organizationUnitId).toBe(testOrganizationUnitId("D003"))
     expect(updated.periodStart).toBe("2026-04-01")
   })
 
@@ -161,7 +161,7 @@ describe("BudgetRepository", () => {
       {
         id: "0190004e-0000-7000-8000-000000000001",
         employee_id: "1",
-        organization_unit_id: "department:D003",
+        organization_unit_id: "0190005e-0000-7000-8000-000044303033",
         category: "books",
         amount: 3300,
         spent_at: "2026-05-12",
@@ -173,7 +173,7 @@ describe("BudgetRepository", () => {
       {
         id: "0190004e-0000-7000-8000-000000000002",
         employee_id: "1",
-        organization_unit_id: "department:D003",
+        organization_unit_id: "0190005e-0000-7000-8000-000044303033",
         category: "transport",
         amount: 1200,
         spent_at: "2026-05-10",
@@ -185,7 +185,7 @@ describe("BudgetRepository", () => {
       {
         id: "0190004e-0000-7000-8000-000000000003",
         employee_id: "2",
-        organization_unit_id: "department:D004",
+        organization_unit_id: "0190005e-0000-7000-8000-000044303034",
         category: "other",
         amount: 5000,
         spent_at: "2026-05-14",
@@ -197,7 +197,7 @@ describe("BudgetRepository", () => {
       {
         id: "0190004e-0000-7000-8000-000000000004",
         employee_id: "1",
-        organization_unit_id: "department:D003",
+        organization_unit_id: "0190005e-0000-7000-8000-000044303033",
         category: "other",
         amount: 9999,
         spent_at: "2027-05-01",
@@ -210,7 +210,7 @@ describe("BudgetRepository", () => {
     const repository = new BudgetRepository(context)
 
     const total = await repository.sumApprovedExpenses({
-      organizationUnitId: toWorkforceOrganizationUnitId("D003"),
+      organizationUnitId: testOrganizationUnitId("D003"),
       periodStart: "2026-04-01",
       periodEnd: "2027-03-31",
     })
@@ -228,7 +228,7 @@ describe("BudgetRepository", () => {
     const repository = new BudgetRepository(context)
 
     const total = await repository.sumApprovedExpenses({
-      organizationUnitId: toWorkforceOrganizationUnitId("D099"),
+      organizationUnitId: testOrganizationUnitId("D099"),
       periodStart: "2026-04-01",
       periodEnd: "2027-03-31",
     })

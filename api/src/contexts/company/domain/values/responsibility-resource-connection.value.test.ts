@@ -6,11 +6,15 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { restoreOrgResponsibilityType } from "@/contexts/company/domain/definitions/restore-org-responsibility-type.definition"
 import type { OrgResponsibilityPeriod } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const source = {
   employeeId: restoreWorkforceId("employee", "employee:1"),
   employmentId: restoreWorkforceId("employment", "employment:1"),
-  organizationUnitId: restoreWorkforceId("organization_unit", "unit:1"),
+  organizationUnitId: restoreWorkforceId(
+    "organization_unit",
+    "0190005f-0000-7000-8000-2fcb85764fe2",
+  ),
   responsibilityType: restoreOrgResponsibilityType("MANAGER"),
   responsibilityId: "responsibility:manager",
   authorityScopeId: "scope:unit",
@@ -18,7 +22,7 @@ const source = {
 
 function resource(overrides: Partial<CompanyResourceProps> = {}) {
   const created = CompanyResourceEntity.create({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "responsibility-assignment",
     id: "existing:responsibility",
     revision: 1,
@@ -106,7 +110,12 @@ test("取消済みの将来版も期間の照合に含め、予約を復活さ�
 test("別雇用・別組織・別責務・委任条件の違いと履歴欠落を拒否する", () => {
   for (const changed of [
     period({ employmentId: restoreWorkforceId("employment", "employment:2") }),
-    period({ organizationUnitId: restoreWorkforceId("organization_unit", "unit:2") }),
+    period({
+      organizationUnitId: restoreWorkforceId(
+        "organization_unit",
+        "0190005f-0000-7000-8000-c81109c4de10",
+      ),
+    }),
     period({ responsibilityType: restoreOrgResponsibilityType("PEOPLE_OPERATIONS") }),
   ]) {
     expect(

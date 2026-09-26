@@ -8,6 +8,7 @@ import { requestWithContext } from "@tests/api/support/request-with-context"
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Fixture = Awaited<ReturnType<typeof createExternalIdentityImportTestContext>>
 
@@ -99,7 +100,7 @@ describe("POST /company/external-identity-imports", () => {
       jwtSecret: EXTERNAL_IMPORT_TEST_SECRET,
       path: "/company/people?effective_on=2026-01-01",
       token,
-      headers: { "x-company-organization-id": "organization:default" },
+      headers: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID },
       now: c.clock.at.toISOString(),
     })
     expect(response.status).toBe(200)

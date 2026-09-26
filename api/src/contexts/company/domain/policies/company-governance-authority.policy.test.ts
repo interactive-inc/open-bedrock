@@ -300,7 +300,7 @@ function resource(
   attributes: Parameters<typeof CompanyResourceEntity.create>[0]["attributes"],
 ): CompanyResourceEntity {
   const value = CompanyResourceEntity.create({
-    organizationId: "organization:1",
+    organizationId: "01900060-0000-7000-8000-e53d7d4223a9",
     type,
     id,
     revision: 1,
@@ -317,7 +317,7 @@ test.each(["identity", "period-id", "ambiguous"])(
   "組織scopeは期間IDではなく一意なOrgUnitで解決する: %s",
   (kind) => {
     const unit = {
-      organizationUnitId: "unit:1",
+      organizationUnitId: "0190005f-0000-7000-8000-2fcb85764fe2",
       code: "ROOT",
       officialName: "Company",
       kind: "COMPANY",
@@ -330,7 +330,10 @@ test.each(["identity", "period-id", "ambiguous"])(
       criteria: [
         {
           responsibilityCode: "APPROVE",
-          scope: { scopeType: "organization-unit", scopeId: "unit:1" },
+          scope: {
+            scopeType: "organization-unit",
+            scopeId: "0190005f-0000-7000-8000-2fcb85764fe2",
+          },
         },
       ],
       activeAccountIds: new Set(["account:1"]),
@@ -339,7 +342,7 @@ test.each(["identity", "period-id", "ambiguous"])(
         ...(kind === "ambiguous" ? [resource("organization-unit", "period:2", unit)] : []),
         resource("authority-scope", "scope:1", {
           scopeType: "organization-unit",
-          scopeId: kind === "period-id" ? "period:1" : "unit:1",
+          scopeId: kind === "period-id" ? "period:1" : "0190005f-0000-7000-8000-2fcb85764fe2",
         }),
         resource("responsibility", "responsibility:1", {
           code: "APPROVE",

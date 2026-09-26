@@ -3,6 +3,7 @@ import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calenda
 import { AbortWhenPreviousStatementChangedNoRowsAdapter } from "@/contexts/company/infrastructure/adapters/database/abort-when-previous-statement-changed-no-rows.adapter"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 
 type Props = Readonly<{
   employeeId: string
@@ -60,7 +61,7 @@ export class InitialEmploymentActionAdapter {
     if (summary instanceof Error) return summary
     const fingerprint = await ProposalDigestValue.create(summary)
     if (fingerprint instanceof Error) return fingerprint
-    const actionId = `initial-employment:${fingerprint.toString()}`
+    const actionId = deterministicCompanyId("initial-employment", fingerprint.toString())
     const recordedAt = Math.floor(props.occurredAt.getTime() / 1000)
 
     return {

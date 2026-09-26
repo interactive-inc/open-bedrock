@@ -1,5 +1,6 @@
 CREATE TABLE company_organizations (
   id TEXT PRIMARY KEY NOT NULL,
+  legacy_id TEXT UNIQUE,
   revision INTEGER NOT NULL DEFAULT 0 CHECK (revision >= 0),
   name TEXT NOT NULL DEFAULT '' CHECK (
     length(name) <= 200
@@ -12,8 +13,18 @@ CREATE TABLE company_organizations (
     AND instr(representative_name, char(0)) = 0
   ),
   created_at INTEGER NOT NULL CHECK (created_at >= 0),
-  updated_at INTEGER NOT NULL CHECK (updated_at >= created_at)
+  updated_at INTEGER NOT NULL CHECK (updated_at >= created_at),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+
+CREATE TRIGGER company_organizations_legacy_id_insert
+BEFORE INSERT ON company_organizations
+WHEN NEW.legacy_id IS NOT NULL
+BEGIN SELECT RAISE(ABORT, 'record_legacy_id_immutable'); END;
+CREATE TRIGGER company_organizations_identity_update
+BEFORE UPDATE OF id, legacy_id ON company_organizations
+WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE TABLE company_account_profiles (
   -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
@@ -1157,10 +1168,21 @@ BEFORE UPDATE OF id ON company_organization_unit_period_versions
 WHEN NEW.id IS NOT OLD.id
 BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
-CREATE TABLE "company_organization_units" (
-  id TEXT PRIMARY KEY NOT NULL CHECK (length(id) BETWEEN 1 AND 128),
-  created_at INTEGER NOT NULL CHECK (created_at >= 0)
+CREATE TABLE company_organization_units (
+  id TEXT PRIMARY KEY NOT NULL,
+  legacy_id TEXT UNIQUE,
+  created_at INTEGER NOT NULL CHECK (created_at >= 0),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+
+CREATE TRIGGER company_organization_units_legacy_id_insert
+BEFORE INSERT ON company_organization_units
+WHEN NEW.legacy_id IS NOT NULL
+BEGIN SELECT RAISE(ABORT, 'record_legacy_id_immutable'); END;
+CREATE TRIGGER company_organization_units_identity_update
+BEFORE UPDATE OF id, legacy_id ON company_organization_units
+WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE INDEX company_organization_assignment_period_versions_employee_idx
   ON company_organization_assignment_period_versions(
@@ -1726,7 +1748,7 @@ INSERT INTO company_organization_lifecycle_states (id, revision, updated_at) VAL
 
 CREATE TABLE company_organization_resource_bindings (
   organization_unit_id TEXT PRIMARY KEY NOT NULL REFERENCES company_organization_units(id) ON DELETE RESTRICT,
-  organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE RESTRICT CHECK (organization_id = 'organization:default'),
+  organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE RESTRICT CHECK (organization_id = 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'),
   recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0)
 );
 
@@ -1814,7 +1836,7 @@ WHERE NOT EXISTS (SELECT 1 FROM company_organization_unit_period_versions AS per
 DROP TRIGGER IF EXISTS company_organization_resource_commit_guard;
 CREATE TRIGGER company_organization_resource_commit_guard
 BEFORE UPDATE OF revision ON company_organizations
-WHEN NEW.id = 'organization:default'
+WHEN NEW.id = 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'
 BEGIN
   SELECT RAISE(ABORT, 'organization resource history mismatch')
   WHERE EXISTS (SELECT 1 FROM company_organization_resource_mismatches);
@@ -1842,7 +1864,7 @@ CREATE TABLE company_bootstrap_receipts (
   -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
   id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   command_id TEXT NOT NULL UNIQUE CHECK (length(command_id) BETWEEN 1 AND 200),
-  organization_id TEXT NOT NULL UNIQUE REFERENCES company_organizations(id) CHECK (organization_id = 'organization:default'),
+  organization_id TEXT NOT NULL UNIQUE REFERENCES company_organizations(id) CHECK (organization_id = 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'),
   actor_account_id TEXT NOT NULL REFERENCES system_accounts(id),
   fingerprint TEXT NOT NULL CHECK (length(fingerprint) = 64 AND fingerprint NOT GLOB '*[^0-9a-f]*'),
   employee_id TEXT NOT NULL REFERENCES company_employees(id),
@@ -2234,7 +2256,7 @@ END;
 
 CREATE TABLE company_assignment_resource_bindings (
   resource_id TEXT PRIMARY KEY NOT NULL CHECK (length(resource_id) BETWEEN 1 AND 255),
-  organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE RESTRICT CHECK (organization_id = 'organization:default'),
+  organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE RESTRICT CHECK (organization_id = 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'),
   employee_id TEXT NOT NULL REFERENCES company_employees(id) ON DELETE RESTRICT,
   resource_revision INTEGER NOT NULL CHECK (resource_revision >= 1),
   recorded_at INTEGER NOT NULL CHECK (recorded_at >= 0)
@@ -2337,7 +2359,7 @@ END;
 
 CREATE TABLE company_personnel_reporting_bindings (
   resource_id TEXT PRIMARY KEY NOT NULL,
-  organization_id TEXT NOT NULL DEFAULT 'organization:default' CHECK (organization_id = 'organization:default'),
+  organization_id TEXT NOT NULL DEFAULT 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d' CHECK (organization_id = 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'),
   resource_type TEXT NOT NULL DEFAULT 'reporting-relation' CHECK (resource_type = 'reporting-relation'),
   employee_id TEXT NOT NULL REFERENCES company_employees(id) ON DELETE RESTRICT,
   employment_id TEXT NOT NULL REFERENCES company_employments(id) ON DELETE RESTRICT,
@@ -2612,7 +2634,7 @@ END;
 
 CREATE TABLE _company_reporting_bindings_with_adoptions (
   resource_id TEXT PRIMARY KEY NOT NULL,
-  organization_id TEXT NOT NULL DEFAULT 'organization:default' CHECK (organization_id = 'organization:default'),
+  organization_id TEXT NOT NULL DEFAULT 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d' CHECK (organization_id = 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'),
   resource_type TEXT NOT NULL DEFAULT 'reporting-relation' CHECK (resource_type = 'reporting-relation'),
   employee_id TEXT NOT NULL REFERENCES company_employees(id) ON DELETE RESTRICT,
   employment_id TEXT NOT NULL REFERENCES company_employments(id) ON DELETE RESTRICT,
@@ -2779,7 +2801,7 @@ END;
 -- Account-to-Employee identity and effective public history.
 CREATE TABLE company_account_employee_resource_bindings (
   resource_id TEXT PRIMARY KEY NOT NULL,
-  organization_id TEXT NOT NULL DEFAULT 'organization:default' CHECK (organization_id = 'organization:default'),
+  organization_id TEXT NOT NULL DEFAULT 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d' CHECK (organization_id = 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'),
   resource_type TEXT NOT NULL DEFAULT 'account-employee-link' CHECK (resource_type = 'account-employee-link'),
   account_id TEXT NOT NULL UNIQUE REFERENCES system_accounts(id) ON DELETE RESTRICT,
   employee_id TEXT NOT NULL UNIQUE REFERENCES company_employees(id) ON DELETE RESTRICT,
@@ -2794,7 +2816,7 @@ SELECT NOT EXISTS (
   JOIN company_resource_heads head ON head.organization_id = resource.organization_id
     AND head.resource_type = resource.resource_type AND head.resource_id = resource.resource_id
   WHERE resource.resource_type = 'account-employee-link' AND (
-    resource.organization_id != 'organization:default'
+    resource.organization_id != 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'
     OR json_extract(resource.attributes_json, '$.accountId') IS NOT json_extract(head.attributes_json, '$.accountId')
     OR json_extract(resource.attributes_json, '$.employeeId') IS NOT json_extract(head.attributes_json, '$.employeeId')
     OR EXISTS (SELECT 1 FROM company_account_employee_links original WHERE
@@ -2866,7 +2888,7 @@ CREATE TRIGGER company_account_employee_resource_owner_guard
 BEFORE INSERT ON company_resource_revisions WHEN NEW.resource_type = 'account-employee-link'
 BEGIN
   SELECT RAISE(ABORT, 'company account link owner is immutable') WHERE
-    NEW.organization_id != 'organization:default'
+    NEW.organization_id != 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'
     OR EXISTS (SELECT 1 FROM company_resource_heads previous
       WHERE previous.organization_id = NEW.organization_id AND previous.resource_type = NEW.resource_type
         AND (previous.resource_id = NEW.resource_id AND (
@@ -2942,7 +2964,7 @@ WITH effective_versions AS (
 )
 SELECT link.* FROM company_account_employee_link_periods link WHERE link.source = 'public'
   AND NOT EXISTS (SELECT 1 FROM coverage
-    WHERE coverage.organization_id = 'organization:default' AND coverage.employee_id = link.employee_id
+    WHERE coverage.organization_id = 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d' AND coverage.employee_id = link.employee_id
       AND coverage.starts_on <= link.starts_on
       AND (coverage.ends_on IS NULL OR (link.ends_on IS NOT NULL AND link.ends_on <= coverage.ends_on)));
 CREATE TABLE _company_account_link_period_check (ok INTEGER NOT NULL CHECK (ok = 1));
@@ -3444,7 +3466,7 @@ SELECT appointment.* FROM appointments appointment WHERE
 
 CREATE TABLE company_responsibility_resource_bindings (
   resource_id TEXT PRIMARY KEY NOT NULL CHECK (length(resource_id) BETWEEN 1 AND 255),
-  organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE RESTRICT CHECK (organization_id = 'organization:default'),
+  organization_id TEXT NOT NULL REFERENCES company_organizations(id) ON DELETE RESTRICT CHECK (organization_id = 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'),
   employee_id TEXT NOT NULL REFERENCES company_employees(id) ON DELETE RESTRICT,
   employment_id TEXT NOT NULL REFERENCES company_employments(id) ON DELETE RESTRICT,
   organization_unit_id TEXT NOT NULL REFERENCES company_organization_units(id) ON DELETE RESTRICT,
@@ -3740,7 +3762,7 @@ BEGIN
     WHERE operation.id = NEW.operation_id AND operation.status = 'PENDING'
       AND operation.change_count = NEW.adopted_periods AND operation.applied_count = NEW.adopted_periods
       AND operation.actor_account_id = NEW.actor_account_id AND operation.reason = NEW.reason
-  ) OR NEW.organization_revision != (SELECT revision FROM company_organizations WHERE id = 'organization:default')
+  ) OR NEW.organization_revision != (SELECT revision FROM company_organizations WHERE id = 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d')
   OR NEW.adopted_periods != (SELECT count(*) FROM company_organization_responsibility_period_versions period WHERE period.recorded_by_action_id = NEW.operation_id)
   OR EXISTS (
     SELECT 1 FROM company_organization_responsibility_period_versions period
@@ -4270,7 +4292,7 @@ CREATE INDEX company_resource_revisions_org_revision_idx
 CREATE TABLE company_definition_resource_adoptions (
   -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
   id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
-  organization_id TEXT NOT NULL DEFAULT 'organization:default' CHECK (organization_id = 'organization:default'),
+  organization_id TEXT NOT NULL DEFAULT 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d' CHECK (organization_id = 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'),
   command_id TEXT NOT NULL,
   resource_type TEXT NOT NULL CHECK (resource_type IN ('grade', 'position')),
   definition_id INTEGER NOT NULL CHECK (definition_id > 0),
@@ -4338,7 +4360,7 @@ END;
 CREATE TABLE company_grade_award_archives (
   -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
   id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
-  organization_id TEXT NOT NULL REFERENCES company_organizations(id) CHECK (organization_id = 'organization:default'),
+  organization_id TEXT NOT NULL REFERENCES company_organizations(id) CHECK (organization_id = 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'),
   command_id TEXT NOT NULL,
   employee_id TEXT NOT NULL REFERENCES company_employees(id),
   fingerprint TEXT NOT NULL CHECK (length(fingerprint) = 64),
@@ -4504,8 +4526,8 @@ END;
 CREATE TABLE company_responsibility_source_adoptions (
   -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
   id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
-  organization_id TEXT NOT NULL DEFAULT 'organization:default'
-    CHECK (organization_id = 'organization:default'),
+  organization_id TEXT NOT NULL DEFAULT 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'
+    CHECK (organization_id = 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'),
   source_context TEXT NOT NULL CHECK (length(trim(source_context)) BETWEEN 1 AND 100),
   source_kind TEXT NOT NULL CHECK (length(trim(source_kind)) BETWEEN 1 AND 100),
   source_namespace TEXT NOT NULL CHECK (length(trim(source_namespace)) BETWEEN 1 AND 255),
@@ -4588,8 +4610,8 @@ END;
 CREATE TABLE company_responsibility_source_cutovers (
   -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
   id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
-  organization_id TEXT NOT NULL DEFAULT 'organization:default'
-    CHECK (organization_id = 'organization:default'),
+  organization_id TEXT NOT NULL DEFAULT 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'
+    CHECK (organization_id = 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'),
   source_context TEXT NOT NULL CHECK (length(trim(source_context)) BETWEEN 1 AND 100),
   source_kind TEXT NOT NULL CHECK (length(trim(source_kind)) BETWEEN 1 AND 100),
   source_namespace TEXT NOT NULL CHECK (length(trim(source_namespace)) BETWEEN 1 AND 255),

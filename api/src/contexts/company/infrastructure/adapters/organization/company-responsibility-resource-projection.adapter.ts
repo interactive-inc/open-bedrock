@@ -12,6 +12,7 @@ import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restor
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const date = z.string().refine(isCalendarDate)
 const periodRow = z.object({
@@ -49,7 +50,7 @@ export class CompanyResponsibilityResourceProjectionAdapter {
     for (const resource of change.resources.filter(
       (resource) => resource.type === "responsibility-assignment",
     )) {
-      if (resource.organizationId !== "organization:default")
+      if (resource.organizationId !== COMPANY_DEFAULT_ORGANIZATION_ID)
         return new CompanyResourceValidationError("invalid_resource")
       const rows = await this.c.batch([
         this.c

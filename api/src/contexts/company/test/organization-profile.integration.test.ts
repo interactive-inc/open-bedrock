@@ -4,6 +4,7 @@ import { CompanyActorValue } from "@/contexts/company/domain/values/company-acto
 import { D1OrganizationProfileAdapter } from "@/contexts/company/infrastructure/adapters/organization/d1-organization-profile.adapter"
 import { readCompanyOrganizationProfile } from "@/contexts/company/interface/operations/read-company-organization-profile"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 describe("会社プロフィールの正本と表示の接続", () => {
   test("遡及訂正後の現在表示と指定会社版の表示が同じ確定事実を返す", async () => {
@@ -40,7 +41,7 @@ describe("会社プロフィールの正本と表示の接続", () => {
     }
     const headers = {
       "content-type": "application/json",
-      "x-company-organization-id": "organization:default",
+      "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID,
       "if-match": "1",
       "idempotency-key": "profile:retroactive-correction",
     }
@@ -72,7 +73,7 @@ describe("会社プロフィールの正本と表示の接続", () => {
     expect(
       await readCompanyOrganizationProfile({
         database: f.database,
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         effectiveOn: restoreCalendarDate("2026-09-07"),
         organizationRevision: 1,
       }),
@@ -80,7 +81,7 @@ describe("会社プロフィールの正本と表示の接続", () => {
     expect(
       await readCompanyOrganizationProfile({
         database: f.database,
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         effectiveOn: restoreCalendarDate("2026-09-07"),
         organizationRevision: 2,
       }),
@@ -92,7 +93,7 @@ describe("会社プロフィールの正本と表示の接続", () => {
     const atRevision = (organizationRevision: number) =>
       readCompanyOrganizationProfile({
         database: f.database,
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         effectiveOn: restoreCalendarDate("2026-09-07"),
         organizationRevision,
       })
@@ -172,7 +173,9 @@ describe("会社プロフィールの正本と表示の接続", () => {
     })
     expect(await f.baseline()).toEqual(baseline)
     const overwrite = await f.database
-      .exec("UPDATE company_organizations SET name = 'Bypass' WHERE id = 'organization:default'")
+      .exec(
+        `UPDATE company_organizations SET name = 'Bypass' WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+      )
       .catch((cause: unknown) => cause)
     expect(overwrite).toBeInstanceOf(Error)
     expect(await f.state()).toEqual({ revision: 2, profiles: 2, receipts: 1 })
@@ -181,7 +184,7 @@ describe("会社プロフィールの正本と表示の接続", () => {
   test("未知の代表者は旧情報で補わず、公開profileを読んだ内容をそのまま更新できる", async () => {
     const f = await createOrganizationProfileFixture()
     const resource = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "company-profile",
       id: "profile:public-first",
       revision: 1,
@@ -199,7 +202,7 @@ describe("会社プロフィールの正本と表示の接続", () => {
       method: "POST",
       headers: {
         "content-type": "application/json",
-        "x-company-organization-id": "organization:default",
+        "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID,
         "if-match": "0",
         "idempotency-key": "profile:first",
       },
@@ -373,7 +376,7 @@ describe("会社プロフィールの正本と表示の接続", () => {
       const batch = f.database.batch.bind(f.database)
       spyOn(f.database, "batch").mockImplementationOnce(async (statements) => {
         await f.database.exec(
-          "UPDATE company_organizations SET representative_name = 'Changed Representative' WHERE id = 'organization:default'",
+          `UPDATE company_organizations SET representative_name = 'Changed Representative' WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
         )
         return batch(statements)
       })
@@ -395,14 +398,14 @@ describe("会社プロフィールの正本と表示の接続", () => {
     f.actor.current = CompanyActorValue.restore({
       accountId: f.actor.current.accountId,
       employeeId: f.actor.current.employeeId,
-      organizationIds: ["organization:other"],
+      organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
       capabilities: ["company:admin"],
     })
     expect(Number((await f.write(input)).status)).toBe(403)
     f.actor.current = CompanyActorValue.restore({
       accountId: f.actor.current.accountId,
       employeeId: f.actor.current.employeeId,
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:read"],
     })
     expect(Number((await f.write(input)).status)).toBe(403)

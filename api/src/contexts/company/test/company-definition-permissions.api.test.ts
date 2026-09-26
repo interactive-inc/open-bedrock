@@ -9,6 +9,7 @@ import { GET, POST } from "@/contexts/company/interface/routes/company.definitio
 import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test("等級と役職の限定資格は他の定義を読まず変更せず、再送でも現在資格を検査する", async () => {
   const database = createCompanyD1TestDatabase(
@@ -21,7 +22,7 @@ test("等級と役職の限定資格は他の定義を読まず変更せず、�
   )
   const state: { permissions: CompanyPermissionKey[]; organizationId: string } = {
     permissions: ["master:grade:write"],
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
   }
   const app = new Hono<CompanyHttpEnvironment>()
   app.use("*", async (context, next) => {
@@ -44,11 +45,11 @@ test("等級と役職の限定資格は他の定義を読まず変更せず、�
   app.get("/definitions", ...GET).post("/definitions", ...POST)
   app.get("/people", ...PEOPLE_GET).post("/organization-changes", ...ORGANIZATION_POST)
   const headers = {
-    "x-company-organization-id": "organization:default",
+    "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID,
     "Content-Type": "application/json",
   }
   const grade = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "grade",
     id: "grade:test",
     revision: 1,
@@ -157,7 +158,7 @@ test("等級と役職の限定資格は他の定義を読まず変更せず、�
   const positions = await app.request("/definitions?type=position", { headers }, { DB: database })
   expect(positions.status).toBe(200)
   expect(await positions.json()).toMatchObject({ resources: [{ type: "position" }] })
-  state.organizationId = "organization:other"
+  state.organizationId = "01900060-0000-7000-8000-12268fccf2cc"
   expect(
     (await app.request("/definitions?type=position", { headers }, { DB: database })).status,
   ).toBe(403)

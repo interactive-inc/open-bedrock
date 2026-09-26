@@ -9,11 +9,12 @@ import * as employeeAwards from "@/contexts/company/interface/routes/company.gra
 import * as definitions from "@/contexts/company/interface/routes/company.definition-resource-adoptions.$commandId"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const administrator = CompanyActorValue.restore({
   accountId: "account:reader",
   employeeId: null,
-  organizationIds: ["organization:default"],
+  organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
   capabilities: ["company:admin"],
 })
 
@@ -62,13 +63,13 @@ async function fixture() {
   if (definitionSource instanceof Error) throw definitionSource
   await database
     .prepare(`INSERT INTO company_grade_award_archives VALUES
-    ('organization:default', 'archive:one', 'employee:one', ?1, 'account:original', 'Archive reason',
+    ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'archive:one', 'employee:one', ?1, 'account:original', 'Archive reason',
       '2030-01-01', 8, ?2, ?3, 100)`)
     .bind("a".repeat(64), awardSource.props.digest, awardSource.props.sourceJson)
     .run()
   await database
     .prepare(`INSERT INTO company_definition_resource_adoptions VALUES
-    ('organization:default', 'definition:one', 'grade', 'grade:one', 1, 'account:original', 'Adoption reason',
+    ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'definition:one', 'grade', 'grade:one', 1, 'account:original', 'Adoption reason',
       9, '2030-01-01', ?1, ?2, 100)`)
     .bind(definitionSource.props.digest, definitionSource.props.sourceJson)
     .run()
@@ -103,13 +104,13 @@ test("旧台帳なしで移行時の原文と主体を読み、会社範囲・�
       CompanyActorValue.restore({
         accountId: "account:reader",
         employeeId: null,
-        organizationIds: ["organization:other"],
+        organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
         capabilities: ["company:admin"],
       }),
       CompanyActorValue.restore({
         accountId: "account:reader",
         employeeId: null,
-        organizationIds: ["organization:default"],
+        organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
         capabilities: ["company:read"],
       }),
     ]) {
@@ -130,25 +131,25 @@ test("従業員別の原記録は本人または属性閲覧権限者だけが�
   for (const scenario of [
     {
       employeeId: "employee:one",
-      organization: "organization:default",
+      organization: COMPANY_DEFAULT_ORGANIZATION_ID,
       permitted: false,
       expected: 200,
     },
     {
       employeeId: "employee:other",
-      organization: "organization:default",
+      organization: COMPANY_DEFAULT_ORGANIZATION_ID,
       permitted: false,
       expected: 403,
     },
     {
       employeeId: "employee:other",
-      organization: "organization:default",
+      organization: COMPANY_DEFAULT_ORGANIZATION_ID,
       permitted: true,
       expected: 200,
     },
     {
       employeeId: "employee:one",
-      organization: "organization:other",
+      organization: "01900060-0000-7000-8000-12268fccf2cc",
       permitted: true,
       expected: 403,
     },

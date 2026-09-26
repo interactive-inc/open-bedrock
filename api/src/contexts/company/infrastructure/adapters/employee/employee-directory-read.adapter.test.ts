@@ -7,6 +7,7 @@ import { describe, expect, test, spyOn } from "bun:test"
 import { CompanyEmployeeDirectoryReadAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-directory-read.adapter"
 import { createEmployeeEmploymentTestDatabase } from "@/contexts/company/infrastructure/adapters/employee/lib/create-employee-employment-test-database.test-support"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 function directory(database: D1Database, now: string) {
   return new CompanyEmployeeDirectoryReadAdapter({
@@ -23,9 +24,9 @@ const publicAccountLinkSchema = `
 function publicAccountLink(accountId: string, employeeId: string, resourceId = accountId) {
   return `
     INSERT INTO company_account_employee_resource_bindings VALUES
-      ('${resourceId}', 'organization:default', '${accountId}', '${employeeId}');
+      ('${resourceId}', '${COMPANY_DEFAULT_ORGANIZATION_ID}', '${accountId}', '${employeeId}');
     INSERT INTO company_resource_revisions VALUES
-      ('organization:default', 'account-employee-link', '${resourceId}', 1, 'active',
+      ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account-employee-link', '${resourceId}', 1, 'active',
        '2026-01-01', NULL, '{"accountId":"${accountId}","employeeId":"${employeeId}"}');
   `
 }
@@ -77,14 +78,14 @@ function attributeDatabase(additionalSql = "") {
     `
     ALTER TABLE company_employments ADD COLUMN employment_type TEXT DEFAULT 'PART_TIME';
     INSERT INTO company_workforce_resource_bindings VALUES
-      ('employment', 'employment:1', 'organization:1', 'employee:1'),
-      ('employee', 'employee:1', 'organization:1', 'employee:1');
+      ('employment', 'employment:1', '01900060-0000-7000-8000-e53d7d4223a9', 'employee:1'),
+      ('employee', 'employee:1', '01900060-0000-7000-8000-e53d7d4223a9', 'employee:1');
     INSERT INTO company_resource_revisions VALUES
-      ('organization:1', 'person', 'person:1', 1, 'active', '2026-01-01', NULL, '{"officialName":"Before Person"}'),
-      ('organization:1', 'person', 'person:1', 2, 'active', '2026-09-01', NULL, '{"officialName":"After Person"}'),
-      ('organization:1', 'employee', 'employee:1', 1, 'active', '2026-01-01', NULL, '{"personId":"person:1"}'),
-      ('organization:1', 'employment', 'employment:1', 1, 'active', '2026-01-01', '2026-10-01', '{"employeeId":"employee:1","employmentType":"FULL_TIME"}'),
-      ('organization:1', 'employment', 'employment:1', 2, 'active', '2026-09-01', '2026-10-01', '{"employeeId":"employee:1","employmentType":"PART_TIME"}');
+      ('01900060-0000-7000-8000-e53d7d4223a9', 'person', 'person:1', 1, 'active', '2026-01-01', NULL, '{"officialName":"Before Person"}'),
+      ('01900060-0000-7000-8000-e53d7d4223a9', 'person', 'person:1', 2, 'active', '2026-09-01', NULL, '{"officialName":"After Person"}'),
+      ('01900060-0000-7000-8000-e53d7d4223a9', 'employee', 'employee:1', 1, 'active', '2026-01-01', NULL, '{"personId":"person:1"}'),
+      ('01900060-0000-7000-8000-e53d7d4223a9', 'employment', 'employment:1', 1, 'active', '2026-01-01', '2026-10-01', '{"employeeId":"employee:1","employmentType":"FULL_TIME"}'),
+      ('01900060-0000-7000-8000-e53d7d4223a9', 'employment', 'employment:1', 2, 'active', '2026-09-01', '2026-10-01', '{"employeeId":"employee:1","employmentType":"PART_TIME"}');
     ${additionalSql}
   `,
     false,
@@ -124,7 +125,7 @@ describe("氏名・雇用区分の時点参照", () => {
   test("会社営業日で名前と雇用区分が切り替わり、退職後は最終在籍日の区分を保つ", async () => {
     const database = attributeDatabase(`
       INSERT INTO company_resource_revisions VALUES
-        ('organization:1', 'employment', 'employment:1', 3, 'void', '2026-11-01', NULL, '{"employeeId":"employee:1","employmentType":"FULL_TIME"}');
+        ('01900060-0000-7000-8000-e53d7d4223a9', 'employment', 'employment:1', 3, 'void', '2026-11-01', NULL, '{"employeeId":"employee:1","employmentType":"FULL_TIME"}');
     `)
     expect(await employmentAttributes(database, "2026-08-31T14:59:59Z")).toEqual([
       { id: "employment:1", name: "Before Person", type: "FULL_TIME" },
@@ -143,13 +144,13 @@ describe("氏名・雇用区分の時点参照", () => {
   test("同じ有効日の訂正を優先し、遡及した版の番号だけで将来の区分を上書きしない", async () => {
     const database = attributeDatabase(`
       INSERT INTO company_resource_revisions VALUES
-        ('organization:1', 'employment', 'employment:1', 3, 'active', '2026-01-01', '2026-10-01', '{"employeeId":"employee:1","employmentType":"FULL_TIME"}');
+        ('01900060-0000-7000-8000-e53d7d4223a9', 'employment', 'employment:1', 3, 'active', '2026-01-01', '2026-10-01', '{"employeeId":"employee:1","employmentType":"FULL_TIME"}');
     `)
     expect((await employmentAttributes(database, "2026-09-01T00:00:00Z"))[0]?.type).toBe(
       "PART_TIME",
     )
     await database.exec(`INSERT INTO company_resource_revisions VALUES
-      ('organization:1', 'employment', 'employment:1', 4, 'active', '2026-09-01', '2026-10-01', '{"employeeId":"employee:1","employmentType":"FULL_TIME"}');`)
+      ('01900060-0000-7000-8000-e53d7d4223a9', 'employment', 'employment:1', 4, 'active', '2026-09-01', '2026-10-01', '{"employeeId":"employee:1","employmentType":"FULL_TIME"}');`)
     expect((await employmentAttributes(database, "2026-09-01T00:00:00Z"))[0]?.type).toBe(
       "FULL_TIME",
     )
@@ -162,9 +163,9 @@ describe("氏名・雇用区分の時点参照", () => {
       "UPDATE company_resource_revisions SET effective_to = '2026-06-01' WHERE resource_type = 'employment';",
       'UPDATE company_resource_revisions SET attributes_json = \'{"employeeId":"employee:1","employmentType":"UNKNOWN"}\' WHERE resource_type = \'employment\';',
       'UPDATE company_resource_revisions SET attributes_json = \'{"employeeId":"employee:other","employmentType":"FULL_TIME"}\' WHERE resource_type = \'employment\';',
-      "UPDATE company_resource_revisions SET organization_id = 'organization:other' WHERE resource_type = 'employment';",
+      "UPDATE company_resource_revisions SET organization_id = '01900060-0000-7000-8000-12268fccf2cc' WHERE resource_type = 'employment';",
       "UPDATE company_workforce_resource_bindings SET employee_id = 'employee:other' WHERE resource_type = 'employment';",
-      "INSERT INTO company_workforce_resource_bindings VALUES ('employment', 'employment:1', 'organization:other', 'employee:1');",
+      "INSERT INTO company_workforce_resource_bindings VALUES ('employment', 'employment:1', '01900060-0000-7000-8000-12268fccf2cc', 'employee:1');",
       "DELETE FROM company_employment_period_versions;",
       "INSERT INTO company_employment_period_versions VALUES ('employment:1', 2, 'employee:1', '2026-01-01', '2026-10-01', 1);",
     ]) {
@@ -182,7 +183,7 @@ describe("氏名・雇用区分の時点参照", () => {
       "DELETE FROM company_resource_revisions WHERE resource_type = 'person';",
       "UPDATE company_resource_revisions SET state = 'void' WHERE resource_type = 'person';",
       "UPDATE company_resource_revisions SET effective_to = '2026-06-01' WHERE resource_type = 'person';",
-      "INSERT INTO company_workforce_resource_bindings VALUES ('employee', 'employee:1', 'organization:1', 'employee:1');",
+      "INSERT INTO company_workforce_resource_bindings VALUES ('employee', 'employee:1', '01900060-0000-7000-8000-e53d7d4223a9', 'employee:1');",
       "UPDATE company_resource_revisions SET attributes_json = '{\"officialName\":\" \"}' WHERE resource_type = 'person';",
     ]) {
       expect(
@@ -248,7 +249,7 @@ describe("雇用状態の派生表", () => {
       { additional: "", date: "2025-12-31", has: false, fullTime: false, partTime: false },
       {
         additional:
-          "INSERT INTO company_workforce_resource_bindings VALUES ('employment', 'employment:1', 'organization:1', 'employee:1');",
+          "INSERT INTO company_workforce_resource_bindings VALUES ('employment', 'employment:1', '01900060-0000-7000-8000-e53d7d4223a9', 'employee:1');",
         date: "2026-08-01",
         has: false,
         fullTime: false,
@@ -313,10 +314,10 @@ describe("雇用IDごとの有効な在籍状態", () => {
     const database = createEmployeeEmploymentTestDatabase(`
       INSERT INTO company_employees VALUES ('employee:2', 'Another Person', 'E002', NULL, NULL);
       INSERT INTO company_workforce_resource_bindings VALUES
-        ('employee', 'employee:2', 'organization:default', 'employee:2');
+        ('employee', 'employee:2', '${COMPANY_DEFAULT_ORGANIZATION_ID}', 'employee:2');
       INSERT INTO company_resource_revisions VALUES
-        ('organization:default', 'person', 'person:2', 1, 'active', '2026-01-01', NULL, '{"officialName":"Another Person"}'),
-        ('organization:default', 'employee', 'employee:2', 1, 'active', '2026-01-01', NULL, '{"personId":"person:2","employeeCode":"E002"}');
+        ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'person', 'person:2', 1, 'active', '2026-01-01', NULL, '{"officialName":"Another Person"}'),
+        ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'employee', 'employee:2', 1, 'active', '2026-01-01', NULL, '{"personId":"person:2","employeeCode":"E002"}');
       INSERT INTO company_employments VALUES ('employment:2', 'employee:2', 'ACTIVE', '2026-01-01', NULL), ('employment:rehire', 'employee:1', 'ACTIVE', '2026-12-01', NULL);
       INSERT INTO company_employment_period_versions VALUES ('employment:2', 1, 'employee:2', '2026-01-01', NULL, 0), ('employment:rehire', 1, 'employee:1', '2026-12-01', NULL, 0);
       INSERT INTO company_employee_status_period_versions VALUES ('status:2', 1, 'employment:2', 'employee:2', 'leave', '2026-01-01', NULL, 0), ('status:rehire', 1, 'employment:rehire', 'employee:1', 'active', '2026-12-01', NULL, 0);
@@ -375,10 +376,10 @@ describe("Company directoryの在籍時点", () => {
     const database = createEmployeeEmploymentTestDatabase(`
       INSERT INTO company_employees VALUES ('employee:200', 'Another Person', NULL, NULL, NULL);
       INSERT INTO company_workforce_resource_bindings VALUES
-        ('employee', 'employee:200', 'organization:default', 'employee:200');
+        ('employee', 'employee:200', '${COMPANY_DEFAULT_ORGANIZATION_ID}', 'employee:200');
       INSERT INTO company_resource_revisions VALUES
-        ('organization:default', 'person', 'person:200', 1, 'active', '2026-01-01', NULL, '{"officialName":"Another Person"}'),
-        ('organization:default', 'employee', 'employee:200', 1, 'active', '2026-01-01', NULL, '{"personId":"person:200","employeeCode":null}');
+        ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'person', 'person:200', 1, 'active', '2026-01-01', NULL, '{"officialName":"Another Person"}'),
+        ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'employee', 'employee:200', 1, 'active', '2026-01-01', NULL, '{"personId":"person:200","employeeCode":null}');
     `)
     const employeeId = restoreWorkforceId("employee", "employee:1")
     const ids = Array.from({ length: 201 }, (_, index) =>
@@ -420,9 +421,9 @@ describe("Company directoryの在籍時点", () => {
       ${publicAccountLinkSchema}
       ${publicAccountLink("account:1", "employee:1")}
       INSERT INTO company_organization_unit_period_versions VALUES
-        ('unit-period:1', 1, 'unit:1', 'UNIT', 'Example Unit', '2026-01-01', '2026-10-01', 0);
+        ('unit-period:1', 1, '0190005f-0000-7000-8000-2fcb85764fe2', 'UNIT', 'Example Unit', '2026-01-01', '2026-10-01', 0);
       INSERT INTO company_organization_assignment_period_versions VALUES
-        ('assignment:1', 1, 'employee:1', 'unit:1', 'PRIMARY', NULL, 'employment:1', '2026-01-01', '2026-10-01', 0);
+        ('assignment:1', 1, 'employee:1', '0190005f-0000-7000-8000-2fcb85764fe2', 'PRIMARY', NULL, 'employment:1', '2026-01-01', '2026-10-01', 0);
     `)
     const accountId = zAccountId.parse("account:1")
     const before = await directory(database, "2026-09-30T14:59:59Z").findForAccountIds([
@@ -455,10 +456,10 @@ describe("Company directoryの在籍時点", () => {
       ${publicAccountLinkSchema}
       INSERT INTO company_employees VALUES ('employee:2', 'Another Person', 'E002', NULL, NULL);
       INSERT INTO company_workforce_resource_bindings VALUES
-        ('employee', 'employee:2', 'organization:default', 'employee:2');
+        ('employee', 'employee:2', '${COMPANY_DEFAULT_ORGANIZATION_ID}', 'employee:2');
       INSERT INTO company_resource_revisions VALUES
-        ('organization:default', 'person', 'person:2', 1, 'active', '2026-01-01', NULL, '{"officialName":"Another Person"}'),
-        ('organization:default', 'employee', 'employee:2', 1, 'active', '2026-01-01', NULL, '{"personId":"person:2","employeeCode":"E002"}');
+        ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'person', 'person:2', 1, 'active', '2026-01-01', NULL, '{"officialName":"Another Person"}'),
+        ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'employee', 'employee:2', 1, 'active', '2026-01-01', NULL, '{"personId":"person:2","employeeCode":"E002"}');
       ${publicAccountLink("account:1", "employee:1", "link:1")}
       ${publicAccountLink("account:1", "employee:2", "link:2")}
     `)
@@ -570,10 +571,10 @@ describe("Company directoryの在籍時点", () => {
   test("主務が重複する場合は先頭の所属だけを返さない", async () => {
     const database = createEmployeeEmploymentTestDatabase(`
       INSERT INTO company_organization_unit_period_versions VALUES
-        ('unit-period:1', 1, 'unit:1', 'UNIT', 'Example Unit', '2026-01-01', NULL, 0);
+        ('unit-period:1', 1, '0190005f-0000-7000-8000-2fcb85764fe2', 'UNIT', 'Example Unit', '2026-01-01', NULL, 0);
       INSERT INTO company_organization_assignment_period_versions VALUES
-        ('assignment:1', 1, 'employee:1', 'unit:1', 'PRIMARY', NULL, 'employment:1', '2026-01-01', NULL, 0),
-        ('assignment:2', 1, 'employee:1', 'unit:1', 'PRIMARY', NULL, 'employment:1', '2026-01-01', NULL, 0);
+        ('assignment:1', 1, 'employee:1', '0190005f-0000-7000-8000-2fcb85764fe2', 'PRIMARY', NULL, 'employment:1', '2026-01-01', NULL, 0),
+        ('assignment:2', 1, 'employee:1', '0190005f-0000-7000-8000-2fcb85764fe2', 'PRIMARY', NULL, 'employment:1', '2026-01-01', NULL, 0);
     `)
     const reader = directory(database, "2026-09-01T00:00:00Z")
     expect(await reader.findByCode("E001")).toBeInstanceOf(Error)
@@ -595,11 +596,11 @@ const employeeId = restoreWorkforceId("employee", "employee:1")
 const history = `
   UPDATE company_employees SET official_name = 'Future Person';
   INSERT INTO company_workforce_resource_bindings VALUES
-    ('employee', 'employee:1', 'organization:default', 'employee:1');
+    ('employee', 'employee:1', '${COMPANY_DEFAULT_ORGANIZATION_ID}', 'employee:1');
   INSERT INTO company_resource_revisions VALUES
-    ('organization:default', 'employee', 'employee:1', 1, 'active', '2026-01-01', NULL, '{"personId":"person:1"}'),
-    ('organization:default', 'person', 'person:1', 1, 'active', '2026-01-01', NULL, '{"officialName":"Current Person"}'),
-    ('organization:default', 'person', 'person:1', 2, 'active', '2026-07-01', NULL, '{"officialName":"Future Person"}');
+    ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'employee', 'employee:1', 1, 'active', '2026-01-01', NULL, '{"personId":"person:1"}'),
+    ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'person', 'person:1', 1, 'active', '2026-01-01', NULL, '{"officialName":"Current Person"}'),
+    ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'person', 'person:1', 2, 'active', '2026-07-01', NULL, '{"officialName":"Future Person"}');
 `
 
 describe("Company従業員名の期間参照", () => {
@@ -608,7 +609,7 @@ describe("Company従業員名の期間参照", () => {
       history +
         `
       INSERT INTO company_resource_revisions VALUES
-        ('organization:default', 'person', 'person:1', 3, 'active', '2026-07-01', NULL, '{"officialName":"Corrected Person"}');
+        ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'person', 'person:1', 3, 'active', '2026-07-01', NULL, '{"officialName":"Corrected Person"}');
     `,
       false,
     )
@@ -693,7 +694,7 @@ describe("Company従業員名の期間参照", () => {
       history +
         `
       INSERT INTO company_workforce_resource_bindings VALUES
-        ('employee', 'employee:1', 'organization:default', 'employee:1');
+        ('employee', 'employee:1', '${COMPANY_DEFAULT_ORGANIZATION_ID}', 'employee:1');
     `,
     )
     expect(

@@ -28,7 +28,7 @@ test("一括確認した一覧とキーをそのまま送り、競合を自動�
         snapshotDigest: "a".repeat(64),
         corrections: [
           {
-            organizationId: "organization:default",
+            organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
             type: "person",
             id: "person:example",
             revision: 2,

@@ -12,6 +12,7 @@ import { describe, expect, test } from "bun:test"
 import { Hono } from "hono"
 import { hc } from "hono/client"
 import { readFileSync } from "node:fs"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const systemSql = readFileSync(
   new URL("../../../system/infrastructure/schema/system-core.sql", import.meta.url),
@@ -26,7 +27,7 @@ const principalSql = ["system-integration.sql", "system-principal.sql"]
     readFileSync(new URL(`../../../system/infrastructure/schema/${name}`, import.meta.url), "utf8"),
   )
   .join("\n")
-const organizationId = "organization:default"
+const organizationId = COMPANY_DEFAULT_ORGANIZATION_ID
 const asOf = restoreCalendarDate("2026-01-01")
 
 describe("Company authority resolution HTTP", () => {

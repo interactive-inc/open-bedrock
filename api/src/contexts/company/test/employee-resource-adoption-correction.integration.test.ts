@@ -3,6 +3,7 @@ import { createEmployeeAdoptionBatchFixture } from "@/contexts/company/test/empl
 import type { AdoptionResource } from "@/contexts/company/test/employee-resource-adoption.test-support"
 import { CompanyEmploymentResourceHistoryAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-employment-resource-history.adapter"
 import { CompanyEmploymentResourceTimelineValue } from "@/contexts/company/domain/values/company-employment-resource-timeline.value"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 async function fixture() {
   const imported: AdoptionResource[] = []
@@ -69,7 +70,7 @@ test("原履歴を保全して訂正と全員の接続を原子的に保存し�
   )
   expect(await context.legacy()).toEqual(legacy)
   const history = await new CompanyEmploymentResourceHistoryAdapter(context.database).read({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     id: "employment:batch-1",
   })
   if (history instanceof Error) throw history

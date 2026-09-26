@@ -11,6 +11,7 @@ import {
 } from "@/contexts/company/domain/values/organization-structure.value"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { drizzle } from "drizzle-orm/d1"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 type Context = D1Database
 export type PreparedCompanyOrganizationProjection = Readonly<{
   beforeWorkforce: ReadonlyArray<D1PreparedStatement>
@@ -28,7 +29,8 @@ export class CompanyOrganizationResourceProjectionAdapter {
   ): Promise<PreparedCompanyOrganizationProjection | Error> {
     const resources = change.resources.filter(
       (resource) =>
-        resource.type === "organization-unit" && resource.organizationId === "organization:default",
+        resource.type === "organization-unit" &&
+        resource.organizationId === COMPANY_DEFAULT_ORGANIZATION_ID,
     )
     if (
       resources.length === 0 &&
@@ -82,7 +84,7 @@ export class CompanyOrganizationResourceProjectionAdapter {
       .bind(JSON.stringify(ids))
       .all<{ id: string; organization_id: string | null }>()
     if (!existing.success) return new Error("organization bindings unavailable")
-    if (existing.results.some((unit) => unit.organization_id !== "organization:default"))
+    if (existing.results.some((unit) => unit.organization_id !== COMPANY_DEFAULT_ORGANIZATION_ID))
       return new CompanyResourceValidationError("invalid_organization")
     const newIds = ids.filter((id) => !existing.results.some((unit) => unit.id === id))
     for (const period of periods) {
@@ -150,7 +152,7 @@ export class CompanyOrganizationResourceProjectionAdapter {
         ...newIds.map((id) =>
           this.c
             .prepare(`INSERT INTO company_organization_resource_bindings
-      (organization_unit_id, organization_id, recorded_at) VALUES (?1, 'organization:default', ?2)`)
+      (organization_unit_id, organization_id, recorded_at) VALUES (?1, '${COMPANY_DEFAULT_ORGANIZATION_ID}', ?2)`)
             .bind(id, change.recordedAt),
         ),
         ...assignmentProjection.bindings,

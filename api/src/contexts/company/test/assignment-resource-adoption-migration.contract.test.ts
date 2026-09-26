@@ -7,6 +7,8 @@ import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-dat
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
 import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/test/company-assignment-resource.test-support"
 import { prepareHistoricalCompanyResourceRevisionFixture } from "@/contexts/company/test/historical-company-resource-revision.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
+import { alignHistoricalMigrationSql } from "@/contexts/company/test/align-historical-organization-identity.test-support"
 
 describe("所属移行の上長対応を追加するmigration", () => {
   test("既存発令の上長対応とrowidを保持し、更新禁止と通常の上長変更が移行後も働く", async () => {
@@ -34,7 +36,7 @@ describe("所属移行の上長対応を追加するmigration", () => {
     await database.exec(`CREATE VIEW company_account_employee_link_periods AS
       SELECT account_id, employee_id, NULL AS starts_on, NULL AS ends_on FROM company_account_employee_links`)
     await database.exec(`CREATE VIEW company_account_employee_resource_bindings AS
-      SELECT 'organization:default' AS organization_id, NULL AS resource_id, account_id, employee_id
+      SELECT '${COMPANY_DEFAULT_ORGANIZATION_ID}' AS organization_id, NULL AS resource_id, account_id, employee_id
       FROM company_account_employee_links WHERE 0`)
     // 責務の公開接続がまだ存在しない旧schemaでは、現行writerの参照結果を空に固定する。
     // 対象のmigrationを適用する直前に破棄し、実際のtableを作る。
@@ -80,9 +82,11 @@ describe("所属移行の上長対応を追加するmigration", () => {
         await database.exec("DROP VIEW company_responsibility_resource_bindings")
       }
       await database.batch(
-        splitSqlStatements(readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8")).map(
-          (sql) => database.prepare(sql),
-        ),
+        splitSqlStatements(
+          alignHistoricalMigrationSql(
+            readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8"),
+          ),
+        ).map((sql) => database.prepare(sql)),
       )
     }
     expect(
@@ -161,9 +165,9 @@ test("既存の移行証跡へ接続先を推測して補わず、新しい列�
   ).results
   for (const file of files.filter((file) => file >= first && !auditMigrations.has(file))) {
     await database.batch(
-      splitSqlStatements(readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8")).map((sql) =>
-        database.prepare(sql),
-      ),
+      splitSqlStatements(
+        alignHistoricalMigrationSql(readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8")),
+      ).map((sql) => database.prepare(sql)),
     )
   }
   expect(

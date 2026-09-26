@@ -5,6 +5,7 @@ import {
   CompanyUnavailableError,
   type CompanyOperationError,
 } from "@/contexts/company/domain/errors"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Context = D1Database
 
@@ -113,7 +114,7 @@ export class WorkforceConnectionCompletionRepository {
             (${UNCONNECTED_EMPLOYMENTS}) AS unconnected_employments
           FROM (SELECT 1) AS anchor
           LEFT JOIN company_workforce_connection_completions AS completion
-            ON completion.organization_id = 'organization:default'`)
+            ON completion.organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`)
         .first()
       return rowSchema.parse(row)
     } catch (cause) {

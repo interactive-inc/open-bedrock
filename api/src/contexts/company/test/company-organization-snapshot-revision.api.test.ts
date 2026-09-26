@@ -12,6 +12,7 @@ import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { createCompanyGradeAssignmentTestContext } from "@/contexts/company/test/company-grade-assignment.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test("公開組織snapshotは指定会社版と有効日を維持し、未来版・不正値・権限不足を拒否する", async () => {
   const database = createCompanyD1TestDatabase(
@@ -32,7 +33,7 @@ test("公開組織snapshotは指定会社版と有効日を維持し、未来版
       recordedAt: revision,
       resources: [
         {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "organization-unit",
           id: "period:root",
           revision,
@@ -40,7 +41,7 @@ test("公開組織snapshotは指定会社版と有効日を維持し、未来版
           effectiveFrom: restoreCalendarDate("2030-01-01"),
           effectiveTo: null,
           attributes: {
-            organizationUnitId: "unit:root",
+            organizationUnitId: "0190005f-0000-7000-8000-3d39a82ae356",
             code: "ROOT",
             officialName: `Name ${revision}`,
             kind: "COMPANY",
@@ -60,7 +61,11 @@ test("公開組織snapshotは指定会社版と有効日を維持し、未来版
       CompanyActorValue.restore({
         accountId: "account:reader",
         employeeId: null,
-        organizationIds: [state.authorized ? "organization:default" : "organization:other"],
+        organizationIds: [
+          state.authorized
+            ? COMPANY_DEFAULT_ORGANIZATION_ID
+            : "01900060-0000-7000-8000-12268fccf2cc",
+        ],
         capabilities: ["company:read"],
       }),
     )
@@ -80,7 +85,7 @@ test("公開組織snapshotは指定会社版と有効日を維持し、未来版
   })
   for (const version of ["1", "2"]) {
     const response = await client.snapshots.$get({
-      header: { "x-company-organization-id": "organization:default" },
+      header: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID },
       query: { organization_revision: version, effective_on: "2030-06-01" },
     })
     expect(response.status).toBe(200)
@@ -92,14 +97,14 @@ test("公開組織snapshotは指定会社版と有効日を維持し、未来版
   }
   for (const version of ["3", "-1", "1.5", "9007199254740992", "invalid"]) {
     const response = await client.snapshots.$get({
-      header: { "x-company-organization-id": "organization:default" },
+      header: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID },
       query: { organization_revision: version },
     })
     expect(Number(response.status)).toBe(400)
   }
   state.authorized = false
   const forbidden = await client.snapshots.$get({
-    header: { "x-company-organization-id": "organization:default" },
+    header: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID },
     query: { organization_revision: "1" },
   })
   expect(Number(forbidden.status)).toBe(403)
@@ -115,7 +120,7 @@ test("組織閲覧だけのsnapshotは従業員の等級割当を含まない", 
         CompanyActorValue.restore({
           accountId: "account:reader",
           employeeId: null,
-          organizationIds: ["organization:default"],
+          organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
           capabilities: ["company:read"],
           permissions: access.attributesRead
             ? ["org:read", "employee:attributes:read"]
@@ -128,7 +133,7 @@ test("組織閲覧だけのsnapshotは従業員の等級割当を含まない", 
   const request = async () =>
     app.request(
       "/snapshots?effective_on=2030-04-01",
-      { headers: { "x-company-organization-id": "organization:default" } },
+      { headers: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID } },
       { DB: f.database },
     )
   const orgOnly = await request()

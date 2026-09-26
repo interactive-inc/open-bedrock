@@ -1,5 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
-import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
+import { testOrganizationUnitId } from "@tests/api/support/company/test-organization-unit-id"
 import { Expense } from "@/contexts/expense/domain/entities/expense.entity"
 import { describe, expect, test } from "bun:test"
 
@@ -7,7 +7,7 @@ describe("Expense.create", () => {
   test("builds an Expense with pending status and null id", () => {
     const expense = Expense.create({
       employeeId: toWorkforceEmployeeId(5),
-      organizationUnitId: toWorkforceOrganizationUnitId("D003"),
+      organizationUnitId: testOrganizationUnitId("D003"),
       category: "transport",
       amount: 1200,
       spentAt: "2026-06-01",
@@ -28,7 +28,7 @@ describe("Expense.create", () => {
   test("accepts null note", () => {
     const expense = Expense.create({
       employeeId: toWorkforceEmployeeId(5),
-      organizationUnitId: toWorkforceOrganizationUnitId("D003"),
+      organizationUnitId: testOrganizationUnitId("D003"),
       category: "supplies",
       amount: 500,
       spentAt: "2026-06-02",
@@ -44,7 +44,7 @@ describe("Expense.withStatus", () => {
   test("returns a new Expense with the changed status", () => {
     const expense = Expense.create({
       employeeId: toWorkforceEmployeeId(5),
-      organizationUnitId: toWorkforceOrganizationUnitId("D003"),
+      organizationUnitId: testOrganizationUnitId("D003"),
       category: "transport",
       amount: 1200,
       spentAt: "2026-06-01",
@@ -65,7 +65,7 @@ describe("Expense.withDetails", () => {
   test("returns a new Expense with the changed details", () => {
     const expense = Expense.create({
       employeeId: toWorkforceEmployeeId(5),
-      organizationUnitId: toWorkforceOrganizationUnitId("D003"),
+      organizationUnitId: testOrganizationUnitId("D003"),
       category: "transport",
       amount: 1200,
       spentAt: "2026-06-01",

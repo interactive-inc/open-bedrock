@@ -5,6 +5,7 @@ import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-def
 import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { SystemAttachmentTestBucket } from "@system/test/system-attachment-test-bucket.test-support"
 import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-system-attachment-test-kek-environment.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 export async function createLicensePreservationFixture(
   database: D1Database,
@@ -34,7 +35,7 @@ export async function createLicensePreservationFixture(
     ...governance.step,
     rejection_behavior: rejectionBehavior,
     governance_authority: {
-      organization_id: "organization:default",
+      organization_id: COMPANY_DEFAULT_ORGANIZATION_ID,
       responsibility_code: "APPROVE",
       scope: null,
     },

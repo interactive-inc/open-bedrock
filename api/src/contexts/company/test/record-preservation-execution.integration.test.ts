@@ -15,6 +15,7 @@ import {
 } from "@system/application/workflow/start-system-procedure"
 import { ApproveSystemTask } from "@system/application/workflow/approve-system-task"
 import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test.each(["approver", "service"])(
   "record preservation revalidates Company approval independently of executor: %s",
@@ -54,7 +55,7 @@ test.each(["approver", "service"])(
     const step: ApplicationWorkflowStep = {
       ...c.step,
       governance_authority: {
-        organization_id: "organization:default",
+        organization_id: COMPANY_DEFAULT_ORGANIZATION_ID,
         responsibility_code: "APPROVE",
         scope: null,
       },

@@ -3,6 +3,7 @@ import type { CompanyResourceProps } from "@/contexts/company/domain/entities/co
 import { CompanySnapshotRevisionError } from "@/contexts/company/domain/errors"
 import { z } from "zod"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const rowSchema = z.object({
   resource_id: z.string(),
@@ -41,7 +42,7 @@ export class CompanyEmploymentMovementsRepository {
         this.c.env.DB.prepare(`SELECT count(*) AS missing FROM company_employments employment
           LEFT JOIN company_workforce_resource_bindings binding
             ON binding.resource_type = 'employment' AND binding.resource_id = employment.id
-          WHERE (binding.organization_id = ?1 OR (binding.organization_id IS NULL AND ?1 = 'organization:default'))
+          WHERE (binding.organization_id = ?1 OR (binding.organization_id IS NULL AND ?1 = '${COMPANY_DEFAULT_ORGANIZATION_ID}'))
             AND NOT EXISTS (SELECT 1 FROM company_resource_revisions resource
               WHERE resource.organization_id = ?1 AND resource.resource_type = 'employment'
                 AND resource.resource_id = employment.id AND resource.organization_revision <= ?2

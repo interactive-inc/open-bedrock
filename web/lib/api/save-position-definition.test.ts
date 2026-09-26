@@ -12,7 +12,7 @@ const command: PositionDefinitionCommand = {
   expectedRevision: 7,
   reason: "Confirmed correction",
   resource: {
-    organizationId: "organization:default",
+    organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
     type: "position",
     id: "position:test",
     revision: 3,
@@ -36,7 +36,7 @@ test("retries preserve the exact command, version and key without fetching a new
     vi.fn(async (input: RequestInfo | URL, init?: RequestInit) => {
       requests.push(new Request(input, init))
       return Response.json({
-        organizationId: "organization:default",
+        organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
         organizationRevision: 8,
         replayed: requests.length > 1,
       })

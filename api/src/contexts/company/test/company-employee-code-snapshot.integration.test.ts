@@ -11,12 +11,13 @@ import { createGovernanceTaskTestContext } from "@/contexts/company/test/governa
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { EmployeeRepository } from "@/contexts/company/infrastructure/repositories/employee/employee.repository"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test("将来コード・遡及訂正・予約の訂正で人事状態の対象と応答コードを同じ有効日に揃える", async () => {
   const f = await createGovernanceTaskTestContext()
   const repository = new D1CompanyResourceRepository({ database: f.database })
   const head = await repository.findMany({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     types: ["employee"],
     ids: [f.creator.employeeId],
   })
@@ -37,7 +38,7 @@ test("将来コード・遡及訂正・予約の訂正で人事状態の対象�
         CompanyActorValue.restore({
           accountId: f.creator.accountId,
           employeeId: f.creator.employeeId,
-          organizationIds: ["organization:default"],
+          organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
           capabilities: [],
           permissions: ["employee:read"],
         }),
@@ -67,7 +68,7 @@ test("将来コード・遡及訂正・予約の訂正で人事状態の対象�
     },
   ])
   const publicCurrent = await repository.findMany({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     types: ["employee"],
     ids: [f.creator.employeeId],
     effectiveOn: today,

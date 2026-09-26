@@ -22,6 +22,7 @@ import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { prepareHistoricalCompanyResourceRevisionFixture } from "@/contexts/company/test/historical-company-resource-revision.test-support"
 import { splitSqlStatements } from "@/lib/database/split-sql-statements"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 function resourceProps(resource: CompanyResourceEntity): CompanyResourceProps {
   return {
@@ -62,7 +63,7 @@ async function fixture(
     return repository.write(change)
   }
   const envelope = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     revision: 1,
     state: "active" as const,
     effectiveFrom: restoreCalendarDate("2030-01-01"),
@@ -85,7 +86,10 @@ async function fixture(
       ...envelope,
       type: "authority-scope",
       id: "scope:team",
-      attributes: { scopeType: "organization-unit", scopeId: "unit:journal" },
+      attributes: {
+        scopeType: "organization-unit",
+        scopeId: "0190005f-0000-7000-8000-3e026079e0b5",
+      },
     },
     {
       ...envelope,
@@ -150,7 +154,7 @@ async function fixture(
       base.database
         .prepare(`INSERT INTO company_organization_responsibility_period_versions
       (period_id, revision, employee_id, employment_id, organization_unit_id, responsibility_type, starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
-      VALUES (?1, ?2, ?3, ?4, 'unit:journal', ?5, ?6, ?7, ?8, 'legacy:responsibility-adoption', 0)`)
+      VALUES (?1, ?2, ?3, ?4, '0190005f-0000-7000-8000-3e026079e0b5', ?5, ?6, ?7, ?8, 'legacy:responsibility-adoption', 0)`)
         .bind(
           period.id,
           period.revision,
@@ -168,7 +172,7 @@ async function fixture(
   ])
   let actor: CompanyActorValue | undefined = CompanyActorValue.restore({
     ...base.creator,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:admin"],
   })
   const clock = { now: base.at }
@@ -231,7 +235,7 @@ async function fixture(
     })
   const publicOn = async (date: string) => {
     const snapshot = await repository.findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["responsibility-assignment"],
       effectiveOn: restoreCalendarDate(date),
     })
@@ -287,7 +291,7 @@ async function fixture(
 test("移行の確認対象に既存公開責務の全版と来歴を含め、確認後の変更を拒否する", async () => {
   const f = await fixture()
   const existing: CompanyResourceProps = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "responsibility-assignment",
     id: "existing:responsibility",
     revision: 1,
@@ -340,7 +344,7 @@ test.each([false, true])(
   async (failReceipt) => {
     const f = await fixture()
     const existing: CompanyResourceProps = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "responsibility-assignment",
       id: "existing:manager",
       revision: 1,
@@ -573,13 +577,16 @@ describe("確認済みの既存責務を公開履歴へ接続する", () => {
     })
     expect(
       await resolver.resolve({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         asOf: restoreCalendarDate("2030-06-01"),
         subjectEmployeeId: null,
         criteria: [
           {
             responsibilityCode: "MANAGER",
-            scope: { scopeType: "organization-unit", scopeId: "unit:journal" },
+            scope: {
+              scopeType: "organization-unit",
+              scopeId: "0190005f-0000-7000-8000-3e026079e0b5",
+            },
           },
         ],
       }),
@@ -684,7 +691,7 @@ test("同時再送は一度だけ接続し、別の依頼・別の主体・キ�
   f.setAdoptionActor(
     CompanyActorValue.restore({
       ...f.people[1]!,
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:admin"],
     }),
   )
@@ -812,7 +819,9 @@ test.each(["anonymous", "reader", "other-organization"])(
         : CompanyActorValue.restore({
             ...f.creator,
             organizationIds: [
-              kind === "other-organization" ? "organization:other" : "organization:default",
+              kind === "other-organization"
+                ? "01900060-0000-7000-8000-12268fccf2cc"
+                : COMPANY_DEFAULT_ORGANIZATION_ID,
             ],
             capabilities: [kind === "reader" ? "company:read" : "company:admin"],
           }),
@@ -918,7 +927,7 @@ test("既存の期間重複があるmigrationは一意制約を置換する前�
   await prepareHistoricalCompanyResourceRevisionFixture(database)
   const f = await fixture(database, "confirmed")
   const responsibility: CompanyResourceProps = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "responsibility-assignment",
     id: "overlap:first",
     revision: 1,
@@ -1038,7 +1047,7 @@ test("百件を超える責務を一括で接続し、後半の失敗でも先�
       f.database
         .prepare(`INSERT INTO company_organization_responsibility_period_versions
       (period_id, revision, employee_id, employment_id, organization_unit_id, responsibility_type, starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
-      VALUES (?1, 1, ?2, ?3, 'unit:journal', 'MANAGER', ?4, ?5, 0, 'legacy:bulk-responsibility', 0)`)
+      VALUES (?1, 1, ?2, ?3, '0190005f-0000-7000-8000-3e026079e0b5', 'MANAGER', ?4, ?5, 0, 'legacy:bulk-responsibility', 0)`)
         .bind(
           period.id,
           f.creator.employeeId,

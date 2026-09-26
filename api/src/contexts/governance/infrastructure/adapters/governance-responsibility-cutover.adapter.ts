@@ -7,9 +7,10 @@ import {
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const governanceResponsibilitySource = {
-  organizationId: "organization:default",
+  organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
   sourceContext: "governance",
   sourceKind: "org-role-assignment",
 } as const

@@ -6,6 +6,7 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { splitSqlStatements } from "@/lib/database/split-sql-statements"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const schema =
   readFileSync(
@@ -15,7 +16,7 @@ const schema =
   "\n" +
   readFileSync(new URL("../infrastructure/schema/company.sql", import.meta.url), "utf8")
 const common = {
-  organizationId: "organization:default",
+  organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
   revision: 1,
   state: "active" as const,
   effectiveFrom: restoreCalendarDate("2030-01-01"),
@@ -68,7 +69,7 @@ const unit: CompanyResourceProps = {
   type: "organization-unit",
   id: "period:root",
   attributes: {
-    organizationUnitId: "unit:root",
+    organizationUnitId: "0190005f-0000-7000-8000-3d39a82ae356",
     code: "ROOT",
     officialName: "Company",
     kind: "COMPANY",
@@ -83,7 +84,7 @@ const office: CompanyResourceProps = {
     code: "REVIEW",
     officialName: "Reviewer",
     positionId: position.id,
-    organizationUnitId: "unit:root",
+    organizationUnitId: "0190005f-0000-7000-8000-3d39a82ae356",
   },
 }
 const scope: CompanyResourceProps = {
@@ -242,7 +243,7 @@ const references: ReadonlyArray<
         attributes: {
           employeeId: employee.id,
           employmentId: employment.id,
-          organizationUnitId: "unit:root",
+          organizationUnitId: "0190005f-0000-7000-8000-3d39a82ae356",
           assignmentType: "PRIMARY",
         },
       },
@@ -281,7 +282,7 @@ function fixture(schemaSql = schema) {
   const saved = () =>
     database
       .prepare(`SELECT
-    (SELECT revision FROM company_organizations WHERE id = 'organization:default') AS revision,
+    (SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}') AS revision,
     (SELECT count(*) FROM company_resource_revisions) AS resources,
     (SELECT count(*) FROM company_command_receipts) AS receipts`)
       .first()
@@ -392,7 +393,7 @@ test("連続する定義の版をまたぐ任用を許可し、訂正で開く�
   expect(await f.saved()).toEqual(before)
   expect(
     await f.write(
-      [{ ...responsibility, organizationId: "organization:other" }],
+      [{ ...responsibility, organizationId: "01900060-0000-7000-8000-12268fccf2cc" }],
       0,
       "other-definition",
     ),
@@ -401,8 +402,8 @@ test("連続する定義の版をまたぐ任用を許可し、訂正で開く�
   expect(
     await f.write(
       [
-        { ...body, organizationId: "organization:third" },
-        { ...assignment, organizationId: "organization:third" },
+        { ...body, organizationId: "01900060-0000-7000-8000-31c6b0da6645" },
+        { ...assignment, organizationId: "01900060-0000-7000-8000-31c6b0da6645" },
       ],
       0,
       "other-assignment",

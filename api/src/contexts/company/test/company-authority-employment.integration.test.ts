@@ -5,6 +5,7 @@ import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/r
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { z } from "zod"
 import type { PersonnelActionInput } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test.each(["office-assignment", "organizational-authority"] as const)(
   "退職は雇用に結び付く%sを終了し、過去の任用を保持する",
@@ -26,7 +27,7 @@ test.each(["office-assignment", "organizational-authority"] as const)(
       ["2030-07-01", 0],
     ] as const) {
       const snapshot = await repository.findMany({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         types: [type],
         effectiveOn: restoreCalendarDate(date),
       })
@@ -66,7 +67,7 @@ test.each(["office-assignment", "organizational-authority"] as const)(
       ["2030-08-01", 0],
     ] as const) {
       const snapshot = await repository.findMany({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         types: [type],
         effectiveOn: restoreCalendarDate(date),
       })
@@ -85,7 +86,7 @@ test.each(["office-assignment", "organizational-authority"] as const)(
       ),
     ).toMatchObject({ replayed: false })
     const rehired = await repository.findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: [type],
       effectiveOn: restoreCalendarDate("2030-09-01"),
     })
@@ -100,7 +101,7 @@ test.each(["office-assignment", "organizational-authority"] as const)(
     const f = await createCompanyAuthorityEmploymentTestContext(type)
     const repository = new D1CompanyResourceRepository({ database: f.database })
     const snapshot = await repository.findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["employment"],
     })
     if (!snapshot.ok) throw snapshot.cause
@@ -162,7 +163,7 @@ test.each(["office-assignment", "organizational-authority"] as const)(
             header: {
               "idempotency-key": "authority:shorten-employment",
               "if-match": String(await f.companyRevision()),
-              "x-company-organization-id": "organization:default",
+              "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID,
             },
             json: { reason: "Confirm employment end", resources: [shortened] },
           })
@@ -228,7 +229,7 @@ test.each(["office-assignment", "organizational-authority"] as const)(
               header: {
                 "idempotency-key": "authority:shorten-employment-after-assignment",
                 "if-match": String(await f.companyRevision()),
-                "x-company-organization-id": "organization:default",
+                "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID,
               },
               json: { reason: "Confirm employment end", resources: [shortened] },
             })
@@ -278,7 +279,7 @@ test.each(["office-assignment", "organizational-authority"] as const)(
     if (retired instanceof Error) throw retired
     const repository = new D1CompanyResourceRepository({ database: f.database })
     const history = await repository.findEmploymentDependentHistory(
-      "organization:default",
+      COMPANY_DEFAULT_ORGANIZATION_ID,
       await f.companyRevision(),
     )
     if (history instanceof Error) throw history

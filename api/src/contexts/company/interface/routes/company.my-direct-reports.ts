@@ -8,6 +8,7 @@ import {
 } from "@/contexts/company/interface/errors"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { createFactory } from "hono/factory"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const factory = createFactory<CompanyHttpEnvironment>()
 
@@ -15,7 +16,10 @@ const factory = createFactory<CompanyHttpEnvironment>()
 export const GET = factory.createHandlers(async (context) => {
   const actor = context.var.companyActor
   if (actor === undefined) throw new CompanyAuthenticationRequiredError()
-  if (!actor.hasCapability("company:read") || !actor.canAccessOrganization("organization:default"))
+  if (
+    !actor.hasCapability("company:read") ||
+    !actor.canAccessOrganization(COMPANY_DEFAULT_ORGANIZATION_ID)
+  )
     throw new CompanyReadForbiddenError()
   if (actor.employeeId === null) return context.json({ data: [] }, 200)
   if (context.env.DB === undefined) throw new CompanyDatabaseUnavailableError()

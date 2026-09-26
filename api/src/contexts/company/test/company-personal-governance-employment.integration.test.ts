@@ -6,12 +6,13 @@ import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/t
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { CompanyGovernanceAuthorityResolutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-governance-authority-resolution.adapter"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 async function fixture(type: "responsibility-assignment" | "collective-body-membership") {
   const f = await createCompanyAssignmentResourceTestContext()
   await f.assignEmployeeCode()
   const common = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     id: "governance:personal",
     revision: 1,
     state: "active" as const,
@@ -55,7 +56,7 @@ async function fixture(type: "responsibility-assignment" | "collective-body-memb
           ),
         ),
     }).resolve({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       asOf: restoreCalendarDate(date),
       subjectEmployeeId: null,
       criteria: [
@@ -73,7 +74,7 @@ async function fixture(type: "responsibility-assignment" | "collective-body-memb
   }
   const read = async (date: string) => {
     const snapshot = await repository.findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: [type],
       ids: [resource.id],
       effectiveOn: restoreCalendarDate(date),
@@ -82,7 +83,7 @@ async function fixture(type: "responsibility-assignment" | "collective-body-memb
     return snapshot.resources
   }
   const employments = await repository.findMany({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     types: ["employment"],
   })
   if (!employments.ok) throw employments.cause
@@ -108,7 +109,7 @@ async function fixture(type: "responsibility-assignment" | "collective-body-memb
   }
   const retained = async () => {
     const snapshot = await repository.findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["responsibility-assignment", "collective-body-membership", "collective-body"],
       ids: ["assignment:approve", "membership:0", "membership:1", "membership:2", "body:committee"],
     })
@@ -150,7 +151,7 @@ test.each(["responsibility-assignment", "collective-body-membership"] as const)(
     expect(await f.read("2030-06-30")).toHaveLength(1)
     expect(await f.read("2030-07-01")).toEqual([])
     const history = await f.repository.findEmploymentDependentHistory(
-      "organization:default",
+      COMPANY_DEFAULT_ORGANIZATION_ID,
       await f.companyRevision(),
     )
     if (history instanceof Error) throw history
@@ -262,7 +263,7 @@ test.each(["responsibility-assignment", "collective-body-membership"] as const)(
     const retired = await f.personnel(retirement, "personal:exit")
     if (retired instanceof Error) throw retired
     const history = await f.repository.findEmploymentDependentHistory(
-      "organization:default",
+      COMPANY_DEFAULT_ORGANIZATION_ID,
       await f.companyRevision(),
     )
     if (history instanceof Error) throw history

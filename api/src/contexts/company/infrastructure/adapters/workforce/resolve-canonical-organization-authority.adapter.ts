@@ -7,10 +7,13 @@ import type {
   OrganizationalAuthorityCriterion as ProcedureCriterion,
 } from "@/contexts/company/domain/definitions/organizational-authority-candidate.definition"
 import type { OrganizationalAuthorityCriterion } from "@/contexts/company/domain/definitions/organizational-authority.definition"
-import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
+import { periodContainsDate } from "@/contexts/company/domain/definitions/period-contains-date.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { restoreOrgResponsibilityType } from "@/contexts/company/domain/definitions/restore-org-responsibility-type.definition"
-import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
+import type {
+  EmployeeId,
+  OrganizationUnitId,
+} from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { OrganizationUnitReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/organization-unit-read.adapter"
 import { OrganizationWorkforceSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/workforce/organization-workforce-snapshot.adapter"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
@@ -32,7 +35,9 @@ function toCriteria(props: {
   criteria: ReadonlyArray<ProcedureCriterion>
   employeeRows: ReadonlyArray<EmployeeRow>
   targetDepartmentCode: string | null
+  organizationUnitIdsByCode: ReadonlyMap<string, OrganizationUnitId>
 }): CanonicalCriteria | CompanyOperationError {
+  const organizationUnitId = (code: string) => props.organizationUnitIdsByCode.get(code)
   const byCode = new Map(
     props.employeeRows.flatMap((employee) =>
       employee.code === null ? [] : [[employee.code, employee.id]],
@@ -61,18 +66,32 @@ function toCriteria(props: {
           "organizational_authority_organization_reference_missing",
         )
       }
+      const targetOrganizationUnitId = organizationUnitId(props.targetDepartmentCode)
+      if (targetOrganizationUnitId === undefined) {
+        return new CompanyConflictError(
+          "対象組織を解決できません",
+          "organizational_authority_organization_reference_missing",
+        )
+      }
       criteria.push({
         kind: "target_organization_manager",
-        organizationUnitId: toWorkforceOrganizationUnitId(props.targetDepartmentCode),
+        organizationUnitId: targetOrganizationUnitId,
       })
     } else if (criterion.kind === "responsibility") {
+      const scopedOrganizationUnitId =
+        criterion.organizationUnitCode === null
+          ? null
+          : organizationUnitId(criterion.organizationUnitCode)
+      if (scopedOrganizationUnitId === undefined) {
+        return new CompanyConflictError(
+          "判断資格の組織を解決できません",
+          "organizational_authority_organization_reference_missing",
+        )
+      }
       criteria.push({
         kind: "responsibility",
         responsibilityType: restoreOrgResponsibilityType(criterion.responsibilityType),
-        organizationUnitId:
-          criterion.organizationUnitCode === null
-            ? null
-            : toWorkforceOrganizationUnitId(criterion.organizationUnitCode),
+        organizationUnitId: scopedOrganizationUnitId,
       })
     } else {
       criteria.push({ kind: criterion.kind })
@@ -92,7 +111,27 @@ async function resolveCanonicalOrganizationAuthority(props: {
   targetDepartmentCode: string | null
   asOf: string
 }): Promise<OrganizationalAuthorityCandidateResolution | CompanyOperationError> {
-  const canonicalCriteria = toCriteria(props)
+  // 組織単位の ID は組織コードから組み立てず、判定日に有効な組織単位の期間からコードで引く。
+  const asOf = restoreCalendarDate(props.asOf)
+  const organizationUnitIdsByCode = new Map<string, OrganizationUnitId>()
+  if (
+    props.targetDepartmentCode !== null ||
+    props.criteria.some(
+      (criterion) => criterion.kind === "responsibility" && criterion.organizationUnitCode !== null,
+    )
+  ) {
+    const organization = await new OrganizationUnitReadAdapter(props.c.var.database).readSnapshot(
+      asOf,
+    )
+    if (!organization.ok) {
+      return new CompanyUnexpectedError("組織単位を読み取れません", { cause: organization.cause })
+    }
+    for (const unit of organization.snapshot.units) {
+      if (!unit.isVoid && periodContainsDate(unit, asOf))
+        organizationUnitIdsByCode.set(unit.code, unit.organizationUnitId)
+    }
+  }
+  const canonicalCriteria = toCriteria({ ...props, organizationUnitIdsByCode })
   if (canonicalCriteria instanceof CompanyOperationError) return canonicalCriteria
 
   const result = await new ResolveOrganizationAuthority({
@@ -102,7 +141,7 @@ async function resolveCanonicalOrganizationAuthority(props: {
   }).execute({
     subjectEmployeeId: props.subjectEmployeeId,
     criteria: canonicalCriteria.criteria,
-    asOf: restoreCalendarDate(props.asOf),
+    asOf,
   })
 
   if (result.kind === "unavailable") {

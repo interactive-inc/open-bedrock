@@ -96,6 +96,34 @@ const SURROGATE_SEED_TABLES: Readonly<Record<string, string>> = {
   leave_balances: "0190004c",
 }
 
+/** 組織と組織単位の ID を UUID へ移す前の値。移行前の schema に seed を入れるときに戻す。 */
+const LEGACY_ORGANIZATION_SEED_VALUES: ReadonlyArray<readonly [string, string]> = [
+  ["'ad4f6cb1-774b-43ae-950f-80e9bc67c66d'", "'organization:default'"],
+  ["'282ccd01-cb30-4d0a-84b4-c675bbbe473c'", "'company:root'"],
+  [
+    "'0190005e-0000-7000-8000-' || substr('000000000000' || lower(hex(department_code)), -12)",
+    "'department:' || department_code",
+  ],
+]
+
+async function hasLegacyOrganizationIds(database: D1Database): Promise<boolean> {
+  const column = await database
+    .prepare("SELECT name FROM pragma_table_info('company_organizations') WHERE name = 'legacy_id'")
+    .first<{ name: string }>()
+  return column === null
+}
+
+function withLegacyOrganizationIds(sql: string): string {
+  let out = sql
+  for (const [current, legacy] of LEGACY_ORGANIZATION_SEED_VALUES)
+    out = out.replaceAll(current, legacy)
+  // seed の組織単位の UUID は組織コードの16進を末尾に持つ。移行前の `department:<コード>` へ戻す。
+  return out.replaceAll(/'0190005e-0000-7000-8000-([0-9a-f]{12})'/gu, (_literal, hex: string) => {
+    const code = Buffer.from(hex.replace(/^(00)+/u, ""), "hex").toString("utf8")
+    return `'department:${code}'`
+  })
+}
+
 /**
  * 空のローカルD1へ、対象より前の migration を1ファイルずつ当てる。
  * wrangler と同じく1ファイルを1つの batch として送り、ファイルの途中で止まれば全体を戻す。
@@ -153,6 +181,7 @@ function withoutSurrogateId(sql: string, table: string, prefix: string): string 
 export async function seedLocalD1(database: D1Database): Promise<void> {
   const legacy = await integerKeyedPrefixes(database)
   const withoutId = await tablesWithoutSurrogateId(database)
+  const legacyOrganization = await hasLegacyOrganizationIds(database)
   const files = readdirSync(seedsDirectory)
     .filter((file) => file.endsWith(".sql"))
     .sort()
@@ -162,6 +191,7 @@ export async function seedLocalD1(database: D1Database): Promise<void> {
   ]
   for (const file of ordered) {
     let sql = readFileSync(join(seedsDirectory, file), "utf8")
+    if (legacyOrganization) sql = withLegacyOrganizationIds(sql)
     for (const table of withoutId)
       sql = withoutSurrogateId(sql, table, SURROGATE_SEED_TABLES[table] ?? "")
     sql = sql.replaceAll(

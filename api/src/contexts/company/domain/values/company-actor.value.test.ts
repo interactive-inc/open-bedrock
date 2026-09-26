@@ -7,12 +7,12 @@ describe("CompanyActorValue", () => {
     const actor = CompanyActorValue.restore({
       accountId: "account:1",
       employeeId: "employee:1",
-      organizationIds: ["organization:1"],
+      organizationIds: ["01900060-0000-7000-8000-e53d7d4223a9"],
       capabilities: ["company:read"],
     })
 
-    expect(actor.canAccessOrganization("organization:1")).toBe(true)
-    expect(actor.canAccessOrganization("organization:2")).toBe(false)
+    expect(actor.canAccessOrganization("01900060-0000-7000-8000-e53d7d4223a9")).toBe(true)
+    expect(actor.canAccessOrganization("01900060-0000-7000-8000-b4069a636599")).toBe(false)
     expect(actor.hasCapability("company:read")).toBe(true)
     expect(actor.hasCapability("company:write")).toBe(false)
     expect(actor.canUpdateWorkforce()).toBe(false)
@@ -28,7 +28,7 @@ describe("CompanyActorValue", () => {
       capabilities: ["company:admin"],
     })
 
-    expect(actor.canAccessOrganization("organization:any")).toBe(true)
+    expect(actor.canAccessOrganization("01900060-0000-7000-8000-974d7bba80bb")).toBe(true)
     expect(actor.hasCapability("company:read")).toBe(true)
     expect(actor.hasCapability("company:write")).toBe(true)
     expect(actor.canUpdateWorkforce()).toBe(true)
@@ -38,7 +38,7 @@ describe("CompanyActorValue", () => {
     const actor = CompanyActorValue.restore({
       accountId: "account:basic-editor",
       employeeId: null,
-      organizationIds: ["organization:1"],
+      organizationIds: ["01900060-0000-7000-8000-e53d7d4223a9"],
       capabilities: ["company:workforce:update"],
     })
 
@@ -51,7 +51,10 @@ describe("CompanyActorValue", () => {
       CompanyActorValue.restore({
         accountId: "account:1",
         employeeId: null,
-        organizationIds: ["organization:1", "organization:1"],
+        organizationIds: [
+          "01900060-0000-7000-8000-e53d7d4223a9",
+          "01900060-0000-7000-8000-e53d7d4223a9",
+        ],
         capabilities: ["company:read"],
       }),
     ).toThrow(InvalidCompanyActorError)

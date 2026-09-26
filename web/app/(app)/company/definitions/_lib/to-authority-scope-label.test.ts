@@ -4,7 +4,7 @@ import type { CompanyResource } from "@/lib/api/types/company-resource-types"
 
 function toAuthorityScope(attributes: Readonly<Record<string, unknown>>): CompanyResource {
   return {
-    organizationId: "organization:default",
+    organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
     type: "authority-scope",
     id: "authority-scope:1",
     revision: 1,

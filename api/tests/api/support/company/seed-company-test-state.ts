@@ -1,4 +1,6 @@
 import { publishTestEmployeeResources } from "@tests/api/support/company/publish-test-employee-resources"
+import { seedOrganizationUnitId } from "@tests/api/support/company/test-organization-unit-id"
+import { COMPANY_ROOT_ORGANIZATION_UNIT_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 export type CompanyEmployeeFixture = Readonly<{
   id: number | string
@@ -259,7 +261,7 @@ export async function seedCompanyOrganization(
   for (const department of props.departments) {
     await db
       .prepare("INSERT OR IGNORE INTO company_organization_units (id, created_at) VALUES (?1, ?2)")
-      .bind(`department:${department.code}`, recordedAt)
+      .bind(seedOrganizationUnitId(department.code), recordedAt)
       .run()
   }
 
@@ -295,12 +297,12 @@ export async function seedCompanyOrganization(
         )
         .bind(
           `test:department:${department.code}`,
-          `department:${department.code}`,
+          seedOrganizationUnitId(department.code),
           department.code,
           department.name,
           department.parentCode === undefined || department.parentCode === null
-            ? "company:root"
-            : `department:${department.parentCode}`,
+            ? COMPANY_ROOT_ORGANIZATION_UNIT_ID
+            : seedOrganizationUnitId(department.parentCode),
           baselineOn,
           operationId,
           recordedAt,
@@ -327,7 +329,7 @@ export async function seedCompanyOrganization(
           `test:assignment:${id}:${assignment.assignmentType.toLowerCase()}:${assignment.department.code}`,
           employmentId(assignment.employee),
           id,
-          `department:${assignment.department.code}`,
+          seedOrganizationUnitId(assignment.department.code),
           assignment.assignmentType,
           assignment.positionTitle,
           manager === undefined || manager === null ? null : employeeId(manager),
@@ -353,7 +355,7 @@ export async function seedCompanyOrganization(
           `test:responsibility:${id}:manager:${responsibility.department.code}`,
           employmentId(responsibility.employee),
           id,
-          `department:${responsibility.department.code}`,
+          seedOrganizationUnitId(responsibility.department.code),
           baselineOn,
           operationId,
           recordedAt,

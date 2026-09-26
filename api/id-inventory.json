@@ -4,8 +4,8 @@
     "primaryKeyKinds": {
       "allocator-singleton-secret": 11,
       "composite": 1,
-      "text-prefixed": 10,
-      "text-uuid": 166,
+      "text-prefixed": 7,
+      "text-uuid": 169,
       "text-uuid-candidate": 18
     },
     "declaredForeignKeys": 272,
@@ -13,11 +13,11 @@
       "cross-context": 17,
       "external": 32,
       "historical": 10,
-      "not-reference": 95,
+      "not-reference": 97,
       "polymorphic": 18,
       "same-context": 79
     },
-    "triggers": 787,
+    "triggers": 791,
     "views": 25,
     "indexes": 290
   },
@@ -2272,7 +2272,7 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-prefixed",
+        "kind": "text-uuid",
         "uuidEnforced": false,
         "inheritsFrom": "company_organization_units"
       },
@@ -2436,8 +2436,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-prefixed",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -2510,10 +2510,17 @@
           }
         ]
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
+        "company_organization_units_identity_update",
         "company_organization_units_immutable_delete",
-        "company_organization_units_immutable_update"
+        "company_organization_units_immutable_update",
+        "company_organization_units_legacy_id_insert"
       ],
       "views": [],
       "indexes": []
@@ -2527,8 +2534,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-prefixed",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -2613,7 +2620,12 @@
           }
         ]
       },
-      "softReferences": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
       "triggers": [
         "company_account_employee_resource_commit_guard",
         "company_assignment_adoption_insert_guard",
@@ -2628,6 +2640,8 @@
         "company_grade_assignment_commit_guard",
         "company_organization_resource_commit_guard",
         "company_organization_resource_operation_commit_guard",
+        "company_organizations_identity_update",
+        "company_organizations_legacy_id_insert",
         "company_organizations_revision_step",
         "company_personnel_reporting_commit_guard",
         "company_place_reference_period_commit_guard",

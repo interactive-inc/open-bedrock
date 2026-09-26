@@ -9,8 +9,9 @@ import { readCompanyEmploymentDirectory } from "@/contexts/company/interface/ope
 import { readCompanyEmploymentStartDates } from "@/contexts/company/interface/operations/read-company-employment-start-dates"
 import { readCompanyEmploymentsByEmployee } from "@/contexts/company/interface/operations/read-company-employments-by-employee"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
-const organizationId = "organization:default"
+const organizationId = COMPANY_DEFAULT_ORGANIZATION_ID
 const effectiveOn = restoreCalendarDate("2030-06-01")
 
 test("雇用から人物氏名を同じ会社版で引き、改名後も旧版を再現する", async () => {

@@ -47,7 +47,11 @@ test.each(["starts-after", "ends-before", "period-id", "missing-unit"])(
       attributes: {
         ...f.reporting.attributes,
         organizationUnitId:
-          kind === "period-id" ? f.unit.id : kind === "missing-unit" ? "unit:missing" : "unit:root",
+          kind === "period-id"
+            ? f.unit.id
+            : kind === "missing-unit"
+              ? "0190005f-0000-7000-8000-ccdf3ed2f2b6"
+              : "0190005f-0000-7000-8000-3d39a82ae356",
       },
     }
     const before = await f.saved()
@@ -83,7 +87,7 @@ test("別organizationに同じ組織IDがあっても上長関係の参照を補
   const f = createCompanyReportingReferenceTestContext()
   expect(
     await f.write({
-      resources: [{ ...f.unit, organizationId: "organization:other" }],
+      resources: [{ ...f.unit, organizationId: "01900060-0000-7000-8000-12268fccf2cc" }],
       expectedRevision: 0,
     }),
   ).toMatchObject({ kind: "applied" })
@@ -117,16 +121,22 @@ test("上長関係の組織変更前後をそれぞれ保全し、終了した�
     id: `period:${name}`,
     attributes: {
       ...f.unit.attributes,
-      organizationUnitId: `unit:${name}`,
+      organizationUnitId:
+        name === "first"
+          ? "0190005f-0000-7000-8000-cba7c7adb88f"
+          : "0190005f-0000-7000-8000-0b68139f5ae9",
       code: name.toUpperCase(),
       kind: "TEAM",
-      parentOrganizationUnitId: "unit:root",
+      parentOrganizationUnitId: "0190005f-0000-7000-8000-3d39a82ae356",
     },
   }))
   const reporting = {
     ...f.reporting,
     effectiveTo: null,
-    attributes: { ...f.reporting.attributes, organizationUnitId: "unit:first" },
+    attributes: {
+      ...f.reporting.attributes,
+      organizationUnitId: "0190005f-0000-7000-8000-cba7c7adb88f",
+    },
   }
   expect(
     await f.write({ resources: [f.unit, ...teams, ...f.people, reporting], expectedRevision: 0 }),
@@ -135,7 +145,10 @@ test("上長関係の組織変更前後をそれぞれ保全し、終了した�
     ...reporting,
     revision: 2,
     effectiveFrom: restoreCalendarDate("2030-07-01"),
-    attributes: { ...reporting.attributes, organizationUnitId: "unit:next" },
+    attributes: {
+      ...reporting.attributes,
+      organizationUnitId: "0190005f-0000-7000-8000-0b68139f5ae9",
+    },
   }
   expect(await f.write({ resources: [moved], expectedRevision: 1 })).toMatchObject({
     kind: "applied",

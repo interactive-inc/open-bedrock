@@ -3,6 +3,7 @@ import { D1CompanyAccountProfileRepository } from "@/contexts/company/infrastruc
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { describe, expect, test } from "bun:test"
 import { CompanyAccountNameManagedByEmployeeError } from "@/contexts/company/domain/errors"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const schemaSql = `
   CREATE TABLE system_accounts (
@@ -33,27 +34,27 @@ const schemaSql = `
     employee_id TEXT NOT NULL
   );
   INSERT INTO company_organizations (id, revision, created_at, updated_at)
-    VALUES ('organization:default', 0, 0, 0);
+    VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 0, 0, 0);
 `
 
 describe("Company Account Profile", () => {
   test("読み取り後の従業員紐付けを保存時に再検査する", async () => {
     const database = createCompanyD1TestDatabase(`${schemaSql}
       INSERT INTO system_accounts VALUES ('account-1', 'active', 7, 100, 100);
-      INSERT INTO company_account_profiles VALUES ('organization:default', 'account-1', 'Employee name', 100, 100);
+      INSERT INTO company_account_profiles VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account-1', 'Employee name', 100, 100);
     `)
     const repository = new D1CompanyAccountProfileRepository(database)
     const commit = database.batch.bind(database)
     database.batch = async (statements) => {
       await database
         .prepare(
-          "INSERT INTO company_account_employee_resource_bindings VALUES ('organization:default', 'link-1', 'account-1', 'employee-1')",
+          `INSERT INTO company_account_employee_resource_bindings VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'link-1', 'account-1', 'employee-1')`,
         )
         .run()
       return commit(statements)
     }
     const result = await new UpdateCompanyAccountProfile(repository).execute(
-      "organization:default",
+      COMPANY_DEFAULT_ORGANIZATION_ID,
       "account-1",
       "Stale rename",
       new Date(200),
@@ -69,12 +70,12 @@ describe("Company Account Profile", () => {
   test("紐付いたAccountでも同じ表示名は履歴時刻を変えずに返す", async () => {
     const database = createCompanyD1TestDatabase(`${schemaSql}
       INSERT INTO system_accounts VALUES ('account-1', 'active', 7, 100, 100);
-      INSERT INTO company_account_profiles VALUES ('organization:default', 'account-1', 'Employee name', 100, 100);
-      INSERT INTO company_account_employee_resource_bindings VALUES ('organization:default', 'link-1', 'account-1', 'employee-1');
+      INSERT INTO company_account_profiles VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account-1', 'Employee name', 100, 100);
+      INSERT INTO company_account_employee_resource_bindings VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'link-1', 'account-1', 'employee-1');
     `)
     const result = await new UpdateCompanyAccountProfile(
       new D1CompanyAccountProfileRepository(database),
-    ).execute("organization:default", "account-1", "Employee name", new Date(200))
+    ).execute(COMPANY_DEFAULT_ORGANIZATION_ID, "account-1", "Employee name", new Date(200))
     expect(result).not.toBeInstanceOf(Error)
     expect(
       await database
@@ -89,12 +90,12 @@ describe("Company Account Profile", () => {
         VALUES ('account-1', 'active', 7, 100, 100);
       INSERT INTO company_account_profiles
         (organization_id, account_id, display_name, created_at, updated_at)
-        VALUES ('organization:default', 'account-1', 'Before', 100, 100);
+        VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account-1', 'Before', 100, 100);
     `)
     const repository = new D1CompanyAccountProfileRepository(database)
 
     const before = await repository.find({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       accountId: "account-1",
     })
     expect(before).not.toBeNull()
@@ -103,7 +104,7 @@ describe("Company Account Profile", () => {
     expect(before.displayName).toBe("Before")
 
     const updated = await new UpdateCompanyAccountProfile(repository).execute(
-      "organization:default",
+      COMPANY_DEFAULT_ORGANIZATION_ID,
       "account-1",
       "After",
       new Date(200),
@@ -125,7 +126,7 @@ describe("Company Account Profile", () => {
 
     expect(
       await new UpdateCompanyAccountProfile(repository).execute(
-        "organization:default",
+        COMPANY_DEFAULT_ORGANIZATION_ID,
         "missing",
         "Name",
         new Date(200),

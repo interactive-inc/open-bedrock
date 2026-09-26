@@ -4,6 +4,7 @@ import { createClient } from "@/lib/http/hc-client"
 import { readJsonObjectFile } from "@/lib/input/read-json-file"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { companyOrganizationId } from "@/lib/company/company-organization-id"
 
 export const help = `bedrock employees adoption-batch --data <confirmed-employees.json> --idempotency-key <uuid>
 
@@ -53,7 +54,7 @@ export default factory.createHandlers(
                   .array(
                     z
                       .object({
-                        organizationId: z.literal("organization:default"),
+                        organizationId: z.literal(companyOrganizationId),
                         type: z.enum(["person", "employee", "employment"]),
                         id: z.string().regex(/^\S{1,255}$/),
                         revision: z.number().int().positive().max(100),

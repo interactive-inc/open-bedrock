@@ -3,9 +3,10 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import { CompanyEmploymentStartCorrectionValue } from "@/contexts/company/domain/values/company-employment-start-correction.value"
 import { CompanyEmploymentResourceTimelineValue } from "@/contexts/company/domain/values/company-employment-resource-timeline.value"
 import { CompanyResourceEffectiveHistoryValue } from "@/contexts/company/domain/values/company-resource-effective-history.value"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const initial = {
-  organizationId: "organization:default",
+  organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
   type: "employment" as const,
   id: "employment:one",
   revision: 1,

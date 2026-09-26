@@ -32,6 +32,7 @@ import { licenseResponseSchema } from "@/contexts/software-license/interface/htt
 import { HTTPException } from "hono/http-exception"
 import { publishTestEmployeeResources } from "@tests/api/support/company/publish-test-employee-resources"
 import { publishTestAccountEmployeeLink } from "@tests/api/support/company/publish-test-account-employee-link"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const secret = "software-license-integration-test-secret"
 
@@ -50,7 +51,7 @@ export async function createLicenseFixture(database: D1Database) {
   await execSql(
     database,
     `INSERT OR IGNORE INTO company_organizations (id,revision,name,representative_name,created_at,updated_at)
-    VALUES ('organization:default',0,'Example',NULL,0,0);
+    VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}',0,'Example',NULL,0,0);
     INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
     VALUES ('7a047d56-30bc-4028-888d-2294d2d80c99','license:test-manager','custom','LicenseEntity Manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES

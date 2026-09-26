@@ -4,6 +4,7 @@ import { PrepareExpenseApprovalScopeAdapter } from "@/contexts/expense/infrastru
 import { ExpenseProcedureRepository } from "@/contexts/expense/infrastructure/repositories/expense-procedure.repository"
 import { ConflictError } from "@/lib/errors"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 let pool: LocalD1Pool
 
@@ -24,7 +25,7 @@ async function fixture() {
     const response = await c.write(
       [
         {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "organization-unit",
           id: "unit-period:transferred",
           revision: 1,
@@ -32,7 +33,7 @@ async function fixture() {
           effectiveFrom: c.command.spentAt,
           effectiveTo: null,
           attributes: {
-            organizationUnitId: "unit:transferred",
+            organizationUnitId: "0190005f-0000-7000-8000-9fae6578f5a2",
             code: "TRANSFERRED",
             officialName: "Transferred Team",
             kind: "TEAM",
@@ -43,7 +44,10 @@ async function fixture() {
           ...c.assignment,
           revision: 2,
           effectiveFrom: c.command.spentAt,
-          attributes: { ...c.assignment.attributes, organizationUnitId: "unit:transferred" },
+          attributes: {
+            ...c.assignment.attributes,
+            organizationUnitId: "0190005f-0000-7000-8000-9fae6578f5a2",
+          },
         },
       ],
       await c.companyRevision(),
@@ -65,7 +69,7 @@ test("申請者の所属を変更しても提出済み経費の負担組織を�
   if (original instanceof Error) throw original
   await transfer()
   expect(await c.read(c.command.spentAt)).toMatchObject({
-    primaryAssignment: { organizationUnitId: "unit:transferred" },
+    primaryAssignment: { organizationUnitId: "0190005f-0000-7000-8000-9fae6578f5a2" },
   })
   const current = await adapter.prepare({
     organizationUnitId: expense.submitted.request.organizationUnitId,

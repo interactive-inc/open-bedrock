@@ -7,6 +7,7 @@ import { AbortWhenPreviousStatementChangedNoRowsAdapter } from "@/contexts/compa
 import { CompanyEmploymentResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-employment-resource-projection.adapter"
 import { CompanyWorkforceResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-workforce-resource-projection.adapter"
 import { drizzle } from "drizzle-orm/d1"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Props = Readonly<{
   employeeId: string
@@ -102,7 +103,7 @@ export class PublishedInitialWorkforceAdapter {
         this.c
           .prepare(`INSERT INTO company_workforce_resource_bindings
           (resource_type, resource_id, organization_id, employee_id, resource_revision, lifecycle_revision, last_action_id)
-          VALUES ('employment', ?1, 'organization:default', ?2, 1, ?3, ?4)`)
+          VALUES ('employment', ?1, '${COMPANY_DEFAULT_ORGANIZATION_ID}', ?2, 1, ?3, ?4)`)
           .bind(props.employmentId, props.employeeId, props.lifecycleRevision, props.actionId),
         journal.commit,
       ],

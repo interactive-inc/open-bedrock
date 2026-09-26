@@ -10,6 +10,7 @@ import { parseGovernanceCode } from "@/contexts/governance/interface/http/parse-
 import { verifyBearer } from "@/api/http/verify-bearer"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const request = z.strictObject({
   employee_code: z.string().min(1).max(100),
@@ -44,7 +45,7 @@ export const POST = factory.createHandlers(verifyBearer, zValidator("json", requ
         actor: CompanyActorValue.restore({
           accountId: String(props.session.accountId),
           employeeId: String(props.session.employeeId),
-          organizationIds: ["organization:default"],
+          organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
           capabilities: ["company:write"],
         }),
         database: c.env.DB,
@@ -62,7 +63,7 @@ export const POST = factory.createHandlers(verifyBearer, zValidator("json", requ
           },
         }),
       }).assign({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         commandId: props.commandId,
         expectedRevision: props.expectedRevision,
         responsibilityCode: props.responsibilityCode,

@@ -6,11 +6,12 @@ import { CompanyOrganizationResourceProjectionAdapter } from "@/contexts/company
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { readFileSync } from "node:fs"
 import { splitSqlStatements } from "@/lib/database/split-sql-statements"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 async function fixture(type: "office-assignment" | "organizational-authority") {
   const f = await createCompanyAuthorityEmploymentTestContext(type)
   const snapshot = await new D1CompanyResourceRepository({ database: f.database }).findMany({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     types: ["employment"],
   })
   if (!snapshot.ok) throw snapshot.cause
@@ -110,7 +111,7 @@ test.each(["office-assignment", "organizational-authority"] as const)(
       ["2030-08-01", 0],
     ] as const) {
       const snapshot = await repository.findMany({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         types: ["employment", "assignment", type],
         ids: resources.map((resource) => resource.id),
         effectiveOn: restoreCalendarDate(date),
@@ -250,7 +251,7 @@ test("人物・従業員・雇用を一つの会社版で確定し、後段の�
   const f = await fixture("office-assignment")
   const repository = new D1CompanyResourceRepository({ database: f.database })
   const snapshot = await repository.findMany({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     types: ["person", "employee", "employment"],
   })
   if (!snapshot.ok) throw snapshot.cause
@@ -327,7 +328,7 @@ test("人物・従業員・雇用を一つの会社版で確定し、後段の�
   expect(Number((await f.write(resources, revision, "workforce:all")).status)).toBe(201)
   expect(Number((await f.write(resources, revision, "workforce:all")).status)).toBe(200)
   const saved = await repository.findMany({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     organizationRevision: revision + 1,
     types: ["person", "employee", "employment"],
     ids: [person.id, employee.id, employment.id],

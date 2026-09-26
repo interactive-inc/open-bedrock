@@ -14,6 +14,7 @@ import { SystemPrincipalSecretService } from "@system/lib/auth/system-principal-
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { POST } from "@system/interface/routes/system.machine-sessions"
 import { drizzle } from "drizzle-orm/d1"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 async function runAll(database: D1Database, statements: ReadonlyArray<string>): Promise<void> {
   await database.batch(statements.map((statement) => database.prepare(statement)))
@@ -32,8 +33,8 @@ export async function createLocalD1Governance(database: D1Database) {
   if (hash instanceof Error) throw hash
   await runAll(database, [
     `INSERT INTO company_organizations (id, revision, name, representative_name, created_at, updated_at)
-      SELECT 'organization:default', 0, 'Example organization', 'Example representative', 0, 0
-      WHERE NOT EXISTS (SELECT 1 FROM company_organizations WHERE id = 'organization:default')`,
+      SELECT '${COMPANY_DEFAULT_ORGANIZATION_ID}', 0, 'Example organization', 'Example representative', 0, 0
+      WHERE NOT EXISTS (SELECT 1 FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}')`,
     `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
       VALUES ('external-import-service', 'active', 0, 0, 0)`,
     `INSERT INTO system_principals (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
@@ -73,7 +74,9 @@ export async function createLocalD1Governance(database: D1Database) {
   if (response.status !== 201)
     throw new Error(`machine session failed: ${response.status} ${await response.text()}`)
   const organizationRevision = await database
-    .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+    .prepare(
+      `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+    )
     .first<number>("revision")
   if (organizationRevision === null) throw new Error("missing organization")
   const actor = { accountId, tokenVersion: 0, credentialId, issuedAtMs: now.getTime() }
@@ -112,7 +115,7 @@ export async function createLocalD1Governance(database: D1Database) {
   const date = resolveCompanyBusinessDate({ now: now.toISOString(), timeZone: "Asia/Tokyo" })
   if (date instanceof Error) throw date
   const base = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     revision: 1,
     effectiveFrom: restoreCalendarDate(date),
     effectiveTo: null,
@@ -180,7 +183,9 @@ export async function createLocalD1Governance(database: D1Database) {
   ]
   const write = async (changes: ReadonlyArray<CompanyResourceProps>) => {
     const revision = await database
-      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+      .prepare(
+        `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+      )
       .first<number>("revision")
     if (revision === null) throw new Error("organization is missing")
     const change = CompanyResourceChangeEntity.create({
@@ -198,7 +203,7 @@ export async function createLocalD1Governance(database: D1Database) {
   }
   await write(resources)
   const accountLinks = await new D1CompanyResourceRepository({ database }).findMany({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     types: ["account-employee-link"],
   })
   if (!accountLinks.ok) throw accountLinks.cause
@@ -215,7 +220,7 @@ export async function createLocalD1Governance(database: D1Database) {
     rejection_behavior: "reject",
     allow_delegation: true,
     governance_authority: {
-      organization_id: "organization:default",
+      organization_id: COMPANY_DEFAULT_ORGANIZATION_ID,
       responsibility_code: "APPROVE",
       scope: { scope_type: "amount", currency_code: "JPY", amount_field: "amount" },
     },

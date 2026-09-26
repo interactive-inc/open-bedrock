@@ -21,6 +21,7 @@ import { verifyPassword } from "@system/lib/auth/verify-password"
 import { openSystemAccountProvisioning } from "@system/interface/operations/open-system-account-provisioning"
 import { openSystemRoleCatalog } from "@system/interface/operations/open-system-role-catalog"
 import { isCompanyWriteAbortedByGuard as isAbortedByGuard } from "@/contexts/company/interface/operations/is-company-write-aborted-by-guard"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 /**
  * 登録時に既定で割り当てるrole key。このroleは全従業員が持つ基準の権限集合なので、
@@ -192,7 +193,7 @@ export class RegisterEmployee {
         system.accountStatement,
         ...companyStatements,
         prepareCompanyInitialAccountProfileStatement(this.c.env.DB, {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           accountId: system.accountId,
           displayName: input.action.employeeName,
           at: input.now.getTime(),

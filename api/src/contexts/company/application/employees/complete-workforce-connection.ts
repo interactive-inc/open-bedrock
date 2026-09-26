@@ -5,6 +5,7 @@ import {
 import { CompanyForbiddenError } from "@/contexts/company/domain/errors"
 import type { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import type { WorkforceConnectionCompletionRepository } from "@/contexts/company/infrastructure/repositories/employee/workforce-connection-completion.repository"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Context = Readonly<{
   actor: CompanyActorValue
@@ -20,13 +21,13 @@ export class CompleteWorkforceConnection {
 
   async execute(input: WorkforceConnectionCompletionInput) {
     if (
-      !this.c.actor.canAccessOrganization("organization:default") ||
+      !this.c.actor.canAccessOrganization(COMPANY_DEFAULT_ORGANIZATION_ID) ||
       !this.c.actor.hasCapability("company:admin")
     )
       return new CompanyForbiddenError()
     const completion = WorkforceConnectionCompletionEntity.create({
       ...input,
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       actorAccountId: this.c.actor.accountId,
       recordedAt: this.c.now.getTime(),
     })

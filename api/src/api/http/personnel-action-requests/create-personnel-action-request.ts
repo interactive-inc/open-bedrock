@@ -33,6 +33,7 @@ import type { SystemWorkflowWriter } from "@system/domain/definitions/workflow/s
 import { openSystemWorkflow } from "@system/interface/operations/open-system-workflow"
 import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { prepareSystemAuditEventAppend } from "@system/interface/operations/prepare-system-audit-event-append"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 export type CreatedPersonnelActionRequest = Readonly<{
   id: string
@@ -278,7 +279,7 @@ export class CreatePersonnelActionRequest {
             ? null
             : prepareCompanyOrganizationRevisionStatement({
                 database: this.c.env.DB,
-                organizationId: "organization:default",
+                organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
                 expectedRevision: command.baseCompanyRevision,
               })
         if (companyRevisionStatement instanceof Error) return companyRevisionStatement

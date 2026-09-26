@@ -10,6 +10,7 @@ import {
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { EmployeeProfileSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/employee/employee-profile-snapshot.adapter"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Context = Readonly<{ env: CompanyContext["env"] }>
 export type EmployeeProfileUpdateResult = Readonly<{
@@ -60,7 +61,7 @@ export class EmployeeProfileRepository {
         return new CompanyUnexpectedError("会社の日付を確認できません", { cause: today })
       if (today !== input.profile.effectiveOn) {
         const receipt = await this.c.env.DB.prepare(
-          "SELECT 1 AS present FROM company_command_receipts WHERE organization_id = 'organization:default' AND command_id = ?1",
+          `SELECT 1 AS present FROM company_command_receipts WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND command_id = ?1`,
         )
           .bind(change.commandId)
           .first<unknown>()

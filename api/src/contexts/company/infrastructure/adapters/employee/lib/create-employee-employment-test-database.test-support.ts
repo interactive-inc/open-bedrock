@@ -1,4 +1,5 @@
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const schema = `
   CREATE TABLE company_workforce_resource_bindings (
@@ -56,10 +57,10 @@ export function createEmployeeEmploymentTestDatabase(
   const resources = published
     ? `
       INSERT INTO company_workforce_resource_bindings VALUES
-        ('employee', 'employee:1', 'organization:default', 'employee:1');
+        ('employee', 'employee:1', '${COMPANY_DEFAULT_ORGANIZATION_ID}', 'employee:1');
       INSERT INTO company_resource_revisions VALUES
-        ('organization:default', 'person', 'person:1', 1, 'active', '2026-01-01', NULL, '{"officialName":"Example Person","email":null,"phone":null}'),
-        ('organization:default', 'employee', 'employee:1', 1, 'active', '2026-01-01', NULL, '{"personId":"person:1","employeeCode":"E001"}');
+        ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'person', 'person:1', 1, 'active', '2026-01-01', NULL, '{"officialName":"Example Person","email":null,"phone":null}'),
+        ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'employee', 'employee:1', 1, 'active', '2026-01-01', NULL, '{"personId":"person:1","employeeCode":"E001"}');
     `
     : ""
   return createCompanyD1TestDatabase(schema + resources + additionalSql)

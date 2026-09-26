@@ -38,6 +38,7 @@ import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restor
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
   .filter((file) => file.endsWith(".sql"))
@@ -85,7 +86,7 @@ async function fixture() {
   // 会社情報を事前設定する製品でも、確認済み入力と一致する場合だけ初期化する。
   await database
     .prepare(
-      "UPDATE company_organizations SET name = ?1, representative_name = ?2 WHERE id = 'organization:default'",
+      `UPDATE company_organizations SET name = ?1, representative_name = ?2 WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
     )
     .bind(declaration.organization_name, declaration.representative_name)
     .run()
@@ -93,7 +94,7 @@ async function fixture() {
   const authorization: {
     organizationIds: string[]
     capabilities: ("company:admin" | "company:read")[]
-  } = { organizationIds: ["organization:default"], capabilities: ["company:admin"] }
+  } = { organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID], capabilities: ["company:admin"] }
   const environment = {
     DB: database,
     BOOTSTRAP_TOKEN: "company-bootstrap-test-token",
@@ -193,7 +194,7 @@ async function fixture() {
     (SELECT count(*) FROM company_organization_unit_period_versions) AS periods,
     (SELECT count(*) FROM company_organization_assignment_period_versions) AS assignments,
     (SELECT count(*) FROM company_organization_responsibility_period_versions) AS responsibilities,
-    (SELECT revision FROM company_organizations WHERE id = 'organization:default') AS revision`)
+    (SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}') AS revision`)
       .first<BootstrapState>()
   return {
     database,
@@ -321,13 +322,13 @@ describe("Company bootstrap through System authentication", () => {
       organization_unit_id: original?.organization_unit_id,
     })
     const profile = await f.client.company.profile.$get(
-      { header: { "x-company-organization-id": "organization:default" }, query: {} },
+      { header: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID }, query: {} },
       { headers: f.headers },
     )
     expect(Number(profile.status)).toBe(200)
     const beforeConfirmation = await f.client.company.profile.$get(
       {
-        header: { "x-company-organization-id": "organization:default" },
+        header: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID },
         query: { effective_on: declaration.hire_date },
       },
       { headers: f.headers },
@@ -350,7 +351,7 @@ describe("Company bootstrap through System authentication", () => {
     })
     const snapshot = await f.client.company["organization-snapshots"].$get(
       {
-        header: { "x-company-organization-id": "organization:default" },
+        header: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID },
         query: { as_of: f.observedOn },
       },
       { headers: f.headers },
@@ -466,7 +467,7 @@ describe("Company bootstrap through System authentication", () => {
     expect(
       await f.database
         .prepare(
-          "SELECT name, representative_name FROM company_organizations WHERE id = 'organization:default'",
+          `SELECT name, representative_name FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
         )
         .first<{ name: string; representative_name: string }>(),
     ).toEqual({
@@ -504,14 +505,14 @@ describe("Company bootstrap through System authentication", () => {
         ).status,
       ),
     ).toBe(401)
-    f.authorization.organizationIds = ["organization:other"]
+    f.authorization.organizationIds = ["01900060-0000-7000-8000-12268fccf2cc"]
     expect(Number((await f.post()).status)).toBe(403)
-    f.authorization.organizationIds = ["organization:default"]
+    f.authorization.organizationIds = [COMPANY_DEFAULT_ORGANIZATION_ID]
     f.authorization.capabilities = ["company:read"]
     expect(Number((await f.post()).status)).toBe(403)
     f.authorization.capabilities = ["company:admin"]
     expect(Number((await f.post()).status)).toBe(201)
-    f.authorization.organizationIds = ["organization:other"]
+    f.authorization.organizationIds = ["01900060-0000-7000-8000-12268fccf2cc"]
     expect(Number((await f.post()).status)).toBe(403)
   })
 
@@ -543,16 +544,20 @@ describe("Company bootstrap through System authentication", () => {
       Number((await f.post({ ...declaration, organization_name: "Other Company" })).status),
     ).toBe(409)
     await f.database.exec(
-      "UPDATE company_organizations SET name = 'Existing Company' WHERE id = 'organization:default'",
+      `UPDATE company_organizations SET name = 'Existing Company' WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
     )
     expect(Number((await f.post()).status)).toBe(409)
     expect(
       await f.database
-        .prepare("SELECT name FROM company_organizations WHERE id = 'organization:default'")
+        .prepare(
+          `SELECT name FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+        )
         .first<string>("name"),
     ).toBe("Existing Company")
     await f.database
-      .prepare("UPDATE company_organizations SET name = ?1 WHERE id = 'organization:default'")
+      .prepare(
+        `UPDATE company_organizations SET name = ?1 WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+      )
       .bind(declaration.organization_name)
       .run()
     expect(Number((await f.createUnit()).status)).toBe(201)
@@ -574,7 +579,7 @@ describe("Company bootstrap through System authentication", () => {
         if (kind === "organization") expect(Number((await f.createUnit()).status)).toBe(201)
         else
           await f.database.exec(
-            "UPDATE company_organizations SET representative_name = 'Changed Representative' WHERE id = 'organization:default'",
+            `UPDATE company_organizations SET representative_name = 'Changed Representative' WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
           )
         return batch(statements)
       })
@@ -656,7 +661,7 @@ async function responsibilityLifecycleFixture() {
       .first<string>("resource_id")
     if (id === null) throw new Error("public responsibility missing")
     const history = await repository.findEmploymentDependentHistory(
-      "organization:default",
+      COMPANY_DEFAULT_ORGANIZATION_ID,
       (await f.state())?.revision ?? 0,
     )
     if (history instanceof Error) throw history
@@ -695,7 +700,7 @@ async function responsibilityLifecycleFixture() {
         header: {
           "idempotency-key": key,
           "if-match": String(revision ?? (await f.state())?.revision),
-          "x-company-organization-id": "organization:default",
+          "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID,
         },
         json: { reason: "Confirm responsibility change", resources },
       },
@@ -703,7 +708,7 @@ async function responsibilityLifecycleFixture() {
     )
   const publicOn = async (date: string) => {
     const snapshot = await repository.findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["responsibility-assignment"],
       effectiveOn: restoreCalendarDate(date),
     })
@@ -945,7 +950,7 @@ test("初期化した責務を公開資格として解決し、確認前の資�
     repository: f.repository,
     readActiveAccountIds: async (ids) => new Set(ids.filter((id) => id === f.accountId)),
   }).resolve({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     asOf: restoreCalendarDate(f.observedOn),
     subjectEmployeeId: null,
     criteria: [
@@ -1311,7 +1316,7 @@ test.each(["responsibility", "authority-scope"] as const)(
       ),
     ).toBe(201)
     const definitions = await f.repository.findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: [type],
       effectiveOn: restoreCalendarDate(f.observedOn),
     })
@@ -1350,7 +1355,7 @@ test.each(["responsibility", "authority-scope"] as const)(
     const response = await f.client.company.definitions.$post(
       {
         header: {
-          "x-company-organization-id": "organization:default",
+          "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID,
           "idempotency-key": `responsibility:definition-void:${type}`,
           "if-match": String(before?.revision),
         },

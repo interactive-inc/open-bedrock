@@ -6,6 +6,7 @@ import { CompanyActorValue } from "@/contexts/company/domain/values/company-acto
 import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/test/company-assignment-resource.test-support"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { GET } from "@/contexts/company/interface/routes/company.employments"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 /** 元の雇用を変えず、公開APIから雇用主を確認するための会社を作る。 */
 export async function createCompanyEmployerTestContext(databaseOverride?: D1Database) {
@@ -32,7 +33,7 @@ export async function createCompanyEmployerTestContext(databaseOverride?: D1Data
     })
     .parse(JSON.parse(head.attributes_json))
   const employment = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "employment" as const,
     id: head.resource_id,
     revision: head.revision + 1,
@@ -42,7 +43,7 @@ export async function createCompanyEmployerTestContext(databaseOverride?: D1Data
     attributes: { ...attributes, employerLegalEntityId: "legal:employer" },
   }
   const legalEntity = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "legal-entity" as const,
     id: "legal:employer",
     revision: 1,
@@ -58,7 +59,7 @@ export async function createCompanyEmployerTestContext(databaseOverride?: D1Data
   }
   const actor = CompanyActorValue.restore({
     ...f.creator,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:read"],
     permissions: ["employee:read"],
   })
@@ -76,7 +77,7 @@ export async function createCompanyEmployerTestContext(databaseOverride?: D1Data
     if (revision !== undefined) query.set("organization_revision", String(revision))
     const response = await app.request(
       `/employments?${query.toString()}`,
-      { headers: { "x-company-organization-id": "organization:default" } },
+      { headers: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID } },
       f.context.env,
     )
     expect(response.status).toBe(200)

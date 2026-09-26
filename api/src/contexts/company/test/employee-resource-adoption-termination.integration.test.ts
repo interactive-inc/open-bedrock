@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { createEmployeeAdoptionBatchFixture } from "@/contexts/company/test/employee-resource-adoption-batch.test-support"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 async function fixture(hasInitialAction = true, lifecycleRevision = 1) {
   const context = await createEmployeeAdoptionBatchFixture(1)
@@ -55,7 +56,7 @@ async function fixture(hasInitialAction = true, lifecycleRevision = 1) {
         .prepare(`INSERT INTO company_resource_revisions
         (organization_id, resource_type, resource_id, revision, organization_revision, state,
          effective_from, effective_to, attributes_json, command_id, actor_account_id, reason, recorded_at)
-        VALUES ('organization:default', ?1, ?2, 1, 1, 'active', '2020-01-01', ?3, ?4, 'initial-import', 'system:migration', 'Initial import', 0)`)
+        VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', ?1, ?2, 1, 1, 'active', '2020-01-01', ?3, ?4, 'initial-import', 'system:migration', 'Initial import', 0)`)
         .bind(
           resource.type,
           resource.id,
@@ -66,7 +67,7 @@ async function fixture(hasInitialAction = true, lifecycleRevision = 1) {
         .prepare(`INSERT INTO company_resource_heads
         (organization_id, resource_type, resource_id, revision, organization_revision, state,
          effective_from, effective_to, attributes_json, updated_at)
-        VALUES ('organization:default', ?1, ?2, 1, 1, 'active', '2020-01-01', ?3, ?4, 0)`)
+        VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', ?1, ?2, 1, 1, 'active', '2020-01-01', ?3, ?4, 0)`)
         .bind(
           resource.type,
           resource.id,
@@ -89,7 +90,7 @@ async function fixture(hasInitialAction = true, lifecycleRevision = 1) {
             },
             corrections: [
               {
-                organizationId: "organization:default",
+                organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
                 type: "employment",
                 id: "employment:ended",
                 revision: 2,

@@ -41,7 +41,10 @@ describe("WorkforceStateValue", () => {
           recordedAt: 1,
           employmentId: restoreWorkforceId("employment", "employment:1"),
           employeeId,
-          organizationUnitId: restoreWorkforceId("organization_unit", "unit:1"),
+          organizationUnitId: restoreWorkforceId(
+            "organization_unit",
+            "0190005f-0000-7000-8000-2fcb85764fe2",
+          ),
           assignmentType: "PRIMARY",
           positionTitle: null,
           managerEmployeeId: null,

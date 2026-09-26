@@ -5,8 +5,9 @@ import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { readCompanyEmploymentResourceChain } from "@/contexts/company/interface/operations/read-company-employment-resource-chain"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
-const organizationId = "organization:default"
+const organizationId = COMPANY_DEFAULT_ORGANIZATION_ID
 
 test("雇用・従業員・人物の資源版を同じ会社版で取得する", async () => {
   const database = createCompanyD1TestDatabase(

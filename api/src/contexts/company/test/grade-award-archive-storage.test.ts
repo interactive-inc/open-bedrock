@@ -1,6 +1,7 @@
 import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const companySql = readFileSync(
   new URL("../infrastructure/schema/company.sql", import.meta.url),
@@ -16,7 +17,7 @@ const archiveSql = companySql.slice(
 
 test("保全記録の所属・参照先と不変性をDBで強制し、元台帳がなくても原記録を保持する", async () => {
   const db = createCompanyD1TestDatabase(`PRAGMA foreign_keys=ON;
-    CREATE TABLE company_organizations(id TEXT PRIMARY KEY); INSERT INTO company_organizations VALUES ('organization:default');
+    CREATE TABLE company_organizations(id TEXT PRIMARY KEY); INSERT INTO company_organizations VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}');
     CREATE TABLE company_employees(id TEXT PRIMARY KEY); INSERT INTO company_employees VALUES ('employee:one');
     CREATE TABLE system_accounts(id TEXT PRIMARY KEY); INSERT INTO system_accounts VALUES ('account:reviewer');
     ${archiveSql}`)
@@ -30,7 +31,7 @@ test("保全記録の所属・参照先と不変性をDBで強制し、元台帳
       .prepare(`INSERT INTO company_grade_award_archives
     (organization_id, command_id, employee_id, fingerprint, actor_account_id, reason, observed_on,
      observed_company_revision, snapshot_digest, source_json, recorded_at) VALUES
-    ('organization:default', 'archive:one', 'employee:one', ?1, 'account:reviewer', 'Preserve original records',
+    ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'archive:one', 'employee:one', ?1, 'account:reviewer', 'Preserve original records',
     '2030-01-01', 8, ?1, ?2, 1)`)
       .bind("a".repeat(64), sourceJson)
   await insert().run()

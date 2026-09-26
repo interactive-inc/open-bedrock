@@ -142,7 +142,7 @@ describe("GET /expense-budgets", () => {
 
   test("filters by fiscal_period and organization_unit_id", async () => {
     const response = await request({
-      path: "/expense/expense-budgets?organization_unit_id=department%3AD003&fiscal_period=2026",
+      path: "/expense/expense-budgets?organization_unit_id=0190005e-0000-7000-8000-000044303033&fiscal_period=2026",
       token: await tokenFor(1),
     })
 
@@ -154,7 +154,7 @@ describe("GET /expense-budgets", () => {
 
     if (parsed.success) {
       expect(parsed.data.total).toBe(1)
-      expect(parsed.data.data[0]?.organization_unit_id).toBe("department:D003")
+      expect(parsed.data.data[0]?.organization_unit_id).toBe("0190005e-0000-7000-8000-000044303033")
     }
   })
 
@@ -181,7 +181,7 @@ describe("POST /expense-budgets", () => {
       token: await tokenFor(1),
       method: "POST",
       body: {
-        organization_unit_id: "department:D005",
+        organization_unit_id: "0190005e-0000-7000-8000-000044303035",
         fiscal_period: "2026",
         period_start: "2026-04-01",
         period_end: "2027-03-31",
@@ -197,7 +197,7 @@ describe("POST /expense-budgets", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.organization_unit_id).toBe("department:D005")
+      expect(parsed.data.organization_unit_id).toBe("0190005e-0000-7000-8000-000044303035")
       expect(parsed.data.amount).toBe(300000)
       expect(parsed.data.note).toBeNull()
       expect(parsed.data.created_at).toBe(now)
@@ -210,7 +210,7 @@ describe("POST /expense-budgets", () => {
       token: await tokenFor(1),
       method: "POST",
       body: {
-        organization_unit_id: "department:D999",
+        organization_unit_id: "0190005e-0000-7000-8000-000044393939",
         fiscal_period: "2026",
         period_start: "2026-04-01",
         period_end: "2027-03-31",
@@ -228,7 +228,7 @@ describe("POST /expense-budgets", () => {
       token: await tokenFor(1),
       method: "POST",
       body: {
-        organization_unit_id: "department:D003",
+        organization_unit_id: "0190005e-0000-7000-8000-000044303033",
         fiscal_period: "2026",
         period_start: "2026-04-01",
         period_end: "2026-03-01",
@@ -246,7 +246,7 @@ describe("POST /expense-budgets", () => {
       token: await tokenFor(1),
       method: "POST",
       body: {
-        organization_unit_id: "department:D003",
+        organization_unit_id: "0190005e-0000-7000-8000-000044303033",
         fiscal_period: "2026",
         period_start: "2026-04-01",
         period_end: "2027-03-31",
@@ -264,7 +264,7 @@ describe("POST /expense-budgets", () => {
       token: await tokenFor(2),
       method: "POST",
       body: {
-        organization_unit_id: "department:D003",
+        organization_unit_id: "0190005e-0000-7000-8000-000044303033",
         fiscal_period: "2026",
         period_start: "2026-04-01",
         period_end: "2027-03-31",

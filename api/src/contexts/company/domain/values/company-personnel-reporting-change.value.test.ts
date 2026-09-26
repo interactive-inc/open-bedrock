@@ -3,12 +3,17 @@ import { CompanyPersonnelReportingChangeValue } from "@/contexts/company/domain/
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyReportingRelationTimelineValue } from "@/contexts/company/domain/values/company-reporting-relation-timeline.value"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const january = restoreCalendarDate("2030-01-01")
 const march = restoreCalendarDate("2030-03-01")
 const april = restoreCalendarDate("2030-04-01")
 const july = restoreCalendarDate("2030-07-01")
-const scope = { resourceId: "line:one", employeeId: "employee:one", organizationUnitId: "unit:one" }
+const scope = {
+  resourceId: "line:one",
+  employeeId: "employee:one",
+  organizationUnitId: "0190005f-0000-7000-8000-c9ae95875c9c",
+}
 
 function version(
   revision: number,
@@ -17,7 +22,7 @@ function version(
   state: "active" | "void" = "active",
 ) {
   const resource = CompanyResourceEntity.create({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "reporting-relation",
     id: scope.resourceId,
     revision,

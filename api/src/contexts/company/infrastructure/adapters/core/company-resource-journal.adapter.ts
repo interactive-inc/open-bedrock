@@ -86,7 +86,7 @@ export class CompanyResourceJournalAdapter {
     if (change.expectedRevision === 0) {
       statements.push(
         database.insert(companyOrganizations).select(sql`
-          SELECT ${organizationId}, 0, '', '', ${change.recordedAt}, ${change.recordedAt}
+          SELECT ${organizationId}, NULL, 0, '', '', ${change.recordedAt}, ${change.recordedAt}
           WHERE NOT EXISTS (SELECT 1 FROM company_organizations WHERE id = ${organizationId})
         `),
       )

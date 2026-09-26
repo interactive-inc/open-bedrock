@@ -3,6 +3,7 @@ import { readFileSync } from "node:fs"
 import { GradeAwardSourceSnapshotValue } from "@/contexts/company/domain/values/grade-award-source-snapshot.value"
 import { GradeAwardArchiveReadAdapter } from "@/contexts/company/infrastructure/adapters/definitions/grade-award-archive-read.adapter"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const portable = readFileSync(
   new URL("../infrastructure/schema/company.sql", import.meta.url),
@@ -20,7 +21,7 @@ const archiveSql = portable.slice(
 async function fixture(corruptDigest = false) {
   const database = createCompanyD1TestDatabase(`
     CREATE TABLE company_organizations(id TEXT PRIMARY KEY, revision INTEGER);
-    INSERT INTO company_organizations VALUES ('organization:default', 8);
+    INSERT INTO company_organizations VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 8);
     CREATE TABLE company_employees(id TEXT PRIMARY KEY); INSERT INTO company_employees VALUES ('employee:one');
     CREATE TABLE system_accounts(id TEXT PRIMARY KEY); INSERT INTO system_accounts VALUES ('account:reviewer');
     ${archiveSql}`)
@@ -46,7 +47,7 @@ async function fixture(corruptDigest = false) {
     .prepare(`INSERT INTO company_grade_award_archives
     (organization_id, command_id, employee_id, fingerprint, actor_account_id, reason, observed_on,
       observed_company_revision, snapshot_digest, source_json, recorded_at)
-    VALUES ('organization:default', 'archive:one', 'employee:one', ?1, 'account:reviewer',
+    VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'archive:one', 'employee:one', ?1, 'account:reviewer',
       'Preserve original records', '2030-01-01', 8, ?2, ?3, 100)`)
     .bind(
       "a".repeat(64),

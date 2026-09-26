@@ -5,6 +5,7 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import type { ExternalIdentityImportInput } from "@/contexts/company/domain/entities/external-identity-import.entity"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { CompanyAccountEmployeeLinksReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/company-account-employee-links-read.adapter"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 function update(
   input: ExternalIdentityImportInput,
@@ -207,7 +208,7 @@ describe("外部identityとCompany正本の同期", () => {
       replayed: false,
     })
     const resources = await new D1CompanyResourceRepository({ database: c.database }).findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["person", "employee", "employment"],
       effectiveOn: restoreCalendarDate("2026-01-01"),
     })
@@ -304,7 +305,7 @@ describe("外部identityとCompany正本の同期", () => {
         .first<Record<string, unknown>>(),
     ).toEqual({ email: "updated@example.com" })
     const resources = await new D1CompanyResourceRepository({ database: c.database }).findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["person"],
     })
     if (!resources.ok) throw resources.cause
@@ -368,7 +369,9 @@ describe("外部identityとCompany正本の同期", () => {
     ).toEqual({ total: 0 })
     expect(
       await c.database
-        .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+        .prepare(
+          `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+        )
         .first<Record<string, unknown>>(),
     ).toEqual({ revision: c.input.expectedRevision })
     await c.database.exec("DROP TRIGGER reject_import")

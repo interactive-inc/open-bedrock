@@ -117,10 +117,17 @@ test(
     ).toEqual({ id: "11" })
     // 予算の主キーは UUID へ移り、移行前の整数の主キーは legacy_id に残る。
     expect(
-      database.query("SELECT legacy_id AS id, organization_unit_id FROM expense_budgets").get(),
+      database
+        .query(
+          `SELECT budget.legacy_id AS id, unit.legacy_id AS organization_unit
+           FROM expense_budgets budget
+           JOIN company_organization_units unit ON unit.id = budget.organization_unit_id`,
+        )
+        .get(),
     ).toEqual({
+      // 組織単位の ID も UUID へ移り、移行前の ID は組織単位の legacy_id に残る。
       id: "13",
-      organization_unit_id: "department:D001",
+      organization_unit: "department:D001",
     })
 
     const declarations = [

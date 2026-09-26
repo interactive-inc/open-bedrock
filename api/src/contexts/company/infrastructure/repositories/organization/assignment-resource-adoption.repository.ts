@@ -24,6 +24,7 @@ import {
 } from "@/contexts/company/domain/errors"
 import { drizzle } from "drizzle-orm/d1"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Context = CompanyContext
 export type AssignmentResourceAdoptionResult = Readonly<{
@@ -107,7 +108,7 @@ export class AssignmentResourceAdoptionRepository {
     if (assignments instanceof Error) return this.invalid(assignments)
     const occupied = await database
       .prepare(`SELECT 1 AS present FROM company_resource_heads
-      WHERE organization_id = 'organization:default' AND resource_type = 'assignment'
+      WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND resource_type = 'assignment'
         AND resource_id IN (SELECT value FROM json_each(?1)) LIMIT 1`)
       .bind(
         JSON.stringify(
@@ -151,7 +152,7 @@ export class AssignmentResourceAdoptionRepository {
     if (validation.kind !== "valid") return this.unavailable(validation.cause)
     const units = await database
       .prepare(
-        `SELECT organization_unit_id FROM company_organization_resource_bindings WHERE organization_id = 'organization:default'`,
+        `SELECT organization_unit_id FROM company_organization_resource_bindings WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
       )
       .all<{ organization_unit_id: string }>()
     if (!units.success) return this.unavailable(new Error("organization bindings unavailable"))
@@ -166,7 +167,7 @@ export class AssignmentResourceAdoptionRepository {
       return this.invalid(new Error("organization history is not connected"))
     const repository = new D1CompanyResourceRepository({ database })
     const history = await repository.findReportingRelationHistory(
-      "organization:default",
+      COMPANY_DEFAULT_ORGANIZATION_ID,
       command.props.expectedRevision,
     )
     if (history instanceof Error) return this.unavailable(history)
@@ -245,7 +246,7 @@ export class AssignmentResourceAdoptionRepository {
           database
             .prepare(`INSERT INTO company_assignment_resource_bindings
           (resource_id, organization_id, employee_id, resource_revision, recorded_at)
-          VALUES (?1, 'organization:default', ?2, ?3, ?4)`)
+          VALUES (?1, '${COMPANY_DEFAULT_ORGANIZATION_ID}', ?2, ?3, ?4)`)
             .bind(
               entry.resource.id,
               command.props.employeeId,

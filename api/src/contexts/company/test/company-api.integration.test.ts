@@ -17,6 +17,7 @@ import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-dat
 import { Hono } from "hono"
 import { hc } from "hono/client"
 import { readFileSync } from "node:fs"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const companySql =
   readFileSync(
@@ -34,7 +35,7 @@ type TestEnv = {
 const actor = CompanyActorValue.restore({
   accountId: "account:1",
   employeeId: "employee:1",
-  organizationIds: ["organization:default"],
+  organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
   capabilities: ["company:read", "company:write"],
   permissions: ["employee:read", "employee:attributes:read"],
 })
@@ -75,7 +76,7 @@ async function seedOrganization(database: D1Database): Promise<void> {
          (id, revision, name, representative_name, created_at, updated_at)
        VALUES (?, 0, '', '', 0, 0)`,
     )
-    .bind("organization:default")
+    .bind(COMPANY_DEFAULT_ORGANIZATION_ID)
     .run()
 }
 
@@ -86,7 +87,7 @@ const organizationProfileInput = {
   timeZone: "Asia/Tokyo",
   fiscalYearStartMonth: 4,
   version: {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     organizationRevision: 0,
     resourceId: null,
     resourceRevision: 0,
@@ -98,17 +99,17 @@ const organizationProfileInput = {
 }
 
 const readHeaders = {
-  "x-company-organization-id": "organization:default",
+  "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID,
 } as const
 
 const writeHeaders = (commandId: string, expectedRevision: number) => ({
-  "x-company-organization-id": "organization:default",
+  "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID,
   "idempotency-key": commandId,
   "if-match": `"${expectedRevision}"`,
 })
 
 const person = {
-  organizationId: "organization:default",
+  organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
   type: "person",
   id: "person:1",
   revision: 1,
@@ -133,7 +134,7 @@ describe("canonical Company API", () => {
     const basicEditor = CompanyActorValue.restore({
       accountId: "account:basic-editor",
       employeeId: null,
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:workforce:update"],
     })
     const client = createClient(database, basicEditor)
@@ -163,7 +164,7 @@ describe("canonical Company API", () => {
     expect(Number(cancellation.status)).toBe(403)
 
     const legalEntity = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "legal-entity" as const,
       id: "legal-entity:one",
       revision: 1,
@@ -186,7 +187,7 @@ describe("canonical Company API", () => {
       (
         await database
           .prepare("SELECT revision FROM company_organizations WHERE id = ?")
-          .bind("organization:default")
+          .bind(COMPANY_DEFAULT_ORGANIZATION_ID)
           .first<{ revision: number }>()
       )?.revision,
     ).toBe(2)
@@ -220,7 +221,7 @@ describe("canonical Company API", () => {
     const basicEditor = CompanyActorValue.restore({
       accountId: "account:basic-editor",
       employeeId: null,
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:workforce:update"],
     })
     const updated = await createClient(database, basicEditor).company["organization-changes"].$post(
@@ -383,7 +384,7 @@ describe("canonical Company API", () => {
     await seedLegalEntity(database)
     const client = createClient(database)
     const site = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "site" as const,
       id: "site:main",
       revision: 1,
@@ -400,7 +401,7 @@ describe("canonical Company API", () => {
       },
     }
     const workplace = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "workplace" as const,
       id: "workplace:main-office",
       revision: 1,
@@ -434,7 +435,7 @@ describe("canonical Company API", () => {
     await seedOrganization(database)
     const client = createClient(database)
     const job = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "job" as const,
       id: "job:engineer",
       revision: 1,
@@ -444,7 +445,7 @@ describe("canonical Company API", () => {
       attributes: { code: "ENGINEER", officialName: "Engineer" },
     }
     const position = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "position" as const,
       id: "position:engineer",
       revision: 1,
@@ -458,7 +459,7 @@ describe("canonical Company API", () => {
       },
     }
     const authorityScope = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "authority-scope" as const,
       id: "authority-scope:region",
       revision: 1,
@@ -468,7 +469,7 @@ describe("canonical Company API", () => {
       attributes: { scopeType: "region" as const, regionCode: "NORTH" },
     }
     const collectiveBody = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "collective-body" as const,
       id: "collective-body:board",
       revision: 1,
@@ -627,7 +628,7 @@ describe("canonical Company API", () => {
   test("組織変更は上長関係の循環を永続化前に拒否する", async () => {
     const client = createClient(createCompanyD1TestDatabase(companySql))
     const organizationUnit = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "organization-unit",
       id: "organization-unit-period:root",
       revision: 1,
@@ -643,7 +644,7 @@ describe("canonical Company API", () => {
       },
     } as const
     const reportingRelation = (employeeId: string, managerEmployeeId: string) => ({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "reporting-relation" as const,
       id: `reporting:${employeeId}`,
       revision: 1,
@@ -716,7 +717,7 @@ async function seedLegalEntity(database: D1Database): Promise<void> {
          (organization_id, resource_type, resource_id, revision, organization_revision,
           state, effective_from, effective_to, attributes_json, command_id,
           actor_account_id, reason, recorded_at)
-       VALUES ('organization:default', 'legal-entity', 'legal-entity:primary', 1, 1,
+       VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'legal-entity', 'legal-entity:primary', 1, 1,
          'active', '2026-01-01', NULL,
          '{"officialName":"Example Corporation","jurisdictionCountryCode":"US","registrationNumber":null,"defaultCurrencyCode":"USD"}',
          'command:legal-entity', 'account:1', 'register legal entity', 1)`,
@@ -725,13 +726,13 @@ async function seedLegalEntity(database: D1Database): Promise<void> {
       `INSERT INTO company_resource_heads
          (organization_id, resource_type, resource_id, revision, organization_revision,
           state, effective_from, effective_to, attributes_json, updated_at)
-       VALUES ('organization:default', 'legal-entity', 'legal-entity:primary', 1, 1,
+       VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'legal-entity', 'legal-entity:primary', 1, 1,
          'active', '2026-01-01', NULL,
          '{"officialName":"Example Corporation","jurisdictionCountryCode":"US","registrationNumber":null,"defaultCurrencyCode":"USD"}', 1)`,
     ),
     database.prepare(
       `UPDATE company_organizations SET revision = 1, updated_at = 1
-       WHERE id = 'organization:default' AND revision = 0`,
+       WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND revision = 0`,
     ),
   ])
 }

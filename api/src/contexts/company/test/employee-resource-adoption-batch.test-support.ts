@@ -4,6 +4,7 @@ import { prepareUnpublishedEmployment } from "@/contexts/company/test/unpublishe
 import { EmployeeResourceAdoptionSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/employee-resource-adoption/employee-resource-adoption-snapshot.adapter"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 /** 公開Account対応だけが先に存在し、全員の接続を同時に必要とする会社を用意する。 */
 export async function createEmployeeAdoptionBatchFixture(
@@ -43,7 +44,7 @@ export async function createEmployeeAdoptionBatchFixture(
       context.database
         .prepare(`INSERT INTO company_account_profiles
         (organization_id, account_id, display_name, created_at, updated_at)
-        VALUES ('organization:default', ?1, ?2, 0, 0)`)
+        VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', ?1, ?2, 0, 0)`)
         .bind(accountId, officialName),
     ])
     const initial = await prepareUnpublishedEmployment(context.database, {
@@ -58,7 +59,7 @@ export async function createEmployeeAdoptionBatchFixture(
     })
     await context.database.batch([...initial])
     const person: AdoptionResource = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "person",
       id: `person:batch-${index}`,
       revision: 1,
@@ -150,7 +151,7 @@ export async function createEmployeeAdoptionBatchFixture(
   for (const employee of employees) {
     const resourceId = `account-link:${employee.employeeId}`
     await seedResource({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "account-employee-link",
       id: resourceId,
       revision: 1,

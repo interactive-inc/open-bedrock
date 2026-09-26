@@ -8,6 +8,7 @@ import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { resolvePersonnelActionInput } from "@/contexts/company/interface/operations/resolve-personnel-action-input"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test("旧役職台帳の撤去後も確認した会社版と発効日の役職を解決し、改名後の再送で変えない", async () => {
   const f = await createCompanyGradeAssignmentTestContext()
@@ -24,7 +25,7 @@ test("旧役職台帳の撤去後も確認した会社版と発効日の役職�
       recordedAt: index + 1,
       resources: [
         {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "position",
           id: "position:coordinator",
           revision: index + 1,
@@ -86,7 +87,7 @@ test("旧役職台帳の撤去後も確認した会社版と発効日の役職�
     recordedAt: 3,
     resources: [
       {
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "position",
         id: "position:distinct",
         revision: 1,

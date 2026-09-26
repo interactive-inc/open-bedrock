@@ -1,5 +1,5 @@
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
-import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
+import { testOrganizationUnitId } from "@tests/api/support/company/test-organization-unit-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type {
   EmployeeId,
@@ -21,6 +21,7 @@ import {
 } from "@/lib/errors"
 import { expectApplicationError } from "@tests/api/support/expect-application-error"
 import { makeTestSession } from "@tests/api/support/make-test-session"
+import { COMPANY_ROOT_ORGANIZATION_UNIT_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 /**
  * 公募・応募Repositoryと募集部署Adapterの型付きfake。SQLは模倣せず、保存したDomain modelを返す。
@@ -30,7 +31,7 @@ import { makeTestSession } from "@tests/api/support/make-test-session"
 function createContext() {
   const postings = new Map<string, CareerPosting>()
   const applications: CareerApplication[] = []
-  const selectable = new Set<OrganizationUnitId>([toWorkforceOrganizationUnitId("D003")])
+  const selectable = new Set<OrganizationUnitId>([testOrganizationUnitId("D003")])
 
   const postingRepository = {
     findById: async (id: string) => postings.get(id) ?? null,
@@ -90,7 +91,7 @@ async function seedPosting(context: ReturnType<typeof createContext>): Promise<s
   const created = await new CreateCareerPosting(context).run({
     session: makeTestSession("root"),
     title: "Platform Engineer",
-    organizationUnitId: toWorkforceOrganizationUnitId("D003"),
+    organizationUnitId: testOrganizationUnitId("D003"),
     requiredSkills: "typescript",
     status: "open",
   })
@@ -146,7 +147,7 @@ describe("CreateCareerPosting", () => {
     const created = await new CreateCareerPosting(context).run({
       session: makeTestSession("root"),
       title: "Data Analyst",
-      organizationUnitId: toWorkforceOrganizationUnitId("D003"),
+      organizationUnitId: testOrganizationUnitId("D003"),
       requiredSkills: null,
       status: "open",
     })
@@ -155,7 +156,7 @@ describe("CreateCareerPosting", () => {
       throw new Error("create failed")
     }
 
-    expect(created.organizationUnitId).toBe(toWorkforceOrganizationUnitId("D003"))
+    expect(created.organizationUnitId).toBe(testOrganizationUnitId("D003"))
     expect(created.legacyDeptName).toBeNull()
   })
 
@@ -165,7 +166,7 @@ describe("CreateCareerPosting", () => {
     const created = await new CreateCareerPosting(context).run({
       session: makeTestSession("root"),
       title: "Data Analyst",
-      organizationUnitId: toWorkforceOrganizationUnitId("D999"),
+      organizationUnitId: testOrganizationUnitId("D999"),
       requiredSkills: null,
       status: "open",
     })
@@ -179,7 +180,10 @@ describe("CreateCareerPosting", () => {
     const created = await new CreateCareerPosting(context).run({
       session: makeTestSession("root"),
       title: "Data Analyst",
-      organizationUnitId: restoreWorkforceId("organization_unit", "company:root"),
+      organizationUnitId: restoreWorkforceId(
+        "organization_unit",
+        COMPANY_ROOT_ORGANIZATION_UNIT_ID,
+      ),
       requiredSkills: null,
       status: "open",
     })
@@ -200,7 +204,7 @@ describe("UpdateCareerPosting", () => {
       session: makeTestSession("root"),
       postingId: postingId,
       title: "Senior Platform Engineer",
-      organizationUnitId: toWorkforceOrganizationUnitId("D003"),
+      organizationUnitId: testOrganizationUnitId("D003"),
       requiredSkills: "typescript,go",
       status: "closed",
     })
@@ -224,7 +228,7 @@ describe("UpdateCareerPosting", () => {
       session: makeTestSession("root"),
       postingId: postingId,
       title: "Senior Platform Engineer",
-      organizationUnitId: toWorkforceOrganizationUnitId("D999"),
+      organizationUnitId: testOrganizationUnitId("D999"),
       requiredSkills: null,
       status: "open",
     })

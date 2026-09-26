@@ -141,7 +141,7 @@ describe("GET /expense-budgets/:id", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.organization_unit_id).toBe("department:D003")
+      expect(parsed.data.organization_unit_id).toBe("0190005e-0000-7000-8000-000044303033")
       expect(parsed.data.amount).toBe(1000000)
       expect(parsed.data.consumed_amount).toBe(3300)
       expect(parsed.data.remaining_amount).toBe(996700)
@@ -202,7 +202,7 @@ describe("PATCH /expense-budgets/:id", () => {
     expect(body.amount).toBe(1200000)
     expect(body.name).toBe("Engineering FY2026 (revised)")
     expect(body.note).toBe("raised")
-    expect(body.organization_unit_id).toBe("department:D003")
+    expect(body.organization_unit_id).toBe("0190005e-0000-7000-8000-000044303033")
   })
 
   test("returns 404 for a missing budget", async () => {

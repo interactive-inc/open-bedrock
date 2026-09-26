@@ -2,6 +2,7 @@ import { expect, spyOn, test } from "bun:test"
 import { z } from "zod"
 import { createEmployeeAdoptionBatchFixture } from "@/contexts/company/test/employee-resource-adoption-batch.test-support"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test("全Account対応が接続済みである制約を保ち、台帳と公開履歴を変えず全員を一度で接続する", async () => {
   const context = await createEmployeeAdoptionBatchFixture()
@@ -69,7 +70,7 @@ test("翌日の並び替えた再送も元の結果を返し、対象・理由�
   context.actors.current = CompanyActorValue.restore({
     accountId: "account:batch-1",
     employeeId: "employee:batch-1",
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:admin"],
   })
   expect((await context.post(input)).status).toBe(409)
@@ -164,8 +165,8 @@ test("再送も現在のCompany管理資格を要求する", async () => {
   const accesses: ReadonlyArray<
     Pick<Parameters<typeof CompanyActorValue.restore>[0], "organizationIds" | "capabilities">
   > = [
-    { organizationIds: ["organization:default"], capabilities: ["company:read"] },
-    { organizationIds: ["organization:other"], capabilities: ["company:admin"] },
+    { organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID], capabilities: ["company:read"] },
+    { organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"], capabilities: ["company:admin"] },
   ]
   for (const access of accesses) {
     context.actors.current = CompanyActorValue.restore({

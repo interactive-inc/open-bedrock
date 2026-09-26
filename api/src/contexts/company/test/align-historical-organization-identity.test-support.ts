@@ -1,0 +1,116 @@
+import {
+  COMPANY_DEFAULT_ORGANIZATION_ID,
+  COMPANY_ROOT_ORGANIZATION_UNIT_ID,
+} from "@/contexts/company/domain/definitions/company-organization-identity.definition"
+
+const LEGACY_ORGANIZATION_ID = "organization:default"
+const LEGACY_ROOT_ORGANIZATION_UNIT_ID = "company:root"
+
+/**
+ * 組織の ID を UUID へ移す前の schema で過去の migration を検査するとき、現行の書込みは既知の UUID の
+ * 組織と最上位の組織単位を使う。検査用の bun:sqlite の DB に限り、schema と行に埋め込まれた旧来の ID を
+ * 既知の UUID へ置き換え、過去の schema の形のまま現行の書込みを受け付けるようにする。
+ * 移行後の schema では何もしない。
+ */
+export async function alignHistoricalOrganizationIdentity(database: D1Database): Promise<void> {
+  const legacy = await database
+    .prepare("SELECT 1 AS found FROM company_organizations WHERE id = ?1")
+    .bind(LEGACY_ORGANIZATION_ID)
+    .first<{ found: number }>()
+  if (legacy === null) return
+  const replaced = (sql: string) =>
+    sql.replaceAll(`'${LEGACY_ORGANIZATION_ID}'`, `'${COMPANY_DEFAULT_ORGANIZATION_ID}'`)
+  const triggers = (
+    await database
+      .prepare("SELECT name, sql FROM sqlite_master WHERE type = 'trigger' ORDER BY rowid")
+      .all<{ name: string; sql: string }>()
+  ).results
+  const views = (
+    await database
+      .prepare("SELECT name, sql FROM sqlite_master WHERE type = 'view' ORDER BY rowid")
+      .all<{ name: string; sql: string }>()
+  ).results
+  await database.prepare("PRAGMA foreign_keys = OFF").run()
+  for (const trigger of triggers) await database.prepare(`DROP TRIGGER ${trigger.name}`).run()
+  for (const view of views) await database.prepare(`DROP VIEW ${view.name}`).run()
+  // 旧来の組織 ID を埋め込んだ table は、置き換えた定義で作り直して行を戻す。
+  const embedded = (
+    await database
+      .prepare(
+        "SELECT name, sql FROM sqlite_master WHERE type = 'table' AND sql LIKE '%''organization:default''%'",
+      )
+      .all<{ name: string; sql: string }>()
+  ).results
+  for (const table of embedded) {
+    const indexes = (
+      await database
+        .prepare(
+          "SELECT sql FROM sqlite_master WHERE type = 'index' AND tbl_name = ?1 AND sql IS NOT NULL",
+        )
+        .bind(table.name)
+        .all<{ sql: string }>()
+    ).results
+    const aligned = `__aligned_${table.name}`
+    const definition = replaced(table.sql).replace(
+      /^CREATE TABLE\s+("?)[A-Za-z0-9_]+\1/u,
+      `CREATE TABLE "${aligned}"`,
+    )
+    await database.prepare(definition).run()
+    await database.prepare(`INSERT INTO "${aligned}" SELECT * FROM "${table.name}"`).run()
+    await database.prepare(`DROP TABLE "${table.name}"`).run()
+    await database.prepare(`ALTER TABLE "${aligned}" RENAME TO "${table.name}"`).run()
+    for (const index of indexes) await database.prepare(index.sql).run()
+  }
+
+  const tables = (
+    await database
+      .prepare(
+        "SELECT name FROM sqlite_master WHERE type = 'table' AND name NOT LIKE 'sqlite\\_%' ESCAPE '\\'",
+      )
+      .all<{ name: string }>()
+  ).results
+  for (const { name } of tables) {
+    const columns = (
+      await database
+        .prepare(`SELECT name FROM pragma_table_info('${name}')`)
+        .all<{ name: string }>()
+    ).results
+    for (const { name: column } of columns) {
+      // role の key の company:root は IAM の業務コードで、組織単位の ID ではない。
+      if (name === "system_iam_roles") continue
+      await database
+        .prepare(
+          `UPDATE "${name}" SET "${column}" = CASE "${column}"
+             WHEN ?1 THEN ?2 WHEN ?3 THEN ?4
+             ELSE replace(replace("${column}", '"' || ?1 || '"', '"' || ?2 || '"'), '"' || ?3 || '"', '"' || ?4 || '"') END
+           WHERE typeof("${column}") = 'text' AND ("${column}" IN (?1, ?3) OR instr("${column}", '"' || ?1 || '"') > 0 OR instr("${column}", '"' || ?3 || '"') > 0)`,
+        )
+        .bind(
+          LEGACY_ORGANIZATION_ID,
+          COMPANY_DEFAULT_ORGANIZATION_ID,
+          LEGACY_ROOT_ORGANIZATION_UNIT_ID,
+          COMPANY_ROOT_ORGANIZATION_UNIT_ID,
+        )
+        .run()
+    }
+  }
+  // 現行の書込みは legacy_id の列を含めて組織と組織単位を読み書きするため、検査用に空の列だけを足す。
+  for (const table of ["company_organizations", "company_organization_units"]) {
+    const column = await database
+      .prepare(`SELECT name FROM pragma_table_info('${table}') WHERE name = 'legacy_id'`)
+      .first<{ name: string }>()
+    if (column === null)
+      await database.prepare(`ALTER TABLE ${table} ADD COLUMN legacy_id TEXT`).run()
+  }
+  for (const view of views) await database.prepare(replaced(view.sql)).run()
+  for (const trigger of triggers) await database.prepare(replaced(trigger.sql)).run()
+  await database.prepare("PRAGMA foreign_keys = ON").run()
+}
+
+/**
+ * 組織の ID を揃えた検査用の DB へ後続の migration を当てるとき、migration の SQL が埋め込む旧来の組織 ID を
+ * 既知の UUID へ読み替える。揃えた DB の CHECK・trigger と同じ値にするため。
+ */
+export function alignHistoricalMigrationSql(sql: string): string {
+  return sql.replaceAll(`'${LEGACY_ORGANIZATION_ID}'`, `'${COMPANY_DEFAULT_ORGANIZATION_ID}'`)
+}

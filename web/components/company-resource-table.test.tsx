@@ -7,7 +7,7 @@ import { readResourceText } from "@/lib/company/read-resource-text"
 afterEach(cleanup)
 
 const baseResource: CompanyResource = {
-  organizationId: "organization:default",
+  organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
   type: "site",
   id: "site:head-office",
   revision: 3,

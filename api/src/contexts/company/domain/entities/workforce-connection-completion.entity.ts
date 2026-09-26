@@ -1,9 +1,10 @@
 import { z } from "zod"
 import { CompanyValidationError } from "@/contexts/company/domain/errors"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const schema = z
   .object({
-    organizationId: z.literal("organization:default"),
+    organizationId: z.literal(COMPANY_DEFAULT_ORGANIZATION_ID),
     commandId: z.string().regex(/^\S{1,255}$/),
     actorAccountId: z.string().min(1).max(255),
     reason: z.string().trim().min(1).max(2000),

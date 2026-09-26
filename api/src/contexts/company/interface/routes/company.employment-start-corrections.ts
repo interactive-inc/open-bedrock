@@ -29,6 +29,7 @@ import { resolveCompanyRecordedAt } from "@/contexts/company/interface/request-e
 import { zValidator } from "@hono/zod-validator"
 import { createFactory } from "hono/factory"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const factory = createFactory<CompanyHttpEnvironment>()
 
@@ -37,7 +38,7 @@ const factory = createFactory<CompanyHttpEnvironment>()
 export const GET = factory.createHandlers(
   zValidator(
     "header",
-    z.object({ "x-company-organization-id": z.literal("organization:default") }),
+    z.object({ "x-company-organization-id": z.literal(COMPANY_DEFAULT_ORGANIZATION_ID) }),
     (validation) => {
       if (!validation.success) throw new CompanyHeadersInvalidError(validation.error)
     },
@@ -61,7 +62,7 @@ export const GET = factory.createHandlers(
     const actor = context.var.companyActor
     if (actor === undefined) throw new CompanyAuthenticationRequiredError()
     if (
-      !actor.canAccessOrganization("organization:default") ||
+      !actor.canAccessOrganization(COMPANY_DEFAULT_ORGANIZATION_ID) ||
       !canReadCompanyResource(actor, "employment")
     )
       throw new CompanyAccessDeniedError()
@@ -69,7 +70,7 @@ export const GET = factory.createHandlers(
     const query = context.req.valid("query")
     const history = await readEmploymentStartCorrectionHistory({
       database: context.env.DB,
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       employmentId: query.employment_id,
       throughRevision: query.organization_revision,
     })
@@ -80,7 +81,7 @@ export const GET = factory.createHandlers(
     if (target instanceof Error) throw new CompanyReadUnavailableError(target)
     context.header("etag", `"${history.organizationRevision}"`)
     return context.json({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       organizationRevision: history.organizationRevision,
       employmentId: query.employment_id,
       startsOn: target.startsOn,
@@ -96,7 +97,7 @@ export const POST = factory.createHandlers(
   zValidator(
     "header",
     z.object({
-      "x-company-organization-id": z.literal("organization:default"),
+      "x-company-organization-id": z.literal(COMPANY_DEFAULT_ORGANIZATION_ID),
       "idempotency-key": z.string().regex(/^\S{1,255}$/),
       "if-match": z.string().regex(/^(?:W\/)?(?:"\d+"|\d+)$/),
     }),
@@ -132,7 +133,10 @@ export const POST = factory.createHandlers(
   async (context) => {
     const actor = context.var.companyActor
     if (actor === undefined) throw new CompanyAuthenticationRequiredError()
-    if (!actor.canAccessOrganization("organization:default") || !actor.canUpdateWorkforce())
+    if (
+      !actor.canAccessOrganization(COMPANY_DEFAULT_ORGANIZATION_ID) ||
+      !actor.canUpdateWorkforce()
+    )
       throw new CompanyAccessDeniedError()
     const database = context.env.DB
     if (database === undefined) throw new CompanyDatabaseUnavailableError()
@@ -145,7 +149,7 @@ export const POST = factory.createHandlers(
     const recordedAt = resolveCompanyRecordedAt(context.var.companyClock)
     const planned = await planEmploymentStartCorrection({
       database,
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       employmentId: body.employmentId,
       expectedRevision,
       correctsRevision: body.correctsRevision,
@@ -181,7 +185,7 @@ export const POST = factory.createHandlers(
     context.header("etag", `"${result.organizationRevision}"`)
     return context.json(
       {
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         organizationRevision: result.organizationRevision,
         replayed: result.replayed,
       },

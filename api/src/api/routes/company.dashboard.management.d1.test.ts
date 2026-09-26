@@ -269,7 +269,7 @@ async function createTestDb(): Promise<D1Database> {
     {
       id: "0190004e-0000-7000-8000-000000000001",
       employee_id: "2",
-      organization_unit_id: "department:D002",
+      organization_unit_id: "0190005e-0000-7000-8000-000044303032",
       category: "transport",
       amount: 1000,
       spent_at: "2026-06-01",
@@ -280,7 +280,7 @@ async function createTestDb(): Promise<D1Database> {
     {
       id: "0190004e-0000-7000-8000-000000000002",
       employee_id: "3",
-      organization_unit_id: "department:D002",
+      organization_unit_id: "0190005e-0000-7000-8000-000044303032",
       category: "supplies",
       amount: 2000,
       spent_at: "2026-06-03",
@@ -291,7 +291,7 @@ async function createTestDb(): Promise<D1Database> {
     {
       id: "0190004e-0000-7000-8000-000000000003",
       employee_id: "3",
-      organization_unit_id: "department:D002",
+      organization_unit_id: "0190005e-0000-7000-8000-000044303032",
       category: "books",
       amount: 500,
       spent_at: "2026-05-01",

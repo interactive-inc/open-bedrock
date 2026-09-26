@@ -7,6 +7,7 @@ import { OrganizationWorkforceSnapshotAdapter } from "@/contexts/company/infrast
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
 import { wrapSystemD1TestDatabase } from "@system/test/wrap-system-d1-test-database.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const databases: Database[] = []
 afterEach(() => {
@@ -52,12 +53,12 @@ test("千人を超える会社のAccountを問い合わせ上限内で読み、�
       .bind(input),
     database.prepare(`INSERT OR IGNORE INTO company_organizations
       (id, revision, name, representative_name, created_at, updated_at)
-      VALUES ('organization:default', 1, 'Example', '', 0, 0)`),
+      VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 1, 'Example', '', 0, 0)`),
     database
       .prepare(`INSERT INTO company_resource_revisions
         (organization_id, resource_type, resource_id, revision, organization_revision,
          state, effective_from, attributes_json, command_id, actor_account_id, reason, recorded_at)
-      SELECT 'organization:default', 'person', 'person:' || json_extract(value, '$.employeeId'),
+      SELECT '${COMPANY_DEFAULT_ORGANIZATION_ID}', 'person', 'person:' || json_extract(value, '$.employeeId'),
         1, 1, 'active', '2020-01-01', json_object('officialName', 'Member'),
         'test:workforce-people', 'system:test', 'Confirmed test person', 0
       FROM json_each(?1)`)
@@ -72,7 +73,7 @@ test("千人を超える会社のAccountを問い合わせ上限内で読み、�
       .prepare(`INSERT INTO company_resource_revisions
         (organization_id, resource_type, resource_id, revision, organization_revision,
          state, effective_from, attributes_json, command_id, actor_account_id, reason, recorded_at)
-      SELECT 'organization:default', 'employee', json_extract(value, '$.employeeId'),
+      SELECT '${COMPANY_DEFAULT_ORGANIZATION_ID}', 'employee', json_extract(value, '$.employeeId'),
         1, 1, 'active', '2020-01-01',
         json_object('personId', 'person:' || json_extract(value, '$.employeeId')),
         'test:workforce-employees', 'system:test', 'Confirmed test employee', 0
@@ -87,14 +88,14 @@ test("千人を超える会社のAccountを問い合わせ上限内で読み、�
     database
       .prepare(`INSERT INTO company_workforce_resource_bindings
         (resource_type, resource_id, organization_id, employee_id, resource_revision, lifecycle_revision)
-      SELECT 'employee', json_extract(value, '$.employeeId'), 'organization:default',
+      SELECT 'employee', json_extract(value, '$.employeeId'), '${COMPANY_DEFAULT_ORGANIZATION_ID}',
         json_extract(value, '$.employeeId'), 1, 0 FROM json_each(?1)`)
       .bind(input),
     database
       .prepare(`INSERT INTO company_resource_revisions
         (organization_id, resource_type, resource_id, revision, organization_revision,
          state, effective_from, attributes_json, command_id, actor_account_id, reason, recorded_at)
-      SELECT 'organization:default', 'account-employee-link', 'link:' || json_extract(value, '$.accountId'),
+      SELECT '${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account-employee-link', 'link:' || json_extract(value, '$.accountId'),
         1, 1, 'active', '2020-01-01',
         json_object('accountId', json_extract(value, '$.accountId'),
           'employeeId', json_extract(value, '$.employeeId')),
