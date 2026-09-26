@@ -42,7 +42,7 @@ test(
 
     INSERT INTO system_notification_messages
       (id, kind, title, created_at)
-    VALUES ('message-existing', 'system:test', 'Existing', 100);
+    VALUES ('01900054-0000-7000-8000-000000000001', 'system:test', 'Existing', 100);
   `)
 
     applyMigrations(database, migrationFiles.slice(7))
@@ -62,10 +62,15 @@ test(
     expect(
       database
         .query(
-          "SELECT id, action_url, priority, dedupe_key FROM system_notification_messages WHERE id = 'message-existing'",
+          "SELECT id, action_url, priority, dedupe_key FROM system_notification_messages WHERE id = '01900054-0000-7000-8000-000000000001'",
         )
         .get(),
-    ).toEqual({ id: "message-existing", action_url: null, priority: "normal", dedupe_key: null })
+    ).toEqual({
+      id: "01900054-0000-7000-8000-000000000001",
+      action_url: null,
+      priority: "normal",
+      dedupe_key: null,
+    })
 
     for (const declaration of Object.values(systemCoreSchema)) {
       const table = getTableConfig(declaration)

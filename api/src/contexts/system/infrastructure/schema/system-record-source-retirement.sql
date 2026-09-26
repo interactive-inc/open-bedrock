@@ -15,7 +15,8 @@ CREATE TABLE system_record_source_retirements (
   CHECK(json_extract(snapshot_json,'$.proposalId') IS proposal_id),
   CHECK(json_extract(snapshot_json,'$.caseId') IS case_id),
   CHECK(json_extract(snapshot_json,'$.executionAuthorizationId') IS execution_authorization_id),
-  CHECK(json_extract(snapshot_json,'$.auditEventId') IS audit_event_id)
+  CHECK(json_extract(snapshot_json,'$.auditEventId') IS audit_event_id),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE TRIGGER system_record_source_retirements_insert BEFORE INSERT ON system_record_source_retirements

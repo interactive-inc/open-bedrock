@@ -2,7 +2,7 @@ import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 type SeedNotification = {
-  id: number
+  id: string
   recipientEmployeeId: EmployeeId
   sourceDomain: string
   sourceId: number | null
@@ -15,7 +15,7 @@ type SeedNotification = {
 
 export const seedNotifications: ReadonlyArray<SeedNotification> = [
   {
-    id: 1,
+    id: "01900054-0000-7000-8000-000000000001",
     recipientEmployeeId: toWorkforceEmployeeId(5),
     sourceDomain: "application",
     sourceId: 10,
@@ -26,7 +26,7 @@ export const seedNotifications: ReadonlyArray<SeedNotification> = [
     createdAt: "2025-05-20T09:00:00Z",
   },
   {
-    id: 2,
+    id: "01900054-0000-7000-8000-000000000002",
     recipientEmployeeId: toWorkforceEmployeeId(5),
     sourceDomain: "manual",
     sourceId: null,
@@ -37,7 +37,7 @@ export const seedNotifications: ReadonlyArray<SeedNotification> = [
     createdAt: "2025-05-22T09:00:00Z",
   },
   {
-    id: 3,
+    id: "01900054-0000-7000-8000-000000000003",
     recipientEmployeeId: toWorkforceEmployeeId(5),
     sourceDomain: "reminder",
     sourceId: null,
@@ -48,7 +48,7 @@ export const seedNotifications: ReadonlyArray<SeedNotification> = [
     createdAt: "2025-05-25T09:00:00Z",
   },
   {
-    id: 4,
+    id: "01900054-0000-7000-8000-000000000004",
     recipientEmployeeId: toWorkforceEmployeeId(6),
     sourceDomain: "manual",
     sourceId: null,
@@ -70,7 +70,7 @@ export async function seedSystemNotifications(db: D1Database): Promise<void> {
            VALUES (?1, ?2, ?3, ?4, 'company:notification.source', ?5, ?6)`,
         )
         .bind(
-          String(notification.id),
+          notification.id,
           `company:${notification.kind}`,
           notification.title,
           notification.body,
@@ -89,7 +89,7 @@ export async function seedSystemNotifications(db: D1Database): Promise<void> {
            VALUES (?1, ?1, ?2, ?3, ?4)`,
         )
         .bind(
-          String(notification.id),
+          notification.id,
           String(notification.recipientEmployeeId),
           deliveredAt,
           notification.isRead ? deliveredAt : null,

@@ -50,7 +50,7 @@ async function fixture() {
       .bind(String(officer)),
   ])
   const now = Date.now()
-  for (const id of ["att-a", "att-b"])
+  for (const id of ["01900054-0000-7000-8000-00000000000a", "01900054-0000-7000-8000-00000000000b"])
     await db
       .prepare(
         `INSERT INTO system_attachments
@@ -115,7 +115,7 @@ async function fixture() {
     (
       await db
         .prepare(
-          "SELECT id, status, wrapped_dek FROM system_attachments WHERE id IN ('att-a', 'att-b') ORDER BY id",
+          "SELECT id, status, wrapped_dek FROM system_attachments WHERE id IN ('01900054-0000-7000-8000-00000000000a', '01900054-0000-7000-8000-00000000000b') ORDER BY id",
         )
         .all<{ id: string; status: string; wrapped_dek: string | null }>()
     ).results
@@ -164,7 +164,7 @@ test("従業員単位の消去申請を承認後にだけ実行し、権限の�
         officer,
         "/company/personal-data-erasure-requests",
         "POST",
-        submission({ kind: "attachment", attachment_id: "att-a" }),
+        submission({ kind: "attachment", attachment_id: "01900054-0000-7000-8000-00000000000a" }),
       )
     ).status,
   ).toBe(409)
@@ -193,11 +193,14 @@ test("従業員単位の消去申請を承認後にだけ実行し、権限の�
   expect(destroyed.status).toBe(200)
   expect(await destroyed.json()).toEqual({
     status: "destroyed",
-    attachment_ids: ["att-a", "att-b"],
+    attachment_ids: [
+      "01900054-0000-7000-8000-00000000000a",
+      "01900054-0000-7000-8000-00000000000b",
+    ],
   })
   expect(await c.attachments()).toEqual([
-    { id: "att-a", status: "erased", wrapped_dek: null },
-    { id: "att-b", status: "erased", wrapped_dek: null },
+    { id: "01900054-0000-7000-8000-00000000000a", status: "erased", wrapped_dek: null },
+    { id: "01900054-0000-7000-8000-00000000000b", status: "erased", wrapped_dek: null },
   ])
   expect(await (await c.request(officer, execute, "POST")).json()).toMatchObject({
     status: "replayed",
@@ -214,7 +217,7 @@ test("従業員単位の消去申請を承認後にだけ実行し、権限の�
         officer,
         "/company/personal-data-erasure-requests",
         "POST",
-        submission({ kind: "attachment", attachment_id: "att-a" }),
+        submission({ kind: "attachment", attachment_id: "01900054-0000-7000-8000-00000000000a" }),
       )
     ).status,
   ).toBe(409)
@@ -244,7 +247,7 @@ test("最終承認者が消去権限を持つ場合は、承認の確定で鍵�
     officer,
     "/company/personal-data-erasure-requests",
     "POST",
-    submission({ kind: "attachment", attachment_id: "att-b" }),
+    submission({ kind: "attachment", attachment_id: "01900054-0000-7000-8000-00000000000b" }),
   )
   expect(submitted.status).toBe(201)
   const { application_id: applicationId } = z
@@ -262,8 +265,8 @@ test("最終承認者が消去権限を持つ場合は、承認の確定で鍵�
   )
   expect(approved.status).toBe(200)
   expect(await c.attachments()).toEqual([
-    { id: "att-a", status: "linked", wrapped_dek: "wrapped" },
-    { id: "att-b", status: "erased", wrapped_dek: null },
+    { id: "01900054-0000-7000-8000-00000000000a", status: "linked", wrapped_dek: "wrapped" },
+    { id: "01900054-0000-7000-8000-00000000000b", status: "erased", wrapped_dek: null },
   ])
   expect(await c.audits()).toEqual([
     "system.attachment.erasure.requested",

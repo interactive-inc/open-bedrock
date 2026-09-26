@@ -141,7 +141,9 @@ test("DDLとDrizzleの列を一致させ、DBでも壊れたJSONを拒否する"
   expect(() => sqlite.exec("UPDATE system_operation_receipts SET recorded_at = 1.5")).toThrow()
 })
 
-test("各製品の追記migrationが同じtable・索引・変更禁止triggerを作る", () => {
+// 作成時のmigrationは複合主キーで、UUIDの主キーへの作り直しは後続のmigrationが行う。
+// 作成時点では主キー以外の列、索引、変更禁止triggerが正本と一致することを確かめる。
+test("各製品の追記migrationが同じ列・索引・変更禁止triggerを作る", () => {
   const canonical = new Database(":memory:")
   const released = new Database(":memory:")
   canonical.exec(ddl)
@@ -154,10 +156,17 @@ test("各製品の追記migrationが同じtable・索引・変更禁止trigger�
   const structure = (database: Database) =>
     database
       .query(
-        "SELECT type, name, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' ORDER BY type, name",
+        "SELECT type, name, sql FROM sqlite_master WHERE name NOT LIKE 'sqlite_%' AND type != 'table' ORDER BY type, name",
+      )
+      .all()
+  const columns = (database: Database) =>
+    database
+      .query<{ name: string; type: string; notnull: number }, []>(
+        "SELECT name, type, \"notnull\" FROM pragma_table_info('system_operation_receipts') WHERE name != 'id' ORDER BY cid",
       )
       .all()
   expect(structure(released)).toEqual(structure(canonical))
+  expect(columns(released)).toEqual(columns(canonical))
   canonical.close()
   released.close()
 })

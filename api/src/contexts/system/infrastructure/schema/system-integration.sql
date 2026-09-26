@@ -65,12 +65,13 @@ CREATE INDEX system_reconciliation_runs_status_idx
   ON system_reconciliation_runs (status, created_at);
 
 CREATE TABLE system_reconciliation_items (
+  id TEXT PRIMARY KEY NOT NULL,
   run_id TEXT NOT NULL REFERENCES system_reconciliation_runs(id) ON DELETE RESTRICT,
   item_key TEXT NOT NULL CHECK (length(item_key) BETWEEN 1 AND 512),
   local_digest TEXT CHECK (local_digest IS NULL OR (length(local_digest) = 64 AND local_digest NOT GLOB '*[^0-9a-f]*')),
   external_digest TEXT CHECK (external_digest IS NULL OR (length(external_digest) = 64 AND external_digest NOT GLOB '*[^0-9a-f]*')),
   status TEXT NOT NULL CHECK (status IN ('matched', 'different', 'missing_local', 'missing_external')),
-  PRIMARY KEY (run_id, item_key),
+  UNIQUE (run_id, item_key),
   CHECK (
     (status = 'matched' AND local_digest = external_digest AND local_digest IS NOT NULL)
     OR (status = 'different' AND local_digest <> external_digest AND local_digest IS NOT NULL AND external_digest IS NOT NULL)

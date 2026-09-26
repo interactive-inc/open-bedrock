@@ -633,7 +633,8 @@ BEGIN
 END;
 
 CREATE TABLE system_batch_jobs (
-  id INTEGER PRIMARY KEY NOT NULL,
+  id TEXT PRIMARY KEY NOT NULL,
+  legacy_id TEXT UNIQUE,
   name TEXT NOT NULL
     CHECK (length(name) BETWEEN 1 AND 200),
   status TEXT NOT NULL

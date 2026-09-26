@@ -3,23 +3,23 @@
     "tables": 206,
     "primaryKeyKinds": {
       "allocator-singleton-secret": 11,
-      "composite": 26,
-      "integer": 4,
+      "composite": 21,
+      "integer": 2,
       "text-business-code": 1,
       "text-prefixed": 13,
-      "text-uuid": 97,
-      "text-uuid-candidate": 54
+      "text-uuid": 125,
+      "text-uuid-candidate": 33
     },
     "declaredForeignKeys": 272,
     "softReferences": {
       "cross-context": 17,
       "external": 32,
       "historical": 10,
-      "not-reference": 89,
+      "not-reference": 91,
       "polymorphic": 18,
       "same-context": 79
     },
-    "triggers": 744,
+    "triggers": 752,
     "views": 25,
     "indexes": 290
   },
@@ -6990,8 +6990,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -7060,8 +7060,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -7322,18 +7322,23 @@
         "columns": [
           {
             "name": "id",
-            "type": "INTEGER"
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
         "incoming": []
       },
-      "softReferences": [],
-      "triggers": [],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
+      "triggers": ["system_batch_jobs_identity_update", "system_batch_jobs_legacy_id_insert"],
       "views": [],
       "indexes": ["system_batch_jobs_status_idx"]
     },
@@ -7559,8 +7564,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -7599,8 +7604,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -8023,8 +8028,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -8323,8 +8328,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -8361,8 +8366,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -8418,8 +8423,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -8541,8 +8546,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -8579,8 +8584,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -8634,8 +8639,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false,
+        "kind": "text-uuid",
+        "uuidEnforced": true,
         "inheritsFrom": "system_notification_messages"
       },
       "foreignKeys": {
@@ -8730,20 +8735,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "operation_key",
-            "type": "TEXT"
-          },
-          {
-            "name": "scope_key",
-            "type": "TEXT"
-          },
-          {
-            "name": "command_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -8773,7 +8770,11 @@
           "target": "system_principals"
         }
       ],
-      "triggers": ["system_operation_receipts_no_delete", "system_operation_receipts_no_update"],
+      "triggers": [
+        "system_operation_receipts_identity_update",
+        "system_operation_receipts_no_delete",
+        "system_operation_receipts_no_update"
+      ],
       "views": [],
       "indexes": ["system_operation_receipts_actor_idx"]
     },
@@ -8786,8 +8787,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -8921,8 +8922,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -9435,16 +9436,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "run_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "item_key",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -9464,6 +9461,7 @@
         }
       ],
       "triggers": [
+        "system_reconciliation_items_identity_update",
         "system_reconciliation_items_no_delete",
         "system_reconciliation_items_no_update"
       ],
@@ -9479,8 +9477,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -9516,20 +9514,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "freeze_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "record_kind",
-            "type": "TEXT"
-          },
-          {
-            "name": "source_record_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -9562,6 +9552,7 @@
       ],
       "triggers": [
         "system_record_coverage_entries_delete",
+        "system_record_coverage_entries_identity_update",
         "system_record_coverage_entries_insert",
         "system_record_coverage_entries_update",
         "system_record_coverage_pages_index",
@@ -9579,8 +9570,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -9633,16 +9624,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "id",
+            "name": "revision_id",
             "type": "TEXT"
-          },
-          {
-            "name": "revision",
-            "type": "INTEGER"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -9664,12 +9651,17 @@
       },
       "softReferences": [
         {
+          "column": "revision_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "record_id",
           "classification": "polymorphic"
         }
       ],
       "triggers": [
         "system_preserved_record_insert_guard",
+        "system_record_disclosure_policies_identity_update",
         "system_record_disclosure_prevent_delete",
         "system_record_disclosure_prevent_update",
         "system_record_disclosure_publication_guard"
@@ -9682,16 +9674,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "receipt_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "attachment_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -9716,6 +9704,7 @@
         "system_attachments_retirement_frozen_insert",
         "system_attachments_retirement_frozen_update",
         "system_record_retirement_attachment_pins_delete",
+        "system_record_retirement_attachment_pins_identity_update",
         "system_record_retirement_attachment_pins_insert",
         "system_record_retirement_attachment_pins_update",
         "system_record_retirement_receipts_pin_attachments"
@@ -9732,8 +9721,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -9789,8 +9778,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -9853,8 +9842,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -10210,8 +10199,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -10404,8 +10393,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false,
+        "kind": "text-uuid",
+        "uuidEnforced": true,
         "inheritsFrom": "system_attachments"
       },
       "foreignKeys": {
@@ -10453,12 +10442,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "sequence",
-            "type": "INTEGER"
+            "name": "id",
+            "type": "TEXT"
           }
         ],
-        "kind": "integer",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -10535,6 +10524,7 @@
       "triggers": [
         "system_work_evidence_insert",
         "system_work_item_revisions_delete",
+        "system_work_item_revisions_identity_update",
         "system_work_item_revisions_update",
         "system_work_revision_insert",
         "system_work_submit_evidence"
@@ -10551,8 +10541,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [

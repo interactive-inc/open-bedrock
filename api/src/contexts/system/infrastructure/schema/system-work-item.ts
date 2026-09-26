@@ -53,7 +53,7 @@ export const systemWorkItems = sqliteTable(
 export const systemWorkItemRevisions = sqliteTable(
   "system_work_item_revisions",
   {
-    sequence: integer("sequence").primaryKey({ autoIncrement: true }),
+    id: text("id").primaryKey().notNull(),
     workItemId: text("work_item_id")
       .notNull()
       .references(() => systemWorkItems.id, { onDelete: "restrict" }),

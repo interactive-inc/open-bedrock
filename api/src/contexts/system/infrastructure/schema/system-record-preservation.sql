@@ -1,10 +1,11 @@
 CREATE TABLE system_record_disclosure_policies (
+  revision_id TEXT PRIMARY KEY NOT NULL,
   id TEXT NOT NULL,
   revision INTEGER NOT NULL CHECK (revision > 0),
   record_id TEXT NOT NULL,
   audit_event_id TEXT NOT NULL UNIQUE REFERENCES system_audit_events(event_id),
   snapshot_json TEXT NOT NULL CHECK (json_valid(snapshot_json)),
-  PRIMARY KEY (id, revision),
+  UNIQUE (id, revision),
   CHECK (json_extract(snapshot_json, '$.id') IS id),
   CHECK (json_extract(snapshot_json, '$.revision') IS revision),
   CHECK (json_extract(snapshot_json, '$.recordId') IS record_id),

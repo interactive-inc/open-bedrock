@@ -26,7 +26,8 @@ CREATE TABLE system_record_source_freezes (
       AND json_type(snapshot_json, '$.release.reason') IS 'text'
       AND length(trim(json_extract(snapshot_json, '$.release.reason'))) BETWEEN 1 AND 2000
       AND julianday(json_extract(snapshot_json, '$.release.at')) IS NOT NULL
-      AND julianday(json_extract(snapshot_json, '$.release.at')) >= julianday(json_extract(snapshot_json, '$.createdAt'))))
+      AND julianday(json_extract(snapshot_json, '$.release.at')) >= julianday(json_extract(snapshot_json, '$.createdAt')))),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
 -- 同じDB内では保存元設定を変更しても停止中の所有業務を迂回させない。
 CREATE UNIQUE INDEX system_record_source_freezes_active_owner_idx

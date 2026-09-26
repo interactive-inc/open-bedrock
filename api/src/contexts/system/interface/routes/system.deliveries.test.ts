@@ -31,7 +31,7 @@ describe("System delivery HTTP", () => {
     if (accessToken instanceof Error) throw accessToken
     const repository = new SystemDeliveryRepository(fixture.context)
     const queued = SystemDeliveryEntity.create({
-      id: "managed:1",
+      id: "01900054-0000-7000-8000-000000000003",
       kind: "job",
       handlerKey: "example.record",
       operationKey: "example.record",
@@ -78,7 +78,7 @@ describe("System delivery HTTP", () => {
       )
     expect(
       (
-        await request("/system/deliveries/managed:1", "PATCH", {
+        await request("/system/deliveries/01900054-0000-7000-8000-000000000003", "PATCH", {
           kind: "job",
           action: "claim",
           lease_seconds: 30,
@@ -101,7 +101,10 @@ describe("System delivery HTTP", () => {
                 ? { error_code: "handler.failed", retry_at: now.toISOString() }
                 : {}),
             }
-      expect((await request("/system/deliveries/managed:1", "PATCH", body)).status).toBe(403)
+      expect(
+        (await request("/system/deliveries/01900054-0000-7000-8000-000000000003", "PATCH", body))
+          .status,
+      ).toBe(403)
     }
     expect(await repository.find("job", queued.id)).toMatchObject({ status: "leased", attempt: 1 })
     const failed = leased.fail(accountId, "b".repeat(64), "handler.failed", now, now)
@@ -153,7 +156,7 @@ describe("System delivery HTTP", () => {
     const created = await client.system.deliveries.$post({
       json: {
         kind: "job",
-        id: "job:1",
+        id: "01900054-0000-7000-8000-000000000001",
         operation_key: "record.process",
         payload_digest: "a".repeat(64),
         idempotency_key: "command:1",
@@ -165,7 +168,7 @@ describe("System delivery HTTP", () => {
     const replayed = await client.system.deliveries.$post({
       json: {
         kind: "job",
-        id: "job:replay",
+        id: "01900054-0000-7000-8000-000000000002",
         operation_key: "record.process",
         payload_digest: "a".repeat(64),
         idempotency_key: "command:1",
@@ -176,7 +179,7 @@ describe("System delivery HTTP", () => {
     expect(replayed.status).toBe(200)
 
     const claimed = await client.system.deliveries[":deliveryId"].$patch({
-      param: { deliveryId: "job:1" },
+      param: { deliveryId: "01900054-0000-7000-8000-000000000001" },
       json: { kind: "job", action: "claim", lease_seconds: 30 },
     })
     expect(claimed.status).toBe(200)
@@ -185,7 +188,7 @@ describe("System delivery HTTP", () => {
     const leaseToken = "lease_token" in claimedBody ? claimedBody.lease_token : undefined
     if (leaseToken === undefined) return
     const failed = await client.system.deliveries[":deliveryId"].$patch({
-      param: { deliveryId: "job:1" },
+      param: { deliveryId: "01900054-0000-7000-8000-000000000001" },
       json: {
         kind: "job",
         action: "fail",
@@ -199,7 +202,13 @@ describe("System delivery HTTP", () => {
     const deadLetters = await client.system["dead-letters"].$get()
     expect(deadLetters.status).toBe(200)
     expect(await deadLetters.json()).toMatchObject({
-      dead_letters: [{ sourceType: "job", sourceId: "job:1", reasonCode: "remote.failed" }],
+      dead_letters: [
+        {
+          sourceType: "job",
+          sourceId: "01900054-0000-7000-8000-000000000001",
+          reasonCode: "remote.failed",
+        },
+      ],
     })
     const deadLetterBody = await (await client.system["dead-letters"].$get()).json()
     const deadLetterId = deadLetterBody.dead_letters[0]?.id

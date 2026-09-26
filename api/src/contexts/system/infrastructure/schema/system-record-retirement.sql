@@ -128,10 +128,17 @@ BEGIN
 END;
 
 CREATE TABLE system_record_retirement_attachment_pins (
+  -- 撤去の trigger が行を足すため、主キーは列の既定値で採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   receipt_id TEXT NOT NULL REFERENCES system_record_retirement_receipts(id),
   attachment_id TEXT NOT NULL,
-  PRIMARY KEY(receipt_id,attachment_id)
+  UNIQUE(receipt_id,attachment_id),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER system_record_retirement_attachment_pins_identity_update
+BEFORE UPDATE OF id ON system_record_retirement_attachment_pins
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 CREATE INDEX system_record_retirement_attachment_pins_attachment_idx
   ON system_record_retirement_attachment_pins(attachment_id,receipt_id);
 

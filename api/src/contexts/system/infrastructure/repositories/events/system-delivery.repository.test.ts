@@ -41,7 +41,12 @@ describe("SystemDeliveryRepository", () => {
     expect(await repository.update(leased, failed, [])).toBe("updated")
     const deadLetters = await repository.findDeadLetters()
     expect(deadLetters).toMatchObject([
-      { sourceType: "job", sourceId: "job:1", reasonCode: "remote.failed", attempt: 1 },
+      {
+        sourceType: "job",
+        sourceId: "01900054-0000-7000-8000-000000000001",
+        reasonCode: "remote.failed",
+        attempt: 1,
+      },
     ])
     if (deadLetters instanceof Error || deadLetters[0] === undefined) return
     const requeued = createRequeuedDelivery(deadLetters[0].id, deadLetters[0].payloadDigest)
@@ -99,7 +104,7 @@ function createFixture(): Readonly<{ database: D1Database }> {
 
 function createDelivery(payloadDigest: string): SystemDeliveryEntity {
   const delivery = SystemDeliveryEntity.create({
-    id: "job:1",
+    id: "01900054-0000-7000-8000-000000000001",
     kind: "job",
     operationKey: "record.process",
     payloadDigest,
@@ -122,7 +127,7 @@ function createDelivery(payloadDigest: string): SystemDeliveryEntity {
 
 function createRequeuedDelivery(deadLetterId: string, payloadDigest: string): SystemDeliveryEntity {
   const delivery = SystemDeliveryEntity.create({
-    id: "job:requeued",
+    id: "01900054-0000-7000-8000-000000000004",
     kind: "job",
     operationKey: "system.dead_letter.reprocess.job",
     payloadDigest,
