@@ -1,4 +1,4 @@
-import { testDerivedId } from "@tests/api/support/test-identity-id"
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import { expect, test } from "bun:test"
 import { CompanyGovernanceAuthorityResolutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-governance-authority-resolution.adapter"
 import {

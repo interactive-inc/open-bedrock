@@ -1,4 +1,4 @@
-import { testAccountId } from "@tests/api/support/test-identity-id"
+import { testAccountId } from "@system/test/system-test-id.test-support"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import {
   SYSTEM_ACCESS_TOKEN_AUDIENCE,

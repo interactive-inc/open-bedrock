@@ -1,4 +1,4 @@
-import { testDerivedId } from "@tests/api/support/test-identity-id"
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyGovernanceAuthorityError } from "@/contexts/company/domain/errors"

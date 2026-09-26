@@ -15,7 +15,7 @@ import { openSystemProcedures } from "@system/interface/operations/open-system-p
 import { CompleteApprovedPersonnelActionRequest } from "@/contexts/company/application/employee-lifecycle/procedure/complete-approved-personnel-action-request"
 import { PersonnelActionPersistenceAdapter } from "@/contexts/company/infrastructure/adapters/employee-lifecycle/personnel-action-persistence.adapter"
 import { CompanyConflictError } from "@/contexts/company/domain/errors"
-import { testDerivedId } from "@tests/api/support/test-identity-id"
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { ApplyOrganizationResourceAdoption } from "@/contexts/company/application/organization/apply-organization-resource-adoption"

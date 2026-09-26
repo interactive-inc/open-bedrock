@@ -1,4 +1,5 @@
-import { testAccountId, testDerivedId, testEmployeeId } from "@tests/api/support/test-identity-id"
+import { testAccountId, testDerivedId } from "@system/test/system-test-id.test-support"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { publishTestAccountEmployeeLink } from "@tests/api/support/company/publish-test-account-employee-link"
 import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"

@@ -1,4 +1,5 @@
-import { testDerivedId, testEmployeeId } from "@tests/api/support/test-identity-id"
+import { testDerivedId } from "@system/test/system-test-id.test-support"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { publishTestEmployeeResources } from "@tests/api/support/company/publish-test-employee-resources"
 import { seedOrganizationUnitId } from "@tests/api/support/company/test-organization-unit-id"
 import { COMPANY_ROOT_ORGANIZATION_UNIT_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"

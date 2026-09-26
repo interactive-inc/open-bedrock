@@ -3,7 +3,8 @@ import { RetireEmployee } from "@/contexts/company/application/employee-lifecycl
 import { CompanyOperationError } from "@/contexts/company/domain/errors"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
-import { testAccountId, testEmployeeId } from "@tests/api/support/test-identity-id"
+import { testAccountId } from "@system/test/system-test-id.test-support"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import {
   createLifecycleRouteDb,

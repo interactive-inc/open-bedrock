@@ -1,4 +1,4 @@
-import { testAccountId } from "@tests/api/support/test-identity-id"
+import { testAccountId } from "@system/test/system-test-id.test-support"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"

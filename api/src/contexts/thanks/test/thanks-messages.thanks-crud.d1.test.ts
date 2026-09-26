@@ -1,4 +1,5 @@
-import { testAccountId, testDerivedId, testEmployeeId } from "@tests/api/support/test-identity-id"
+import { testAccountId, testDerivedId } from "@system/test/system-test-id.test-support"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"

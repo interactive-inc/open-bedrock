@@ -1,4 +1,4 @@
-import { testDerivedId } from "@tests/api/support/test-identity-id"
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import type { LifecycleSchedule } from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
 import type { OrganizationUnitPeriod } from "@/contexts/company/domain/definitions/organization-unit.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"

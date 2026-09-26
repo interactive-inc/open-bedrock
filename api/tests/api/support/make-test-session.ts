@@ -1,4 +1,5 @@
-import { testAccountId, testEmployeeId } from "@tests/api/support/test-identity-id"
+import { testAccountId } from "@system/test/system-test-id.test-support"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { SYSTEM_ROLE_PERMISSIONS } from "@tests/api/support/system-roles"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"

@@ -1,4 +1,4 @@
-import { testDerivedId } from "@tests/api/support/test-identity-id"
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"

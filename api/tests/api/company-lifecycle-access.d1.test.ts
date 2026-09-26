@@ -10,7 +10,8 @@ import {
   readOrganizationRevision,
 } from "@tests/api/support/lifecycle-route-fixture"
 import { createTestContextForDatabase } from "@tests/api/support/create-context-for-database"
-import { testAccountId, testEmployeeId } from "@tests/api/support/test-identity-id"
+import { testAccountId } from "@system/test/system-test-id.test-support"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"

@@ -1,4 +1,5 @@
-import { testAccountId, testEmployeeId } from "@tests/api/support/test-identity-id"
+import { testAccountId } from "@system/test/system-test-id.test-support"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 
 /** 社員を指す列。数字の社員 ID は seed と同じ規則で UUID へ写す。 */
 const EMPLOYEE_COLUMNS = new Set([

@@ -1,5 +1,5 @@
 import { describe, expect, test, spyOn } from "bun:test"
-import { testAccountId } from "@tests/api/support/test-identity-id"
+import { testAccountId } from "@system/test/system-test-id.test-support"
 import { readFileSync, readdirSync } from "node:fs"
 import { join } from "node:path"
 import { Hono } from "hono"

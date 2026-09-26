@@ -1,6 +1,6 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
-import { testAccountId } from "@tests/api/support/test-identity-id"
+import { testAccountId } from "@system/test/system-test-id.test-support"
 
 type SeedNotification = {
   id: string

@@ -5,7 +5,7 @@ import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
-import { testAccountId } from "@tests/api/support/test-identity-id"
+import { testAccountId } from "@system/test/system-test-id.test-support"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"

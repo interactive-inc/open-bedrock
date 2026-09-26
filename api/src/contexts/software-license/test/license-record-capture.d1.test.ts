@@ -1,4 +1,4 @@
-import { testDerivedId } from "@tests/api/support/test-identity-id"
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import { ListLicenseRecordInventoryAdapter } from "@/contexts/software-license/infrastructure/adapters/list-license-record-inventory.adapter"
 import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"

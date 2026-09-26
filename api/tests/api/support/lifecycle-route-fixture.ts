@@ -1,4 +1,5 @@
-import { testDerivedId, testEmployeeId } from "@tests/api/support/test-identity-id"
+import { testDerivedId } from "@system/test/system-test-id.test-support"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { seedDepartments } from "@tests/api/support/company/seed-departments.test-support"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { seedOrgDepartments } from "@tests/api/support/company/seed-org-departments.test-support"

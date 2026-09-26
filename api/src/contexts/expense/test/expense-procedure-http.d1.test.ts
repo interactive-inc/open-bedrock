@@ -9,7 +9,7 @@ import { zExpenseProcedureView } from "@/contexts/expense/interface/http/respons
 import { z } from "zod"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
 import { execSql } from "@tests/d1/support/exec-sql"
-import { testDerivedId } from "@tests/api/support/test-identity-id"
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 
 let pool: LocalD1Pool
 

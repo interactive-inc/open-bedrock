@@ -1,4 +1,4 @@
-import { testAccountId, testDerivedId } from "@tests/api/support/test-identity-id"
+import { testAccountId, testDerivedId } from "@system/test/system-test-id.test-support"
 import { Database } from "bun:sqlite"
 import { readFileSync } from "node:fs"
 import { wrapSystemD1TestDatabase } from "@system/test/wrap-system-d1-test-database.test-support"

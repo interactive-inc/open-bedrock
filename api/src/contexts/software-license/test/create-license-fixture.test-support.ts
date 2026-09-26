@@ -1,4 +1,4 @@
-import { testDerivedId } from "@tests/api/support/test-identity-id"
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import { POST as resubmitPreservation } from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.resubmit"
 import { POST as withdrawPreservation } from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.withdraw"
 import { POST as rejectPreservation } from "@/contexts/software-license/interface/routes/software-license.software-licenses.$id.preservation-requests.$number.reject"

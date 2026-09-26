@@ -1,4 +1,4 @@
-import { testAccountId, testDerivedId } from "@tests/api/support/test-identity-id"
+import { testAccountId, testDerivedId } from "@system/test/system-test-id.test-support"
 import { readFileSync } from "node:fs"
 import { describe, expect, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"

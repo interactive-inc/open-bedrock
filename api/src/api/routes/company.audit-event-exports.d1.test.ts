@@ -13,7 +13,7 @@ import { AUDIT_CSV_MAX_BYTES } from "@/contexts/company/domain/definitions/to-au
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
 import { execSql } from "@tests/d1/support/exec-sql"
-import { testAccountId } from "@tests/api/support/test-identity-id"
+import { testAccountId } from "@system/test/system-test-id.test-support"
 
 let pool: LocalD1Pool
 

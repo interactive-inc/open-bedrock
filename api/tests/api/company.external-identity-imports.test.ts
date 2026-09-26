@@ -4,7 +4,7 @@ import {
   EXTERNAL_IMPORT_TEST_SECRET,
 } from "@/contexts/company/test/external-identity-import.test-support"
 import type { ExternalIdentityImportInput } from "@/contexts/company/domain/entities/external-identity-import.entity"
-import { testAccountId } from "@tests/api/support/test-identity-id"
+import { testAccountId } from "@system/test/system-test-id.test-support"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"

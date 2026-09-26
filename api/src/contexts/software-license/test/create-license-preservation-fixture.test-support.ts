@@ -1,4 +1,4 @@
-import { testDerivedId } from "@tests/api/support/test-identity-id"
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import { createLicenseFixture } from "@/contexts/software-license/test/create-license-fixture.test-support"
 import { createLocalD1Governance } from "@tests/d1/support/create-local-d1-governance"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"

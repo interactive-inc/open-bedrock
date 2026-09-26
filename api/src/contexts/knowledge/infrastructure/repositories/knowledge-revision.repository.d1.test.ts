@@ -1,4 +1,5 @@
-import { testAccountId, testEmployeeId } from "@tests/api/support/test-identity-id"
+import { testAccountId } from "@system/test/system-test-id.test-support"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { KnowledgeArticle } from "@/contexts/knowledge/domain/entities/knowledge-article.entity"
 import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"

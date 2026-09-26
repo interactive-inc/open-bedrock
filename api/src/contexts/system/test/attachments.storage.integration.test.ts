@@ -1,4 +1,4 @@
-import { testAccountId, testDerivedId } from "@tests/api/support/test-identity-id"
+import { testAccountId, testDerivedId } from "@system/test/system-test-id.test-support"
 import { z } from "zod"
 import { CaptureLinkedAttachmentRecordAdapter } from "@system/infrastructure/adapters/records/capture-linked-attachment-record.adapter"
 import { AttachmentRecordContentValue } from "@system/domain/values/records/attachment-record-content.value"

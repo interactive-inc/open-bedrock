@@ -1,4 +1,4 @@
-import { testDerivedId } from "@tests/api/support/test-identity-id"
+import { testDerivedId } from "@system/test/system-test-id.test-support"
 import { SystemPrincipalEntity } from "@system/domain/entities/system-principal.entity"
 import { describe, expect, test } from "bun:test"
 
