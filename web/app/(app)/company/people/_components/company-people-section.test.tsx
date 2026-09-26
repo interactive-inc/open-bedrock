@@ -16,7 +16,7 @@ afterEach(() => {
 })
 
 const person: CompanyResource = {
-  organizationId: "organization:default",
+  organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
   type: "person",
   id: "person:1",
   revision: 1,
@@ -29,7 +29,7 @@ const person: CompanyResource = {
 describe("CompanyPeopleSection", () => {
   test("氏名と連絡先を出し、欠けた電話はハイフンにする", async () => {
     mocks.getCompanyPeopleResources.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 4,
       resources: [person],
     })
@@ -46,7 +46,7 @@ describe("CompanyPeopleSection", () => {
 
   test("空のときは登録がないことを示す", async () => {
     mocks.getCompanyPeopleResources.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 0,
       resources: [],
     })

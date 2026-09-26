@@ -4,6 +4,7 @@ import type { OrganizationResourceAdoptionInput } from "@/contexts/company/domai
 import { OrganizationResourceAdoptionSnapshotValue } from "@/contexts/company/domain/values/organization-resource-adoption-snapshot.value"
 import { CompanyValidationError } from "@/contexts/company/domain/errors"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_ROOT_ORGANIZATION_UNIT_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 async function adopt(
   isInitialization: boolean,
@@ -15,13 +16,13 @@ async function adopt(
       organizationRevision: 1,
       lifecycleRevision: 1,
       pendingOperations: 0,
-      organizationUnit: { id: "company:root", createdAt: 0 },
+      organizationUnit: { id: COMPANY_ROOT_ORGANIZATION_UNIT_ID, createdAt: 0 },
       bindingOrganizationId: null,
       periods: [
         {
           periodId: "company:root:initial",
           revision: 1,
-          organizationUnitId: "company:root",
+          organizationUnitId: COMPANY_ROOT_ORGANIZATION_UNIT_ID,
           code: "COMPANY",
           officialName: "Company",
           kind: "COMPANY",
@@ -42,7 +43,7 @@ async function adopt(
   if (snapshot instanceof Error) throw snapshot
   const command = OrganizationResourceAdoptionEntity.create({
     commandId: "adoption:1",
-    organizationUnitId: "company:root",
+    organizationUnitId: COMPANY_ROOT_ORGANIZATION_UNIT_ID,
     expectedRevision: 1,
     snapshotDigest: snapshot.props.digest,
     observedOn: "2026-09-13",

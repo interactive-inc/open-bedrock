@@ -21,6 +21,7 @@ import { OrganizationWorkforceChangeEntity } from "@/contexts/company/domain/ent
 import { OrganizationUnitChangeStatementAdapter } from "@/contexts/company/infrastructure/adapters/organization/organization-unit-change-statement.adapter"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Context = Readonly<{ env: Readonly<{ DB: D1Database; COMPANY_TIME_ZONE?: string }> }>
 export type OrganizationResourceAdoptionResult = Readonly<{
@@ -92,7 +93,7 @@ export class OrganizationResourceAdoptionRepository {
     if (await this.hasResources(command.props.organizationUnitId, changes)) return this.conflict()
     const repository = new D1CompanyResourceRepository({ database: this.c.env.DB })
     const current = await repository.findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["organization-unit"],
     })
     if (!current.ok) return this.unavailable(current.cause)
@@ -120,7 +121,7 @@ export class OrganizationResourceAdoptionRepository {
         cause: validationChange,
       })
     const reportingHistory = await repository.findReportingRelationHistory(
-      "organization:default",
+      COMPANY_DEFAULT_ORGANIZATION_ID,
       current.organizationRevision,
     )
     if (reportingHistory instanceof Error) return this.unavailable(reportingHistory)
@@ -175,7 +176,7 @@ export class OrganizationResourceAdoptionRepository {
     }
     statements.push(
       this.c.env.DB.prepare(`INSERT INTO company_organization_resource_bindings
-      (organization_unit_id, organization_id, recorded_at) VALUES (?1, 'organization:default', ?2)`).bind(
+      (organization_unit_id, organization_id, recorded_at) VALUES (?1, '${COMPANY_DEFAULT_ORGANIZATION_ID}', ?2)`).bind(
         command.props.organizationUnitId,
         command.props.recordedAt,
       ),
@@ -228,7 +229,7 @@ export class OrganizationResourceAdoptionRepository {
     changes: ReadonlyArray<CompanyResourceChangeEntity>,
   ): Promise<boolean> {
     return (
-      (await this.c.env.DB.prepare(`SELECT 1 FROM company_resource_heads WHERE organization_id = 'organization:default' AND resource_type = 'organization-unit'
+      (await this.c.env.DB.prepare(`SELECT 1 FROM company_resource_heads WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND resource_type = 'organization-unit'
       AND (json_extract(attributes_json, '$.organizationUnitId') = ?1 OR resource_id IN (SELECT value FROM json_each(?2))) LIMIT 1`)
         .bind(
           organizationUnitId,

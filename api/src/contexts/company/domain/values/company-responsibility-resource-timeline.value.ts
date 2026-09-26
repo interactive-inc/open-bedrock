@@ -1,6 +1,7 @@
 import type { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import type { OrgResponsibilityPeriod } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 export type CompanyResponsibilitySource = Readonly<{
   employeeId: OrgResponsibilityPeriod["employeeId"]
@@ -33,7 +34,7 @@ export class CompanyResponsibilityResourceTimelineValue {
         (resource, index) =>
           resource.type !== "responsibility-assignment" ||
           resource.id !== first.id ||
-          resource.organizationId !== "organization:default" ||
+          resource.organizationId !== COMPANY_DEFAULT_ORGANIZATION_ID ||
           resource.revision !== index + 1 ||
           resource.readText("holderType") !== "employee" ||
           resource.readText("holderId") !== source.employeeId ||

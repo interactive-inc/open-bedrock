@@ -44,7 +44,7 @@ test.each(["legalEntity", "site", "unit"] as const)(
       await f.write({
         resources: f.resources.map((resource) => ({
           ...resource,
-          organizationId: "organization:other",
+          organizationId: "01900060-0000-7000-8000-12268fccf2cc",
         })),
         expectedRevision: 0,
       }),
@@ -62,7 +62,7 @@ test.each(["legalEntity", "site", "unit"] as const)(
 )
 
 test("勤務場所は組織の安定IDを参照し、期間IDや存在しない組織を拒否する", async () => {
-  for (const target of ["period:root", "unit:missing"]) {
+  for (const target of ["period:root", "0190005f-0000-7000-8000-ccdf3ed2f2b6"]) {
     const f = createCompanyPlaceTestContext()
     expect(
       await f.write({

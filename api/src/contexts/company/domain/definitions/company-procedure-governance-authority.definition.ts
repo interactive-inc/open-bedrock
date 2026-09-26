@@ -1,7 +1,8 @@
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 export const zCompanyProcedureGovernanceAuthority = z.strictObject({
-  organization_id: z.literal("organization:default"),
+  organization_id: z.literal(COMPANY_DEFAULT_ORGANIZATION_ID),
   responsibility_code: z.string().trim().min(1).max(255),
   scope: z
     .discriminatedUnion("scope_type", [

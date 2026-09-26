@@ -7,9 +7,9 @@ CREATE TABLE company_employments (id TEXT PRIMARY KEY, employee_id TEXT);
 CREATE TABLE company_workforce_resource_bindings (resource_type TEXT, resource_id TEXT, organization_id TEXT);
 CREATE TABLE company_resource_revisions (organization_id TEXT, resource_type TEXT, resource_id TEXT,
 revision INTEGER, organization_revision INTEGER, state TEXT, effective_from TEXT, effective_to TEXT, attributes_json TEXT);
-INSERT INTO company_organizations VALUES ('organization:one', 3), ('organization:other', 1);`
+INSERT INTO company_organizations VALUES ('01900060-0000-7000-8000-027c16aed276', 3), ('01900060-0000-7000-8000-12268fccf2cc', 1);`
 const query = {
-  organizationId: "organization:one",
+  organizationId: "01900060-0000-7000-8000-027c16aed276",
   organizationRevision: 1,
   from: "2026-06-01",
   through: "2026-06-15",
@@ -17,10 +17,42 @@ const query = {
 async function fixture() {
   const database = createCompanyD1TestDatabase(schema)
   for (const row of [
-    ["organization:one", "employment:one", 1, 1, "active", "2026-06-01", "2026-06-10"],
-    ["organization:one", "employment:one", 2, 2, "active", "2026-06-01", "2026-06-20"],
-    ["organization:one", "employment:one", 3, 3, "void", "2026-06-01", "2026-06-20"],
-    ["organization:other", "employment:other", 1, 1, "active", "2026-06-02", null],
+    [
+      "01900060-0000-7000-8000-027c16aed276",
+      "employment:one",
+      1,
+      1,
+      "active",
+      "2026-06-01",
+      "2026-06-10",
+    ],
+    [
+      "01900060-0000-7000-8000-027c16aed276",
+      "employment:one",
+      2,
+      2,
+      "active",
+      "2026-06-01",
+      "2026-06-20",
+    ],
+    [
+      "01900060-0000-7000-8000-027c16aed276",
+      "employment:one",
+      3,
+      3,
+      "void",
+      "2026-06-01",
+      "2026-06-20",
+    ],
+    [
+      "01900060-0000-7000-8000-12268fccf2cc",
+      "employment:other",
+      1,
+      1,
+      "active",
+      "2026-06-02",
+      null,
+    ],
   ]) {
     await database
       .prepare(
@@ -56,12 +88,14 @@ test("後続の訂正・取消があっても指定した会社版の集計を�
 test("別会社の履歴を混ぜず、存在しない会社と未来の版を拒否する", async () => {
   const database = await fixture()
   const repository = new CompanyEmploymentMovementsRepository({ env: { DB: database } })
-  expect(await repository.find({ ...query, organizationId: "organization:other" })).toEqual({
+  expect(
+    await repository.find({ ...query, organizationId: "01900060-0000-7000-8000-12268fccf2cc" }),
+  ).toEqual({
     joinCount: 1,
     retireCount: 0,
   })
   expect(
-    await repository.find({ ...query, organizationId: "organization:missing" }),
+    await repository.find({ ...query, organizationId: "01900060-0000-7000-8000-9f96a06e569f" }),
   ).toBeInstanceOf(Error)
   expect(await repository.find({ ...query, organizationRevision: 4 })).toBeInstanceOf(Error)
   expect(await repository.find({ ...query, organizationRevision: -1 })).toBeInstanceOf(Error)
@@ -72,7 +106,7 @@ test("壊れた保存内容や読取失敗をゼロ件に読み替えない", as
   const repository = new CompanyEmploymentMovementsRepository({ env: { DB: database } })
   await database
     .prepare(
-      "UPDATE company_resource_revisions SET attributes_json = 'invalid' WHERE organization_id = 'organization:one' AND revision = 1",
+      "UPDATE company_resource_revisions SET attributes_json = 'invalid' WHERE organization_id = '01900060-0000-7000-8000-027c16aed276' AND revision = 1",
     )
     .run()
   expect(await repository.find(query)).toBeInstanceOf(Error)
@@ -88,7 +122,7 @@ test("既存契約の一部でも公開履歴へ未接続なら部分集計を�
     .run()
   await database
     .prepare(
-      "INSERT INTO company_workforce_resource_bindings VALUES ('employment', 'employment:unconnected', 'organization:one')",
+      "INSERT INTO company_workforce_resource_bindings VALUES ('employment', 'employment:unconnected', '01900060-0000-7000-8000-027c16aed276')",
     )
     .run()
   expect(await repository.find(query)).toBeInstanceOf(Error)

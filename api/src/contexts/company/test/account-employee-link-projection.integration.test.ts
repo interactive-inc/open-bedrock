@@ -1,5 +1,6 @@
 import { expect, test } from "bun:test"
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 async function legacyLinks(database: D1Database) {
   const rows = await database
@@ -34,7 +35,9 @@ test("同じ対の再公開は対応表を変えず、別の相手への付け�
 
   await c.database.exec("DROP TRIGGER company_account_employee_resource_owner_guard")
   const revision = await c.database
-    .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+    .prepare(
+      `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+    )
     .first<number>("revision")
   await expect(
     c.write([
@@ -48,7 +51,9 @@ test("同じ対の再公開は対応表を変えず、別の相手への付け�
   expect(await legacyLinks(c.database)).toEqual(before)
   expect(
     await c.database
-      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+      .prepare(
+        `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+      )
       .first<number>("revision"),
   ).toBe(revision)
 })

@@ -10,12 +10,13 @@ import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { GET } from "@/contexts/company/interface/routes/company.personnel-actions"
 import { GET as LEGACY_GET } from "@/contexts/company/interface/routes/company.legacy-personnel-action-records"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 async function fixture() {
   const f = await createCompanyAssignmentResourceTestContext()
   let actor: CompanyActorValue | undefined = CompanyActorValue.restore({
     ...f.creator,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:admin"],
     permissions: ["employee:read"],
   })
@@ -151,13 +152,13 @@ test("会社台帳の読取権限だけ・別organization・未認証では発�
   const actors: Array<Parameters<typeof CompanyActorValue.restore>[0]> = [
     {
       ...f.creator,
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:read"],
       permissions: [],
     },
     {
       ...f.creator,
-      organizationIds: ["organization:other"],
+      organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
       capabilities: ["company:read"],
       permissions: ["employee:read"],
     },
@@ -172,7 +173,10 @@ test("会社台帳の読取権限だけ・別organization・未認証では発�
     (
       await f.app.request(
         "/actions",
-        { method: "POST", headers: { "x-company-organization-id": "organization:default" } },
+        {
+          method: "POST",
+          headers: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID },
+        },
         f.context.env,
       )
     ).status,
@@ -196,7 +200,7 @@ test("旧記録は保全して別の読取口へ残し、APIとDBの新規書込
     recordedAt: f.at.getTime(),
     resources: [
       {
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "personnel-action",
         id: "legacy:1",
         revision: 1,
@@ -217,13 +221,13 @@ test("旧記録は保全して別の読取口へ残し、APIとDBの新規書込
   const before = await f.persisted()
   const retired = await f.app.request(
     "/actions",
-    { method: "POST", headers: { "x-company-organization-id": "organization:default" } },
+    { method: "POST", headers: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID } },
     f.context.env,
   )
   expect(retired.status).toBe(404)
   const legacy = await f.app.request(
     "/legacy",
-    { headers: { "x-company-organization-id": "organization:default" } },
+    { headers: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID } },
     f.context.env,
   )
   expect(legacy.status).toBe(200)

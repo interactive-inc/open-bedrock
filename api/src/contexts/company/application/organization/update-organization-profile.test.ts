@@ -4,6 +4,7 @@ import { CompanyForbiddenError } from "@/contexts/company/domain/errors"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import { OrganizationProfileChangeRepository } from "@/contexts/company/infrastructure/repositories/organization/organization-profile-change.repository"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test("別organizationへのプロフィール変更を保存前に拒否する", async () => {
   const repository = new OrganizationProfileChangeRepository(
@@ -14,7 +15,7 @@ test("別organizationへのプロフィール変更を保存前に拒否する",
     actor: CompanyActorValue.restore({
       accountId: "account:operator",
       employeeId: null,
-      organizationIds: ["organization:other"],
+      organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
       capabilities: ["company:admin"],
     }),
     repository,
@@ -31,7 +32,7 @@ test("別organizationへのプロフィール変更を保存前に拒否する",
         timeZone: "Asia/Tokyo",
         fiscalYearStartMonth: 4,
         version: {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           organizationRevision: 0,
           resourceId: null,
           resourceRevision: 0,

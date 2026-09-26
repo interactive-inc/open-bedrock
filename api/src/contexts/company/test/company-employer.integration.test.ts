@@ -4,6 +4,7 @@ import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/r
 import { expect, test } from "bun:test"
 import { createCompanyEmployerTestContext } from "@/contexts/company/test/company-employer.test-support"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test("雇用主の未記録を保持し、同じ会社版の法人と雇用を原子的に接続する", async () => {
   const f = await createCompanyEmployerTestContext()
@@ -275,7 +276,7 @@ test("別会社の法人、閲覧だけの権限、古い会社版を雇用主�
   const f = await createCompanyEmployerTestContext()
   await f.database
     .prepare(
-      "INSERT INTO company_organizations(id, revision, created_at, updated_at) VALUES ('organization:other', 0, 1, 1)",
+      "INSERT INTO company_organizations(id, revision, created_at, updated_at) VALUES ('01900060-0000-7000-8000-12268fccf2cc', 0, 1, 1)",
     )
     .run()
   const foreign = CompanyResourceChangeEntity.create({
@@ -288,7 +289,7 @@ test("別会社の法人、閲覧だけの権限、古い会社版を雇用主�
       {
         ...f.legalEntity,
         id: "legal:foreign",
-        organizationId: "organization:other",
+        organizationId: "01900060-0000-7000-8000-12268fccf2cc",
         effectiveFrom: restoreCalendarDate(f.legalEntity.effectiveFrom),
       },
     ],
@@ -324,7 +325,7 @@ test("別会社の法人、閲覧だけの権限、古い会社版を雇用主�
   f.setActor(
     CompanyActorValue.restore({
       ...f.creator,
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:read"],
     }),
   )

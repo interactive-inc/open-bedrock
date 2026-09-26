@@ -8,6 +8,7 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 // 両製品の全migrationを適用するfixtureを使うため、各caseの上限は20秒とする。
 const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
@@ -15,7 +16,7 @@ const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
   .sort()
   .map((path) => readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, path), "utf8"))
   .join("\n")
-const organizationId = "organization:default"
+const organizationId = COMPANY_DEFAULT_ORGANIZATION_ID
 const person: CompanyResourceProps = {
   organizationId,
   type: "person",

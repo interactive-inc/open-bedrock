@@ -12,6 +12,7 @@ import {
 } from "@/contexts/company/domain/errors"
 import { OrganizationWorkforceChangeRepository } from "@/contexts/company/infrastructure/repositories/organization/organization-workforce-change.repository"
 import { createEmployeeAdoptionFixture } from "@/contexts/company/test/employee-resource-adoption.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const observedSchema = z.object({
   name: z.string(),
@@ -161,7 +162,7 @@ describe("organization edits preserve the version the caller observed", () => {
       f.actors.current = CompanyActorValue.restore({
         accountId: f.actor.accountId,
         employeeId: f.actor.employeeId,
-        organizationIds: ["organization:default"],
+        organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
         capabilities: ["company:read"],
       })
       expect((await f.mutate(method, observed, "completed")).status).toBe(403)
@@ -266,7 +267,7 @@ describe("organization edits preserve the version the caller observed", () => {
       const actor = CompanyActorValue.restore({
         accountId: f.actor.accountId,
         employeeId: null,
-        organizationIds: ["organization:other"],
+        organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
         capabilities: ["company:admin"],
       })
       expect(await new operation({ actor, company, repository }).execute(input)).toBeInstanceOf(

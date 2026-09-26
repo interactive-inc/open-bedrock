@@ -16,7 +16,7 @@ afterEach(() => {
 })
 
 const legalEntity: CompanyResource = {
-  organizationId: "organization:default",
+  organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
   type: "legal-entity",
   id: "legal-entity:main",
   revision: 1,
@@ -32,7 +32,7 @@ const legalEntity: CompanyResource = {
 }
 
 const companyProfile: CompanyResource = {
-  organizationId: "organization:default",
+  organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
   type: "company-profile",
   id: "company-profile:main",
   revision: 1,
@@ -50,7 +50,7 @@ const companyProfile: CompanyResource = {
 describe("CompanyProfileSection", () => {
   test("法人と会社プロフィールを並べ、未設定の属性はハイフンにする", async () => {
     mocks.getCompanyProfileResources.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 12,
       resources: [legalEntity, companyProfile],
     })
@@ -67,7 +67,7 @@ describe("CompanyProfileSection", () => {
 
   test("空のときは登録がないことを両方の表で示す", async () => {
     mocks.getCompanyProfileResources.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 0,
       resources: [],
     })

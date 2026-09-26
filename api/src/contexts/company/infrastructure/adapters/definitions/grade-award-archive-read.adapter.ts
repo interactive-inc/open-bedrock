@@ -1,6 +1,7 @@
 import { z } from "zod"
 import { CompanyUnavailableError } from "@/contexts/company/domain/errors"
 import { GradeAwardSourceSnapshotValue } from "@/contexts/company/domain/values/grade-award-source-snapshot.value"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Context = Readonly<{ env: Readonly<{ DB: D1Database }> }>
 const recordSchema = z.object({
@@ -25,7 +26,7 @@ export class GradeAwardArchiveReadAdapter {
   async find(commandId: string) {
     try {
       const row = await this.c.env.DB.prepare(
-        "SELECT * FROM company_grade_award_archives WHERE organization_id = 'organization:default' AND command_id = ?1",
+        `SELECT * FROM company_grade_award_archives WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND command_id = ?1`,
       )
         .bind(commandId)
         .first()
@@ -58,7 +59,7 @@ export class GradeAwardArchiveReadAdapter {
   async findByEmployee(employeeId: string) {
     try {
       const row = await this.c.env.DB.prepare(
-        "SELECT command_id FROM company_grade_award_archives WHERE organization_id = 'organization:default' AND employee_id = ?1",
+        `SELECT command_id FROM company_grade_award_archives WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND employee_id = ?1`,
       )
         .bind(employeeId)
         .first<{ command_id: string }>()

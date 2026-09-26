@@ -14,6 +14,7 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import * as links from "@/contexts/company/interface/routes/company.account-employee-links"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 async function fixture() {
   const f = await createGovernanceTaskTestContext()
@@ -30,7 +31,7 @@ async function fixture() {
   } satisfies CompanyResourceProps
   let actor: CompanyActorValue | undefined = CompanyActorValue.restore({
     ...f.creator,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:admin"],
   })
   const app = new Hono<CompanyHttpEnvironment>()
@@ -55,7 +56,9 @@ async function fixture() {
   })
   const revision = async () => {
     const value = await f.database
-      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+      .prepare(
+        `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+      )
       .first<number>("revision")
     if (value === null) throw new Error("Company revision missing")
     return value
@@ -77,7 +80,7 @@ async function fixture() {
   const persisted = () =>
     f.database
       .prepare(`SELECT json_array(
-    (SELECT revision FROM company_organizations WHERE id = 'organization:default'),
+    (SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'),
     (SELECT count(*) FROM company_resource_revisions), (SELECT count(*) FROM company_resource_heads),
     (SELECT count(*) FROM company_command_receipts), (SELECT count(*) FROM company_account_employee_links),
     (SELECT count(*) FROM company_account_employee_resource_bindings)) AS snapshot`)
@@ -106,7 +109,7 @@ async function fixture() {
         : null,
     )
     const published = await new D1CompanyResourceRepository({ database: f.database }).findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["account-employee-link"],
       ids: [resource.id],
       effectiveOn: asOf,
@@ -253,7 +256,7 @@ describe("Account対応の公開履歴と会社の参照", () => {
   test("新しい対応の保存失敗で公開履歴・対応・証跡を全て戻し、再試行できる", async () => {
     const f = await fixture()
     const common = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       revision: 1,
       state: "active",
       effectiveFrom: restoreCalendarDate("2030-01-01"),
@@ -338,7 +341,7 @@ describe("Account対応の公開履歴と会社の参照", () => {
       [
         CompanyActorValue.restore({
           ...f.creator,
-          organizationIds: ["organization:default"],
+          organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
           capabilities: ["company:read"],
         }),
         403,
@@ -346,7 +349,7 @@ describe("Account対応の公開履歴と会社の参照", () => {
       [
         CompanyActorValue.restore({
           ...f.creator,
-          organizationIds: ["organization:other"],
+          organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
           capabilities: ["company:admin"],
         }),
         403,

@@ -1,4 +1,5 @@
 import { publishTestAccountEmployeeLink } from "@tests/api/support/company/publish-test-account-employee-link"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type TestEmployeeResources = Readonly<{
   employeeId: string
@@ -31,17 +32,19 @@ export async function publishTestEmployeeResources(
     .prepare(
       `INSERT OR IGNORE INTO company_organizations
        (id, revision, name, representative_name, created_at, updated_at)
-       VALUES ('organization:default', 1, 'Example Company', '', 0, 0)`,
+       VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 1, 'Example Company', '', 0, 0)`,
     )
     .run()
   await db
     .prepare(
       `UPDATE company_organizations SET revision = 1
-       WHERE id = 'organization:default' AND revision = 0`,
+       WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND revision = 0`,
     )
     .run()
   const organizationRevision = await db
-    .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+    .prepare(
+      `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+    )
     .first<number>("revision")
   if (organizationRevision === null) throw new Error("test Company organization is missing")
 
@@ -78,7 +81,7 @@ export async function publishTestEmployeeResources(
            (organization_id, resource_type, resource_id, revision, organization_revision,
             state, effective_from, effective_to, attributes_json, command_id,
             actor_account_id, reason, recorded_at)
-           VALUES ('organization:default', ?1, ?2, 1, ?3, 'active', ?4, ?5,
+           VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', ?1, ?2, 1, ?3, 'active', ?4, ?5,
                    ?6, ?7, 'system:test', 'Initialize Company test employee', ?8)`,
         )
         .bind(
@@ -96,7 +99,7 @@ export async function publishTestEmployeeResources(
           `INSERT INTO company_resource_heads
            (organization_id, resource_type, resource_id, revision, organization_revision,
             state, effective_from, effective_to, attributes_json, updated_at)
-           VALUES ('organization:default', ?1, ?2, 1, ?3, 'active', ?4, ?5, ?6, ?7)`,
+           VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', ?1, ?2, 1, ?3, 'active', ?4, ?5, ?6, ?7)`,
         )
         .bind(
           resource.type,
@@ -116,7 +119,7 @@ export async function publishTestEmployeeResources(
           `INSERT INTO company_workforce_resource_bindings
            (resource_type, resource_id, organization_id, employee_id, resource_revision,
             lifecycle_revision, last_action_id)
-           VALUES (?1, ?2, 'organization:default', ?3, 1, 0, NULL)`,
+           VALUES (?1, ?2, '${COMPANY_DEFAULT_ORGANIZATION_ID}', ?3, 1, 0, NULL)`,
         )
         .bind(resource.type, resource.id, input.employeeId),
     )

@@ -12,6 +12,7 @@ import { CompanyEmploymentResourceTimelineValue } from "@/contexts/company/domai
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 export type EmployeeResourceAdoptionInput = Readonly<{
   commandId: string
@@ -68,7 +69,7 @@ export class EmployeeResourceAdoptionEntity {
       const resource = CompanyResourceEntity.create(props)
       if (
         resource instanceof Error ||
-        resource.organizationId !== "organization:default" ||
+        resource.organizationId !== COMPANY_DEFAULT_ORGANIZATION_ID ||
         !["person", "employee", "employment"].includes(resource.type)
       )
         return EmployeeResourceAdoptionEntity.invalid()

@@ -12,6 +12,7 @@ import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 let pool: LocalD1Pool
 
@@ -106,7 +107,9 @@ describe("POST /thanks-messages", () => {
     const db = await createTestDb()
     const repository = new D1CompanyResourceRepository({ database: db })
     const organizationRevision = await db
-      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+      .prepare(
+        `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+      )
       .first<number>("revision")
     if (organizationRevision === null) throw new Error("test Company organization is missing")
     const initial = CompanyResourceChangeEntity.create({
@@ -117,7 +120,7 @@ describe("POST /thanks-messages", () => {
       recordedAt: 0,
       resources: [
         {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "person",
           id: "person:thanks-name",
           revision: 1,
@@ -127,7 +130,7 @@ describe("POST /thanks-messages", () => {
           attributes: { officialName: "Current Person" },
         },
         {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "employee",
           id: "employee:thanks-name",
           revision: 1,
@@ -137,7 +140,7 @@ describe("POST /thanks-messages", () => {
           attributes: { personId: "person:thanks-name" },
         },
         {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "employment",
           id: "employment:thanks-name",
           revision: 1,
@@ -162,7 +165,7 @@ describe("POST /thanks-messages", () => {
       recordedAt: 1,
       resources: [
         {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "person",
           id: "person:thanks-name",
           revision: 2,

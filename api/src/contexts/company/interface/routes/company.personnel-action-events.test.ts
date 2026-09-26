@@ -7,6 +7,7 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { GET } from "@/contexts/company/interface/routes/company.personnel-action-events"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test("人事イベントを記録順に再開でき、訂正元と訂正後の発効日を返す", async () => {
   const f = await createCompanyAssignmentResourceTestContext()
@@ -38,7 +39,7 @@ test("人事イベントを記録順に再開でき、訂正元と訂正後の�
   const actor = {
     value: CompanyActorValue.restore({
       ...f.creator,
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:read"],
       permissions: ["employee:read"],
     }),
@@ -94,13 +95,13 @@ test("人事イベントを記録順に再開でき、訂正元と訂正後の�
   ).toBe(400)
   actor.value = CompanyActorValue.restore({
     ...f.creator,
-    organizationIds: ["organization:other"],
+    organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
     capabilities: ["company:admin"],
   })
   expect((await app.request("/events", {}, f.context.env)).status).toBe(403)
   actor.value = CompanyActorValue.restore({
     ...f.creator,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:read"],
   })
   expect((await app.request("/events", {}, f.context.env)).status).toBe(403)

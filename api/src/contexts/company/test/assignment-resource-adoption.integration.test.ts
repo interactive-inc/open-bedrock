@@ -9,6 +9,7 @@ import { z } from "zod"
 import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/test/company-assignment-resource.test-support"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import type { PersonnelActionInput } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 async function fixture(secondStartsOn = "2030-04-01", managerRetires = false) {
   const base = await createCompanyAssignmentResourceTestContext()
@@ -17,7 +18,7 @@ async function fixture(secondStartsOn = "2030-04-01", managerRetires = false) {
       (
         await base.write([
           {
-            organizationId: "organization:default",
+            organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
             type: "organization-unit",
             id: "unit-period:adoption",
             revision: 1,
@@ -25,7 +26,7 @@ async function fixture(secondStartsOn = "2030-04-01", managerRetires = false) {
             effectiveFrom: "2030-01-01",
             effectiveTo: null,
             attributes: {
-              organizationUnitId: "unit:adoption",
+              organizationUnitId: "0190005f-0000-7000-8000-bb90379dc3be",
               code: "ADOPT",
               officialName: "Example Team",
               kind: "TEAM",
@@ -97,7 +98,7 @@ async function fixture(secondStartsOn = "2030-04-01", managerRetires = false) {
         .prepare(`INSERT INTO company_organization_assignment_period_versions
       (period_id, revision, employment_id, employee_id, organization_unit_id, assignment_type, position_title, manager_employee_id,
        starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
-      VALUES (?1, ?2, ?3, ?4, 'unit:adoption', 'PRIMARY', 'Coordinator', ?5, ?6, ?7, 0, 'legacy:adoption-source', 0)`)
+      VALUES (?1, ?2, ?3, ?4, '0190005f-0000-7000-8000-bb90379dc3be', 'PRIMARY', 'Coordinator', ?5, ?6, ?7, 0, 'legacy:adoption-source', 0)`)
         .bind(
           period.id,
           period.revision,
@@ -212,7 +213,10 @@ test("既存の公開所属IDへ複数期間を接続し、証跡失敗と再送
     id: "assignment:independent",
     effectiveFrom: restoreCalendarDate("2030-02-01"),
     effectiveTo: restoreCalendarDate("2030-04-01"),
-    attributes: { ...f.assignment.attributes, organizationUnitId: "unit:adoption" },
+    attributes: {
+      ...f.assignment.attributes,
+      organizationUnitId: "0190005f-0000-7000-8000-bb90379dc3be",
+    },
   }
   for (const resource of [
     existing,
@@ -333,7 +337,7 @@ test("既存の公開所属IDへ複数期間を接続し、証跡失敗と再送
               effectiveFrom: "2030-04-01",
               attributes: {
                 ...f.assignment.attributes,
-                organizationUnitId: "unit:adoption",
+                organizationUnitId: "0190005f-0000-7000-8000-bb90379dc3be",
                 positionTitle: "Lead",
               },
             },
@@ -610,7 +614,7 @@ describe("既存の所属・上長履歴の公開正本への接続", () => {
           await overlapping.write(
             [
               {
-                organizationId: "organization:default",
+                organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
                 type: "reporting-relation",
                 id: "reporting:existing",
                 revision: 1,
@@ -620,7 +624,7 @@ describe("既存の所属・上長履歴の公開正本への接続", () => {
                 attributes: {
                   employeeId: overlapping.people[0]!.employeeId,
                   managerEmployeeId: overlapping.people[1]!.employeeId,
-                  organizationUnitId: "unit:adoption",
+                  organizationUnitId: "0190005f-0000-7000-8000-bb90379dc3be",
                 },
               },
             ],
@@ -712,12 +716,12 @@ describe("既存の所属・上長履歴の公開正本への接続", () => {
       undefined,
       CompanyActorValue.restore({
         ...f.creator,
-        organizationIds: ["organization:default"],
+        organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
         capabilities: ["company:read"],
       }),
       CompanyActorValue.restore({
         ...f.creator,
-        organizationIds: ["organization:other"],
+        organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
         capabilities: ["company:admin"],
       }),
     ]) {

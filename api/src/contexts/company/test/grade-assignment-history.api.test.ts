@@ -10,6 +10,7 @@ import { GET } from "@/contexts/company/interface/routes/company.grade-assignmen
 import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test("本人の等級履歴は訂正・取消・根拠を保持し、ページ間の更新で指定版が変わらない", async () => {
   const database = createCompanyD1TestDatabase(
@@ -53,7 +54,7 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
     actor: CompanyActorValue.restore({
       accountId: "account:reader",
       employeeId: "employee:test",
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: [],
     }),
   }
@@ -67,7 +68,7 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
     return context.json({ code: error.code }, error.status)
   })
   app.get("/history", ...GET)
-  const headers = { "x-company-organization-id": "organization:default" }
+  const headers = { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID }
   for (const revision of [1, 2, 3]) {
     const command = CompanyResourceChangeEntity.create({
       commandId: `history:${revision}`,
@@ -79,7 +80,7 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
         .filter((specification) => revision === 1 || specification.type === "grade-assignment")
         .map((specification) => ({
           ...specification,
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           revision,
           state: revision === 3 ? "void" : "active",
           effectiveFrom: restoreCalendarDate(
@@ -167,7 +168,7 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
   state.actor = CompanyActorValue.restore({
     accountId: "account:reader",
     employeeId: null,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: [],
     permissions: ["employee:attributes:read"],
   })
@@ -184,7 +185,7 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
     (
       await app.request(
         "/history?employee_id=employee:test&organization_revision=2",
-        { headers: { "x-company-organization-id": "organization:other" } },
+        { headers: { "x-company-organization-id": "01900060-0000-7000-8000-12268fccf2cc" } },
         { DB: database },
       )
     ).status,
@@ -202,7 +203,7 @@ test("本人の等級履歴は訂正・取消・根拠を保持し、ページ�
   state.actor = CompanyActorValue.restore({
     accountId: "account:reader",
     employeeId: "employee:test",
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: [],
   })
   database.prepare = () => {

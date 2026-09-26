@@ -22,7 +22,7 @@ bodyは`reason`と1件以上100件以下の`resources`を持つ。Actor Account 
 
 ## 会社の初期化
 
-`POST /company/bootstrap`は、空の既定Companyへ確認済みの会社情報と最初の従業員を登録する。Systemの認証と`company:admin`、`organization:default`へのアクセスを要求し、従業員sessionの作成前に利用できる。`Idempotency-Key`を必須とし、初期状態と会社版は保存時にも検査する。
+`POST /company/bootstrap`は、空の既定Companyへ確認済みの会社情報と最初の従業員を登録する。Systemの認証と`company:admin`、既定organization（[記録の識別子](records-model.md#記録の識別子)）へのアクセスを要求し、従業員sessionの作成前に利用できる。`Idempotency-Key`を必須とし、初期状態と会社版は保存時にも検査する。
 
 JSONは次の全項目を必須とする。
 
@@ -206,11 +206,11 @@ portable DDLはCompany contextの`infrastructure/schema/company.sql`を正本と
 
 公開resourceに未接続の既存台帳、招待からの登録、製品固有の人物情報writer、未接続の組織・所属・責務の保存先統合は未完成である。期間が不明な既存Account対応は、確認した期間を公開APIで接続する。入社・再入社の発令は`employmentType`に`FULL_TIME`または`PART_TIME`を必須とする。新規従業員登録の入力名は`employment_type`である。選択した区分を承認対象の本文、発令記録、業務台帳、公開雇用へ保存する。再入社と訂正で新しく作る契約にも明示した区分を使い、以前の契約の区分を変更しない。
 
-既存の組織一覧・組織ツリー・組織詳細・所属者一覧・本人の所属組織と、組織の作成・更新・削除は既定organizationの台帳を扱う。必要なCompany capabilityまたは操作permissionに加え、`organization:default`へのアクセスを必須とする。別organizationの管理者は参照・変更・成功済み変更の再送を行えない。プロフィール変更も対象organizationへのアクセスを検査する。接続済みのOrgUnitは公開APIと既存APIの変更を同じtransactionで両方の履歴へ保存する。公開APIで新設した既定organizationのOrgUnitと、接続済みの親から既存APIで新設したOrgUnitも接続される。既存の未接続OrgUnitは管理者による履歴確認を必要とする。
+既存の組織一覧・組織ツリー・組織詳細・所属者一覧・本人の所属組織と、組織の作成・更新・削除は既定organizationの台帳を扱う。必要なCompany capabilityまたは操作permissionに加え、既定organization（[記録の識別子](records-model.md#記録の識別子)）へのアクセスを必須とする。別organizationの管理者は参照・変更・成功済み変更の再送を行えない。プロフィール変更も対象organizationへのアクセスを検査する。接続済みのOrgUnitは公開APIと既存APIの変更を同じtransactionで両方の履歴へ保存する。公開APIで新設した既定organizationのOrgUnitと、接続済みの親から既存APIで新設したOrgUnitも接続される。既存の未接続OrgUnitは管理者による履歴確認を必要とする。
 
 雇用区分の欠ける新規入力は400で拒否する。区分を含まない旧提案は、本文やdigestを変更せず承認・実行を409で拒否し、新しい申請を求める。既存の発令履歴に区分がなければ不明のまま参照し、推測して書き足さない。Webの入社・再入社フォームとCLIの`employees register --employment-type`も区分の選択を必須とする。
 
-既存業務台帳は単一Companyを所有し、organizationを分離する列を持たない。EmployeeとEmploymentの公開writeは`organization:default`に限定し、別organizationは422で拒否する。複数organizationの従業員を同じ台帳へ混在させる機能は未完成である。
+既存業務台帳は単一Companyを所有し、organizationを分離する列を持たない。EmployeeとEmploymentの公開writeは既定organization（[記録の識別子](records-model.md#記録の識別子)）に限定し、別organizationは422で拒否する。複数organizationの従業員を同じ台帳へ混在させる機能は未完成である。
 
 業務側の在籍認可、従業員一覧、Accountに対応する承認候補は、雇用・状態・所属の最新period revisionと会社営業日から参照する。接続済みのEmployeeの氏名・従業員番号・存在も、PersonとEmployeeの有効日から解決する。退職日の翌日を期間の終了日とし、将来退職の予約時に表示用の雇用statusが変わっても発効前のアクセスは失わせない。欠落・重複・所有者不一致がある現在期間は評価不能として拒否する。業務台帳を直接読む残る経路の統合は未完成である。
 

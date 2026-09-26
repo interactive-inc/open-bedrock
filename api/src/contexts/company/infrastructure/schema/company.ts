@@ -14,10 +14,13 @@ import {
 import { systemAccounts, systemIdentityBindings } from "@system/infrastructure/schema/system-core"
 import { systemMachineCredentials } from "@system/infrastructure/schema/system-principal"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 /** Company全体のoptimistic revision。全writeはこのrevisionをCASする。 */
 export const companyOrganizations = sqliteTable("company_organizations", {
   id: text("id").primaryKey(),
+  /** UUID へ移す前の組織 ID。移行前の記録を現在の行へ辿るために残す。 */
+  legacyId: text("legacy_id").unique(),
   revision: integer("revision").notNull().default(0),
   name: text("name").notNull(),
   representativeName: text("representative_name").notNull(),
@@ -364,7 +367,10 @@ export const companyOrganizationResourceBindings = sqliteTable(
     recordedAt: integer("recorded_at").notNull(),
   },
   (table) => [
-    check("company_org_binding_default", sql`${table.organizationId} = 'organization:default'`),
+    check(
+      "company_org_binding_default",
+      sql`${table.organizationId} = ${sql.raw(`'${COMPANY_DEFAULT_ORGANIZATION_ID}'`)}`,
+    ),
     check("company_org_binding_time", sql`${table.recordedAt} >= 0`),
   ],
 )
@@ -442,7 +448,10 @@ export const companyBootstrapReceipts = sqliteTable(
   },
   (table) => [
     check("company_bootstrap_command", sql`length(${table.commandId}) BETWEEN 1 AND 200`),
-    check("company_bootstrap_default", sql`${table.organizationId} = 'organization:default'`),
+    check(
+      "company_bootstrap_default",
+      sql`${table.organizationId} = ${sql.raw(`'${COMPANY_DEFAULT_ORGANIZATION_ID}'`)}`,
+    ),
     check(
       "company_bootstrap_fingerprint",
       sql`length(${table.fingerprint}) = 64 AND ${table.fingerprint} NOT GLOB '*[^0-9a-f]*'`,
@@ -500,7 +509,7 @@ export const companyDefinitionResourceAdoptions = sqliteTable(
     id: text("id")
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    organizationId: text("organization_id").notNull().default("organization:default"),
+    organizationId: text("organization_id").notNull().default(COMPANY_DEFAULT_ORGANIZATION_ID),
     commandId: text("command_id").notNull(),
     resourceType: text("resource_type").notNull(),
     definitionId: integer("definition_id").notNull(),
@@ -535,7 +544,7 @@ export const companyDefinitionResourceAdoptions = sqliteTable(
     }).onDelete("restrict"),
     check(
       "company_definition_adoption_organization",
-      sql`${table.organizationId} = 'organization:default'`,
+      sql`${table.organizationId} = ${sql.raw(`'${COMPANY_DEFAULT_ORGANIZATION_ID}'`)}`,
     ),
     check("company_definition_adoption_type", sql`${table.resourceType} IN ('grade', 'position')`),
     check("company_definition_adoption_id", sql`${table.definitionId} > 0`),
@@ -568,7 +577,7 @@ export const companyResponsibilitySourceAdoptions = sqliteTable(
     id: text("id")
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    organizationId: text("organization_id").notNull().default("organization:default"),
+    organizationId: text("organization_id").notNull().default(COMPANY_DEFAULT_ORGANIZATION_ID),
     sourceContext: text("source_context").notNull(),
     sourceKind: text("source_kind").notNull(),
     sourceNamespace: text("source_namespace").notNull(),
@@ -612,7 +621,7 @@ export const companyResponsibilitySourceAdoptions = sqliteTable(
     }).onDelete("restrict"),
     check(
       "company_responsibility_source_adoption_organization",
-      sql`${table.organizationId} = 'organization:default'`,
+      sql`${table.organizationId} = ${sql.raw(`'${COMPANY_DEFAULT_ORGANIZATION_ID}'`)}`,
     ),
     check(
       "company_responsibility_source_adoption_identity",
@@ -655,7 +664,7 @@ export const companyResponsibilitySourceCutovers = sqliteTable(
     id: text("id")
       .primaryKey()
       .$defaultFn(() => crypto.randomUUID()),
-    organizationId: text("organization_id").notNull().default("organization:default"),
+    organizationId: text("organization_id").notNull().default(COMPANY_DEFAULT_ORGANIZATION_ID),
     sourceContext: text("source_context").notNull(),
     sourceKind: text("source_kind").notNull(),
     sourceNamespace: text("source_namespace").notNull(),
@@ -674,7 +683,7 @@ export const companyResponsibilitySourceCutovers = sqliteTable(
     unique().on(table.organizationId, table.sourceContext, table.sourceKind),
     check(
       "company_responsibility_source_cutover_organization",
-      sql`${table.organizationId} = 'organization:default'`,
+      sql`${table.organizationId} = ${sql.raw(`'${COMPANY_DEFAULT_ORGANIZATION_ID}'`)}`,
     ),
     check(
       "company_responsibility_source_cutover_identity",
@@ -732,7 +741,7 @@ export const companyGradeAwardArchives = sqliteTable(
     unique().on(table.organizationId, table.employeeId),
     check(
       "grade_award_archive_organization",
-      sql`${table.organizationId} = 'organization:default'`,
+      sql`${table.organizationId} = ${sql.raw(`'${COMPANY_DEFAULT_ORGANIZATION_ID}'`)}`,
     ),
     check("grade_award_archive_fingerprint", sql`length(${table.fingerprint}) = 64`),
     check("grade_award_archive_reason", sql`length(trim(${table.reason})) BETWEEN 1 AND 2000`),

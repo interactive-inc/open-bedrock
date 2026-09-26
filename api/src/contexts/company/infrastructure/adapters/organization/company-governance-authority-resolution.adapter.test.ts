@@ -5,11 +5,12 @@ import {
   type CompanyJsonObject,
 } from "@/contexts/company/domain/entities/company-resource.entity"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const asOf = restoreCalendarDate("2030-01-01")
 function resource(type: CompanyResourceEntity["type"], id: string, attributes: CompanyJsonObject) {
   const value = CompanyResourceEntity.create({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type,
     id,
     attributes,
@@ -52,7 +53,7 @@ function fixture() {
       findMany: async () => ({ ok: true as const, organizationRevision: 7, resources }),
     },
     input: {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       asOf,
       subjectEmployeeId: null,
       criteria: [{ responsibilityCode: "REVIEW", scope: null }],

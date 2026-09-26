@@ -1,5 +1,6 @@
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { publishTestAccountEmployeeLink } from "@tests/api/support/company/publish-test-account-employee-link"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 /** 認証・認可情報を持つ seed 従業員の最小形。 */
 export type IamSeedEmployee = {
@@ -59,7 +60,7 @@ export async function seedIamForEmployees(
       .prepare(
         `INSERT OR IGNORE INTO company_account_profiles
            (organization_id, account_id, display_name, created_at, updated_at)
-         SELECT 'organization:default', ?1, official_name, 0, 0
+         SELECT '${COMPANY_DEFAULT_ORGANIZATION_ID}', ?1, official_name, 0, 0
          FROM company_employees
          WHERE id = ?2`,
       )

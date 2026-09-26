@@ -9,6 +9,7 @@ import { requestWithContext } from "@tests/api/support/request-with-context"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
 import { execSql } from "@tests/d1/support/exec-sql"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 let pool: LocalD1Pool
 
@@ -44,7 +45,9 @@ async function createTestDb(): Promise<D1Database> {
   const db = await pool.next()
   await initializeStandardCompanyTestState(db)
   const companyRevision = await db
-    .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+    .prepare(
+      `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+    )
     .first<number>("revision")
   if (companyRevision === null) throw new Error("Company revision missing")
   observedCompanyRevisions.set(db, companyRevision)
@@ -87,7 +90,7 @@ describe("POST /company/employee-registrations", () => {
     }
     await db
       .prepare(
-        "UPDATE company_organizations SET revision = revision + 1 WHERE id = 'organization:default'",
+        `UPDATE company_organizations SET revision = revision + 1 WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
       )
       .run()
     expect((await post(db, body)).status).toBe(409)
@@ -99,7 +102,7 @@ describe("POST /company/employee-registrations", () => {
     const db = await createTestDb()
     expect((await post(db, body)).status).toBe(201)
     const links = await new D1CompanyResourceRepository({ database: db }).findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["account-employee-link"],
     })
     if (!links.ok) throw links.cause
@@ -124,7 +127,9 @@ describe("POST /company/employee-registrations", () => {
       requestWithContext({ db, jwtSecret, path: "/company/current-profile", token })
     expect((await read()).status).toBe(200)
     const revision = await db
-      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+      .prepare(
+        `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+      )
       .first<number>("revision")
     expect(
       (
@@ -135,7 +140,7 @@ describe("POST /company/employee-registrations", () => {
           method: "POST",
           token: await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(1) }),
           headers: {
-            "x-company-organization-id": "organization:default",
+            "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID,
             "idempotency-key": "account-link:cancel",
             "if-match": String(revision),
           },
@@ -182,7 +187,7 @@ describe("POST /company/employee-registrations", () => {
       jwtSecret,
       path: "/company/employments?effective_on=2026-01-01",
       token: await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(1) }),
-      headers: { "x-company-organization-id": "organization:default" },
+      headers: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID },
     })
     expect(response.status).toBe(200)
     expect(await response.json()).toMatchObject({
@@ -220,7 +225,7 @@ describe("POST /company/employee-registrations", () => {
       jwtSecret,
       path: `/company/employees?id=${employeeId}&effective_on=2026-01-01`,
       token: await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(1) }),
-      headers: { "x-company-organization-id": "organization:default" },
+      headers: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID },
     })
     expect(response.status).toBe(200)
     expect(await response.json()).toMatchObject({

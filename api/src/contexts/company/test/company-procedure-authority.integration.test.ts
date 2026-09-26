@@ -8,6 +8,7 @@ import { RevalidateCompanyProcedureAuthorityAdapter } from "@/contexts/company/i
 import { CompanyAuthoritySnapshotGuardAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-authority-snapshot-guard.adapter"
 import type { ApplicationWorkflowStep } from "@/contexts/company/domain/definitions/company-procedure-workflow.definition"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 describe("Company Taskの判断時点の資格", () => {
   test("旧Account対応を撤去しても公開対応先の従業員変更を保存時に検知する", async () => {
@@ -60,7 +61,7 @@ describe("Company Taskの判断時点の資格", () => {
       if (asOf instanceof Error) throw asOf
       const repository = new D1CompanyResourceRepository({ database })
       const snapshot = await repository.findMany({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         types: ["employee"],
         effectiveOn: asOf,
       })

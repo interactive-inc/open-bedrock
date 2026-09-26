@@ -45,14 +45,16 @@ test("all pages keep the observed company revision and missing archive does not 
     if (url.pathname === "/company/grade-award-archives/by-employee/employee:test")
       return Response.json({ error: "missing" }, { status: 404 })
     expect(url.pathname).toBe("/company/grade-assignment-history")
-    expect(request.headers.get("x-company-organization-id")).toBe("organization:default")
+    expect(request.headers.get("x-company-organization-id")).toBe(
+      "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
+    )
     expect(url.searchParams.get("organization_revision")).toBe("7")
     expect(url.searchParams.get("employee_id")).toBe("employee:test")
     const offset = url.searchParams.get("offset")!
     offsets.push(offset)
     expect(["0", "1"]).toContain(offset)
     return Response.json({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 7,
       employeeId: "employee:test",
       revisions: [{ ...revision, revision: Number(offset) + 1 }],
@@ -97,7 +99,7 @@ test.each([
       if (failure === "storage-failure")
         return Response.json({ error: "unavailable" }, { status: 503 })
       return Response.json({
-        organizationId: "organization:default",
+        organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
         organizationRevision: failure === "changed-revision" ? 8 : 7,
         employeeId: failure === "changed-employee" ? "employee:other" : "employee:test",
         revisions: [revision],

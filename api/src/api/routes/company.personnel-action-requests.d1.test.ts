@@ -8,6 +8,7 @@ import { createTestToken } from "@tests/api/support/create-test-token"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 let pool: LocalD1Pool
 
@@ -76,7 +77,9 @@ async function createTestDb(): Promise<D1Database> {
   const published = await openSystemProcedures({ env: { DB: db } }).publish(definition, 0)
   if (published !== true) throw published
   const companyRevision = await db
-    .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+    .prepare(
+      `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+    )
     .first<number>("revision")
   if (companyRevision === null) throw new Error("Company revision missing")
   observedCompanyRevisions.set(db, companyRevision)
@@ -116,7 +119,7 @@ describe("POST /company/personnel-action-requests", () => {
     }
     await db
       .prepare(
-        "UPDATE company_organizations SET revision = revision + 1 WHERE id = 'organization:default'",
+        `UPDATE company_organizations SET revision = revision + 1 WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
       )
       .run()
     expect((await post(db, body)).status).toBe(409)

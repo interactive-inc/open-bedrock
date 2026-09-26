@@ -9,6 +9,7 @@ import { openSystemProcedures } from "@system/interface/operations/open-system-p
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
 import { startLocalD1, type LocalD1 } from "@tests/d1/support/start-local-d1"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 let local: LocalD1
 
@@ -96,7 +97,7 @@ test("旧定義は読めるが再発行できず、公開責務への明示的�
         name: "Review",
         approvers: [],
         governance_authority: {
-          organization_id: "organization:default",
+          organization_id: COMPANY_DEFAULT_ORGANIZATION_ID,
           responsibility_code: "REVIEWER",
           scope: null,
         },

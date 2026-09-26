@@ -4,6 +4,7 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import { readCompanyEmploymentDirectory } from "@/contexts/company/interface/operations/read-company-employment-directory"
 import { readCompanyEmploymentStates } from "@/contexts/company/interface/operations/read-company-employment-states"
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test("雇用の在籍状態と雇用形態を雇用名簿と同じ Company 版で返す", async () => {
   const fixture = await createGovernanceTaskTestContext()
@@ -15,13 +16,13 @@ test("雇用の在籍状態と雇用形態を雇用名簿と同じ Company 版�
 
   const directory = await readCompanyEmploymentDirectory({
     database: fixture.database,
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     effectiveOn,
   })
   if (directory instanceof Error) throw directory
   const states = await readCompanyEmploymentStates({
     database: fixture.database,
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     effectiveOn,
     organizationRevision: directory.organizationRevision,
   })
@@ -43,7 +44,7 @@ test("雇用が始まる前の有効日と不正な組織では雇用を補完�
 
   const before = await readCompanyEmploymentStates({
     database: fixture.database,
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     effectiveOn: restoreCalendarDate("1900-01-01"),
   })
   if (before instanceof Error) throw before

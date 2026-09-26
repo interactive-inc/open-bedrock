@@ -23,6 +23,7 @@ import { OrganizationResourceAdoptionRepository } from "@/contexts/company/infra
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
 import { execSql } from "@tests/d1/support/exec-sql"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 let pool: LocalD1Pool
 
@@ -44,7 +45,7 @@ async function createFixture() {
   if (assignment === undefined || target === undefined)
     throw new Error("personnel fixture is missing")
   const employees = await new D1CompanyResourceRepository({ database: c.database }).findMany({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     types: ["employee"],
     effectiveOn: assignment.effectiveFrom,
   })
@@ -89,7 +90,7 @@ async function createFixture() {
         {
           ...c.step,
           governance_authority: {
-            organization_id: "organization:default",
+            organization_id: COMPANY_DEFAULT_ORGANIZATION_ID,
             responsibility_code: "APPROVE",
             scope: null,
           },
@@ -138,7 +139,9 @@ async function createFixture() {
   const input = {
     action: { kind: "leave_started", employeeCode: "MEMBER-1", eventOn: assignment.effectiveFrom },
     base_company_revision: await c.database
-      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+      .prepare(
+        `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+      )
       .first<number>("revision"),
     base_employee_revision: revision,
     base_organization_revision: null,
@@ -169,7 +172,7 @@ async function connectRoot(c: Awaited<ReturnType<typeof createFixture>>) {
   const adopted = await new ApplyOrganizationResourceAdoption({
     actor: CompanyActorValue.restore({
       ...c.creator,
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:admin"],
     }),
     repository: new OrganizationResourceAdoptionRepository({ env: c.context.env }),
@@ -202,7 +205,7 @@ describe("Company公開責務による人事発令", () => {
       .first<string>("id")
     if (employmentId === null) throw new Error("employment missing")
     const base = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       revision: 1,
       state: "active",
       effectiveFrom: c.input.action.eventOn,
@@ -217,7 +220,7 @@ describe("Company公開責務による人事発令", () => {
         type: "organization-unit",
         id: "period:approval-team",
         attributes: {
-          organizationUnitId: "unit:approval-team",
+          organizationUnitId: "0190005f-0000-7000-8000-7999329aec63",
           code: "APPROVAL-TEAM",
           officialName: "Example Team",
           kind: "TEAM",
@@ -231,7 +234,7 @@ describe("Company公開責務による人事発令", () => {
         attributes: {
           employeeId: c.target.employeeId,
           employmentId,
-          organizationUnitId: "unit:approval-team",
+          organizationUnitId: "0190005f-0000-7000-8000-7999329aec63",
           assignmentType: "PRIMARY",
           positionTitle: "Coordinator",
         },
@@ -249,7 +252,9 @@ describe("Company公開責務による人事発令", () => {
       },
     ])
     const companyRevision = await c.database
-      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+      .prepare(
+        `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+      )
       .first<number>("revision")
     if (companyRevision === null) throw new Error("Company revision missing")
     expect(
@@ -313,7 +318,7 @@ describe("Company公開責務による人事発令", () => {
     const publicAssignments = await new D1CompanyResourceRepository({
       database: c.database,
     }).findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["assignment"],
       effectiveOn: c.input.action.eventOn,
     })
@@ -327,7 +332,10 @@ describe("Company公開責務による人事発令", () => {
       .bind(c.target.employeeId)
       .all()
     expect(native.results).toEqual([
-      { organization_unit_id: "unit:approval-team", position_title: "Approved Lead" },
+      {
+        organization_unit_id: "0190005f-0000-7000-8000-7999329aec63",
+        position_title: "Approved Lead",
+      },
     ])
     expect(
       (await c.request(3, `/company/application-requests/${number}/approve`, { comment: null }))
@@ -352,7 +360,7 @@ describe("Company公開責務による人事発令", () => {
       step: {
         ...c.step,
         governance_authority: {
-          organization_id: "organization:default",
+          organization_id: COMPANY_DEFAULT_ORGANIZATION_ID,
           responsibility_code: "APPROVE",
           scope: null,
         },
@@ -441,7 +449,9 @@ describe("Company公開責務による人事発令", () => {
         eventOn: c.at.toISOString().slice(0, 10),
       },
       base_company_revision: await c.database
-        .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+        .prepare(
+          `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+        )
         .first<number>("revision"),
       base_employee_revision: 0,
       base_organization_revision: organizationRevision,
@@ -469,7 +479,7 @@ describe("Company公開責務による人事発令", () => {
       .first<{ id: string }>()
     if (employee === null) throw new Error("employee was not created")
     const assignments = await new D1CompanyResourceRepository({ database: c.database }).findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["assignment"],
       effectiveOn: c.input.action.eventOn,
     })
@@ -490,7 +500,7 @@ describe("Company公開責務による人事発令", () => {
     ).toBe(1)
 
     const reporting = await new D1CompanyResourceRepository({ database: c.database }).findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["reporting-relation"],
       effectiveOn: c.input.action.eventOn,
     })
@@ -569,7 +579,7 @@ describe("Company公開責務による人事発令", () => {
         else if (change === "company-revision") {
           await c.write([
             {
-              organizationId: "organization:default",
+              organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
               type: "position",
               id: "position:concurrent-definition",
               revision: 1,
@@ -863,7 +873,7 @@ test("人事申請の一覧は改名と従業員番号の発効日を公開Compa
   expect((await c.submit()).status).toBe(201)
   const repository = new D1CompanyResourceRepository({ database: c.database })
   const resources = await repository.findMany({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     types: ["person", "employee"],
   })
   if (!resources.ok) throw new Error("resources missing")

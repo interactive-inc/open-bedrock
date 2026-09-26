@@ -8,6 +8,7 @@ import type {
   EmployeeProfileRepository,
   EmployeeProfileUpdateResult,
 } from "@/contexts/company/infrastructure/repositories/employee/employee-profile.repository"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Context = Readonly<{
   actor: CompanyActorValue
@@ -24,7 +25,7 @@ export class UpdateEmployeeName {
     input: EmployeeProfileUpdateInput & Readonly<{ code: string; officialName: string }>,
   ): Promise<EmployeeProfileUpdateResult | CompanyOperationError> {
     if (
-      !this.c.actor.canAccessOrganization("organization:default") ||
+      !this.c.actor.canAccessOrganization(COMPANY_DEFAULT_ORGANIZATION_ID) ||
       !this.c.actor.hasPermission("employee:write:basic")
     )
       return new CompanyForbiddenError()

@@ -130,6 +130,7 @@ dashboard query は、集計値と drill-down の両方に認可を適用する�
 - 監査、保全本文、照合ページ、案件、提案 digest などの変更不能な証跡は、置き換え前の主キーを含んでいても書き換えない。証跡が指す旧主キーから現在の記録へは `legacy_id` で辿る
 - `legacy_id` は所有業務の保全本文に含める。記録を撤去した後も、保全本文によって旧主キーと現在の主キーを結び付ける
 - 所有業務が撤去の書込み停止中である間は主キーを置き換えない
+- 導入ごとに一つだけの会社組織と会社全体の組織単位は、どの導入でも同じ既知の UUID を ID とする。会社組織は `ad4f6cb1-774b-43ae-950f-80e9bc67c66d`、会社全体の組織単位は `282ccd01-cb30-4d0a-84b4-c675bbbe473c` とし、`api/src/contexts/company/domain/definitions/company-organization-identity.definition.ts` の定数だけから参照する。値の変更はテストで拒否する。以前の ID である `organization:default` と `company:root` は、それぞれの行の `legacy_id` に保持する
 
 ## 業務撤去時の原記録
 

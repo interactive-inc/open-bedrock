@@ -13,6 +13,7 @@ import type { CompanyHttpEnvironment } from "@/contexts/company/interface/reques
 import { createFactory } from "hono/factory"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const factory = createFactory<CompanyHttpEnvironment>()
 
@@ -53,7 +54,7 @@ export const POST = factory.createHandlers(
                   .array(
                     z
                       .object({
-                        organizationId: z.literal("organization:default"),
+                        organizationId: z.literal(COMPANY_DEFAULT_ORGANIZATION_ID),
                         type: z.enum(["person", "employee", "employment"]),
                         id: z.string().regex(/^\S{1,255}$/),
                         revision: z.number().int().positive().max(100),

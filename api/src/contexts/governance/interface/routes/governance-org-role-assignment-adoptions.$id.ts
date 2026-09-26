@@ -17,6 +17,7 @@ import { toHttpException } from "@/lib/http/to-http-exception"
 import { validateUuidParam } from "@/lib/http/validate-uuid-param"
 import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const request = z.strictObject({
   freeze_id: z.string().uuid(),
@@ -50,7 +51,7 @@ export const GET = factory.createHandlers(verifyBearer, async (c) => {
   }
   const organizationRevision = await readCompanyOrganizationRevision({
     database: c.env.DB,
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
   })
   if (organizationRevision instanceof Error) throw organizationRevision
 

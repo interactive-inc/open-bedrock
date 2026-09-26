@@ -199,7 +199,7 @@ test("公開責務の条件を編集し、会社が決める人数を上書き�
         ...initialWorkflow.steps[0],
         approvers: [],
         governance_authority: {
-          organization_id: "organization:default",
+          organization_id: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
           responsibility_code: "REVIEWER",
           scope: null,
         },

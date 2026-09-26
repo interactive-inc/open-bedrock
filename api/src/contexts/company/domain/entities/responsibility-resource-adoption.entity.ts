@@ -10,6 +10,7 @@ import type { ResponsibilityResourceAdoptionSnapshotValue } from "@/contexts/com
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 import { ResponsibilityResourceConnectionValue } from "@/contexts/company/domain/values/responsibility-resource-connection.value"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const schema = z
   .object({
@@ -85,7 +86,7 @@ export class ResponsibilityResourceAdoptionEntity {
         "移行対象が変更されています。再確認してください",
         "responsibility_resource_adoption_conflict",
       )
-    if (source.employeeOrganizationId !== "organization:default")
+    if (source.employeeOrganizationId !== COMPANY_DEFAULT_ORGANIZATION_ID)
       return new CompanyValidationError(
         "先に従業員と雇用の履歴を接続してください",
         "invalid_responsibility_adoption",
@@ -147,7 +148,7 @@ export class ResponsibilityResourceAdoptionEntity {
       const digest = await ProposalDigestValue.create(canonical)
       if (digest instanceof Error) return digest
       const resource = CompanyResourceEntity.create({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "responsibility-assignment",
         id: `responsibility-adoption:${digest.toString()}`,
         revision: 1,
@@ -244,7 +245,7 @@ export class ResponsibilityResourceAdoptionEntity {
           "invalid_responsibility_connection",
         )
       const resource = CompanyResourceEntity.create({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "responsibility-assignment",
         id: target,
         revision: row.revision,

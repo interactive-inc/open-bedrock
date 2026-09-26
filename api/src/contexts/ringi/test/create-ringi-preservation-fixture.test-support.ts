@@ -9,6 +9,7 @@ import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-sy
 import { createMonotonicTestClock } from "@tests/api/support/create-monotonic-test-clock"
 import type { createLocalD1Governance } from "@tests/d1/support/create-local-d1-governance"
 import { execSql } from "@tests/d1/support/exec-sql"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const secret = "ringi-integration-test-secret"
 
@@ -44,7 +45,7 @@ export async function createRingiPreservationFixture(
           ...governance.step,
           rejection_behavior: "reject",
           governance_authority: {
-            organization_id: "organization:default",
+            organization_id: COMPANY_DEFAULT_ORGANIZATION_ID,
             responsibility_code: "APPROVE",
             scope: null,
           },

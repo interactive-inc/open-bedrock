@@ -16,7 +16,7 @@ afterEach(() => {
 })
 
 const site: CompanyResource = {
-  organizationId: "organization:default",
+  organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
   type: "site",
   id: "site:1",
   revision: 1,
@@ -34,7 +34,7 @@ const site: CompanyResource = {
 }
 
 const workplace: CompanyResource = {
-  organizationId: "organization:default",
+  organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
   type: "workplace",
   id: "workplace:1",
   revision: 1,
@@ -47,7 +47,7 @@ const workplace: CompanyResource = {
 describe("CompanySiteSection", () => {
   test("事業所と勤務場所を分けて出す", async () => {
     mocks.getCompanyDefinitionResources.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 6,
       resources: [site, workplace],
     })
@@ -62,7 +62,7 @@ describe("CompanySiteSection", () => {
 
   test("職務や責任の定義は同じ api から来てもここには出さない", async () => {
     mocks.getCompanyDefinitionResources.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 6,
       resources: [
         site,
@@ -82,7 +82,7 @@ describe("CompanySiteSection", () => {
 
   test("空のときは両方の表で登録がないことを示す", async () => {
     mocks.getCompanyDefinitionResources.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 0,
       resources: [],
     })

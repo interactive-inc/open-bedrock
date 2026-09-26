@@ -13,6 +13,7 @@ import { EmployeeLifecycleAdapter } from "@/contexts/company/infrastructure/adap
 import type { PersonnelActionInput } from "@/contexts/company/domain/definitions/lifecycle-types.definition"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { createLocalD1Governance } from "@tests/d1/support/create-local-d1-governance"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 /**
  * migration済みのローカルD1へ合議体の責務規程を作り、公開Company APIで組織履歴を確定して
@@ -22,7 +23,7 @@ export async function createLocalD1CompanyAssignment(database: D1Database) {
   const base = await createLocalD1Governance(database)
   const actor = CompanyActorValue.restore({
     ...base.creator,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:admin"],
   })
   const app = new Hono<CompanyHttpEnvironment>()
@@ -84,7 +85,9 @@ export async function createLocalD1CompanyAssignment(database: D1Database) {
   if (employment === null) throw new Error("employment missing")
   const companyRevision = async () => {
     const revision = await base.database
-      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+      .prepare(
+        `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+      )
       .first<number>("revision")
     if (revision === null) throw new Error("company revision missing")
     return revision
@@ -92,7 +95,7 @@ export async function createLocalD1CompanyAssignment(database: D1Database) {
   const revision = await companyRevision()
   type Resource = Parameters<typeof client.changes.$post>[0]["json"]["resources"][number]
   const assignment: Extract<Resource, { type: "assignment" }> = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "assignment",
     id: "assignment:public",
     revision: 1,
@@ -116,7 +119,7 @@ export async function createLocalD1CompanyAssignment(database: D1Database) {
       header: {
         "idempotency-key": key,
         "if-match": String(expectedRevision),
-        "x-company-organization-id": "organization:default",
+        "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID,
       },
       json: { reason: "Confirm assignment", resources },
     })
@@ -128,7 +131,7 @@ export async function createLocalD1CompanyAssignment(database: D1Database) {
   const assignEmployeeCode = async (targetId = employeeId, code = "EMPLOYEE-001") => {
     const head = await base.database
       .prepare(`SELECT revision, attributes_json, effective_from FROM company_resource_heads
-      WHERE organization_id = 'organization:default' AND resource_type = 'employee' AND resource_id = ?1`)
+      WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND resource_type = 'employee' AND resource_id = ?1`)
       .bind(targetId)
       .first<{ revision: number; attributes_json: string; effective_from: string }>()
     if (head === null) throw new Error("employee resource missing")
@@ -137,13 +140,13 @@ export async function createLocalD1CompanyAssignment(database: D1Database) {
       header: {
         "idempotency-key": `employee-code:${code}`,
         "if-match": String(await companyRevision()),
-        "x-company-organization-id": "organization:default",
+        "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID,
       },
       json: {
         reason: "Confirm employee code",
         resources: [
           {
-            organizationId: "organization:default",
+            organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
             type: "employee",
             id: targetId,
             revision: head.revision + 1,

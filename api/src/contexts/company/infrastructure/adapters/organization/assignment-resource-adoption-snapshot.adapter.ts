@@ -1,4 +1,5 @@
 import { AssignmentResourceAdoptionSnapshotValue } from "@/contexts/company/domain/values/assignment-resource-adoption-snapshot.value"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 type Context = D1Database
 
 /** 移行の確認と保存直前の検査に同じ所属履歴のSQLを使う。 */
@@ -30,7 +31,7 @@ export class AssignmentResourceAdoptionSnapshotAdapter {
   private query(): string {
     return `SELECT json_object(
       'employeeId', employee.id,
-      'organizationRevision', (SELECT revision FROM company_organizations WHERE id = 'organization:default'),
+      'organizationRevision', (SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'),
       'lifecycleRevision', (SELECT revision FROM company_organization_lifecycle_states WHERE id = 1),
       'pendingOperations', (SELECT count(*) FROM company_organization_change_operations WHERE status = 'PENDING'),
       'employeeOrganizationId', (SELECT organization_id FROM company_workforce_resource_bindings WHERE resource_type = 'employee' AND resource_id = employee.id),
@@ -48,7 +49,7 @@ export class AssignmentResourceAdoptionSnapshotAdapter {
         JOIN company_resource_revisions resource ON resource.organization_id = head.organization_id
           AND resource.resource_type = head.resource_type AND resource.resource_id = head.resource_id
         LEFT JOIN company_assignment_resource_bindings binding ON binding.resource_id = head.resource_id
-        WHERE head.organization_id = 'organization:default' AND head.resource_type = 'assignment'
+        WHERE head.organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND head.resource_type = 'assignment'
           AND json_extract(head.attributes_json, '$.employeeId') = employee.id
         ORDER BY resource.resource_id, resource.revision
       ))),

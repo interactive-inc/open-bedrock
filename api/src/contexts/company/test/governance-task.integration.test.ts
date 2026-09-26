@@ -133,9 +133,9 @@ describe("公開Companyから業務Taskへの接続", () => {
             ...assignment,
             revision: 1,
             type: "organization-unit",
-            id: "unit:review",
+            id: "0190005f-0000-7000-8000-fd1e836c4a13",
             attributes: {
-              organizationUnitId: "unit:review",
+              organizationUnitId: "0190005f-0000-7000-8000-fd1e836c4a13",
               code: "REVIEW",
               officialName: "Review",
               kind: "DEPARTMENT",
@@ -157,7 +157,7 @@ describe("公開Companyから業務Taskへの接続", () => {
             attributes: {
               code: "REVIEWER",
               officialName: "Reviewer",
-              organizationUnitId: "unit:review",
+              organizationUnitId: "0190005f-0000-7000-8000-fd1e836c4a13",
               positionId: "position:review",
             },
           },

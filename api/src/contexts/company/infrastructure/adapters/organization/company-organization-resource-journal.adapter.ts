@@ -9,6 +9,7 @@ import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/r
 import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/core/company-resource-journal.adapter"
 import { validateCompanyOrganizationChange } from "@/contexts/company/domain/policies/company-organization.policy"
 import { drizzle } from "drizzle-orm/d1"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 type Context = D1Database
 
 /** 接続済みの組織への既存writeを公開履歴へ反映し、新設組織は接続済みの親から引き継ぐ。 */
@@ -29,7 +30,7 @@ export class CompanyOrganizationResourceJournalAdapter {
     try {
       const bindings = await this.c
         .prepare(
-          "SELECT organization_unit_id FROM company_organization_resource_bindings WHERE organization_id = 'organization:default'",
+          `SELECT organization_unit_id FROM company_organization_resource_bindings WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
         )
         .all<{ organization_unit_id: string }>()
       if (!bindings.success)
@@ -52,7 +53,7 @@ export class CompanyOrganizationResourceJournalAdapter {
       if (periods.length === 0) return []
       const repository = new D1CompanyResourceRepository({ database: this.c })
       const current = await repository.findMany({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         types: ["organization-unit"],
       })
       if (!current.ok)
@@ -68,7 +69,7 @@ export class CompanyOrganizationResourceJournalAdapter {
         reason: change.reason,
         recordedAt: change.recordedAt,
         resources: periods.map((period) => ({
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "organization-unit",
           id: period.periodId,
           revision: period.revision,
@@ -89,7 +90,7 @@ export class CompanyOrganizationResourceJournalAdapter {
           cause: command,
         })
       const reportingHistory = await repository.findReportingRelationHistory(
-        "organization:default",
+        COMPANY_DEFAULT_ORGANIZATION_ID,
         current.organizationRevision,
       )
       if (reportingHistory instanceof Error)
@@ -126,7 +127,7 @@ export class CompanyOrganizationResourceJournalAdapter {
           .map((id) =>
             this.c
               .prepare(`INSERT INTO company_organization_resource_bindings
-        (organization_unit_id, organization_id, recorded_at) VALUES (?1, 'organization:default', ?2)`)
+        (organization_unit_id, organization_id, recorded_at) VALUES (?1, '${COMPANY_DEFAULT_ORGANIZATION_ID}', ?2)`)
               .bind(id, change.recordedAt),
           ),
         journal.commit,

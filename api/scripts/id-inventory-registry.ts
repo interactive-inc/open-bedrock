@@ -228,6 +228,8 @@ export const SOFT_REFERENCES: Readonly<Record<string, SoftReference>> = {
   "it_incidents.legacy_id": LEGACY_PRIMARY_KEY,
   "salary_revisions.legacy_id": LEGACY_PRIMARY_KEY,
   "work_accidents.legacy_id": LEGACY_PRIMARY_KEY,
+  "company_organizations.legacy_id": LEGACY_PRIMARY_KEY,
+  "company_organization_units.legacy_id": LEGACY_PRIMARY_KEY,
   "asset_lendings.asset_code": sameContext("assets"),
   "career_applications.posting_id": sameContext("career_postings"),
   "career_postings.dept_id": historical(

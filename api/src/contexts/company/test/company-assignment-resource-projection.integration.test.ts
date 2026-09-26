@@ -8,6 +8,7 @@ import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/r
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { ResolveCanonicalOrganizationAuthorityAdapter } from "@/contexts/company/infrastructure/adapters/workforce/resolve-canonical-organization-authority.adapter"
 import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/test/company-assignment-resource.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 describe("公開Assignmentと業務の所属期間", () => {
   test("上長本人の退職APIは部下の関係を終了し、再送・訂正・再入社で旧上長を復活させない", async () => {
@@ -86,7 +87,7 @@ describe("公開Assignmentと業務の所属期間", () => {
     await f.initializeAssignment()
     await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
     const relation = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "reporting-relation",
       id: "reporting:reserved",
       revision: 1,
@@ -96,7 +97,7 @@ describe("公開Assignmentと業務の所属期間", () => {
       attributes: {
         employeeId: f.people[0]!.employeeId,
         managerEmployeeId: f.people[1]!.employeeId,
-        organizationUnitId: "unit:journal",
+        organizationUnitId: "0190005f-0000-7000-8000-3e026079e0b5",
       },
     } satisfies NonNullable<Parameters<typeof f.write>[0]>[number]
     expect(
@@ -246,7 +247,7 @@ describe("公開Assignmentと業務の所属期間", () => {
       { length: 101 },
       (_, index) =>
         ({
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "reporting-relation",
           id: `reporting:many:${index}`,
           revision: 1,
@@ -256,7 +257,7 @@ describe("公開Assignmentと業務の所属期間", () => {
           attributes: {
             employeeId: f.people[0]!.employeeId,
             managerEmployeeId: f.people[1]!.employeeId,
-            organizationUnitId: "unit:journal",
+            organizationUnitId: "0190005f-0000-7000-8000-3e026079e0b5",
           },
         }) satisfies NonNullable<Parameters<typeof f.write>[0]>[number],
     )
@@ -337,7 +338,7 @@ describe("公開Assignmentと業務の所属期間", () => {
                   attributes: {
                     employeeId: f.people[0]!.employeeId,
                     managerEmployeeId: f.people[2]!.employeeId,
-                    organizationUnitId: "unit:journal",
+                    organizationUnitId: "0190005f-0000-7000-8000-3e026079e0b5",
                   },
                 },
               ],
@@ -378,7 +379,7 @@ describe("公開Assignmentと業務の所属期間", () => {
     await f.initializeAssignment()
     const managerId = f.people[1]!.employeeId
     const relation = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "reporting-relation",
       id: "reporting:employment-guard",
       revision: 1,
@@ -388,7 +389,7 @@ describe("公開Assignmentと業務の所属期間", () => {
       attributes: {
         employeeId: f.people[0]!.employeeId,
         managerEmployeeId: managerId,
-        organizationUnitId: "unit:journal",
+        organizationUnitId: "0190005f-0000-7000-8000-3e026079e0b5",
       },
     } satisfies NonNullable<Parameters<typeof f.write>[0]>[number]
     expect(
@@ -397,7 +398,7 @@ describe("公開Assignmentと業務の所属期間", () => {
       ),
     ).toBe(201)
     const snapshot = await new D1CompanyResourceRepository({ database: f.database }).findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["employment", "collective-body-membership"],
     })
     if (!snapshot.ok) throw snapshot.cause
@@ -449,7 +450,7 @@ describe("公開Assignmentと業務の所属期間", () => {
             header: {
               "idempotency-key": "reporting:shorten-only",
               "if-match": String(await f.companyRevision()),
-              "x-company-organization-id": "organization:default",
+              "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID,
             },
             json: { reason: "Shorten employment", resources: [shortened] },
           })
@@ -610,7 +611,7 @@ describe("公開Assignmentと業務の所属期間", () => {
           await f.write(
             [
               {
-                organizationId: "organization:default",
+                organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
                 type: "reporting-relation",
                 id: first.id,
                 revision: first.revision + 1,
@@ -700,7 +701,10 @@ describe("公開Assignmentと業務の所属期間", () => {
       revision: assignment.revision + 1,
       effectiveFrom: assignment.effectiveFrom,
       effectiveTo: "2030-06-01",
-      attributes: { ...f.assignment.attributes, organizationUnitId: "unit:journal" },
+      attributes: {
+        ...f.assignment.attributes,
+        organizationUnitId: "0190005f-0000-7000-8000-3e026079e0b5",
+      },
     }
     const before = await f.persisted()
     expect(
@@ -708,7 +712,7 @@ describe("公開Assignmentと業務の所属期間", () => {
     ).toBe(422)
     expect(await f.persisted()).toEqual(before)
     const relation = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "reporting-relation",
       id: reporting.id,
       revision: reporting.revision + 1,
@@ -718,7 +722,7 @@ describe("公開Assignmentと業務の所属期間", () => {
       attributes: {
         employeeId: f.people[0]!.employeeId,
         managerEmployeeId: f.people[1]!.employeeId,
-        organizationUnitId: "unit:journal",
+        organizationUnitId: "0190005f-0000-7000-8000-3e026079e0b5",
       },
     } satisfies NonNullable<Parameters<typeof f.write>[0]>[number]
     expect(
@@ -777,7 +781,7 @@ describe("公開Assignmentと業務の所属期間", () => {
     expect(await f.personnel(input, "reporting:initial")).toMatchObject({ replayed: false })
     const first = (await f.publicReporting("2030-03-01"))[0]!
     const future = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "reporting-relation",
       id: first.id,
       revision: first.revision + 1,
@@ -787,7 +791,7 @@ describe("公開Assignmentと業務の所属期間", () => {
       attributes: {
         employeeId: f.people[0]!.employeeId,
         managerEmployeeId: f.people[2]!.employeeId,
-        organizationUnitId: "unit:journal",
+        organizationUnitId: "0190005f-0000-7000-8000-3e026079e0b5",
       },
     } satisfies NonNullable<Parameters<typeof f.write>[0]>[number]
     expect(
@@ -920,7 +924,7 @@ describe("公開Assignmentと業務の所属期間", () => {
           await f.write(
             [
               {
-                organizationId: "organization:default",
+                organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
                 type: "reporting-relation",
                 id: "reporting:independent",
                 revision: 1,
@@ -930,7 +934,7 @@ describe("公開Assignmentと業務の所属期間", () => {
                 attributes: {
                   employeeId: f.people[0]!.employeeId,
                   managerEmployeeId: additional.employeeId,
-                  organizationUnitId: "unit:journal",
+                  organizationUnitId: "0190005f-0000-7000-8000-3e026079e0b5",
                 },
               },
             ],
@@ -1031,7 +1035,7 @@ describe("公開Assignmentと業務の所属期間", () => {
     await f.initializeAssignment()
     await f.assignEmployeeCode(f.people[1]!.employeeId, "MANAGER-001")
     const backward = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "reporting-relation",
       id: "reporting:backward",
       revision: 1,
@@ -1041,7 +1045,7 @@ describe("公開Assignmentと業務の所属期間", () => {
       attributes: {
         employeeId: f.people[1]!.employeeId,
         managerEmployeeId: f.people[0]!.employeeId,
-        organizationUnitId: "unit:journal",
+        organizationUnitId: "0190005f-0000-7000-8000-3e026079e0b5",
       },
     } satisfies NonNullable<Parameters<typeof f.write>[0]>[number]
     expect(
@@ -1138,14 +1142,14 @@ describe("公開Assignmentと業務の所属期間", () => {
     const f = await createCompanyAssignmentResourceTestContext()
     await f.initializeAssignment()
     const unit = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "organization-unit",
       revision: 1,
       state: "active",
       effectiveFrom: "2030-01-01",
       effectiveTo: null,
       attributes: {
-        organizationUnitId: "unit:journal",
+        organizationUnitId: "0190005f-0000-7000-8000-3e026079e0b5",
         code: "TEAM",
         officialName: "Example Team",
         kind: "TEAM",
@@ -1169,7 +1173,7 @@ describe("公開Assignmentと業務の所属期間", () => {
               },
             ],
             await f.companyRevision(),
-            "unit:future-code",
+            "0190005f-0000-7000-8000-9b1a68be40a1",
           )
         ).status,
       ),
@@ -1193,9 +1197,12 @@ describe("公開Assignmentと業務の所属期間", () => {
         unit: resource.readText("organizationUnitId"),
         title: resource.readText("positionTitle"),
       })),
-    ).toEqual([{ unit: "unit:journal", title: "Lead" }])
+    ).toEqual([{ unit: "0190005f-0000-7000-8000-3e026079e0b5", title: "Lead" }])
     expect(await f.read("2030-08-01")).toMatchObject({
-      primaryAssignment: { organizationUnitId: "unit:journal", positionTitle: "Lead" },
+      primaryAssignment: {
+        organizationUnitId: "0190005f-0000-7000-8000-3e026079e0b5",
+        positionTitle: "Lead",
+      },
     })
   })
   test("異動先の組織IDと将来予約の境界を公開履歴へ保つ", async () => {
@@ -1207,7 +1214,7 @@ describe("公開Assignmentと業務の所属期間", () => {
           await f.write(
             [
               {
-                organizationId: "organization:default",
+                organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
                 type: "organization-unit",
                 id: "period:other",
                 revision: 1,
@@ -1215,7 +1222,7 @@ describe("公開Assignmentと業務の所属期間", () => {
                 effectiveFrom: "2030-01-01",
                 effectiveTo: null,
                 attributes: {
-                  organizationUnitId: "unit:other",
+                  organizationUnitId: "0190005f-0000-7000-8000-35e18215e902",
                   code: "OTHER",
                   officialName: "Other Team",
                   kind: "TEAM",
@@ -1249,9 +1256,9 @@ describe("公開Assignmentと業務の所属期間", () => {
       ),
     ).toMatchObject({ replayed: false })
     for (const [date, unit] of [
-      ["2030-02-01", "unit:journal"],
-      ["2030-04-01", "unit:other"],
-      ["2030-08-01", "unit:journal"],
+      ["2030-02-01", "0190005f-0000-7000-8000-3e026079e0b5"],
+      ["2030-04-01", "0190005f-0000-7000-8000-35e18215e902"],
+      ["2030-08-01", "0190005f-0000-7000-8000-3e026079e0b5"],
     ] satisfies Array<[string, string]>) {
       expect(
         (await f.publicAssignments(date)).map((resource) =>
@@ -1311,7 +1318,7 @@ describe("公開Assignmentと業務の所属期間", () => {
       recordedAt: f.at.getTime(),
       resources: [
         {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "employment",
           id: source.attributes.employmentId,
           revision: employment.revision + 1,
@@ -1331,7 +1338,7 @@ describe("公開Assignmentと業務の所属期間", () => {
     })
     expect(await f.persisted()).toEqual(before)
     expect(await f.read("2030-08-01")).toMatchObject({
-      primaryAssignment: { organizationUnitId: "unit:journal" },
+      primaryAssignment: { organizationUnitId: "0190005f-0000-7000-8000-3e026079e0b5" },
     })
   })
 
@@ -1517,7 +1524,7 @@ describe("公開Assignmentと業務の所属期間", () => {
         (
           await f.write([
             {
-              organizationId: "organization:default",
+              organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
               type: "organization-unit",
               id: "unit-period:journal",
               revision: 1,
@@ -1525,7 +1532,7 @@ describe("公開Assignmentと業務の所属期間", () => {
               effectiveFrom: "2030-01-01",
               effectiveTo: null,
               attributes: {
-                organizationUnitId: "unit:journal",
+                organizationUnitId: "0190005f-0000-7000-8000-3e026079e0b5",
                 code: "TEAM",
                 officialName: "Example Team",
                 kind: "TEAM",
@@ -1544,7 +1551,10 @@ describe("公開Assignmentと業務の所属期間", () => {
             [
               {
                 ...f.assignment,
-                attributes: { ...f.assignment.attributes, organizationUnitId: "unit:journal" },
+                attributes: {
+                  ...f.assignment.attributes,
+                  organizationUnitId: "0190005f-0000-7000-8000-3e026079e0b5",
+                },
               },
             ],
             await f.companyRevision(),
@@ -1589,7 +1599,7 @@ describe("公開Assignmentと業務の所属期間", () => {
                 effectiveFrom: current.effectiveFrom,
                 attributes: {
                   ...f.assignment.attributes,
-                  organizationUnitId: "unit:journal",
+                  organizationUnitId: "0190005f-0000-7000-8000-3e026079e0b5",
                   positionTitle: "Revised Lead",
                 },
               },
@@ -1628,7 +1638,7 @@ describe("公開Assignmentと業務の所属期間", () => {
         (
           await f.write([
             {
-              organizationId: "organization:default",
+              organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
               type: "organization-unit",
               id: "unit-period:opaque",
               revision: 1,
@@ -1636,7 +1646,7 @@ describe("公開Assignmentと業務の所属期間", () => {
               effectiveFrom: "2030-01-01",
               effectiveTo: null,
               attributes: {
-                organizationUnitId: "unit:opaque",
+                organizationUnitId: "0190005f-0000-7000-8000-e384a7defa99",
                 code: "TEAM",
                 officialName: "Example Team",
                 kind: "TEAM",
@@ -1665,13 +1675,13 @@ describe("公開Assignmentと業務の所属期間", () => {
       ),
     ).toMatchObject({ replayed: false })
     expect(await f.read("2030-06-01")).toMatchObject({
-      primaryAssignment: { organizationUnitId: "unit:opaque" },
+      primaryAssignment: { organizationUnitId: "0190005f-0000-7000-8000-e384a7defa99" },
     })
     expect(
       (await f.publicAssignments("2030-06-01")).map((resource) =>
         resource.readText("organizationUnitId"),
       ),
-    ).toEqual(["unit:opaque"])
+    ).toEqual(["0190005f-0000-7000-8000-e384a7defa99"])
   })
   test("公開APIに保存した所属が同じ基準日の従業員一覧へ届く", async () => {
     const f = await createCompanyAssignmentResourceTestContext()
@@ -1728,7 +1738,7 @@ describe("公開Assignmentと業務の所属期間", () => {
   test("組織の作成と配属を一つの変更で保存し、主務の重複は全体を巻き戻す", async () => {
     const f = await createCompanyAssignmentResourceTestContext()
     const unit = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "organization-unit",
       id: "unit-period:team",
       revision: 1,
@@ -1736,7 +1746,7 @@ describe("公開Assignmentと業務の所属期間", () => {
       effectiveFrom: "2030-01-01",
       effectiveTo: null,
       attributes: {
-        organizationUnitId: "unit:team",
+        organizationUnitId: "0190005f-0000-7000-8000-a43705386391",
         code: "TEAM",
         officialName: "Example Team",
         kind: "TEAM",
@@ -1745,11 +1755,14 @@ describe("公開Assignmentと業務の所属期間", () => {
     } satisfies NonNullable<Parameters<typeof f.write>[0]>[number]
     const assignment = {
       ...f.assignment,
-      attributes: { ...f.assignment.attributes, organizationUnitId: "unit:team" },
+      attributes: {
+        ...f.assignment.attributes,
+        organizationUnitId: "0190005f-0000-7000-8000-a43705386391",
+      },
     }
     expect(Number((await f.write([unit, assignment])).status)).toBe(201)
     expect(await f.read("2030-06-01")).toMatchObject({
-      primaryAssignment: { organizationUnitId: "unit:team" },
+      primaryAssignment: { organizationUnitId: "0190005f-0000-7000-8000-a43705386391" },
     })
     const before = await f.persisted()
     const duplicate = { ...f.assignment, id: "assignment:duplicate" }

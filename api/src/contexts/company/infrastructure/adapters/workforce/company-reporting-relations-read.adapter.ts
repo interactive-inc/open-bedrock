@@ -6,6 +6,7 @@ import type { CalendarDate } from "@/contexts/company/domain/definitions/calenda
 import type { OrganizationalAuthorityReportingRelationEvidence } from "@/contexts/company/domain/definitions/organizational-authority.definition"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Context = D1Database
 
@@ -18,7 +19,7 @@ export class CompanyReportingRelationsReadAdapter implements CompanyReportingRel
   async readSnapshot(asOf: CalendarDate): Promise<CompanyReportingRelationsReadResult> {
     try {
       const result = await new D1CompanyResourceRepository({ database: this.c }).findMany({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         types: ["reporting-relation"],
         effectiveOn: asOf,
       })
@@ -52,7 +53,9 @@ export class CompanyReportingRelationsReadAdapter implements CompanyReportingRel
   async readRevision(): ReturnType<CompanyReportingRelationsReadPort["readRevision"]> {
     try {
       const revision = await this.c
-        .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+        .prepare(
+          `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+        )
         .first<number>("revision")
       if (revision === null) return { ok: true, revision: 0 }
       if (!Number.isSafeInteger(revision) || revision < 0) {

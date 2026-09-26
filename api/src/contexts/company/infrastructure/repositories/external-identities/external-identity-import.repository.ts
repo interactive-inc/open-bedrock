@@ -29,8 +29,9 @@ import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-dig
 import type { IdentityId } from "@system/domain/schemas/identity/identity-id.schema"
 import { drizzle } from "drizzle-orm/d1"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
-const organizationId = "organization:default"
+const organizationId = COMPANY_DEFAULT_ORGANIZATION_ID
 const summarySchema = z
   .object({
     created: z.number().int().nonnegative(),

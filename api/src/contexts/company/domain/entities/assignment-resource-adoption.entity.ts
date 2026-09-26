@@ -9,6 +9,7 @@ import type { AssignmentResourceAdoptionSnapshotValue } from "@/contexts/company
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 import { AssignmentResourceConnectionValue } from "@/contexts/company/domain/values/assignment-resource-connection.value"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const schema = z
   .object({
@@ -76,7 +77,7 @@ export class AssignmentResourceAdoptionEntity {
         "移行対象が変更されています。再確認してください",
         "assignment_resource_adoption_conflict",
       )
-    if (source.employeeOrganizationId !== "organization:default")
+    if (source.employeeOrganizationId !== COMPANY_DEFAULT_ORGANIZATION_ID)
       return new CompanyValidationError(
         "先に従業員と雇用の履歴を接続してください",
         "invalid_assignment_adoption",
@@ -121,7 +122,7 @@ export class AssignmentResourceAdoptionEntity {
       const digest = await ProposalDigestValue.create(canonical)
       if (digest instanceof Error) return digest
       const resource = CompanyResourceEntity.create({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "assignment",
         id: `assignment-adoption:${digest.toString()}`,
         revision: 1,
@@ -231,7 +232,7 @@ export class AssignmentResourceAdoptionEntity {
           "invalid_assignment_connection",
         )
       const resource = CompanyResourceEntity.create({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "assignment",
         id: target,
         revision: row.revision,

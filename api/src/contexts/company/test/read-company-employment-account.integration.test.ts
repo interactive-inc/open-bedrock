@@ -7,6 +7,7 @@ import { readCompanyEmploymentsByAccount } from "@/contexts/company/interface/op
 import { readCompanyEmploymentsByAccounts } from "@/contexts/company/interface/operations/read-company-employments-by-accounts"
 import { readCompanyEmploymentsByEmployee } from "@/contexts/company/interface/operations/read-company-employments-by-employee"
 import { createGovernanceTaskTestContext } from "@/contexts/company/test/governance-task.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test("雇用と Account 対応を同じ Company 版で読み、存在しない雇用を補完しない", async () => {
   const fixture = await createGovernanceTaskTestContext()
@@ -18,7 +19,7 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
   if (effectiveOn instanceof Error) throw effectiveOn
   const employments = await readCompanyEmploymentsByEmployee({
     database: fixture.database,
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     employeeIds: [person.employeeId],
     effectiveOn,
   })
@@ -28,7 +29,7 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
 
   const found = await readCompanyEmploymentAccount({
     database: fixture.database,
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     employmentId,
     effectiveOn,
     organizationRevision: employments.organizationRevision,
@@ -47,7 +48,7 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
   expect(
     await readCompanyEmploymentsByAccount({
       database: fixture.database,
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       accountId: person.accountId,
       effectiveOn,
       organizationRevision: found.organizationRevision,
@@ -61,7 +62,7 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
   expect(
     await readCompanyEmploymentsByAccount({
       database: fixture.database,
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       accountId: "account:missing",
       effectiveOn,
       organizationRevision: found.organizationRevision,
@@ -75,7 +76,7 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
   expect(
     await readCompanyEmploymentsByAccounts({
       database: fixture.database,
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       accountIds: [person.accountId, "account:missing"],
       effectiveOn,
       organizationRevision: found.organizationRevision,
@@ -92,7 +93,7 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
   expect(
     await readCompanyEmploymentsByAccounts({
       database: fixture.database,
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       accountIds: [],
       effectiveOn,
     }),
@@ -100,7 +101,7 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
 
   const directory = await readCompanyEmploymentDirectory({
     database: fixture.database,
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     effectiveOn,
     organizationRevision: found.organizationRevision,
   })
@@ -114,7 +115,7 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
 
   const missing = await readCompanyEmploymentAccount({
     database: fixture.database,
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     employmentId: "employment:missing",
     effectiveOn,
     organizationRevision: found.organizationRevision,
@@ -126,7 +127,7 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
 
   const beforeHire = await readCompanyEmploymentAccount({
     database: fixture.database,
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     employmentId,
     effectiveOn: restoreCalendarDate("1900-01-01"),
     organizationRevision: found.organizationRevision,

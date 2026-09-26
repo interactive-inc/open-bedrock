@@ -1,5 +1,6 @@
 import { CompanyAccountProfileEntity } from "@/contexts/company/domain/entities/company-account-profile.entity"
 import { describe, expect, test } from "bun:test"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const ACCOUNT_ID = "11111111-1111-4111-8111-111111111111"
 
@@ -32,7 +33,7 @@ describe("CompanyAccountProfileEntity", () => {
     })
 
     const entity = CompanyAccountProfileEntity.create({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       accountId: ACCOUNT_ID,
       displayName,
       createdAt: new Date(1),

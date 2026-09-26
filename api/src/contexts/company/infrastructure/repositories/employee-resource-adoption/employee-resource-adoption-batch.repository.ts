@@ -15,6 +15,7 @@ import { EmployeeResourceAdoptionSnapshotAdapter } from "@/contexts/company/infr
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Context = Readonly<{ env: Readonly<{ DB: D1Database; COMPANY_TIME_ZONE?: string }> }>
 export type EmployeeResourceAdoptionBatchResult = Readonly<{
@@ -96,7 +97,7 @@ export class EmployeeResourceAdoptionBatchRepository {
         ...payloads.map((payload) => snapshots.prepareBatchGuard(payload)),
         this.c.env.DB.prepare(`INSERT INTO company_command_receipts
           (organization_id, command_id, fingerprint, expected_revision, organization_revision, recorded_at)
-          VALUES ('organization:default', ?1, ?2, ?3, ?4, ?5)`).bind(
+          VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', ?1, ?2, ?3, ?4, ?5)`).bind(
           `employee-adoption-batch:${command.props.commandId}`,
           fingerprint,
           command.props.expectedRevision,
@@ -213,7 +214,7 @@ export class EmployeeResourceAdoptionBatchRepository {
         statements.push(
           this.c.env.DB.prepare(`INSERT INTO company_command_receipts
           (organization_id, command_id, fingerprint, expected_revision, organization_revision, recorded_at)
-          VALUES ('organization:default', ?1, ?2, ?3, ?4, ?5)`).bind(
+          VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', ?1, ?2, ?3, ?4, ?5)`).bind(
             `employee-adoption-batch-part:${fingerprint}:${index}`,
             fingerprint,
             expectedRevision,
@@ -223,7 +224,7 @@ export class EmployeeResourceAdoptionBatchRepository {
         )
       statements.push(
         this.c.env.DB.prepare(`UPDATE company_organizations SET revision = ?1, updated_at = ?2
-          WHERE id = 'organization:default' AND revision = ?3`).bind(
+          WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND revision = ?3`).bind(
           expectedRevision + 1,
           command.props.recordedAt,
           expectedRevision,
@@ -240,7 +241,7 @@ export class EmployeeResourceAdoptionBatchRepository {
     return this.c.env.DB.prepare(`INSERT INTO company_workforce_resource_bindings
       (resource_type, resource_id, organization_id, employee_id, resource_revision, lifecycle_revision, last_action_id)
       SELECT json_extract(binding.value, '$.type'), json_extract(binding.value, '$.id'),
-        'organization:default', json_extract(employee.value, '$.employeeId'),
+        '${COMPANY_DEFAULT_ORGANIZATION_ID}', json_extract(employee.value, '$.employeeId'),
         json_extract(binding.value, '$.revision'), json_extract(employee.value, '$.lifecycleRevision'),
         json_extract(employee.value, '$.termination.actionId')
       FROM json_each(?1) AS employee, json_each(employee.value, '$.bindings') AS binding
@@ -267,7 +268,7 @@ export class EmployeeResourceAdoptionBatchRepository {
   ): Promise<EmployeeResourceAdoptionBatchResult | CompanyConflictError | null> {
     const row =
       await this.c.env.DB.prepare(`SELECT fingerprint, organization_revision FROM company_command_receipts
-      WHERE organization_id = 'organization:default' AND command_id = ?1`)
+      WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND command_id = ?1`)
         .bind(`employee-adoption-batch:${command.props.commandId}`)
         .first()
     if (row === null) return null

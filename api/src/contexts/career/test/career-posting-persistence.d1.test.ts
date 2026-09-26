@@ -1,5 +1,5 @@
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
-import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
+import { testOrganizationUnitId } from "@tests/api/support/company/test-organization-unit-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { CareerApplication } from "@/contexts/career/domain/entities/career-application.entity"
@@ -10,6 +10,7 @@ import { CareerPostingRepository } from "@/contexts/career/infrastructure/reposi
 import type { Context } from "@/env"
 import { createLocalD1Context } from "@tests/d1/support/create-local-d1-context"
 import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
+import { COMPANY_ROOT_ORGANIZATION_UNIT_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 let local: LocalD1
 
@@ -28,7 +29,7 @@ async function createPosting(context: Context): Promise<CareerPosting> {
   const created = await new CareerPostingRepository(context).create(
     CareerPosting.create({
       title: "Platform Engineer",
-      organizationUnitId: toWorkforceOrganizationUnitId("D003"),
+      organizationUnitId: testOrganizationUnitId("D003"),
       requiredSkills: "typescript",
       status: "open",
     }),
@@ -49,14 +50,18 @@ describe("career posting persistence on local D1", () => {
 
     if (units instanceof Error) throw units
 
-    expect(units.isSelectable(toWorkforceOrganizationUnitId("D003"))).toBe(true)
-    expect(units.isSelectable(toWorkforceOrganizationUnitId("D999"))).toBe(false)
-    expect(units.isSelectable(restoreWorkforceId("organization_unit", "company:root"))).toBe(false)
+    expect(units.isSelectable(testOrganizationUnitId("D003"))).toBe(true)
+    expect(units.isSelectable(testOrganizationUnitId("D999"))).toBe(false)
+    expect(
+      units.isSelectable(
+        restoreWorkforceId("organization_unit", COMPANY_ROOT_ORGANIZATION_UNIT_ID),
+      ),
+    ).toBe(false)
 
     const posting = await createPosting(context)
 
     expect(posting.id).not.toBe(null)
-    expect(posting.organizationUnitId).toBe(toWorkforceOrganizationUnitId("D003"))
+    expect(posting.organizationUnitId).toBe(testOrganizationUnitId("D003"))
     expect(posting.legacyDeptName).toBeNull()
   })
 

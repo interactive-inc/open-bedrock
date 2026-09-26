@@ -6,6 +6,7 @@ import { GovernanceAdapter } from "@/contexts/governance/infrastructure/adapters
 import { resolveCompanyBusinessDate } from "@/contexts/company/domain/definitions/resolve-company-business-date.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CompanyGovernanceRoleAssignmentReadAdapter } from "@/contexts/governance/infrastructure/adapters/company-governance-role-assignment-read.adapter"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 export type GovernanceOrgRoleAssignee = {
   assignment_id: string | null
@@ -70,7 +71,7 @@ export class ResolveGovernanceOrgRoleAdapter {
     const snapshot = await new CompanyGovernanceRoleAssignmentReadAdapter({
       repository: openCompanyResourceRepository({ database: this.c.env.DB }),
     }).read({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       responsibilityCode: code,
       effectiveOn: restoreCalendarDate(businessDate),
     })

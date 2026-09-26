@@ -16,7 +16,7 @@ afterEach(() => {
 })
 
 const link: CompanyResource = {
-  organizationId: "organization:default",
+  organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
   type: "account-employee-link",
   id: "link:1",
   revision: 1,
@@ -29,7 +29,7 @@ const link: CompanyResource = {
 describe("CompanyAccountEmployeeLinkSection", () => {
   test("Account と Employee の対応を 1 行で出す", async () => {
     mocks.getCompanyAccountEmployeeLinkResources.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 2,
       resources: [link],
     })
@@ -44,7 +44,7 @@ describe("CompanyAccountEmployeeLinkSection", () => {
 
   test("空のときは登録がないことを示す", async () => {
     mocks.getCompanyAccountEmployeeLinkResources.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 0,
       resources: [],
     })

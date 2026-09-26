@@ -51,7 +51,10 @@ describe("初期状態の雇用区分", () => {
 function fixture() {
   const managerId = restoreWorkforceId("employee", "employee:manager")
   const workerId = restoreWorkforceId("employee", "employee:worker")
-  const organizationUnitId = restoreWorkforceId("organization_unit", "unit:company")
+  const organizationUnitId = restoreWorkforceId(
+    "organization_unit",
+    "0190005f-0000-7000-8000-42298cf34a48",
+  )
   const schedules = [managerId, workerId].map((employeeId): LifecycleSchedule => {
     const employmentId = restoreWorkforceId("employment", `employment:${employeeId}`)
     const period = {

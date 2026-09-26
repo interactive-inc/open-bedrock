@@ -3,9 +3,10 @@ import { companyAccountProfiles } from "@/contexts/company/infrastructure/schema
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { and, eq, inArray } from "drizzle-orm"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 /** Companyの既定organization。 */
-const DEFAULT_ORGANIZATION_ID = "organization:default"
+const DEFAULT_ORGANIZATION_ID = COMPANY_DEFAULT_ORGANIZATION_ID
 
 type Props = Readonly<{
   employeeId: EmployeeId

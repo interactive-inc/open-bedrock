@@ -2,6 +2,7 @@ import { CompanyResourceEntity } from "@/contexts/company/domain/entities/compan
 import type { OrgAssignmentPeriod } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Props = Readonly<{
   resourceId: string
@@ -28,7 +29,7 @@ export class CompanyAssignmentJournalChangeValue {
           resource.revision !== index + 1 ||
           resource.type !== "assignment" ||
           resource.id !== props.resourceId ||
-          resource.organizationId !== "organization:default" ||
+          resource.organizationId !== COMPANY_DEFAULT_ORGANIZATION_ID ||
           resource.readText("employeeId") !== first.employeeId,
       )
     )
@@ -98,7 +99,7 @@ export class CompanyAssignmentJournalChangeValue {
       )
         continue
       const resource = CompanyResourceEntity.create({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "assignment",
         id: props.resourceId,
         revision: history.length + resources.length + 1,

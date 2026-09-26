@@ -11,6 +11,7 @@ import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { z } from "zod"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
+import { COMPANY_ROOT_ORGANIZATION_UNIT_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 let pool: LocalD1Pool
 
@@ -119,7 +120,10 @@ describe("POST /career-postings", () => {
       path: "/career/career-postings",
       token: await tokenFor(1),
       method: "POST",
-      body: { title: "Backend Engineer", organization_unit_id: "department:D003" },
+      body: {
+        title: "Backend Engineer",
+        organization_unit_id: "0190005e-0000-7000-8000-000044303033",
+      },
     })
 
     expect(response.status).toBe(201)
@@ -131,7 +135,7 @@ describe("POST /career-postings", () => {
     if (parsed.success) {
       expect(parsed.data.title).toBe("Backend Engineer")
       expect(parsed.data.status).toBe("open")
-      expect(parsed.data.organization_unit_id).toBe("department:D003")
+      expect(parsed.data.organization_unit_id).toBe("0190005e-0000-7000-8000-000044303033")
       expect(parsed.data.organization_unit_name).toBe("開発部")
       expect(parsed.data.legacy_dept_name).toBeNull()
     }
@@ -153,7 +157,7 @@ describe("POST /career-postings", () => {
       path: "/career/career-postings",
       token: await tokenFor(1),
       method: "POST",
-      body: { organization_unit_id: "department:D003" },
+      body: { organization_unit_id: "0190005e-0000-7000-8000-000044303033" },
     })
 
     expect(response.status).toBe(400)
@@ -186,7 +190,7 @@ describe("POST /career-postings", () => {
       path: "/career/career-postings",
       token: await tokenFor(1),
       method: "POST",
-      body: { title: "Invalid Dept", organization_unit_id: "department:D999" },
+      body: { title: "Invalid Dept", organization_unit_id: "0190005e-0000-7000-8000-000044393939" },
     })
 
     expect(response.status).toBe(422)
@@ -268,7 +272,7 @@ describe("PUT /career-postings/:postingId", () => {
       method: "PUT",
       body: {
         title: "Updated Lead",
-        organization_unit_id: "department:D004",
+        organization_unit_id: "0190005e-0000-7000-8000-000044303034",
         required_skills: "go",
         status: "closed",
       },
@@ -283,7 +287,7 @@ describe("PUT /career-postings/:postingId", () => {
     if (parsed.success) {
       expect(parsed.data.title).toBe("Updated Lead")
       expect(parsed.data.status).toBe("closed")
-      expect(parsed.data.organization_unit_id).toBe("department:D004")
+      expect(parsed.data.organization_unit_id).toBe("0190005e-0000-7000-8000-000044303034")
       expect(parsed.data.organization_unit_name).toBe("営業部")
       expect(parsed.data.legacy_dept_name).toBe("開発部")
     }
@@ -327,7 +331,7 @@ describe("PUT /career-postings/:postingId", () => {
       path: "/career/career-postings/01900017-0000-7000-8000-000000000001",
       token: await tokenFor(1),
       method: "PUT",
-      body: { title: "Updated Lead", organization_unit_id: "company:root" },
+      body: { title: "Updated Lead", organization_unit_id: COMPANY_ROOT_ORGANIZATION_UNIT_ID },
     })
 
     expect(response.status).toBe(422)

@@ -2,11 +2,12 @@ import { expect, test } from "bun:test"
 import { ApplyOrganizationChange } from "@/contexts/company/application/organization/apply-organization-change"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const actor = CompanyActorValue.restore({
   accountId: "account:1",
   employeeId: "employee:1",
-  organizationIds: ["organization:default"],
+  organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
   capabilities: ["company:write"],
 })
 
@@ -28,7 +29,7 @@ test("ApplyOrganizationChangeは永続化経路の例外をunavailableへ閉じ�
     recordedAt: 1,
     resources: [
       {
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "organization-unit",
         id: "organization-unit-period:root",
         revision: 1,
@@ -54,7 +55,7 @@ test("限定資格は人物を変更できるが法人資源との混在は再�
   const workforceActor = CompanyActorValue.restore({
     accountId: "account:basic-editor",
     employeeId: null,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:workforce:update"],
   })
   let writeAttempts = 0
@@ -68,7 +69,7 @@ test("限定資格は人物を変更できるが法人資源との混在は再�
     },
   })
   const person = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "person" as const,
     id: "person:one",
     revision: 2,
@@ -113,7 +114,7 @@ test("限定資格は人物を変更できるが法人資源との混在は再�
     resources: [
       person,
       {
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "legal-entity" as const,
         id: "legal-entity:one",
         revision: 1,
@@ -137,7 +138,7 @@ test("限定人事資格は根拠と訂正元を持つ雇用期間の取消・�
   const workforceActor = CompanyActorValue.restore({
     accountId: "account:basic-editor",
     employeeId: null,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:workforce:update"],
   })
   let writeAttempts = 0
@@ -151,7 +152,7 @@ test("限定人事資格は根拠と訂正元を持つ雇用期間の取消・�
     },
   })
   const employment = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "employment" as const,
     id: "employment:one",
     state: "active" as const,

@@ -1,3 +1,4 @@
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 type TestAccountEmployeeLink = Readonly<{
   accountId: string
   employeeId: string
@@ -33,7 +34,9 @@ export async function publishTestAccountEmployeeLink(
     .first()
   if (publishedEmployee === null) return
   const organizationRevision = await db
-    .prepare(`SELECT revision FROM company_organizations WHERE id = 'organization:default'`)
+    .prepare(
+      `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+    )
     .first<number>("revision")
   if (organizationRevision === null || organizationRevision < 1)
     throw new Error("test Company organization is missing")
@@ -45,7 +48,7 @@ export async function publishTestAccountEmployeeLink(
         (organization_id, resource_type, resource_id, revision, organization_revision,
          state, effective_from, effective_to, attributes_json, command_id,
          actor_account_id, reason, recorded_at)
-        VALUES ('organization:default', 'account-employee-link', ?1, 1, ?2,
+        VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account-employee-link', ?1, 1, ?2,
           'active', ?3, NULL, ?4, ?5, 'system:test',
           'Initialize Company test Account correspondence', ?6)`)
       .bind(
@@ -60,13 +63,13 @@ export async function publishTestAccountEmployeeLink(
       .prepare(`INSERT INTO company_resource_heads
         (organization_id, resource_type, resource_id, revision, organization_revision,
          state, effective_from, effective_to, attributes_json, updated_at)
-        VALUES ('organization:default', 'account-employee-link', ?1, 1, ?2,
+        VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account-employee-link', ?1, 1, ?2,
           'active', ?3, NULL, ?4, ?5)`)
       .bind(resourceId, organizationRevision, input.effectiveFrom, attributes, input.recordedAt),
     db
       .prepare(`INSERT INTO company_account_employee_resource_bindings
         (resource_id, organization_id, account_id, employee_id, recorded_at)
-        VALUES (?1, 'organization:default', ?2, ?3, ?4)`)
+        VALUES (?1, '${COMPANY_DEFAULT_ORGANIZATION_ID}', ?2, ?3, ?4)`)
       .bind(resourceId, input.accountId, input.employeeId, input.recordedAt),
   ]
   const results = await db.batch(statements)

@@ -36,7 +36,7 @@ INSERT INTO company_account_employee_links (account_id, employee_id) VALUES
 
 INSERT INTO company_account_profiles
   (organization_id, account_id, display_name, created_at, updated_at)
-SELECT 'organization:default', link.account_id, employee.official_name, 0, 0
+SELECT 'ad4f6cb1-774b-43ae-950f-80e9bc67c66d', link.account_id, employee.official_name, 0, 0
 FROM company_account_employee_links link
 INNER JOIN company_employees employee ON employee.id = link.employee_id;
 

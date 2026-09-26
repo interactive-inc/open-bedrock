@@ -11,6 +11,7 @@ import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restor
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const date = z.string().refine(isCalendarDate)
 const periodRow = z.object({
@@ -48,7 +49,7 @@ export class CompanyAssignmentResourceProjectionAdapter {
     const assignments: OrgAssignmentPeriod[] = []
     const bindings: D1PreparedStatement[] = []
     for (const resource of change.resources.filter((resource) => resource.type === "assignment")) {
-      if (resource.organizationId !== "organization:default")
+      if (resource.organizationId !== COMPANY_DEFAULT_ORGANIZATION_ID)
         return new CompanyResourceValidationError("invalid_resource")
       const history = await new CompanyAssignmentResourceHistoryAdapter(this.c).read(resource)
       if (history instanceof Error) return history

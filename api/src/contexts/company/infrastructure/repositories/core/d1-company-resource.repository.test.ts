@@ -7,6 +7,7 @@ import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/r
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { readFileSync } from "node:fs"
 import { validateCompanyOrganizationChange } from "@/contexts/company/domain/policies/company-organization.policy"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const schema =
   readFileSync(
@@ -18,7 +19,7 @@ const schema =
 const effectiveFrom = restoreCalendarDate("2026-01-01")
 
 const person: CompanyResourceProps = {
-  organizationId: "organization:default",
+  organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
   type: "person",
   id: "person:1",
   revision: 1,
@@ -46,16 +47,16 @@ const assignment: CompanyResourceProps = {
   attributes: {
     employeeId: employee.id,
     employmentId: employment.id,
-    organizationUnitId: "unit:1",
+    organizationUnitId: "0190005f-0000-7000-8000-2fcb85764fe2",
     assignmentType: "PRIMARY",
   },
 }
 const organizationUnit: CompanyResourceProps = {
   ...person,
   type: "organization-unit",
-  id: "unit:1",
+  id: "0190005f-0000-7000-8000-2fcb85764fe2",
   attributes: {
-    organizationUnitId: "unit:1",
+    organizationUnitId: "0190005f-0000-7000-8000-2fcb85764fe2",
     code: "ROOT",
     officialName: "Example Organization",
     kind: "COMPANY",
@@ -102,7 +103,10 @@ test.each(["organization-reference", "employment-authority"] as const)(
             ...person,
             type: "authority-scope",
             id: "scope:unconfirmed",
-            attributes: { scopeType: "organization-unit", scopeId: "unit:unconfirmed" },
+            attributes: {
+              scopeType: "organization-unit",
+              scopeId: "0190005f-0000-7000-8000-279426d9e995",
+            },
           }
         : {
             ...person,
@@ -188,7 +192,7 @@ test.each(["organizational-office", "authority-scope"] as const)(
             attributes: {
               code: "LEAD",
               officialName: "Lead",
-              organizationUnitId: "unit:1",
+              organizationUnitId: "0190005f-0000-7000-8000-2fcb85764fe2",
               positionId: position.id,
             },
           }
@@ -196,7 +200,10 @@ test.each(["organizational-office", "authority-scope"] as const)(
             ...person,
             type,
             id: "target:scope",
-            attributes: { scopeType: "organization-unit", scopeId: "unit:1" },
+            attributes: {
+              scopeType: "organization-unit",
+              scopeId: "0190005f-0000-7000-8000-2fcb85764fe2",
+            },
           }
     const valid = command([unit, continuation, position, target])
     expect(validateCompanyOrganizationChange([], valid, [])).toBeNull()
@@ -353,7 +360,9 @@ describe("Company workforce resourceの参照整合性", () => {
   test("同じIDが別organizationにあっても参照できない", async () => {
     const { repository } = fixture()
     expect(
-      await repository.write(command([{ ...person, organizationId: "organization:other" }])),
+      await repository.write(
+        command([{ ...person, organizationId: "01900060-0000-7000-8000-12268fccf2cc" }]),
+      ),
     ).toMatchObject({ kind: "applied" })
     expect(await repository.write(command([employee]))).toMatchObject({ kind: "invalid" })
   })
@@ -363,9 +372,9 @@ describe("Company workforce resourceの参照整合性", () => {
     expect(
       await repository.write(
         command([
-          { ...person, organizationId: "organization:other" },
-          { ...employee, organizationId: "organization:other" },
-          { ...employment, organizationId: "organization:other" },
+          { ...person, organizationId: "01900060-0000-7000-8000-12268fccf2cc" },
+          { ...employee, organizationId: "01900060-0000-7000-8000-12268fccf2cc" },
+          { ...employment, organizationId: "01900060-0000-7000-8000-12268fccf2cc" },
         ]),
       ),
     ).toMatchObject({ kind: "invalid", error: { code: "invalid_resource" } })
@@ -535,9 +544,9 @@ describe("Company workforce resourceの参照整合性", () => {
       const unit: CompanyResourceProps = {
         ...person,
         type: "organization-unit",
-        id: "unit:1",
+        id: "0190005f-0000-7000-8000-2fcb85764fe2",
         attributes: {
-          organizationUnitId: "unit:1",
+          organizationUnitId: "0190005f-0000-7000-8000-2fcb85764fe2",
           code: "ROOT",
           officialName: "Example Organization",
           kind: "COMPANY",
@@ -590,7 +599,7 @@ describe("Company workforce resourceの参照整合性", () => {
                 employeeId: otherEmployee.id,
                 employmentId: employment.id,
                 scopeType: "organization-unit",
-                scopeId: "unit:1",
+                scopeId: "0190005f-0000-7000-8000-2fcb85764fe2",
                 authority: "approve",
               }
       expect(
@@ -621,7 +630,7 @@ describe("Company workforce resourceの参照整合性", () => {
       attributes: {
         employeeId: employee.id,
         managerEmployeeId: manager.id,
-        organizationUnitId: "unit:1",
+        organizationUnitId: "0190005f-0000-7000-8000-2fcb85764fe2",
       },
     }
     const managerEmployment = {

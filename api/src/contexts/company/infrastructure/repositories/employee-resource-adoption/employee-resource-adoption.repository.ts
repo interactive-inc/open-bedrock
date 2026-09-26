@@ -14,6 +14,7 @@ import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 import { drizzle } from "drizzle-orm/d1"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Context = Readonly<{ env: Readonly<{ DB: D1Database; COMPANY_TIME_ZONE?: string }> }>
 export type EmployeeResourceAdoptionResult = Readonly<{
@@ -125,7 +126,7 @@ export class EmployeeResourceAdoptionRepository {
       new EmployeeResourceAdoptionSnapshotAdapter(this.c.env.DB).prepareGuard(snapshot),
       this.c.env.DB.prepare(`INSERT INTO company_command_receipts
         (organization_id, command_id, fingerprint, expected_revision, organization_revision, recorded_at)
-        VALUES ('organization:default', ?1, ?2, ?3, ?4, ?5)`).bind(
+        VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', ?1, ?2, ?3, ?4, ?5)`).bind(
         `employee-connection:${fingerprint}`,
         fingerprint,
         command.props.expectedRevision,
@@ -134,7 +135,7 @@ export class EmployeeResourceAdoptionRepository {
       ),
       ...this.prepareBindings(command, snapshot),
       this.c.env.DB.prepare(`UPDATE company_organizations SET revision = ?1, updated_at = ?2
-        WHERE id = 'organization:default' AND revision = ?3`).bind(
+        WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND revision = ?3`).bind(
         organizationRevision,
         command.props.recordedAt,
         command.props.expectedRevision,
@@ -163,7 +164,7 @@ export class EmployeeResourceAdoptionRepository {
       .map((resource) =>
         this.c.env.DB.prepare(`INSERT INTO company_workforce_resource_bindings
       (resource_type, resource_id, organization_id, employee_id, resource_revision, lifecycle_revision, last_action_id)
-      VALUES (?1, ?2, 'organization:default', ?3, ?4, ?5, NULL)`).bind(
+      VALUES (?1, ?2, '${COMPANY_DEFAULT_ORGANIZATION_ID}', ?3, ?4, ?5, NULL)`).bind(
           resource.type,
           resource.id,
           command.props.employeeId,
@@ -225,7 +226,7 @@ export class EmployeeResourceAdoptionRepository {
       (await this.c.env.DB.prepare(`SELECT 1 AS present FROM company_resource_heads AS head
       JOIN json_each(?1) AS requested ON head.resource_type = json_extract(requested.value, '$.type')
         AND head.resource_id = json_extract(requested.value, '$.id')
-      WHERE head.organization_id = 'organization:default' LIMIT 1`)
+      WHERE head.organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' LIMIT 1`)
         .bind(JSON.stringify(keys))
         .first()) !== null
     )

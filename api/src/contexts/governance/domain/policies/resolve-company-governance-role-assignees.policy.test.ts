@@ -2,6 +2,7 @@ import { CompanyResourceEntity } from "@/contexts/company/domain/entities/compan
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { describe, expect, test } from "bun:test"
 import { resolveCompanyGovernanceRoleAssignees } from "@/contexts/governance/domain/policies/resolve-company-governance-role-assignees.policy"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 function resource(
   type: "responsibility" | "authority-scope" | "responsibility-assignment",
@@ -9,7 +10,7 @@ function resource(
   attributes: Record<string, string | boolean | null>,
 ) {
   const restored = CompanyResourceEntity.create({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type,
     id,
     revision: 1,
@@ -28,7 +29,7 @@ const responsibility = resource("responsibility", "responsibility:ciso", {
 })
 const scope = resource("authority-scope", "scope:security", {
   scopeType: "organization-unit",
-  scopeId: "department:security",
+  scopeId: "0190005f-0000-7000-8000-9ce54195b83b",
 })
 
 describe("Company governance role assignees", () => {
@@ -57,7 +58,7 @@ describe("Company governance role assignees", () => {
         { id: "employee:2", code: "E002", name: "Second" },
         { id: "employee:1", code: "E001", name: "First" },
       ],
-      departments: [{ id: "department:security", code: "SECURITY" }],
+      departments: [{ id: "0190005f-0000-7000-8000-9ce54195b83b", code: "SECURITY" }],
     })
 
     expect(result).toEqual([

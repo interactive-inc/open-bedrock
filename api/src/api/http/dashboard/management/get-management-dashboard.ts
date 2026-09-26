@@ -12,6 +12,7 @@ import type { ApplicationError } from "@/lib/errors"
 import { toManagementDashboardRanges } from "@/api/http/dashboard/management/to-management-dashboard-ranges"
 import type { AppManagementDashboard } from "@/api/http/company/response-schemas"
 import { countPendingSystemCases } from "@system/interface/operations/count-pending-system-cases"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 /**
  * 経営ダッシュボードの横断集計。予測・計算は持たず、在籍・入退社・申請の件数と、業務contextごとの
@@ -54,7 +55,7 @@ export class GetManagementDashboard {
         })
       }
       const movements = await readCompanyEmploymentMovements(this.c, {
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         organizationRevision: companySnapshot.companyRevision,
         from: employmentRanges.since,
         through: businessDate,

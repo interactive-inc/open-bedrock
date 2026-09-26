@@ -1,4 +1,5 @@
 "use client"
+import { companyOrganizationId } from "@/lib/api/company-organization-id"
 
 import { WorkflowStepEditor } from "@/app/(app)/system/application-templates/[template]/workflow/_components/workflow-step-editor"
 import { useActionState, useState } from "react"
@@ -138,7 +139,7 @@ export function WorkflowEditor(props: {
                   name: "会社の責務による承認",
                   approvers: [],
                   governance_authority: {
-                    organization_id: "organization:default",
+                    organization_id: companyOrganizationId,
                     responsibility_code: "",
                     scope: null,
                   },

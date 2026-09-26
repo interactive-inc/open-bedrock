@@ -7,7 +7,7 @@ exports[`公開 resource を正本とする初回雇用が書く行を固定す�
       "corrects_action_id": null,
       "employee_id": "employee:one",
       "event_on": "2026-09-01",
-      "id": "initial-employment:03f860b1d051c2dc4aad3c8574520e3fde36b0e56bbe445dfa836ebd028fdf02",
+      "id": "ae19fb77-4847-8a79-84e8-54d2db00f26d",
       "kind": "initial_state",
       "operation_id": "initial:one",
       "payload_fingerprint": "03f860b1d051c2dc4aad3c8574520e3fde36b0e56bbe445dfa836ebd028fdf02",
@@ -21,14 +21,14 @@ exports[`公開 resource を正本とする初回雇用が書く行を固定す�
   ],
   "bindings": [
     {
-      "last_action_id": "initial-employment:03f860b1d051c2dc4aad3c8574520e3fde36b0e56bbe445dfa836ebd028fdf02",
+      "last_action_id": "ae19fb77-4847-8a79-84e8-54d2db00f26d",
       "lifecycle_revision": 0,
       "resource_id": "employee:one",
       "resource_revision": 1,
       "resource_type": "employee",
     },
     {
-      "last_action_id": "initial-employment:03f860b1d051c2dc4aad3c8574520e3fde36b0e56bbe445dfa836ebd028fdf02",
+      "last_action_id": "ae19fb77-4847-8a79-84e8-54d2db00f26d",
       "lifecycle_revision": 0,
       "resource_id": "employment:one",
       "resource_revision": 1,
@@ -71,7 +71,7 @@ exports[`公開 resource を正本とする初回雇用が書く行を固定す�
       "ends_on": null,
       "is_void": 0,
       "period_id": "employment:one",
-      "recorded_by_action_id": "initial-employment:03f860b1d051c2dc4aad3c8574520e3fde36b0e56bbe445dfa836ebd028fdf02",
+      "recorded_by_action_id": "ae19fb77-4847-8a79-84e8-54d2db00f26d",
       "revision": 1,
       "starts_on": "2026-09-01",
     },
@@ -106,7 +106,7 @@ exports[`公開 resource を正本とする初回雇用が書く行を固定す�
     {
       "ends_on": null,
       "is_void": 0,
-      "recorded_by_action_id": "initial-employment:03f860b1d051c2dc4aad3c8574520e3fde36b0e56bbe445dfa836ebd028fdf02",
+      "recorded_by_action_id": "ae19fb77-4847-8a79-84e8-54d2db00f26d",
       "revision": 1,
       "starts_on": "2026-09-01",
       "status": "leave",

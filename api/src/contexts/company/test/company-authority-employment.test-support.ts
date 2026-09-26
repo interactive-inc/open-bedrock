@@ -3,6 +3,7 @@ import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/t
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 export async function createCompanyAuthorityEmploymentTestContext(
   type: "office-assignment" | "organizational-authority",
@@ -10,7 +11,7 @@ export async function createCompanyAuthorityEmploymentTestContext(
   const f = await createCompanyAssignmentResourceTestContext()
   const assignment = await f.initializeAssignment()
   const common = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     revision: 1,
     state: "active" as const,
     effectiveFrom: restoreCalendarDate("2030-03-01"),
@@ -40,7 +41,7 @@ export async function createCompanyAuthorityEmploymentTestContext(
         attributes: {
           code: "TEAM_LEAD",
           officialName: "Team Lead",
-          organizationUnitId: "unit:journal",
+          organizationUnitId: "0190005f-0000-7000-8000-3e026079e0b5",
           positionId: "position:authority-test",
         },
       },
@@ -58,7 +59,7 @@ export async function createCompanyAuthorityEmploymentTestContext(
             attributes: {
               ...attributes,
               scopeType: "organization-unit",
-              scopeId: "unit:journal",
+              scopeId: "0190005f-0000-7000-8000-3e026079e0b5",
               authority: "WORK_REVIEW",
             },
           },

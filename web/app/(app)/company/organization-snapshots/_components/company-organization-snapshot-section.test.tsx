@@ -21,7 +21,7 @@ function toResource(props: {
   attributes: Readonly<Record<string, unknown>>
 }): CompanyResource {
   return {
-    organizationId: "organization:default",
+    organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
     type: props.type,
     id: props.id,
     revision: 1,
@@ -35,7 +35,7 @@ function toResource(props: {
 describe("CompanyOrganizationSnapshotSection", () => {
   test("最上位の組織単位は親を持たないことを言葉で示す", async () => {
     mocks.getCompanyOrganizationSnapshot.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 9,
       resources: [
         toResource({
@@ -61,7 +61,7 @@ describe("CompanyOrganizationSnapshotSection", () => {
 
   test("組織単位のコードは部署ハブへ辿れる", async () => {
     mocks.getCompanyOrganizationSnapshot.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 9,
       resources: [
         toResource({
@@ -85,7 +85,7 @@ describe("CompanyOrganizationSnapshotSection", () => {
 
   test("コードを持たない組織単位はリンクにしない", async () => {
     mocks.getCompanyOrganizationSnapshot.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 9,
       resources: [
         toResource({
@@ -103,7 +103,7 @@ describe("CompanyOrganizationSnapshotSection", () => {
 
   test("再委任の可否を日本語にする", async () => {
     mocks.getCompanyOrganizationSnapshot.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 9,
       resources: [
         toResource({
@@ -127,7 +127,7 @@ describe("CompanyOrganizationSnapshotSection", () => {
 
   test("基準日をそのまま api へ渡す", async () => {
     mocks.getCompanyOrganizationSnapshot.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 9,
       resources: [],
     })
@@ -141,7 +141,7 @@ describe("CompanyOrganizationSnapshotSection", () => {
 
   test("その時点の登録が無いときは 4 つすべての表で空を示す", async () => {
     mocks.getCompanyOrganizationSnapshot.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 0,
       resources: [],
     })

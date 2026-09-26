@@ -1,6 +1,7 @@
 import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import type { EmploymentType } from "@/contexts/company/domain/definitions/employment-type.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 /** 新しい従業員と最初の雇用の宣言。 */
 type InitialWorkforceDeclaration = Readonly<{
@@ -20,7 +21,7 @@ type InitialWorkforceDeclaration = Readonly<{
 export function initialWorkforceResources(
   input: InitialWorkforceDeclaration,
 ): ReadonlyArray<CompanyResourceProps> {
-  const organizationId = "organization:default"
+  const organizationId = COMPANY_DEFAULT_ORGANIZATION_ID
   const personId = `person:${input.employeeId}`
   const base = {
     organizationId,

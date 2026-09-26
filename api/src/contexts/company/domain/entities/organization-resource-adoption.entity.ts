@@ -4,6 +4,10 @@ import type { CompanyResourceProps } from "@/contexts/company/domain/entities/co
 import { CompanyConflictError, CompanyValidationError } from "@/contexts/company/domain/errors"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import type { OrganizationResourceAdoptionSnapshotValue } from "@/contexts/company/domain/values/organization-resource-adoption-snapshot.value"
+import {
+  COMPANY_DEFAULT_ORGANIZATION_ID,
+  COMPANY_ROOT_ORGANIZATION_UNIT_ID,
+} from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const schema = z
   .object({
@@ -92,7 +96,7 @@ export class OrganizationResourceAdoptionEntity {
           )
         if (
           source.periods.length !== 1 ||
-          source.organizationUnit.id !== "company:root" ||
+          source.organizationUnit.id !== COMPANY_ROOT_ORGANIZATION_UNIT_ID ||
           source.organizationUnit.createdAt !== 0 ||
           period.organizationUnitId !== source.organizationUnit.id ||
           period.periodId !== "company:root:initial" ||
@@ -109,7 +113,7 @@ export class OrganizationResourceAdoptionEntity {
             "invalid_organization_adoption",
           )
         const resource: CompanyResourceProps = {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "organization-unit",
           id: period.periodId,
           revision: 1,
@@ -170,7 +174,7 @@ export class OrganizationResourceAdoptionEntity {
         reason: this.props.reason,
         resources: [
           {
-            organizationId: "organization:default",
+            organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
             type: "organization-unit",
             id: period.periodId,
             revision: period.revision,

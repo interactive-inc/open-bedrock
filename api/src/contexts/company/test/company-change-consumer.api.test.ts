@@ -17,6 +17,7 @@ import { GET as employments } from "@/contexts/company/interface/routes/company.
 import { GET as profile } from "@/contexts/company/interface/routes/company.profile"
 import { GET as organizationSnapshots } from "@/contexts/company/interface/routes/company.organization-snapshots"
 import { GET as definitions } from "@/contexts/company/interface/routes/company.definitions"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const resourceSchema = z.object({
   id: z.string(),
@@ -83,7 +84,7 @@ function fixture() {
       CompanyActorValue.restore({
         accountId: "account:reader",
         employeeId: null,
-        organizationIds: ["organization:default"],
+        organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
         capabilities: ["company:read"],
         permissions: ["employee:read", "employee:attributes:read"],
       }),
@@ -118,7 +119,7 @@ function fixture() {
       const response = await app.request(
         path,
         {
-          headers: { "x-company-organization-id": "organization:default" },
+          headers: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID },
         },
         { DB: database, COMPANY_TIME_ZONE: "UTC" },
       )
@@ -130,7 +131,7 @@ function fixture() {
 
 function resources(revision: number): CompanyResourceProps[] {
   const base = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     revision,
     effectiveFrom: restoreCalendarDate("2030-01-01"),
     effectiveTo: null,
@@ -176,7 +177,7 @@ function resources(revision: number): CompanyResourceProps[] {
       type: "organization-unit",
       id: "period:root",
       attributes: {
-        organizationUnitId: "unit:root",
+        organizationUnitId: "0190005f-0000-7000-8000-3d39a82ae356",
         code: "ROOT",
         officialName: "Root",
         kind: "COMPANY",
@@ -192,7 +193,7 @@ function resources(revision: number): CompanyResourceProps[] {
       attributes: {
         employeeId: "employee:test",
         employmentId: "employment:test",
-        organizationUnitId: "unit:root",
+        organizationUnitId: "0190005f-0000-7000-8000-3d39a82ae356",
         assignmentType: "PRIMARY",
         positionTitle: revision === 1 ? "Member" : "Coordinator",
       },

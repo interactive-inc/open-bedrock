@@ -21,7 +21,7 @@ function toResource(props: {
   attributes: Readonly<Record<string, unknown>>
 }): CompanyResource {
   return {
-    organizationId: "organization:default",
+    organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
     type: props.type,
     id: props.id,
     revision: 1,
@@ -35,7 +35,7 @@ function toResource(props: {
 describe("CompanyDefinitionSection", () => {
   test("職務・役職・責任・権限範囲・合議体を種別ごとに分けて出す", async () => {
     mocks.getCompanyDefinitionResources.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 7,
       resources: [
         toResource({ type: "job", id: "job:1", attributes: { code: "J01", officialName: "開発" } }),
@@ -79,7 +79,7 @@ describe("CompanyDefinitionSection", () => {
 
   test("等級と役職マスタは別の画面が正本なのでここには出さない", async () => {
     mocks.getCompanyDefinitionResources.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 7,
       resources: [
         toResource({
@@ -103,7 +103,7 @@ describe("CompanyDefinitionSection", () => {
 
   test("空のときは 5 つすべての表で登録がないことを示す", async () => {
     mocks.getCompanyDefinitionResources.mockResolvedValue({
-      organizationId: "organization:default",
+      organizationId: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       organizationRevision: 0,
       resources: [],
     })

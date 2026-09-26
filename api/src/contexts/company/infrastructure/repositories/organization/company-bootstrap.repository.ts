@@ -12,6 +12,8 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 type Context = Readonly<{
   env: Readonly<{ DB: D1Database; COMPANY_TIME_ZONE?: string }>
   /** 合成元が解決したSystem資格などの条件を、Companyの保存と同じtransactionで照合する。 */
@@ -75,7 +77,7 @@ export class CompanyBootstrapRepository {
     if (snapshot instanceof Error) return this.unavailable(snapshot)
     if (snapshot === null) return this.conflict()
     const employeeId = crypto.randomUUID()
-    const employmentId = `employment:${crypto.randomUUID()}`
+    const employmentId = crypto.randomUUID()
     const assignmentPeriodId = `bootstrap-assignment:${employeeId}`
     const companyResources = await new InitialCompanyResourceJournalAdapter(this.c.env.DB).prepare(
       command,
@@ -84,8 +86,8 @@ export class CompanyBootstrapRepository {
       { employeeId, employmentId, assignmentPeriodId },
     )
     if (companyResources instanceof Error) return companyResources
-    const actionId = `bootstrap:employee:${employeeId}`
-    const organizationActionId = `bootstrap:organization:${employeeId}`
+    const actionId = deterministicCompanyId("bootstrap-employee", employeeId)
+    const organizationActionId = deterministicCompanyId("bootstrap-organization", employeeId)
     const recordedAt = write.recordedAt
     const actionRecordedAt = Math.floor(recordedAt / 1_000)
     const summary = CanonicalSystemJsonValue.create({
@@ -132,7 +134,7 @@ export class CompanyBootstrapRepository {
       snapshots.prepareGuard(snapshot),
       this.c.env.DB.prepare(`SELECT CASE WHEN
         NOT EXISTS (SELECT 1 FROM company_employees) AND
-        EXISTS (SELECT 1 FROM company_organizations WHERE id = 'organization:default' AND revision = 0 AND name IN ('', ?1) AND representative_name IN ('', ?2)) AND
+        EXISTS (SELECT 1 FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND revision = 0 AND name IN ('', ?1) AND representative_name IN ('', ?2)) AND
         (SELECT count(*) FROM company_organization_units) = 1 AND
         (SELECT count(*) FROM company_organization_unit_period_versions) = 1 AND
         NOT EXISTS (SELECT 1 FROM company_organization_assignment_period_versions) AND
@@ -150,7 +152,7 @@ export class CompanyBootstrapRepository {
       this.c.env.DB.prepare(
         `INSERT INTO company_account_profiles
              (organization_id, account_id, display_name, created_at, updated_at)
-           VALUES ('organization:default', ?1, ?2, ?3, ?3)`,
+           VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', ?1, ?2, ?3, ?3)`,
       ).bind(write.accountId, write.employeeName, recordedAt),
       this.c.env.DB.prepare(
         `INSERT INTO company_personnel_actions
@@ -252,7 +254,7 @@ export class CompanyBootstrapRepository {
       ).bind(organizationActionId),
       this.c.env.DB.prepare(`INSERT INTO company_bootstrap_receipts
         (command_id, organization_id, actor_account_id, fingerprint, employee_id, organization_revision, declaration_json, source_json, recorded_at)
-        VALUES (?1, 'organization:default', ?2, ?3, ?4, 3, ?5, ?6, ?7)`).bind(
+        VALUES (?1, '${COMPANY_DEFAULT_ORGANIZATION_ID}', ?2, ?3, ?4, 3, ?5, ?6, ?7)`).bind(
         write.commandId,
         write.accountId,
         fingerprint,
@@ -271,7 +273,7 @@ export class CompanyBootstrapRepository {
   private async hasCompanyState(command: CompanyBootstrapEntity): Promise<boolean> {
     return (
       (await this.c.env.DB.prepare(`SELECT 1 FROM company_employees
-      UNION ALL SELECT 1 FROM company_organizations WHERE id = 'organization:default' AND (revision > 0 OR name NOT IN ('', ?1) OR representative_name NOT IN ('', ?2))
+      UNION ALL SELECT 1 FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND (revision > 0 OR name NOT IN ('', ?1) OR representative_name NOT IN ('', ?2))
       UNION ALL SELECT 1 WHERE (SELECT count(*) FROM company_organization_units) <> 1
         OR (SELECT count(*) FROM company_organization_unit_period_versions) <> 1
         OR EXISTS (SELECT 1 FROM company_organization_assignment_period_versions)

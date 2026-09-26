@@ -19,6 +19,7 @@ import { CompanyResourceJournalAdapter } from "@/contexts/company/infrastructure
 import { governanceOrgRoles } from "@/contexts/governance/domain/catalogs/governance-org-role.catalog"
 import { drizzle } from "drizzle-orm/d1"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 let pool: LocalD1Pool
 
@@ -62,11 +63,13 @@ async function createTestDb(): Promise<D1Database> {
 
   const expectedRevision =
     (await db
-      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+      .prepare(
+        `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+      )
       .first<number>("revision")) ?? 0
   const resources: CompanyResourceProps[] = governanceOrgRoles.map<CompanyResourceProps>(
     (role) => ({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "responsibility" as const,
       id: `governance:responsibility:${role.code}`,
       revision: 1,
@@ -143,7 +146,9 @@ async function request(props: {
       : props.method === "DELETE" && props.path.includes("/governance-org-roles/assignments/")
   const revision = roleMutation
     ? await props.db
-        .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+        .prepare(
+          `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+        )
         .first<number>("revision")
     : null
   return requestWithContext({

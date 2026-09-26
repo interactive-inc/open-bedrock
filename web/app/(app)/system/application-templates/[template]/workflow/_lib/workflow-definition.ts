@@ -1,5 +1,6 @@
 import { z } from "zod"
 import type { ApplicationWorkflow } from "@/lib/api/types/application-workflow-types"
+import { companyOrganizationId } from "@/lib/api/company-organization-id"
 
 /**
  * API の正規スキーマは api/src/contexts/company/domain/definitions/company-procedure-workflow.definition.ts。
@@ -32,7 +33,7 @@ const workflowApproverSelectorSchema = z.discriminatedUnion("type", [
 ])
 
 const governanceAuthoritySchema = z.strictObject({
-  organization_id: z.literal("organization:default"),
+  organization_id: z.literal(companyOrganizationId),
   responsibility_code: z.string().trim().min(1).max(255),
   scope: z
     .discriminatedUnion("scope_type", [

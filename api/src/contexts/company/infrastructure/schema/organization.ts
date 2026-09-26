@@ -69,12 +69,11 @@ export const organizationUnits = sqliteTable(
   "company_organization_units",
   {
     id: text("id").primaryKey(),
+    /** UUID へ移す前の組織単位 ID。移行前の記録を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   },
-  (table) => [
-    check("company_organization_units_id_length", sql`length(${table.id}) BETWEEN 1 AND 128`),
-    check("company_organization_units_created_at", sql`${table.createdAt} >= 0`),
-  ],
+  (table) => [check("company_organization_units_created_at", sql`${table.createdAt} >= 0`)],
 )
 
 export type OrganizationUnitRow = InferSelectModel<typeof organizationUnits>

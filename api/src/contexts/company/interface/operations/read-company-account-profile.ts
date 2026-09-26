@@ -3,6 +3,7 @@ import { companyAccountProfiles } from "@/contexts/company/infrastructure/schema
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { and, eq, sql } from "drizzle-orm"
 import type { DrizzleD1Database } from "drizzle-orm/d1"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 export type CompanyAccountProfile = Readonly<{
   /** 会社の正本から解決した表示名。projection を渡さないとき、または解決できなければ null。 */
@@ -35,7 +36,7 @@ export async function readCompanyAccountProfile(
     .from(companyAccountProfiles)
     .where(
       and(
-        eq(companyAccountProfiles.organizationId, "organization:default"),
+        eq(companyAccountProfiles.organizationId, COMPANY_DEFAULT_ORGANIZATION_ID),
         eq(companyAccountProfiles.accountId, input.accountId),
       ),
     )

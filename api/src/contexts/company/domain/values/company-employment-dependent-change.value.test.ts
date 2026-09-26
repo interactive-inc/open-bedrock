@@ -4,6 +4,7 @@ import { CompanyResourceEntity } from "@/contexts/company/domain/entities/compan
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import type { LifecycleSchedule } from "@/contexts/company/domain/definitions/lifecycle-schedule.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const employeeId = restoreWorkforceId("employee", "employee:one")
 const employmentId = restoreWorkforceId("employment", "employment:one")
@@ -29,7 +30,10 @@ function schedule(
         endsOn: assignmentEndsOn,
         employeeId,
         employmentPeriodId: employmentId,
-        organizationUnitId: restoreWorkforceId("organization_unit", "unit:one"),
+        organizationUnitId: restoreWorkforceId(
+          "organization_unit",
+          "0190005f-0000-7000-8000-c9ae95875c9c",
+        ),
         departmentCode: "TEAM",
         assignmentType: "primary",
         positionTitle: null,
@@ -48,7 +52,7 @@ function version(
   type: "office-assignment" | "organizational-authority" = "office-assignment",
 ) {
   const resource = CompanyResourceEntity.create({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type,
     id: "appointment:one",
     revision,
@@ -62,7 +66,7 @@ function version(
             employeeId: holder,
             employmentId,
             scopeType: "organization-unit",
-            scopeId: "unit:one",
+            scopeId: "0190005f-0000-7000-8000-c9ae95875c9c",
             authority: "APPROVE",
           },
   })

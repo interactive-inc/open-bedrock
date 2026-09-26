@@ -5,6 +5,7 @@ import { prepareCompanyOrganizationRevisionGuard } from "@/contexts/company/inte
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { eq } from "drizzle-orm"
 import { drizzle } from "drizzle-orm/d1"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test("Company 版の競合と組織不在で他 context の batch 書込を戻す", async () => {
   const database = createCompanyD1TestDatabase(
@@ -18,14 +19,17 @@ test("Company 版の競合と組織不在で他 context の batch 書込を戻�
   await database
     .prepare(`INSERT INTO company_organizations
       (id, revision, name, representative_name, created_at, updated_at)
-      VALUES ('organization:default', 1, 'Before', '', 1, 1)`)
+      VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 1, 'Before', '', 1, 1)`)
     .run()
   const orm = drizzle(database)
   const write = orm
     .update(companyOrganizations)
     .set({ name: "After" })
-    .where(eq(companyOrganizations.id, "organization:default"))
-  const guard = (expectedRevision: number, organizationId = "organization:default") => {
+    .where(eq(companyOrganizations.id, COMPANY_DEFAULT_ORGANIZATION_ID))
+  const guard = (
+    expectedRevision: number,
+    organizationId: string = COMPANY_DEFAULT_ORGANIZATION_ID,
+  ) => {
     const statement = prepareCompanyOrganizationRevisionGuard({
       database,
       organizationId,
@@ -36,15 +40,17 @@ test("Company 版の競合と組織不在で他 context の batch 書込を戻�
   }
   const name = () =>
     database
-      .prepare("SELECT name FROM company_organizations WHERE id = 'organization:default'")
+      .prepare(
+        `SELECT name FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+      )
       .first<string>("name")
 
   await expect(orm.batch([guard(0), write])).rejects.toThrow("company_revision_conflict")
   expect(await name()).toBe("Before")
 
-  await expect(orm.batch([guard(1, "organization:missing"), write])).rejects.toThrow(
-    "company_revision_conflict",
-  )
+  await expect(
+    orm.batch([guard(1, "01900060-0000-7000-8000-9f96a06e569f"), write]),
+  ).rejects.toThrow("company_revision_conflict")
   expect(await name()).toBe("Before")
 
   await orm.batch([guard(1), write])

@@ -11,6 +11,7 @@ import { GET as DEFINITIONS_GET } from "@/contexts/company/interface/routes/comp
 import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const schema =
   readFileSync(
@@ -19,7 +20,7 @@ const schema =
   ) +
   "\n" +
   readFileSync(new URL("../infrastructure/schema/company.sql", import.meta.url), "utf8")
-const organizationId = "organization:default"
+const organizationId: string = COMPANY_DEFAULT_ORGANIZATION_ID
 const day = restoreCalendarDate("2026-01-01")
 
 /** HTTP の100件契約を実DBと同じパラメータ上限で検査する。 */
@@ -127,7 +128,7 @@ test.each(["person", "grade"] as const)(
     expect(Math.max(...f.bindCounts)).toBeLessThanOrEqual(7)
     expect((await f.request([...ids, `${type}:excluded`], day)).status).toBe(400)
     expect((await f.request([...ids.slice(1), ids[1]], day)).status).toBe(400)
-    expect((await f.request(ids, day, "organization:other")).status).toBe(403)
+    expect((await f.request(ids, day, "01900060-0000-7000-8000-12268fccf2cc")).status).toBe(403)
   },
 )
 
@@ -155,5 +156,5 @@ test("公開定義APIで会社版を固定し、未知の版と不正な版を�
   for (const revision of ["", "-1", "0.5", "3", "NaN", "1e0", "9007199254740992"]) {
     expect((await f.request(ids, day, organizationId, revision)).status).toBe(400)
   }
-  expect((await f.request(ids, day, "organization:other", "1")).status).toBe(403)
+  expect((await f.request(ids, day, "01900060-0000-7000-8000-12268fccf2cc", "1")).status).toBe(403)
 })

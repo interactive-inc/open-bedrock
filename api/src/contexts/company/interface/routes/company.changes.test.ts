@@ -16,6 +16,7 @@ import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { CompanyChangeFeedRepository } from "@/contexts/company/infrastructure/repositories/core/company-change-feed.repository"
 import { createCompanyPlaceTestContext } from "@/contexts/company/test/company-place.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const pageSchema = z.object({
   data: z.array(
@@ -169,7 +170,7 @@ test("原資料参照は正式revisionに残り、変更取得と再送判定に
   expect(await repository.write(correction)).toMatchObject({ kind: "applied", replayed: false })
   expect(await repository.write(correction)).toMatchObject({ kind: "applied", replayed: true })
   const page = await new CompanyChangeFeedRepository(f.database).list({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     afterRevision: 0,
     afterType: null,
     afterId: null,
@@ -311,7 +312,7 @@ test("実際の人事発令と公開履歴の全改訂を再構築し、旧台�
   if (retired instanceof Error) throw retired
   const actor = CompanyActorValue.restore({
     ...f.creator,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:read"],
     permissions: ["employee:read", "employee:attributes:read"],
   })
@@ -326,7 +327,7 @@ test("実際の人事発令と公開履歴の全改訂を再構築し、旧台�
   for (const iteration of Array.from({ length: 100 }, (_, index) => index)) {
     const response = await app.request(
       `/changes?${query.toString()}`,
-      { headers: { "x-company-organization-id": "organization:default" } },
+      { headers: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID } },
       f.context.env,
     )
     expect(response.status).toBe(200)
@@ -364,7 +365,7 @@ test("実際の人事発令と公開履歴の全改訂を再構築し、旧台�
   }
   const expected = await f.database
     .prepare(
-      "SELECT organization_revision, resource_type, resource_id, revision FROM company_resource_revisions WHERE organization_id = 'organization:default' ORDER BY organization_revision, resource_type, resource_id, revision",
+      `SELECT organization_revision, resource_type, resource_id, revision FROM company_resource_revisions WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' ORDER BY organization_revision, resource_type, resource_id, revision`,
     )
     .all<{
       organization_revision: number
@@ -387,7 +388,7 @@ test("独立consumerは変更feedで発見したIDだけから同じ会社版の
   const pinnedRevision = await f.companyRevision()
   const actor = CompanyActorValue.restore({
     ...f.creator,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:read"],
     permissions: ["employee:read", "employee:attributes:read"],
   })
@@ -401,7 +402,7 @@ test("独立consumerは変更feedで発見したIDだけから同じ会社版の
     .get("/employees", ...employeesGET)
     .get("/employments", ...employmentsGET)
     .get("/organization-snapshots", ...organizationSnapshotsGET)
-  const headers = { "x-company-organization-id": "organization:default" }
+  const headers = { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID }
   const env = f.context.env
   const fetchPage = async (query: URLSearchParams) => {
     const response = await app.request(`/changes?${query.toString()}`, { headers }, env)

@@ -3,6 +3,7 @@ import { EmployeeResourceAdoptionBatchEntity } from "@/contexts/company/domain/e
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CompanyValidationError } from "@/contexts/company/domain/errors"
 import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const input = {
   commandId: "confirmed-batch",
@@ -47,7 +48,7 @@ test("HTTPを通らない呼出しでも重複・不正な確認値・版のover
 test("確認した訂正内容と終了日の補正値を呼出元の変更から保護する", () => {
   const attributes = { officialName: "Confirmed Person" }
   const correction: CompanyResourceProps = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "person",
     id: "person:first",
     revision: 2,

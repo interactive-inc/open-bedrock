@@ -20,6 +20,7 @@ import type { CompanyHttpEnvironment } from "@/contexts/company/interface/reques
 import { zValidator } from "@hono/zod-validator"
 import { createFactory } from "hono/factory"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const factory = createFactory<CompanyHttpEnvironment>()
 const paramSchema = z.object({ code: z.string().trim().min(1).max(64) })
@@ -33,7 +34,7 @@ export const GET = factory.createHandlers(
     const actor = context.var.companyActor
     if (actor === undefined) throw new CompanyAuthenticationRequiredError()
     if (
-      !actor.canAccessOrganization("organization:default") ||
+      !actor.canAccessOrganization(COMPANY_DEFAULT_ORGANIZATION_ID) ||
       !actor.hasPermission("employee:read")
     )
       throw new CompanyReadForbiddenError()

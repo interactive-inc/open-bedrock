@@ -11,6 +11,7 @@ import { readSystemAccountSnapshot } from "@system/interface/iam/read-system-acc
 import { findSystemIdentityLogin } from "@system/interface/operations/find-system-identity-login"
 import { findSystemIdentityByEmail } from "@system/interface/operations/find-system-identity-by-email"
 import { openSystemIdentityCatalog } from "@system/interface/operations/open-system-identity-catalog"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 export type ProviderIdentity = {
   identityId: IdentityId
@@ -62,7 +63,7 @@ export class IdentityAdapter {
       const employee = employees[0]?.employee
       const displayNames = await readCompanyAccountDisplayNames({
         database: this.c.env.DB,
-        organizationIds: ["organization:default"],
+        organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
         accountIds: [login.account.id],
         now,
         timeZone: this.c.env.COMPANY_TIME_ZONE,

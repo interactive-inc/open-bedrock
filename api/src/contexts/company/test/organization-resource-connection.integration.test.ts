@@ -10,6 +10,7 @@ import { CompanyActorValue } from "@/contexts/company/domain/values/company-acto
 import { OrganizationResourceAdoptionSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/organization/organization-resource-adoption-snapshot.adapter"
 import { CompanyOrganizationResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-organization-resource-projection.adapter"
 import { CompanyOrganizationResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-organization-resource-journal.adapter"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const resourceSchema = z.object({
   organizationId: z.string(),
@@ -128,7 +129,7 @@ async function createOrganizationFixture(
     )
   const snapshot = async (asOf = "2026-09-07") => {
     const response = await reads["organization-snapshots"].$get({
-      header: { "x-company-organization-id": "organization:default" },
+      header: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID },
       query: { as_of: asOf },
     })
     expect(Number(response.status)).toBe(200)
@@ -137,7 +138,7 @@ async function createOrganizationFixture(
   const change = (resources: Resource[], revision: number, key: string) =>
     writes["organization-changes"].$post({
       header: {
-        "x-company-organization-id": "organization:default",
+        "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID,
         "if-match": String(revision),
         "idempotency-key": key,
       },
@@ -153,7 +154,7 @@ async function createOrganizationFixture(
     ).results
   const state = async () =>
     await base.database
-      .prepare(`SELECT (SELECT revision FROM company_organizations WHERE id = 'organization:default') AS companyRevision,
+      .prepare(`SELECT (SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}') AS companyRevision,
     (SELECT revision FROM company_organization_lifecycle_states WHERE id = 1) AS lifecycleRevision,
     (SELECT count(*) FROM company_command_receipts) AS receipts, (SELECT count(*) FROM company_resource_revisions) AS resources,
     (SELECT count(*) FROM company_organization_change_operations) AS operations, (SELECT count(*) FROM company_organization_resource_bindings) AS bindings,
@@ -354,7 +355,7 @@ describe("organization resources and the company period ledger", () => {
     await f.connect()
     const current = await f.snapshot()
     const resource: Resource = {
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "organization-unit",
       id: "period:public",
       revision: 1,
@@ -362,7 +363,7 @@ describe("organization resources and the company period ledger", () => {
       effectiveFrom: "2026-09-07",
       effectiveTo: null,
       attributes: {
-        organizationUnitId: "unit:public",
+        organizationUnitId: "0190005f-0000-7000-8000-4051856b7055",
         code: "PUBLIC",
         officialName: "Public Department",
         kind: "DEPARTMENT",
@@ -376,7 +377,7 @@ describe("organization resources and the company period ledger", () => {
       await (
         await f.reads["organization-units"][":code"].$get({ param: { code: "PUBLIC" } })
       ).json(),
-    ).toMatchObject({ id: "unit:public", name: "Public Department" })
+    ).toMatchObject({ id: "0190005f-0000-7000-8000-4051856b7055", name: "Public Department" })
     expect(Number((await f.rename("PUBLIC", "Changed through existing API")).status)).toBe(200)
     expect(
       (await f.snapshot()).resources.find((resource) => resource.id === "period:public"),
@@ -435,7 +436,7 @@ describe("organization resources and the company period ledger", () => {
     f.actors.current = CompanyActorValue.restore({
       accountId: f.actor.accountId,
       employeeId: f.actor.employeeId,
-      organizationIds: ["organization:other"],
+      organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
       capabilities: ["company:admin"],
     })
     expect(Number((await f.adopt(valid, "foreign-adoption")).status)).toBe(403)
@@ -451,7 +452,7 @@ describe("organization resources and the company period ledger", () => {
     f.actors.current = CompanyActorValue.restore({
       accountId: f.actor.accountId,
       employeeId: f.actor.employeeId,
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:write"],
     })
     expect(Number((await f.adopt(valid, "non-admin-adoption")).status)).toBe(403)

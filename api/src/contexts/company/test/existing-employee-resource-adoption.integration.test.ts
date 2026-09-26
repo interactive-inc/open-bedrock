@@ -2,6 +2,7 @@ import { expect, spyOn, test } from "bun:test"
 import { z } from "zod"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import { createEmployeeAdoptionFixture } from "@/contexts/company/test/employee-resource-adoption.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 async function fixture() {
   const context = await createEmployeeAdoptionFixture()
@@ -43,7 +44,7 @@ async function fixture() {
     ])
   }
   await context.database.exec(
-    "UPDATE company_organizations SET revision = 1 WHERE id = 'organization:default'; UPDATE company_organizations SET revision = 2 WHERE id = 'organization:default'",
+    `UPDATE company_organizations SET revision = 1 WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'; UPDATE company_organizations SET revision = 2 WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
   )
   const publicHistory = async () =>
     (
@@ -224,7 +225,7 @@ test("再送も権限を要求し、同じキーの接続方式変更を拒否�
   context.actors.current = CompanyActorValue.restore({
     accountId: context.actor.accountId,
     employeeId: context.actor.employeeId,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:read"],
   })
   expect((await context.post(input)).status).toBe(403)

@@ -3,6 +3,7 @@ import type { CompanyResourceEntity } from "@/contexts/company/domain/entities/c
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import { CompanyEmploymentResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/employee/company-employment-resource-projection.adapter"
 import { AbortWhenPreviousStatementChangedNoRowsAdapter } from "@/contexts/company/infrastructure/adapters/database/abort-when-previous-statement-changed-no-rows.adapter"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Context = D1Database
 
@@ -91,7 +92,7 @@ export class CompanyWorkforceResourceProjectionAdapter {
       change.resources.some(
         (resource) =>
           (resource.type === "employee" || resource.type === "employment") &&
-          resource.organizationId !== "organization:default",
+          resource.organizationId !== COMPANY_DEFAULT_ORGANIZATION_ID,
       )
     )
       return new CompanyResourceValidationError("invalid_resource")
@@ -150,7 +151,7 @@ export class CompanyWorkforceResourceProjectionAdapter {
       if (resource.type === "account-employee-link") finalLinks.set(resource.id, resource)
     }
     for (const resource of finalLinks.values()) {
-      if (resource.organizationId !== "organization:default")
+      if (resource.organizationId !== COMPANY_DEFAULT_ORGANIZATION_ID)
         return new CompanyResourceValidationError("invalid_resource")
       if (resource.state === "void" || resource.effectiveTo !== null) continue
       const accountId = resource.readText("accountId")

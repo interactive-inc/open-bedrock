@@ -3,6 +3,7 @@ import type { OrgResponsibilityPeriod } from "@/contexts/company/domain/definiti
 import type { CompanyResponsibilitySource } from "@/contexts/company/domain/values/company-responsibility-resource-timeline.value"
 import { CompanyResponsibilityResourceTimelineValue } from "@/contexts/company/domain/values/company-responsibility-resource-timeline.value"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Props = Readonly<{
   resourceId: string
@@ -70,7 +71,7 @@ export class CompanyResponsibilityJournalChangeValue {
       if (current?.effectiveFrom === date && current.effectiveTo === end && current.state === state)
         continue
       const resource = CompanyResourceEntity.create({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "responsibility-assignment",
         id: props.resourceId,
         revision: history.length + resources.length + 1,

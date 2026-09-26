@@ -2,10 +2,11 @@ import { expect, test } from "bun:test"
 import { CompanyEmploymentMovementsValue } from "@/contexts/company/domain/values/company-employment-movements.value"
 import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 function employment(id: string, startsOn: string, endsOn: string | null): CompanyResourceProps {
   return {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "employment",
     id,
     revision: 1,

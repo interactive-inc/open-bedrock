@@ -5,6 +5,7 @@ import {
 import { CompanyForbiddenError } from "@/contexts/company/domain/errors"
 import type { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import type { OrganizationResourceAdoptionRepository } from "@/contexts/company/infrastructure/repositories/organization/organization-resource-adoption.repository"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 type Context = Readonly<{
   actor: CompanyActorValue
   repository: OrganizationResourceAdoptionRepository
@@ -18,7 +19,7 @@ export class ApplyOrganizationResourceAdoption {
   }
   async execute(input: OrganizationResourceAdoptionInput) {
     if (
-      !this.c.actor.canAccessOrganization("organization:default") ||
+      !this.c.actor.canAccessOrganization(COMPANY_DEFAULT_ORGANIZATION_ID) ||
       !this.c.actor.hasCapability("company:admin")
     )
       return new CompanyForbiddenError()

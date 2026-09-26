@@ -16,6 +16,7 @@ import {
 } from "@/contexts/company/domain/errors"
 import { z } from "zod"
 import type { PersonnelActionSummary } from "@/contexts/company/domain/definitions/personnel-action-summary.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const bindingSchema = z.object({
   resource_id: z.string(),
@@ -48,7 +49,7 @@ export class CompanyPersonnelReportingJournalAdapter {
     try {
       const history = await new D1CompanyResourceRepository({
         database: this.c,
-      }).findReportingRelationHistory("organization:default", organizationRevision)
+      }).findReportingRelationHistory(COMPANY_DEFAULT_ORGANIZATION_ID, organizationRevision)
       if (history instanceof Error) throw history
       const selected = await this.c
         .prepare("SELECT * FROM company_personnel_reporting_bindings WHERE employee_id = ?1")
@@ -275,7 +276,7 @@ export class CompanyPersonnelReportingJournalAdapter {
     const prefix = `lifecycle:${actionId}:`
     const result = await this.c
       .prepare(`SELECT resource_id, revision FROM company_resource_revisions
-      WHERE organization_id = 'organization:default' AND resource_type = 'reporting-relation'
+      WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND resource_type = 'reporting-relation'
         AND substr(command_id, 1, length(?1)) = ?1`)
       .bind(prefix)
       .all()
@@ -381,7 +382,7 @@ export class CompanyPersonnelReportingJournalAdapter {
     ]
     const connected = await this.c
       .prepare(`SELECT resource_id FROM company_workforce_resource_bindings
-      WHERE organization_id = 'organization:default' AND resource_type = 'employee'
+      WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND resource_type = 'employee'
         AND resource_id IN (SELECT value FROM json_each(?1))`)
       .bind(JSON.stringify(managers))
       .all<{ resource_id: string }>()

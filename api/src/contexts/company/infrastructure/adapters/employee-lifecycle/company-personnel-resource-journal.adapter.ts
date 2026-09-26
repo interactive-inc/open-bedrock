@@ -23,6 +23,7 @@ import {
 } from "@/contexts/company/domain/errors"
 import { drizzle } from "drizzle-orm/d1"
 import type { PersonnelActionSummary } from "@/contexts/company/domain/definitions/personnel-action-summary.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Context = D1Database
 
@@ -197,7 +198,7 @@ export class CompanyPersonnelResourceJournalAdapter {
       return []
     const history = await new D1CompanyResourceRepository({
       database: this.c,
-    }).findEmploymentDependentHistory("organization:default", organizationRevision)
+    }).findEmploymentDependentHistory(COMPANY_DEFAULT_ORGANIZATION_ID, organizationRevision)
     if (history instanceof Error)
       return new CompanyUnexpectedError("等級割当・任用・決裁資格の履歴を参照できません", {
         cause: history,
@@ -230,7 +231,7 @@ export class CompanyPersonnelResourceJournalAdapter {
           : await this.c
               .prepare(`
         SELECT min(revision) AS first_revision, max(revision) AS last_revision FROM company_resource_revisions
-        WHERE organization_id = 'organization:default' AND resource_type = ?1 AND resource_id = ?2
+        WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND resource_type = ?1 AND resource_id = ?2
           AND substr(command_id, 1, length(?3)) = ?3`)
               .bind(first.type, first.id, prefix)
               .first<{ first_revision: number | null; last_revision: number | null }>()

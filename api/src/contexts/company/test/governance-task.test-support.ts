@@ -9,6 +9,7 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { drizzle } from "drizzle-orm/d1"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 /** 公開Companyへの入社登録と責務規程を、両製品の実migrationへ作成する。 */
 export async function createGovernanceTaskTestContext(databaseOverride?: D1Database) {
@@ -43,7 +44,7 @@ export async function createGovernanceTaskTestContext(databaseOverride?: D1Datab
   })
   if (date instanceof Error) throw date
   const base = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     revision: 1,
     effectiveFrom: restoreCalendarDate(date),
     effectiveTo: null,
@@ -111,7 +112,9 @@ export async function createGovernanceTaskTestContext(databaseOverride?: D1Datab
   ]
   const write = async (changes: ReadonlyArray<CompanyResourceProps>) => {
     const revision = await database
-      .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+      .prepare(
+        `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+      )
       .first<number>("revision")
     if (revision === null) throw new Error("organization is missing")
     const change = CompanyResourceChangeEntity.create({
@@ -129,7 +132,7 @@ export async function createGovernanceTaskTestContext(databaseOverride?: D1Datab
   }
   await write(resources)
   const accountLinks = await new D1CompanyResourceRepository({ database }).findMany({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     types: ["account-employee-link"],
   })
   if (!accountLinks.ok) throw accountLinks.cause
@@ -146,7 +149,7 @@ export async function createGovernanceTaskTestContext(databaseOverride?: D1Datab
     rejection_behavior: "reject",
     allow_delegation: true,
     governance_authority: {
-      organization_id: "organization:default",
+      organization_id: COMPANY_DEFAULT_ORGANIZATION_ID,
       responsibility_code: "APPROVE",
       scope: { scope_type: "amount", currency_code: "JPY", amount_field: "amount" },
     },

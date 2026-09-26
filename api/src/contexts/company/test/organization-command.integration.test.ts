@@ -14,6 +14,7 @@ import {
 } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { createEmployeeAdoptionFixture } from "@/contexts/company/test/employee-resource-adoption.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const schema =
   readFileSync(
@@ -40,7 +41,7 @@ const resourceSchema = z.object({
 })
 type Resource = z.infer<typeof resourceSchema>
 const root: Resource = {
-  organizationId: "organization:default",
+  organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
   type: "organization-unit",
   id: "period:root",
   revision: 1,
@@ -48,7 +49,7 @@ const root: Resource = {
   effectiveFrom: "2026-01-01",
   effectiveTo: null,
   attributes: {
-    organizationUnitId: "unit:root",
+    organizationUnitId: "0190005f-0000-7000-8000-3d39a82ae356",
     code: "ROOT",
     officialName: "Company",
     kind: "COMPANY",
@@ -59,11 +60,11 @@ const child: Resource = {
   ...root,
   id: "period:child",
   attributes: {
-    organizationUnitId: "unit:child",
+    organizationUnitId: "0190005f-0000-7000-8000-2924942897cc",
     code: "CHILD",
     officialName: "Department",
     kind: "DEPARTMENT",
-    parentOrganizationUnitId: "unit:root",
+    parentOrganizationUnitId: "0190005f-0000-7000-8000-3d39a82ae356",
   },
 }
 
@@ -74,7 +75,7 @@ function fixture() {
     current: CompanyActorValue.restore({
       accountId: "account:operator",
       employeeId: null,
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:write"],
     }),
   }
@@ -102,7 +103,7 @@ function fixture() {
         method: "POST",
         headers: {
           "content-type": "application/json",
-          "x-company-organization-id": "organization:default",
+          "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID,
           "if-match": `"${revision}"`,
           "idempotency-key": key,
         },
@@ -113,7 +114,7 @@ function fixture() {
   const state = () =>
     database
       .prepare(
-        `SELECT (SELECT revision FROM company_organizations WHERE id = 'organization:default') AS revision, (SELECT count(*) FROM company_command_receipts) AS receipts, (SELECT count(*) FROM company_resource_revisions) AS resources`,
+        `SELECT (SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}') AS revision, (SELECT count(*) FROM company_command_receipts) AS receipts, (SELECT count(*) FROM company_resource_revisions) AS resources`,
       )
       .first()
   return { database, actors, post, state, clock }
@@ -168,14 +169,14 @@ describe("organization command receipts and boundaries", () => {
     f.actors.current = CompanyActorValue.restore({
       accountId: "account:operator",
       employeeId: null,
-      organizationIds: ["organization:other"],
+      organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
       capabilities: ["company:write"],
     })
     expect((await f.post([root], 0, "root-create")).status).toBe(403)
     f.actors.current = CompanyActorValue.restore({
       accountId: "account:operator",
       employeeId: null,
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:read"],
     })
     expect((await f.post([root], 0, "root-create")).status).toBe(403)
@@ -323,8 +324,8 @@ describe("organization command receipts and boundaries", () => {
       (SELECT recorded_at FROM company_command_receipts WHERE command_id = 'clocked-root') AS receipt,
       (SELECT recorded_at FROM company_resource_revisions WHERE command_id = 'clocked-root') AS resource,
       (SELECT updated_at FROM company_resource_heads WHERE resource_id = 'period:root') AS head,
-      (SELECT created_at FROM company_organizations WHERE id = 'organization:default') AS created,
-      (SELECT updated_at FROM company_organizations WHERE id = 'organization:default') AS updated`)
+      (SELECT created_at FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}') AS created,
+      (SELECT updated_at FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}') AS updated`)
         .first<{
           receipt: number
           resource: number
@@ -389,7 +390,7 @@ describe("legacy organization routes stay inside their Company scope", () => {
       accountId: f.actor.accountId,
       employeeId: f.actor.employeeId,
       capabilities: ["company:admin"],
-      organizationIds: ["organization:other"],
+      organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
     })
     for (const path of [
       "/company/organization-units",

@@ -6,6 +6,7 @@ import {
 } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const january = restoreCalendarDate("2030-01-01")
 const february = restoreCalendarDate("2030-02-01")
@@ -13,14 +14,18 @@ const march = restoreCalendarDate("2030-03-01")
 
 function relation(id: string, manager: string, overrides: Partial<CompanyResourceProps> = {}) {
   const resource = CompanyResourceEntity.create({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "reporting-relation",
     id,
     revision: 1,
     state: "active",
     effectiveFrom: january,
     effectiveTo: null,
-    attributes: { employeeId: id, managerEmployeeId: manager, organizationUnitId: "unit:root" },
+    attributes: {
+      employeeId: id,
+      managerEmployeeId: manager,
+      organizationUnitId: "0190005f-0000-7000-8000-3d39a82ae356",
+    },
     ...overrides,
   })
   if (resource instanceof Error) throw resource
@@ -39,7 +44,7 @@ describe("CompanyReportingRelationTimelineValue", () => {
     expect(
       CompanyReportingRelationTimelineValue.create([
         relation("a", "b"),
-        relation("b", "a", { organizationId: "organization:other" }),
+        relation("b", "a", { organizationId: "01900060-0000-7000-8000-12268fccf2cc" }),
       ]),
     ).toBeInstanceOf(CompanyResourceValidationError)
   })

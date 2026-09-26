@@ -5,6 +5,7 @@ import {
   type CompanyResourceProps,
 } from "@/contexts/company/domain/entities/company-resource.entity"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 function resource(
   revision: number,
@@ -12,7 +13,7 @@ function resource(
   overrides: Partial<CompanyResourceProps> = {},
 ) {
   const entity = CompanyResourceEntity.create({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "employment",
     id: "employment:1",
     revision,
@@ -141,7 +142,7 @@ describe("版付き雇用と業務の期間履歴", () => {
 
   test("別人・別契約・別組織の履歴を混ぜない", () => {
     for (const changed of [
-      resource(2, "2026-01-01", { organizationId: "organization:other" }),
+      resource(2, "2026-01-01", { organizationId: "01900060-0000-7000-8000-12268fccf2cc" }),
       resource(2, "2026-01-01", { id: "employment:other" }),
       resource(2, "2026-01-01", {
         attributes: { employeeId: "employee:other", employmentType: "FULL_TIME", status: "ACTIVE" },

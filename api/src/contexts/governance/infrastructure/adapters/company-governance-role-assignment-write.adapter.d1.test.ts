@@ -8,6 +8,7 @@ import { CreateRecordSourceFreeze } from "@system/application/records/create-rec
 import { openSystemRecordSourceFreezes } from "@system/interface/operations/open-system-record-source-freezes"
 import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 let pool: LocalD1Pool
 
@@ -28,7 +29,7 @@ async function fixture() {
   const actor = CompanyActorValue.restore({
     accountId: context.creator.accountId,
     employeeId: context.creator.employeeId,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:admin"],
   })
   return {
@@ -45,7 +46,7 @@ test("責務定義と任命を一つの会社版へ保存し、同じcommandを�
   const f = await fixture()
   const expectedRevision = await f.companyRevision()
   const input = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     commandId: "governance:ciso:first",
     expectedRevision,
     responsibilityCode: "ciso",
@@ -67,7 +68,7 @@ test("責務定義と任命を一つの会社版へ保存し、同じcommandを�
   const read = await new CompanyGovernanceRoleAssignmentReadAdapter({
     repository: new D1CompanyResourceRepository({ database: f.database }),
   }).read({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     responsibilityCode: "ciso",
     effectiveOn: restoreCalendarDate("2030-03-01"),
     organizationRevision: first.organizationRevision,
@@ -89,7 +90,7 @@ test("責務定義と任命を一つの会社版へ保存し、同じcommandを�
 test("単独責務の期間重複を別のCompany commandとして保存しない", async () => {
   const f = await fixture()
   const first = await f.writer.assign({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     commandId: "governance:ciso:first",
     expectedRevision: await f.companyRevision(),
     responsibilityCode: "ciso",
@@ -105,7 +106,7 @@ test("単独責務の期間重複を別のCompany commandとして保存しな�
   if (first.kind !== "assigned") throw new Error(`assignment failed: ${first.kind}`)
   const before = await f.companyRevision()
   const overlap = await f.writer.assign({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     commandId: "governance:ciso:overlap",
     expectedRevision: before,
     responsibilityCode: "ciso",
@@ -125,7 +126,7 @@ test("単独責務の期間重複を別のCompany commandとして保存しな�
 test("解除をCompanyの取消revisionとして残し、同じcommandの再送で履歴を増やさない", async () => {
   const f = await fixture()
   const assigned = await f.writer.assign({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     commandId: "governance:ciso:first",
     expectedRevision: await f.companyRevision(),
     responsibilityCode: "ciso",
@@ -140,7 +141,7 @@ test("解除をCompanyの取消revisionとして残し、同じcommandの再送�
   })
   if (assigned.kind !== "assigned") throw new Error(`assignment failed: ${assigned.kind}`)
   const input = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     commandId: "governance:ciso:revoke",
     expectedRevision: assigned.organizationRevision,
     assignmentId: assigned.assignmentId,
@@ -172,14 +173,14 @@ test("監査保存が失敗した場合はCompanyの責務任命も会社版も�
     actor: CompanyActorValue.restore({
       accountId: f.creator.accountId,
       employeeId: f.creator.employeeId,
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:admin"],
     }),
     database: f.database,
     auditStatements: [f.database.prepare("SELECT json_extract('', '$')")],
   })
   const result = await writer.assign({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     commandId: "governance:ciso:audit-failure",
     expectedRevision: before,
     responsibilityCode: "ciso",
@@ -221,7 +222,7 @@ test("取消済みの元記録をactiveとvoidの連続改訂および移行証�
   )
   if (frozen instanceof Error || frozen === "conflict") throw new Error("freeze failed")
   const adoptionRequest: Parameters<CompanyGovernanceRoleAssignmentWriteAdapter["assign"]>[0] = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     commandId: "governance:legacy:7",
     expectedRevision: await f.companyRevision(),
     responsibilityCode: "ciso",
@@ -243,7 +244,7 @@ test("取消済みの元記録をactiveとvoidの連続改訂および移行証�
            command_id, resource_type, resource_id, resource_revision, snapshot_digest,
            source_json, actor_account_id, reason, expected_revision, organization_revision,
            recorded_at)
-         VALUES ('organization:default', 'governance', 'org-role-assignment', ?1, ?2,
+         VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'governance', 'org-role-assignment', ?1, ?2,
            '7', ?3, ?4, 'responsibility-assignment', ?5, ?6, ?3, ?7, ?8, ?9, ?10, ?11, ?12)`)
         .bind(
           sourceNamespace,

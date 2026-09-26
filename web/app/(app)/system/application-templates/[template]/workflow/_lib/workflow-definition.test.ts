@@ -7,7 +7,7 @@ test("責務と申請金額の参照を編集用JSONで保持し、人数の上�
     name: "Review",
     approvers: [],
     governance_authority: {
-      organization_id: "organization:default",
+      organization_id: "ad4f6cb1-774b-43ae-950f-80e9bc67c66d",
       responsibility_code: "APPROVE",
       scope: { scope_type: "amount", currency_code: "JPY", amount_field: "amount" },
     },

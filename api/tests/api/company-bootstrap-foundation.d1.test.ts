@@ -4,6 +4,7 @@ import { z } from "zod"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { execSql } from "@tests/d1/support/exec-sql"
 import { type LocalD1, startLocalD1 } from "@tests/d1/support/start-local-d1"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 let local: LocalD1
 
@@ -99,7 +100,7 @@ test("実APIでSystem初期化・ログインからCompany初期化・公開プ�
     ...environment,
     path: "/company/profile",
     token,
-    headers: { "x-company-organization-id": "organization:default" },
+    headers: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID },
   })
   expect(profile.status).toBe(200)
   expect(await profile.json()).toMatchObject({
@@ -148,7 +149,7 @@ test("実APIでSystem初期化・ログインからCompany初期化・公開プ�
     ...environment,
     path: "/company/profile",
     token,
-    headers: { "x-company-organization-id": "organization:default" },
+    headers: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID },
   })
   expect(updatedProfile.status).toBe(200)
   expect(await updatedProfile.json()).toMatchObject({

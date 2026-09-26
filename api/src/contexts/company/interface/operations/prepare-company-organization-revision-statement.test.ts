@@ -3,11 +3,12 @@ import { readCompanyOrganizationLifecycleRevision } from "@/contexts/company/int
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { Database } from "bun:sqlite"
 import { expect, test } from "bun:test"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 function createDatabase(): D1Database {
   const sqlite = new Database(":memory:")
   sqlite.run("CREATE TABLE company_organizations (id TEXT PRIMARY KEY, revision INTEGER NOT NULL)")
-  sqlite.run("INSERT INTO company_organizations VALUES ('organization:default', 7)")
+  sqlite.run(`INSERT INTO company_organizations VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 7)`)
   sqlite.run(
     "CREATE TABLE company_organization_lifecycle_states (id INTEGER PRIMARY KEY, revision INTEGER)",
   )
@@ -29,7 +30,7 @@ test("会社版が一致すれば同じbatchの書込みを確定する", async 
   const database = createDatabase()
 
   await database.batch([
-    guard(database, "organization:default", 7),
+    guard(database, COMPANY_DEFAULT_ORGANIZATION_ID, 7),
     database.prepare("INSERT INTO effects VALUES (1)"),
   ])
 
@@ -40,8 +41,8 @@ test("会社版の不一致と組織の不在では、同じbatchの書込みを
   const database = createDatabase()
 
   for (const [organizationId, revision] of [
-    ["organization:default", 6],
-    ["organization:other", 7],
+    [COMPANY_DEFAULT_ORGANIZATION_ID, 6],
+    ["01900060-0000-7000-8000-12268fccf2cc", 7],
   ] as const)
     await expect(
       database.batch([
@@ -59,7 +60,7 @@ test("不正な組織IDと版を拒否する", () => {
   expect(
     prepareCompanyOrganizationRevisionStatement({
       database,
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       expectedRevision: -1,
     }),
   ).toBeInstanceOf(Error)

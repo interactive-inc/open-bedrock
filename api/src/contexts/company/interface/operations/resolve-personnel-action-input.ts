@@ -14,6 +14,7 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import { CompanySnapshotRevisionError } from "@/contexts/company/domain/errors"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const code = z.string().trim().min(1).max(64)
 const date = z.string().date()
@@ -135,7 +136,7 @@ async function resolvePosition(
 > {
   if (reference.code === null || reference.code === undefined) return null
   const snapshot = await repository.findMany({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     organizationRevision: reference.organizationRevision,
     effectiveOn: restoreCalendarDate(reference.effectiveOn),
     types: ["position"],

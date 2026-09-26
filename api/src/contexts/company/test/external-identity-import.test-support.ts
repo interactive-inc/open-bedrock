@@ -11,6 +11,8 @@ import { iamRoleIdSchema } from "@system/domain/schemas/iam/iam-role.schema"
 import { systemFactory } from "@system/interface/request-environment/system-factory"
 import { POST } from "@system/interface/routes/system.machine-sessions"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
+import { alignHistoricalOrganizationIdentity } from "@/contexts/company/test/align-historical-organization-identity.test-support"
 
 const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
   .filter((file) => file.endsWith(".sql"))
@@ -30,6 +32,7 @@ export async function createExternalIdentityImportTestContext(
   const rawSecret = "1".repeat(64)
   const hash = await new SystemPrincipalSecretService().hashRawSecret(rawSecret)
   if (hash instanceof Error) throw hash
+  await alignHistoricalOrganizationIdentity(database)
   // role の主キーを UUID へ移す前の schema では、migration が入れた管理 role の主キーが UUID でない。
   // 取り込みは role の一覧を検証して読むため、どの割当も指していない旧来の role を先に外す。
   await database.exec(`
@@ -52,8 +55,8 @@ export async function createExternalIdentityImportTestContext(
   }
   await database.exec(`
     INSERT INTO company_organizations (id, revision, name, representative_name, created_at, updated_at)
-      SELECT 'organization:default', 0, 'Example organization', 'Example representative', 0, 0
-      WHERE NOT EXISTS (SELECT 1 FROM company_organizations WHERE id = 'organization:default');
+      SELECT '${COMPANY_DEFAULT_ORGANIZATION_ID}', 0, 'Example organization', 'Example representative', 0, 0
+      WHERE NOT EXISTS (SELECT 1 FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}');
     INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
       VALUES ('external-import-service', 'active', 0, 0, 0);
     INSERT INTO system_principals (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
@@ -95,7 +98,9 @@ export async function createExternalIdentityImportTestContext(
     throw new Error(`machine session failed: ${response.status} ${await response.text()}`)
   const token = z.object({ access_token: z.string() }).parse(await response.json()).access_token
   const revision = await database
-    .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+    .prepare(
+      `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+    )
     .first<number>("revision")
   if (revision === null) throw new Error("missing organization")
   const actor = { accountId, tokenVersion: 0, credentialId, issuedAtMs: now.getTime() }

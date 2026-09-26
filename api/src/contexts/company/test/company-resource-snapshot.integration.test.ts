@@ -4,6 +4,7 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const schema =
   readFileSync(
@@ -12,7 +13,7 @@ const schema =
   ) +
   "\n" +
   readFileSync(new URL("../infrastructure/schema/company.sql", import.meta.url), "utf8")
-const organizationId = "organization:default"
+const organizationId = COMPANY_DEFAULT_ORGANIZATION_ID
 
 async function fixture() {
   const repository = new D1CompanyResourceRepository({

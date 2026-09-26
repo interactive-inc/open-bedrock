@@ -1,4 +1,4 @@
-import { toWorkforceOrganizationUnitId } from "@/contexts/company/domain/definitions/to-workforce-organization-unit-id.definition"
+import { testOrganizationUnitId } from "@tests/api/support/company/test-organization-unit-id"
 import type { OrganizationUnitId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 
 type SeedBudget = {
@@ -20,7 +20,7 @@ type SeedBudget = {
 export const seedBudgets: ReadonlyArray<SeedBudget> = [
   {
     id: "0190004d-0000-7000-8000-000000000001",
-    organizationUnitId: toWorkforceOrganizationUnitId("D003"),
+    organizationUnitId: testOrganizationUnitId("D003"),
     fiscalPeriod: "2026",
     periodStart: "2026-04-01",
     periodEnd: "2027-03-31",
@@ -31,7 +31,7 @@ export const seedBudgets: ReadonlyArray<SeedBudget> = [
   },
   {
     id: "0190004d-0000-7000-8000-000000000002",
-    organizationUnitId: toWorkforceOrganizationUnitId("D004"),
+    organizationUnitId: testOrganizationUnitId("D004"),
     fiscalPeriod: "2026",
     periodStart: "2026-04-01",
     periodEnd: "2027-03-31",

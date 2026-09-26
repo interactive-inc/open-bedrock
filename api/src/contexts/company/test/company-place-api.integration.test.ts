@@ -3,6 +3,7 @@ import { CompanyActorValue } from "@/contexts/company/domain/values/company-acto
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { createCompanyPlaceTestContext } from "@/contexts/company/test/company-place.test-support"
 import { createCompanyPlaceHttpTestClient } from "@/contexts/company/test/company-place-http.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 test.each(["legalEntity", "site", "unit"] as const)(
   "公開APIは %s の単独短縮を422とし、関連記録の同時短縮を確定する",
@@ -68,7 +69,10 @@ test.each(["missing-site", "missing-unit"])(
     const attributes = {
       ...f.workplace.attributes,
       siteId: kind === "missing-site" ? "site:missing" : f.site.id,
-      organizationUnitId: kind === "missing-unit" ? "unit:missing" : "unit:root",
+      organizationUnitId:
+        kind === "missing-unit"
+          ? "0190005f-0000-7000-8000-ccdf3ed2f2b6"
+          : "0190005f-0000-7000-8000-3d39a82ae356",
     }
     const request = createCompanyPlaceHttpTestClient(f.database)
     expect(
@@ -92,7 +96,9 @@ test.each(["read-only", "other-organization"])(
       accountId: "account:operator",
       employeeId: null,
       organizationIds:
-        kind === "other-organization" ? ["organization:other"] : ["organization:default"],
+        kind === "other-organization"
+          ? ["01900060-0000-7000-8000-12268fccf2cc"]
+          : [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: kind === "read-only" ? ["company:read"] : ["company:write"],
     })
     const request = createCompanyPlaceHttpTestClient(f.database, actor)

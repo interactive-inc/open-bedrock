@@ -128,14 +128,16 @@ describe("GET /expense-budgets/summary", () => {
       expect(parsed.data.data.length).toBe(2)
 
       const engineering = parsed.data.data.find(
-        (row) => row.organization_unit_id === "department:D003",
+        (row) => row.organization_unit_id === "0190005e-0000-7000-8000-000044303033",
       )
 
       expect(engineering?.budget_amount).toBe(1000000)
       expect(engineering?.consumed_amount).toBe(3300)
       expect(engineering?.remaining_amount).toBe(996700)
 
-      const sales = parsed.data.data.find((row) => row.organization_unit_id === "department:D004")
+      const sales = parsed.data.data.find(
+        (row) => row.organization_unit_id === "0190005e-0000-7000-8000-000044303034",
+      )
 
       expect(sales?.consumed_amount).toBe(0)
     }

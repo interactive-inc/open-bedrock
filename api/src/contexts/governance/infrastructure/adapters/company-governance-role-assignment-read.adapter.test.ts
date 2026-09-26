@@ -2,6 +2,7 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyGovernanceRoleAssignmentReadAdapter } from "@/contexts/governance/infrastructure/adapters/company-governance-role-assignment-read.adapter"
 import { expect, test } from "bun:test"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 function resource(
   type: CompanyResourceEntity["type"],
@@ -9,7 +10,7 @@ function resource(
   attributes: Record<string, string | boolean | null>,
 ) {
   const result = CompanyResourceEntity.create({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type,
     id,
     revision: 1,
@@ -54,7 +55,7 @@ test("Companyの指定版だけから責務任命と人物名を解決する", a
       },
     },
   }).read({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     responsibilityCode: "ciso",
     effectiveOn: restoreCalendarDate("2026-01-01"),
     organizationRevision: 7,
@@ -74,7 +75,7 @@ test("Companyの指定版だけから責務任命と人物名を解決する", a
   })
   expect(queries).toEqual([
     expect.objectContaining({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       organizationRevision: 7,
       effectiveOn: "2026-01-01",
     }),
@@ -87,7 +88,7 @@ test("Companyの欠落・破損を空の任命一覧として返さない", asyn
       findMany: async () => ({ ok: true as const, organizationRevision: 1, resources: [] }),
     },
   }).read({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     responsibilityCode: "ciso",
     effectiveOn: restoreCalendarDate("2026-01-01"),
   })

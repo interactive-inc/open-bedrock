@@ -48,6 +48,7 @@ import { CancelExpenseProcedure } from "@/contexts/expense/application/cancel-ex
 import { RecordExpenseDecision } from "@/contexts/expense/application/record-expense-decision"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
 import { execSql } from "@tests/d1/support/exec-sql"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 let pool: LocalD1Pool
 
@@ -1032,7 +1033,7 @@ test("経費の全6種別を実認証で保全し、業務全テーブル撤去�
         {
           ...c.step,
           governance_authority: {
-            organization_id: "organization:default",
+            organization_id: COMPANY_DEFAULT_ORGANIZATION_ID,
             responsibility_code: "APPROVE",
             scope: null,
           },

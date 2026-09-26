@@ -12,6 +12,7 @@ import {
 } from "@/contexts/company/interface/errors"
 import { toHttpException } from "@/contexts/company/interface/operations/to-http-exception"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const factory = createFactory<CompanyHttpEnvironment>()
 
@@ -24,7 +25,7 @@ export const GET = factory.createHandlers(
     const actor = context.var.companyActor
     if (actor === undefined) throw new CompanyAuthenticationRequiredError()
     if (
-      !actor.canAccessOrganization("organization:default") ||
+      !actor.canAccessOrganization(COMPANY_DEFAULT_ORGANIZATION_ID) ||
       !actor.hasCapability("company:admin")
     )
       throw new CompanyAccessDeniedError()

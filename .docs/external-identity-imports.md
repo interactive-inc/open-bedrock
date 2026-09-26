@@ -1,6 +1,6 @@
 # 外部identity同期
 
-`POST /company/external-identity-imports` は、外部identityの登録と氏名・emailの更新をCompanyへ取り込む。対象providerは `oidc`、対象organizationは `organization:default` に限る。
+`POST /company/external-identity-imports` は、外部identityの登録と氏名・emailの更新をCompanyへ取り込む。対象providerは `oidc`、対象organizationは 既定organization（[記録の識別子](records-model.md#記録の識別子)） に限る。
 
 ## 操作主体と権限
 

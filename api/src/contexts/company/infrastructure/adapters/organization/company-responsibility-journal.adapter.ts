@@ -8,6 +8,7 @@ import { restoreOrgResponsibilityType } from "@/contexts/company/domain/definiti
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CompanyConflictError, CompanyValidationError } from "@/contexts/company/domain/errors"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const rowSchema = z.object({
   resource_id: z.string(),
@@ -89,9 +90,7 @@ export class CompanyResponsibilityJournalAdapter {
         continue
       const period = change.after
       const resourceId =
-        prior?.resource_id ??
-        pendingPeriods.get(period.periodId) ??
-        `responsibility-assignment:${crypto.randomUUID()}`
+        prior?.resource_id ?? pendingPeriods.get(period.periodId) ?? crypto.randomUUID()
       pendingPeriods.set(period.periodId, resourceId)
       const responsibility =
         prior === undefined
@@ -110,7 +109,7 @@ export class CompanyResponsibilityJournalAdapter {
           )
           .bind(period.organizationUnitId)
           .first<string>("organization_id")
-        if (unit !== "organization:default")
+        if (unit !== COMPANY_DEFAULT_ORGANIZATION_ID)
           return new CompanyValidationError(
             "責務を割り当てる組織履歴が未接続です",
             "lifecycle_projection_mismatch",
@@ -140,7 +139,7 @@ export class CompanyResponsibilityJournalAdapter {
     const bindings: D1PreparedStatement[] = []
     for (const [resourceId, group] of groups) {
       const history = await new CompanyResponsibilityResourceHistoryAdapter(this.c).read({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         id: resourceId,
       })
       if (history instanceof Error) return history
@@ -151,7 +150,7 @@ export class CompanyResponsibilityJournalAdapter {
         const prefix = `lifecycle:${props.correctsActionId}:`
         const lastRevision = await this.c
           .prepare(`SELECT max(revision) AS revision FROM company_resource_revisions
-          WHERE organization_id = 'organization:default' AND resource_type = 'responsibility-assignment' AND resource_id = ?1
+          WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND resource_type = 'responsibility-assignment' AND resource_id = ?1
             AND substr(command_id, 1, length(?2)) = ?2`)
           .bind(resourceId, prefix)
           .first<number | null>("revision")
@@ -174,7 +173,7 @@ export class CompanyResponsibilityJournalAdapter {
         this.c
           .prepare(`INSERT INTO company_responsibility_resource_bindings
         (resource_id, organization_id, employee_id, employment_id, organization_unit_id, responsibility_type, responsibility_id, authority_scope_id, resource_revision, recorded_at)
-        VALUES (?1, 'organization:default', ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
+        VALUES (?1, '${COMPANY_DEFAULT_ORGANIZATION_ID}', ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)
         ON CONFLICT (resource_id) DO UPDATE SET resource_revision = excluded.resource_revision, recorded_at = excluded.recorded_at`)
           .bind(
             resourceId,
@@ -218,7 +217,7 @@ export class CompanyResponsibilityJournalAdapter {
     if (cached !== undefined) return cached.id
     const row = await this.c
       .prepare(`SELECT resource_id, revision, state, effective_from, effective_to, attributes_json FROM company_resource_heads
-      WHERE organization_id = 'organization:default' AND resource_type = ?1 AND
+      WHERE organization_id = '${COMPANY_DEFAULT_ORGANIZATION_ID}' AND resource_type = ?1 AND
       ((?1 = 'responsibility' AND json_extract(attributes_json, '$.code') = ?2)
         OR (?1 = 'authority-scope' AND json_extract(attributes_json, '$.scopeType') = 'organization-unit' AND json_extract(attributes_json, '$.scopeId') = ?3))
       ORDER BY resource_id LIMIT 1`)
@@ -242,7 +241,7 @@ export class CompanyResponsibilityJournalAdapter {
       return row.resource_id
     }
     const resource = CompanyResourceEntity.create({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type,
       id: `${type}:${crypto.randomUUID()}`,
       revision: 1,

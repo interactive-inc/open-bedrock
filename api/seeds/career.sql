@@ -3,9 +3,9 @@
 -- migration: migrations/career.sql / 値: src/infrastructure/seed/seed-career-postings.ts, seed-career-applications.ts, seed-career-sheets.ts
 
 INSERT INTO career_postings (id, title, organization_unit_id, required_skills, status) VALUES
-  ('01900017-0000-7000-8000-000000000001', 'プロダクト開発リード', 'department:D003', 'typescript,project_mgmt', 'open'),
-  ('01900017-0000-7000-8000-000000000002', 'カスタマーサクセスマネージャー', 'department:D005', 'customer_success,english', 'open'),
-  ('01900017-0000-7000-8000-000000000003', '経営企画スペシャリスト', 'department:D001', 'accounting,project_mgmt', 'closed');
+  ('01900017-0000-7000-8000-000000000001', 'プロダクト開発リード', '0190005e-0000-7000-8000-000044303033', 'typescript,project_mgmt', 'open'),
+  ('01900017-0000-7000-8000-000000000002', 'カスタマーサクセスマネージャー', '0190005e-0000-7000-8000-000044303035', 'customer_success,english', 'open'),
+  ('01900017-0000-7000-8000-000000000003', '経営企画スペシャリスト', '0190005e-0000-7000-8000-000044303031', 'accounting,project_mgmt', 'closed');
 
 INSERT INTO career_applications (id, posting_id, applicant_id, message, status) VALUES
   ('01900018-0000-7000-8000-000000000001', '01900017-0000-7000-8000-000000000001', 6, '開発リード職に挑戦したいです', 'applied'),

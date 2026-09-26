@@ -22,6 +22,7 @@ import type { CompanyHttpEnvironment } from "@/contexts/company/interface/reques
 import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
   .filter((file) => file.endsWith(".sql"))
@@ -43,7 +44,7 @@ async function fixture() {
   const actor = CompanyActorValue.restore({
     accountId: "account:profile",
     employeeId,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: [],
     permissions: ["employee:read", "employee:write:basic"],
   })
@@ -79,7 +80,7 @@ async function fixture() {
     recordedAt: 0,
     resources: [
       {
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "person",
         id: "person:profile",
         revision: 1,
@@ -93,7 +94,7 @@ async function fixture() {
         },
       },
       {
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "employee",
         id: employeeId,
         revision: 1,
@@ -103,7 +104,7 @@ async function fixture() {
         attributes: { personId: "person:profile", employeeCode: "PROFILE-001" },
       },
       {
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "employment",
         id: "employment:profile",
         revision: 1,
@@ -113,7 +114,7 @@ async function fixture() {
         attributes: { employeeId, status: "ACTIVE", employmentType: "FULL_TIME" },
       },
       {
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "account-employee-link",
         id: "link:profile",
         revision: 1,
@@ -129,8 +130,8 @@ async function fixture() {
     kind: "applied",
   })
   await database.exec(`INSERT INTO company_account_profiles (organization_id, account_id, display_name, created_at, updated_at)
-      VALUES ('organization:default', 'account:profile', 'Example Person', 0, 0),
-      ('organization:default', 'account:unlinked', 'Unlinked Person', 0, 0);`)
+      VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account:profile', 'Example Person', 0, 0),
+      ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account:unlinked', 'Unlinked Person', 0, 0);`)
   const read = (path = "/company/my-profile") => app.request(path, {}, environment)
   const version = async () => {
     const response = await read()
@@ -158,7 +159,7 @@ async function fixture() {
       .prepare(`SELECT
     (SELECT count(*) FROM company_resource_revisions WHERE resource_type = 'person') AS revisions,
     (SELECT count(*) FROM company_command_receipts) AS receipts,
-    (SELECT revision FROM company_organizations WHERE id = 'organization:default') AS organization_revision`)
+    (SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}') AS organization_revision`)
       .first<{ revisions: number; receipts: number; organization_revision: number }>()
   const rows = () =>
     database
@@ -178,7 +179,7 @@ test("Account表示名も会社営業日の人物履歴を使い、将来の改�
     recordedAt: context.clock.now.getTime(),
     resources: [
       {
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "person",
         id: "person:profile",
         revision: 2,
@@ -202,7 +203,7 @@ test("Account表示名も会社営業日の人物履歴を使い、将来の改�
   for (const instant of ["2026-06-30T14:59:59Z", "2026-06-30T15:00:00Z"]) {
     const names = await new ReadCompanyAccountDisplayNamesAdapter({
       database: context.database,
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       accountIds: ["account:profile", "account:unlinked"],
       now: instant,
       timeZone: "Asia/Tokyo",
@@ -219,7 +220,7 @@ test("人物履歴の開始前は接続済みAccountの古いprofileを表示せ
   const context = await fixture()
   const names = await new ReadCompanyAccountDisplayNamesAdapter({
     database: context.database,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     accountIds: ["account:profile", "account:unlinked"],
     now: "2025-12-31T14:59:59Z",
     timeZone: "Asia/Tokyo",
@@ -237,7 +238,7 @@ test("旧Account対応表と互換ビューを除いても公開対応と人物�
   await context.database.exec("DROP VIEW IF EXISTS company_account_employee_link_periods")
   const names = await new ReadCompanyAccountDisplayNamesAdapter({
     database: context.database,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     accountIds: ["account:profile"],
     now: "2026-06-01T00:00:00Z",
     timeZone: "Asia/Tokyo",
@@ -249,8 +250,8 @@ test("Account表示名の参照範囲と複数会社の優先順を守り、大�
   const context = await fixture()
   await context.database.exec(`INSERT INTO company_organizations
     (id, revision, name, representative_name, created_at, updated_at)
-    VALUES ('organization:aaa', 0, 'Other', 'Other', 0, 0);
-    INSERT INTO company_account_profiles (organization_id, account_id, display_name, created_at, updated_at) VALUES ('organization:aaa', 'account:profile', 'Other organization name', 0, 0)`)
+    VALUES ('01900060-0000-7000-8000-3feeb980fa36', 0, 'Other', 'Other', 0, 0);
+    INSERT INTO company_account_profiles (organization_id, account_id, display_name, created_at, updated_at) VALUES ('01900060-0000-7000-8000-3feeb980fa36', 'account:profile', 'Other organization name', 0, 0)`)
   const accountIds = Array.from({ length: 150 }, (_, index) => `account:bulk:${index}`)
   for (const id of accountIds) {
     await context.database.batch([
@@ -261,16 +262,16 @@ test("Account表示名の参照範囲と複数会社の優先順を守り、大�
         .bind(id),
       context.database
         .prepare(
-          "INSERT INTO company_account_profiles (organization_id, account_id, display_name, created_at, updated_at) VALUES ('organization:default', ?1, ?1, 0, 0)",
+          `INSERT INTO company_account_profiles (organization_id, account_id, display_name, created_at, updated_at) VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', ?1, ?1, 0, 0)`,
         )
         .bind(id),
     ])
   }
   for (const organizationIds of [
-    ["organization:default"],
-    ["organization:default", "organization:aaa"],
+    [COMPANY_DEFAULT_ORGANIZATION_ID],
+    [COMPANY_DEFAULT_ORGANIZATION_ID, "01900060-0000-7000-8000-3feeb980fa36"],
     ["*"],
-    ["organization:denied"],
+    ["01900060-0000-7000-8000-fc74928b5e2f"],
     [],
   ]) {
     const names = await new ReadCompanyAccountDisplayNamesAdapter({
@@ -280,12 +281,15 @@ test("Account表示名の参照範囲と複数会社の優先順を守り、大�
       now: "2026-06-01T00:00:00Z",
       timeZone: "Asia/Tokyo",
     }).readCompanyAccountDisplayNames()
-    if (organizationIds.length === 0 || organizationIds.includes("organization:denied")) {
+    if (
+      organizationIds.length === 0 ||
+      organizationIds.includes("01900060-0000-7000-8000-fc74928b5e2f")
+    ) {
       expect(names.size).toBe(0)
     } else {
       expect(names.size).toBe(151)
       expect(names.get("account:profile")).toBe(
-        organizationIds.length === 1 && organizationIds[0] === "organization:default"
+        organizationIds.length === 1 && organizationIds[0] === COMPANY_DEFAULT_ORGANIZATION_ID
           ? "Example Person"
           : "Other organization name",
       )
@@ -299,7 +303,7 @@ test("会社timezoneが不明なAccount名を推測して返さない", async ()
   for (const timeZone of [undefined, "invalid/timezone"]) {
     const rejected = await new ReadCompanyAccountDisplayNamesAdapter({
       database: context.database,
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       accountIds: ["account:profile"],
       now: "2026-06-01T00:00:00Z",
       timeZone,
@@ -320,7 +324,7 @@ test("Account対応の終了日には古いprofile名へ戻らず、会社上の
     recordedAt: 1,
     resources: [
       {
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "account-employee-link",
         id: "link:profile",
         revision: 2,
@@ -339,7 +343,7 @@ test("Account対応の終了日には古いprofile名へ戻らず、会社上の
   })
   const names = await new ReadCompanyAccountDisplayNamesAdapter({
     database: context.database,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     accountIds: ["account:profile"],
     now: "2026-06-30T15:00:00Z",
     timeZone: "Asia/Tokyo",
@@ -368,7 +372,7 @@ test("Account対応の空白期間と再接続を公開revisionだけで判定�
       recordedAt: revision,
       resources: [
         {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "account-employee-link",
           id: "link:profile",
           revision,
@@ -391,7 +395,7 @@ test("Account対応の空白期間と再接続を公開revisionだけで判定�
   ] as const) {
     const names = await new ReadCompanyAccountDisplayNamesAdapter({
       database: context.database,
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       accountIds: ["account:profile"],
       now,
       timeZone: "Asia/Tokyo",
@@ -438,7 +442,7 @@ describe("employee profile writes share the public Person history", () => {
       { account_id: "account:unlinked", display_name: "Unlinked Person" },
     ])
     const history = await new D1CompanyResourceRepository({ database: context.database }).findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["person"],
       effectiveOn: restoreCalendarDate("2026-06-01"),
     })
@@ -513,14 +517,14 @@ describe("employee profile writes share the public Person history", () => {
     context.actors.current = CompanyActorValue.restore({
       accountId: "account:profile",
       employeeId,
-      organizationIds: ["organization:other"],
+      organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
       capabilities: ["company:admin"],
     })
     expect((await context.write({ phone: null, profile })).status).toBe(403)
     context.actors.current = CompanyActorValue.restore({
       accountId: "account:profile",
       employeeId,
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: [],
     })
     expect(
@@ -641,7 +645,7 @@ describe("employee profile writes share the public Person history", () => {
       recordedAt: context.clock.now.getTime(),
       resources: [
         {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "person",
           id: "person:profile",
           revision: 2,
@@ -693,7 +697,7 @@ describe("employee profile writes share the public Person history", () => {
       recordedAt: context.clock.now.getTime(),
       resources: [
         {
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "person",
           id: "person:profile",
           revision: 2,
@@ -729,7 +733,7 @@ describe("employee profile writes share the public Person history", () => {
     const scheduled = await new D1CompanyResourceRepository({
       database: context.database,
     }).findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["person"],
       effectiveOn: restoreCalendarDate("2026-07-01"),
     })
@@ -745,7 +749,7 @@ describe("employee profile writes share the public Person history", () => {
     context.actors.current = CompanyActorValue.restore({
       accountId: "account:profile",
       employeeId: "employee:legacy",
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: [],
     })
     expect(responseSchema.parse(await (await context.read()).json())).toEqual({

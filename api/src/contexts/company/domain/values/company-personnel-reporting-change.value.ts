@@ -1,6 +1,7 @@
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyResourceValidationError } from "@/contexts/company/domain/errors"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Period = Readonly<{ startsOn: CalendarDate; endsOn: CalendarDate | null }>
 type Props = Readonly<{
@@ -30,7 +31,7 @@ export class CompanyPersonnelReportingChangeValue {
           resource.revision !== index + 1 ||
           resource.type !== "reporting-relation" ||
           resource.id !== props.resourceId ||
-          resource.organizationId !== "organization:default" ||
+          resource.organizationId !== COMPANY_DEFAULT_ORGANIZATION_ID ||
           resource.readText("employeeId") !== props.employeeId ||
           resource.readText("organizationUnitId") !== props.organizationUnitId,
       ) ||
@@ -103,7 +104,7 @@ export class CompanyPersonnelReportingChangeValue {
       )
         continue
       const resource = CompanyResourceEntity.create({
-        organizationId: "organization:default",
+        organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "reporting-relation",
         id: props.resourceId,
         revision: history.length + resources.length + 1,

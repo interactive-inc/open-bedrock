@@ -28,6 +28,7 @@ import {
 import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
   .filter((file) => file.endsWith(".sql"))
@@ -35,7 +36,7 @@ const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
   .map((file) => readFileSync(join(COMPANY_TEST_MIGRATIONS_DIR, file), "utf8"))
   .join("\n")
 const employeeId = restoreWorkforceId("employee", "employee:resource")
-const organizationId = "organization:default"
+const organizationId = COMPANY_DEFAULT_ORGANIZATION_ID
 const actor = CompanyActorValue.restore({
   accountId: "account:operator",
   employeeId: "employee:operator",

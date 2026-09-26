@@ -45,8 +45,6 @@ const NOT_YET_CONVERTED: ReadonlySet<string> = new Set([
   "company_employments",
   "company_organization_change_operations",
   "company_organization_resource_bindings",
-  "company_organization_units",
-  "company_organizations",
   "company_personnel_actions",
   "company_personnel_reporting_bindings",
   "company_responsibility_period_bindings",

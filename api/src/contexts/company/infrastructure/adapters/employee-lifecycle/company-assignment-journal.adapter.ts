@@ -13,6 +13,8 @@ import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restor
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { isCalendarDate } from "@/contexts/company/domain/definitions/is-calendar-date.definition"
 import { z } from "zod"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 
 const rowSchema = z.object({
   resource_id: z.string(),
@@ -93,7 +95,7 @@ export class CompanyAssignmentJournalAdapter {
           .bind(props.action.employeeId)
           .first<{ organization_id: string }>()
         if (employee === null) return { resources: [], bindings: [], periodIds: new Set() }
-        if (employee.organization_id !== "organization:default")
+        if (employee.organization_id !== COMPANY_DEFAULT_ORGANIZATION_ID)
           return new CompanyValidationError(
             "従業員の会社が所属台帳と一致しません",
             "lifecycle_projection_mismatch",
@@ -116,14 +118,15 @@ export class CompanyAssignmentJournalAdapter {
         if (binding === undefined && mutation.before !== null) continue
         const period = mutation.after
         periodIds.add(period.periodId)
-        const resourceId = binding?.resource_id ?? `assignment:${period.periodId}`
+        const resourceId =
+          binding?.resource_id ?? deterministicCompanyId("assignment", period.periodId)
         if (binding === undefined) {
           const unit = await this.c
             .prepare(`SELECT organization_id FROM company_organization_resource_bindings
             WHERE organization_unit_id = ?1`)
             .bind(period.organizationUnitId)
             .first<{ organization_id: string }>()
-          if (unit?.organization_id !== "organization:default")
+          if (unit?.organization_id !== COMPANY_DEFAULT_ORGANIZATION_ID)
             return new CompanyValidationError(
               "異動先の組織履歴が未接続です",
               "lifecycle_projection_mismatch",
@@ -151,7 +154,7 @@ export class CompanyAssignmentJournalAdapter {
       const bindings: D1PreparedStatement[] = []
       for (const [resourceId, periods] of periodsByResource) {
         const history = await new CompanyAssignmentResourceHistoryAdapter(this.c).read({
-          organizationId: "organization:default",
+          organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           id: resourceId,
         })
         if (history instanceof Error)
@@ -179,7 +182,7 @@ export class CompanyAssignmentJournalAdapter {
           this.c
             .prepare(`INSERT INTO company_assignment_resource_bindings
           (resource_id, organization_id, employee_id, resource_revision, recorded_at)
-          VALUES (?1, 'organization:default', ?2, ?3, ?4)
+          VALUES (?1, '${COMPANY_DEFAULT_ORGANIZATION_ID}', ?2, ?3, ?4)
           ON CONFLICT (resource_id) DO UPDATE SET resource_revision = excluded.resource_revision, recorded_at = excluded.recorded_at`)
             .bind(resourceId, props.action.employeeId, revision, props.action.recordedAt * 1000),
         )

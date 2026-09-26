@@ -19,6 +19,7 @@ import { OrganizationWorkforceSnapshotAdapter } from "@/contexts/company/infrast
 import { OrganizationUnitReadAdapter } from "@/contexts/company/infrastructure/adapters/workforce/organization-unit-read.adapter"
 import { OrganizationWorkforceChangeRepository } from "@/contexts/company/infrastructure/repositories/organization/organization-workforce-change.repository"
 import { ValidateOrganizationChange } from "@/contexts/company/lib/workforce/validate-organization-change"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 type Context = Readonly<{
   actor: CompanyActorValue
@@ -40,7 +41,7 @@ export class DeleteOrganizationUnit {
     now: Date
   }): Promise<{ replayed: boolean } | CompanyOperationError> {
     if (
-      !this.c.actor.canAccessOrganization("organization:default") ||
+      !this.c.actor.canAccessOrganization(COMPANY_DEFAULT_ORGANIZATION_ID) ||
       !this.c.actor.hasPermission("org:write")
     )
       return new CompanyForbiddenError()

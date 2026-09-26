@@ -2,6 +2,7 @@ import { describe, expect, test } from "bun:test"
 import { restoreWorkforceId } from "@/contexts/company/domain/definitions/restore-workforce-id.definition"
 import { ResolveLiveEmployeeAccessAdapter } from "@/contexts/company/infrastructure/adapters/employee/resolve-live-employee-access.adapter"
 import { createEmployeeEmploymentTestDatabase } from "@/contexts/company/infrastructure/adapters/employee/lib/create-employee-employment-test-database.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const employeeId = restoreWorkforceId("employee", "employee:1")
 
@@ -16,10 +17,10 @@ describe("Companyの在籍期間に基づくアクセス判定", () => {
     const database = createEmployeeEmploymentTestDatabase(`
       INSERT INTO company_employees VALUES ('employee:2', 'Second Person', 'E002', NULL, NULL);
       INSERT INTO company_workforce_resource_bindings VALUES
-        ('employee', 'employee:2', 'organization:default', 'employee:2');
+        ('employee', 'employee:2', '${COMPANY_DEFAULT_ORGANIZATION_ID}', 'employee:2');
       INSERT INTO company_resource_revisions VALUES
-        ('organization:default', 'person', 'person:2', 1, 'active', '2026-01-01', NULL, '{"officialName":"Second Person"}'),
-        ('organization:default', 'employee', 'employee:2', 1, 'active', '2026-01-01', NULL, '{"personId":"person:2","employeeCode":"E002"}');
+        ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'person', 'person:2', 1, 'active', '2026-01-01', NULL, '{"officialName":"Second Person"}'),
+        ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'employee', 'employee:2', 1, 'active', '2026-01-01', NULL, '{"personId":"person:2","employeeCode":"E002"}');
       INSERT INTO company_employment_period_versions VALUES ('employment:2', 1, 'employee:2', '2026-01-01', NULL, 0);
       INSERT INTO company_employee_status_period_versions VALUES ('status:2', 1, 'employment:2', 'employee:2', 'leave', '2026-01-01', NULL, 0);
     `)

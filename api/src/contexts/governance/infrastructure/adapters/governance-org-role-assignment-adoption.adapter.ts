@@ -6,9 +6,10 @@ import { findGovernanceOrgRole } from "@/contexts/governance/domain/catalogs/gov
 import { CompanyGovernanceRoleAssignmentWriteAdapter } from "@/contexts/governance/infrastructure/adapters/company-governance-role-assignment-write.adapter"
 import { GovernanceRoleAssignmentAdoptionSnapshotAdapter } from "@/contexts/governance/infrastructure/adapters/governance-role-assignment-adoption-snapshot.adapter"
 import type { SystemJsonValue } from "@system/domain/definitions/audit/system-json-value.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const governanceResponsibilitySource = {
-  organizationId: "organization:default",
+  organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
   sourceContext: "governance",
   sourceKind: "org-role-assignment",
 } as const
@@ -72,7 +73,7 @@ export class GovernanceOrgRoleAssignmentAdoptionAdapter {
       actor: CompanyActorValue.restore({
         accountId: String(props.session.accountId),
         employeeId: String(props.session.employeeId),
-        organizationIds: ["organization:default"],
+        organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
         capabilities: ["company:write"],
       }),
       database: this.c.database,
@@ -89,7 +90,7 @@ export class GovernanceOrgRoleAssignmentAdoptionAdapter {
         },
       }),
     }).assign({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       commandId: props.commandId,
       expectedRevision: props.expectedRevision,
       responsibilityCode: role.code,

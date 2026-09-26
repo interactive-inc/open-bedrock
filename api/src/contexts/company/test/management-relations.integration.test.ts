@@ -25,6 +25,7 @@ import type { CompanyHttpEnvironment } from "@/contexts/company/interface/reques
 import * as organizationChanges from "@/contexts/company/interface/routes/company.organization-changes"
 import * as organizationAdoptions from "@/contexts/company/interface/routes/company.organization-resource-adoptions"
 import * as organizationSnapshots from "@/contexts/company/interface/routes/company.organization-snapshots"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const relationSchema = z.object({
   organizationId: z.string(),
@@ -47,7 +48,7 @@ async function fixture() {
   let actor = CompanyActorValue.restore({
     accountId: base.creator.accountId,
     employeeId: base.creator.employeeId,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:admin"],
   })
   let now = base.at
@@ -106,13 +107,15 @@ async function fixture() {
   })
   expect(Number(connected.status)).toBe(201)
   const revision = await base.database
-    .prepare("SELECT revision FROM company_organizations WHERE id = 'organization:default'")
+    .prepare(
+      `SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}'`,
+    )
     .first<number>("revision")
   if (revision === null) throw new Error("organization revision missing")
   const write = (resources: Relation[], key: string, expectedRevision = revision) =>
     client["organization-changes"].$post({
       header: {
-        "x-company-organization-id": "organization:default",
+        "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID,
         "if-match": String(expectedRevision),
         "idempotency-key": key,
       },
@@ -124,7 +127,7 @@ async function fixture() {
     return person.employeeId
   }
   const relation = (id: string, employeeIndex: number, managerIndex: number): Relation => ({
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "reporting-relation",
     id,
     revision: 1,
@@ -140,13 +143,13 @@ async function fixture() {
   const persisted = () =>
     base.database
       .prepare(`SELECT
-        (SELECT revision FROM company_organizations WHERE id = 'organization:default') AS revision,
+        (SELECT revision FROM company_organizations WHERE id = '${COMPANY_DEFAULT_ORGANIZATION_ID}') AS revision,
         (SELECT COUNT(*) FROM company_resource_revisions) AS resources,
         (SELECT COUNT(*) FROM company_command_receipts) AS receipts`)
       .first<{ revision: number; resources: number; receipts: number }>()
   const readRelations = async (date: string) => {
     const response = await client["organization-snapshots"].$get({
-      header: { "x-company-organization-id": "organization:default" },
+      header: { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID },
       query: { as_of: date },
     })
     expect(Number(response.status)).toBe(200)
@@ -280,7 +283,7 @@ describe("Company reporting graph through organization changes", () => {
       f.setActor(
         CompanyActorValue.restore({
           ...person,
-          organizationIds: ["organization:default"],
+          organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
           capabilities: ["company:read"],
         }),
       )
@@ -323,8 +326,8 @@ describe("Company reporting graph through organization changes", () => {
       })
     }
     for (const denied of [
-      { organizationIds: ["organization:default"], capabilities: [] },
-      { organizationIds: ["organization:other"], capabilities: ["company:read"] },
+      { organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID], capabilities: [] },
+      { organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"], capabilities: ["company:read"] },
     ] satisfies Array<
       Pick<Parameters<typeof CompanyActorValue.restore>[0], "organizationIds" | "capabilities">
     >) {
@@ -348,7 +351,7 @@ describe("Company reporting graph through organization changes", () => {
       Number((await f.write([f.relation("report:profile", 0, 1)], "profile-read")).status),
     ).toBe(201)
     const snapshot = await new D1CompanyResourceRepository({ database: f.database }).findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["employee"],
       effectiveOn: restoreCalendarDate("2030-06-01"),
     })

@@ -3,6 +3,7 @@ import { FindRegisteredEmployeeByOperationAdapter } from "@/contexts/company/inf
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
 import { Database } from "bun:sqlite"
 import { expect, test } from "bun:test"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 function createDatabase(): D1Database {
   const sqlite = new Database(":memory:")
@@ -16,11 +17,11 @@ function createDatabase(): D1Database {
   sqlite.run(`CREATE TABLE company_account_profiles (organization_id TEXT, account_id TEXT,
     display_name TEXT, created_at INTEGER, updated_at INTEGER)`)
   sqlite.run(`INSERT INTO company_resource_revisions VALUES
-    ('organization:default', 'employee', 'employee-1', 1, 'initial-workforce:action-1',
+    ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'employee', 'employee-1', 1, 'initial-workforce:action-1',
       '{"personId":"person:employee-1","employeeCode":"E900"}'),
-    ('organization:default', 'person', 'person:employee-1', 1, 'initial-workforce:action-1',
+    ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'person', 'person:employee-1', 1, 'initial-workforce:action-1',
       '{"officialName":"Example Person","email":null,"phone":null}'),
-    ('organization:default', 'person', 'person:employee-1', 2, 'rename',
+    ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'person', 'person:employee-1', 2, 'rename',
       '{"officialName":"Renamed Person","email":null,"phone":null}')`)
   sqlite.run(
     "INSERT INTO company_account_employee_resource_bindings VALUES ('employee-1', 'account-1')",
@@ -57,7 +58,7 @@ test("表示名の初期保存は作成時刻と更新時刻へ同じ時刻を�
   const database = createDatabase()
   await database.batch([
     new InitialAccountProfileStatementAdapter(database).prepare({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       accountId: "account-1",
       displayName: "Example Person",
       at: 1234,
@@ -69,7 +70,7 @@ test("表示名の初期保存は作成時刻と更新時刻へ同じ時刻を�
       .prepare("SELECT * FROM company_account_profiles")
       .first<Record<string, unknown>>(),
   ).toEqual({
-    organization_id: "organization:default",
+    organization_id: COMPANY_DEFAULT_ORGANIZATION_ID,
     account_id: "account-1",
     display_name: "Example Person",
     created_at: 1234,

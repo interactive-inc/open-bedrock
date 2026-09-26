@@ -2,6 +2,7 @@ import { restoreCalendarDate } from "@/contexts/company/domain/definitions/resto
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import { createEmployeeAdoptionFixture } from "@/contexts/company/test/employee-resource-adoption.test-support"
 import { expect, test } from "bun:test"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const path = "/company/workforce-connection-completions"
 
@@ -77,7 +78,7 @@ test("Company管理資格が無ければ接続の状態も完了も扱わない"
   f.actors.current = CompanyActorValue.restore({
     accountId: "account:adoption",
     employeeId: null,
-    organizationIds: ["organization:default"],
+    organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:read", "company:write"],
   })
   expect((await f.app.request(path, {}, f.environment)).status).toBe(403)
@@ -90,7 +91,7 @@ test("完了を記録した会社では、公開履歴へ未接続の従業員�
   await f.database.exec(`DROP TRIGGER company_workforce_connection_completions_requires_connection;
     INSERT INTO company_workforce_connection_completions
     (organization_id, command_id, actor_account_id, reason, employee_count, employment_count, completed_at)
-    VALUES ('organization:default', 'completion-test', 'account:adoption', 'Test', 1, 1, 0);`)
+    VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'completion-test', 'account:adoption', 'Test', 1, 1, 0);`)
   const rejected = await f.personnel(
     {
       kind: "returned",

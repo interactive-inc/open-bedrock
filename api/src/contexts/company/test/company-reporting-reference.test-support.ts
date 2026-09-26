@@ -35,7 +35,7 @@ export function createCompanyReportingReferenceTestContext(schemaSql?: string) {
     attributes: {
       employeeId: "employee:worker",
       managerEmployeeId: "employee:manager",
-      organizationUnitId: "unit:root",
+      organizationUnitId: "0190005f-0000-7000-8000-3d39a82ae356",
     },
   }
   const closed: CompanyResourceProps = {

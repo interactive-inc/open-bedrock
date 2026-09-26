@@ -22,6 +22,7 @@ import type { CompanyPermissionKey } from "@/contexts/company/domain/catalogs/ia
 import { OidcClientRegistryValue } from "@system/domain/values/oauth/oidc-client-registry.value"
 import { OidcIssuerConfigurationValue } from "@system/domain/values/oauth/oidc-issuer-configuration.value"
 import { SystemIdentityUnavailableError } from "@system/interface/errors"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 /** CORS_ORIGIN 未設定時に許可するローカル開発用 Origin。 */
 const defaultAllowedOrigins = [
@@ -172,7 +173,7 @@ const companyActorMiddleware = factory.createMiddleware(async (c, next) => {
     CompanyActorValue.restore({
       accountId: String(session.accountId),
       employeeId: session.employeeId === null ? null : String(session.employeeId),
-      organizationIds: ["organization:default"],
+      organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities,
       permissions,
     }),
@@ -191,7 +192,7 @@ const companyAuthenticationMiddleware = factory.createMiddleware(async (c, next)
       CompanyActorValue.restore({
         accountId: String(c.var.userId),
         employeeId: null,
-        organizationIds: ["organization:default"],
+        organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
         capabilities,
       }),
     )

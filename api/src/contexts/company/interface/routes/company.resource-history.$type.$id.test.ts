@@ -9,6 +9,7 @@ import { CompanyHTTPException } from "@/contexts/company/interface/errors"
 import type { CompanyHttpEnvironment } from "@/contexts/company/interface/request-environment/company-request-environment"
 import { GET } from "@/contexts/company/interface/routes/company.resource-history.$type.$id"
 import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-database.test-support"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const schema =
   readFileSync(
@@ -22,7 +23,7 @@ test("資源履歴は取消と訂正元・原資料を含み、会社版を固�
   const database = createCompanyD1TestDatabase(schema)
   const repository = new D1CompanyResourceRepository({ database })
   const person = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "person" as const,
     id: "person:history",
     state: "active" as const,
@@ -69,7 +70,9 @@ test("資源履歴は取消と訂正元・原資料を含み、会社版を固�
       CompanyActorValue.restore({
         accountId: "account:reader",
         employeeId: null,
-        organizationIds: [access.allowed ? "organization:default" : "organization:other"],
+        organizationIds: [
+          access.allowed ? COMPANY_DEFAULT_ORGANIZATION_ID : "01900060-0000-7000-8000-12268fccf2cc",
+        ],
         capabilities: ["company:read"],
         permissions: access.employeeRead ? ["employee:read"] : ["org:read"],
       }),
@@ -82,7 +85,7 @@ test("資源履歴は取消と訂正元・原資料を含み、会社版を固�
   })
   app.get("/resource-history/:type/:id", ...GET)
   const url = "/resource-history/person/person:history"
-  const headers = { "x-company-organization-id": "organization:default" }
+  const headers = { "x-company-organization-id": COMPANY_DEFAULT_ORGANIZATION_ID }
   const first = await app.request(`${url}?limit=1`, { headers }, { DB: database })
   expect(first.status).toBe(200)
   access.employeeRead = false

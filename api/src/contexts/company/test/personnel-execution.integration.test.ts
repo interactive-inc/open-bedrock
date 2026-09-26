@@ -13,6 +13,7 @@ import { StartSystemProcedure } from "@system/application/workflow/start-system-
 import { ApproveSystemTask } from "@system/application/workflow/approve-system-task"
 import { SystemD1WorkflowAdapter } from "@system/infrastructure/adapters/workflow/system-d1-workflow.adapter"
 import { createSystemDecisionTask } from "@system/domain/policies/decision-task.policy"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 async function createFixture(delegated = false) {
   const c = await createGovernanceTaskTestContext()
@@ -63,7 +64,7 @@ async function createFixture(delegated = false) {
     ...c.step,
     key: code,
     governance_authority: {
-      organization_id: "organization:default",
+      organization_id: COMPANY_DEFAULT_ORGANIZATION_ID,
       responsibility_code: code,
       scope: null,
     },

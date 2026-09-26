@@ -2,13 +2,14 @@ import { expect } from "bun:test"
 import { createCompanyAssignmentResourceTestContext } from "@/contexts/company/test/company-assignment-resource.test-support"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 export async function createCompanyGradeAssignmentTestContext() {
   const base = await createCompanyAssignmentResourceTestContext()
   const assignment = await base.initializeAssignment()
   type Resource = NonNullable<Parameters<typeof base.write>[0]>[number]
   const grade: Extract<Resource, { type: "grade" }> = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "grade",
     id: "grade:confirmed",
     revision: 1,
@@ -18,7 +19,7 @@ export async function createCompanyGradeAssignmentTestContext() {
     attributes: { code: "G1", officialName: "Grade One", rank: 1, description: "Confirmed grade" },
   }
   const appointment: Extract<Resource, { type: "grade-assignment" }> = {
-    organizationId: "organization:default",
+    organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "grade-assignment",
     id: "grade-assignment:confirmed",
     revision: 1,
@@ -37,7 +38,7 @@ export async function createCompanyGradeAssignmentTestContext() {
   ).toBe(201)
   const read = async (date: string) => {
     const snapshot = await new D1CompanyResourceRepository({ database: base.database }).findMany({
-      organizationId: "organization:default",
+      organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       types: ["grade-assignment"],
       effectiveOn: restoreCalendarDate(date),
     })
