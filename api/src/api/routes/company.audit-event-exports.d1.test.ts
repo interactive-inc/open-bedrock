@@ -563,7 +563,8 @@ describe("POST /audit-event-exports", () => {
     // 大きな行の本文を短くした分、分割読取りの回数が 2 回減る。
     expect(formalWorst.queries()).toBe(29)
     expect(formalWorst.queries()).toBeLessThanOrEqual(33)
-  }, 20_000)
+    // 予算は問い合わせの回数で検査する。CI の実行時間は揺れるため、時間の上限は広く取る。
+  }, 60_000)
 
   test("prioritizes unavailable over success, overflow and denied outcomes", async () => {
     const success = await createTestDb()
