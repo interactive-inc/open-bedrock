@@ -55,7 +55,7 @@ test("休暇申請11件と残数を停止世代ごとに分割照合し、空の
   await database
     .prepare(`INSERT INTO system_step_up_grants
       (id,account_id,token_hash,method,issued_at,expires_at)
-      VALUES ('leave-coverage-step-up',?1,?2,'external_identity',?3,?4)`)
+      VALUES ('0ed90391-e95d-4b6c-98ef-d78be36b670b',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const post = (path: string, body: unknown) =>

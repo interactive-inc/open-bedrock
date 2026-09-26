@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -172,7 +173,7 @@ describe("POST /business-trips", () => {
 
     if (parsed.success) {
       expect(parsed.data.status).toBe("requested")
-      expect(parsed.data.traveler_id).toBe(toWorkforceEmployeeId(4))
+      expect(parsed.data.traveler_id).toBe(toWorkforceEmployeeId(testEmployeeId(4)))
       expect(parsed.data.estimated_cost).toBe(22000)
     }
   })
@@ -235,7 +236,7 @@ describe("GET /business-trips/me", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0].traveler_id).toBe(toWorkforceEmployeeId(4))
+      expect(parsed.data.data[0].traveler_id).toBe(toWorkforceEmployeeId(testEmployeeId(4)))
     }
   })
 

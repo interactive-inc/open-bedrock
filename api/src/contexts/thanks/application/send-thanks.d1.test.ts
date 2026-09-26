@@ -1,3 +1,4 @@
+import { testDerivedId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { employees } from "@/contexts/company/infrastructure/schema/employee"
@@ -30,7 +31,7 @@ afterAll(async () => {
 })
 
 async function seedEmployee(context: Context, code: string, name: string): Promise<EmployeeId> {
-  const employeeId = toWorkforceEmployeeId(`employee:${code}`)
+  const employeeId = toWorkforceEmployeeId(testDerivedId("employee", code))
 
   await context.var.database.insert(employees).values({
     id: employeeId,
@@ -42,7 +43,7 @@ async function seedEmployee(context: Context, code: string, name: string): Promi
     updatedAt: new Date(0),
   })
   await context.var.database.insert(employments).values({
-    id: `employment:${code}`,
+    id: testDerivedId("employment", code),
     employeeId,
     contractName: name,
     employmentType: "FULL_TIME",
@@ -55,7 +56,7 @@ async function seedEmployee(context: Context, code: string, name: string): Promi
 
   const initialEmployment = await prepareUnpublishedEmployment(context.env.DB, {
     employeeId,
-    employmentId: restoreWorkforceId("employment", `employment:${code}`),
+    employmentId: restoreWorkforceId("employment", testDerivedId("employment", code)),
     effectiveOn: restoreCalendarDate("1970-01-01"),
     status: "active",
     occurredAt: new Date(0),
@@ -66,7 +67,7 @@ async function seedEmployee(context: Context, code: string, name: string): Promi
   await context.env.DB.batch([...initialEmployment])
   await publishTestEmployeeResources(context.env.DB, {
     employeeId: String(employeeId),
-    employmentId: `employment:${code}`,
+    employmentId: testDerivedId("employment", code),
     officialName: name,
     employeeCode: code,
     employmentType: "FULL_TIME",

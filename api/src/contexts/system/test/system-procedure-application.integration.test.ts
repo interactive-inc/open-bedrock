@@ -25,7 +25,7 @@ async function createFixture(): Promise<{
     .prepare(
       `INSERT INTO system_accounts
          (id, status, token_version, created_at, updated_at)
-       VALUES ('author', 'active', 0, 100, 100)`,
+       VALUES ('3ba00d8d-82f5-498d-b03a-bf4f72a88a4d', 'active', 0, 100, 100)`,
     )
     .run()
 
@@ -48,7 +48,7 @@ describe("System procedure application", () => {
       inputSchema: { type: "object" },
       decisionPolicy: { steps: [] },
       completionOperationKey: null,
-      createdByAccountId: zAccountId.parse("author"),
+      createdByAccountId: zAccountId.parse("3ba00d8d-82f5-498d-b03a-bf4f72a88a4d"),
       createdAt: new Date(100),
     })
     const second = await publish.run({
@@ -60,7 +60,7 @@ describe("System procedure application", () => {
       inputSchema: { required: ["reason"], type: "object" },
       decisionPolicy: { steps: [{ key: "review" }] },
       completionOperationKey: "apply-change",
-      createdByAccountId: zAccountId.parse("author"),
+      createdByAccountId: zAccountId.parse("3ba00d8d-82f5-498d-b03a-bf4f72a88a4d"),
       createdAt: new Date(110),
     })
 
@@ -88,7 +88,7 @@ describe("System procedure application", () => {
       inputSchema: {},
       decisionPolicy: {},
       completionOperationKey: null,
-      createdByAccountId: zAccountId.parse("author"),
+      createdByAccountId: zAccountId.parse("3ba00d8d-82f5-498d-b03a-bf4f72a88a4d"),
       createdAt: new Date(100),
     })
     if (initial instanceof Error || initial === "revision_conflict") throw initial
@@ -103,7 +103,7 @@ describe("System procedure application", () => {
         inputSchema: {},
         decisionPolicy: {},
         completionOperationKey: null,
-        createdByAccountId: zAccountId.parse("author"),
+        createdByAccountId: zAccountId.parse("3ba00d8d-82f5-498d-b03a-bf4f72a88a4d"),
         createdAt: new Date(110),
       }),
       publish.run({
@@ -115,7 +115,7 @@ describe("System procedure application", () => {
         inputSchema: {},
         decisionPolicy: {},
         completionOperationKey: null,
-        createdByAccountId: zAccountId.parse("author"),
+        createdByAccountId: zAccountId.parse("3ba00d8d-82f5-498d-b03a-bf4f72a88a4d"),
         createdAt: new Date(111),
       }),
     ])
@@ -141,7 +141,7 @@ describe("System procedure application", () => {
       inputSchema: {},
       decisionPolicy: {},
       completionOperationKey: null,
-      createdByAccountId: zAccountId.parse("author"),
+      createdByAccountId: zAccountId.parse("3ba00d8d-82f5-498d-b03a-bf4f72a88a4d"),
       createdAt: new Date(100),
     })
     if (definition instanceof Error || definition === "revision_conflict") throw definition

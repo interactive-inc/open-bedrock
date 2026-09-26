@@ -29,7 +29,7 @@ test("雇用・従業員・人物の資源版を同じ会社版で取得する",
   const initial = CompanyResourceChangeEntity.create({
     commandId: "resource-chain:initial",
     expectedRevision: 0,
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Confirm employment",
     recordedAt: 1,
     resources: [
@@ -37,15 +37,15 @@ test("雇用・従業員・人物の資源版を同じ会社版で取得する",
       {
         ...common,
         type: "employee",
-        id: "employee-1",
+        id: "349b77d2-3ea4-4a82-854c-c7aef39a04fb",
         attributes: { personId: "person-1", employeeCode: "E001" },
       },
       {
         ...common,
         type: "employment",
-        id: "employment-1",
+        id: "e9d2a8af-691a-41c5-beee-74a8f5de7388",
         attributes: {
-          employeeId: "employee-1",
+          employeeId: "349b77d2-3ea4-4a82-854c-c7aef39a04fb",
           status: "ACTIVE",
           employmentType: "FULL_TIME",
         },
@@ -58,13 +58,13 @@ test("雇用・従業員・人物の資源版を同じ会社版で取得する",
   const before = await readCompanyEmploymentResourceChain({
     database,
     organizationId,
-    employmentId: "employment-1",
+    employmentId: "e9d2a8af-691a-41c5-beee-74a8f5de7388",
   })
   expect(before).toEqual({
     organizationRevision: 1,
-    employmentId: "employment-1",
+    employmentId: "e9d2a8af-691a-41c5-beee-74a8f5de7388",
     employmentRevision: 1,
-    employeeId: "employee-1",
+    employeeId: "349b77d2-3ea4-4a82-854c-c7aef39a04fb",
     employeeRevision: 1,
     personId: "person-1",
     personRevision: 1,
@@ -73,14 +73,14 @@ test("雇用・従業員・人物の資源版を同じ会社版で取得する",
     await readCompanyEmploymentResourceChain({
       database,
       organizationId,
-      employmentId: "employment-missing",
+      employmentId: "0c164f06-5b57-457f-9378-48c436fe3fb7",
     }),
   ).toBeNull()
 
   const renamed = CompanyResourceChangeEntity.create({
     commandId: "resource-chain:rename",
     expectedRevision: 1,
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Confirm new name",
     recordedAt: 2,
     resources: [
@@ -99,7 +99,7 @@ test("雇用・従業員・人物の資源版を同じ会社版で取得する",
     await readCompanyEmploymentResourceChain({
       database,
       organizationId,
-      employmentId: "employment-1",
+      employmentId: "e9d2a8af-691a-41c5-beee-74a8f5de7388",
     }),
   ).toMatchObject({ organizationRevision: 2, personRevision: 2, employmentRevision: 1 })
 })

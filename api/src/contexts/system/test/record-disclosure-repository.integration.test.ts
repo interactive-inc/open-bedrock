@@ -43,7 +43,7 @@ function publication(
     auditEventId: crypto.randomUUID(),
     grants: [
       {
-        accountId: "viewer",
+        accountId: "eb2aaac2-352f-4196-8e01-adea61c54466",
         actions: ["read"],
         purposes: ["review"],
         validFrom: "2026-09-13T00:00:00.000Z",
@@ -143,7 +143,7 @@ test("disclosure guard rejects changed policy and authorization before audited d
     await f.db.batch([...f.repository.preparePublish(first.entity, first.audit)])
     const request = {
       recordId: first.entity.snapshot.recordId,
-      accountId: "viewer",
+      accountId: "eb2aaac2-352f-4196-8e01-adea61c54466",
       action: "read",
       purpose: "review",
       at: new Date("2026-09-13T00:30:00Z"),

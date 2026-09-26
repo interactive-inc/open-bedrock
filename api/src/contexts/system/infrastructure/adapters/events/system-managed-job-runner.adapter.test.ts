@@ -12,15 +12,15 @@ async function fixture(maxAttempts = 2) {
   sqlite.exec("PRAGMA foreign_keys = ON")
   for (const name of ["system-core", "system-integration", "system-principal", "system-delivery"])
     sqlite.exec(readFileSync(new URL(`../../schema/${name}.sql`, import.meta.url), "utf8"))
-  sqlite.exec(`INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('worker:1','active',0,0,0);
-    INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at) VALUES ('principal:1','worker:1','service','Worker',1,0,0);
+  sqlite.exec(`INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('75effc00-0878-4178-8d76-277086315849','active',0,0,0);
+    INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at) VALUES ('308954f7-a233-4860-85cb-026577024347','75effc00-0878-4178-8d76-277086315849','service','Worker',1,0,0);
     INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES ('4e74c1bb-6f90-452e-852b-b723b635cc75','worker','custom','Worker',0,0);
     INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('4e74c1bb-6f90-452e-852b-b723b635cc75','batch:execute');
-    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('d50d88aa-2e8e-4e9b-8d15-2a1fb3ed6a4c','worker:1','4e74c1bb-6f90-452e-852b-b723b635cc75',0);
+    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('d50d88aa-2e8e-4e9b-8d15-2a1fb3ed6a4c','75effc00-0878-4178-8d76-277086315849','4e74c1bb-6f90-452e-852b-b723b635cc75',0);
     CREATE TABLE effects (id TEXT PRIMARY KEY);`)
   const database = wrapSystemD1TestDatabase(sqlite)
   const clock = { at: new Date(1000) }
-  const workerAccountId = zAccountId.parse("worker:1")
+  const workerAccountId = zAccountId.parse("75effc00-0878-4178-8d76-277086315849")
   const jobInput = {
     id: "01900054-0000-7000-8000-000000000001",
     kind: "job",

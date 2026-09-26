@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { requestWithContext } from "@tests/api/support/request-with-context"
@@ -28,7 +29,7 @@ test("a stale knowledge edit cannot replace the text another edit already saved"
     .prepare(`INSERT INTO knowledge_articles
     (id,title,category,tags,body_md,author_id,created_at)
     VALUES ('01900042-0000-7000-8000-000000000001','Procedure','Operations',NULL,'Original instructions',?1,'2026-01-01T00:00:00Z')`)
-    .bind(toWorkforceEmployeeId(1))
+    .bind(toWorkforceEmployeeId(testEmployeeId(1)))
     .run()
   const jwtSecret = "knowledge-revision-test-secret"
   const token = await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(1) })

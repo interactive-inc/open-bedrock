@@ -1,6 +1,11 @@
+import { testDerivedId } from "@tests/api/support/test-identity-id"
 import { expect, spyOn, test } from "bun:test"
 import { z } from "zod"
-import { createEmployeeAdoptionBatchFixture } from "@/contexts/company/test/employee-resource-adoption-batch.test-support"
+import {
+  batchAccountId,
+  batchEmployeeId,
+  createEmployeeAdoptionBatchFixture,
+} from "@/contexts/company/test/employee-resource-adoption-batch.test-support"
 import { CompanyActorValue } from "@/contexts/company/domain/values/company-actor.value"
 import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
@@ -68,8 +73,8 @@ test("翌日の並び替えた再送も元の結果を返し、対象・理由�
     409,
   )
   context.actors.current = CompanyActorValue.restore({
-    accountId: "account:batch-1",
-    employeeId: "employee:batch-1",
+    accountId: batchAccountId(1),
+    employeeId: batchEmployeeId(1),
     organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:admin"],
   })
@@ -88,7 +93,7 @@ test("新しい接続は当日の確認を要求し、対象漏れや最後の�
   expect(await context.state()).toEqual(before)
   await context.database
     .prepare(
-      "UPDATE company_account_profiles SET display_name = 'Unconfirmed name' WHERE account_id = 'account:batch-1'",
+      `UPDATE company_account_profiles SET display_name = 'Unconfirmed name' WHERE account_id = '${batchAccountId(1)}'`,
     )
     .run()
   expect((await context.post(input)).status).toBe(409)
@@ -103,7 +108,7 @@ test("最後の移行証跡の保存失敗も全取消し、同じキーで再�
   const before = await context.state()
   await context.database
     .exec(`CREATE TRIGGER fail_batch_adoption BEFORE INSERT ON company_employee_resource_adoptions
-    WHEN NEW.employee_id = 'employee:batch-1' BEGIN SELECT RAISE(ABORT, 'injected last receipt failure'); END`)
+    WHEN NEW.employee_id = '${batchEmployeeId(1)}' BEGIN SELECT RAISE(ABORT, 'injected last receipt failure'); END`)
   expect((await context.post(input)).status).toBe(503)
   expect(await context.state()).toEqual(before)
   await context.database.exec("DROP TRIGGER fail_batch_adoption")
@@ -119,7 +124,7 @@ test("保存直前の最後のsnapshot変更を検出し、全員の接続と監
     async (statements) => {
       await context.database
         .prepare(
-          "UPDATE company_account_profiles SET updated_at = updated_at + 1 WHERE account_id = 'account:batch-1'",
+          `UPDATE company_account_profiles SET updated_at = updated_at + 1 WHERE account_id = '${batchAccountId(1)}'`,
         )
         .run()
       return batch(statements)
@@ -189,19 +194,24 @@ test("未知の従業員・重複・空集合・任意履歴やactorの注入を
     [],
     [input.employees[0], input.employees[0]],
     Array.from({ length: 251 }, (_, index) => ({
-      employeeId: `employee:${index}`,
+      employeeId: testDerivedId("employee", index),
       snapshotDigest: "a".repeat(64),
     })),
   ]) {
     expect((await context.post({ ...input, employees })).status).toBe(400)
   }
   expect((await context.post({ ...input, resources: [] })).status).toBe(400)
-  expect((await context.post({ ...input, actorAccountId: "account:someone" })).status).toBe(400)
+  expect(
+    (await context.post({ ...input, actorAccountId: "5ceca380-7edc-4c23-980b-d7c1f0df3783" }))
+      .status,
+  ).toBe(400)
   expect(
     (
       await context.post({
         ...input,
-        employees: [{ employeeId: "employee:missing", snapshotDigest: "a".repeat(64) }],
+        employees: [
+          { employeeId: "a5438ed0-be24-4fee-afe4-037ae70145b7", snapshotDigest: "a".repeat(64) },
+        ],
       })
     ).status,
   ).toBe(404)

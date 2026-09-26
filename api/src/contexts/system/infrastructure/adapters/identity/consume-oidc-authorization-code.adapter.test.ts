@@ -13,8 +13,10 @@ describe("consumeOidcAuthorizationCode", () => {
   test("誤ったverifier・issuer・client・redirect URIでは消費しない", async () => {
     const fixture = new SystemSessionTestContext()
     const now = new Date("2026-01-01T00:00:00.000Z")
-    const accountId = zAccountId.parse("account-1")
-    fixture.sqlite.exec("INSERT INTO system_accounts VALUES ('account-1', 'active', 0, NULL, 0, 0)")
+    const accountId = zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e")
+    fixture.sqlite.exec(
+      "INSERT INTO system_accounts (id, status, token_version, closed_at, created_at, updated_at) VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'active', 0, NULL, 0, 0)",
+    )
     const context = {
       var: {
         database: drizzle(fixture.context.env.DB, { schema: systemCoreSchema }),
@@ -82,8 +84,10 @@ describe("consumeOidcAuthorizationCode", () => {
   test("期限切れcodeを消費しない", async () => {
     const fixture = new SystemSessionTestContext()
     const issuedAt = new Date("2026-01-01T00:00:00.000Z")
-    const accountId = zAccountId.parse("account-1")
-    fixture.sqlite.exec("INSERT INTO system_accounts VALUES ('account-1', 'active', 0, NULL, 0, 0)")
+    const accountId = zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e")
+    fixture.sqlite.exec(
+      "INSERT INTO system_accounts (id, status, token_version, closed_at, created_at, updated_at) VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'active', 0, NULL, 0, 0)",
+    )
     const database = drizzle(fixture.context.env.DB, { schema: systemCoreSchema })
     const issued = await new CreateOidcAuthorizationCodeAdapter({
       var: { database, now: () => issuedAt },
@@ -115,8 +119,10 @@ describe("consumeOidcAuthorizationCode", () => {
   test("PKCE条件を満たす並行交換を一件だけ成功させる", async () => {
     const fixture = new SystemSessionTestContext()
     const now = new Date("2026-01-01T00:00:00.000Z")
-    const accountId = zAccountId.parse("account-1")
-    fixture.sqlite.exec("INSERT INTO system_accounts VALUES ('account-1', 'active', 0, NULL, 0, 0)")
+    const accountId = zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e")
+    fixture.sqlite.exec(
+      "INSERT INTO system_accounts (id, status, token_version, closed_at, created_at, updated_at) VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'active', 0, NULL, 0, 0)",
+    )
     const context = {
       var: {
         database: drizzle(fixture.context.env.DB, { schema: systemCoreSchema }),

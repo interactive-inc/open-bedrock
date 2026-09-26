@@ -24,7 +24,7 @@ function createDatabase(): D1Database {
     ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'person', 'person:employee-1', 2, 'rename',
       '{"officialName":"Renamed Person","email":null,"phone":null}')`)
   sqlite.run(
-    "INSERT INTO company_account_employee_resource_bindings VALUES ('employee-1', 'account-1')",
+    "INSERT INTO company_account_employee_resource_bindings VALUES ('employee-1', 'd5858208-e680-4db8-a05d-8bf4f900c24e')",
   )
   sqlite.run(
     "INSERT INTO company_personnel_actions VALUES ('action-1', 'employee-1', 'hire', 'fingerprint', 'actor', 'operation-1')",
@@ -41,7 +41,7 @@ test("冪等keyで確定済みの入社発令と、登録時に公開した値�
     recordedByAccountId: "actor",
     employeeCode: "E900",
     officialName: "Example Person",
-    accountId: "account-1",
+    accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
   })
   expect(await adapter.find("operation-unknown")).toBeNull()
 })
@@ -59,7 +59,7 @@ test("表示名の初期保存は作成時刻と更新時刻へ同じ時刻を�
   await database.batch([
     new InitialAccountProfileStatementAdapter(database).prepare({
       organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
-      accountId: "account-1",
+      accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
       displayName: "Example Person",
       at: 1234,
     }),
@@ -71,7 +71,7 @@ test("表示名の初期保存は作成時刻と更新時刻へ同じ時刻を�
       .first<Record<string, unknown>>(),
   ).toEqual({
     organization_id: COMPANY_DEFAULT_ORGANIZATION_ID,
-    account_id: "account-1",
+    account_id: "d5858208-e680-4db8-a05d-8bf4f900c24e",
     display_name: "Example Person",
     created_at: 1234,
     updated_at: 1234,

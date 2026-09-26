@@ -17,7 +17,7 @@ import { describe, expect, test } from "bun:test"
 import { hc } from "hono/client"
 
 const now = new Date("2026-01-01T00:00:00.000Z")
-const rootAccountId = zAccountId.parse("principal-root-account")
+const rootAccountId = zAccountId.parse("06b683a4-a91c-4b76-af75-d34d402f0ac6")
 const jwtSecret = "system-session-test-jwt-secret"
 
 describe("System Principal HTTP", () => {
@@ -34,7 +34,7 @@ describe("System Principal HTTP", () => {
       .query(
         `INSERT INTO system_step_up_grants
            (id, account_id, token_hash, method, issued_at, expires_at, last_used_at, revoked_at)
-         VALUES ('step-up:1', ?1, ?2, 'password', ?3, ?4, NULL, NULL)`,
+         VALUES ('5e32da6a-cdd9-4fcf-b973-b80082165594', ?1, ?2, 'password', ?3, ?4, NULL, NULL)`,
       )
       .run(rootAccountId, stepUpHash, now.getTime(), now.getTime() + 300_000)
 
@@ -154,7 +154,7 @@ function seedRoot(fixture: SystemSessionTestContext): void {
     .query(
       `INSERT INTO system_principals
          (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
-       VALUES ('principal:root', ?1, 'human', 'Root', NULL, 1, ?2, ?2)`,
+       VALUES ('4d0f979a-6d3b-4d7b-9be0-fe4b3a99e1d2', ?1, 'human', 'Root', NULL, 1, ?2, ?2)`,
     )
     .run(rootAccountId, now.getTime())
   fixture.sqlite.exec(
@@ -167,7 +167,7 @@ function seedRoot(fixture: SystemSessionTestContext): void {
             ('7fc6245e-9a8a-419a-849e-d398ffef5c52', 'system:admin');
      INSERT INTO system_role_bindings
        (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-     VALUES ('a0fa7364-472e-45da-8939-f513091033e4', 'principal-root-account', '7fc6245e-9a8a-419a-849e-d398ffef5c52',
+     VALUES ('a0fa7364-472e-45da-8939-f513091033e4', '06b683a4-a91c-4b76-af75-d34d402f0ac6', '7fc6245e-9a8a-419a-849e-d398ffef5c52',
              NULL, NULL, 1, NULL);`,
   )
 }

@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -125,7 +126,7 @@ describe("POST /shift-assignments", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
       expect(parsed.data.pattern_id).toBe("01900023-0000-7000-8000-000000000001")
       expect(parsed.data.published_at).toBeNull()
     }

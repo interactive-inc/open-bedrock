@@ -6,7 +6,7 @@ import { drizzle } from "drizzle-orm/d1"
 
 const fixtures: Array<SystemSessionTestContext> = []
 const input = {
-  accountId: zAccountId.parse("account-1"),
+  accountId: zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e"),
   tokenVersion: 0,
   issuedAtMs: 1_000,
   sessionFamilyId: null,
@@ -22,18 +22,18 @@ function createFixture() {
   fixtures.push(fixture)
   fixture.sqlite.exec(`
     INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-    VALUES ('account-1', 'active', 0, 1, 1), ('account-2', 'active', 0, 1, 1);
+    VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'active', 0, 1, 1), ('4b0518fd-9017-4afc-addd-bb50998b0273', 'active', 0, 1, 1);
     INSERT INTO system_principals
     (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
-    VALUES ('principal-1', 'account-1', 'service', 'Primary', NULL, 1, 1, 1),
-           ('principal-2', 'account-2', 'service', 'Other', NULL, 1, 1, 1);
+    VALUES ('4392b600-7e0f-470a-9330-bfb3344f6a5b', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'service', 'Primary', NULL, 1, 1, 1),
+           ('4474863f-42a0-4e22-ae28-61a0d4a475ad', '4b0518fd-9017-4afc-addd-bb50998b0273', 'service', 'Other', NULL, 1, 1, 1);
   `)
   fixture.sqlite
     .query(`
     INSERT INTO system_machine_credentials
     (id, principal_id, name, secret_hash, status, created_at, updated_at, last_used_at, expires_at)
-    VALUES ('credential-1', 'principal-1', 'Primary', ?1, 'active', 100, 1000, 1000, 2000),
-           ('credential-2', 'principal-2', 'Other', ?2, 'active', 100, 1000, 1000, 2000)
+    VALUES ('ad6a0f96-902f-4999-84f6-2b9eb703c2ed', '4392b600-7e0f-470a-9330-bfb3344f6a5b', 'Primary', ?1, 'active', 100, 1000, 1000, 2000),
+           ('64571a17-dadf-476c-b4ab-d793d738ef0c', '4474863f-42a0-4e22-ae28-61a0d4a475ad', 'Other', ?2, 'active', 100, 1000, 1000, 2000)
   `)
     .run("1".repeat(64), "2".repeat(64))
   return fixture
@@ -45,15 +45,15 @@ describe("SystemAccessTokenStateAdapter", () => {
     for (const database of [fixture.context.env.DB, drizzle(fixture.context.env.DB)]) {
       const state = await new SystemAccessTokenStateAdapter({ database }).resolve({
         ...input,
-        machineCredentialId: "credential-1",
+        machineCredentialId: "ad6a0f96-902f-4999-84f6-2b9eb703c2ed",
       })
       expect(state).toMatchObject({
         kind: "accepted",
-        account: { id: "account-1" },
+        account: { id: "d5858208-e680-4db8-a05d-8bf4f900c24e" },
         machine: {
-          principalId: "principal-1",
+          principalId: "4392b600-7e0f-470a-9330-bfb3344f6a5b",
           kind: "service",
-          credentialId: "credential-1",
+          credentialId: "ad6a0f96-902f-4999-84f6-2b9eb703c2ed",
           connectorId: null,
         },
       })
@@ -66,7 +66,7 @@ describe("SystemAccessTokenStateAdapter", () => {
     expect(
       await new SystemAccessTokenStateAdapter({ database: fixture.context.env.DB }).resolve({
         ...input,
-        machineCredentialId: "credential-2",
+        machineCredentialId: "64571a17-dadf-476c-b4ab-d793d738ef0c",
       }),
     ).toEqual({ kind: "rejected", reason: "invalid_machine_credential" })
   })
@@ -78,7 +78,7 @@ describe("SystemAccessTokenStateAdapter", () => {
       expect(
         await new SystemAccessTokenStateAdapter({ database: fixture.context.env.DB }).resolve({
           ...input,
-          machineCredentialId: "credential-1",
+          machineCredentialId: "ad6a0f96-902f-4999-84f6-2b9eb703c2ed",
           issuedAtMs,
         }),
       ).toEqual({ kind: "rejected", reason: "invalid_machine_credential" })
@@ -91,7 +91,7 @@ describe("SystemAccessTokenStateAdapter", () => {
     expect(
       await new SystemAccessTokenStateAdapter({ database: fixture.context.env.DB }).resolve({
         ...input,
-        machineCredentialId: "credential-1",
+        machineCredentialId: "ad6a0f96-902f-4999-84f6-2b9eb703c2ed",
       }),
     ).toEqual({ kind: "rejected", reason: "invalid_machine_credential" })
   })
@@ -101,9 +101,12 @@ describe("SystemAccessTokenStateAdapter", () => {
     fixture.sqlite.exec(`
       UPDATE system_principals SET kind = 'human', revision = revision + 1;
       INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-      VALUES ('legacy-human', 'active', 0, 1, 1);
+      VALUES ('964d96c2-4c23-4fc2-ac6d-296e5d5870b9', 'active', 0, 1, 1);
     `)
-    for (const accountId of [input.accountId, zAccountId.parse("legacy-human")]) {
+    for (const accountId of [
+      input.accountId,
+      zAccountId.parse("964d96c2-4c23-4fc2-ac6d-296e5d5870b9"),
+    ]) {
       expect(
         await new SystemAccessTokenStateAdapter({ database: fixture.context.env.DB }).resolve({
           ...input,
@@ -120,7 +123,7 @@ describe("SystemAccessTokenStateAdapter", () => {
     expect(
       await new SystemAccessTokenStateAdapter({ database: fixture.context.env.DB }).resolve({
         ...input,
-        machineCredentialId: "credential-1",
+        machineCredentialId: "ad6a0f96-902f-4999-84f6-2b9eb703c2ed",
       }),
     ).toBeInstanceOf(Error)
   })

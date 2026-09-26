@@ -11,7 +11,7 @@ const april = restoreCalendarDate("2030-04-01")
 const july = restoreCalendarDate("2030-07-01")
 const scope = {
   resourceId: "line:one",
-  employeeId: "employee:one",
+  employeeId: "9e174baf-3240-4253-9cba-16bc3e431cca",
   organizationUnitId: "0190005f-0000-7000-8000-c9ae95875c9c",
 }
 

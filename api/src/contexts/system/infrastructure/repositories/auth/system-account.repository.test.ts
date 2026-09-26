@@ -102,15 +102,17 @@ describe("SystemAccountRepository", () => {
       .prepare(
         `INSERT INTO system_accounts
            (id, status, token_version, created_at, updated_at)
-         VALUES ('account-1', 'suspended', 3, 100, 200)`,
+         VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'suspended', 3, 100, 200)`,
       )
       .run()
 
-    const account = await createRepository(database).find(zAccountId.parse("account-1"))
+    const account = await createRepository(database).find(
+      zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e"),
+    )
 
     expect(account).toBeInstanceOf(AccountEntity)
     expect(account).toMatchObject({
-      id: "account-1",
+      id: "d5858208-e680-4db8-a05d-8bf4f900c24e",
       status: "suspended",
       tokenVersion: 3,
       closedAt: null,
@@ -152,7 +154,9 @@ describe("SystemAccountRepository", () => {
     const database = createSystemD1TestDatabase(schema)
     await database.exec("DROP TABLE system_accounts")
 
-    const account = await createRepository(database).find(zAccountId.parse("account-1"))
+    const account = await createRepository(database).find(
+      zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e"),
+    )
 
     expect(account).toBeInstanceOf(Error)
     expect(account).not.toBeInstanceOf(InvalidAccountError)

@@ -10,6 +10,7 @@ import { CompanyActorValue } from "@/contexts/company/domain/values/company-acto
 import { OrganizationResourceAdoptionSnapshotAdapter } from "@/contexts/company/infrastructure/adapters/organization/organization-resource-adoption-snapshot.adapter"
 import { CompanyOrganizationResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-organization-resource-projection.adapter"
 import { CompanyOrganizationResourceJournalAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-organization-resource-journal.adapter"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const resourceSchema = z.object({
@@ -41,6 +42,12 @@ const snapshotSchema = z.object({
   organizationRevision: z.number(),
   resources: z.array(resourceSchema),
 })
+
+/** 既存の組織APIは冪等キーを操作IDに使うため、テストの名前付きキーを同じ UUID へ写す。 */
+const operationKey = (key: string) =>
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u.test(key)
+    ? key
+    : deterministicCompanyId("test-operation", key)
 
 async function createOrganizationFixture(
   createEmployeeAdoptionFixture: ReturnType<typeof createEmployeeAdoptionFixtureScope>,
@@ -109,7 +116,7 @@ async function createOrganizationFixture(
   const create = (code: string, key = `create:${code}`) =>
     writes["organization-units"].$post(
       { json: { code, name: code, parent_code: null } },
-      { headers: { "idempotency-key": key } },
+      { headers: { "idempotency-key": operationKey(key) } },
     )
   const observe = async (code: string) => {
     const response = await reads["organization-units"][":code"].$get({ param: { code } })
@@ -122,10 +129,10 @@ async function createOrganizationFixture(
       expected_as_of: body.as_of,
     }
   }
-  const rename = async (code: string, name: string, key = `rename:${crypto.randomUUID()}`) =>
+  const rename = async (code: string, name: string, key: string = crypto.randomUUID()) =>
     writes["organization-units"][":code"].$put(
       { param: { code }, json: { name, parent_code: null, ...(await observe(code)) } },
-      { headers: { "idempotency-key": key } },
+      { headers: { "idempotency-key": operationKey(key) } },
     )
   const snapshot = async (asOf = "2026-09-07") => {
     const response = await reads["organization-snapshots"].$get({
@@ -668,7 +675,7 @@ describe("organization resources and the company period ledger", () => {
               param: { code: "PERIODS" },
               json: { name: "Old screen", parent_code: null, ...beforeDateChange },
             },
-            { headers: { "idempotency-key": "stale-future-period" } },
+            { headers: { "idempotency-key": operationKey("stale-future-period") } },
           )
         ).status,
       ),
@@ -685,7 +692,7 @@ describe("organization resources and the company period ledger", () => {
         (
           await f.writes["organization-units"][":code"].$delete(
             { param: { code: "PERIODS" }, json: await f.observe("PERIODS") },
-            { headers: { "idempotency-key": "cancel-future-period" } },
+            { headers: { "idempotency-key": operationKey("cancel-future-period") } },
           )
         ).status,
       ),

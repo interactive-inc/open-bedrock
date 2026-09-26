@@ -10,6 +10,10 @@ export const organizationChangeOperations = sqliteTable(
   "company_organization_change_operations",
   {
     id: text("id").primaryKey(),
+    /** 主キーを UUID へ移す前の値。移行前の記録を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
+    /** trigger が操作を見つけるための旧来の鍵。ID はこの鍵から決まる UUID */
+    operationKey: text("operation_key").unique(),
     expectedRevision: integer("expected_revision").notNull(),
     changeCount: integer("change_count").notNull(),
     appliedCount: integer("applied_count").notNull().default(0),

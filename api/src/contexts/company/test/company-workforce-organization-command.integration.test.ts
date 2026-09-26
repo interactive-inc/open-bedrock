@@ -1,4 +1,5 @@
 import { expect, spyOn, test } from "bun:test"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 import { z } from "zod"
 import { createCompanyAuthorityEmploymentTestContext } from "@/contexts/company/test/company-authority-employment.test-support"
 import { D1CompanyResourceRepository } from "@/contexts/company/infrastructure/repositories/core/d1-company-resource.repository"
@@ -494,7 +495,7 @@ test.each(["responsibility", "manager"] as const)(
       .bind(other.employeeId)
       .first<{ id: string }>()
     if (otherEmployment === null) throw new Error("other employment missing")
-    const operationId = `legacy:${kind}`
+    const operationId = deterministicCompanyId("test-operation", `legacy:${kind}`)
     const legacyPeriod =
       kind === "responsibility"
         ? f.database

@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { z } from "zod"
@@ -89,9 +90,21 @@ describe("POST /review-cycles/:cycleId/forms/bulk", () => {
       "POST",
       {
         forms: [
-          { subject_employee_id: "5", reviewer_employee_id: "5", reviewer_type: "self" },
-          { subject_employee_id: "5", reviewer_employee_id: "4", reviewer_type: "manager" },
-          { subject_employee_id: "5", reviewer_employee_id: "2", reviewer_type: "peer" },
+          {
+            subject_employee_id: testEmployeeId(5),
+            reviewer_employee_id: testEmployeeId(5),
+            reviewer_type: "self",
+          },
+          {
+            subject_employee_id: testEmployeeId(5),
+            reviewer_employee_id: testEmployeeId(4),
+            reviewer_type: "manager",
+          },
+          {
+            subject_employee_id: testEmployeeId(5),
+            reviewer_employee_id: testEmployeeId(2),
+            reviewer_type: "peer",
+          },
         ],
       },
     )
@@ -127,7 +140,13 @@ describe("POST /review-cycles/:cycleId/forms/bulk", () => {
       await memberToken(),
       "POST",
       {
-        forms: [{ subject_employee_id: "5", reviewer_employee_id: "5", reviewer_type: "self" }],
+        forms: [
+          {
+            subject_employee_id: testEmployeeId(5),
+            reviewer_employee_id: testEmployeeId(5),
+            reviewer_type: "self",
+          },
+        ],
       },
     )
 
@@ -140,7 +159,13 @@ describe("POST /review-cycles/:cycleId/forms/bulk", () => {
       await adminToken(),
       "POST",
       {
-        forms: [{ subject_employee_id: "5", reviewer_employee_id: "5", reviewer_type: "self" }],
+        forms: [
+          {
+            subject_employee_id: testEmployeeId(5),
+            reviewer_employee_id: testEmployeeId(5),
+            reviewer_type: "self",
+          },
+        ],
       },
     )
 
@@ -153,7 +178,13 @@ describe("POST /review-cycles/:cycleId/forms/bulk", () => {
       await adminToken(),
       "POST",
       {
-        forms: [{ subject_employee_id: "5", reviewer_employee_id: "9999", reviewer_type: "peer" }],
+        forms: [
+          {
+            subject_employee_id: testEmployeeId(5),
+            reviewer_employee_id: testEmployeeId(9999),
+            reviewer_type: "peer",
+          },
+        ],
       },
     )
 

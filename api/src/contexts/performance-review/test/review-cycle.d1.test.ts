@@ -50,7 +50,7 @@ async function seedPendingForm(db: D1Database, cycleId: string): Promise<void> {
   await db
     .prepare(
       `INSERT INTO review_forms (id, cycle_id, subject_employee_id, reviewer_employee_id, reviewer_type, answers, score, comment, status, submitted_at)
-       VALUES (?2, ?1, '10', '5', 'peer', '[]', NULL, NULL, 'pending', NULL)`,
+       VALUES (?2, ?1, '01900062-0000-7000-8000-00000000000a', '01900062-0000-7000-8000-000000000005', 'peer', '[]', NULL, NULL, 'pending', NULL)`,
     )
     .bind(cycleId, crypto.randomUUID())
     .run()

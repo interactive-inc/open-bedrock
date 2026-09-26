@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { OnboardingAssignment } from "@/contexts/onboarding/domain/entities/onboarding-assignment.entity"
@@ -51,7 +52,11 @@ const template = new OnboardingTemplate({
 })
 
 function assign(assignedAt: string): OnboardingAssignment {
-  return OnboardingAssignment.create({ employeeId: toWorkforceEmployeeId(1), template, assignedAt })
+  return OnboardingAssignment.create({
+    employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
+    template,
+    assignedAt,
+  })
 }
 
 describe("OnboardingAssignmentRepository on local D1", () => {
@@ -65,7 +70,7 @@ describe("OnboardingAssignmentRepository on local D1", () => {
     if (first instanceof Error || first.id === null) throw new Error("create failed")
 
     const active = await repository.findActiveByEmployeeAndTemplate(
-      toWorkforceEmployeeId(1),
+      toWorkforceEmployeeId(testEmployeeId(1)),
       "join-default",
     )
 
@@ -79,7 +84,10 @@ describe("OnboardingAssignmentRepository on local D1", () => {
     if (completed instanceof Error) throw completed
 
     expect(
-      await repository.findActiveByEmployeeAndTemplate(toWorkforceEmployeeId(1), "join-default"),
+      await repository.findActiveByEmployeeAndTemplate(
+        toWorkforceEmployeeId(testEmployeeId(1)),
+        "join-default",
+      ),
     ).toBeNull()
     expect(await repository.delete(completed)).toBeNull()
 
@@ -128,7 +136,7 @@ async function createTwoTaskAssignment(
 ): Promise<OnboardingAssignment> {
   const created = await repository.create(
     OnboardingAssignment.create({
-      employeeId: toWorkforceEmployeeId(1),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
       template: twoTaskTemplate(),
       assignedAt: "2026-01-01T00:00:00.000Z",
     }),
@@ -165,7 +173,7 @@ describe("OnboardingAssignmentRepository", () => {
 
     const created = await repository.create(
       OnboardingAssignment.create({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         template,
         assignedAt: "2026-01-01T00:00:00.000Z",
       }),

@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { resolveCompanyEmployeeRelation } from "@/contexts/company/interface/operations/resolve-company-employee-relation"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -41,7 +42,7 @@ function goalPorts(context: Context) {
 
 async function createGoal(context: Context): Promise<string> {
   const goal = await new CreateGoal(goalPorts(context)).run({
-    employeeId: toWorkforceEmployeeId(1),
+    employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
     period: "2026-H1",
     title: "Improve test coverage",
     kpi: null,
@@ -81,7 +82,7 @@ describe("goal evaluation with company organization on local D1", () => {
       kind: "manager",
       score: 5,
       comment: "Excellent",
-      evaluatorId: toWorkforceEmployeeId(2),
+      evaluatorId: toWorkforceEmployeeId(testEmployeeId(2)),
       session: makeTestSession("manager", 2),
       createdAt: "2026-01-01T00:00:00.000Z",
     })
@@ -91,7 +92,7 @@ describe("goal evaluation with company organization on local D1", () => {
 
     const deleted = await new DeleteGoal(goalPorts(context)).run({
       goalId,
-      employeeId: toWorkforceEmployeeId(1),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
     })
 
     expect(deleted).toEqual({ reason: "deleted" })
@@ -117,7 +118,7 @@ describe("goal evaluation with company organization on local D1", () => {
       kind: "manager",
       score: 5,
       comment: "Excellent",
-      evaluatorId: toWorkforceEmployeeId(2),
+      evaluatorId: toWorkforceEmployeeId(testEmployeeId(2)),
       session: makeTestSession("manager", 2),
       createdAt: "2026-01-01T00:00:00.000Z",
     })

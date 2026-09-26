@@ -16,7 +16,7 @@ const input = {
   operationKey: "record.create",
   scopeKey: "scope:1",
   commandId: "command:1",
-  actorAccountId: "account:1",
+  actorAccountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
   actorPrincipalId: "principal:1",
   requestDigest: "a".repeat(64),
   recordedAt: 1000,

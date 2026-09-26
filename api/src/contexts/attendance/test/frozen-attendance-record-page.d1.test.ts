@@ -30,7 +30,7 @@ test("欠番・複数ページを停止世代へ束縛し、解除して再停�
       "DELETE FROM attendance_records WHERE id='01900016-0000-7000-8000-000000000002'",
     ),
     f.database.prepare(
-      "INSERT INTO attendance_records (id,employee_id,work_date,status) VALUES ('01900016-0000-7000-8000-000000000384','employee:worker','2026-08-31','closed')",
+      "INSERT INTO attendance_records (id,employee_id,work_date,status) VALUES ('01900016-0000-7000-8000-000000000384','aea9e258-3d37-4735-a897-5d1eb8aa7c29','2026-08-31','closed')",
     ),
   ])
   const repository = openSystemRecordSourceFreezes({ env: f.context.env, assertions: [] })
@@ -135,7 +135,7 @@ test("100件の上限を超える原記録を重複なく全ページ取得す�
     f.database,
     `WITH RECURSIVE ids(n) AS (SELECT 3 UNION ALL SELECT n+1 FROM ids WHERE n<205)
     INSERT INTO attendance_records (id,employee_id,work_date,status)
-    SELECT printf('01900016-0000-7000-8000-%012x', n),'employee:worker','2026-09-01','closed' FROM ids`,
+    SELECT printf('01900016-0000-7000-8000-%012x', n),'aea9e258-3d37-4735-a897-5d1eb8aa7c29','2026-09-01','closed' FROM ids`,
   )
   const id = crypto.randomUUID()
   const repository = openSystemRecordSourceFreezes({ env: f.context.env, assertions: [] })

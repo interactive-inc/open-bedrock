@@ -89,28 +89,38 @@ test(
 
     applyMigrations(database, migrationFiles.slice(companyCutoverIndex))
 
-    expect(
-      database
-        .query(
-          `SELECT id, official_name, employee_code, email, phone
-         FROM company_employees WHERE id = '7'`,
-        )
-        .get(),
-    ).toEqual({
-      id: "7",
+    // 社員と Account の主キーは UUID へ移り、移行前の値は legacy_id に残る。
+    const employee = database
+      .query<
+        { id: string; official_name: string; employee_code: string; email: string; phone: string },
+        []
+      >(
+        `SELECT id, official_name, employee_code, email, phone
+         FROM company_employees WHERE legacy_id = '7'`,
+      )
+      .get()
+    expect(employee).toMatchObject({
       official_name: "Existing Employee",
       employee_code: "E007",
       email: "existing@example.test",
       phone: "000-0000",
     })
+    expect(employee?.id).toMatch(
+      /^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/u,
+    )
+    const account = database
+      .query<{ id: string }, []>(
+        "SELECT id FROM system_accounts WHERE legacy_id = 'account-existing'",
+      )
+      .get()
     expect(
       database.query("SELECT account_id, employee_id FROM company_account_employee_links").get(),
-    ).toEqual({ account_id: "account-existing", employee_id: "7" })
+    ).toEqual({ account_id: account?.id, employee_id: employee?.id })
     expect(
       database
-        .query("SELECT employee_id, status FROM company_employments WHERE employee_id = '7'")
-        .get(),
-    ).toEqual({ employee_id: "7", status: "ACTIVE" })
+        .query("SELECT employee_id, status FROM company_employments WHERE employee_id = ?1")
+        .get(employee?.id ?? ""),
+    ).toEqual({ employee_id: employee?.id, status: "ACTIVE" })
     // 人事の注記の主キーは UUID へ移り、移行前の整数の主キーは legacy_id に残る。
     expect(
       database.query("SELECT legacy_id AS id FROM company_personnel_annotations").get(),

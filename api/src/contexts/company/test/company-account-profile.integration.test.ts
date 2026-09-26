@@ -40,22 +40,22 @@ const schemaSql = `
 describe("Company Account Profile", () => {
   test("読み取り後の従業員紐付けを保存時に再検査する", async () => {
     const database = createCompanyD1TestDatabase(`${schemaSql}
-      INSERT INTO system_accounts VALUES ('account-1', 'active', 7, 100, 100);
-      INSERT INTO company_account_profiles VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account-1', 'Employee name', 100, 100);
+      INSERT INTO system_accounts VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'active', 7, 100, 100);
+      INSERT INTO company_account_profiles VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'Employee name', 100, 100);
     `)
     const repository = new D1CompanyAccountProfileRepository(database)
     const commit = database.batch.bind(database)
     database.batch = async (statements) => {
       await database
         .prepare(
-          `INSERT INTO company_account_employee_resource_bindings VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'link-1', 'account-1', 'employee-1')`,
+          `INSERT INTO company_account_employee_resource_bindings VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'link-1', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'employee-1')`,
         )
         .run()
       return commit(statements)
     }
     const result = await new UpdateCompanyAccountProfile(repository).execute(
       COMPANY_DEFAULT_ORGANIZATION_ID,
-      "account-1",
+      "d5858208-e680-4db8-a05d-8bf4f900c24e",
       "Stale rename",
       new Date(200),
     )
@@ -69,13 +69,18 @@ describe("Company Account Profile", () => {
 
   test("紐付いたAccountでも同じ表示名は履歴時刻を変えずに返す", async () => {
     const database = createCompanyD1TestDatabase(`${schemaSql}
-      INSERT INTO system_accounts VALUES ('account-1', 'active', 7, 100, 100);
-      INSERT INTO company_account_profiles VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account-1', 'Employee name', 100, 100);
-      INSERT INTO company_account_employee_resource_bindings VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'link-1', 'account-1', 'employee-1');
+      INSERT INTO system_accounts VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'active', 7, 100, 100);
+      INSERT INTO company_account_profiles VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'Employee name', 100, 100);
+      INSERT INTO company_account_employee_resource_bindings VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'link-1', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'employee-1');
     `)
     const result = await new UpdateCompanyAccountProfile(
       new D1CompanyAccountProfileRepository(database),
-    ).execute(COMPANY_DEFAULT_ORGANIZATION_ID, "account-1", "Employee name", new Date(200))
+    ).execute(
+      COMPANY_DEFAULT_ORGANIZATION_ID,
+      "d5858208-e680-4db8-a05d-8bf4f900c24e",
+      "Employee name",
+      new Date(200),
+    )
     expect(result).not.toBeInstanceOf(Error)
     expect(
       await database
@@ -87,16 +92,16 @@ describe("Company Account Profile", () => {
   test("reads and updates the Company-owned display name without changing System Account", async () => {
     const database = createCompanyD1TestDatabase(`${schemaSql}
       INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-        VALUES ('account-1', 'active', 7, 100, 100);
+        VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'active', 7, 100, 100);
       INSERT INTO company_account_profiles
         (organization_id, account_id, display_name, created_at, updated_at)
-        VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account-1', 'Before', 100, 100);
+        VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'Before', 100, 100);
     `)
     const repository = new D1CompanyAccountProfileRepository(database)
 
     const before = await repository.find({
       organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
-      accountId: "account-1",
+      accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
     })
     expect(before).not.toBeNull()
     expect(before).not.toBeInstanceOf(Error)
@@ -105,7 +110,7 @@ describe("Company Account Profile", () => {
 
     const updated = await new UpdateCompanyAccountProfile(repository).execute(
       COMPANY_DEFAULT_ORGANIZATION_ID,
-      "account-1",
+      "d5858208-e680-4db8-a05d-8bf4f900c24e",
       "After",
       new Date(200),
     )
@@ -115,7 +120,9 @@ describe("Company Account Profile", () => {
     expect(updated.displayName).toBe("After")
     expect(
       await database
-        .prepare("SELECT status, token_version FROM system_accounts WHERE id = 'account-1'")
+        .prepare(
+          "SELECT status, token_version FROM system_accounts WHERE id = 'd5858208-e680-4db8-a05d-8bf4f900c24e'",
+        )
         .first<{ status: string; token_version: number }>(),
     ).toEqual({ status: "active", token_version: 7 })
   })

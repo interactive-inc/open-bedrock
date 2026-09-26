@@ -1,3 +1,4 @@
+import { testDerivedId } from "@tests/api/support/test-identity-id"
 import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 type TestAccountEmployeeLink = Readonly<{
   accountId: string
@@ -40,7 +41,7 @@ export async function publishTestAccountEmployeeLink(
     .first<number>("revision")
   if (organizationRevision === null || organizationRevision < 1)
     throw new Error("test Company organization is missing")
-  const resourceId = `test:${input.accountId}:account-link`
+  const resourceId = testDerivedId("account-link", input.accountId)
   const attributes = JSON.stringify({ accountId: input.accountId, employeeId: input.employeeId })
   const statements = [
     db

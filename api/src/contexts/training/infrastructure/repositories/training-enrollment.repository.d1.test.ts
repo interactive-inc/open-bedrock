@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { TrainingCourse } from "@/contexts/training/domain/entities/training-course.entity"
 import { TrainingEnrollment } from "@/contexts/training/domain/entities/training-enrollment.entity"
 import { TrainingCourseRepository } from "@/contexts/training/infrastructure/repositories/training-course.repository"
@@ -59,7 +60,7 @@ describe("TrainingEnrollmentRepository", () => {
     const created = await repository.create(
       TrainingEnrollment.create({
         courseId,
-        employeeId: toWorkforceEmployeeId(2),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(2)),
         dueDate: "2026-03-31",
       }),
     )
@@ -87,7 +88,7 @@ describe("TrainingEnrollmentRepository", () => {
     }
 
     expect(found.courseId).toBe(courseId)
-    expect(found.employeeId).toBe(toWorkforceEmployeeId(2))
+    expect(found.employeeId).toBe(toWorkforceEmployeeId(testEmployeeId(2)))
     expect(found.status).toBe("enrolled")
   })
 
@@ -116,7 +117,7 @@ describe("TrainingEnrollmentRepository", () => {
     const created = await repository.create(
       TrainingEnrollment.create({
         courseId: course.id!,
-        employeeId: toWorkforceEmployeeId(2),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(2)),
         dueDate: null,
       }),
     )
@@ -138,7 +139,7 @@ describe("TrainingEnrollmentRepository", () => {
     const created = await repository.create(
       TrainingEnrollment.create({
         courseId,
-        employeeId: toWorkforceEmployeeId(2),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(2)),
         dueDate: null,
       }),
     )
@@ -182,7 +183,7 @@ describe("TrainingEnrollmentRepository", () => {
     const created = await repository.create(
       TrainingEnrollment.create({
         courseId,
-        employeeId: toWorkforceEmployeeId(2),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(2)),
         dueDate: null,
       }),
     )
@@ -208,7 +209,7 @@ describe("TrainingEnrollmentRepository", () => {
 
     const found = await repository.findByCourseAndEmployee(
       crypto.randomUUID(),
-      toWorkforceEmployeeId(9999),
+      toWorkforceEmployeeId(testEmployeeId(9999)),
     )
 
     expect(found).toBeNull()

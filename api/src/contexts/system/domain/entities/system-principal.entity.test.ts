@@ -1,3 +1,4 @@
+import { testDerivedId } from "@tests/api/support/test-identity-id"
 import { SystemPrincipalEntity } from "@system/domain/entities/system-principal.entity"
 import { describe, expect, test } from "bun:test"
 
@@ -8,8 +9,8 @@ describe("SystemPrincipalEntity", () => {
     for (const kind of ["human", "agent", "service"] as const) {
       expect(
         SystemPrincipalEntity.create({
-          id: `principal:${kind}`,
-          accountId: `account:${kind}`,
+          id: testDerivedId("principal", kind),
+          accountId: testDerivedId("account", kind),
           kind,
           name: kind,
           connectorId: null,
@@ -22,7 +23,7 @@ describe("SystemPrincipalEntity", () => {
     expect(
       SystemPrincipalEntity.create({
         id: "principal:connector",
-        accountId: "account:connector",
+        accountId: "4e1ad874-b77a-4853-b6ea-e3f9bad3df21",
         kind: "connector",
         name: "Connector",
         connectorId: "connector:external",
@@ -37,7 +38,7 @@ describe("SystemPrincipalEntity", () => {
     expect(
       SystemPrincipalEntity.create({
         id: "principal:connector",
-        accountId: "account:connector",
+        accountId: "4e1ad874-b77a-4853-b6ea-e3f9bad3df21",
         kind: "connector",
         name: "Connector",
         connectorId: null,

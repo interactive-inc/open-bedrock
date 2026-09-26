@@ -1,3 +1,4 @@
+import { testDerivedId } from "@tests/api/support/test-identity-id"
 import { expect, test } from "bun:test"
 import { readFileSync } from "node:fs"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
@@ -137,13 +138,13 @@ const person: CompanyResourceProps = {
 const employee: CompanyResourceProps = {
   ...common,
   type: "employee",
-  id: "employee:member",
+  id: testDerivedId("employee", "member"),
   attributes: { personId: person.id },
 }
 const employment: CompanyResourceProps = {
   ...common,
   type: "employment",
-  id: "employment:member",
+  id: testDerivedId("employment", "member"),
   attributes: {
     employeeId: employee.id,
     status: "ACTIVE",
@@ -239,7 +240,7 @@ const references: ReadonlyArray<
       {
         ...common,
         type: "assignment",
-        id: "placement:member",
+        id: testDerivedId("assignment", "member"),
         attributes: {
           employeeId: employee.id,
           employmentId: employment.id,
@@ -272,7 +273,7 @@ function fixture(schemaSql = schema) {
       resources,
       expectedRevision,
       commandId,
-      actorAccountId: "account:operator",
+      actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
       reason: "Confirm governance history",
       recordedAt: Date.parse("2030-06-01T00:00:00Z"),
     })

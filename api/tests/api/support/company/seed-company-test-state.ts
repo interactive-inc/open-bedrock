@@ -1,3 +1,4 @@
+import { testDerivedId, testEmployeeId } from "@tests/api/support/test-identity-id"
 import { publishTestEmployeeResources } from "@tests/api/support/company/publish-test-employee-resources"
 import { seedOrganizationUnitId } from "@tests/api/support/company/test-organization-unit-id"
 import { COMPANY_ROOT_ORGANIZATION_UNIT_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
@@ -32,15 +33,15 @@ const recordedAt = Date.parse(`${baselineOn}T00:00:00.000Z`)
 const fingerprint = "0".repeat(64)
 
 function employeeId(employee: CompanyEmployeeFixture): string {
-  return String(employee.id)
+  return testEmployeeId(employee.id)
 }
 
 function employmentId(employee: CompanyEmployeeFixture): string {
-  return `test:${employeeId(employee)}:employment`
+  return testDerivedId("employment", employeeId(employee))
 }
 
 function personnelActionId(employee: CompanyEmployeeFixture): string {
-  return `test:${employeeId(employee)}:initial-state`
+  return testDerivedId("initial-state", employeeId(employee))
 }
 
 function departmentFor(
@@ -141,7 +142,7 @@ export async function seedCompanyEmployees(
              VALUES (?1, 1, ?2, ?3, ?4, ?5, NULL, 0, ?6, ?7)`,
           )
           .bind(
-            `test:${id}:status`,
+            testDerivedId("status", id),
             currentEmploymentId,
             id,
             status,
@@ -256,7 +257,7 @@ export async function seedCompanyOrganization(
     (await db
       .prepare("SELECT revision FROM company_organization_lifecycle_states WHERE id = 1")
       .first<number>("revision")) ?? 0
-  const operationId = `test:organization:${expectedRevision}`
+  const operationId = testDerivedId("organization-operation", expectedRevision)
 
   for (const department of props.departments) {
     await db

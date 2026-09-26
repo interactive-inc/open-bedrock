@@ -16,11 +16,13 @@ export async function createExpenseProcedureTestContext(
   rejectionBehavior: "reject" | "return" = "reject",
 ) {
   const c = await createLocalD1CompanyAssignment(database)
+  // 主務所属の資源IDはUUIDでなければ保存できない。
+  const assignment = { ...c.assignment, id: "7b0c52d4-3f4e-4c8a-9a61-2f1e0d5c8b47" }
   const assigned = await c.write([
-    { ...c.assignment, effectiveFrom: c.at.toISOString().slice(0, 10) },
+    { ...assignment, effectiveFrom: c.at.toISOString().slice(0, 10) },
   ])
   if (Number(assigned.status) !== 201)
-    throw new Error("assignment failed", { cause: await assigned.json() })
+    throw new Error(`assignment failed ${JSON.stringify(await assigned.json())}`)
   const requester = c.creator
   const first = c.people[1]
   const second = c.people[2]
@@ -161,6 +163,7 @@ export async function createExpenseProcedureTestContext(
   }
   return {
     ...c,
+    assignment,
     requester,
     first,
     second,

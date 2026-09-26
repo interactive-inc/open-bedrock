@@ -13,7 +13,10 @@ function createDatabase(): Database {
   return database
 }
 
-function insertAccount(database: Database, id: string = "account-1"): void {
+function insertAccount(
+  database: Database,
+  id: string = "d5858208-e680-4db8-a05d-8bf4f900c24e",
+): void {
   database.run(
     `INSERT INTO system_accounts
        (id, status, token_version, created_at, updated_at)
@@ -111,7 +114,8 @@ describe("canonical System core schema", () => {
         .all()
         .map((foreignKey) => foreignKey.table)
 
-      expect(databaseColumns).toEqual(table.columns.map((column) => column.name))
+      // UUID 化の migration が一部の column を末尾へ付け直したため、並びではなく集合で照合する。
+      expect([...databaseColumns].sort()).toEqual(table.columns.map((column) => column.name).sort())
       expect(foreignTables.every((foreignTable) => foreignTable.startsWith("system_"))).toBe(true)
     }
 
@@ -155,69 +159,69 @@ describe("canonical System core schema", () => {
       database.run(
         `INSERT INTO system_accounts
            (id, status, token_version, created_at, updated_at)
-         VALUES ('invalid', 'disabled', 0, 100, 100)`,
+         VALUES ('434d2b37-4b7e-400c-82d8-10451c11f513', 'disabled', 0, 100, 100)`,
       ),
     ).toThrow()
     insertAccount(database)
     expect(() =>
       database.run(
-        "UPDATE system_accounts SET status = 'locked', updated_at = 101 WHERE id = 'account-1'",
+        "UPDATE system_accounts SET status = 'locked', updated_at = 101 WHERE id = 'd5858208-e680-4db8-a05d-8bf4f900c24e'",
       ),
     ).toThrow()
     database.run(
       `UPDATE system_accounts
        SET status = 'locked', token_version = 1, updated_at = 101
-       WHERE id = 'account-1'`,
+       WHERE id = 'd5858208-e680-4db8-a05d-8bf4f900c24e'`,
     )
     expect(() =>
       database.run(
-        "UPDATE system_accounts SET token_version = 0, updated_at = 102 WHERE id = 'account-1'",
+        "UPDATE system_accounts SET token_version = 0, updated_at = 102 WHERE id = 'd5858208-e680-4db8-a05d-8bf4f900c24e'",
       ),
     ).toThrow()
 
     database.run(
       `INSERT INTO system_identity_bindings
          (id, account_id, provider, subject, created_at, activated_at)
-       VALUES ('identity-password', 'account-1', 'password', 'User@Example.test', 100, 100)`,
+       VALUES ('166ce80b-9a6c-4cdc-b3ad-c4cfb962de1f', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'password', 'User@Example.test', 100, 100)`,
     )
     expect(() =>
       database.run(
         `INSERT INTO system_identity_bindings
            (id, account_id, provider, subject, created_at, activated_at)
-         VALUES ('identity-duplicate', 'account-1', 'password', 'User@Example.test', 100, 100)`,
+         VALUES ('b3460b5f-1fe4-477a-b6fd-c16052906424', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'password', 'User@Example.test', 100, 100)`,
       ),
     ).toThrow()
     database.run(
       `INSERT INTO system_identity_bindings
          (id, account_id, provider, subject, created_at, activated_at)
-       VALUES ('identity-google', 'account-1', 'google', 'subject-1', 100, 100)`,
+       VALUES ('67150a57-caa3-49c8-90f0-df6f7a384a07', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'google', 'subject-1', 100, 100)`,
     )
     expect(() =>
       database.run(
         `INSERT INTO system_password_credentials
            (identity_id, password_hash, changed_at, created_at, updated_at)
-         VALUES ('identity-google', ?, 100, 100, 100)`,
+         VALUES ('67150a57-caa3-49c8-90f0-df6f7a384a07', ?, 100, 100, 100)`,
         ["h".repeat(64)],
       ),
     ).toThrow()
     database.run(
       `INSERT INTO system_password_credentials
          (identity_id, password_hash, changed_at, created_at, updated_at)
-       VALUES ('identity-password', ?, 100, 100, 100)`,
+       VALUES ('166ce80b-9a6c-4cdc-b3ad-c4cfb962de1f', ?, 100, 100, 100)`,
       ["h".repeat(64)],
     )
     expect(() =>
       database.run(
         `UPDATE system_password_credentials
          SET changed_at = 99, updated_at = 101
-         WHERE identity_id = 'identity-password'`,
+         WHERE identity_id = '166ce80b-9a6c-4cdc-b3ad-c4cfb962de1f'`,
       ),
     ).toThrow()
     expect(() =>
       database.run(
         `UPDATE system_identity_bindings
          SET activated_at = 101
-         WHERE id = 'identity-password'`,
+         WHERE id = '166ce80b-9a6c-4cdc-b3ad-c4cfb962de1f'`,
       ),
     ).toThrow()
 
@@ -225,29 +229,37 @@ describe("canonical System core schema", () => {
       database.run(
         `INSERT INTO system_sessions
            (id, account_id, family_id, token_hash, token_version, created_at, expires_at)
-         VALUES ('bad-session', 'account-1', 'family-1', ?, 0, 100, 100)`,
+         VALUES ('cd2a6c1c-867a-4626-98c7-12a10baa156f', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'family-1', ?, 0, 100, 100)`,
         ["a".repeat(64)],
       ),
     ).toThrow()
     database.run(
       `INSERT INTO system_sessions
          (id, account_id, family_id, token_hash, token_version, created_at, expires_at)
-       VALUES ('session-1', 'account-1', 'family-1', ?, 0, 100, 200)`,
+       VALUES ('525b9676-68a4-4575-8f18-694f41810014', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'family-1', ?, 0, 100, 200)`,
       ["a".repeat(64)],
     )
-    database.run("UPDATE system_sessions SET rotated_at = 150 WHERE id = 'session-1'")
+    database.run(
+      "UPDATE system_sessions SET rotated_at = 150 WHERE id = '525b9676-68a4-4575-8f18-694f41810014'",
+    )
     expect(() =>
-      database.run("UPDATE system_sessions SET rotated_at = 160 WHERE id = 'session-1'"),
+      database.run(
+        "UPDATE system_sessions SET rotated_at = 160 WHERE id = '525b9676-68a4-4575-8f18-694f41810014'",
+      ),
     ).toThrow()
-    database.run("UPDATE system_sessions SET revoked_at = 170 WHERE id = 'session-1'")
+    database.run(
+      "UPDATE system_sessions SET revoked_at = 170 WHERE id = '525b9676-68a4-4575-8f18-694f41810014'",
+    )
     expect(() =>
-      database.run("UPDATE system_sessions SET revoked_at = 180 WHERE id = 'session-1'"),
+      database.run(
+        "UPDATE system_sessions SET revoked_at = 180 WHERE id = '525b9676-68a4-4575-8f18-694f41810014'",
+      ),
     ).toThrow()
     expect(() =>
       database.run(
         `INSERT INTO system_sessions
            (id, account_id, family_id, token_hash, token_version, created_at, expires_at)
-         VALUES ('session-2', 'account-1', 'family-1', ?, 0, 100, 200)`,
+         VALUES ('261c5041-b688-4a45-92af-92ea330c73dc', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'family-1', ?, 0, 100, 200)`,
         ["a".repeat(64)],
       ),
     ).toThrow()
@@ -262,13 +274,13 @@ describe("canonical System core schema", () => {
     database.run(
       `INSERT INTO system_role_bindings
          (id, account_id, role_id, resource_type, resource_id, created_at)
-       VALUES ('8d9a49af-964f-426a-88d1-d3de8279d573', 'account-1', '92ab97b6-273c-42c6-8b7e-895d366202c0', NULL, NULL, 100)`,
+       VALUES ('8d9a49af-964f-426a-88d1-d3de8279d573', 'd5858208-e680-4db8-a05d-8bf4f900c24e', '92ab97b6-273c-42c6-8b7e-895d366202c0', NULL, NULL, 100)`,
     )
     expect(() =>
       database.run(
         `INSERT INTO system_bootstrap_state
            (singleton, completed_by_account_id, root_binding_id, completed_at)
-         VALUES (1, 'account-1', '8d9a49af-964f-426a-88d1-d3de8279d573', 100)`,
+         VALUES (1, 'd5858208-e680-4db8-a05d-8bf4f900c24e', '8d9a49af-964f-426a-88d1-d3de8279d573', 100)`,
       ),
     ).toThrow()
     database.run(
@@ -280,32 +292,32 @@ describe("canonical System core schema", () => {
       database.run(
         `INSERT INTO system_role_bindings
            (id, account_id, role_id, resource_type, resource_id, created_at)
-         VALUES ('afc3f7d5-b1e6-45b0-8986-c40d535bc11a', 'account-1', '92ab97b6-273c-42c6-8b7e-895d366202c0', NULL, NULL, 101)`,
+         VALUES ('afc3f7d5-b1e6-45b0-8986-c40d535bc11a', 'd5858208-e680-4db8-a05d-8bf4f900c24e', '92ab97b6-273c-42c6-8b7e-895d366202c0', NULL, NULL, 101)`,
       ),
     ).toThrow()
     expect(() =>
       database.run(
         `INSERT INTO system_role_bindings
            (id, account_id, role_id, resource_type, resource_id, created_at)
-         VALUES ('d781afbf-83b1-41ba-8f9e-686711a87ec9', 'account-1', '92ab97b6-273c-42c6-8b7e-895d366202c0', 'facility:read', NULL, 100)`,
+         VALUES ('d781afbf-83b1-41ba-8f9e-686711a87ec9', 'd5858208-e680-4db8-a05d-8bf4f900c24e', '92ab97b6-273c-42c6-8b7e-895d366202c0', 'facility:read', NULL, 100)`,
       ),
     ).toThrow()
     expect(() =>
       database.run(
         `INSERT INTO system_bootstrap_state
            (singleton, completed_by_account_id, root_binding_id, completed_at)
-         VALUES (2, 'account-1', '8d9a49af-964f-426a-88d1-d3de8279d573', 100)`,
+         VALUES (2, 'd5858208-e680-4db8-a05d-8bf4f900c24e', '8d9a49af-964f-426a-88d1-d3de8279d573', 100)`,
       ),
     ).toThrow()
     database.run(
       `INSERT INTO system_bootstrap_state
          (singleton, completed_by_account_id, root_binding_id, completed_at)
-       VALUES (1, 'account-1', '8d9a49af-964f-426a-88d1-d3de8279d573', 100)`,
+       VALUES (1, 'd5858208-e680-4db8-a05d-8bf4f900c24e', '8d9a49af-964f-426a-88d1-d3de8279d573', 100)`,
     )
 
     expect(
       database.query("SELECT completed_by_account_id FROM system_bootstrap_state").get(),
-    ).toEqual({ completed_by_account_id: "account-1" })
+    ).toEqual({ completed_by_account_id: "d5858208-e680-4db8-a05d-8bf4f900c24e" })
     expect(() =>
       database.run("UPDATE system_bootstrap_state SET completed_at = 101 WHERE singleton = 1"),
     ).toThrow()
@@ -379,19 +391,19 @@ describe("canonical System core schema", () => {
       database.run(
         `INSERT INTO system_notification_deliveries
            (id, message_id, recipient_account_id, delivered_at, read_at)
-         VALUES ('delivery-bad', 'message-1', 'account-1', 100, 99)`,
+         VALUES ('delivery-bad', 'message-1', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 100, 99)`,
       ),
     ).toThrow()
     database.run(
       `INSERT INTO system_notification_deliveries
          (id, message_id, recipient_account_id, delivered_at)
-       VALUES ('delivery-1', 'message-1', 'account-1', 100)`,
+       VALUES ('delivery-1', 'message-1', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 100)`,
     )
     expect(() =>
       database.run(
         `INSERT INTO system_notification_deliveries
            (id, message_id, recipient_account_id, delivered_at)
-         VALUES ('delivery-duplicate', 'message-1', 'account-1', 101)`,
+         VALUES ('delivery-duplicate', 'message-1', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 101)`,
       ),
     ).toThrow()
     database.run("UPDATE system_notification_deliveries SET read_at = 110 WHERE id = 'delivery-1'")
@@ -409,8 +421,8 @@ describe("canonical System core schema", () => {
     database.run(
       `INSERT INTO system_audit_events
          (event_id, actor_account_id, action, target_type, target_id, outcome, occurred_at)
-       VALUES ('0190aaaa-0000-4000-8000-000000000001', 'deleted-account', 'system.account.locked', 'system:account',
-               'account-1', 'succeeded', 100)`,
+       VALUES ('0190aaaa-0000-4000-8000-000000000001', '0d5bac1a-9f1d-45cd-af40-61607b0a9b9f', 'system.account.locked', 'system:account',
+               'd5858208-e680-4db8-a05d-8bf4f900c24e', 'succeeded', 100)`,
     )
     expect(() =>
       database.run(
@@ -433,7 +445,7 @@ describe("canonical System core schema", () => {
     ).toThrow()
 
     expect(database.query("SELECT actor_account_id FROM system_audit_events").get()).toEqual({
-      actor_account_id: "deleted-account",
+      actor_account_id: "0d5bac1a-9f1d-45cd-af40-61607b0a9b9f",
     })
     database.close()
   })

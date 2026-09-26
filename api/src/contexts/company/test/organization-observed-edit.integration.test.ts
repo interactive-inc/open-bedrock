@@ -12,6 +12,7 @@ import {
 } from "@/contexts/company/domain/errors"
 import { OrganizationWorkforceChangeRepository } from "@/contexts/company/infrastructure/repositories/organization/organization-workforce-change.repository"
 import { createEmployeeAdoptionFixture } from "@/contexts/company/test/employee-resource-adoption.test-support"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const observedSchema = z.object({
@@ -42,7 +43,11 @@ async function fixture() {
       target,
       {
         method,
-        headers: { "content-type": "application/json", "idempotency-key": key },
+        headers: {
+          "content-type": "application/json",
+          // 既存の組織APIは冪等キーを操作IDに使うため、名前付きキーを同じ UUID へ写す。
+          "idempotency-key": deterministicCompanyId("test-operation", key),
+        },
         ...(body === undefined ? {} : { body: JSON.stringify(body) }),
       },
       base.environment,
@@ -220,8 +225,9 @@ describe("organization edits preserve the version the caller observed", () => {
       expect(
         await f.database
           .prepare(
-            "SELECT count(*) AS count FROM company_organization_change_operations WHERE id = 'racing-replay'",
+            "SELECT count(*) AS count FROM company_organization_change_operations WHERE id = ?1",
           )
+          .bind(deterministicCompanyId("test-operation", "racing-replay"))
           .first<number>("count"),
       ).toBe(1)
     })
@@ -245,7 +251,7 @@ describe("organization edits preserve the version the caller observed", () => {
     const company = f.company
     const repository = new OrganizationWorkforceChangeRepository(company)
     const input = {
-      operationId: "direct-write",
+      operationId: "a8d9afb7-6c37-41bd-a661-e97cf1d26265",
       code: "OBSERVED",
       officialName: "Direct",
       parentCode: null,

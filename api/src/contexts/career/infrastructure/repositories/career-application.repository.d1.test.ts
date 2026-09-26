@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { CareerApplication } from "@/contexts/career/domain/entities/career-application.entity"
 import { CareerApplicationRepository } from "@/contexts/career/infrastructure/repositories/career-application.repository"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -51,7 +52,7 @@ describe("CareerApplicationRepository", () => {
     const created = await repository.create(
       CareerApplication.create({
         postingId: POSTING_ID,
-        applicantId: toWorkforceEmployeeId(2),
+        applicantId: toWorkforceEmployeeId(testEmployeeId(2)),
         message: "応募します",
       }),
     )
@@ -62,7 +63,10 @@ describe("CareerApplicationRepository", () => {
       throw new Error("create failed")
     }
 
-    const found = await repository.findByPostingAndApplicant(POSTING_ID, toWorkforceEmployeeId(2))
+    const found = await repository.findByPostingAndApplicant(
+      POSTING_ID,
+      toWorkforceEmployeeId(testEmployeeId(2)),
+    )
 
     expect(found).toBeInstanceOf(CareerApplication)
 
@@ -88,7 +92,7 @@ describe("CareerApplicationRepository", () => {
     const result = await repository.create(
       CareerApplication.create({
         postingId: POSTING_ID,
-        applicantId: toWorkforceEmployeeId(2),
+        applicantId: toWorkforceEmployeeId(testEmployeeId(2)),
         message: null,
       }),
     )
@@ -116,7 +120,7 @@ describe("CareerApplicationRepository", () => {
     await repository.create(
       CareerApplication.create({
         postingId: POSTING_ID,
-        applicantId: toWorkforceEmployeeId(7),
+        applicantId: toWorkforceEmployeeId(testEmployeeId(7)),
         message: "a",
       }),
     )
@@ -124,13 +128,13 @@ describe("CareerApplicationRepository", () => {
     await repository.create(
       CareerApplication.create({
         postingId: SECOND_POSTING_ID,
-        applicantId: toWorkforceEmployeeId(7),
+        applicantId: toWorkforceEmployeeId(testEmployeeId(7)),
         message: "b",
       }),
     )
 
     const applications = await repository.findByApplicantId({
-      applicantId: toWorkforceEmployeeId(7),
+      applicantId: toWorkforceEmployeeId(testEmployeeId(7)),
       limit: 50,
       offset: 0,
     })
@@ -156,7 +160,7 @@ describe("CareerApplicationRepository", () => {
     const created = await repository.create(
       CareerApplication.create({
         postingId: POSTING_ID,
-        applicantId: toWorkforceEmployeeId(8),
+        applicantId: toWorkforceEmployeeId(testEmployeeId(8)),
         message: "before",
       }),
     )
@@ -188,7 +192,7 @@ describe("CareerApplicationRepository", () => {
     const created = await repository.create(
       CareerApplication.create({
         postingId: POSTING_ID,
-        applicantId: toWorkforceEmployeeId(8),
+        applicantId: toWorkforceEmployeeId(testEmployeeId(8)),
         message: "msg",
       }),
     )
@@ -221,7 +225,7 @@ describe("CareerApplicationRepository", () => {
     const created = await repository.create(
       CareerApplication.create({
         postingId: POSTING_ID,
-        applicantId: toWorkforceEmployeeId(9),
+        applicantId: toWorkforceEmployeeId(testEmployeeId(9)),
         message: "x",
       }),
     )
@@ -249,7 +253,7 @@ describe("CareerApplicationRepository", () => {
     const created = await repository.create(
       CareerApplication.create({
         postingId: POSTING_ID,
-        applicantId: toWorkforceEmployeeId(9),
+        applicantId: toWorkforceEmployeeId(testEmployeeId(9)),
         message: "x",
       }),
     )

@@ -1,3 +1,4 @@
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 import { restoreOrgResponsibilityType } from "@/contexts/company/domain/definitions/restore-org-responsibility-type.definition"
 import type { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import type { OrgResponsibilityPeriod } from "@/contexts/company/domain/definitions/workforce-schedule.definition"
@@ -232,7 +233,10 @@ export class CompanyResponsibilityResourceProjectionAdapter {
     const hex = Array.from(new Uint8Array(digest), (byte) =>
       byte.toString(16).padStart(2, "0"),
     ).join("")
-    return restoreWorkforceId("period", `responsibility-resource:${hex}`)
+    return restoreWorkforceId(
+      "period",
+      deterministicCompanyId("responsibility-resource-period", hex),
+    )
   }
 
   private toPeriod(row: z.infer<typeof periodRow>): OrgResponsibilityPeriod {

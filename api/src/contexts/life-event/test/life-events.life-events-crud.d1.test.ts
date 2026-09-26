@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -108,7 +109,8 @@ async function createTestDb(): Promise<D1Database> {
 
 function applicantToken(): Promise<string> {
   return createTestToken(jwtSecret, {
-    employeeId: toWorkforceEmployeeId(4),
+    employeeId: toWorkforceEmployeeId(testEmployeeId(4)),
+    accountId: 4,
   })
 }
 
@@ -166,7 +168,7 @@ describe("POST /life-events", () => {
 
     if (parsed.success) {
       expect(parsed.data.status).toBe("submitted")
-      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(4))
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(4)))
       expect(parsed.data.detail).toBe("氏名変更の手続きを予定")
     }
   })
@@ -225,7 +227,7 @@ describe("GET /life-events/me", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0].employee_id).toBe(toWorkforceEmployeeId(4))
+      expect(parsed.data.data[0].employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(4)))
     }
   })
 

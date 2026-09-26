@@ -3,5 +3,5 @@
 -- 値は src/infrastructure/seed/seed-licenses.ts と一致させること。
 
 INSERT INTO software_licenses (id, name, vendor, category, seats, renewal_deadline, owner_employee_id, note, status, created_at) VALUES
-  ('0190004b-0000-7000-8000-000000000001', 'プロジェクト管理ツール', 'サンプルSaaS株式会社', 'saas', 50, '2026-03-31', 1, NULL, 'active', '2026-01-05T00:00:00Z'),
+  ('0190004b-0000-7000-8000-000000000001', 'プロジェクト管理ツール', 'サンプルSaaS株式会社', 'saas', 50, '2026-03-31', '01900062-0000-7000-8000-000000000001', NULL, 'active', '2026-01-05T00:00:00Z'),
   ('0190004b-0000-7000-8000-000000000002', 'デザイン制作ソフト', NULL, 'software', 10, '2026-06-30', NULL, NULL, 'active', '2026-01-06T00:00:00Z');

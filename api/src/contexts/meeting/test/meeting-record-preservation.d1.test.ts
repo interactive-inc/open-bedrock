@@ -54,7 +54,7 @@ test("会議3台帳を停止中に人の承認で保全し、業務コードを�
   await database
     .prepare(`INSERT INTO system_step_up_grants
       (id,account_id,token_hash,method,issued_at,expires_at)
-      VALUES ('meeting-test-step-up',?1,?2,'external_identity',?3,?4)`)
+      VALUES ('ceec7cb3-8d34-42d1-bed6-f19c13eff4d8',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const frozen = await app.request(

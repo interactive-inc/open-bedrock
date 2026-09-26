@@ -21,8 +21,8 @@ export class OrganizationUnitChangeStatementAdapter {
           `INSERT INTO company_organization_change_operations
            (id, expected_revision, change_count, applied_count, resulting_revision, status,
             recorded_at, actor_account_id, reason, evidence_references_json,
-            request_fingerprint)
-         VALUES (?1, ?2, ?3, 0, ?2 + ?3, 'PENDING', ?4, ?5, ?6, ?7, ?8)`,
+            request_fingerprint, operation_key)
+         VALUES (?1, ?2, ?3, 0, ?2 + ?3, 'PENDING', ?4, ?5, ?6, ?7, ?8, ?9)`,
         )
         .bind(
           change.operationId,
@@ -33,6 +33,7 @@ export class OrganizationUnitChangeStatementAdapter {
           change.reason,
           JSON.stringify(change.evidenceReferences),
           requestFingerprint,
+          change.operationKey,
         ),
     ]
     for (const period of change.responsibilities.filter((period) => period.isVoid)) {

@@ -4,6 +4,7 @@ import {
   EXTERNAL_IMPORT_TEST_SECRET,
 } from "@/contexts/company/test/external-identity-import.test-support"
 import type { ExternalIdentityImportInput } from "@/contexts/company/domain/entities/external-identity-import.entity"
+import { testAccountId } from "@tests/api/support/test-identity-id"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { SystemAccessTokenIssuer } from "@system/lib/auth/system-access-token-issuer"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
@@ -166,10 +167,10 @@ describe("POST /company/external-identity-imports", () => {
     expect((await post(c, body(c.input), "old-shared-provisioning-key")).status).toBe(401)
     expect((await post(c, body(c.input), null)).status).toBe(401)
     await c.database.exec(
-      "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('human', 'active', 0, 0, 0)",
+      `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('${testAccountId("human")}', 'active', 0, 0, 0)`,
     )
     const token = await new SystemAccessTokenIssuer(EXTERNAL_IMPORT_TEST_SECRET).issue({
-      accountId: zAccountId.parse("human"),
+      accountId: zAccountId.parse(testAccountId("human")),
       tokenVersion: 0,
       now: new Date(),
     })

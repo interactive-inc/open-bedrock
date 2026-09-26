@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -74,7 +75,7 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "shift_assignments", [
     {
       id: "01900024-0000-7000-8000-000000000065",
-      employee_id: "5",
+      employee_id: testEmployeeId(5),
       pattern_id: "01900023-0000-7000-8000-000000000001",
       date: "2026-06-10",
       note: null,
@@ -82,7 +83,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: "01900024-0000-7000-8000-000000000066",
-      employee_id: "4",
+      employee_id: testEmployeeId(4),
       pattern_id: "01900023-0000-7000-8000-000000000002",
       date: "2026-06-10",
       note: null,
@@ -90,7 +91,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: "01900024-0000-7000-8000-000000000067",
-      employee_id: "5",
+      employee_id: testEmployeeId(5),
       pattern_id: "01900023-0000-7000-8000-000000000001",
       date: "2026-06-11",
       note: null,
@@ -211,8 +212,8 @@ describe("POST /shift-swap-requests", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.requester_employee_id).toBe(toWorkforceEmployeeId(5))
-      expect(parsed.data.target_employee_id).toBe(toWorkforceEmployeeId(4))
+      expect(parsed.data.requester_employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
+      expect(parsed.data.target_employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(4)))
       expect(parsed.data.status).toBe("pending")
     }
   })

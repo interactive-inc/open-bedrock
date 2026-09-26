@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"
 import { AttendanceRecordRepository } from "@/contexts/attendance/infrastructure/repositories/attendance-record.repository"
 import { createAttendanceRecordSourceFixture } from "@/contexts/attendance/test/create-attendance-record-source-fixture.test-support"
@@ -34,7 +35,7 @@ test("実DBの書込み停止が通常の出勤と退勤で409になり、解除
   await execSql(
     f.database,
     `INSERT INTO company_employees (id,official_name,employee_code,created_at,updated_at)
-    VALUES ('employee:second','Second','SECOND',0,0)`,
+    VALUES ('5ee94854-5a8e-4b5a-af95-78411d5f6c82','Second','SECOND',0,0)`,
   )
   const repository = openSystemRecordSourceFreezes({ env: f.context.env, assertions: [] })
   const command = {
@@ -48,12 +49,12 @@ test("実DBの書込み停止が通常の出勤と退勤で409になり、解除
     await new CreateRecordSourceFreeze({ repository }).execute(command, f.clock.now),
   ).toMatchObject({ kind: "created" })
   const clockIn = {
-    employeeId: toWorkforceEmployeeId("employee:second"),
+    employeeId: toWorkforceEmployeeId("5ee94854-5a8e-4b5a-af95-78411d5f6c82"),
     now: "2026-09-01T08:00:00Z",
     note: null,
   }
   const clockOut = {
-    employeeId: toWorkforceEmployeeId("employee:worker"),
+    employeeId: toWorkforceEmployeeId(testEmployeeId("employee:worker")),
     now: "2026-09-01T08:00:00Z",
   }
   for (const failure of [

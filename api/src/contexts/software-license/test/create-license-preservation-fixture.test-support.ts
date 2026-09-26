@@ -1,3 +1,4 @@
+import { testDerivedId } from "@tests/api/support/test-identity-id"
 import { createLicenseFixture } from "@/contexts/software-license/test/create-license-fixture.test-support"
 import { createLocalD1Governance } from "@tests/d1/support/create-local-d1-governance"
 import { createCompanyProcedureDecisionPolicy } from "@/contexts/company/domain/policies/company-procedure-decision.policy"
@@ -14,7 +15,9 @@ export async function createLicensePreservationFixture(
 ) {
   const governance = await createLocalD1Governance(database)
   const f = await createLicenseFixture(database)
-  const reviewer = governance.people.find((person) => person.accountId !== "account:manager")
+  const reviewer = governance.people.find(
+    (person) => person.accountId !== testDerivedId("account", "manager"),
+  )
   const assignment = governance.resources.find(
     (resource) => resource.type === "responsibility-assignment",
   )

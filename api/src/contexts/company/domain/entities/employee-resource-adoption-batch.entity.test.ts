@@ -10,11 +10,11 @@ const input = {
   expectedRevision: 2,
   observedOn: restoreCalendarDate("2026-09-07"),
   reason: "Confirmed history",
-  actorAccountId: "account:example",
+  actorAccountId: "9938f3c8-f3b4-4398-b2f6-6553cdee26df",
   recordedAt: Date.parse("2026-09-07T00:00:00Z"),
   employees: [
-    { employeeId: "employee:second", snapshotDigest: "b".repeat(64) },
-    { employeeId: "employee:first", snapshotDigest: "a".repeat(64) },
+    { employeeId: "5ee94854-5a8e-4b5a-af95-78411d5f6c82", snapshotDigest: "b".repeat(64) },
+    { employeeId: "2f159e48-35a7-479c-97f4-d115a268abfd", snapshotDigest: "a".repeat(64) },
   ],
 }
 
@@ -33,7 +33,11 @@ test("HTTPを通らない呼出しでも重複・不正な確認値・版のover
   for (const change of [
     { employees: [input.employees[0]!, input.employees[0]!] },
     { employees: [] },
-    { employees: [{ employeeId: "employee:example", snapshotDigest: "unconfirmed" }] },
+    {
+      employees: [
+        { employeeId: "88ad8bad-6bb3-43c7-8896-631c6d18db36", snapshotDigest: "unconfirmed" },
+      ],
+    },
     { expectedRevision: Number.MAX_SAFE_INTEGER },
     { expectedRevision: -1 },
     { recordedAt: Number.NaN },
@@ -57,7 +61,7 @@ test("確認した訂正内容と終了日の補正値を呼出元の変更か�
     effectiveTo: null,
     attributes,
   }
-  const termination = { employmentId: "employment:first", endsOn: "2026-08-17" }
+  const termination = { employmentId: "16e506f1-ffee-4605-ace6-534ed0eb4798", endsOn: "2026-08-17" }
   const command = EmployeeResourceAdoptionBatchEntity.create({
     ...input,
     employees: [

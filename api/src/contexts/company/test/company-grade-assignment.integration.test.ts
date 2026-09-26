@@ -47,7 +47,10 @@ test("等級の欠落、別人への付替え、期間の重複と参照期間�
     {
       ...f.appointment,
       revision: 2,
-      attributes: { ...f.appointment.attributes, employeeId: "employee:another" },
+      attributes: {
+        ...f.appointment.attributes,
+        employeeId: "ebb00dc2-45bc-4fd0-b048-dff5f3438a41",
+      },
     },
     {
       ...f.appointment,

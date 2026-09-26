@@ -1,3 +1,4 @@
+import { testDerivedId } from "@tests/api/support/test-identity-id"
 import {
   afterAll,
   afterEach,
@@ -42,7 +43,11 @@ describe("software license usage ledger", () => {
     expect(created.status).toBe(201)
     const assigned = await f.request(`/software-licenses/${f.license.id}/assignments`, {
       method: "POST",
-      body: { id: crypto.randomUUID(), employee_id: "employee:member", reason: "Work" },
+      body: {
+        id: crypto.randomUUID(),
+        employee_id: testDerivedId("employee", "member"),
+        reason: "Work",
+      },
     })
     expect(assigned.status).toBe(201)
     const response = await f.request("/software-licenses/assignments")
@@ -84,7 +89,11 @@ describe("software license usage ledger", () => {
       ["member", "other"].map((employee) =>
         f.request(`/software-licenses/${f.license.id}/assignments`, {
           method: "POST",
-          body: { id: crypto.randomUUID(), employee_id: `employee:${employee}`, reason: "Work" },
+          body: {
+            id: crypto.randomUUID(),
+            employee_id: testDerivedId("employee", employee),
+            reason: "Work",
+          },
         }),
       ),
     )
@@ -100,7 +109,11 @@ describe("software license usage ledger", () => {
 
   test("concurrent retries create one assignment and one audit event", async () => {
     const f = await createLicenseFixture(await pool.next())
-    const body = { id: crypto.randomUUID(), employee_id: "employee:member", reason: "Work" }
+    const body = {
+      id: crypto.randomUUID(),
+      employee_id: testDerivedId("employee", "member"),
+      reason: "Work",
+    }
     const responses = await Promise.all(
       [1, 2].map(() =>
         f.request(`/software-licenses/${f.license.id}/assignments`, { method: "POST", body }),
@@ -126,7 +139,7 @@ describe("software license usage ledger", () => {
       (
         await f.request(path, {
           method: "POST",
-          body: { id, employee_id: "employee:member", reason: "Work" },
+          body: { id, employee_id: testDerivedId("employee", "member"), reason: "Work" },
         })
       ).status,
     ).toBe(201)
@@ -135,7 +148,11 @@ describe("software license usage ledger", () => {
       (
         await f.request(path, {
           method: "POST",
-          body: { id: crypto.randomUUID(), employee_id: "employee:member", reason: "Work" },
+          body: {
+            id: crypto.randomUUID(),
+            employee_id: testDerivedId("employee", "member"),
+            reason: "Work",
+          },
         })
       ).status,
     ).toBe(400)
@@ -173,7 +190,7 @@ describe("software license usage ledger", () => {
           method: "POST",
           body: {
             id: crypto.randomUUID(),
-            employee_id: "employee:member",
+            employee_id: testDerivedId("employee", "member"),
             reason: "Work",
           },
         })
@@ -193,7 +210,7 @@ describe("software license usage ledger", () => {
       (
         await f.request(`/software-licenses/${f.license.id}/assignments`, {
           method: "POST",
-          body: { id, employee_id: "employee:member", reason: "Work" },
+          body: { id, employee_id: testDerivedId("employee", "member"), reason: "Work" },
         })
       ).status,
     ).toBe(201)
@@ -274,7 +291,7 @@ describe("software license usage ledger", () => {
           method: "POST",
           body: {
             id: crypto.randomUUID(),
-            employee_id: "employee:member",
+            employee_id: testDerivedId("employee", "member"),
             reason: "Work",
           },
         })
@@ -286,7 +303,7 @@ describe("software license usage ledger", () => {
     const f = await createLicenseFixture(await pool.next())
     const body = {
       id: crypto.randomUUID(),
-      employee_id: "employee:member",
+      employee_id: testDerivedId("employee", "member"),
       account_reference: "member@example.com",
       reason: "Team assignment",
     }
@@ -295,7 +312,7 @@ describe("software license usage ledger", () => {
     expect(first.status).toBe(201)
     const assigned = licenseAssignmentSchema.parse(await first.json())
     expect(assigned.plan_name).toBe("Team")
-    expect(String(assigned.assigned_by)).toBe("account:manager")
+    expect(String(assigned.assigned_by)).toBe(testDerivedId("account", "manager"))
     expect(assigned.assigned_at).toBe(f.clock.now.getTime())
     expect((await f.request(path, { method: "POST", body })).status).toBe(200)
     expect(
@@ -320,7 +337,9 @@ describe("software license usage ledger", () => {
       (await f.request(path, { method: "POST", body: { ...body, id: crypto.randomUUID() } }))
         .status,
     ).toBe(201)
-    const rows = await f.request("/software-licenses/assignments?employee_id=employee%3Amember")
+    const rows = await f.request(
+      `/software-licenses/assignments?employee_id=${testDerivedId("employee", "member")}`,
+    )
     const page = await rows.json()
     expect(page).toMatchObject({
       data: [
@@ -345,7 +364,11 @@ describe("software license usage ledger", () => {
       (
         await f.request(`${path}/assignments`, {
           method: "POST",
-          body: { id: crypto.randomUUID(), employee_id: "employee:member", reason: "Work" },
+          body: {
+            id: crypto.randomUUID(),
+            employee_id: testDerivedId("employee", "member"),
+            reason: "Work",
+          },
         })
       ).status,
     ).toBe(201)
@@ -353,7 +376,11 @@ describe("software license usage ledger", () => {
       (
         await f.request(`${path}/assignments`, {
           method: "POST",
-          body: { id: crypto.randomUUID(), employee_id: "employee:other", reason: "Work" },
+          body: {
+            id: crypto.randomUUID(),
+            employee_id: testDerivedId("employee", "other"),
+            reason: "Work",
+          },
         })
       ).status,
     ).toBe(409)
@@ -389,14 +416,18 @@ describe("software license usage ledger", () => {
       403,
     )
     const path = `/software-licenses/${f.license.id}/assignments`
-    const body = { id: crypto.randomUUID(), employee_id: "employee:missing", reason: "Work" }
+    const body = {
+      id: crypto.randomUUID(),
+      employee_id: testDerivedId("employee", "missing"),
+      reason: "Work",
+    }
     expect((await f.request(path, { method: "POST", body })).status).toBe(400)
     expect(
       (
         await f.request(path, {
           method: "POST",
           actor: "member",
-          body: { ...body, employee_id: "employee:member" },
+          body: { ...body, employee_id: testDerivedId("employee", "member") },
         })
       ).status,
     ).toBe(403)
@@ -409,7 +440,11 @@ describe("software license usage ledger", () => {
       `CREATE TRIGGER fail_license_audit BEFORE INSERT ON system_audit_events
       WHEN NEW.action='software_license.assignment.recorded' BEGIN SELECT RAISE(ABORT,'audit unavailable'); END;`,
     )
-    const body = { id: crypto.randomUUID(), employee_id: "employee:member", reason: "Work" }
+    const body = {
+      id: crypto.randomUUID(),
+      employee_id: testDerivedId("employee", "member"),
+      reason: "Work",
+    }
     expect(
       (await f.request(`/software-licenses/${f.license.id}/assignments`, { method: "POST", body }))
         .status,
@@ -442,7 +477,7 @@ describe("software license usage ledger", () => {
           method: "POST",
           body: {
             id: crypto.randomUUID(),
-            employee_id: "employee:member",
+            employee_id: testDerivedId("employee", "member"),
             reason: "Work",
           },
         })
@@ -463,7 +498,7 @@ describe("software license usage ledger", () => {
       (
         await f.request(`${path}/assignments`, {
           method: "POST",
-          body: { id, employee_id: "employee:member", reason: "Work" },
+          body: { id, employee_id: testDerivedId("employee", "member"), reason: "Work" },
         })
       ).status,
     ).toBe(201)

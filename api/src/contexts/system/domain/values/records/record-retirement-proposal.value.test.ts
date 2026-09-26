@@ -11,7 +11,7 @@ async function fixture() {
     sourceNamespace: "example-source",
     ownerContext: "example",
     purpose: "archive",
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
   }
   const pages = []
   for (const recordKind of ["record", "attachment"]) {
@@ -77,7 +77,7 @@ async function fixture() {
     plan,
     first,
     terminalReceipt,
-    actorAccountId: "account:applicant",
+    actorAccountId: "00e1a673-4bef-44f9-b57b-db0468faceed",
     reason: "Retire source and retain records",
   }
 }
@@ -92,7 +92,10 @@ test("retirement approval binds the complete plan and terminal verification inde
   )
   if (restored instanceof Error) throw restored
   expect(restored.props.digest.toString()).toBe(proposal.props.digest.toString())
-  for (const change of [{ reason: "Different reason" }, { actorAccountId: "other-applicant" }]) {
+  for (const change of [
+    { reason: "Different reason" },
+    { actorAccountId: "f7dec41b-fe84-4dda-9212-0be0001c1dd1" },
+  ]) {
     const changed = await RecordRetirementProposalValue.create({ ...input, ...change })
     if (changed instanceof Error) throw changed
     expect(changed.props.digest.toString()).not.toBe(proposal.props.digest.toString())

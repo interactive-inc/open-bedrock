@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
@@ -124,7 +125,7 @@ describe("GET /training-enrollments", () => {
       .parse(await response.json())
 
     expect(body.data.length).toBe(1)
-    expect(body.data[0]?.employee_id).toBe(toWorkforceEmployeeId(5))
+    expect(body.data[0]?.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
   })
 
   test("a member targeting another employee is forbidden", async () => {
@@ -147,7 +148,7 @@ describe("GET /training-enrollments", () => {
 
   test("returns 404 for an unknown employee_id", async () => {
     const response = await request(
-      "/training/training-enrollments?employee_id=9999",
+      `/training/training-enrollments?employee_id=${testEmployeeId(9999)}`,
       await tokenFor(1),
     )
 
@@ -156,7 +157,7 @@ describe("GET /training-enrollments", () => {
 
   test("a privileged role views another's status by employee_id", async () => {
     const response = await request(
-      "/training/training-enrollments?employee_id=5",
+      `/training/training-enrollments?employee_id=${testEmployeeId(5)}`,
       await tokenFor(1),
     )
 
@@ -167,7 +168,7 @@ describe("GET /training-enrollments", () => {
       .parse(await response.json())
 
     expect(body.data.length).toBe(1)
-    expect(body.data[0]?.employee_id).toBe(toWorkforceEmployeeId(5))
+    expect(body.data[0]?.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
   })
 
   test("returns 401 without a bearer token", async () => {

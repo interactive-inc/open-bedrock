@@ -29,7 +29,7 @@ async function fixture() {
     const command = CompanyResourceChangeEntity.create({
       commandId: `snapshot:${index}`,
       expectedRevision: index,
-      actorAccountId: "account:operator",
+      actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
       reason: "Confirmed definition",
       recordedAt: index + 1,
       resources: [
@@ -178,7 +178,7 @@ test("訂正による旧開始日の取消は前倒しした期間へ戻り、�
   const initial = CompanyResourceChangeEntity.create({
     commandId: "grade:initial",
     expectedRevision: 0,
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Original source",
     recordedAt: 1,
     resources: [{ ...resource, revision: 1 }],
@@ -188,7 +188,7 @@ test("訂正による旧開始日の取消は前倒しした期間へ戻り、�
   const correction = CompanyResourceChangeEntity.createHistoryBatch({
     commandId: "grade:correct-start",
     expectedRevision: 1,
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Original source confirms earlier start",
     recordedAt: 2,
     evidenceReferences: [
@@ -222,7 +222,7 @@ test("訂正による旧開始日の取消は前倒しした期間へ戻り、�
   const ordinaryCancellation = CompanyResourceChangeEntity.create({
     commandId: "grade:future-cancel",
     expectedRevision: 2,
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Future cancellation",
     recordedAt: 3,
     resources: [
@@ -262,7 +262,7 @@ test("単一revisionで開始日を前倒しする訂正も旧開始日の資源
   const first = CompanyResourceChangeEntity.create({
     commandId: "grade:single-initial",
     expectedRevision: 0,
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Original source",
     recordedAt: 1,
     resources: [original],
@@ -272,7 +272,7 @@ test("単一revisionで開始日を前倒しする訂正も旧開始日の資源
   const correction = CompanyResourceChangeEntity.create({
     commandId: "grade:single-correct",
     expectedRevision: 1,
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Original source confirms earlier start",
     recordedAt: 2,
     evidenceReferences: [

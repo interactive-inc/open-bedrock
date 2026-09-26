@@ -13,7 +13,11 @@ const initial = {
   state: "active" as const,
   effectiveFrom: restoreCalendarDate("2026-01-01"),
   effectiveTo: restoreCalendarDate("2026-07-01"),
-  attributes: { employeeId: "employee:one", employmentType: "PART_TIME", status: "ACTIVE" },
+  attributes: {
+    employeeId: "9e174baf-3240-4253-9cba-16bc3e431cca",
+    employmentType: "PART_TIME",
+    status: "ACTIVE",
+  },
 }
 const leave = {
   ...initial,

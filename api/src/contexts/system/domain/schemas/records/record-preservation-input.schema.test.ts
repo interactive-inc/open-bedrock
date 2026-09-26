@@ -31,7 +31,7 @@ test("preservation request accepts disclosure and retention choices without gran
     }).success,
   ).toBe(true)
   for (const injected of [
-    { actorAccountId: "another-actor" },
+    { actorAccountId: "13174c44-fe69-4065-9e59-6319c84a1f8a" },
     { source: { contentDigest: "a".repeat(64) } },
     { sourceNamespace: "another-source" },
     { sourceAuthorizationRef: { id: "another-grant" } },

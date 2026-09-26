@@ -1,5 +1,6 @@
 CREATE TABLE system_principals (
-  id TEXT PRIMARY KEY NOT NULL CHECK (length(id) BETWEEN 1 AND 255),
+  id TEXT PRIMARY KEY NOT NULL,
+  legacy_id TEXT UNIQUE,
   account_id TEXT NOT NULL UNIQUE REFERENCES system_accounts(id) ON DELETE RESTRICT,
   kind TEXT NOT NULL CHECK (kind IN ('human', 'agent', 'service', 'connector')),
   name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 200 AND trim(name) = name),
@@ -7,14 +8,23 @@ CREATE TABLE system_principals (
   revision INTEGER NOT NULL CHECK (revision >= 1),
   created_at INTEGER NOT NULL CHECK (created_at >= 0),
   updated_at INTEGER NOT NULL CHECK (updated_at >= created_at),
-  CHECK ((kind = 'connector') = (connector_id IS NOT NULL))
+  CHECK ((kind = 'connector') = (connector_id IS NOT NULL)),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER system_principals_legacy_id_insert
+BEFORE INSERT ON system_principals
+WHEN NEW.legacy_id IS NOT NULL
+BEGIN SELECT RAISE(ABORT, 'record_legacy_id_immutable'); END;
+CREATE TRIGGER system_principals_identity_update
+BEFORE UPDATE OF id, legacy_id ON system_principals
+WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE UNIQUE INDEX system_principals_connector_uniq ON system_principals (connector_id);
 CREATE INDEX system_principals_kind_idx ON system_principals (kind, id);
 
 CREATE TABLE system_machine_credentials (
-  id TEXT PRIMARY KEY NOT NULL CHECK (length(id) BETWEEN 1 AND 255),
+  id TEXT PRIMARY KEY NOT NULL,
   principal_id TEXT NOT NULL REFERENCES system_principals(id) ON DELETE RESTRICT,
   name TEXT NOT NULL CHECK (length(name) BETWEEN 1 AND 200 AND trim(name) = name),
   secret_hash TEXT NOT NULL UNIQUE CHECK (
@@ -28,7 +38,8 @@ CREATE TABLE system_machine_credentials (
     last_used_at IS NULL OR (last_used_at >= created_at AND last_used_at <= updated_at)
   ),
   revoked_at INTEGER CHECK (revoked_at IS NULL OR revoked_at = updated_at),
-  CHECK ((status = 'revoked') = (revoked_at IS NOT NULL))
+  CHECK ((status = 'revoked') = (revoked_at IS NOT NULL)),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE INDEX system_machine_credentials_principal_idx
@@ -37,7 +48,7 @@ CREATE INDEX system_machine_credentials_expiration_idx
   ON system_machine_credentials (expires_at);
 
 CREATE TABLE system_step_up_grants (
-  id TEXT PRIMARY KEY NOT NULL CHECK (length(id) BETWEEN 1 AND 255),
+  id TEXT PRIMARY KEY NOT NULL,
   account_id TEXT NOT NULL REFERENCES system_accounts(id) ON DELETE RESTRICT,
   token_hash TEXT NOT NULL UNIQUE CHECK (
     length(token_hash) = 64 AND token_hash NOT GLOB '*[^0-9a-f]*'
@@ -50,7 +61,8 @@ CREATE TABLE system_step_up_grants (
   ),
   revoked_at INTEGER CHECK (
     revoked_at IS NULL OR (revoked_at >= issued_at AND revoked_at < expires_at)
-  )
+  ),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE INDEX system_step_up_grants_account_idx

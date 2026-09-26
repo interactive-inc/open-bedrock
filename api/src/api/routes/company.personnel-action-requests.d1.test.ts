@@ -4,6 +4,7 @@ import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-def
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { openSystemProcedures } from "@system/interface/operations/open-system-procedures"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { testAccountId } from "@tests/api/support/test-identity-id"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 import { requestWithContext } from "@tests/api/support/request-with-context"
@@ -70,7 +71,7 @@ async function createTestDb(): Promise<D1Database> {
     inputSchema: { fields: [] },
     decisionPolicy: policy,
     completionOperationKey: "company.personnel-action.apply",
-    createdByAccountId: zAccountId.parse("1"),
+    createdByAccountId: zAccountId.parse(testAccountId(1)),
     createdAt: new Date("2026-01-01T00:00:00.000Z"),
   })
   if (definition instanceof Error) throw definition

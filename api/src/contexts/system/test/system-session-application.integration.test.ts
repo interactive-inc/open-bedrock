@@ -16,7 +16,7 @@ import { SystemSessionRepository } from "@system/infrastructure/repositories/aut
 import { SystemSessionTestContext } from "@system/test/system-session-test-context.test-support"
 import { describe, expect, test } from "bun:test"
 
-const accountId = zAccountId.parse("account-1")
+const accountId = zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e")
 const now = new Date("2026-01-01T00:00:00.000Z")
 const rotateAt = new Date("2026-01-02T00:00:00.000Z")
 const sessionTtlMilliseconds = 7 * 24 * 60 * 60 * 1_000

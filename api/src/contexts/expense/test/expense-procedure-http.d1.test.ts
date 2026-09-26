@@ -9,6 +9,7 @@ import { zExpenseProcedureView } from "@/contexts/expense/interface/http/respons
 import { z } from "zod"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
 import { execSql } from "@tests/d1/support/exec-sql"
+import { testDerivedId } from "@tests/api/support/test-identity-id"
 
 let pool: LocalD1Pool
 
@@ -35,7 +36,7 @@ async function fixture(rejectionBehavior: "reject" | "return" = "reject") {
       [
         {
           ...c.assignment,
-          id: `assignment:http:${person.employeeId}`,
+          id: testDerivedId("assignment:http", person.employeeId),
           effectiveFrom: c.at.toISOString().slice(0, 10),
           attributes: {
             ...c.assignment.attributes,

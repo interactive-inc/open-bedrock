@@ -1,3 +1,4 @@
+import { testAccountId, testDerivedId } from "@tests/api/support/test-identity-id"
 import { Database } from "bun:sqlite"
 import { readFileSync } from "node:fs"
 import { wrapSystemD1TestDatabase } from "@system/test/wrap-system-d1-test-database.test-support"
@@ -26,17 +27,19 @@ export async function createSystemWorkTestFixture() {
   const stepUpToken =
     crypto.randomUUID().replaceAll("-", "") + crypto.randomUUID().replaceAll("-", "")
   const stepUpTokens = new Map<string, string>()
+  // Account は名前から決まる UUID で作り、呼び出し側は名前でも UUID でも指定できる。
   for (const account of ["owner", "worker", "recipient", "other", "admin"]) {
+    const accountId = testAccountId(account)
     sqlite
       .query(
         "INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES (?1,'active',0,100,100)",
       )
-      .run(account)
+      .run(accountId)
     sqlite
       .query(
         "INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at) VALUES (?1,?2,?3,'Test operator',1,100,100)",
       )
-      .run(`principal:${account}`, account, account === "worker" ? "agent" : "human")
+      .run(testDerivedId("principal", account), accountId, account === "worker" ? "agent" : "human")
     // role と割当の主キーは UUID。role は key の `role:<account>` で引ける。
     const roleId = crypto.randomUUID()
     sqlite
@@ -60,26 +63,26 @@ export async function createSystemWorkTestFixture() {
       .query(
         "INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES (?1,?2,?3,100)",
       )
-      .run(crypto.randomUUID(), account, roleId)
+      .run(crypto.randomUUID(), accountId, roleId)
     if (account !== "worker") {
       const raw = await new SystemPrincipalSecretService().hashRawSecret(`${stepUpToken}${account}`)
       if (raw instanceof Error) throw raw
-      stepUpTokens.set(account, raw)
+      stepUpTokens.set(accountId, raw)
       const hash = await new SystemPrincipalSecretService().hashRawSecret(raw)
       if (hash instanceof Error) throw hash
       sqlite
         .query(`INSERT INTO system_step_up_grants (id,account_id,token_hash,method,issued_at,expires_at,last_used_at)
         VALUES (?1,?2,?3,'password',?4,?5,?4)`)
-        .run(`stepup:${account}`, account, hash, issuedAt, issuedAt + 300000)
+        .run(testDerivedId("step-up", account), accountId, hash, issuedAt, issuedAt + 300000)
     }
   }
   sqlite
     .query(`INSERT INTO system_machine_credentials (id,principal_id,name,secret_hash,status,created_at,updated_at,last_used_at)
-    VALUES ('credential:worker','principal:worker','Test credential',?1,'active',100,?2,?2)`)
+    VALUES ('087f472e-41a4-42b5-a66f-c625597754b0','ef083a4f-dd0a-42a8-8007-57ab6f2df095','Test credential',?1,'active',100,?2,?2)`)
     .run("a".repeat(64), issuedAt)
   function claims(account: string) {
     return zAccessTokenClaims.parse({
-      sub: account,
+      sub: testAccountId(account),
       ver: 0,
       purpose: "api-session",
       iss: "test",
@@ -88,7 +91,9 @@ export async function createSystemWorkTestFixture() {
       iat: Math.floor(issuedAt / 1000),
       issuedAtMs: issuedAt,
       exp: Math.floor(issuedAt / 1000) + 3600,
-      ...(account === "worker" ? { machineCredentialId: "credential:worker" } : {}),
+      ...(testAccountId(account) === testAccountId("worker")
+        ? { machineCredentialId: "087f472e-41a4-42b5-a66f-c625597754b0" }
+        : {}),
     })
   }
   function adapter(account: string, identityBindingId: string | null = null) {
@@ -112,7 +117,7 @@ export async function createSystemWorkTestFixture() {
   ) {
     const authorization = await adapter(account).prepare({
       permission,
-      stepUpToken: protectedOperation ? (stepUpTokens.get(account) ?? "") : null,
+      stepUpToken: protectedOperation ? (stepUpTokens.get(testAccountId(account)) ?? "") : null,
     })
     if (authorization instanceof Error) throw authorization
     return {

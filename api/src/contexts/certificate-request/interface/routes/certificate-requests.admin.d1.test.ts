@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -113,7 +114,7 @@ describe("GET /certificate-requests/admin", () => {
 
   test("filters by employee_id", async () => {
     const response = await request(
-      "/certificate-request/certificate-requests/admin?employee_id=2",
+      `/certificate-request/certificate-requests/admin?employee_id=${testEmployeeId(2)}`,
       await tokenFor(1),
     )
 
@@ -124,9 +125,11 @@ describe("GET /certificate-requests/admin", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.data.every((item) => item.requester_id === toWorkforceEmployeeId(2))).toBe(
-        true,
-      )
+      expect(
+        parsed.data.data.every(
+          (item) => item.requester_id === toWorkforceEmployeeId(testEmployeeId(2)),
+        ),
+      ).toBe(true)
       expect(parsed.data.data.length).toBeGreaterThan(0)
     }
   })

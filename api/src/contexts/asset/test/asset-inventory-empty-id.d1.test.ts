@@ -36,7 +36,7 @@ test("空の資産コードを初回ページから漏らさず撤去照合を�
   await database
     .prepare(`INSERT INTO system_step_up_grants
     (id,account_id,token_hash,method,issued_at,expires_at)
-    VALUES ('asset-inventory-empty-id',?1,?2,'external_identity',?3,?4)`)
+    VALUES ('e2e367f4-8953-45aa-a78f-d945445f0c7b',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now, now + 60_000)
     .run()
   const post = (path: string, body: unknown, key: string) =>
@@ -92,7 +92,7 @@ test("空の棚卸しIDを初回ページから漏らさず撤去照合を拒否
   await database
     .prepare(`INSERT INTO system_step_up_grants
     (id,account_id,token_hash,method,issued_at,expires_at)
-    VALUES ('asset-inventory-empty-composite-id',?1,?2,'external_identity',?3,?4)`)
+    VALUES ('dfc9503c-f45b-4fd1-9c87-ea94b999d306',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now, now + 60_000)
     .run()
   const post = (path: string, body: unknown, key: string) =>

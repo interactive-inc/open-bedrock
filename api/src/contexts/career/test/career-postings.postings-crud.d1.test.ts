@@ -394,7 +394,7 @@ describe("organization unit picked from the Company organization units list", ()
       path: "/company/organization-units",
       token,
       method: "POST",
-      headers: { "Idempotency-Key": "career-posting-new-unit" },
+      headers: { "Idempotency-Key": "62345678-1234-4abc-8def-1234567890ab" },
       body: { code: "D100", name: "新設部", parent_code: null },
     })
 

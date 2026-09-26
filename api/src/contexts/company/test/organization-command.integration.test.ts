@@ -73,7 +73,7 @@ function fixture() {
   const clock = { now: new Date("2026-09-07T00:00:00Z") }
   const actors = {
     current: CompanyActorValue.restore({
-      accountId: "account:operator",
+      accountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
       employeeId: null,
       organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:write"],
@@ -167,14 +167,14 @@ describe("organization command receipts and boundaries", () => {
     const f = fixture()
     expect((await f.post([root], 0, "root-create")).status).toBe(201)
     f.actors.current = CompanyActorValue.restore({
-      accountId: "account:operator",
+      accountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
       employeeId: null,
       organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
       capabilities: ["company:write"],
     })
     expect((await f.post([root], 0, "root-create")).status).toBe(403)
     f.actors.current = CompanyActorValue.restore({
-      accountId: "account:operator",
+      accountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
       employeeId: null,
       organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:read"],
@@ -276,7 +276,7 @@ describe("organization command receipts and boundaries", () => {
     const competing = CompanyResourceChangeEntity.create({
       commandId: "competing-root",
       expectedRevision: 1,
-      actorAccountId: "account:other",
+      actorAccountId: "d2c82c1d-214f-4a0e-8162-09c1f6704ea5",
       recordedAt: Date.now(),
       reason: "Confirmed rename",
       resources: [
@@ -372,7 +372,10 @@ describe("legacy organization routes stay inside their Company scope", () => {
         path,
         {
           method,
-          headers: { "content-type": "application/json", "idempotency-key": "scope-create-unit" },
+          headers: {
+            "content-type": "application/json",
+            "idempotency-key": "a5c0e2d4-7b1f-4c3e-9a8d-2f6b1e0c9d7a",
+          },
           ...(body === undefined ? {} : { body: JSON.stringify(body) }),
         },
         f.environment,

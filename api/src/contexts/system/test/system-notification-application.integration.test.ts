@@ -63,8 +63,8 @@ CREATE TABLE system_notification_deliveries (
 describe("canonical System Notification Application + D1 repository", () => {
   test("旧通知もAccount・scope付きで読め、選択済みdeliveryだけを既読にする", async () => {
     const database = createSystemD1TestDatabase(notificationSchema)
-    await insertAccount(database, "account-owner", "active")
-    await insertAccount(database, "account-other", "active")
+    await insertAccount(database, "4f810255-55d5-43c8-b43f-2df5e7bf5a3c", "active")
+    await insertAccount(database, "cd2c4c4e-c038-4a89-8411-6f779077ac7e", "active")
     await database.exec(`
       INSERT INTO system_notification_messages
         (id, kind, title, body, action_url, priority, created_at)
@@ -73,11 +73,11 @@ describe("canonical System Notification Application + D1 repository", () => {
       VALUES ('legacy', 'care:facility', 'f1');
       INSERT INTO system_notification_deliveries
         (id, message_id, recipient_account_id, delivered_at)
-      VALUES ('owner-delivery', 'legacy', 'account-owner', 1000),
-             ('other-delivery', 'legacy', 'account-other', 1000);
+      VALUES ('owner-delivery', 'legacy', '4f810255-55d5-43c8-b43f-2df5e7bf5a3c', 1000),
+             ('other-delivery', 'legacy', 'cd2c4c4e-c038-4a89-8411-6f779077ac7e', 1000);
     `)
-    const owner = zAccountId.parse("account-owner")
-    const other = zAccountId.parse("account-other")
+    const owner = zAccountId.parse("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
+    const other = zAccountId.parse("cd2c4c4e-c038-4a89-8411-6f779077ac7e")
     const ownerRecords = await listSystemNotificationRecords({
       database,
       recipientAccountId: owner,
@@ -462,7 +462,7 @@ describe("canonical System Notification Application + D1 repository", () => {
 
   test("同じpublication keyの再送は元のMessageとDeliveryへ収束する", async () => {
     const database = createSystemD1TestDatabase(notificationSchema)
-    await insertAccount(database, "account-owner", "active")
+    await insertAccount(database, "4f810255-55d5-43c8-b43f-2df5e7bf5a3c", "active")
     const repository = new SystemNotificationRepository({ context: { env: { DB: database } } })
     const publish = new PublishSystemNotification({ notificationRepository: repository })
     const first = createMessage("message-original", "system:test:publication-1", "source-1")
@@ -470,7 +470,7 @@ describe("canonical System Notification Application + D1 repository", () => {
       createDelivery({
         id: "delivery-original",
         messageId: first.id,
-        recipientAccountId: "account-owner",
+        recipientAccountId: "4f810255-55d5-43c8-b43f-2df5e7bf5a3c",
       }),
     ])
     expect(await publish.execute({ message: first, deliveries: firstDeliveries })).toEqual({
@@ -482,7 +482,7 @@ describe("canonical System Notification Application + D1 repository", () => {
       createDelivery({
         id: "delivery-retry",
         messageId: retry.id,
-        recipientAccountId: "account-owner",
+        recipientAccountId: "4f810255-55d5-43c8-b43f-2df5e7bf5a3c",
       }),
     ])
     expect(await publish.execute({ message: retry, deliveries: retryDeliveries })).toEqual({
@@ -499,7 +499,7 @@ describe("canonical System Notification Application + D1 repository", () => {
     ).toBe("delivery-original")
     const stored = await repository.findByDeliveryIdForAccount(
       firstDeliveries.deliveries[0]!.id,
-      zAccountId.parse("account-owner"),
+      zAccountId.parse("4f810255-55d5-43c8-b43f-2df5e7bf5a3c"),
     )
     expect(stored).not.toBeInstanceOf(Error)
     if (stored instanceof Error || stored === null) throw stored ?? new Error("missing delivery")
@@ -508,7 +508,7 @@ describe("canonical System Notification Application + D1 repository", () => {
 
   test("同じpublication keyで本文や宛先を変えた再送は全件rollbackする", async () => {
     const database = createSystemD1TestDatabase(notificationSchema)
-    await insertAccount(database, "account-owner", "active")
+    await insertAccount(database, "4f810255-55d5-43c8-b43f-2df5e7bf5a3c", "active")
     await insertAccount(database, "account-extra", "active")
     const repository = new SystemNotificationRepository({ context: { env: { DB: database } } })
     const publish = new PublishSystemNotification({ notificationRepository: repository })
@@ -517,7 +517,7 @@ describe("canonical System Notification Application + D1 repository", () => {
       createDelivery({
         id: "delivery-original",
         messageId: original.id,
-        recipientAccountId: "account-owner",
+        recipientAccountId: "4f810255-55d5-43c8-b43f-2df5e7bf5a3c",
       }),
     ])
     expect(await publish.execute({ message: original, deliveries: originalDeliveries })).toEqual({
@@ -541,7 +541,7 @@ describe("canonical System Notification Application + D1 repository", () => {
           createDelivery({
             id: "delivery-changed",
             messageId: changedContent.id,
-            recipientAccountId: "account-owner",
+            recipientAccountId: "4f810255-55d5-43c8-b43f-2df5e7bf5a3c",
           }),
         ]),
       }),
@@ -605,7 +605,7 @@ describe("canonical System Notification Application + D1 repository", () => {
 
   test("優先度・opaque action・resource scopeを保存し、属性を変えた再送は拒否する", async () => {
     const database = createSystemD1TestDatabase(notificationSchema)
-    await insertAccount(database, "account-owner", "active")
+    await insertAccount(database, "4f810255-55d5-43c8-b43f-2df5e7bf5a3c", "active")
     const repository = new SystemNotificationRepository({ context: { env: { DB: database } } })
     const publish = new PublishSystemNotification({ notificationRepository: repository })
     const message = createScopedMessage("message-scoped", "care:shift:reminder-1")
@@ -613,13 +613,13 @@ describe("canonical System Notification Application + D1 repository", () => {
       createDelivery({
         id: "delivery-scoped",
         messageId: message.id,
-        recipientAccountId: "account-owner",
+        recipientAccountId: "4f810255-55d5-43c8-b43f-2df5e7bf5a3c",
       }),
     ])
     expect(await publish.execute({ message, deliveries })).toEqual({ kind: "published" })
     const saved = await repository.findByDeliveryIdForAccount(
       deliveries.deliveries[0]!.id,
-      zAccountId.parse("account-owner"),
+      zAccountId.parse("4f810255-55d5-43c8-b43f-2df5e7bf5a3c"),
     )
     expect(saved).not.toBeInstanceOf(Error)
     if (saved instanceof Error || saved === null) throw saved ?? new Error("missing delivery")
@@ -656,7 +656,7 @@ describe("canonical System Notification Application + D1 repository", () => {
             createDelivery({
               id: `delivery-scoped-retry-${index}`,
               messageId: changed.id,
-              recipientAccountId: "account-owner",
+              recipientAccountId: "4f810255-55d5-43c8-b43f-2df5e7bf5a3c",
             }),
           ]),
         }),
@@ -706,22 +706,22 @@ describe("canonical System Notification Application + D1 repository", () => {
 
   test("他Accountからreceiptを隠し、既読時刻を最初の遷移から後退も上書きもしない", async () => {
     const database = createSystemD1TestDatabase(notificationSchema)
-    await insertAccount(database, "account-owner", "active")
-    await insertAccount(database, "account-other", "active")
+    await insertAccount(database, "4f810255-55d5-43c8-b43f-2df5e7bf5a3c", "active")
+    await insertAccount(database, "cd2c4c4e-c038-4a89-8411-6f779077ac7e", "active")
 
     const message = createMessage("message-read")
     const deliveries = createDeliveryBatch([
       createDelivery({
         id: "delivery-read",
         messageId: message.id,
-        recipientAccountId: "account-owner",
+        recipientAccountId: "4f810255-55d5-43c8-b43f-2df5e7bf5a3c",
       }),
     ])
     const repository = new SystemNotificationRepository({ context: { env: { DB: database } } })
     const publish = new PublishSystemNotification({ notificationRepository: repository })
     const markRead = new MarkSystemNotificationRead({ notificationRepository: repository })
-    const ownerAccountId = zAccountId.parse("account-owner")
-    const otherAccountId = zAccountId.parse("account-other")
+    const ownerAccountId = zAccountId.parse("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
+    const otherAccountId = zAccountId.parse("cd2c4c4e-c038-4a89-8411-6f779077ac7e")
 
     expect(await publish.execute({ message, deliveries })).toEqual({ kind: "published" })
     expect(
@@ -775,14 +775,14 @@ describe("canonical System Notification Application + D1 repository", () => {
 
   test("Account単位の一覧・未読件数・一括既読・破棄をcanonical Deliveryだけで処理する", async () => {
     const database = createSystemD1TestDatabase(notificationSchema)
-    await insertAccount(database, "account-owner", "active")
-    await insertAccount(database, "account-other", "active")
+    await insertAccount(database, "4f810255-55d5-43c8-b43f-2df5e7bf5a3c", "active")
+    await insertAccount(database, "cd2c4c4e-c038-4a89-8411-6f779077ac7e", "active")
     const repository = new SystemNotificationRepository({ context: { env: { DB: database } } })
 
     for (const [index, accountId] of [
-      "account-owner",
-      "account-owner",
-      "account-other",
+      "4f810255-55d5-43c8-b43f-2df5e7bf5a3c",
+      "4f810255-55d5-43c8-b43f-2df5e7bf5a3c",
+      "cd2c4c4e-c038-4a89-8411-6f779077ac7e",
     ].entries()) {
       const message = createMessage(`message-list-${index + 1}`)
       const deliveries = createDeliveryBatch([
@@ -800,7 +800,7 @@ describe("canonical System Notification Application + D1 repository", () => {
       ).toEqual({ kind: "published" })
     }
 
-    const accountId = zAccountId.parse("account-owner")
+    const accountId = zAccountId.parse("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
     expect(await repository.countUnreadForAccount(accountId)).toBe(2)
 
     const page = await repository.findMany({
@@ -814,14 +814,16 @@ describe("canonical System Notification Application + D1 repository", () => {
     expect(page.total).toBe(2)
     expect(page.items).toHaveLength(1)
     expect(page.items[0]?.message.title).toBe("System test notification")
-    expect(String(page.items[0]?.delivery.recipientAccountId)).toBe("account-owner")
+    expect(String(page.items[0]?.delivery.recipientAccountId)).toBe(
+      "4f810255-55d5-43c8-b43f-2df5e7bf5a3c",
+    )
 
     expect(await repository.markAllDeliveriesRead(accountId, new Date(3_000))).toBe(2)
     expect(await repository.countUnreadForAccount(accountId)).toBe(0)
     expect(
       await repository.dismissDelivery(
         page.items[0]!.delivery.id,
-        zAccountId.parse("account-other"),
+        zAccountId.parse("cd2c4c4e-c038-4a89-8411-6f779077ac7e"),
         new Date(4_000),
       ),
     ).toBe(false)
@@ -835,14 +837,14 @@ describe("canonical System Notification Application + D1 repository", () => {
 
   test("dismiss後の同一publication再送はDeliveryを復活させない", async () => {
     const database = createSystemD1TestDatabase(notificationSchema)
-    await insertAccount(database, "account-owner", "active")
+    await insertAccount(database, "4f810255-55d5-43c8-b43f-2df5e7bf5a3c", "active")
     const repository = new SystemNotificationRepository({ context: { env: { DB: database } } })
     const message = createMessage("dismiss-message", "system:test:dismiss-1", "source-dismiss")
     const deliveries = createDeliveryBatch([
       createDelivery({
         id: "dismiss-delivery",
         messageId: message.id,
-        recipientAccountId: "account-owner",
+        recipientAccountId: "4f810255-55d5-43c8-b43f-2df5e7bf5a3c",
       }),
     ])
     expect(
@@ -851,7 +853,7 @@ describe("canonical System Notification Application + D1 repository", () => {
         deliveries,
       }),
     ).toEqual({ kind: "published" })
-    const accountId = zAccountId.parse("account-owner")
+    const accountId = zAccountId.parse("4f810255-55d5-43c8-b43f-2df5e7bf5a3c")
     expect(
       await repository.dismissDelivery(deliveries.deliveries[0]!.id, accountId, new Date(3_000)),
     ).toBe(true)
@@ -863,7 +865,7 @@ describe("canonical System Notification Application + D1 repository", () => {
           createDelivery({
             id: "retry-delivery",
             messageId: retry.id,
-            recipientAccountId: "account-owner",
+            recipientAccountId: "4f810255-55d5-43c8-b43f-2df5e7bf5a3c",
           }),
         ]),
       },

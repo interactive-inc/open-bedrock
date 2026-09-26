@@ -15,7 +15,7 @@ function createFixture() {
     .query(
       `INSERT INTO system_accounts
          (id, status, token_version, created_at, updated_at)
-       VALUES ('cli-session-account', 'active', 0, ?1, ?1)`,
+       VALUES ('1cb0c8e2-74ea-4cf3-b33a-321991689e26', 'active', 0, ?1, ?1)`,
     )
     .run(now.getTime())
   const app = new Hono<SystemHonoEnv>()
@@ -46,7 +46,7 @@ async function seedCode(
     .query(
       `INSERT INTO system_cli_login_codes
          (code_hash, account_id, created_at, expires_at)
-       VALUES (?1, 'cli-session-account', ?2, ?3)`,
+       VALUES (?1, '1cb0c8e2-74ea-4cf3-b33a-321991689e26', ?2, ?3)`,
     )
     .run(codeHash, Math.min(now.getTime(), expiresAt - 1), expiresAt)
 }
@@ -63,7 +63,7 @@ describe("POST /system/cli-sessions", () => {
     expect(response.status).toBe(201)
     const body = await response.json()
     if (!("account_id" in body)) throw new Error("expected issued System Session")
-    expect(String(body.account_id)).toBe("cli-session-account")
+    expect(String(body.account_id)).toBe("1cb0c8e2-74ea-4cf3-b33a-321991689e26")
     expect(body.access_token.length > 0).toBe(true)
     expect(body.refresh_token.length).toBe(64)
     expect(body.session_id.length > 0).toBe(true)
@@ -116,7 +116,7 @@ describe("POST /system/cli-sessions", () => {
     fixture.sqlite.exec(`
       UPDATE system_accounts
       SET status = 'suspended', token_version = token_version + 1, updated_at = updated_at + 1
-      WHERE id = 'cli-session-account';
+      WHERE id = '1cb0c8e2-74ea-4cf3-b33a-321991689e26';
     `)
 
     const response = await client.system["cli-sessions"].$post({

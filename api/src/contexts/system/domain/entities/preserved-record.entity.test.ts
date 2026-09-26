@@ -27,7 +27,7 @@ const input = {
     id: "grant-1",
     version: "1",
   },
-  actorAccountId: "archive-operator",
+  actorAccountId: "a3e16d2a-d110-49b0-9ecb-e7b88a1c35ce",
   finalizedAt: "2026-09-13T00:00:01.000Z",
   reason: "Preserve confirmed source",
   auditEventId: crypto.randomUUID(),
@@ -56,7 +56,7 @@ test("本文の保全対象と確定主体を照合し、別の保全を根拠�
     { ...hold, id: crypto.randomUUID() },
     { ...hold, attachmentId: crypto.randomUUID() },
     { ...hold, sha256: "c".repeat(64) },
-    { ...hold, actorAccountId: "other-operator" },
+    { ...hold, actorAccountId: "258bbdaa-4348-4953-bc9b-523250d0062e" },
     { ...hold, createdAt: "2026-09-13T00:00:00.000Z" },
   ]) {
     const mismatch = AttachmentPreservationEntity.create(different)

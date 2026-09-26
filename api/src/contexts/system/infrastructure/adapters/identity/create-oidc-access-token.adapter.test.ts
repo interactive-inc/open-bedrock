@@ -8,7 +8,9 @@ import { drizzle } from "drizzle-orm/d1"
 describe("createOidcAccessToken", () => {
   test("平文tokenを保存しない", async () => {
     const fixture = new SystemSessionTestContext()
-    fixture.sqlite.exec("INSERT INTO system_accounts VALUES ('account-1', 'active', 0, NULL, 0, 0)")
+    fixture.sqlite.exec(
+      "INSERT INTO system_accounts (id, status, token_version, closed_at, created_at, updated_at) VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'active', 0, NULL, 0, 0)",
+    )
     const result = await new CreateOidcAccessTokenAdapter({
       var: {
         database: drizzle(fixture.context.env.DB, { schema: systemCoreSchema }),
@@ -17,7 +19,7 @@ describe("createOidcAccessToken", () => {
     }).createOidcAccessToken({
       issuer: "https://identity.example.test",
       clientId: "system-console",
-      accountId: zAccountId.parse("account-1"),
+      accountId: zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e"),
       scope: "openid",
     })
 

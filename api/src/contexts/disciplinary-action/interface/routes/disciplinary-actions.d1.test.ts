@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
@@ -58,7 +59,12 @@ async function createAction(db: D1Database): Promise<string> {
     path: "/disciplinary-action/disciplinary-actions",
     token: await tokenFor(1),
     method: "POST",
-    body: { employee_id: "5", kind: "warning", summary: "policy breach", decided_on: "2026-06-01" },
+    body: {
+      employee_id: testEmployeeId(5),
+      kind: "warning",
+      summary: "policy breach",
+      decided_on: "2026-06-01",
+    },
   })
 
   const body = (await response.json()) as { id: string }
@@ -121,7 +127,7 @@ describe("disciplinary actions", () => {
     const response = await requestWithContext({
       db,
       jwtSecret,
-      path: "/disciplinary-action/disciplinary-actions?employee_id=5",
+      path: `/disciplinary-action/disciplinary-actions?employee_id=${testEmployeeId(5)}`,
       token: await tokenFor(5),
     })
 
@@ -135,7 +141,12 @@ describe("disciplinary actions", () => {
       path: "/disciplinary-action/disciplinary-actions",
       token: await tokenFor(5),
       method: "POST",
-      body: { employee_id: "6", kind: "warning", summary: "x", decided_on: "2026-06-01" },
+      body: {
+        employee_id: testEmployeeId(6),
+        kind: "warning",
+        summary: "x",
+        decided_on: "2026-06-01",
+      },
     })
 
     expect(response.status).toBe(403)

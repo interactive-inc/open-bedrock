@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -116,7 +117,7 @@ describe("GET /expenses/admin", () => {
       )
 
       expect(first?.applicant_name).toBe("Emery Lane")
-      expect(first?.applicant_id).toBe(toWorkforceEmployeeId(5))
+      expect(String(first?.applicant_id)).toBe(testEmployeeId(5))
     }
   })
 

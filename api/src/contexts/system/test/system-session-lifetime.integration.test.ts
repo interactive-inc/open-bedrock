@@ -12,7 +12,7 @@ import {
 import { describe, expect, test } from "bun:test"
 import { Hono } from "hono"
 
-const accountId = "system-lifetime-account"
+const accountId = "29acdce0-9491-410f-907f-7712dbca3070"
 const subject = "person@example.com"
 const password = "correct-password"
 const pepper = "system-session-lifetime-pepper"
@@ -36,14 +36,14 @@ async function createFixture() {
     .query(
       `INSERT INTO system_identity_bindings
          (id, account_id, provider, subject, created_at, activated_at, revoked_at)
-       VALUES ('password-identity', ?1, 'password', ?2, ?3, ?3, NULL)`,
+       VALUES ('69157852-80fb-427d-8ef4-8047bd2d8c6a', ?1, 'password', ?2, ?3, ?3, NULL)`,
     )
     .run(accountId, subject, issuedAt.getTime())
   fixture.sqlite
     .query(
       `INSERT INTO system_password_credentials
          (identity_id, password_hash, changed_at, created_at, updated_at)
-       VALUES ('password-identity', ?1, ?2, ?2, ?2)`,
+       VALUES ('69157852-80fb-427d-8ef4-8047bd2d8c6a', ?1, ?2, ?2, ?2)`,
     )
     .run(passwordHash, issuedAt.getTime())
 
@@ -192,8 +192,8 @@ describe("System Session absolute lifetime", () => {
            (id, account_id, family_id, token_hash, token_version,
             created_at, expires_at, rotated_at, revoked_at)
          VALUES
-           ('legacy-1', ?1, 'legacy-family', ?2, 0, ?3, ?4, ?5, NULL),
-           ('legacy-2', ?1, 'legacy-family', ?6, 0, ?5, ?7, NULL, NULL)`,
+           ('d2b167e6-a7bd-44f6-a72e-6b62792fd895', ?1, 'legacy-family', ?2, 0, ?3, ?4, ?5, NULL),
+           ('3761449c-4d30-4eb9-9894-9d4b49e7a515', ?1, 'legacy-family', ?6, 0, ?5, ?7, NULL, NULL)`,
       )
       .run(
         accountId,
@@ -221,7 +221,7 @@ describe("System Session absolute lifetime", () => {
         `INSERT INTO system_sessions
            (id, account_id, family_id, token_hash, token_version,
             created_at, expires_at, rotated_at, revoked_at)
-         VALUES ('legacy-1', ?1, 'legacy-family', ?2, 0, ?3, ?4, NULL, NULL)`,
+         VALUES ('d2b167e6-a7bd-44f6-a72e-6b62792fd895', ?1, 'legacy-family', ?2, 0, ?3, ?4, NULL, NULL)`,
       )
       .run(accountId, tokenHash, familyStart, familyStart + 7 * day)
 

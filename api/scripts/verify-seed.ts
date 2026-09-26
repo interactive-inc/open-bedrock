@@ -114,10 +114,10 @@ const publicWorkforceGapCount = (
       WHERE binding.resource_type = 'employee' AND binding.employee_id = employee.id
         AND head.state = 'active'
         AND json_extract(head.attributes_json, '$.employeeCode') IS employee.employee_code
-        AND json_extract(head.attributes_json, '$.personId') = 'person:seed:' || employee.id
+        AND json_extract(head.attributes_json, '$.personId') = '01900065' || substr(employee.id, 9)
     ) OR NOT EXISTS (
       SELECT 1 FROM company_resource_heads person
-      WHERE person.resource_type = 'person' AND person.resource_id = 'person:seed:' || employee.id
+      WHERE person.resource_type = 'person' AND person.resource_id = '01900065' || substr(employee.id, 9)
         AND person.state = 'active'
         AND json_extract(person.attributes_json, '$.officialName') = employee.official_name
         AND json_extract(person.attributes_json, '$.email') IS employee.email
@@ -159,7 +159,7 @@ const retiredEmployeeHistory = db
   SELECT revision, effective_from,
     json_extract(attributes_json, '$.status') AS status
   FROM company_resource_revisions
-  WHERE resource_type = 'employment' AND resource_id = 'employment:seed-employment-18'
+  WHERE resource_type = 'employment' AND resource_id = '01900064-0000-7000-8000-000000000012'
   ORDER BY revision
 )`)
   .all() as Array<{ revision: number; effective_from: string; status: string }>

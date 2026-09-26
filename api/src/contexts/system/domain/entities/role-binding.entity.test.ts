@@ -8,7 +8,7 @@ const REVOKED_AT = new Date("2026-08-11T00:01:00.000Z")
 function bindingProps(overrides: Readonly<Record<string, unknown>> = {}) {
   return {
     id: "ae18ee9b-62ff-4396-8971-165b0ac77248",
-    accountId: "account-1",
+    accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
     roleId: "a290ac92-bf4b-434b-8443-8b6ceeb1cb85",
     resource: null,
     createdAt: CREATED_AT,

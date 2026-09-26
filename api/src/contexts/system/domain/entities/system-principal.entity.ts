@@ -15,6 +15,8 @@ const propsSchema = z
     revision: z.number().int().min(1).max(Number.MAX_SAFE_INTEGER),
     createdAt: z.date(),
     updatedAt: z.date(),
+    /** 主キーを UUID へ移す前の値。Entity の同一性には使わない */
+    legacyId: z.string().nullable().optional(),
   })
   .strict()
 

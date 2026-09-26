@@ -68,7 +68,7 @@ const defaults = {
 export async function createOrganizationProfileFixture() {
   const database = createCompanyD1TestDatabase(sql)
   await database.exec(
-    "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('account:profile', 'active', 0, 0, 0)",
+    "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('e419466c-18a7-4fec-a665-7bf591769bf4', 'active', 0, 0, 0)",
   )
   await database
     .prepare(
@@ -79,7 +79,7 @@ export async function createOrganizationProfileFixture() {
   const clock = { now: new Date("2026-09-07T03:00:00.000Z") }
   const actor = {
     current: CompanyActorValue.restore({
-      accountId: "account:profile",
+      accountId: "e419466c-18a7-4fec-a665-7bf591769bf4",
       employeeId: null,
       organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
       capabilities: ["company:admin"],

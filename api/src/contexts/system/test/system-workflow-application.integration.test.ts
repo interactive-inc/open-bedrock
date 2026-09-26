@@ -1,3 +1,4 @@
+import { testDerivedId } from "@tests/api/support/test-identity-id"
 import { SystemD1ProposalAdapter } from "@system/infrastructure/adapters/workflow/system-d1-proposal.adapter"
 import { describe, expect, test } from "bun:test"
 import { CancelSystemProcedure } from "@system/application/workflow/cancel-system-procedure"
@@ -39,20 +40,29 @@ async function createFixture(): Promise<{
   writer: SystemD1WorkflowAdapter
 }> {
   const database = createSystemD1TestDatabase(schema)
-  for (const accountId of ["creator", "reviewer-1", "reviewer-2", "final-reviewer", "inactive"]) {
+  for (const accountId of [
+    "3d1063a4-6a8f-4d72-af2a-90c6e9594c0e",
+    "e8bd8dd1-e8a4-4bea-8588-11cca10715ea",
+    "af28da7a-a120-4992-a8e2-992c936d18f1",
+    "97d4c99b-22e3-4895-a7c9-255873cd66da",
+    "010e8026-ab0b-43dd-a71c-25b5324c608f",
+  ]) {
     await database
       .prepare(
         `INSERT INTO system_accounts
            (id, status, token_version, created_at, updated_at)
          VALUES (?1, ?2, 0, 100, 100)`,
       )
-      .bind(accountId, accountId === "inactive" ? "suspended" : "active")
+      .bind(
+        accountId,
+        accountId === "010e8026-ab0b-43dd-a71c-25b5324c608f" ? "suspended" : "active",
+      )
       .run()
     await database
       .prepare(`INSERT INTO system_principals
       (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
       VALUES (?1, ?2, 'human', ?2, NULL, 1, 100, 100)`)
-      .bind(`principal:${accountId}`, accountId)
+      .bind(testDerivedId("principal", accountId), accountId)
       .run()
   }
   await database
@@ -67,7 +77,7 @@ async function createFixture(): Promise<{
       `INSERT INTO system_procedure_definition_revisions
          (procedure_key, revision, title, category, input_schema_json,
           decision_policy_json, created_by_account_id, created_at)
-       VALUES ('change', 1, 'Change', 'operation', '{}', '{}', 'creator', 100)`,
+       VALUES ('change', 1, 'Change', 'operation', '{}', '{}', '3d1063a4-6a8f-4d72-af2a-90c6e9594c0e', 100)`,
     )
     .run()
 
@@ -109,14 +119,16 @@ function nextTask(
   proposalDigest: typeof evidenceDigest,
   at: Date,
 ): SystemDecisionTaskBundle {
-  const finalCandidate = DecisionTaskCandidateEntity.create(candidate("final-reviewer", at))
+  const finalCandidate = DecisionTaskCandidateEntity.create(
+    candidate("97d4c99b-22e3-4895-a7c9-255873cd66da", at),
+  )
   if (finalCandidate instanceof InvalidSystemWorkflowError) throw finalCandidate
   const task = DecisionTaskEntity.create({
     caseId,
     key: "final-review",
     round: 1,
     candidateAccountIds: [finalCandidate.accountId],
-    excludedAccountIds: [zAccountId.parse("creator")],
+    excludedAccountIds: [zAccountId.parse("3d1063a4-6a8f-4d72-af2a-90c6e9594c0e")],
     requiredApprovals: 1,
     proposalDigest,
     openedAt: at,
@@ -127,7 +139,9 @@ function nextTask(
   return {
     task,
     candidates: [finalCandidate],
-    exclusions: [{ accountId: zAccountId.parse("creator"), reason: "creator" }],
+    exclusions: [
+      { accountId: zAccountId.parse("3d1063a4-6a8f-4d72-af2a-90c6e9594c0e"), reason: "creator" },
+    ],
   }
 }
 
@@ -155,7 +169,7 @@ describe("System workflow application", () => {
             procedureKey: "change",
             procedureRevision: 1,
             body: { reason: "Direct persistence boundary" },
-            createdByAccountId: zAccountId.parse("creator"),
+            createdByAccountId: zAccountId.parse("3d1063a4-6a8f-4d72-af2a-90c6e9594c0e"),
             supersedesProposalId: null,
             createdAt: at,
             firstTask: {
@@ -163,7 +177,7 @@ describe("System workflow application", () => {
               requiredApprovals: 1,
               openedAt: at,
               dueAt: null,
-              candidates: [candidate("reviewer-1", at)],
+              candidates: [candidate("e8bd8dd1-e8a4-4bea-8588-11cca10715ea", at)],
               excludedAccountIds: [],
             },
           })
@@ -171,8 +185,11 @@ describe("System workflow application", () => {
           if (phase === "represented")
             await fixture.database.exec(`INSERT INTO system_delegations
           (id, delegator_account_id, delegate_account_id, starts_at, ends_at, created_at)
-          VALUES ('45957f75-2fc1-4f5d-8b9f-c17706538f58', 'reviewer-1', 'reviewer-2', 100, 300, 100)`)
-          const accountId = phase === "candidate" ? "reviewer-2" : "reviewer-1"
+          VALUES ('45957f75-2fc1-4f5d-8b9f-c17706538f58', 'e8bd8dd1-e8a4-4bea-8588-11cca10715ea', 'af28da7a-a120-4992-a8e2-992c936d18f1', 100, 300, 100)`)
+          const accountId =
+            phase === "candidate"
+              ? "af28da7a-a120-4992-a8e2-992c936d18f1"
+              : "e8bd8dd1-e8a4-4bea-8588-11cca10715ea"
           if (kind === "missing")
             await fixture.database
               .prepare("DELETE FROM system_principals WHERE account_id = ?1")
@@ -197,15 +214,17 @@ describe("System workflow application", () => {
               ? fixture.database
                   .prepare(`INSERT INTO system_decision_task_candidates
           (case_id, task_key, round, candidate_account_id, source, evidence_context, evidence_kind, evidence_id, evidence_version, eligibility_digest, eligible_from, resolved_at)
-          VALUES (?1, 'review', 1, 'reviewer-2', 'primary', 'authority', 'qualification', 'evidence:2', '1', ?2, NULL, 200)`)
+          VALUES (?1, 'review', 1, 'af28da7a-a120-4992-a8e2-992c936d18f1', 'primary', 'authority', 'qualification', 'evidence:2', '1', ?2, NULL, 200)`)
                   .bind(started.workflowCase.id, evidenceDigest)
               : fixture.database
                   .prepare(`INSERT INTO system_human_attestations
           (id, case_id, task_key, round, actor_account_id, represented_account_id, delegation_id, action, proposal_digest, comment, decided_at)
-          VALUES ('3bdf36d5-3d86-4a41-870f-dd6685aecee4', ?1, 'review', 1, ?2, 'reviewer-1', ?3, 'approve', ?4, NULL, 210)`)
+          VALUES ('3bdf36d5-3d86-4a41-870f-dd6685aecee4', ?1, 'review', 1, ?2, 'e8bd8dd1-e8a4-4bea-8588-11cca10715ea', ?3, 'approve', ?4, NULL, 210)`)
                   .bind(
                     started.workflowCase.id,
-                    phase === "represented" ? "reviewer-2" : "reviewer-1",
+                    phase === "represented"
+                      ? "af28da7a-a120-4992-a8e2-992c936d18f1"
+                      : "e8bd8dd1-e8a4-4bea-8588-11cca10715ea",
                     phase === "represented" ? "45957f75-2fc1-4f5d-8b9f-c17706538f58" : null,
                     started.proposal.digest,
                   )
@@ -242,7 +261,7 @@ describe("System workflow application", () => {
       procedureKey: "change",
       procedureRevision: 1,
       body: { reason: "Execution evidence" },
-      createdByAccountId: zAccountId.parse("creator"),
+      createdByAccountId: zAccountId.parse("3d1063a4-6a8f-4d72-af2a-90c6e9594c0e"),
       supersedesProposalId: null,
       createdAt: new Date(200),
       firstTask: {
@@ -250,7 +269,7 @@ describe("System workflow application", () => {
         requiredApprovals: 1,
         openedAt: new Date(200),
         dueAt: null,
-        candidates: [candidate("reviewer-1", new Date(200))],
+        candidates: [candidate("e8bd8dd1-e8a4-4bea-8588-11cca10715ea", new Date(200))],
         excludedAccountIds: [],
       },
     })
@@ -259,14 +278,14 @@ describe("System workflow application", () => {
       .prepare(`INSERT INTO system_delegations
         (id, delegator_account_id, delegate_account_id, scope_context, scope_kind, scope_id, scope_version,
          starts_at, ends_at, created_at, revoked_at)
-        VALUES ('31d1558e-cfb2-420b-8201-a3ba4e6b1f45', 'reviewer-1', 'reviewer-2', NULL, NULL, NULL, NULL, 100, 500, 100, NULL)`)
+        VALUES ('31d1558e-cfb2-420b-8201-a3ba4e6b1f45', 'e8bd8dd1-e8a4-4bea-8588-11cca10715ea', 'af28da7a-a120-4992-a8e2-992c936d18f1', NULL, NULL, NULL, NULL, 100, 500, 100, NULL)`)
       .run()
     const approved = await new ApproveSystemTask(fixture.writer).execute({
       caseId: started.workflowCase.id,
       taskKey: "review",
       round: 1,
-      actorAccountId: zAccountId.parse("reviewer-2"),
-      representedAccountId: zAccountId.parse("reviewer-1"),
+      actorAccountId: zAccountId.parse("af28da7a-a120-4992-a8e2-992c936d18f1"),
+      representedAccountId: zAccountId.parse("e8bd8dd1-e8a4-4bea-8588-11cca10715ea"),
       delegationId: "31d1558e-cfb2-420b-8201-a3ba4e6b1f45",
       proposalDigest: started.proposal.digest,
       comment: null,
@@ -293,17 +312,20 @@ describe("System workflow application", () => {
       await fixture.database.exec(`INSERT INTO system_delegations
           (id, delegator_account_id, delegate_account_id, scope_context, scope_kind, scope_id, scope_version,
            starts_at, ends_at, created_at, revoked_at)
-          VALUES ('c888a1ba-ed0d-4b34-8db1-200238b076a0', 'reviewer-1', 'reviewer-2', NULL, NULL, NULL, NULL, 260, 500, 260, NULL)`)
+          VALUES ('c888a1ba-ed0d-4b34-8db1-200238b076a0', 'e8bd8dd1-e8a4-4bea-8588-11cca10715ea', 'af28da7a-a120-4992-a8e2-992c936d18f1', NULL, NULL, NULL, NULL, 260, 500, 260, NULL)`)
     } else if (change === "account") {
       await fixture.database.exec(
-        "UPDATE system_accounts SET status = 'suspended', token_version = token_version + 1 WHERE id = 'reviewer-1'",
+        "UPDATE system_accounts SET status = 'suspended', token_version = token_version + 1 WHERE id = 'e8bd8dd1-e8a4-4bea-8588-11cca10715ea'",
       )
     } else if (change === "principal") {
       await fixture.database.exec(
-        "UPDATE system_principals SET kind = 'agent', revision = revision + 1, updated_at = 250 WHERE account_id = 'reviewer-2'",
+        "UPDATE system_principals SET kind = 'agent', revision = revision + 1, updated_at = 250 WHERE account_id = 'af28da7a-a120-4992-a8e2-992c936d18f1'",
       )
     } else {
-      const account = change === "missing_represented" ? "reviewer-1" : "reviewer-2"
+      const account =
+        change === "missing_represented"
+          ? "e8bd8dd1-e8a4-4bea-8588-11cca10715ea"
+          : "af28da7a-a120-4992-a8e2-992c936d18f1"
       await fixture.database
         .prepare("DELETE FROM system_principals WHERE account_id = ?1")
         .bind(account)
@@ -311,7 +333,7 @@ describe("System workflow application", () => {
       if (change === "recreated_actor")
         await fixture.database.exec(`INSERT INTO system_principals
           (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
-          VALUES ('replacement-human', 'reviewer-2', 'human', 'Replacement', NULL, 1, 250, 250)`)
+          VALUES ('977d0e0a-4fa8-47ef-b5fe-b25f42a55c5a', 'af28da7a-a120-4992-a8e2-992c936d18f1', 'human', 'Replacement', NULL, 1, 250, 250)`)
     }
     const conflict = await fixture.database.batch([before.guard]).then(
       () => null,
@@ -333,10 +355,10 @@ describe("System workflow application", () => {
       fixture.database
         .prepare(
           kind === "missing"
-            ? "DELETE FROM system_principals WHERE account_id = 'reviewer-1'"
+            ? "DELETE FROM system_principals WHERE account_id = 'e8bd8dd1-e8a4-4bea-8588-11cca10715ea'"
             : kind === "future"
-              ? "UPDATE system_principals SET created_at = 220, updated_at = 220, revision = revision + 1 WHERE account_id = 'reviewer-1'"
-              : "UPDATE system_principals SET kind = 'agent', revision = revision + 1 WHERE account_id = 'reviewer-1'",
+              ? "UPDATE system_principals SET created_at = 220, updated_at = 220, revision = revision + 1 WHERE account_id = 'e8bd8dd1-e8a4-4bea-8588-11cca10715ea'"
+              : "UPDATE system_principals SET kind = 'agent', revision = revision + 1 WHERE account_id = 'e8bd8dd1-e8a4-4bea-8588-11cca10715ea'",
         )
         .run()
     if (phase === "candidate") await machine()
@@ -347,7 +369,7 @@ describe("System workflow application", () => {
       procedureKey: "change",
       procedureRevision: 1,
       body: { reason: "Human decision required" },
-      createdByAccountId: zAccountId.parse("creator"),
+      createdByAccountId: zAccountId.parse("3d1063a4-6a8f-4d72-af2a-90c6e9594c0e"),
       supersedesProposalId: null,
       createdAt: at,
       firstTask: {
@@ -355,7 +377,7 @@ describe("System workflow application", () => {
         requiredApprovals: 1,
         openedAt: at,
         dueAt: null,
-        candidates: [candidate("reviewer-1", at)],
+        candidates: [candidate("e8bd8dd1-e8a4-4bea-8588-11cca10715ea", at)],
         excludedAccountIds: [],
       },
     })
@@ -375,8 +397,8 @@ describe("System workflow application", () => {
         caseId: started.workflowCase.id,
         taskKey: "review",
         round: 1,
-        actorAccountId: zAccountId.parse("reviewer-1"),
-        representedAccountId: zAccountId.parse("reviewer-1"),
+        actorAccountId: zAccountId.parse("e8bd8dd1-e8a4-4bea-8588-11cca10715ea"),
+        representedAccountId: zAccountId.parse("e8bd8dd1-e8a4-4bea-8588-11cca10715ea"),
         delegationId: null,
         proposalDigest: started.proposal.digest,
         comment: null,
@@ -402,7 +424,7 @@ describe("System workflow application", () => {
         procedureKey: "change",
         procedureRevision: 1,
         body: { reason: "Two human decisions" },
-        createdByAccountId: zAccountId.parse("creator"),
+        createdByAccountId: zAccountId.parse("3d1063a4-6a8f-4d72-af2a-90c6e9594c0e"),
         supersedesProposalId: null,
         createdAt: at,
         firstTask: {
@@ -410,29 +432,29 @@ describe("System workflow application", () => {
           requiredApprovals: 1,
           openedAt: at,
           dueAt: null,
-          candidates: [candidate("reviewer-1", at)],
+          candidates: [candidate("e8bd8dd1-e8a4-4bea-8588-11cca10715ea", at)],
           excludedAccountIds: [],
         },
       })
       if (started instanceof Error) throw started
       if (kind === "missing")
         await fixture.database.exec(
-          "DELETE FROM system_principals WHERE account_id = 'final-reviewer'",
+          "DELETE FROM system_principals WHERE account_id = '97d4c99b-22e3-4895-a7c9-255873cd66da'",
         )
       if (kind === "machine")
         await fixture.database.exec(
-          "UPDATE system_principals SET kind = 'agent', revision = revision + 1 WHERE account_id = 'final-reviewer'",
+          "UPDATE system_principals SET kind = 'agent', revision = revision + 1 WHERE account_id = '97d4c99b-22e3-4895-a7c9-255873cd66da'",
         )
       if (kind === "future")
         await fixture.database.exec(
-          "UPDATE system_principals SET created_at = 220, updated_at = 220, revision = revision + 1 WHERE account_id = 'final-reviewer'",
+          "UPDATE system_principals SET created_at = 220, updated_at = 220, revision = revision + 1 WHERE account_id = '97d4c99b-22e3-4895-a7c9-255873cd66da'",
         )
       const result = await new ApproveSystemTask(fixture.writer).execute({
         caseId: started.workflowCase.id,
         taskKey: "review",
         round: 1,
-        actorAccountId: zAccountId.parse("reviewer-1"),
-        representedAccountId: zAccountId.parse("reviewer-1"),
+        actorAccountId: zAccountId.parse("e8bd8dd1-e8a4-4bea-8588-11cca10715ea"),
+        representedAccountId: zAccountId.parse("e8bd8dd1-e8a4-4bea-8588-11cca10715ea"),
         delegationId: null,
         proposalDigest: started.proposal.digest,
         comment: null,
@@ -465,7 +487,7 @@ describe("System workflow application", () => {
       procedureKey: "change",
       procedureRevision: 1,
       body: { reason: "Guarded decision" },
-      createdByAccountId: zAccountId.parse("creator"),
+      createdByAccountId: zAccountId.parse("3d1063a4-6a8f-4d72-af2a-90c6e9594c0e"),
       supersedesProposalId: null,
       createdAt: at,
       firstTask: {
@@ -473,7 +495,7 @@ describe("System workflow application", () => {
         requiredApprovals: 1,
         openedAt: at,
         dueAt: null,
-        candidates: [candidate("reviewer-1", at)],
+        candidates: [candidate("e8bd8dd1-e8a4-4bea-8588-11cca10715ea", at)],
         excludedAccountIds: [],
       },
     })
@@ -486,8 +508,8 @@ describe("System workflow application", () => {
       caseId: started.workflowCase.id,
       taskKey: "review",
       round: 1,
-      actorAccountId: zAccountId.parse("reviewer-1"),
-      representedAccountId: zAccountId.parse("reviewer-1"),
+      actorAccountId: zAccountId.parse("e8bd8dd1-e8a4-4bea-8588-11cca10715ea"),
+      representedAccountId: zAccountId.parse("e8bd8dd1-e8a4-4bea-8588-11cca10715ea"),
       delegationId: null,
       proposalDigest: started.proposal.digest,
       comment: null,
@@ -531,7 +553,7 @@ describe("System workflow application", () => {
       procedureKey: "change",
       procedureRevision: 1,
       body: { reason: "safe", amount: 10 },
-      createdByAccountId: zAccountId.parse("creator"),
+      createdByAccountId: zAccountId.parse("3d1063a4-6a8f-4d72-af2a-90c6e9594c0e"),
       supersedesProposalId: null,
       createdAt: at,
       firstTask: {
@@ -539,7 +561,10 @@ describe("System workflow application", () => {
         requiredApprovals: 2,
         openedAt: at,
         dueAt: null,
-        candidates: [candidate("reviewer-1", at), candidate("reviewer-2", at)],
+        candidates: [
+          candidate("e8bd8dd1-e8a4-4bea-8588-11cca10715ea", at),
+          candidate("af28da7a-a120-4992-a8e2-992c936d18f1", at),
+        ],
         excludedAccountIds: [],
       },
     })
@@ -554,8 +579,8 @@ describe("System workflow application", () => {
       caseId: started.workflowCase.id,
       taskKey: "review",
       round: 1,
-      actorAccountId: zAccountId.parse("reviewer-1"),
-      representedAccountId: zAccountId.parse("reviewer-1"),
+      actorAccountId: zAccountId.parse("e8bd8dd1-e8a4-4bea-8588-11cca10715ea"),
+      representedAccountId: zAccountId.parse("e8bd8dd1-e8a4-4bea-8588-11cca10715ea"),
       delegationId: null,
       proposalDigest: started.proposal.digest,
       comment: null,
@@ -576,8 +601,8 @@ describe("System workflow application", () => {
       caseId: started.workflowCase.id,
       taskKey: "review",
       round: 1,
-      actorAccountId: zAccountId.parse("reviewer-2"),
-      representedAccountId: zAccountId.parse("reviewer-2"),
+      actorAccountId: zAccountId.parse("af28da7a-a120-4992-a8e2-992c936d18f1"),
+      representedAccountId: zAccountId.parse("af28da7a-a120-4992-a8e2-992c936d18f1"),
       delegationId: null,
       proposalDigest: started.proposal.digest,
       comment: "reviewed",
@@ -598,8 +623,8 @@ describe("System workflow application", () => {
       caseId: started.workflowCase.id,
       taskKey: "final-review",
       round: 1,
-      actorAccountId: zAccountId.parse("final-reviewer"),
-      representedAccountId: zAccountId.parse("final-reviewer"),
+      actorAccountId: zAccountId.parse("97d4c99b-22e3-4895-a7c9-255873cd66da"),
+      representedAccountId: zAccountId.parse("97d4c99b-22e3-4895-a7c9-255873cd66da"),
       delegationId: null,
       proposalDigest: started.proposal.digest,
       comment: null,
@@ -622,7 +647,7 @@ describe("System workflow application", () => {
       procedureKey: "change",
       procedureRevision: 1,
       body: {},
-      createdByAccountId: zAccountId.parse("creator"),
+      createdByAccountId: zAccountId.parse("3d1063a4-6a8f-4d72-af2a-90c6e9594c0e"),
       supersedesProposalId: null,
       createdAt: at,
       firstTask: {
@@ -630,7 +655,7 @@ describe("System workflow application", () => {
         requiredApprovals: 1,
         openedAt: at,
         dueAt: null,
-        candidates: [candidate("inactive", at)],
+        candidates: [candidate("010e8026-ab0b-43dd-a71c-25b5324c608f", at)],
         excludedAccountIds: [],
       },
     })
@@ -652,7 +677,7 @@ describe("System workflow application", () => {
       procedureKey: "change",
       procedureRevision: 1,
       body: { amount: 10 },
-      createdByAccountId: zAccountId.parse("creator"),
+      createdByAccountId: zAccountId.parse("3d1063a4-6a8f-4d72-af2a-90c6e9594c0e"),
       supersedesProposalId: null,
       createdAt: new Date(200),
       firstTask: {
@@ -660,7 +685,7 @@ describe("System workflow application", () => {
         requiredApprovals: 1,
         openedAt: new Date(200),
         dueAt: null,
-        candidates: [candidate("reviewer-1", new Date(200))],
+        candidates: [candidate("e8bd8dd1-e8a4-4bea-8588-11cca10715ea", new Date(200))],
         excludedAccountIds: [],
       },
     })
@@ -672,7 +697,7 @@ describe("System workflow application", () => {
       procedureKey: "change",
       procedureRevision: 1,
       body: { amount: 20 },
-      createdByAccountId: zAccountId.parse("creator"),
+      createdByAccountId: zAccountId.parse("3d1063a4-6a8f-4d72-af2a-90c6e9594c0e"),
       supersedesProposalId: first.proposal.id,
       createdAt: new Date(220),
       firstTask: {
@@ -680,7 +705,7 @@ describe("System workflow application", () => {
         requiredApprovals: 1,
         openedAt: new Date(220),
         dueAt: null,
-        candidates: [candidate("reviewer-2", new Date(220))],
+        candidates: [candidate("af28da7a-a120-4992-a8e2-992c936d18f1", new Date(220))],
         excludedAccountIds: [],
       },
     })
@@ -734,7 +759,7 @@ describe("System workflow application", () => {
       procedureKey: "change",
       procedureRevision: 1,
       body: {},
-      createdByAccountId: zAccountId.parse("creator"),
+      createdByAccountId: zAccountId.parse("3d1063a4-6a8f-4d72-af2a-90c6e9594c0e"),
       supersedesProposalId: null,
       createdAt: new Date(200),
       firstTask: {
@@ -742,7 +767,7 @@ describe("System workflow application", () => {
         requiredApprovals: 1,
         openedAt: new Date(200),
         dueAt: null,
-        candidates: [candidate("reviewer-1", new Date(200))],
+        candidates: [candidate("e8bd8dd1-e8a4-4bea-8588-11cca10715ea", new Date(200))],
         excludedAccountIds: [],
       },
     })
@@ -751,7 +776,7 @@ describe("System workflow application", () => {
     expect(
       await new CancelSystemProcedure(fixture.writer).run({
         number: started.number,
-        createdByAccountId: zAccountId.parse("creator"),
+        createdByAccountId: zAccountId.parse("3d1063a4-6a8f-4d72-af2a-90c6e9594c0e"),
         cancelledAt: new Date(210),
       }),
     ).toBe(true)
@@ -777,7 +802,7 @@ describe("System workflow application", () => {
       procedureKey: "change",
       procedureRevision: 1,
       body: {},
-      createdByAccountId: zAccountId.parse("creator"),
+      createdByAccountId: zAccountId.parse("3d1063a4-6a8f-4d72-af2a-90c6e9594c0e"),
       supersedesProposalId: null,
       createdAt: at,
       firstTask: {
@@ -785,7 +810,7 @@ describe("System workflow application", () => {
         requiredApprovals: 1,
         openedAt: at,
         dueAt: null,
-        candidates: [candidate("reviewer-1", at)],
+        candidates: [candidate("e8bd8dd1-e8a4-4bea-8588-11cca10715ea", at)],
         excludedAccountIds: [],
       },
     })
@@ -795,8 +820,8 @@ describe("System workflow application", () => {
       caseId: started.workflowCase.id,
       taskKey: "review",
       round: 1,
-      actorAccountId: zAccountId.parse("reviewer-1"),
-      representedAccountId: zAccountId.parse("reviewer-1"),
+      actorAccountId: zAccountId.parse("e8bd8dd1-e8a4-4bea-8588-11cca10715ea"),
+      representedAccountId: zAccountId.parse("e8bd8dd1-e8a4-4bea-8588-11cca10715ea"),
       delegationId: null,
       proposalDigest: started.proposal.digest,
       comment: "unsafe",

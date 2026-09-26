@@ -26,7 +26,7 @@ test("検査計画は監査と原子的に保存され、再開・上書き拒�
     id: crypto.randomUUID(),
     sourceNamespace: "example-source",
     ownerContext: "example",
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Archive",
     createdAt: "2026-09-14T00:00:00.000Z",
     auditEventId: crypto.randomUUID(),
@@ -51,7 +51,7 @@ test("検査計画は監査と原子的に保存され、再開・上書き拒�
       nextCursor: null,
       purpose: "archive",
       checkedAt: "2026-09-14T00:00:01.000Z",
-      actorAccountId: "account:operator",
+      actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
       records: [],
     },
     null,
@@ -59,7 +59,7 @@ test("検査計画は監査と原子的に保存され、再開・上書き拒�
   if (page instanceof Error) throw page
   const pageAudit = SystemAuditEventEntity.restore({
     eventId: crypto.randomUUID(),
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     action: "system.record.coverage.page.verified",
     targetType: "system:record-coverage-page",
     targetId: page.snapshot.id,
@@ -89,7 +89,7 @@ test("検査計画は監査と原子的に保存され、再開・上書き拒�
         recordCount: 0,
       },
     ],
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     createdAt: "2026-09-14T00:00:02.000Z",
     auditEventId: crypto.randomUUID(),
   })
@@ -183,7 +183,7 @@ test("検査計画は監査と原子的に保存され、再開・上書き拒�
     ).toBeInstanceOf(Error)
   const released = freeze.release({
     at: "2026-09-14T00:00:03.000Z",
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Resume",
     auditEventId: crypto.randomUUID(),
   })

@@ -9,7 +9,7 @@ const REVOKED_AT = new Date("2026-08-11T00:02:00.000Z")
 function bindingProps(overrides: Readonly<Record<string, unknown>> = {}) {
   return {
     id: "identity-1",
-    accountId: "account-1",
+    accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
     provider: "oidc",
     subject: "Subject-A",
     createdAt: CREATED_AT,
@@ -32,7 +32,7 @@ describe("IdentityBindingEntity", () => {
 
     expect(binding).toMatchObject({
       id: "identity-1",
-      accountId: "account-1",
+      accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
       provider: "oidc",
       subject: "Subject-A",
       state: "pending",

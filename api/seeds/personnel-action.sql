@@ -1,7 +1,7 @@
 -- Company personnel-action data attached to one immutable System proposal.
 
 INSERT INTO system_proposal_series (id, procedure_key, created_by_account_id, created_at)
-VALUES ('01900057-0000-7000-8000-000000009001', 'personnel_action_request', '2', 1785546000000);
+VALUES ('01900057-0000-7000-8000-000000009001', 'personnel_action_request', '01900061-0000-7000-8000-000000000002', 1785546000000);
 
 INSERT INTO system_proposal_numbers (number, series_id)
 VALUES (9001, '01900057-0000-7000-8000-000000009001');
@@ -14,7 +14,7 @@ VALUES
    'personnel_action_request', 1,
    '{"departmentCode":"D005","employeeCode":"E010","eventOn":"2026-09-01","kind":"transferred","managerEmployeeCode":"E013","positionTitle":null}',
    '936b9b104d9a2aa2d6ba40b1288c58525db110746d4b40903cdd3d76a7ac4cee',
-   '2', NULL, 1785546000000);
+   '01900061-0000-7000-8000-000000000002', NULL, 1785546000000);
 
 INSERT INTO system_cases
   (id, subject_context, subject_kind, subject_id, subject_version, proposal_digest,
@@ -23,7 +23,7 @@ VALUES
   ('01900059-0000-7000-8000-000000009001', 'company', 'personnel-action-request',
    '00000000-0000-4000-8000-000000009001', '1',
    '936b9b104d9a2aa2d6ba40b1288c58525db110746d4b40903cdd3d76a7ac4cee',
-   '2', 'pending', 1785546000000, 1785546000000);
+   '01900061-0000-7000-8000-000000000002', 'pending', 1785546000000, 1785546000000);
 
 INSERT INTO system_proposal_cases (proposal_id, case_id, linked_at)
 VALUES ('01900058-0000-7000-8000-000000009001', '01900059-0000-7000-8000-000000009001', 1785546000000);
@@ -38,13 +38,13 @@ VALUES
 
 INSERT INTO system_decision_task_exclusions
   (case_id, task_key, round, excluded_account_id, reason)
-VALUES ('01900059-0000-7000-8000-000000009001', 'hr_approval', 1, '2', 'creator');
+VALUES ('01900059-0000-7000-8000-000000009001', 'hr_approval', 1, '01900061-0000-7000-8000-000000000002', 'creator');
 
 INSERT INTO system_decision_task_candidates
   (case_id, task_key, round, candidate_account_id, source, evidence_context,
    evidence_kind, evidence_id, evidence_version, eligibility_digest, eligible_from, resolved_at)
 VALUES
-  ('01900059-0000-7000-8000-000000009001', 'hr_approval', 1, '3', 'primary', 'company',
+  ('01900059-0000-7000-8000-000000009001', 'hr_approval', 1, '01900061-0000-7000-8000-000000000003', 'primary', 'company',
    'organizational-authority', 'seed-personnel-action-resolution-9001', '1',
    '936b9b104d9a2aa2d6ba40b1288c58525db110746d4b40903cdd3d76a7ac4cee',
    NULL, 1785546000000);
@@ -56,7 +56,7 @@ INSERT INTO company_personnel_action_requests
    created_at, applied_action_id, withdrawn_at, withdrawn_by_employee_id)
 VALUES
   ('00000000-0000-4000-8000-000000009001', 9001,
-   '01900057-0000-7000-8000-000000009001', '10', NULL, 'D005', 'transferred',
+   '01900057-0000-7000-8000-000000009001', '01900062-0000-7000-8000-00000000000a', NULL, 'D005', 'transferred',
    '{"departmentCode":"D005","employeeCode":"E010","eventOn":"2026-09-01","kind":"transferred","managerEmployeeCode":"E013","positionTitle":null}',
    'b024d76055a494b15fe65fcceefa63654de2dfc825fcea7631939acd23c1d007',
-   '2', 0, 0, 1785546000, NULL, NULL, NULL);
+   '01900062-0000-7000-8000-000000000002', 0, 0, 1785546000, NULL, NULL, NULL);

@@ -12,10 +12,10 @@ test("招待登録用のSystem読取はIdentity重複、Account状態、Role版�
   const fixture = new SystemSessionTestContext()
   try {
     fixture.sqlite.run(
-      "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('usr_person', 'active', 2, 100, 200)",
+      "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('59d1cf87-ae64-4e2f-8316-d3b1505c96ed', 'active', 2, 100, 200)",
     )
     fixture.sqlite.run(
-      "INSERT INTO system_identity_bindings (id, account_id, provider, subject, created_at, activated_at) VALUES ('identity-1', 'usr_person', 'password', 'person@example.com', 100, 100)",
+      "INSERT INTO system_identity_bindings (id, account_id, provider, subject, created_at, activated_at) VALUES ('637b1ce9-daa9-4063-8cb0-1190607a2ceb', '59d1cf87-ae64-4e2f-8316-d3b1505c96ed', 'password', 'person@example.com', 100, 100)",
     )
     fixture.sqlite.run(
       "INSERT INTO system_iam_roles (id, key, kind, resource_type, name, created_at, updated_at) VALUES ('a290ac92-bf4b-434b-8443-8b6ceeb1cb85', 'demo:member', 'managed', 'demo:scope', 'Member', 100, 200)",
@@ -34,8 +34,10 @@ test("招待登録用のSystem読取はIdentity重複、Account状態、Role版�
         subject: "other@example.com",
       }),
     ).toBe(false)
-    expect(await readSystemAccountSnapshot(database, "usr_person")).toEqual({
-      id: "usr_person",
+    expect(
+      await readSystemAccountSnapshot(database, "59d1cf87-ae64-4e2f-8316-d3b1505c96ed"),
+    ).toEqual({
+      id: "59d1cf87-ae64-4e2f-8316-d3b1505c96ed",
       status: "active",
       tokenVersion: 2,
       closedAt: null,
@@ -56,16 +58,16 @@ test("初期password発行のSystem読取はcredentialを返さず有効なroot�
   const fixture = new SystemSessionTestContext()
   try {
     fixture.sqlite.run(
-      "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('usr_person', 'active', 0, 100, 200)",
+      "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('59d1cf87-ae64-4e2f-8316-d3b1505c96ed', 'active', 0, 100, 200)",
     )
     fixture.sqlite.run(
-      "INSERT INTO system_identity_bindings (id, account_id, provider, subject, created_at) VALUES ('identity-1', 'usr_person', 'password', 'person@example.com', 100)",
+      "INSERT INTO system_identity_bindings (id, account_id, provider, subject, created_at) VALUES ('637b1ce9-daa9-4063-8cb0-1190607a2ceb', '59d1cf87-ae64-4e2f-8316-d3b1505c96ed', 'password', 'person@example.com', 100)",
     )
     fixture.sqlite.run(
-      "INSERT INTO system_identity_profiles (identity_id, email, can_receive_email, updated_at) VALUES ('identity-1', 'person@example.com', 0, 100)",
+      "INSERT INTO system_identity_profiles (identity_id, email, can_receive_email, updated_at) VALUES ('637b1ce9-daa9-4063-8cb0-1190607a2ceb', 'person@example.com', 0, 100)",
     )
     fixture.sqlite.run(
-      "INSERT INTO system_password_credentials (identity_id, password_hash, changed_at, created_at, updated_at) VALUES ('identity-1', 'secret-hash', 100, 100, 100)",
+      "INSERT INTO system_password_credentials (identity_id, password_hash, changed_at, created_at, updated_at) VALUES ('637b1ce9-daa9-4063-8cb0-1190607a2ceb', 'secret-hash', 100, 100, 100)",
     )
     fixture.sqlite.run(
       "INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at) VALUES ('af285551-000d-4320-8ea0-bbfbc6c96a81', 'legacy-root', 'managed', 'Root', 100, 100)",
@@ -74,23 +76,37 @@ test("初期password発行のSystem読取はcredentialを返さず有効なroot�
       "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('af285551-000d-4320-8ea0-bbfbc6c96a81', 'system:admin')",
     )
     fixture.sqlite.run(
-      "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('f16b950f-c6db-4760-8994-95cc8065169d', 'usr_person', 'af285551-000d-4320-8ea0-bbfbc6c96a81', 100)",
+      "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('f16b950f-c6db-4760-8994-95cc8065169d', '59d1cf87-ae64-4e2f-8316-d3b1505c96ed', 'af285551-000d-4320-8ea0-bbfbc6c96a81', 100)",
     )
     const database = fixture.context.env.DB
 
-    expect(await readSystemInitialPasswordTarget(database, "usr_person")).toEqual({
-      user: { id: "usr_person", disabledAt: null },
-      identities: [{ id: "identity-1", email: "person@example.com", canReceiveEmail: false }],
+    expect(
+      await readSystemInitialPasswordTarget(database, "59d1cf87-ae64-4e2f-8316-d3b1505c96ed"),
+    ).toEqual({
+      user: { id: "59d1cf87-ae64-4e2f-8316-d3b1505c96ed", disabledAt: null },
+      identities: [
+        {
+          id: "637b1ce9-daa9-4063-8cb0-1190607a2ceb",
+          email: "person@example.com",
+          canReceiveEmail: false,
+        },
+      ],
       targetHasRootGrant: true,
     })
     fixture.sqlite.run(
       "UPDATE system_role_bindings SET revoked_at = 201 WHERE id = 'f16b950f-c6db-4760-8994-95cc8065169d'",
     )
-    expect(await readSystemInitialPasswordTarget(database, "usr_person")).toMatchObject({
+    expect(
+      await readSystemInitialPasswordTarget(database, "59d1cf87-ae64-4e2f-8316-d3b1505c96ed"),
+    ).toMatchObject({
       targetHasRootGrant: false,
     })
-    fixture.sqlite.run("UPDATE system_accounts SET status = 'locked' WHERE id = 'usr_person'")
-    expect(await readSystemInitialPasswordTarget(database, "usr_person")).toMatchObject({
+    fixture.sqlite.run(
+      "UPDATE system_accounts SET status = 'locked' WHERE id = '59d1cf87-ae64-4e2f-8316-d3b1505c96ed'",
+    )
+    expect(
+      await readSystemInitialPasswordTarget(database, "59d1cf87-ae64-4e2f-8316-d3b1505c96ed"),
+    ).toMatchObject({
       user: { disabledAt: new Date(200) },
     })
   } finally {
@@ -102,13 +118,13 @@ test("招待作成用のSystem読取はRole権限とIdentityの受信可否を�
   const fixture = new SystemSessionTestContext()
   try {
     fixture.sqlite.run(
-      "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('usr_person', 'active', 0, 100, 100)",
+      "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('59d1cf87-ae64-4e2f-8316-d3b1505c96ed', 'active', 0, 100, 100)",
     )
     fixture.sqlite.run(
-      "INSERT INTO system_identity_bindings (id, account_id, provider, subject, created_at) VALUES ('identity-1', 'usr_person', 'password', 'person@example.com', 100)",
+      "INSERT INTO system_identity_bindings (id, account_id, provider, subject, created_at) VALUES ('637b1ce9-daa9-4063-8cb0-1190607a2ceb', '59d1cf87-ae64-4e2f-8316-d3b1505c96ed', 'password', 'person@example.com', 100)",
     )
     fixture.sqlite.run(
-      "INSERT INTO system_identity_profiles (identity_id, can_receive_email, updated_at) VALUES ('identity-1', 0, 100)",
+      "INSERT INTO system_identity_profiles (identity_id, can_receive_email, updated_at) VALUES ('637b1ce9-daa9-4063-8cb0-1190607a2ceb', 0, 100)",
     )
     fixture.sqlite.run(
       "INSERT INTO system_iam_roles (id, key, kind, resource_type, name, created_at, updated_at) VALUES ('a290ac92-bf4b-434b-8443-8b6ceeb1cb85', 'legacy', 'managed', 'demo:scope', 'Member', 100, 100), ('9e9add99-4e1e-4591-8189-fa544d272a2a', 'legacy-2', 'managed', NULL, 'Other', 100, 100)",
@@ -117,7 +133,7 @@ test("招待作成用のSystem読取はRole権限とIdentityの受信可否を�
       "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('a290ac92-bf4b-434b-8443-8b6ceeb1cb85', 'demo:write'), ('a290ac92-bf4b-434b-8443-8b6ceeb1cb85', 'demo:read')",
     )
     fixture.sqlite.run(
-      "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('ae18ee9b-62ff-4396-8971-165b0ac77248', 'usr_person', 'a290ac92-bf4b-434b-8443-8b6ceeb1cb85', 100), ('75ae8f32-31e1-4c2d-8dfd-f5c9919e9351', 'usr_person', '9e9add99-4e1e-4591-8189-fa544d272a2a', 100)",
+      "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES ('ae18ee9b-62ff-4396-8971-165b0ac77248', '59d1cf87-ae64-4e2f-8316-d3b1505c96ed', 'a290ac92-bf4b-434b-8443-8b6ceeb1cb85', 100), ('75ae8f32-31e1-4c2d-8dfd-f5c9919e9351', '59d1cf87-ae64-4e2f-8316-d3b1505c96ed', '9e9add99-4e1e-4591-8189-fa544d272a2a', 100)",
     )
     const database = fixture.context.env.DB
 
@@ -149,7 +165,9 @@ test("招待作成用のSystem読取はRole権限とIdentityの受信可否を�
         subject: "missing@example.com",
       }),
     ).toBeNull()
-    fixture.sqlite.run("DELETE FROM system_identity_profiles WHERE identity_id = 'identity-1'")
+    fixture.sqlite.run(
+      "DELETE FROM system_identity_profiles WHERE identity_id = '637b1ce9-daa9-4063-8cb0-1190607a2ceb'",
+    )
     expect(
       await readSystemIdentityEmailEligibility(database, {
         provider: "password",

@@ -43,7 +43,7 @@ test("未接続が残る間は記録せず、全件の接続後に一度だけ�
   const saved = await first.json()
   expect(saved).toMatchObject({
     commandId: "completion-1",
-    actorAccountId: "account:adoption",
+    actorAccountId: "7a0b75ec-d7b9-4f49-b023-432c8f109a40",
     employeeCount: 1,
     employmentCount: 1,
   })
@@ -76,7 +76,7 @@ test("未接続が残る間は記録せず、全件の接続後に一度だけ�
 test("Company管理資格が無ければ接続の状態も完了も扱わない", async () => {
   const f = await createEmployeeAdoptionFixture()
   f.actors.current = CompanyActorValue.restore({
-    accountId: "account:adoption",
+    accountId: "7a0b75ec-d7b9-4f49-b023-432c8f109a40",
     employeeId: null,
     organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
     capabilities: ["company:read", "company:write"],
@@ -91,7 +91,7 @@ test("完了を記録した会社では、公開履歴へ未接続の従業員�
   await f.database.exec(`DROP TRIGGER company_workforce_connection_completions_requires_connection;
     INSERT INTO company_workforce_connection_completions
     (organization_id, command_id, actor_account_id, reason, employee_count, employment_count, completed_at)
-    VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'completion-test', 'account:adoption', 'Test', 1, 1, 0);`)
+    VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'completion-test', '7a0b75ec-d7b9-4f49-b023-432c8f109a40', 'Test', 1, 1, 0);`)
   const rejected = await f.personnel(
     {
       kind: "returned",

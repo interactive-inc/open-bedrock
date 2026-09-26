@@ -8,16 +8,16 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 
 test("監査出力資格は期限の1ms前まで有効で、期限ちょうどの最終transactionを拒否する", async () => {
   const db = createSystemAttachmentTestDatabase()
-  await db.exec(`INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('operator','active',0,100,100);
-    INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at) VALUES ('principal:operator','operator','human','Test operator',1,100,100);
+  await db.exec(`INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('70e2091f-b34d-4e08-abad-533415c4908c','active',0,100,100);
+    INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at) VALUES ('f10132a2-99c0-4174-8625-482ce8675ac8','70e2091f-b34d-4e08-abad-533415c4908c','human','Test operator',1,100,100);
     INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES ('44ac46b5-401f-4901-8c48-f29310b8c981','role:operator','custom','Test role',100,100);
-    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('3b967b89-82b6-4e5d-8f67-ad4f2fb3a7ae','operator','44ac46b5-401f-4901-8c48-f29310b8c981',100);
+    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('3b967b89-82b6-4e5d-8f67-ad4f2fb3a7ae','70e2091f-b34d-4e08-abad-533415c4908c','44ac46b5-401f-4901-8c48-f29310b8c981',100);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
       ('44ac46b5-401f-4901-8c48-f29310b8c981','system:admin'),('44ac46b5-401f-4901-8c48-f29310b8c981','system:record:export'),('44ac46b5-401f-4901-8c48-f29310b8c981','system:procedure:read');`)
   const at = new Date()
   const expiresAt = new Date(Math.floor(at.getTime() / 1000) * 1000 + 60007)
   const policy = SystemAuditDisclosurePolicyEntity.create({
-    scope: "operator",
+    scope: "70e2091f-b34d-4e08-abad-533415c4908c",
     commandId: crypto.randomUUID(),
     revision: 1,
     enabled: true,
@@ -26,7 +26,7 @@ test("監査出力資格は期限の1ms前まで有効で、期限ちょうど�
     allowedPurposes: ["archive"],
     expiresAt: expiresAt.toISOString(),
     reason: "Temporary archive access",
-    actorAccountId: "operator",
+    actorAccountId: "70e2091f-b34d-4e08-abad-533415c4908c",
     recordedAt: at.toISOString(),
     auditEventId: crypto.randomUUID(),
   })
@@ -40,7 +40,7 @@ test("監査出力資格は期限の1ms前まで有効で、期限ちょうど�
     env: { DB: db },
     purpose: "archive",
     authentication: {
-      accountId: zAccountId.parse("operator"),
+      accountId: zAccountId.parse("70e2091f-b34d-4e08-abad-533415c4908c"),
       tokenVersion: 0,
       issuedAtMs: at.getTime() - 1000,
       expiresAtMs: expiresAt.getTime() + 60000,

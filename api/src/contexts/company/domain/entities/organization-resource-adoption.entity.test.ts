@@ -4,6 +4,8 @@ import type { OrganizationResourceAdoptionInput } from "@/contexts/company/domai
 import { OrganizationResourceAdoptionSnapshotValue } from "@/contexts/company/domain/values/organization-resource-adoption-snapshot.value"
 import { CompanyValidationError } from "@/contexts/company/domain/errors"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
+import { companyOperationId } from "@/contexts/company/domain/definitions/company-operation-id.definition"
 import { COMPANY_ROOT_ORGANIZATION_UNIT_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 async function adopt(
@@ -20,7 +22,7 @@ async function adopt(
       bindingOrganizationId: null,
       periods: [
         {
-          periodId: "company:root:initial",
+          periodId: deterministicCompanyId("initial-period", "company:root:initial"),
           revision: 1,
           organizationUnitId: COMPANY_ROOT_ORGANIZATION_UNIT_ID,
           code: "COMPANY",
@@ -30,9 +32,13 @@ async function adopt(
           startsOn: "1970-01-01",
           endsOn: null,
           isVoid: 0,
-          recordedByActionId: isInitialization ? initializationActionId : "verified:1",
+          recordedByActionId: isInitialization
+            ? companyOperationId(initializationActionId)
+            : "verified:1",
           recordedAt: isInitialization ? 0 : 1,
-          actorAccountId: isInitialization ? "system:initialization" : "account:reviewer",
+          actorAccountId: isInitialization
+            ? "system:initialization"
+            : "a63d1b89-54f5-4001-8ed7-f2077c91340d",
           reason: isInitialization ? "Initialize organization root" : "Confirmed original record",
           evidenceReferencesJson: "[]",
           requestFingerprint: "0".repeat(64),
@@ -48,7 +54,7 @@ async function adopt(
     snapshotDigest: snapshot.props.digest,
     observedOn: "2026-09-13",
     reason: "Preserve confirmed history",
-    actorAccountId: "account:reviewer",
+    actorAccountId: "a63d1b89-54f5-4001-8ed7-f2077c91340d",
     recordedAt: Date.parse("2026-09-13T00:00:00Z"),
     initializationConfirmation,
   })

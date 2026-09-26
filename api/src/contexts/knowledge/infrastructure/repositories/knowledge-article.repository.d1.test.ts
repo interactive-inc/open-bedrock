@@ -1,3 +1,4 @@
+import { testAccountId, testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { CreateKnowledgeArticle } from "@/contexts/knowledge/application/create-knowledge-article"
 import { UpdateKnowledgeArticle } from "@/contexts/knowledge/application/update-knowledge-article"
@@ -26,7 +27,7 @@ afterAll(async () => {
 })
 
 /** 作成者のbearer認証を載せたContextをローカルD1上に作る。 */
-async function authorFixture(name: string, accountId = "1", now = new Date()) {
+async function authorFixture(name: string, accountId = testAccountId(1), now = new Date()) {
   const fixture = await createLocalD1Context(local, name, { withCompanyOrganization: true })
   await seedIamForEmployees(fixture.db)
   const context = {
@@ -67,7 +68,7 @@ describe("knowledge article persistence on local D1", () => {
       category: "engineering",
       tags: "typescript,testing",
       bodyMd: "Content.",
-      authorId: toWorkforceEmployeeId(1),
+      authorId: toWorkforceEmployeeId(testEmployeeId(1)),
       commandId: "create:test",
       reason: "Initial instructions",
     })
@@ -75,14 +76,14 @@ describe("knowledge article persistence on local D1", () => {
     if (created instanceof Error || created.id === null) throw new Error("create failed")
 
     expect(created.tags).toBe("typescript,testing")
-    expect(created.authorId).toBe(toWorkforceEmployeeId(1))
+    expect(created.authorId).toBe(toWorkforceEmployeeId(testEmployeeId(1)))
 
     const updated = await new UpdateKnowledgeArticle(fixture.ports).run({
       expectedRevision: 1,
       commandId: "update:test",
       reason: "Reviewed change",
       articleId: created.id,
-      authorId: toWorkforceEmployeeId(1),
+      authorId: toWorkforceEmployeeId(testEmployeeId(1)),
       title: "Updated Title",
       category: "design",
       tags: "updated",
@@ -100,7 +101,7 @@ describe("knowledge article persistence on local D1", () => {
       commandId: "update:forbidden",
       reason: "Reviewed change",
       articleId: created.id,
-      authorId: toWorkforceEmployeeId(999),
+      authorId: toWorkforceEmployeeId(testEmployeeId(999)),
       title: "Hacked",
       category: "hacked",
       tags: null,
@@ -118,11 +119,13 @@ describe("knowledge article persistence on local D1", () => {
 
   test("prepared knowledge authorization rejects account suspension before saving", async () => {
     const fixture = await authorFixture("suspended")
-    const authorization = await fixture.ports.authorAuthorization.prepare(toWorkforceEmployeeId(1))
+    const authorization = await fixture.ports.authorAuthorization.prepare(
+      toWorkforceEmployeeId(testEmployeeId(1)),
+    )
     if (authorization instanceof Error) throw authorization
     await fixture.db
       .prepare(
-        "UPDATE system_accounts SET status='suspended',token_version=token_version+1 WHERE id='1'",
+        "UPDATE system_accounts SET status='suspended',token_version=token_version+1 WHERE id='01900061-0000-7000-8000-000000000001'",
       )
       .run()
     const article = KnowledgeArticle.create({
@@ -130,7 +133,7 @@ describe("knowledge article persistence on local D1", () => {
       category: "Operations",
       tags: null,
       bodyMd: "Recorded text",
-      authorId: toWorkforceEmployeeId(1),
+      authorId: toWorkforceEmployeeId(testEmployeeId(1)),
       createdAt: authorization.now.toISOString(),
     })
     const saved = await fixture.ports.articleRepository.createWithHistory(article, {
@@ -160,10 +163,12 @@ describe("knowledge article persistence on local D1", () => {
   test("knowledge business-date guard rejects a prepared snapshot after its day ends", async () => {
     const fixture = await authorFixture(
       "business-date",
-      "1",
+      testAccountId(1),
       new Date(Date.now() - 48 * 60 * 60 * 1000),
     )
-    const authorization = await fixture.ports.authorAuthorization.prepare(toWorkforceEmployeeId(1))
+    const authorization = await fixture.ports.authorAuthorization.prepare(
+      toWorkforceEmployeeId(testEmployeeId(1)),
+    )
     if (authorization instanceof Error) throw authorization
     const guard = authorization.assertions.at(-1)
     if (guard === undefined) throw new Error("business date guard missing")

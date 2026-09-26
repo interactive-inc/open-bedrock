@@ -5,7 +5,6 @@ import {
   foreignKey,
   index,
   integer,
-  primaryKey,
   sqliteTable,
   text,
   unique,
@@ -203,6 +202,9 @@ export const companyCommandReceipts = sqliteTable(
 export const companyWorkforceResourceBindings = sqliteTable(
   "company_workforce_resource_bindings",
   {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     resourceType: text("resource_type", { enum: ["employee", "employment"] }).notNull(),
     resourceId: text("resource_id").notNull(),
     organizationId: text("organization_id").notNull(),
@@ -214,7 +216,7 @@ export const companyWorkforceResourceBindings = sqliteTable(
     lastActionId: text("last_action_id"),
   },
   (table) => [
-    primaryKey({ columns: [table.resourceType, table.resourceId] }),
+    unique().on(table.resourceType, table.resourceId),
     foreignKey({
       columns: [table.organizationId, table.resourceType, table.resourceId],
       foreignColumns: [

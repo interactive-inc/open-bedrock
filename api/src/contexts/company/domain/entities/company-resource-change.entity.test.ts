@@ -21,7 +21,7 @@ describe("CompanyResourceChangeEntity", () => {
       CompanyResourceChangeEntity.create({
         commandId: "command:1",
         expectedRevision: 0,
-        actorAccountId: "account:1",
+        actorAccountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
         reason: "initial import",
         recordedAt: 1,
         resources: [employee, employee],
@@ -33,7 +33,7 @@ describe("CompanyResourceChangeEntity", () => {
     const change = CompanyResourceChangeEntity.create({
       commandId: "command:1",
       expectedRevision: 0,
-      actorAccountId: "account:1",
+      actorAccountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
       reason: "initial import",
       recordedAt: 1,
       resources: [employee],
@@ -49,7 +49,7 @@ describe("CompanyResourceChangeEntity", () => {
     const change = CompanyResourceChangeEntity.create({
       commandId: "command:evidence",
       expectedRevision: 0,
-      actorAccountId: "account:1",
+      actorAccountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
       reason: "corrected from original document",
       recordedAt: 1,
       evidenceReferences: [reference],
@@ -63,7 +63,7 @@ describe("CompanyResourceChangeEntity", () => {
       CompanyResourceChangeEntity.create({
         commandId: "command:invalid-evidence",
         expectedRevision: 0,
-        actorAccountId: "account:1",
+        actorAccountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
         reason: "invalid evidence",
         recordedAt: 1,
         evidenceReferences: [{ ...reference, id: " hire:1" }],
@@ -76,7 +76,7 @@ describe("CompanyResourceChangeEntity", () => {
     const props = {
       commandId: "command:correction",
       expectedRevision: 1,
-      actorAccountId: "account:1",
+      actorAccountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
       reason: "correct old employee fact",
       recordedAt: 2,
       resources: [{ ...employee, revision: 2 }],
@@ -110,7 +110,7 @@ test("人事履歴の内部batchは同じ資源の連続版を受け付け、通
   const props = {
     commandId: "command:history",
     expectedRevision: 1,
-    actorAccountId: "account:1",
+    actorAccountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
     reason: "confirmed personnel history",
     recordedAt: 2,
     resources: [employee, { ...employee, revision: 2 }],

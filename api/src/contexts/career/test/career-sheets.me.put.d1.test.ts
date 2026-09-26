@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { seedCareerSheets } from "@/contexts/career/test/seed/seed-career-sheets.test-support"
@@ -107,7 +108,7 @@ describe("PUT /career-sheets/me", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(1))
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(1)))
       expect(parsed.data.goals_text).toBe("Aim to become a PdM")
       expect(parsed.data.strengths_text).toBe("Requirements definition")
       expect(parsed.data.updated_at).toBe(nowValue)

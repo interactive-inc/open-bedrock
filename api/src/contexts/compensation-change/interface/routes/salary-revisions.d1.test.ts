@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
@@ -93,7 +94,7 @@ async function request(
 describe("GET /salary-revisions", () => {
   test("returns 200 for admin viewing an employee's history", async () => {
     const response = await request(
-      "/compensation-change/salary-revisions?employee_id=5",
+      `/compensation-change/salary-revisions?employee_id=${testEmployeeId(5)}`,
       await tokenFor(1),
     )
 
@@ -105,13 +106,13 @@ describe("GET /salary-revisions", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0]?.employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(parsed.data.data[0]?.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
     }
   })
 
   test("returns 403 for a member viewing their own history (no self exception)", async () => {
     const response = await request(
-      "/compensation-change/salary-revisions?employee_id=5",
+      `/compensation-change/salary-revisions?employee_id=${testEmployeeId(5)}`,
       await tokenFor(5),
     )
 
@@ -119,7 +120,10 @@ describe("GET /salary-revisions", () => {
   })
 
   test("returns 401 without a bearer token", async () => {
-    const response = await request("/compensation-change/salary-revisions?employee_id=5", null)
+    const response = await request(
+      `/compensation-change/salary-revisions?employee_id=${testEmployeeId(5)}`,
+      null,
+    )
 
     expect(response.status).toBe(401)
   })
@@ -132,7 +136,7 @@ describe("POST /salary-revisions", () => {
       await tokenFor(1),
       "POST",
       {
-        employee_id: "1",
+        employee_id: testEmployeeId(1),
         effective_date: "2026-04-01",
         previous_base_salary: 280000,
         new_base_salary: 300000,
@@ -157,7 +161,7 @@ describe("POST /salary-revisions", () => {
       await tokenFor(1),
       "POST",
       {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         effective_date: "2025-04-01",
         previous_base_salary: 280000,
         new_base_salary: 300000,
@@ -173,7 +177,7 @@ describe("POST /salary-revisions", () => {
       await tokenFor(5),
       "POST",
       {
-        employee_id: "1",
+        employee_id: testEmployeeId(1),
         effective_date: "2026-05-01",
         previous_base_salary: 1,
         new_base_salary: 2,
@@ -189,7 +193,7 @@ describe("POST /salary-revisions", () => {
       await tokenFor(1),
       "POST",
       {
-        employee_id: "9999",
+        employee_id: testEmployeeId(9999),
         effective_date: "2026-05-01",
         previous_base_salary: 1,
         new_base_salary: 2,
@@ -220,7 +224,7 @@ describe("POST /salary-revisions", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(1))
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(1)))
     }
   })
 
@@ -246,7 +250,7 @@ describe("POST /salary-revisions", () => {
       await tokenFor(1),
       "POST",
       {
-        employee_id: "1",
+        employee_id: testEmployeeId(1),
         employee_code: "E001",
         effective_date: "2026-05-01",
         previous_base_salary: 1,

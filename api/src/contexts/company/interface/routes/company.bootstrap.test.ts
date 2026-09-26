@@ -181,7 +181,7 @@ async function fixture() {
   const createUnit = () =>
     client.company["organization-units"].$post(
       { json: { name: "Department", code: "DEPT", parent_code: null } },
-      { headers: { ...headers, "idempotency-key": "create:department" } },
+      { headers: { ...headers, "idempotency-key": "6f0d3c2a-1b4e-4a7d-9c8e-5d2f1a0b3c41" } },
     )
   const state = () =>
     database

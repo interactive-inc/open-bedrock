@@ -80,15 +80,16 @@ test("公開履歴へ未接続の従業員は、接続までの原記録とし�
   await f.database
     .prepare(
       `INSERT INTO company_employees (id, official_name, employee_code, email, phone, created_at, updated_at)
-       VALUES ('employee:unconnected', 'Unconnected Person', 'LEGACY-9', 'you@example.com', NULL, 0, 0)`,
+       VALUES ('31cf526f-0921-48a3-be38-c1458aaf2671', 'Unconnected Person', 'LEGACY-9', 'you@example.com', NULL, 0, 0)`,
     )
     .run()
   const snapshot = await new OrganizationWorkforceSnapshotAdapter(f.context).readAllSnapshot()
   if (!snapshot.ok) throw snapshot.cause
 
   expect(
-    snapshot.schedules.find((candidate) => String(candidate.employee.id) === "employee:unconnected")
-      ?.employee,
+    snapshot.schedules.find(
+      (candidate) => String(candidate.employee.id) === "31cf526f-0921-48a3-be38-c1458aaf2671",
+    )?.employee,
   ).toMatchObject({
     officialName: "Unconnected Person",
     employeeCode: "LEGACY-9",

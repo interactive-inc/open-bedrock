@@ -81,7 +81,7 @@ describe("外部identityとCompany正本の同期", () => {
       expect(
         await c.database
           .prepare(
-            "SELECT count(*) AS total FROM system_accounts WHERE id <> 'external-import-service'",
+            "SELECT count(*) AS total FROM system_accounts WHERE id <> '26c690b3-a723-4977-b299-36862160bfce'",
           )
           .first<number>("total"),
       ).toBe(0)
@@ -358,7 +358,7 @@ describe("外部identityとCompany正本の同期", () => {
     expect(
       await c.database
         .prepare(
-          "SELECT count(*) AS total FROM system_accounts WHERE id <> 'external-import-service'",
+          "SELECT count(*) AS total FROM system_accounts WHERE id <> '26c690b3-a723-4977-b299-36862160bfce'",
         )
         .first<Record<string, unknown>>(),
     ).toEqual({ total: 0 })
@@ -410,7 +410,7 @@ describe("外部identityとCompany正本の同期", () => {
       c.database
         .prepare(`INSERT INTO system_role_bindings
           (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-          VALUES (?1, 'external-import-service', '8ca6d30f-174b-40e1-870b-df888721f554', 'system:identity_provider', ?2, 0, NULL)`)
+          VALUES (?1, '26c690b3-a723-4977-b299-36862160bfce', '8ca6d30f-174b-40e1-870b-df888721f554', 'system:identity_provider', ?2, 0, NULL)`)
         .bind(id, provider)
         .run()
     await c.database.exec(

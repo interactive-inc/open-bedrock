@@ -51,7 +51,7 @@ async function fixture(type: "person" | "grade") {
       resources: records,
       expectedRevision: revision,
       commandId: `read-limits:${revision}`,
-      actorAccountId: "account:operator",
+      actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
       reason: "Register confirmed records",
       recordedAt: 1,
     })
@@ -75,7 +75,7 @@ async function fixture(type: "person" | "grade") {
     c.set(
       "companyActor",
       CompanyActorValue.restore({
-        accountId: "account:reader",
+        accountId: "1227c813-1159-4405-9f5b-5e54df944b9a",
         employeeId: null,
         organizationIds: [organizationId],
         capabilities: ["company:read"],

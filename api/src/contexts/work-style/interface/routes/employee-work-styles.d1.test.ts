@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
@@ -57,7 +58,7 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "employee_work_styles", [
     {
       id: "01900010-0000-7000-8000-000000000001",
-      employee_id: "5",
+      employee_id: testEmployeeId(5),
       style: "flextime",
       starts_on: "2026-04-01",
       ends_on: null,
@@ -81,7 +82,7 @@ describe("GET /employee-work-styles", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/work-style/employee-work-styles?employee_id=5",
+      path: `/work-style/employee-work-styles?employee_id=${testEmployeeId(5)}`,
       token: await tokenFor(5),
     })
 
@@ -103,7 +104,7 @@ describe("GET /employee-work-styles", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/work-style/employee-work-styles?employee_id=9",
+      path: `/work-style/employee-work-styles?employee_id=${testEmployeeId(9)}`,
       token: await tokenFor(5),
     })
 
@@ -114,7 +115,7 @@ describe("GET /employee-work-styles", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/work-style/employee-work-styles?employee_id=5",
+      path: `/work-style/employee-work-styles?employee_id=${testEmployeeId(5)}`,
       token: await tokenFor(1),
     })
 
@@ -125,7 +126,7 @@ describe("GET /employee-work-styles", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/work-style/employee-work-styles?employee_id=5",
+      path: `/work-style/employee-work-styles?employee_id=${testEmployeeId(5)}`,
       token: null,
     })
 
@@ -142,7 +143,7 @@ describe("POST /employee-work-styles", () => {
       token: await tokenFor(1),
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         style: "discretionary",
         starts_on: "2026-07-01",
         note: "企画職",
@@ -168,7 +169,7 @@ describe("POST /employee-work-styles", () => {
       path: "/work-style/employee-work-styles",
       token: await tokenFor(5),
       method: "POST",
-      body: { employee_id: "5", style: "flextime", starts_on: "2026-07-01" },
+      body: { employee_id: testEmployeeId(5), style: "flextime", starts_on: "2026-07-01" },
     })
 
     expect(response.status).toBe(403)
@@ -181,7 +182,7 @@ describe("POST /employee-work-styles", () => {
       path: "/work-style/employee-work-styles",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: "5", style: "remote", starts_on: "2026-07-01" },
+      body: { employee_id: testEmployeeId(5), style: "remote", starts_on: "2026-07-01" },
     })
 
     expect(response.status).toBe(400)

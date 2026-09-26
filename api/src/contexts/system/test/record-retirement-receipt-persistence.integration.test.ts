@@ -27,7 +27,7 @@ test("検査順序をDBで固定し、飛越し・別ページ・再送競合・
     coveragePageDigest: page1.digest,
     previousReceiptDigest: null,
     storageKeys: [],
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     checkedAt: "2026-09-14T00:00:03.000Z",
     auditEventId: crypto.randomUUID(),
   }
@@ -180,7 +180,7 @@ test("検査順序をDBで固定し、飛越し・別ページ・再送競合・
   expect(terminal.snapshot.previousReceiptDigest).toBe(first.digest)
   expect(
     await RecordRetirementVerificationReceiptEntity.restore(
-      { ...first.snapshot, actorAccountId: "different" },
+      { ...first.snapshot, actorAccountId: "774e21f0-a9f3-46ff-a028-aa4a77248853" },
       first.digest,
     ),
   ).toBeInstanceOf(Error)
@@ -200,7 +200,7 @@ test("検査順序をDBで固定し、飛越し・別ページ・再送競合・
     ).toBeInstanceOf(Error)
   const release = f.freeze.release({
     at: "2026-09-14T00:00:05.000Z",
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Resume",
     auditEventId: crypto.randomUUID(),
   })
@@ -230,7 +230,7 @@ test("停止解除後は検査結果を追加できず、過去の検査結果�
       coveragePageDigest: page.digest,
       previousReceiptDigest: null,
       storageKeys: [],
-      actorAccountId: "account:operator",
+      actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
       checkedAt: "2026-09-14T00:00:04.000Z",
       auditEventId: crypto.randomUUID(),
     },
@@ -239,7 +239,7 @@ test("停止解除後は検査結果を追加できず、過去の検査結果�
   if (receipt instanceof Error) throw receipt
   const released = f.freeze.release({
     at: "2026-09-14T00:00:03.000Z",
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Resume",
     auditEventId: crypto.randomUUID(),
   })

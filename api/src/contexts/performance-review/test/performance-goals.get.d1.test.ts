@@ -1,3 +1,4 @@
+import { testAccountId, testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -128,9 +129,11 @@ describe("GET /performance-goals", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(2)
-      expect(parsed.data.data.every((goal) => goal.employee_id === toWorkforceEmployeeId(5))).toBe(
-        true,
-      )
+      expect(
+        parsed.data.data.every(
+          (goal) => goal.employee_id === toWorkforceEmployeeId(testEmployeeId(5)),
+        ),
+      ).toBe(true)
     }
   })
 
@@ -160,7 +163,7 @@ describe("GET /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals?employee_id=5",
+      path: `/performance-review/performance-goals?employee_id=${testEmployeeId(5)}`,
       token: await tokenFor(1),
     })
 
@@ -174,9 +177,11 @@ describe("GET /performance-goals", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(2)
-      expect(parsed.data.data.every((goal) => goal.employee_id === toWorkforceEmployeeId(5))).toBe(
-        true,
-      )
+      expect(
+        parsed.data.data.every(
+          (goal) => goal.employee_id === toWorkforceEmployeeId(testEmployeeId(5)),
+        ),
+      ).toBe(true)
     }
   })
 
@@ -184,7 +189,7 @@ describe("GET /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals?employee_id=9",
+      path: `/performance-review/performance-goals?employee_id=${testEmployeeId(9)}`,
       token: await tokenFor(5),
     })
 
@@ -195,7 +200,7 @@ describe("GET /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals?employee_id=5",
+      path: `/performance-review/performance-goals?employee_id=${testEmployeeId(5)}`,
       token: await tokenFor(4),
     })
 
@@ -208,9 +213,11 @@ describe("GET /performance-goals", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.data.every((goal) => goal.employee_id === toWorkforceEmployeeId(5))).toBe(
-        true,
-      )
+      expect(
+        parsed.data.data.every(
+          (goal) => goal.employee_id === toWorkforceEmployeeId(testEmployeeId(5)),
+        ),
+      ).toBe(true)
     }
   })
 
@@ -218,7 +225,7 @@ describe("GET /performance-goals", () => {
     const response = await requestWithContext({
       db: await createTestDb(),
       jwtSecret,
-      path: "/performance-review/performance-goals?employee_id=9",
+      path: `/performance-review/performance-goals?employee_id=${testEmployeeId(9)}`,
       token: await tokenFor(4),
     })
 
@@ -324,7 +331,7 @@ async function createScopeTestDb(): Promise<D1Database> {
   await seedD1(db, "performance_goals", [
     {
       id: "01900030-0000-7000-8000-000000000064",
-      employee_id: "20",
+      employee_id: testEmployeeId(20),
       period: "2025-H2",
       title: "A goal",
       kpi: null,
@@ -333,7 +340,7 @@ async function createScopeTestDb(): Promise<D1Database> {
     },
     {
       id: "01900030-0000-7000-8000-000000000065",
-      employee_id: "21",
+      employee_id: testEmployeeId(21),
       period: "2025-H2",
       title: "B goal",
       kpi: null,
@@ -390,7 +397,10 @@ describe("GET /performance-goals?scope=reports", () => {
         .map((goal) => goal.employee_id)
         .sort((left, right) => left.localeCompare(right))
 
-      expect(employeeIds).toEqual([toWorkforceEmployeeId(20), toWorkforceEmployeeId(21)])
+      expect(employeeIds).toEqual([
+        toWorkforceEmployeeId(testEmployeeId(20)),
+        toWorkforceEmployeeId(testEmployeeId(21)),
+      ])
     }
   })
 
@@ -435,7 +445,7 @@ async function createDepartmentScopeTestDb(): Promise<D1Database> {
   await seedD1(db, "performance_goals", [
     {
       id: "01900030-0000-7000-8000-000000000066",
-      employee_id: "22",
+      employee_id: testEmployeeId(22),
       period: "2025-H2",
       title: "C goal",
       kpi: null,
@@ -470,7 +480,7 @@ async function grantDepartmentReader(db: D1Database, accountId: number): Promise
          (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
        VALUES (?2, ?1, '5e0f7c3a-1d2b-4c5d-8e6f-000000000900', NULL, NULL, 0, NULL)`,
     )
-    .bind(String(accountId), crypto.randomUUID())
+    .bind(testAccountId(accountId), crypto.randomUUID())
     .run()
 }
 
@@ -498,7 +508,10 @@ describe("GET /performance-goals?scope=department", () => {
         .map((goal) => goal.employee_id)
         .sort((left, right) => left.localeCompare(right))
 
-      expect(employeeIds).toEqual([toWorkforceEmployeeId(20), toWorkforceEmployeeId(21)])
+      expect(employeeIds).toEqual([
+        toWorkforceEmployeeId(testEmployeeId(20)),
+        toWorkforceEmployeeId(testEmployeeId(21)),
+      ])
     }
   })
 

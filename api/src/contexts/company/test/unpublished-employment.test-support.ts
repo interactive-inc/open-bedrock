@@ -1,5 +1,6 @@
 import { CanonicalSystemJsonValue } from "@system/domain/values/audit/canonical-system-json.value"
 import { ProposalDigestValue } from "@system/domain/values/workflow/proposal-digest.value"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 
 type Props = Readonly<{
   employeeId: string
@@ -37,7 +38,7 @@ export async function prepareUnpublishedEmployment(
   if (summary instanceof Error) throw summary
   const fingerprint = await ProposalDigestValue.create(summary)
   if (fingerprint instanceof Error) throw fingerprint
-  const actionId = `initial-employment:${fingerprint.toString()}`
+  const actionId = deterministicCompanyId("initial-employment", fingerprint.toString())
   const recordedAt = Math.floor(props.occurredAt.getTime() / 1000)
 
   return [
@@ -67,7 +68,7 @@ export async function prepareUnpublishedEmployment(
        recorded_by_action_id, recorded_at)
       VALUES (?1, 1, ?2, ?3, ?4, ?5, NULL, 0, ?6, ?7)`)
       .bind(
-        `initial-status:${fingerprint.toString()}`,
+        deterministicCompanyId("initial-status", fingerprint.toString()),
         props.employmentId,
         props.employeeId,
         props.status,

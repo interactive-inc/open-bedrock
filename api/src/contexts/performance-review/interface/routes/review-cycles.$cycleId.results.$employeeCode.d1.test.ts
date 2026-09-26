@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -97,8 +98,8 @@ async function createTestDb(): Promise<D1Database> {
     {
       id: "01900033-0000-7000-8000-000000000004",
       cycle_id: "01900032-0000-7000-8000-000000000002",
-      subject_employee_id: "5",
-      reviewer_employee_id: "10",
+      subject_employee_id: testEmployeeId(5),
+      reviewer_employee_id: testEmployeeId(10),
       reviewer_type: "peer",
       answers: JSON.stringify(["Private peer answer"]),
       score: 70,
@@ -108,8 +109,8 @@ async function createTestDb(): Promise<D1Database> {
     {
       id: "01900033-0000-7000-8000-000000000005",
       cycle_id: "01900032-0000-7000-8000-000000000002",
-      subject_employee_id: "5",
-      reviewer_employee_id: "9",
+      subject_employee_id: testEmployeeId(5),
+      reviewer_employee_id: testEmployeeId(9),
       reviewer_type: "subordinate",
       answers: JSON.stringify(["Private subordinate answer"]),
       score: 90,
@@ -119,8 +120,8 @@ async function createTestDb(): Promise<D1Database> {
     {
       id: "01900033-0000-7000-8000-000000000006",
       cycle_id: "01900032-0000-7000-8000-000000000002",
-      subject_employee_id: "5",
-      reviewer_employee_id: "2",
+      subject_employee_id: testEmployeeId(5),
+      reviewer_employee_id: testEmployeeId(2),
       reviewer_type: "peer",
       answers: "[]",
       score: null,
@@ -176,7 +177,7 @@ describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
 
     if (parsed.success) {
       expect(parsed.data.cycle_id).toBe("01900032-0000-7000-8000-000000000002")
-      expect(parsed.data.subject_employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(parsed.data.subject_employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
       expect(parsed.data.form_count).toBe(4)
       expect(parsed.data.submitted_count).toBe(3)
       expect(parsed.data.average_score).toBe(80)
@@ -224,7 +225,7 @@ describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
       forms: [
         {
           id: "01900033-0000-7000-8000-000000000003",
-          reviewer_employee_id: "4",
+          reviewer_employee_id: testEmployeeId(4),
           answers: ["優れた協調性"],
           score: 80,
         },
@@ -249,7 +250,7 @@ describe("GET /review-cycles/:cycleId/results/:employeeCode", () => {
     expect(parsed.forms).toHaveLength(1)
     expect(parsed.forms[0]).toMatchObject({
       id: "01900033-0000-7000-8000-000000000004",
-      reviewer_employee_id: "10",
+      reviewer_employee_id: testEmployeeId(10),
       answers: ["Private peer answer"],
     })
   })

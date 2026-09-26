@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { Goal } from "@/contexts/performance-review/domain/entities/goal.entity"
 import { GoalRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal.repository"
@@ -35,7 +36,7 @@ describe("GoalRepository", () => {
 
     const created = await repository.create(
       Goal.create({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         period: "2026-H1",
         title: "テスト目標",
         kpi: null,
@@ -68,7 +69,7 @@ describe("GoalRepository", () => {
 
     const created = await repository.create(
       Goal.create({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         period: "2026-H1",
         title: "テスト目標",
         kpi: null,

@@ -1,3 +1,4 @@
+import { testAccountId, testEmployeeId } from "@tests/api/support/test-identity-id"
 import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { requestWithContext } from "@tests/api/support/request-with-context"
@@ -51,13 +52,14 @@ test("旧定義は読めるが再発行できず、公開責務への明示的�
     inputSchema: { fields: [] },
     decisionPolicy: policy,
     completionOperationKey: null,
-    createdByAccountId: zAccountId.parse("1"),
+    createdByAccountId: zAccountId.parse(testAccountId(1)),
     createdAt: new Date("2026-01-01T00:00:00Z"),
   })
   if (definition instanceof Error) throw definition
   expect(await openSystemProcedures({ env: { DB: fixture.db } }).publish(definition, 0)).toBe(true)
   const token = await createTestToken("workflow-test-signing-secret", {
-    employeeId: restoreWorkforceId("employee", "1"),
+    employeeId: restoreWorkforceId("employee", testEmployeeId(1)),
+    accountId: 1,
   })
   const request = (method: string, body?: unknown) =>
     requestWithContext({

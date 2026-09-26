@@ -13,7 +13,11 @@ function employment(id: string, startsOn: string, endsOn: string | null): Compan
     state: "active",
     effectiveFrom: restoreCalendarDate(startsOn),
     effectiveTo: endsOn === null ? null : restoreCalendarDate(endsOn),
-    attributes: { employeeId: "employee:one", employmentType: "FULL_TIME", status: "ACTIVE" },
+    attributes: {
+      employeeId: "9e174baf-3240-4253-9cba-16bc3e431cca",
+      employmentType: "FULL_TIME",
+      status: "ACTIVE",
+    },
   }
 }
 function count(histories: ReadonlyArray<ReadonlyArray<CompanyResourceProps>>) {
@@ -90,7 +94,7 @@ test("異なる従業員の在籍を併合しない", () => {
         {
           ...initial,
           id: "two",
-          attributes: { ...initial.attributes, employeeId: "employee:two" },
+          attributes: { ...initial.attributes, employeeId: "25f122cd-8f0d-49c7-b106-1cd4fdc7bad6" },
         },
       ],
     ]),

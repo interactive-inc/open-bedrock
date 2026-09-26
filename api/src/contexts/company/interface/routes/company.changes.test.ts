@@ -41,7 +41,7 @@ function fixture() {
       ('company:a', 2, 'position', 'p', 1, 'command:two', 'active', '2040-01-01', NULL, 20),
       ('company:a', 3, 'grade', 'a', 2, 'command:three', 'void', '2040-01-01', NULL, 30),
       ('company:b', 1, 'person', 'private:person', 1, 'command:private', 'active', '2020-01-01', NULL, 10);
-    ALTER TABLE company_resource_revisions ADD COLUMN actor_account_id TEXT NOT NULL DEFAULT 'account:writer';
+    ALTER TABLE company_resource_revisions ADD COLUMN actor_account_id TEXT NOT NULL DEFAULT '86adb280-2461-48cf-a05d-f13348222317';
     ALTER TABLE company_resource_revisions ADD COLUMN reason TEXT NOT NULL DEFAULT 'Confirmed company fact';
     ALTER TABLE company_resource_revisions ADD COLUMN evidence_references_json TEXT NOT NULL DEFAULT '[]';
     ALTER TABLE company_resource_revisions ADD COLUMN corrects_revision INTEGER;
@@ -51,7 +51,7 @@ function fixture() {
   `)
   const actors: { value: CompanyActorValue | null } = {
     value: CompanyActorValue.restore({
-      accountId: "account:reader",
+      accountId: "1227c813-1159-4405-9f5b-5e54df944b9a",
       employeeId: null,
       organizationIds: ["company:a"],
       capabilities: ["company:read"],
@@ -86,7 +86,7 @@ test("組織閲覧だけでは人事変更を返さず、指定した組織資�
             'command:person', 'active', '2020-01-01', NULL, 30)
   `)
   f.actors.value = CompanyActorValue.restore({
-    accountId: "account:org-reader",
+    accountId: "eae1f52f-b3b9-42de-8a3d-9a3ee17c02fc",
     employeeId: null,
     organizationIds: ["company:a"],
     capabilities: ["company:read"],
@@ -129,7 +129,7 @@ test("変更取得は保存済みの変更者と理由を同じ会社版に返�
   expect(page.data[0]).toEqual({
     organization_revision: 1,
     resource_id: "legal:a",
-    actor_account_id: "account:writer",
+    actor_account_id: "86adb280-2461-48cf-a05d-f13348222317",
     reason: "Confirmed company fact",
     evidence_references: [{ id: "source:hire" }],
   })
@@ -140,7 +140,7 @@ test("原資料参照は正式revisionに残り、変更取得と再送判定に
   const repository = new D1CompanyResourceRepository({ database: f.database })
   const props = {
     commandId: "evidence:initial",
-    actorAccountId: "account:writer",
+    actorAccountId: "86adb280-2461-48cf-a05d-f13348222317",
     reason: "Verified from signed source",
     recordedAt: 10,
     expectedRevision: 0,
@@ -258,7 +258,7 @@ test("会社範囲・閲覧資格・認証を検査し、別会社のcursorと�
     ).status,
   ).toBe(400)
   f.actors.value = CompanyActorValue.restore({
-    accountId: "account:limited",
+    accountId: "4616e8d3-5ed5-49be-95ca-45d279521d6b",
     employeeId: null,
     organizationIds: ["company:a"],
     capabilities: [],

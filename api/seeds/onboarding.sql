@@ -16,7 +16,7 @@ INSERT INTO onboarding_template_tasks (id, template_code, code, title, sort_orde
   ('01900038-0000-7000-8000-000000000003', 'common_leave', 'return_pc', 'PCを返却する', 1, 'hr');
 
 INSERT INTO onboarding_assignments (id, employee_id, template_code, kind, status, assigned_at) VALUES
-  ('0190003d-0000-7000-8000-000000000064', 5, 'engineer_join', 'join', 'in_progress', '2026-05-29T00:00:00Z');
+  ('0190003d-0000-7000-8000-000000000064', '01900062-0000-7000-8000-000000000005', 'engineer_join', 'join', 'in_progress', '2026-05-29T00:00:00Z');
 
 INSERT INTO onboarding_tasks (id, assignment_id, template_task_code, title, sort_order, status, completed_at) VALUES
   ('0190003e-0000-7000-8000-0000000000c8', '0190003d-0000-7000-8000-000000000064', 'issue_pc', 'PCを貸与する', 1, 'pending', NULL),

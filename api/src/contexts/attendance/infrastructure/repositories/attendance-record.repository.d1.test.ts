@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { AttendanceRecord } from "@/contexts/attendance/domain/entities/attendance-record.entity"
@@ -23,7 +24,7 @@ afterAll(async () => {
 
 function openRecord(employeeId: number, clockInAt: string): AttendanceRecord {
   return AttendanceRecord.create({
-    employeeId: toWorkforceEmployeeId(employeeId),
+    employeeId: toWorkforceEmployeeId(testEmployeeId(employeeId)),
     clockInAt,
     note: null,
   })
@@ -61,7 +62,9 @@ describe("AttendanceRecordRepository on local D1", () => {
     expect(updated.note).toBe("left early")
 
     expect(await repository.update(closed)).toBe(null)
-    expect(await repository.findOpenByEmployeeId(toWorkforceEmployeeId(1))).toBe(null)
+    expect(await repository.findOpenByEmployeeId(toWorkforceEmployeeId(testEmployeeId(1)))).toBe(
+      null,
+    )
 
     const next = await repository.create(openRecord(1, "2026-03-16T09:00:00.000Z"))
 
@@ -80,7 +83,7 @@ describe("AttendanceRecordRepository", () => {
 
     const created = await repository.create(
       AttendanceRecord.create({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         clockInAt: "2026-01-01T09:00:00.000Z",
         note: "出勤",
       }),
@@ -92,7 +95,7 @@ describe("AttendanceRecordRepository", () => {
       throw new Error("create failed")
     }
 
-    const found = await repository.findOpenByEmployeeId(toWorkforceEmployeeId(1))
+    const found = await repository.findOpenByEmployeeId(toWorkforceEmployeeId(testEmployeeId(1)))
 
     expect(found).toBeInstanceOf(AttendanceRecord)
 

@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
@@ -143,7 +144,9 @@ describe("GET /thanks-messages/me", () => {
       expect(parsed.data.total).toBe(2)
       expect(parsed.data.data.length).toBe(2)
       expect(
-        parsed.data.data.every((row) => row.sender_employee_id === toWorkforceEmployeeId(4)),
+        parsed.data.data.every(
+          (row) => row.sender_employee_id === toWorkforceEmployeeId(testEmployeeId(4)),
+        ),
       ).toBe(true)
       expect(parsed.data.data[0]?.message).toBe("2件目")
       expect(parsed.data.data[1]?.message).toBe("1件目")

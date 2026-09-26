@@ -24,6 +24,8 @@ export type OrganizationChangeEvidenceReference = Readonly<{
 
 export type OrganizationWorkforceChangeProps = Readonly<{
   operationId: PersonnelActionId
+  /** trigger が操作を見つけるための鍵。ID は companyOperationId(operationKey) になる */
+  operationKey?: string | null
   expectedRevision: number
   asOf: CalendarDate
   recordedAt: number
@@ -49,6 +51,7 @@ function freezeRecords<TValue extends object>(
 /** 一つの人事操作で追記する組織・配属・責任periodを所有するEntity。 */
 export class OrganizationWorkforceChangeEntity {
   readonly operationId: PersonnelActionId
+  readonly operationKey: string | null
   readonly expectedRevision: number
   readonly asOf: CalendarDate
   readonly recordedAt: number
@@ -62,6 +65,7 @@ export class OrganizationWorkforceChangeEntity {
 
   private constructor(props: OrganizationWorkforceChangeProps) {
     this.operationId = props.operationId
+    this.operationKey = props.operationKey ?? null
     this.expectedRevision = props.expectedRevision
     this.asOf = props.asOf
     this.recordedAt = props.recordedAt

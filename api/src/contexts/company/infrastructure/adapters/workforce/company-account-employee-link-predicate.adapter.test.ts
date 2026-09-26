@@ -19,14 +19,18 @@ describe("Company Account対応のSQL条件", () => {
       CREATE TABLE company_account_employee_links (account_id TEXT, employee_id TEXT);
       INSERT INTO company_account_employee_links VALUES ('account:legacy', 'employee:legacy');
       INSERT INTO company_account_employee_resource_bindings VALUES
-        ('link:1', '${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account:1', 'employee:1');
+        ('link:1', '${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account:1', 'b4b9edaa-1e08-46d5-b0bc-1798cc369fd1');
       INSERT INTO company_resource_revisions VALUES
         ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account-employee-link', 'link:1', 1, 'active',
-         '2026-01-01', NULL, '{"accountId":"account:1","employeeId":"employee:1"}'),
+         '2026-01-01', NULL, '{"accountId":"account:1","employeeId":"b4b9edaa-1e08-46d5-b0bc-1798cc369fd1"}'),
         ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account-employee-link', 'link:1', 2, 'void',
-         '2026-09-01', NULL, '{"accountId":"account:1","employeeId":"employee:1"}');
+         '2026-09-01', NULL, '{"accountId":"account:1","employeeId":"b4b9edaa-1e08-46d5-b0bc-1798cc369fd1"}');
     `)
-    const matches = async (date: string, accountId: string, employeeId = "employee:1") => {
+    const matches = async (
+      date: string,
+      accountId: string,
+      employeeId = "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
+    ) => {
       const predicate = new CompanyAccountEmployeeLinkPredicateAdapter({
         asOf: restoreCalendarDate(date),
       })
@@ -45,7 +49,7 @@ describe("Company Account対応のSQL条件", () => {
     expect(await matches("2026-08-31", "account:legacy", "employee:legacy")).toBe(0)
     await database.exec(`INSERT INTO company_resource_revisions VALUES
       ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account-employee-link', 'link:1', 3, 'active',
-       '2026-09-01', NULL, '{"accountId":"account:1","employeeId":"employee:1"}');`)
+       '2026-09-01', NULL, '{"accountId":"account:1","employeeId":"b4b9edaa-1e08-46d5-b0bc-1798cc369fd1"}');`)
     expect(await matches("2026-09-01", "account:1")).toBe(1)
   })
 })

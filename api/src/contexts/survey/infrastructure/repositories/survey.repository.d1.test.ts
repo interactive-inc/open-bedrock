@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { Survey } from "@/contexts/survey/domain/entities/survey.entity"
@@ -45,7 +46,7 @@ async function seedSurveyWithResponse(context: Context): Promise<Survey> {
   const response = await repository.createResponse(
     SurveyResponse.create({
       surveyId: survey.id,
-      respondentId: toWorkforceEmployeeId(1),
+      respondentId: toWorkforceEmployeeId(testEmployeeId(1)),
       answersJson: { a: "fine" },
       submittedAt: "2026-01-01T00:00:00.000Z",
     }),
@@ -190,7 +191,7 @@ describe("SurveyRepository", () => {
     const created = await repository.createResponse(
       SurveyResponse.create({
         surveyId: "01900026-0000-7000-8000-000000000001",
-        respondentId: toWorkforceEmployeeId(2),
+        respondentId: toWorkforceEmployeeId(testEmployeeId(2)),
         answersJson: { q1: 5 },
         submittedAt: "2026-01-01T00:00:00.000Z",
       }),
@@ -204,7 +205,7 @@ describe("SurveyRepository", () => {
 
     const found = await repository.findResponseBySurveyIdAndRespondentId(
       "01900026-0000-7000-8000-000000000001",
-      toWorkforceEmployeeId(2),
+      toWorkforceEmployeeId(testEmployeeId(2)),
     )
 
     expect(found).toBeInstanceOf(SurveyResponse)
@@ -214,7 +215,7 @@ describe("SurveyRepository", () => {
     }
 
     expect(found.surveyId).toBe("01900026-0000-7000-8000-000000000001")
-    expect(found.respondentId).toBe(toWorkforceEmployeeId(2))
+    expect(found.respondentId).toBe(toWorkforceEmployeeId(testEmployeeId(2)))
   })
 
   test("findResponseBySurveyIdAndRespondentId returns null when none matches", async () => {
@@ -227,7 +228,7 @@ describe("SurveyRepository", () => {
 
     const found = await repository.findResponseBySurveyIdAndRespondentId(
       crypto.randomUUID(),
-      toWorkforceEmployeeId(9999),
+      toWorkforceEmployeeId(testEmployeeId(9999)),
     )
 
     expect(found).toBeNull()

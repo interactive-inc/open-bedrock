@@ -17,7 +17,7 @@ import { describe, expect, test } from "bun:test"
 import { hc } from "hono/client"
 
 const now = new Date("2026-01-01T00:00:00.000Z")
-const accountId = zAccountId.parse("system-notification-account")
+const accountId = zAccountId.parse("bef4604e-c494-4c4b-a921-b479186557c2")
 
 describe("System Notification HTTP", () => {
   test("publish・list・detail・既読・一括既読・dismissをAccount境界で完結する", async () => {

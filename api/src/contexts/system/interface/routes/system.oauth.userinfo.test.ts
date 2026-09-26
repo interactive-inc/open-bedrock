@@ -22,28 +22,28 @@ describe("GET /oauth/userinfo", () => {
       .query(
         `INSERT INTO system_accounts
            (id, status, token_version, created_at, updated_at)
-         VALUES ('account-1', 'active', 0, ?1, ?1)`,
+         VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'active', 0, ?1, ?1)`,
       )
       .run(now.getTime())
     fixture.sqlite
       .query(
         `INSERT INTO system_identity_bindings
            (id, account_id, provider, subject, created_at, activated_at, revoked_at)
-         VALUES ('identity-1', 'account-1', 'password', 'person@example.com', ?1, ?1, NULL)`,
+         VALUES ('637b1ce9-daa9-4063-8cb0-1190607a2ceb', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'password', 'person@example.com', ?1, ?1, NULL)`,
       )
       .run(now.getTime())
     fixture.sqlite
       .query(
         `INSERT INTO system_identity_profiles
            (identity_id, email, email_verified, last_used_at, updated_at)
-         VALUES ('identity-1', 'person@example.com', 1, ?1, ?1)`,
+         VALUES ('637b1ce9-daa9-4063-8cb0-1190607a2ceb', 'person@example.com', 1, ?1, ?1)`,
       )
       .run(now.getTime())
     fixture.sqlite
       .query(
         `INSERT INTO system_oidc_access_tokens
            (token_hash, issuer, client_id, account_id, scope, expires_at, created_at)
-         VALUES (?1, ?2, 'system-console', 'account-1', 'openid email', ?3, ?4)`,
+         VALUES (?1, ?2, 'system-console', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'openid email', ?3, ?4)`,
       )
       .run(tokenHash, issuer, now.getTime() + 300_000, now.getTime())
 
@@ -84,7 +84,7 @@ describe("GET /oauth/userinfo", () => {
     expect(response.headers.get("cache-control")).toBe("no-store")
     expect(response.headers.get("pragma")).toBe("no-cache")
     expect(await response.json()).toEqual({
-      sub: "account-1",
+      sub: "d5858208-e680-4db8-a05d-8bf4f900c24e",
       email: "person@example.com",
       email_verified: true,
     })
@@ -96,14 +96,14 @@ describe("GET /oauth/userinfo", () => {
     const accessToken = createOidcSecret()
     const tokenHash = await hashOidcSecret(accessToken)
     fixture.sqlite.exec(`
-      INSERT INTO system_accounts VALUES ('account-1', 'suspended', 1, NULL, 0, 1);
+      INSERT INTO system_accounts (id, status, token_version, closed_at, created_at, updated_at) VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'suspended', 1, NULL, 0, 1);
       INSERT INTO system_oidc_access_tokens
         (token_hash, issuer, client_id, account_id, scope, expires_at, created_at)
         VALUES (
           '${tokenHash}',
           '${issuer}',
           'system-console',
-          'account-1',
+          'd5858208-e680-4db8-a05d-8bf4f900c24e',
           'openid',
           ${now.getTime() + 300_000},
           ${now.getTime()}

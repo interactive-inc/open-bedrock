@@ -12,7 +12,7 @@ import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-dat
 import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const administrator = CompanyActorValue.restore({
-  accountId: "account:reader",
+  accountId: "1227c813-1159-4405-9f5b-5e54df944b9a",
   employeeId: null,
   organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
   capabilities: ["company:admin"],
@@ -31,11 +31,11 @@ async function fixture() {
   const awardSource = await GradeAwardSourceSnapshotValue.create(
     JSON.stringify({
       organizationRevision: 8,
-      employeeId: "employee:one",
+      employeeId: "9e174baf-3240-4253-9cba-16bc3e431cca",
       awards: [
         {
           id: 1,
-          employeeId: "employee:one",
+          employeeId: "9e174baf-3240-4253-9cba-16bc3e431cca",
           gradeId: 1,
           effectiveDate: "2020-01-01",
           reason: " raw reason ",
@@ -63,13 +63,13 @@ async function fixture() {
   if (definitionSource instanceof Error) throw definitionSource
   await database
     .prepare(`INSERT INTO company_grade_award_archives VALUES
-    ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'archive:one', 'employee:one', ?1, 'account:original', 'Archive reason',
+    ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'archive:one', '9e174baf-3240-4253-9cba-16bc3e431cca', ?1, 'c4b2bc70-8c0d-4dfe-8c44-cb303e75669d', 'Archive reason',
       '2030-01-01', 8, ?2, ?3, 100)`)
     .bind("a".repeat(64), awardSource.props.digest, awardSource.props.sourceJson)
     .run()
   await database
     .prepare(`INSERT INTO company_definition_resource_adoptions VALUES
-    ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'definition:one', 'grade', 'grade:one', 1, 'account:original', 'Adoption reason',
+    ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'definition:one', 'grade', 'grade:one', 1, 'c4b2bc70-8c0d-4dfe-8c44-cb303e75669d', 'Adoption reason',
       9, '2030-01-01', ?1, ?2, 100)`)
     .bind(definitionSource.props.digest, definitionSource.props.sourceJson)
     .run()
@@ -96,19 +96,19 @@ test("旧台帳なしで移行時の原文と主体を読み、会社範囲・�
     const response = await f.request(path)
     expect(response.status).toBe(200)
     expect(await response.json()).toMatchObject({
-      actorAccountId: "account:original",
+      actorAccountId: "c4b2bc70-8c0d-4dfe-8c44-cb303e75669d",
       recordedAt: 100,
     })
     for (const actor of [
       undefined,
       CompanyActorValue.restore({
-        accountId: "account:reader",
+        accountId: "1227c813-1159-4405-9f5b-5e54df944b9a",
         employeeId: null,
         organizationIds: ["01900060-0000-7000-8000-12268fccf2cc"],
         capabilities: ["company:admin"],
       }),
       CompanyActorValue.restore({
-        accountId: "account:reader",
+        accountId: "1227c813-1159-4405-9f5b-5e54df944b9a",
         employeeId: null,
         organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
         capabilities: ["company:read"],
@@ -125,37 +125,37 @@ test("旧台帳なしで移行時の原文と主体を読み、会社範囲・�
 
 test("従業員別の原記録は本人または属性閲覧権限者だけが読める", async () => {
   const f = await fixture()
-  const path = "/awards/by-employee/employee:one"
+  const path = "/awards/by-employee/9e174baf-3240-4253-9cba-16bc3e431cca"
   f.state.actor = undefined
   expect((await f.request(path)).status).toBe(401)
   for (const scenario of [
     {
-      employeeId: "employee:one",
+      employeeId: "9e174baf-3240-4253-9cba-16bc3e431cca",
       organization: COMPANY_DEFAULT_ORGANIZATION_ID,
       permitted: false,
       expected: 200,
     },
     {
-      employeeId: "employee:other",
+      employeeId: "1953cffc-119b-42c7-bbab-82c56499e4ac",
       organization: COMPANY_DEFAULT_ORGANIZATION_ID,
       permitted: false,
       expected: 403,
     },
     {
-      employeeId: "employee:other",
+      employeeId: "1953cffc-119b-42c7-bbab-82c56499e4ac",
       organization: COMPANY_DEFAULT_ORGANIZATION_ID,
       permitted: true,
       expected: 200,
     },
     {
-      employeeId: "employee:one",
+      employeeId: "9e174baf-3240-4253-9cba-16bc3e431cca",
       organization: "01900060-0000-7000-8000-12268fccf2cc",
       permitted: true,
       expected: 403,
     },
   ]) {
     f.state.actor = CompanyActorValue.restore({
-      accountId: "account:reader",
+      accountId: "1227c813-1159-4405-9f5b-5e54df944b9a",
       employeeId: scenario.employeeId,
       organizationIds: [scenario.organization],
       capabilities: [],

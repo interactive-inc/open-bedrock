@@ -3,7 +3,7 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { InvalidSystemProposalError } from "@system/domain/errors"
 import { ProcedureDefinitionEntity } from "@system/domain/entities/procedure-definition.entity"
 
-const accountId = zAccountId.parse("account-1")
+const accountId = zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e")
 
 describe("ProcedureDefinitionEntity", () => {
   test("入力契約と判断方針をcanonical JSONへ固定する", () => {

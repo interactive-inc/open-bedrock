@@ -1,3 +1,4 @@
+import { testAccountId, testEmployeeId } from "@tests/api/support/test-identity-id"
 import { CompanySessionValue } from "@/contexts/company/domain/values/company-session.value"
 import { SYSTEM_ROLE_PERMISSIONS } from "@tests/api/support/system-roles"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
@@ -16,8 +17,8 @@ export function makeTestSession(
   const permissions = new Set<string>(entry === undefined ? [] : entry.permissions)
 
   return new CompanySessionValue({
-    accountId: zAccountId.parse(String(employeeId)),
-    employeeId: toWorkforceEmployeeId(employeeId),
+    accountId: zAccountId.parse(testAccountId(employeeId)),
+    employeeId: toWorkforceEmployeeId(testEmployeeId(employeeId)),
     employmentStatus: "ACTIVE",
     permissions: permissions,
     roleKeys: [role],

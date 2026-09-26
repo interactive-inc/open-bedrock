@@ -82,8 +82,9 @@ describe("Company workforce resource migration", () => {
     ).toBeNull()
     expect(await database.prepare("SELECT * FROM company_personnel_actions").first()).toBeNull()
     const shared = await createDatabase("projection-shared", sharedSchema)
+    // 束縛の table は後の migration で UUID の主キーへ作り直したため、この時点の guard と index だけを比べる。
     const query =
-      "SELECT name, sql FROM sqlite_master WHERE name IN ('company_workforce_resource_bindings', 'company_workforce_projection_guard', 'company_employments_employee_active_unique') ORDER BY name"
+      "SELECT name, sql FROM sqlite_master WHERE name IN ('company_workforce_projection_guard', 'company_employments_employee_active_unique') ORDER BY name"
     expect((await database.prepare(query).all()).results).toEqual(
       (await shared.prepare(query).all()).results,
     )
@@ -161,8 +162,9 @@ describe("Company workforce resource migration", () => {
     expect(await repository.write(change)).toMatchObject({ kind: "applied", replayed: true })
 
     const shared = await createDatabase("guard-shared", sharedSchema)
+    // 主キーの不変を守る trigger は後の UUID 化で加わったため、この migration の guard と分けて比べる。
     const triggers =
-      "SELECT name, sql FROM sqlite_master WHERE type = 'trigger' AND name LIKE 'company_workforce_resource_%' ORDER BY name"
+      "SELECT name, sql FROM sqlite_master WHERE type = 'trigger' AND name LIKE 'company_workforce_resource_%' AND name NOT LIKE '%_identity_update' ORDER BY name"
     const actual = (await database.prepare(triggers).all()).results
     expect(actual).toHaveLength(3)
     expect(actual).toEqual((await shared.prepare(triggers).all()).results)

@@ -18,7 +18,7 @@ import { describe, expect, test } from "bun:test"
 import { hc } from "hono/client"
 import { z } from "zod"
 
-const accountId = zAccountId.parse("delivery-worker-account")
+const accountId = zAccountId.parse("37d00139-429b-4419-97c9-2def4b6e1ffe")
 const jwtSecret = "system-session-test-jwt-secret"
 const now = new Date()
 
@@ -253,7 +253,7 @@ function seedWorker(fixture: SystemSessionTestContext): void {
     .query(
       `INSERT INTO system_principals
          (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
-       VALUES ('principal:worker', ?1, 'service', 'Worker', NULL, 1, ?2, ?2)`,
+       VALUES ('ef083a4f-dd0a-42a8-8007-57ab6f2df095', ?1, 'service', 'Worker', NULL, 1, ?2, ?2)`,
     )
     .run(accountId, now.getTime())
   fixture.sqlite.exec(
@@ -267,7 +267,7 @@ function seedWorker(fixture: SystemSessionTestContext): void {
             ('fcc965d5-8be4-4a24-86fe-4453fb422bde', 'system:admin');
      INSERT INTO system_role_bindings
        (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-     VALUES ('5e19b6cc-dac5-433f-87a3-baa7ca288d35', 'delivery-worker-account', 'fcc965d5-8be4-4a24-86fe-4453fb422bde', NULL, NULL, 1, NULL);`,
+     VALUES ('5e19b6cc-dac5-433f-87a3-baa7ca288d35', '37d00139-429b-4419-97c9-2def4b6e1ffe', 'fcc965d5-8be4-4a24-86fe-4453fb422bde', NULL, NULL, 1, NULL);`,
   )
 }
 
@@ -278,7 +278,7 @@ async function issueAccessToken(fixture: SystemSessionTestContext): Promise<stri
   fixture.sqlite
     .query(`INSERT INTO system_machine_credentials
     (id, principal_id, name, secret_hash, status, created_at, updated_at)
-    VALUES ('worker-credential', 'principal:worker', 'Primary', ?1, 'active', ?2, ?2)`)
+    VALUES ('36f370ec-f11f-45ab-b977-fb143f8c0428', 'ef083a4f-dd0a-42a8-8007-57ab6f2df095', 'Primary', ?1, 'active', ?2, ?2)`)
     .run(hash, now.getTime())
   const app = systemFactory.createApp().post("/system/machine-sessions", ...machineSessionPOST)
   const response = await app.request(
@@ -286,7 +286,10 @@ async function issueAccessToken(fixture: SystemSessionTestContext): Promise<stri
     {
       method: "POST",
       headers: { "content-type": "application/json" },
-      body: JSON.stringify({ credential_id: "worker-credential", secret: rawSecret }),
+      body: JSON.stringify({
+        credential_id: "36f370ec-f11f-45ab-b977-fb143f8c0428",
+        secret: rawSecret,
+      }),
     },
     { DB: fixture.context.env.DB, JWT_SECRET: jwtSecret, NOW: now.toISOString() },
   )

@@ -1,18 +1,27 @@
 -- 上位contextや製品runtimeから独立したcanonical System persistence。
 
 CREATE TABLE system_accounts (
-  id TEXT PRIMARY KEY NOT NULL
-    CHECK (length(id) BETWEEN 1 AND 255),
+  id TEXT PRIMARY KEY NOT NULL,
+  legacy_id TEXT UNIQUE,
   status TEXT NOT NULL
     CHECK (status IN ('active', 'suspended', 'locked')),
   token_version INTEGER NOT NULL DEFAULT 0
     CHECK (token_version >= 0),
-  closed_at INTEGER
-    CHECK (closed_at IS NULL OR closed_at >= created_at),
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
     CHECK (updated_at >= created_at)
+, closed_at INTEGER
+  CHECK (closed_at IS NULL OR closed_at >= created_at),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER system_accounts_legacy_id_insert
+BEFORE INSERT ON system_accounts
+WHEN NEW.legacy_id IS NOT NULL
+BEGIN SELECT RAISE(ABORT, 'record_legacy_id_immutable'); END;
+CREATE TRIGGER system_accounts_identity_update
+BEFORE UPDATE OF id, legacy_id ON system_accounts
+WHEN NEW.id IS NOT OLD.id OR NEW.legacy_id IS NOT OLD.legacy_id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 /* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
 CREATE TRIGGER system_accounts_monotonic_security_state
@@ -50,8 +59,7 @@ BEGIN
 END;
 
 CREATE TABLE system_identity_bindings (
-  id TEXT PRIMARY KEY NOT NULL
-    CHECK (length(id) BETWEEN 1 AND 255),
+  id TEXT PRIMARY KEY NOT NULL,
   account_id TEXT NOT NULL
     REFERENCES system_accounts(id) ON DELETE RESTRICT,
   provider TEXT NOT NULL
@@ -67,7 +75,8 @@ CREATE TABLE system_identity_bindings (
         revoked_at >= created_at
         AND (activated_at IS NULL OR revoked_at >= activated_at)
       )
-    )
+    ),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE UNIQUE INDEX system_identity_bindings_provider_subject_uniq
@@ -110,10 +119,11 @@ CREATE TABLE system_identity_profiles (
     CHECK (email IS NULL OR length(email) BETWEEN 3 AND 320),
   email_verified INTEGER NOT NULL DEFAULT 0
     CHECK (email_verified IN (0, 1)),
-  can_receive_email INTEGER NOT NULL DEFAULT 1
-    CHECK (can_receive_email IN (0, 1)),
   last_used_at INTEGER,
   updated_at INTEGER NOT NULL
+, can_receive_email INTEGER NOT NULL DEFAULT 1
+  CHECK (can_receive_email IN (0, 1)),
+  CHECK (length(identity_id) = 36 AND identity_id NOT GLOB '*[^0-9a-f-]*' AND substr(identity_id, 9, 1) = '-' AND substr(identity_id, 14, 1) = '-' AND substr(identity_id, 19, 1) = '-' AND substr(identity_id, 24, 1) = '-' AND length(replace(identity_id, '-', '')) = 32 AND substr(identity_id, 15, 1) GLOB '[1-8]' AND substr(identity_id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE INDEX system_identity_profiles_email_idx
@@ -128,7 +138,8 @@ CREATE TABLE system_password_credentials (
   changed_at INTEGER NOT NULL,
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
-    CHECK (changed_at >= created_at AND updated_at >= changed_at)
+    CHECK (changed_at >= created_at AND updated_at >= changed_at),
+  CHECK (length(identity_id) = 36 AND identity_id NOT GLOB '*[^0-9a-f-]*' AND substr(identity_id, 9, 1) = '-' AND substr(identity_id, 14, 1) = '-' AND substr(identity_id, 19, 1) = '-' AND substr(identity_id, 24, 1) = '-' AND length(replace(identity_id, '-', '')) = 32 AND substr(identity_id, 15, 1) GLOB '[1-8]' AND substr(identity_id, 20, 1) GLOB '[89ab]')
 );
 
 /* DDL-only test harnesses skip compound triggers. Full migration loaders apply this statement. */
@@ -166,8 +177,7 @@ BEGIN
 END;
 
 CREATE TABLE system_password_reset_challenges (
-  id TEXT PRIMARY KEY NOT NULL
-    CHECK (length(id) BETWEEN 1 AND 255),
+  id TEXT PRIMARY KEY NOT NULL,
   token_hash TEXT NOT NULL
     CHECK (length(token_hash) = 64 AND token_hash NOT GLOB '*[^0-9a-f]*'),
   account_id TEXT NOT NULL
@@ -178,7 +188,8 @@ CREATE TABLE system_password_reset_challenges (
   expires_at INTEGER NOT NULL
     CHECK (expires_at > created_at),
   used_at INTEGER
-    CHECK (used_at IS NULL OR used_at >= created_at)
+    CHECK (used_at IS NULL OR used_at >= created_at),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE UNIQUE INDEX system_password_reset_challenges_token_hash_uniq
@@ -216,13 +227,13 @@ BEGIN
 END;
 
 CREATE TABLE system_authentication_attempts (
-  id TEXT PRIMARY KEY NOT NULL
-    CHECK (length(id) BETWEEN 1 AND 255),
+  id TEXT PRIMARY KEY NOT NULL,
   identifier TEXT NOT NULL
     CHECK (length(identifier) BETWEEN 1 AND 2048),
   ip TEXT
     CHECK (ip IS NULL OR length(ip) BETWEEN 1 AND 255),
-  attempted_at INTEGER NOT NULL
+  attempted_at INTEGER NOT NULL,
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE INDEX system_authentication_attempts_identifier_attempted_at_idx
@@ -231,8 +242,7 @@ CREATE INDEX system_authentication_attempts_ip_attempted_at_idx
   ON system_authentication_attempts (ip, attempted_at);
 
 CREATE TABLE system_sessions (
-  id TEXT PRIMARY KEY NOT NULL
-    CHECK (length(id) BETWEEN 1 AND 255),
+  id TEXT PRIMARY KEY NOT NULL,
   account_id TEXT NOT NULL
     REFERENCES system_accounts(id) ON DELETE RESTRICT,
   family_id TEXT NOT NULL
@@ -256,9 +266,10 @@ CREATE TABLE system_sessions (
         revoked_at >= created_at
         AND (rotated_at IS NULL OR revoked_at >= rotated_at)
       )
-    ),
-  authenticated_at INTEGER
-    CHECK (authenticated_at IS NULL OR authenticated_at <= created_at)
+    )
+, authenticated_at INTEGER
+  CHECK (authenticated_at IS NULL OR authenticated_at <= created_at),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE UNIQUE INDEX system_sessions_token_hash_uniq
@@ -515,37 +526,32 @@ BEGIN
 END;
 
 CREATE TABLE system_account_invitations (
-  id TEXT PRIMARY KEY NOT NULL
-    CHECK (length(id) BETWEEN 1 AND 255),
+  id TEXT PRIMARY KEY NOT NULL,
   token TEXT NOT NULL,
   subject TEXT,
   role_id TEXT NOT NULL
     REFERENCES system_iam_roles(id) ON DELETE RESTRICT,
-  resource_type TEXT,
-  resource_id TEXT,
-  related_resource_id TEXT,
   accepted_by_account_id TEXT
     REFERENCES system_accounts(id) ON DELETE RESTRICT,
   expires_at INTEGER NOT NULL,
   revoked_at INTEGER,
   created_at INTEGER NOT NULL,
-  updated_at INTEGER NOT NULL,
+  updated_at INTEGER NOT NULL, resource_type TEXT, resource_id TEXT
+  CHECK ((resource_type IS NULL AND resource_id IS NULL) OR (
+    resource_type IS NOT NULL AND resource_id IS NOT NULL
+    AND length(resource_type) BETWEEN 3 AND 100
+    AND length(resource_id) BETWEEN 1 AND 255
+  )), related_resource_id TEXT
+  CHECK (related_resource_id IS NULL OR (
+    resource_type IS NOT NULL AND resource_id IS NOT NULL
+    AND length(related_resource_id) BETWEEN 1 AND 255
+  )),
   CHECK (
     updated_at >= created_at
     AND expires_at >= created_at
     AND (revoked_at IS NULL OR revoked_at >= created_at)
   ),
-  CHECK (
-    (resource_type IS NULL AND resource_id IS NULL) OR (
-      resource_type IS NOT NULL AND resource_id IS NOT NULL
-      AND length(resource_type) BETWEEN 3 AND 100
-      AND length(resource_id) BETWEEN 1 AND 255
-    )
-  ),
-  CHECK (related_resource_id IS NULL OR (
-    resource_type IS NOT NULL AND resource_id IS NOT NULL
-    AND length(related_resource_id) BETWEEN 1 AND 255
-  ))
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE UNIQUE INDEX system_account_invitations_token_uniq

@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -94,7 +95,7 @@ describe("GET /attendance-records/me/summary", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
       expect(parsed.data.month).toBe("2026-05")
       expect(parsed.data.work_days).toBe(2)
       expect(parsed.data.total_work_minutes).toBe(1050)

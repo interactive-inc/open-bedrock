@@ -1,4 +1,5 @@
 import { app } from "@/api/app"
+import { testDerivedId } from "@tests/api/support/test-identity-id"
 import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
 import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
@@ -46,7 +47,7 @@ describe("System password reset HTTP", () => {
         `INSERT INTO system_sessions
            (id, account_id, family_id, token_hash, token_version, created_at, expires_at,
             rotated_at, revoked_at)
-         VALUES ('existing-session', '1', 'existing-family', ?1, 0, ?2, ?3, NULL, NULL)`,
+         VALUES ('f1c7e890-f425-47ce-8c09-471017d7c4dd', '01900061-0000-7000-8000-000000000001', 'existing-family', ?1, 0, ?2, ?3, NULL, NULL)`,
       )
       .bind(
         "a".repeat(64),
@@ -91,7 +92,7 @@ describe("System password reset HTTP", () => {
     const storedChallenge = await database
       .prepare(
         `SELECT token_hash, used_at FROM system_password_reset_challenges
-         WHERE account_id = '1'`,
+         WHERE account_id = '01900061-0000-7000-8000-000000000001'`,
       )
       .first<{ token_hash: string; used_at: number | null }>()
     expect(storedChallenge).toEqual({ token_hash: tokenHash, used_at: null })
@@ -102,9 +103,8 @@ describe("System password reset HTTP", () => {
     })
     expect(completed.status).toBe(200)
     const credential = await database
-      .prepare(
-        `SELECT password_hash FROM system_password_credentials WHERE identity_id = 'password:1'`,
-      )
+      .prepare(`SELECT password_hash FROM system_password_credentials WHERE identity_id = ?1`)
+      .bind(testDerivedId("password-identity", 1))
       .first<string>("password_hash")
     expect(credential).not.toBe(seedPasswordHash)
     expect(
@@ -114,17 +114,23 @@ describe("System password reset HTTP", () => {
     ).toBe(true)
     expect(
       await database
-        .prepare("SELECT token_version FROM system_accounts WHERE id = '1'")
+        .prepare(
+          "SELECT token_version FROM system_accounts WHERE id = '01900061-0000-7000-8000-000000000001'",
+        )
         .first<number>("token_version"),
     ).toBe(1)
     expect(
       await database
-        .prepare("SELECT revoked_at FROM system_sessions WHERE id = 'existing-session'")
+        .prepare(
+          "SELECT revoked_at FROM system_sessions WHERE id = 'f1c7e890-f425-47ce-8c09-471017d7c4dd'",
+        )
         .first<number>("revoked_at"),
     ).toBe(Date.parse("2026-01-01T00:00:00.000Z"))
     expect(
       await database
-        .prepare("SELECT used_at FROM system_password_reset_challenges WHERE account_id = '1'")
+        .prepare(
+          "SELECT used_at FROM system_password_reset_challenges WHERE account_id = '01900061-0000-7000-8000-000000000001'",
+        )
         .first<number>("used_at"),
     ).toBe(Date.parse("2026-01-01T00:00:00.000Z"))
 
@@ -161,7 +167,9 @@ describe("System password reset HTTP", () => {
     ).toEqual([200, 400])
     expect(
       await database
-        .prepare("SELECT token_version FROM system_accounts WHERE id = '1'")
+        .prepare(
+          "SELECT token_version FROM system_accounts WHERE id = '01900061-0000-7000-8000-000000000001'",
+        )
         .first<number>("token_version"),
     ).toBe(2)
     expect(

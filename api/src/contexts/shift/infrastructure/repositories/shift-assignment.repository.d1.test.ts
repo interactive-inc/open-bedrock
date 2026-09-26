@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { ShiftAssignment } from "@/contexts/shift/domain/entities/shift-assignment.entity"
 import { ShiftAssignmentRepository } from "@/contexts/shift/infrastructure/repositories/shift-assignment.repository"
@@ -37,7 +38,7 @@ describe("ShiftAssignmentRepository", () => {
 
     const created = await repository.create(
       ShiftAssignment.create({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         patternId: null,
         date: "2026-05-31",
         note: null,
@@ -69,7 +70,7 @@ describe("ShiftAssignmentRepository", () => {
 
     const created = await repository.create(
       ShiftAssignment.create({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         patternId: null,
         date: "2026-06-01",
         note: null,
@@ -101,7 +102,7 @@ describe("ShiftAssignmentRepository", () => {
 
     const created = await repository.create(
       ShiftAssignment.create({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         patternId: null,
         date: "2026-06-02",
         note: null,
@@ -141,7 +142,7 @@ describe("ShiftAssignmentRepository", () => {
 
     const created = await repository.create(
       ShiftAssignment.create({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         patternId: null,
         date: "2026-06-04",
         note: "original",
@@ -185,7 +186,7 @@ describe("ShiftAssignmentRepository", () => {
 
     const created = await repository.create(
       ShiftAssignment.create({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         patternId: null,
         date: "2026-06-06",
         note: "original",

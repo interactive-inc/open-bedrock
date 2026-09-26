@@ -153,7 +153,7 @@ describe("公開Companyから業務Taskへの接続", () => {
             ...assignment,
             revision: 1,
             type: "organizational-office",
-            id: "office:review",
+            id: "6db90b08-a99d-48a4-bd0b-118681c35009",
             attributes: {
               code: "REVIEWER",
               officialName: "Reviewer",
@@ -169,7 +169,7 @@ describe("公開Companyから業務Taskへの接続", () => {
             attributes: {
               employeeId: person.employeeId,
               employmentId,
-              organizationalOfficeId: "office:review",
+              organizationalOfficeId: "6db90b08-a99d-48a4-bd0b-118681c35009",
             },
           },
         )
@@ -180,7 +180,8 @@ describe("公開Companyから業務Taskへの接続", () => {
         attributes: {
           ...assignment.attributes,
           holderType,
-          holderId: holderType === "employee" ? person.employeeId : "office:review",
+          holderId:
+            holderType === "employee" ? person.employeeId : "6db90b08-a99d-48a4-bd0b-118681c35009",
           delegationAllowed: true,
         },
       })

@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { EmployeeSkill } from "@/contexts/skill/domain/entities/employee-skill.entity"
@@ -49,7 +50,7 @@ describe("EmployeeSkillRepository on local D1", () => {
 
     const first = await repository.save(
       EmployeeSkill.create({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         skillCode: "typescript",
         level: 5,
         years: 2,
@@ -61,7 +62,7 @@ describe("EmployeeSkillRepository on local D1", () => {
 
     const updated = await repository.save(
       EmployeeSkill.create({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         skillCode: "typescript",
         level: 8,
         years: 4,
@@ -92,7 +93,7 @@ describe("EmployeeSkillRepository", () => {
 
     const saved = await repository.save(
       EmployeeSkill.create({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         skillCode: "TYPESCRIPT",
         level: 3,
         years: 2,
@@ -106,7 +107,7 @@ describe("EmployeeSkillRepository", () => {
       throw saved
     }
 
-    expect(saved.employeeId).toBe(toWorkforceEmployeeId(1))
+    expect(saved.employeeId).toBe(toWorkforceEmployeeId(testEmployeeId(1)))
     expect(saved.skillCode).toBe("TYPESCRIPT")
     expect(saved.level).toBe(3)
   })
@@ -120,7 +121,7 @@ describe("EmployeeSkillRepository", () => {
     const repository = new EmployeeSkillRepository(context)
 
     const deleted = await repository.delete({
-      employeeId: toWorkforceEmployeeId(1),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
       skillCode: "UNKNOWN",
     })
 
@@ -134,7 +135,7 @@ describe("EmployeeSkillRepository", () => {
 
     const saved = await repository.save(
       EmployeeSkill.create({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         skillCode: "TYPESCRIPT",
         level: 3,
         years: 2,
@@ -147,7 +148,7 @@ describe("EmployeeSkillRepository", () => {
     }
 
     const deleted = await repository.delete({
-      employeeId: toWorkforceEmployeeId(1),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
       skillCode: "TYPESCRIPT",
     })
 
@@ -164,7 +165,7 @@ describe("EmployeeSkillRepository", () => {
 
     const saved = await repository.save(
       EmployeeSkill.create({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         skillCode: "TYPESCRIPT",
         level: 3,
         years: 2,
@@ -177,14 +178,14 @@ describe("EmployeeSkillRepository", () => {
     }
 
     const first = await repository.delete({
-      employeeId: toWorkforceEmployeeId(1),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
       skillCode: "TYPESCRIPT",
     })
 
     expect(first).toBe(true)
 
     const second = await repository.delete({
-      employeeId: toWorkforceEmployeeId(1),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
       skillCode: "TYPESCRIPT",
     })
 

@@ -15,7 +15,7 @@ const command = {
   allowedPurposes: null,
   expiresAt: null,
   reason: "閲覧範囲の設定",
-  actorAccountId: "administrator",
+  actorAccountId: "9177c0af-d61f-4e9a-a561-8b2395dfb08d",
 }
 
 function policy(overrides: Record<string, unknown> = {}) {
@@ -120,7 +120,9 @@ describe("System audit disclosure rules", () => {
         allowedFields: ["metadata_json", "actor_account_id"],
       }),
     ).toBe(true)
-    expect(entity.matches({ ...command, actorAccountId: "other-administrator" })).toBe(false)
+    expect(
+      entity.matches({ ...command, actorAccountId: "855d97ca-5b8f-4d12-a417-03bfe2bbf4c2" }),
+    ).toBe(false)
     expect(entity.matches({ ...command, expectedRevision: 1 })).toBe(false)
     expect(entity.matches({ ...command, enabled: false })).toBe(false)
     expect(entity.matches({ ...command, unrelated: true })).toBe(false)

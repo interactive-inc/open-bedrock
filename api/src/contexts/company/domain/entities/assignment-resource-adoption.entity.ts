@@ -1,3 +1,5 @@
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
+import { companyOperationId } from "@/contexts/company/domain/definitions/company-operation-id.definition"
 import { z } from "zod"
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
@@ -124,7 +126,7 @@ export class AssignmentResourceAdoptionEntity {
       const resource = CompanyResourceEntity.create({
         organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
         type: "assignment",
-        id: `assignment-adoption:${digest.toString()}`,
+        id: deterministicCompanyId("assignment-adoption-resource", digest.toString()),
         revision: 1,
         state: original.isVoid === 1 ? "void" : "active",
         effectiveFrom: restoreCalendarDate(original.startsOn),
@@ -154,7 +156,7 @@ export class AssignmentResourceAdoptionEntity {
           isVoid: original.isVoid === 1,
           recordedByActionId: restoreWorkforceId(
             "personnel_action",
-            `assignment-adoption:${this.props.snapshotDigest}`,
+            companyOperationId(`assignment-adoption:${this.props.snapshotDigest}`),
           ),
           recordedAt: this.props.recordedAt,
         },

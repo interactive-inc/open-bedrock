@@ -46,7 +46,7 @@ describe("canonical Company SQL", () => {
          VALUES
            ('01900060-0000-7000-8000-e53d7d4223a9', 'site', 'site:1', 1, 1, 'active', '2026-01-01',
             '{"code":"MAIN","officialName":"Main","legalEntityId":"legal-entity:missing","kind":"physical","timeZone":"UTC","countryCode":"US"}',
-            'command:1', 'account:1', 'create', 1)`,
+            'command:1', 'c0975461-26d2-43a1-86d2-124bd000d9c9', 'create', 1)`,
       ),
     ).toThrow("company_site_legal_entity_not_found")
 
@@ -58,7 +58,7 @@ describe("canonical Company SQL", () => {
          VALUES
            ('01900060-0000-7000-8000-e53d7d4223a9', 'workplace', 'workplace:1', 1, 1, 'active', '2026-01-01',
             '{"code":"OFFICE","officialName":"Office","siteId":"site:missing","kind":"office"}',
-            'command:2', 'account:1', 'create', 1)`,
+            'command:2', 'c0975461-26d2-43a1-86d2-124bd000d9c9', 'create', 1)`,
       ),
     ).toThrow("company_workplace_site_not_found")
   })
@@ -80,7 +80,7 @@ describe("canonical Company SQL", () => {
          VALUES
            ('01900060-0000-7000-8000-e53d7d4223a9', 'organizational-office', 'office:1', 1, 1, 'active', '2026-01-01',
             '{"code":"OFFICE","officialName":"Office","organizationUnitId":"0190005f-0000-7000-8000-ccdf3ed2f2b6","positionId":"position:missing"}',
-            'command:office', 'account:1', 'create', 1)`,
+            'command:office', 'c0975461-26d2-43a1-86d2-124bd000d9c9', 'create', 1)`,
       ),
     ).toThrow("company_governance_organization_reference_invalid")
 
@@ -93,7 +93,7 @@ describe("canonical Company SQL", () => {
            ('01900060-0000-7000-8000-e53d7d4223a9', 'responsibility-assignment', 'assignment:1', 1, 1,
             'active', '2026-01-01',
             '{"responsibilityId":"responsibility:missing","holderType":"collective-body","holderId":"body:missing","authorityScopeId":null,"delegationAllowed":false}',
-            'command:responsibility', 'account:1', 'create', 1)`,
+            'command:responsibility', 'c0975461-26d2-43a1-86d2-124bd000d9c9', 'create', 1)`,
       ),
     ).toThrow("company_responsibility_assignment_reference_not_found")
 
@@ -106,7 +106,7 @@ describe("canonical Company SQL", () => {
            ('01900060-0000-7000-8000-e53d7d4223a9', 'collective-body-membership', 'membership:1', 1, 1,
             'active', '2026-01-01',
             '{"collectiveBodyId":"body:missing","employeeId":"employee:missing","role":"member","voting":true}',
-            'command:membership', 'account:1', 'create', 1)`,
+            'command:membership', 'c0975461-26d2-43a1-86d2-124bd000d9c9', 'create', 1)`,
       ),
     ).toThrow("company_collective_body_membership_reference_not_found")
   })

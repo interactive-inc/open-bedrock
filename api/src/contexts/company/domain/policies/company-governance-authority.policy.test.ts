@@ -1,3 +1,4 @@
+import { testDerivedId } from "@tests/api/support/test-identity-id"
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { CompanyResourceEntity } from "@/contexts/company/domain/entities/company-resource.entity"
 import { CompanyGovernanceAuthorityError } from "@/contexts/company/domain/errors"
@@ -35,22 +36,22 @@ describe("Company governance authority", () => {
       }),
       ...["1", "2", "3"].flatMap((suffix) => [
         resource("person", `person:${suffix}`, { officialName: `Person ${suffix}` }),
-        resource("employee", `employee:${suffix}`, {
+        resource("employee", testDerivedId("employee", suffix), {
           personId: `person:${suffix}`,
           employeeCode: `E${suffix}`,
         }),
-        resource("employment", `employment:${suffix}`, {
-          employeeId: `employee:${suffix}`,
+        resource("employment", testDerivedId("employment", suffix), {
+          employeeId: testDerivedId("employee", suffix),
           status: "ACTIVE",
           employmentType: "FULL_TIME",
         }),
         resource("account-employee-link", `link:${suffix}`, {
-          accountId: `account:${suffix}`,
-          employeeId: `employee:${suffix}`,
+          accountId: testDerivedId("account", suffix),
+          employeeId: testDerivedId("employee", suffix),
         }),
         resource("collective-body-membership", `membership:${suffix}`, {
           collectiveBodyId: "body:committee",
-          employeeId: `employee:${suffix}`,
+          employeeId: testDerivedId("employee", suffix),
           role: suffix === "1" ? "chair" : "member",
           voting: true,
         }),
@@ -59,7 +60,7 @@ describe("Company governance authority", () => {
     const resolution = resolveCompanyGovernanceAuthority({
       asOf,
       organizationRevision: 7,
-      subjectEmployeeId: "employee:1",
+      subjectEmployeeId: testDerivedId("employee", "1"),
       criteria: [
         {
           responsibilityCode: "APPROVE",
@@ -67,7 +68,11 @@ describe("Company governance authority", () => {
         },
       ],
       resources,
-      activeAccountIds: new Set(["account:1", "account:2", "account:3"]),
+      activeAccountIds: new Set([
+        testDerivedId("account", "1"),
+        testDerivedId("account", "2"),
+        testDerivedId("account", "3"),
+      ]),
     })
 
     expect(resolution).not.toBeInstanceOf(CompanyGovernanceAuthorityError)
@@ -79,11 +84,15 @@ describe("Company governance authority", () => {
       organizationRevision: 7,
     })
     expect(resolution.candidates.map((candidate) => candidate.accountId)).toEqual([
-      "account:2",
-      "account:3",
+      testDerivedId("account", "2"),
+      testDerivedId("account", "3"),
     ])
     expect(resolution.exclusions).toEqual([
-      { employeeId: "employee:1", accountId: "account:1", reason: "subject" },
+      {
+        employeeId: testDerivedId("employee", "1"),
+        accountId: testDerivedId("account", "1"),
+        reason: "subject",
+      },
     ])
     expect(resolution.candidates[0]?.qualifications[0]?.collectiveDecision).toEqual({
       collectiveBodyId: "body:committee",
@@ -104,15 +113,18 @@ describe("Company governance authority", () => {
         scopeType: "region",
         regionCode: "EAST",
       }),
-      resource("employee", "employee:1", { personId: "person:1", employeeCode: "E1" }),
+      resource("employee", "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1", {
+        personId: "person:1",
+        employeeCode: "E1",
+      }),
       resource("employment", "employment:1", {
-        employeeId: "employee:1",
+        employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
         status: "ACTIVE",
         employmentType: "FULL_TIME",
       }),
       resource("account-employee-link", "link:1", {
-        accountId: "account:1",
-        employeeId: "employee:1",
+        accountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
+        employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
       }),
     ]
     const outOfScope = resolveCompanyGovernanceAuthority({
@@ -130,12 +142,12 @@ describe("Company governance authority", () => {
         resource("responsibility-assignment", "assignment:1", {
           responsibilityId: "responsibility:approve",
           holderType: "employee",
-          holderId: "employee:1",
+          holderId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
           authorityScopeId: "scope:region",
           delegationAllowed: false,
         }),
       ],
-      activeAccountIds: new Set(["account:1"]),
+      activeAccountIds: new Set(["c0975461-26d2-43a1-86d2-124bd000d9c9"]),
     })
     expect(outOfScope).toMatchObject({ candidates: [] })
 
@@ -155,7 +167,7 @@ describe("Company governance authority", () => {
         }),
         resource("collective-body-membership", "membership:1", {
           collectiveBodyId: "body:1",
-          employeeId: "employee:1",
+          employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
           role: "chair",
           voting: true,
         }),
@@ -167,7 +179,7 @@ describe("Company governance authority", () => {
           delegationAllowed: false,
         }),
       ],
-      activeAccountIds: new Set(["account:1"]),
+      activeAccountIds: new Set(["c0975461-26d2-43a1-86d2-124bd000d9c9"]),
     })
     expect(invalidBody).toBeInstanceOf(CompanyGovernanceAuthorityError)
   })
@@ -195,7 +207,7 @@ describe("Company governance authority", () => {
         resource("responsibility-assignment", "assignment:1", {
           responsibilityId: "responsibility:approve",
           holderType: "employee",
-          holderId: "employee:1",
+          holderId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
           authorityScopeId: "scope:legal-entity",
           delegationAllowed: false,
         }),
@@ -214,22 +226,25 @@ test.each(["TERMINATED", "ACTIVE", "ON_LEAVE"] as const)(
       organizationRevision: 1,
       subjectEmployeeId: null,
       criteria: [{ responsibilityCode: "APPROVE", scope: null }],
-      activeAccountIds: new Set(["account:1"]),
+      activeAccountIds: new Set(["c0975461-26d2-43a1-86d2-124bd000d9c9"]),
       resources: [
-        resource("employee", "employee:1", { personId: "person:1", employeeCode: "E1" }),
+        resource("employee", "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1", {
+          personId: "person:1",
+          employeeCode: "E1",
+        }),
         resource("employment", "employment:previous", {
-          employeeId: "employee:1",
+          employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
           status: previousStatus,
           employmentType: "FULL_TIME",
         }),
-        resource("employment", "employment:current", {
-          employeeId: "employee:1",
+        resource("employment", "1164f8d0-bc3d-4177-99ff-a22cf725c991", {
+          employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
           status: "ACTIVE",
           employmentType: "PART_TIME",
         }),
         resource("account-employee-link", "link:1", {
-          employeeId: "employee:1",
-          accountId: "account:1",
+          employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
+          accountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
         }),
         resource("responsibility", "responsibility:approve", {
           code: "APPROVE",
@@ -238,7 +253,7 @@ test.each(["TERMINATED", "ACTIVE", "ON_LEAVE"] as const)(
         resource("responsibility-assignment", "appointment:1", {
           responsibilityId: "responsibility:approve",
           holderType: "employee",
-          holderId: "employee:1",
+          holderId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
           authorityScopeId: null,
           delegationAllowed: false,
         }),
@@ -251,7 +266,7 @@ test.each(["TERMINATED", "ACTIVE", "ON_LEAVE"] as const)(
     if (resolved instanceof Error) throw resolved
     expect(resolved.candidates).toHaveLength(1)
     expect(resolved.candidates[0]?.qualifications[0]).toMatchObject({
-      employmentId: "employment:current",
+      employmentId: "1164f8d0-bc3d-4177-99ff-a22cf725c991",
     })
   },
 )
@@ -264,17 +279,20 @@ test.each(["ACTIVE", "ON_LEAVE", "TERMINATED"])(
       organizationRevision: 1,
       subjectEmployeeId: null,
       criteria: [{ responsibilityCode: "APPROVE", scope: null }],
-      activeAccountIds: new Set(["account:1"]),
+      activeAccountIds: new Set(["c0975461-26d2-43a1-86d2-124bd000d9c9"]),
       resources: [
-        resource("employee", "employee:1", { personId: "person:1", employeeCode: "E1" }),
+        resource("employee", "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1", {
+          personId: "person:1",
+          employeeCode: "E1",
+        }),
         resource("employment", "employment:1", {
-          employeeId: "employee:1",
+          employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
           status,
           employmentType: "FULL_TIME",
         }),
         resource("account-employee-link", "link:1", {
-          employeeId: "employee:1",
-          accountId: "account:1",
+          employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
+          accountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
         }),
         resource("responsibility", "responsibility:approve", {
           code: "APPROVE",
@@ -283,7 +301,7 @@ test.each(["ACTIVE", "ON_LEAVE", "TERMINATED"])(
         resource("responsibility-assignment", "appointment:1", {
           responsibilityId: "responsibility:approve",
           holderType: "employee",
-          holderId: "employee:1",
+          holderId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
           authorityScopeId: null,
           delegationAllowed: false,
         }),
@@ -336,7 +354,7 @@ test.each(["identity", "period-id", "ambiguous"])(
           },
         },
       ],
-      activeAccountIds: new Set(["account:1"]),
+      activeAccountIds: new Set(["c0975461-26d2-43a1-86d2-124bd000d9c9"]),
       resources: [
         resource("organization-unit", "period:1", unit),
         ...(kind === "ambiguous" ? [resource("organization-unit", "period:2", unit)] : []),
@@ -351,25 +369,33 @@ test.each(["identity", "period-id", "ambiguous"])(
         resource("responsibility-assignment", "responsibility-assignment:1", {
           responsibilityId: "responsibility:1",
           holderType: "employee",
-          holderId: "employee:1",
+          holderId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
           authorityScopeId: "scope:1",
           delegationAllowed: false,
         }),
-        resource("employee", "employee:1", { personId: "person:1", employeeCode: "E1" }),
+        resource("employee", "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1", {
+          personId: "person:1",
+          employeeCode: "E1",
+        }),
         resource("employment", "employment:1", {
-          employeeId: "employee:1",
+          employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
           status: "ACTIVE",
           employmentType: "FULL_TIME",
         }),
         resource("account-employee-link", "link:1", {
-          employeeId: "employee:1",
-          accountId: "account:1",
+          employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
+          accountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
         }),
       ],
     })
     if (kind === "identity")
       expect(resolved).toMatchObject({
-        candidates: [{ employeeId: "employee:1", accountId: "account:1" }],
+        candidates: [
+          {
+            employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
+            accountId: "c0975461-26d2-43a1-86d2-124bd000d9c9",
+          },
+        ],
       })
     else
       expect(resolved).toMatchObject({

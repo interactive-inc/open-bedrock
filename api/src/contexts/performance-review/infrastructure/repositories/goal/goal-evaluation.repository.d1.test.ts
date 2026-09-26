@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { GoalEvaluation } from "@/contexts/performance-review/domain/entities/goal-evaluation.entity"
 import { GoalEvaluationRepository } from "@/contexts/performance-review/infrastructure/repositories/goal/goal-evaluation.repository"
@@ -31,7 +32,7 @@ describe("GoalEvaluationRepository", () => {
     await seedD1(db, "performance_goals", [
       {
         id: "01900030-0000-7000-8000-000000000001",
-        employee_id: "2",
+        employee_id: testEmployeeId(2),
         period: "2026-H1",
         title: "テスト目標",
         kpi: null,
@@ -45,7 +46,7 @@ describe("GoalEvaluationRepository", () => {
     const created = await repository.create(
       GoalEvaluation.create({
         goalId: "01900030-0000-7000-8000-000000000001",
-        evaluatorId: toWorkforceEmployeeId(2),
+        evaluatorId: toWorkforceEmployeeId(testEmployeeId(2)),
         kind: "self",
         score: 80,
         comment: "順調",

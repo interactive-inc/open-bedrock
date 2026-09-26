@@ -17,8 +17,8 @@ function resource(overrides: Partial<CompanyResourceProps> = {}) {
     effectiveFrom: restoreCalendarDate("2020-01-01"),
     effectiveTo: null,
     attributes: {
-      employeeId: "employee:1",
-      employmentId: "employment:1",
+      employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
+      employmentId: "4b97a400-e084-4aa7-9ec9-c3344438b6c8",
       organizationUnitId: "0190005f-0000-7000-8000-2fcb85764fe2",
       assignmentType: "PRIMARY",
       positionTitle: "Staff",
@@ -33,8 +33,8 @@ function period(overrides: Partial<OrgAssignmentPeriod> = {}): OrgAssignmentPeri
   return {
     periodId: restoreWorkforceId("period", "legacy:1"),
     revision: 1,
-    employeeId: restoreWorkforceId("employee", "employee:1"),
-    employmentId: restoreWorkforceId("employment", "employment:1"),
+    employeeId: restoreWorkforceId("employee", "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1"),
+    employmentId: restoreWorkforceId("employment", "4b97a400-e084-4aa7-9ec9-c3344438b6c8"),
     organizationUnitId: restoreWorkforceId(
       "organization_unit",
       "0190005f-0000-7000-8000-2fcb85764fe2",
@@ -68,7 +68,7 @@ test("所属内容が同じ隣接期間を統合し、既存IDと全改訂を保
 test("過去の所属内容の違いを、現在の一致で上書きしない", () => {
   const current = resource({ revision: 2, effectiveFrom: restoreCalendarDate("2025-01-01") })
   const changes: ReadonlyArray<CompanyResourceProps["attributes"]> = [
-    { employmentId: "employment:2" },
+    { employmentId: "3e6eb832-d676-4481-b703-1265880c377e" },
     { organizationUnitId: "0190005f-0000-7000-8000-c81109c4de10" },
     { assignmentType: "CONCURRENT" },
     { positionTitle: "Manager" },

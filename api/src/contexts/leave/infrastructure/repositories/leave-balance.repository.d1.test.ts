@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { LeaveBalanceRepository } from "@/contexts/leave/infrastructure/repositories/leave-balance.repository"
 import { seedD1 } from "@tests/api/support/seed-d1"
@@ -35,7 +36,7 @@ describe("LeaveBalanceRepository", () => {
     await seedD1(db, "leave_balances", [
       {
         id: crypto.randomUUID(),
-        employee_id: "1",
+        employee_id: testEmployeeId(1),
         fiscal_year: "2026",
         leave_type: "annual",
         granted_days: 20,
@@ -47,7 +48,7 @@ describe("LeaveBalanceRepository", () => {
     const repository = new LeaveBalanceRepository(context)
 
     const found = await repository.findByKey({
-      employeeId: toWorkforceEmployeeId(1),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
       fiscalYear: "2026",
       leaveType: "annual",
     })
@@ -71,7 +72,7 @@ describe("LeaveBalanceRepository", () => {
     await seedD1(db, "leave_balances", [
       {
         id: crypto.randomUUID(),
-        employee_id: "1",
+        employee_id: testEmployeeId(1),
         fiscal_year: "2026",
         leave_type: "annual",
         granted_days: 20,
@@ -83,7 +84,7 @@ describe("LeaveBalanceRepository", () => {
     const repository = new LeaveBalanceRepository(context)
 
     const outcome = await repository.consumeDays({
-      employeeId: toWorkforceEmployeeId(1),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
       leaveType: "annual",
       fiscalYear: "2026",
       days: 2,
@@ -92,7 +93,7 @@ describe("LeaveBalanceRepository", () => {
     expect(outcome).toBe("consumed")
 
     const after = await repository.findByKey({
-      employeeId: toWorkforceEmployeeId(1),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
       fiscalYear: "2026",
       leaveType: "annual",
     })
@@ -114,7 +115,7 @@ describe("LeaveBalanceRepository", () => {
     await seedD1(db, "leave_balances", [
       {
         id: crypto.randomUUID(),
-        employee_id: "1",
+        employee_id: testEmployeeId(1),
         fiscal_year: "2026",
         leave_type: "annual",
         granted_days: 20,
@@ -126,7 +127,7 @@ describe("LeaveBalanceRepository", () => {
     const repository = new LeaveBalanceRepository(context)
 
     const outcome = await repository.consumeDays({
-      employeeId: toWorkforceEmployeeId(1),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
       leaveType: "annual",
       fiscalYear: "2026",
       days: 3,
@@ -136,7 +137,7 @@ describe("LeaveBalanceRepository", () => {
 
     // Balance should remain unchanged
     const after = await repository.findByKey({
-      employeeId: toWorkforceEmployeeId(1),
+      employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
       fiscalYear: "2026",
       leaveType: "annual",
     })

@@ -131,13 +131,15 @@ const row = database
        (SELECT count(*) FROM company_employees) AS employee_count,
        (SELECT count(*) FROM company_employments) AS employment_count,
        (SELECT count(*) FROM company_employment_period_versions
-        WHERE period_id LIKE 'employment:%') AS normalized_employment_period_count,
+        WHERE period_id IN (SELECT id FROM company_employments)) AS normalized_employment_period_count,
        (SELECT count(*) FROM company_employee_status_period_versions
-        WHERE employment_period_id LIKE 'employment:%') AS normalized_status_count,
+        WHERE employment_period_id IN (SELECT period_id FROM company_employment_period_versions)) AS normalized_status_count,
        (SELECT count(*) FROM company_organization_assignment_period_versions
-        WHERE employee_id IN ('1', '2') AND employment_id LIKE 'employment:%') AS assignment_count,
+        WHERE employee_id IN (SELECT id FROM company_employees WHERE legacy_id IN ('1', '2'))
+          AND employment_id IN (SELECT id FROM company_employments)) AS assignment_count,
        (SELECT count(*) FROM company_organization_responsibility_period_versions
-        WHERE employee_id IN ('1', '2') AND employment_id LIKE 'employment:%') AS responsibility_count,
+        WHERE employee_id IN (SELECT id FROM company_employees WHERE legacy_id IN ('1', '2'))
+          AND employment_id IN (SELECT id FROM company_employments)) AS responsibility_count,
        (SELECT count(*) FROM company_organization_change_operations
         WHERE recorded_at >= 100000000000) AS millisecond_operation_count,
        (SELECT count(*) FROM company_organization_unit_period_versions

@@ -1,3 +1,4 @@
+import { companyOperationId } from "@/contexts/company/domain/definitions/company-operation-id.definition"
 import type { OrganizationResourceAdoptionEntity } from "@/contexts/company/domain/entities/organization-resource-adoption.entity"
 import { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
 import {
@@ -141,9 +142,11 @@ export class OrganizationResourceAdoptionRepository {
       const confirmed = latest[0]?.toOrganizationUnitPeriod()
       if (confirmed === null || confirmed === undefined)
         return this.unavailable("missing confirmed period")
-      const operationId = restoreWorkforceId("personnel_action", `org-confirm:${fingerprint}`)
+      const operationKey = `org-confirm:${fingerprint}`
+      const operationId = restoreWorkforceId("personnel_action", companyOperationId(operationKey))
       const correction = OrganizationWorkforceChangeEntity.restore({
         operationId,
+        operationKey,
         expectedRevision: snapshot.props.value.lifecycleRevision,
         asOf: restoreCalendarDate(command.props.observedOn),
         recordedAt: command.props.recordedAt,

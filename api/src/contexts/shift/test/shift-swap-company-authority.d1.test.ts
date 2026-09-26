@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, spyOn, test } from "bun:test"
 import { z } from "zod"
@@ -66,7 +67,7 @@ async function createTestDb(name: string, cycle = false): Promise<D1Database> {
   await seedD1(db, "shift_assignments", [
     {
       id: "01900024-0000-7000-8000-000000000001",
-      employee_id: "5",
+      employee_id: testEmployeeId(5),
       pattern_id: "01900023-0000-7000-8000-000000000001",
       date: "2026-06-01",
       note: null,
@@ -74,7 +75,7 @@ async function createTestDb(name: string, cycle = false): Promise<D1Database> {
     },
     {
       id: "01900024-0000-7000-8000-000000000002",
-      employee_id: "10",
+      employee_id: testEmployeeId(10),
       pattern_id: "01900023-0000-7000-8000-000000000002",
       date: "2026-06-01",
       note: null,
@@ -84,8 +85,8 @@ async function createTestDb(name: string, cycle = false): Promise<D1Database> {
   await seedD1(db, "shift_swap_requests", [
     {
       id: swapRequestId,
-      requester_employee_id: "5",
-      target_employee_id: "10",
+      requester_employee_id: testEmployeeId(5),
+      target_employee_id: testEmployeeId(10),
       date: "2026-06-01",
       note: null,
       status: "pending",
@@ -124,8 +125,8 @@ async function persisted(db: D1Database) {
 const untouched = {
   request: "pending",
   assignments: [
-    { employee_id: "5", pattern_id: "01900023-0000-7000-8000-000000000001" },
-    { employee_id: "10", pattern_id: "01900023-0000-7000-8000-000000000002" },
+    { employee_id: testEmployeeId(5), pattern_id: "01900023-0000-7000-8000-000000000001" },
+    { employee_id: testEmployeeId(10), pattern_id: "01900023-0000-7000-8000-000000000002" },
   ],
 }
 
@@ -139,8 +140,8 @@ describe("shift swap approval composes technical permission with Company authori
     expect(await persisted(db)).toEqual({
       request: "approved",
       assignments: [
-        { employee_id: "5", pattern_id: "01900023-0000-7000-8000-000000000002" },
-        { employee_id: "10", pattern_id: "01900023-0000-7000-8000-000000000001" },
+        { employee_id: testEmployeeId(5), pattern_id: "01900023-0000-7000-8000-000000000002" },
+        { employee_id: testEmployeeId(10), pattern_id: "01900023-0000-7000-8000-000000000001" },
       ],
     })
   })

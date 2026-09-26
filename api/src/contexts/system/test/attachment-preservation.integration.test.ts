@@ -1,3 +1,4 @@
+import { testDerivedId } from "@tests/api/support/test-identity-id"
 import { AttachmentPreservationEntity } from "@system/domain/entities/attachment-preservation.entity"
 import { expect, spyOn, test } from "bun:test"
 import { drizzle } from "drizzle-orm/d1"
@@ -31,7 +32,10 @@ async function fixture() {
   const db = createSystemAttachmentTestDatabase()
   const database = drizzle(db)
   const clock = { now: at }
-  for (const id of ["admin", "member"]) {
+  for (const id of [
+    "282b84eb-787d-4655-a88b-c072960fc970",
+    "40aa61aa-631f-473e-9cff-0db7c56ad714",
+  ]) {
     await db
       .prepare(
         "INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES (?1, 'active', 0, ?2, ?2)",
@@ -42,7 +46,7 @@ async function fixture() {
       .prepare(
         "INSERT INTO system_principals (id, account_id, kind, name, revision, created_at, updated_at) VALUES (?1, ?2, 'human', 'Test principal', 1, ?3, ?3)",
       )
-      .bind(`principal:${id}`, id, old.getTime())
+      .bind(testDerivedId("principal", id), id, old.getTime())
       .run()
   }
   await db
@@ -58,7 +62,7 @@ async function fixture() {
     .run()
   await db
     .prepare(
-      "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('09ef108e-50f8-4909-8969-532bd57c6cc9', 'admin', 'be72ba18-7abe-47f1-8371-b41cff620297', NULL, NULL, ?1)",
+      "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('09ef108e-50f8-4909-8969-532bd57c6cc9', '282b84eb-787d-4655-a88b-c072960fc970', 'be72ba18-7abe-47f1-8371-b41cff620297', NULL, NULL, ?1)",
     )
     .bind(old.getTime())
     .run()
@@ -88,14 +92,14 @@ async function fixture() {
       ATTACHMENT_KEKS: createSystemAttachmentTestKekEnvironment(1),
     },
   }).run({
-    ownerAccountId: "member",
+    ownerAccountId: "40aa61aa-631f-473e-9cff-0db7c56ad714",
     fileName: "evidence.pdf",
     contentType: "application/pdf",
     content: new TextEncoder().encode("%PDF-1.7 evidence"),
     now: old,
   })
   if (attachment instanceof Error) throw attachment
-  const headers = async (id = "admin") => {
+  const headers = async (id = "282b84eb-787d-4655-a88b-c072960fc970") => {
     const issuance = await applications.issue.execute({
       accountId: zAccountId.parse(id),
       tokenVersion: 0,
@@ -144,7 +148,7 @@ async function fixture() {
     endpoint,
     command,
     attachments: new AttachmentAdapter({ var: { database } }),
-    create: async (body: unknown, actor = "admin") =>
+    create: async (body: unknown, actor = "282b84eb-787d-4655-a88b-c072960fc970") =>
       request(endpoint, {
         method: "POST",
         headers: await headers(actor),
@@ -239,7 +243,7 @@ test("登録・解除の再送は同じ内容だけを受け付け、監査を�
 
 test("人・権限・再認証・内容digest・期間を検査する", async () => {
   const c = await fixture()
-  expect((await c.create(c.command(), "member")).status).toBe(403)
+  expect((await c.create(c.command(), "40aa61aa-631f-473e-9cff-0db7c56ad714")).status).toBe(403)
   const headers = await c.headers()
   expect(
     (
@@ -256,7 +260,7 @@ test("人・権限・再認証・内容digest・期間を検査する", async ()
   ).toBe(400)
   await c.db
     .prepare(
-      "UPDATE system_principals SET kind = 'agent', revision = revision + 1 WHERE account_id = 'admin'",
+      "UPDATE system_principals SET kind = 'agent', revision = revision + 1 WHERE account_id = '282b84eb-787d-4655-a88b-c072960fc970'",
     )
     .run()
   expect((await c.create(c.command())).status).toBe(401)
@@ -534,7 +538,7 @@ test("保全と監査を外側の保存と一緒に確定し、後続失敗で�
   const entity = AttachmentPreservationEntity.create({
     ...f.command(),
     attachmentId: f.attachment.id,
-    actorAccountId: "admin",
+    actorAccountId: "282b84eb-787d-4655-a88b-c072960fc970",
     createdAt: at.toISOString(),
     auditEventId: crypto.randomUUID(),
     revision: 1,

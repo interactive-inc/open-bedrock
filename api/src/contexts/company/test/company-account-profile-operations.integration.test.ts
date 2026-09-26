@@ -11,7 +11,7 @@ import { drizzle } from "drizzle-orm/d1"
 test("Account の表示名を作成・改名・更新し、保存値と正本の表示名、従業員との紐付けを読む", async () => {
   const f = await createCompanyAssignmentResourceTestContext()
   const database = drizzle(f.database)
-  const accountId = zAccountId.parse("account-profile-operation")
+  const accountId = zAccountId.parse("65205368-2ec8-4da3-82ec-42a667b80eee")
   await f.database
     .prepare(
       `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
@@ -65,7 +65,7 @@ test("Account の表示名を作成・改名・更新し、保存値と正本の
   expect(
     await readCompanyAccountProfile({
       database,
-      accountId: zAccountId.parse("account-profile-missing"),
+      accountId: zAccountId.parse("5d9189de-afda-44ce-a48c-eefa47fb97c2"),
     }),
   ).toBeUndefined()
   expect(await hasCompanyAccountEmployeeLink({ database, accountId })).toBe(false)

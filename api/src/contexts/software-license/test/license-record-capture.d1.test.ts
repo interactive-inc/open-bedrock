@@ -1,3 +1,4 @@
+import { testDerivedId } from "@tests/api/support/test-identity-id"
 import { ListLicenseRecordInventoryAdapter } from "@/contexts/software-license/infrastructure/adapters/list-license-record-inventory.adapter"
 import { afterAll, beforeAll, expect, setDefaultTimeout, test } from "bun:test"
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
@@ -27,7 +28,7 @@ test("source capture retains license and usage history and rejects changed sourc
   const adapter = new CaptureLicenseRecordAdapter({
     env: { DB: f.database, COMPANY_TIME_ZONE: "Asia/Tokyo" },
     var: {
-      userId: zAccountId.parse("account:manager"),
+      userId: zAccountId.parse("31a1342c-776f-4a19-8ca8-8ad48aa33449"),
       accountTokenVersion: 0,
       permissions: new Set(),
       role: "",
@@ -40,7 +41,11 @@ test("source capture retains license and usage history and rejects changed sourc
     (
       await f.request(`/software-licenses/${f.license.id}/assignments`, {
         method: "POST",
-        body: { id: assignmentId, employee_id: "employee:member", reason: "Work" },
+        body: {
+          id: assignmentId,
+          employee_id: testDerivedId("employee", "member"),
+          reason: "Work",
+        },
       })
     ).status,
   ).toBe(201)
@@ -118,7 +123,7 @@ test("license inventory includes all statuses and rejects additions before prese
   const context = {
     env: { DB: f.database, COMPANY_TIME_ZONE: "Asia/Tokyo" },
     var: {
-      userId: zAccountId.parse("account:manager"),
+      userId: zAccountId.parse("31a1342c-776f-4a19-8ca8-8ad48aa33449"),
       accountTokenVersion: 0,
       permissions: new Set<string>(),
       role: "",
@@ -172,7 +177,7 @@ test("source revalidation preserves the approved capture time and rejects mismat
   const context = {
     env: { DB: f.database, COMPANY_TIME_ZONE: "Asia/Tokyo" },
     var: {
-      userId: zAccountId.parse("account:manager"),
+      userId: zAccountId.parse("31a1342c-776f-4a19-8ca8-8ad48aa33449"),
       accountTokenVersion: 0,
       permissions: new Set<string>(),
       role: "",

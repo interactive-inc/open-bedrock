@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import type { EmployeeId } from "@/contexts/company/domain/definitions/workforce-id.definition"
 import { FamilyCareLeave } from "@/contexts/family-care-leave/domain/entities/family-care-leave.entity"
 import { FamilyCareLeaveRepository } from "@/contexts/family-care-leave/infrastructure/repositories/family-care-leave.repository"
@@ -65,7 +66,7 @@ describe("FamilyCareLeaveRepository", () => {
 
       const created = await repository.create(
         buildLeave({
-          employeeId: toWorkforceEmployeeId(1),
+          employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
           startDate: "2026-02-01",
           endDate: "2026-02-05",
         }),
@@ -92,7 +93,7 @@ describe("FamilyCareLeaveRepository", () => {
 
       const first = await repository.create(
         buildLeave({
-          employeeId: toWorkforceEmployeeId(1),
+          employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
           startDate: "2026-02-01",
           endDate: "2026-02-05",
         }),
@@ -104,7 +105,7 @@ describe("FamilyCareLeaveRepository", () => {
 
       const second = await repository.create(
         buildLeave({
-          employeeId: toWorkforceEmployeeId(1),
+          employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
           startDate: "2026-02-03",
           endDate: "2026-02-07",
         }),
@@ -123,7 +124,7 @@ describe("FamilyCareLeaveRepository", () => {
 
       const first = await repository.create(
         buildLeave({
-          employeeId: toWorkforceEmployeeId(1),
+          employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
           startDate: "2026-02-01",
           endDate: "2026-02-05",
         }),
@@ -135,7 +136,7 @@ describe("FamilyCareLeaveRepository", () => {
 
       const second = await repository.create(
         buildLeave({
-          employeeId: toWorkforceEmployeeId(2),
+          employeeId: toWorkforceEmployeeId(testEmployeeId(2)),
           startDate: "2026-02-01",
           endDate: "2026-02-05",
         }),
@@ -155,7 +156,7 @@ describe("FamilyCareLeaveRepository", () => {
       // status が requested 以外（approved）の行はドメインで作れないため直接挿入する。
       await context.var.database.insert(familyCareLeaves).values({
         id: "00000000-0000-4000-8000-0000000000aa",
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         leaveKind: "family_care",
         startDate: "2026-02-01",
         endDate: "2026-02-05",
@@ -166,7 +167,7 @@ describe("FamilyCareLeaveRepository", () => {
 
       const created = await repository.create(
         buildLeave({
-          employeeId: toWorkforceEmployeeId(1),
+          employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
           startDate: "2026-02-03",
           endDate: "2026-02-07",
         }),
@@ -185,7 +186,7 @@ describe("FamilyCareLeaveRepository", () => {
 
       const first = await repository.create(
         buildLeave({
-          employeeId: toWorkforceEmployeeId(1),
+          employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
           startDate: "2026-02-01",
           endDate: "2026-02-03",
         }),
@@ -197,7 +198,7 @@ describe("FamilyCareLeaveRepository", () => {
 
       const second = await repository.create(
         buildLeave({
-          employeeId: toWorkforceEmployeeId(1),
+          employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
           startDate: "2026-02-03",
           endDate: "2026-02-05",
         }),
@@ -218,7 +219,7 @@ describe("FamilyCareLeaveRepository", () => {
 
       const a = await repository.create(
         buildLeave({
-          employeeId: toWorkforceEmployeeId(1),
+          employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
           startDate: "2026-02-01",
           endDate: "2026-02-05",
         }),
@@ -226,7 +227,7 @@ describe("FamilyCareLeaveRepository", () => {
 
       const b = await repository.create(
         buildLeave({
-          employeeId: toWorkforceEmployeeId(1),
+          employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
           startDate: "2026-02-10",
           endDate: "2026-02-15",
         }),
@@ -263,7 +264,7 @@ describe("FamilyCareLeaveRepository", () => {
 
       const leave = await repository.create(
         buildLeave({
-          employeeId: toWorkforceEmployeeId(1),
+          employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
           startDate: "2026-02-01",
           endDate: "2026-02-05",
         }),
@@ -316,7 +317,7 @@ describe("FamilyCareLeaveRepository", () => {
       // status が requested 以外（approved）の行はドメインで作れないため直接挿入する。
       await context.var.database.insert(familyCareLeaves).values({
         id: "00000000-0000-4000-8000-0000000000bb",
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         leaveKind: "family_care",
         startDate: "2026-02-01",
         endDate: "2026-02-05",
@@ -327,7 +328,7 @@ describe("FamilyCareLeaveRepository", () => {
 
       const target = new FamilyCareLeave({
         id: "00000000-0000-4000-8000-0000000000bb",
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         leaveKind: "family_care",
         startDate: "2026-03-01",
         endDate: "2026-03-05",

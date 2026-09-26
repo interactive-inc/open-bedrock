@@ -1,6 +1,9 @@
 import { expect, test } from "bun:test"
 import { z } from "zod"
-import { createEmployeeAdoptionFixture } from "@/contexts/company/test/employee-resource-adoption.test-support"
+import {
+  adoptionEmployeeId,
+  createEmployeeAdoptionFixture,
+} from "@/contexts/company/test/employee-resource-adoption.test-support"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 import { createTestToken } from "@tests/api/support/create-test-token"
@@ -19,7 +22,7 @@ test("所属移行の実APIは認証・Company管理資格と移行前提を検�
       now: f.clock.now.toISOString(),
       token,
       method: "GET",
-      path: "/company/assignment-resource-adoptions?employee_id=employee:adoption",
+      path: `/company/assignment-resource-adoptions?employee_id=${adoptionEmployeeId}`,
     })
   expect((await get(null)).status).toBe(401)
   expect((await get(member)).status).toBe(403)
@@ -39,7 +42,7 @@ test("所属移行の実APIは認証・Company管理資格と移行前提を検�
       headers: { "idempotency-key": "root-assignment-adoption" },
       body: {
         ...preview,
-        employeeId: "employee:adoption",
+        employeeId: adoptionEmployeeId,
         reason: "Confirm original assignment history",
       },
     })

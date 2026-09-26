@@ -10,8 +10,10 @@ describe("findOidcAccessToken", () => {
   test("issuerと有効期限が一致するtokenだけを返す", async () => {
     const fixture = new SystemSessionTestContext()
     const issuedAt = new Date("2026-01-01T00:00:00.000Z")
-    const accountId = zAccountId.parse("account-1")
-    fixture.sqlite.exec("INSERT INTO system_accounts VALUES ('account-1', 'active', 0, NULL, 0, 0)")
+    const accountId = zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e")
+    fixture.sqlite.exec(
+      "INSERT INTO system_accounts (id, status, token_version, closed_at, created_at, updated_at) VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'active', 0, NULL, 0, 0)",
+    )
     const database = drizzle(fixture.context.env.DB, { schema: systemCoreSchema })
     const issued = await new CreateOidcAccessTokenAdapter({
       var: { database, now: () => issuedAt },

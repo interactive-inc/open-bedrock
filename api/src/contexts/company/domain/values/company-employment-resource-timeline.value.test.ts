@@ -20,7 +20,11 @@ function resource(
     state: "active",
     effectiveFrom: restoreCalendarDate(startsOn),
     effectiveTo: null,
-    attributes: { employeeId: "employee:1", employmentType: "FULL_TIME", status: "ACTIVE" },
+    attributes: {
+      employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
+      employmentType: "FULL_TIME",
+      status: "ACTIVE",
+    },
     ...overrides,
   })
   if (entity instanceof Error) throw entity
@@ -31,7 +35,11 @@ describe("版付き雇用と業務の期間履歴", () => {
   test("訂正された旧形式を履歴へ残し、同じ発効日の訂正版だけを現在の期間へ使う", () => {
     const old = {
       ...resource(1, "2026-01-01").toProps(),
-      attributes: { employeeId: "employee:1", employmentType: "FULL_TIME", status: "RETIRED" },
+      attributes: {
+        employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
+        employmentType: "FULL_TIME",
+        status: "RETIRED",
+      },
     }
     expect(CompanyEmploymentResourceTimelineValue.create([old])).toBeInstanceOf(Error)
     expect(
@@ -65,15 +73,23 @@ describe("版付き雇用と業務の期間履歴", () => {
     const timeline = CompanyEmploymentResourceTimelineValue.create([
       resource(1, "2026-01-01"),
       resource(2, "2026-07-01", {
-        attributes: { employeeId: "employee:1", employmentType: "FULL_TIME", status: "ON_LEAVE" },
+        attributes: {
+          employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
+          employmentType: "FULL_TIME",
+          status: "ON_LEAVE",
+        },
       }),
       resource(3, "2026-09-01"),
       resource(4, "2026-10-01", {
-        attributes: { employeeId: "employee:1", employmentType: "FULL_TIME", status: "TERMINATED" },
+        attributes: {
+          employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
+          employmentType: "FULL_TIME",
+          status: "TERMINATED",
+        },
       }),
     ])
     expect(timeline).toMatchObject({
-      employeeId: "employee:1",
+      employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
       startsOn: "2026-01-01",
       endsOn: "2026-10-01",
       periods: [
@@ -130,7 +146,7 @@ describe("版付き雇用と業務の期間履歴", () => {
         resource(1, "2026-01-01"),
         resource(2, "2026-04-01", {
           attributes: {
-            employeeId: "employee:1",
+            employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
             employmentType: "FULL_TIME",
             status: "TERMINATED",
           },
@@ -145,7 +161,11 @@ describe("版付き雇用と業務の期間履歴", () => {
       resource(2, "2026-01-01", { organizationId: "01900060-0000-7000-8000-12268fccf2cc" }),
       resource(2, "2026-01-01", { id: "employment:other" }),
       resource(2, "2026-01-01", {
-        attributes: { employeeId: "employee:other", employmentType: "FULL_TIME", status: "ACTIVE" },
+        attributes: {
+          employeeId: "1953cffc-119b-42c7-bbab-82c56499e4ac",
+          employmentType: "FULL_TIME",
+          status: "ACTIVE",
+        },
       }),
     ])
       expect(
@@ -162,7 +182,7 @@ describe("版付き雇用と業務の期間履歴", () => {
     ).toMatchObject({ code: "invalid_revision" })
     expect(() =>
       resource(1, "2026-01-01", {
-        attributes: { employeeId: "employee:1", status: "ACTIVE" },
+        attributes: { employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1", status: "ACTIVE" },
       }),
     ).toThrow("invalid_resource")
   })
@@ -172,7 +192,11 @@ describe("版付き雇用と業務の期間履歴", () => {
       CompanyEmploymentResourceTimelineValue.create([
         resource(1, "2026-01-01"),
         resource(2, "2026-04-01", {
-          attributes: { employeeId: "employee:1", employmentType: "PART_TIME", status: "ACTIVE" },
+          attributes: {
+            employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
+            employmentType: "PART_TIME",
+            status: "ACTIVE",
+          },
         }),
       ]),
     ).toMatchObject({ employmentType: "PART_TIME", startsOn: "2026-01-01", endsOn: null })

@@ -4,11 +4,13 @@ import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "
 import { companyNotificationKindSchema } from "@/api/http/notifications/notification-kind.definition"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
 import { seedSystemNotifications } from "@tests/api/support/seed-notifications"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { seedCompanyEmployees } from "@tests/api/support/company/seed-company-test-state"
 import { seedIamForEmployees } from "@tests/api/support/seed-iam-for-employees"
 import { z } from "zod"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
 
@@ -106,7 +108,7 @@ describe("POST /notifications", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.recipient_employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(parsed.data.recipient_employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
       expect(parsed.data.is_read).toBe(false)
       expect(parsed.data.created_at).toBe(fixedNow)
     }

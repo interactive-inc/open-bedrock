@@ -7,6 +7,7 @@ import { OrganizationWorkforceSnapshotAdapter } from "@/contexts/company/infrast
 import { restoreCalendarDate } from "@/contexts/company/domain/definitions/restore-calendar-date.definition"
 import { COMPANY_TEST_MIGRATIONS_DIR } from "@/contexts/company/test/migrations-directory.test-support"
 import { wrapSystemD1TestDatabase } from "@system/test/wrap-system-d1-test-database.test-support"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
 const databases: Database[] = []
@@ -33,8 +34,9 @@ test("千人を超える会社のAccountを問い合わせ上限内で読み、�
     },
   })
   const people = Array.from({ length: 1001 }, (_, index) => ({
-    accountId: `account:workforce-${index}`,
-    employeeId: `employee:workforce-${index}`,
+    accountId: deterministicCompanyId("test-account", `workforce-${index}`),
+    employeeId: deterministicCompanyId("test-employee", `workforce-${index}`),
+    linkId: deterministicCompanyId("account-link", `workforce-${index}`),
     status: index === 0 ? "locked" : index === 1 ? "suspended" : "active",
   }))
   const input = JSON.stringify(people)
@@ -95,7 +97,7 @@ test("千人を超える会社のAccountを問い合わせ上限内で読み、�
       .prepare(`INSERT INTO company_resource_revisions
         (organization_id, resource_type, resource_id, revision, organization_revision,
          state, effective_from, attributes_json, command_id, actor_account_id, reason, recorded_at)
-      SELECT '${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account-employee-link', 'link:' || json_extract(value, '$.accountId'),
+      SELECT '${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account-employee-link', json_extract(value, '$.linkId'),
         1, 1, 'active', '2020-01-01',
         json_object('accountId', json_extract(value, '$.accountId'),
           'employeeId', json_extract(value, '$.employeeId')),
@@ -136,6 +138,8 @@ test("千人を超える会社のAccountを問い合わせ上限内で読み、�
       .filter((schedule) => schedule.accountLink === null)
       .map((schedule) => String(schedule.employee.id))
       .sort((left, right) => left.localeCompare(right)),
-  ).toEqual(["employee:workforce-0", "employee:workforce-1"])
+  ).toEqual(
+    [people[0]!.employeeId, people[1]!.employeeId].sort((left, right) => left.localeCompare(right)),
+  )
   expect(queries).toBeLessThanOrEqual(20)
 })

@@ -145,7 +145,9 @@ describe("existing employee resource adoption", () => {
       ),
     ).toMatchObject({ replayed: false })
     const newContract = await f.database
-      .prepare("SELECT id FROM company_employments WHERE id <> 'employment:adoption'")
+      .prepare(
+        "SELECT id FROM company_employments WHERE id <> 'decda03c-f38d-4899-9a9d-30a36ca6fc5e'",
+      )
       .first<string>("id")
     const revision = await f.database
       .prepare(
@@ -215,7 +217,8 @@ describe("existing employee resource adoption", () => {
     if (fault === "type")
       for (const r of resources.filter((r) => r.type === "employment"))
         r.attributes.employmentType = "FULL_TIME"
-    if (fault === "owner") resources[4]!.attributes.employeeId = "employee:other"
+    if (fault === "owner")
+      resources[4]!.attributes.employeeId = "1953cffc-119b-42c7-bbab-82c56499e4ac"
     if (fault === "person-gap") resources[0]!.effectiveFrom = "2021-01-01"
     if (fault === "employee-gap") resources[2]!.effectiveFrom = "2021-01-01"
     const selected = resources.filter(
@@ -238,16 +241,16 @@ describe("existing employee resource adoption", () => {
     const f = await createEmployeeAdoptionFixture()
     const original = await f.input()
     await f.database.exec(
-      "UPDATE company_employees SET phone = 'changed' WHERE id = 'employee:adoption'",
+      "UPDATE company_employees SET phone = 'changed' WHERE id = '50737555-5956-4b7d-8755-4e3b9660f143'",
     )
     expect((await f.post(original)).status).toBe(409)
     await f.database.exec(
-      "UPDATE company_employees SET phone = NULL WHERE id = 'employee:adoption'",
+      "UPDATE company_employees SET phone = NULL WHERE id = '50737555-5956-4b7d-8755-4e3b9660f143'",
     )
     const batch = f.database.batch.bind(f.database)
     const interception = spyOn(f.database, "batch").mockImplementationOnce(async (statements) => {
       await f.database.exec(
-        "UPDATE company_employees SET updated_at = 1 WHERE id = 'employee:adoption'",
+        "UPDATE company_employees SET updated_at = 1 WHERE id = '50737555-5956-4b7d-8755-4e3b9660f143'",
       )
       return batch(statements)
     })
@@ -315,14 +318,16 @@ describe("existing employee resource adoption", () => {
   test("期間所有者の不一致をsnapshotに含め、接続を拒否する", async () => {
     const f = await createEmployeeAdoptionFixture()
     await f.database
-      .exec(`INSERT INTO company_employees (id, official_name, employee_code, created_at, updated_at) VALUES ('employee:other', 'Other', 'OTHER', 0, 0);
-      INSERT INTO company_employment_period_versions (period_id, revision, employee_id, starts_on, ends_on, is_void, recorded_by_action_id, recorded_at) SELECT period_id, revision + 1, 'employee:other', starts_on, ends_on, is_void, recorded_by_action_id, recorded_at FROM company_employment_period_versions LIMIT 1;`)
+      .exec(`INSERT INTO company_employees (id, official_name, employee_code, created_at, updated_at) VALUES ('1953cffc-119b-42c7-bbab-82c56499e4ac', 'Other', 'OTHER', 0, 0);
+      INSERT INTO company_employment_period_versions (period_id, revision, employee_id, starts_on, ends_on, is_void, recorded_by_action_id, recorded_at) SELECT period_id, revision + 1, '1953cffc-119b-42c7-bbab-82c56499e4ac', starts_on, ends_on, is_void, recorded_by_action_id, recorded_at FROM company_employment_period_versions LIMIT 1;`)
     const snapshot = await new EmployeeResourceAdoptionSnapshotAdapter(f.database).find(
       adoptionEmployeeId,
     )
     if (snapshot === null || snapshot instanceof Error) throw new Error("missing snapshot")
     expect(
-      snapshot.props.value.employmentPeriods.some((r) => r.employeeId === "employee:other"),
+      snapshot.props.value.employmentPeriods.some(
+        (r) => r.employeeId === "1953cffc-119b-42c7-bbab-82c56499e4ac",
+      ),
     ).toBe(true)
     expect((await f.post(await f.input())).status).toBe(422)
   })
@@ -377,7 +382,7 @@ describe("existing employee resource adoption", () => {
     expect(
       await f.database
         .prepare(
-          "SELECT termination_date FROM company_employments WHERE id = 'employment:adoption'",
+          "SELECT termination_date FROM company_employments WHERE id = 'decda03c-f38d-4899-9a9d-30a36ca6fc5e'",
         )
         .first<string>("termination_date"),
     ).toBe("2026-08-31")
@@ -387,7 +392,7 @@ describe("existing employee resource adoption", () => {
     const f = await createEmployeeAdoptionFixture()
     await f.database
       .exec(`INSERT INTO company_employments (id, employee_id, contract_name, employment_type, hire_date, termination_date, status, created_at, updated_at)
-      VALUES ('employment:missing-history', 'employee:adoption', 'Old Contract', 'FULL_TIME', '2018-01-01', '2018-12-31', 'TERMINATED', 0, 0);`)
+      VALUES ('79ff1a43-4816-49e0-8929-9debe439150d', '50737555-5956-4b7d-8755-4e3b9660f143', 'Old Contract', 'FULL_TIME', '2018-01-01', '2018-12-31', 'TERMINATED', 0, 0);`)
     expect((await f.post(await f.input())).status).toBe(422)
     expect(await counts(f.database)).toEqual({
       revisions: 0,
@@ -399,15 +404,15 @@ describe("existing employee resource adoption", () => {
   test("Account表示名の不一致と確認後のAccount表示の変更を見逃さない", async () => {
     const f = await createEmployeeAdoptionFixture()
     await f.database.exec(
-      "UPDATE company_account_profiles SET display_name = 'Different Person' WHERE account_id = 'account:adoption'",
+      "UPDATE company_account_profiles SET display_name = 'Different Person' WHERE account_id = '7a0b75ec-d7b9-4f49-b023-432c8f109a40'",
     )
     expect((await f.post(await f.input())).status).toBe(422)
     await f.database.exec(
-      "UPDATE company_account_profiles SET display_name = 'Current Person' WHERE account_id = 'account:adoption'",
+      "UPDATE company_account_profiles SET display_name = 'Current Person' WHERE account_id = '7a0b75ec-d7b9-4f49-b023-432c8f109a40'",
     )
     const input = await f.input()
     await f.database.exec(
-      "UPDATE company_account_profiles SET updated_at = 1 WHERE account_id = 'account:adoption'",
+      "UPDATE company_account_profiles SET updated_at = 1 WHERE account_id = '7a0b75ec-d7b9-4f49-b023-432c8f109a40'",
     )
     expect((await f.post(input)).status).toBe(409)
     expect(await counts(f.database)).toEqual({

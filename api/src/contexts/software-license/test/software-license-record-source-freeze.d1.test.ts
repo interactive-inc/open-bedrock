@@ -29,7 +29,7 @@ function freezeEntity() {
     id: crypto.randomUUID(),
     sourceNamespace: "example-source",
     ownerContext: "software-license",
-    actorAccountId: "account:manager",
+    actorAccountId: "31a1342c-776f-4a19-8ca8-8ad48aa33449",
     reason: "Preserve the service register before retirement",
     createdAt: new Date().toISOString(),
     auditEventId: crypto.randomUUID(),
@@ -85,7 +85,7 @@ test("停止確定後は台帳・割当・変更履歴の全書込みをDBで拒
   await f.database
     .prepare(`INSERT INTO software_license_assignments
       (id,license_id,employee_id,service_name,plan_name,account_reference,assigned_at,assigned_by,assigned_reason)
-      VALUES (?1,?2,'employee:manager','Example Service','Team',NULL,1,'account:manager','Assigned')`)
+      VALUES (?1,?2,'3b4998e1-9d0a-4f19-9ade-044faa2d8620','Example Service','Team',NULL,1,'31a1342c-776f-4a19-8ca8-8ad48aa33449','Assigned')`)
     .bind(assignmentId, f.license.id)
     .run()
   const freeze = freezeEntity()
@@ -101,7 +101,7 @@ test("停止確定後は台帳・割当・変更履歴の全書込みをDBで拒
     f.database
       .prepare(`INSERT INTO software_license_assignments
       (id,license_id,employee_id,service_name,assigned_at,assigned_by,assigned_reason)
-      VALUES (?1,?2,'employee:manager','Example Service',2,'account:manager','Late')`)
+      VALUES (?1,?2,'3b4998e1-9d0a-4f19-9ade-044faa2d8620','Example Service',2,'31a1342c-776f-4a19-8ca8-8ad48aa33449','Late')`)
       .bind(crypto.randomUUID(), f.license.id),
     f.database
       .prepare("UPDATE software_license_assignments SET release_reason='late' WHERE id=?1")
@@ -110,7 +110,7 @@ test("停止確定後は台帳・割当・変更履歴の全書込みをDBで拒
     f.database
       .prepare(`INSERT INTO software_license_changes
       (id,license_id,actor_account_id,recorded_at,before_json,after_json)
-      VALUES (?1,?2,'account:manager',2,NULL,'{}')`)
+      VALUES (?1,?2,'31a1342c-776f-4a19-8ca8-8ad48aa33449',2,NULL,'{}')`)
       .bind(crypto.randomUUID(), f.license.id),
     f.database
       .prepare("UPDATE software_license_changes SET after_json='{}' WHERE license_id=?1")
@@ -147,7 +147,7 @@ test("停止確定後は台帳・割当・変更履歴の全書込みをDBで拒
   ).toBeNull()
 
   const released = freeze.release({
-    actorAccountId: "account:manager",
+    actorAccountId: "31a1342c-776f-4a19-8ca8-8ad48aa33449",
     reason: "Resume service register writes",
     at: new Date(Date.parse(freeze.snapshot.createdAt) + 1).toISOString(),
     auditEventId: crypto.randomUUID(),
@@ -182,7 +182,7 @@ test("停止APIは人の管理権限と外部再認証を要求し、同じ世�
   )
   const now = new Date()
   const authentication = {
-    accountId: zAccountId.parse("account:manager"),
+    accountId: zAccountId.parse("31a1342c-776f-4a19-8ca8-8ad48aa33449"),
     tokenVersion: 0,
     issuedAtMs: now.getTime() - 1_000,
     expiresAtMs: now.getTime() + 3_600_000,
@@ -195,7 +195,7 @@ test("停止APIは人の管理権限と外部再認証を要求し、同じ世�
   await f.database
     .prepare(`INSERT INTO system_step_up_grants
       (id,account_id,token_hash,method,issued_at,expires_at)
-      VALUES ('software-license-freeze-grant','account:manager',?1,'external_identity',?2,?3)`)
+      VALUES ('a2edc813-3e18-48e9-8dfd-4a3771581b2a','31a1342c-776f-4a19-8ca8-8ad48aa33449',?1,'external_identity',?2,?3)`)
     .bind(hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const identity = softwareLicenseFactory.createMiddleware(async (c, next) => {

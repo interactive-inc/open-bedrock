@@ -1,3 +1,4 @@
+import { testAccountId, testDerivedId, testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { seedEmployees } from "@tests/api/support/company/seed-employees.test-support"
@@ -115,14 +116,14 @@ describe("POST /thanks-messages", () => {
     const initial = CompanyResourceChangeEntity.create({
       commandId: "thanks-name-initial",
       expectedRevision: organizationRevision,
-      actorAccountId: "4",
+      actorAccountId: testAccountId(4),
       reason: "Confirmed person",
       recordedAt: 0,
       resources: [
         {
           organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "person",
-          id: "person:thanks-name",
+          id: testDerivedId("person", "thanks-name"),
           revision: 1,
           state: "active",
           effectiveFrom: restoreCalendarDate("2026-01-01"),
@@ -132,23 +133,23 @@ describe("POST /thanks-messages", () => {
         {
           organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "employee",
-          id: "employee:thanks-name",
+          id: "d755859d-9e52-4eb0-b445-07b990bed5d6",
           revision: 1,
           state: "active",
           effectiveFrom: restoreCalendarDate("2026-01-01"),
           effectiveTo: null,
-          attributes: { personId: "person:thanks-name" },
+          attributes: { personId: testDerivedId("person", "thanks-name") },
         },
         {
           organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "employment",
-          id: "employment:thanks-name",
+          id: testDerivedId("employment", "thanks-name"),
           revision: 1,
           state: "active",
           effectiveFrom: restoreCalendarDate("2026-01-01"),
           effectiveTo: null,
           attributes: {
-            employeeId: "employee:thanks-name",
+            employeeId: "d755859d-9e52-4eb0-b445-07b990bed5d6",
             status: "ACTIVE",
             employmentType: "FULL_TIME",
           },
@@ -160,14 +161,14 @@ describe("POST /thanks-messages", () => {
     const future = CompanyResourceChangeEntity.create({
       commandId: "thanks-name-future",
       expectedRevision: organizationRevision + 1,
-      actorAccountId: "4",
+      actorAccountId: testAccountId(4),
       reason: "Confirmed future name",
       recordedAt: 1,
       resources: [
         {
           organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
           type: "person",
-          id: "person:thanks-name",
+          id: testDerivedId("person", "thanks-name"),
           revision: 2,
           state: "active",
           effectiveFrom: restoreCalendarDate("2026-07-01"),
@@ -180,7 +181,7 @@ describe("POST /thanks-messages", () => {
     expect(await repository.write(future)).toMatchObject({ kind: "applied" })
     await db
       .prepare(
-        "INSERT INTO thanks_messages (id, sender_employee_id, recipient_employee_id, message, points, created_at) VALUES ('01900028-0000-7000-8000-000000000001', '4', 'employee:thanks-name', 'Thank you', 0, '2026-06-01T00:00:00Z')",
+        "INSERT INTO thanks_messages (id, sender_employee_id, recipient_employee_id, message, points, created_at) VALUES ('01900028-0000-7000-8000-000000000001', '01900062-0000-7000-8000-000000000004', 'd755859d-9e52-4eb0-b445-07b990bed5d6', 'Thank you', 0, '2026-06-01T00:00:00Z')",
       )
       .run()
     const before = await db
@@ -226,8 +227,8 @@ describe("POST /thanks-messages", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.sender_employee_id).toBe(toWorkforceEmployeeId(4))
-      expect(parsed.data.recipient_employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(parsed.data.sender_employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(4)))
+      expect(parsed.data.recipient_employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
       expect(parsed.data.points).toBe(0)
       expect(parsed.data.message).toBe("助けてくれてありがとう")
     }

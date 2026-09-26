@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -150,9 +151,11 @@ describe("GET /performance-goals/me", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(2)
-      expect(parsed.data.data.every((goal) => goal.employee_id === toWorkforceEmployeeId(5))).toBe(
-        true,
-      )
+      expect(
+        parsed.data.data.every(
+          (goal) => goal.employee_id === toWorkforceEmployeeId(testEmployeeId(5)),
+        ),
+      ).toBe(true)
     }
   })
 
@@ -181,7 +184,7 @@ describe("GET /performance-goals/:goalId", () => {
 
     if (parsed.success) {
       expect(parsed.data.id).toBe(ownGoalId)
-      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
     }
   })
 

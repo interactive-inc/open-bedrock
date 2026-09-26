@@ -23,6 +23,21 @@ import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-dat
 import { prepareHistoricalCompanyResourceRevisionFixture } from "@/contexts/company/test/historical-company-resource-revision.test-support"
 import { splitSqlStatements } from "@/lib/database/split-sql-statements"
 import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
+
+/** 期間と公開資源の ID は UUID の制約を満たす固定値にする。 */
+const fixtureIds = {
+  legacyOne: deterministicCompanyId("test-responsibility", "responsibility:legacy-one"),
+  legacyTwo: deterministicCompanyId("test-responsibility", "responsibility:legacy-two"),
+  legacyPeople: deterministicCompanyId("test-responsibility", "responsibility:legacy-people"),
+  legacyCancelled: deterministicCompanyId("test-responsibility", "responsibility:legacy-cancelled"),
+  existingResponsibility: deterministicCompanyId("test-responsibility", "existing:responsibility"),
+  existingManager: deterministicCompanyId("test-responsibility", "existing:manager"),
+  independent: deterministicCompanyId("test-responsibility", "responsibility:independent"),
+  missingResponsibility: deterministicCompanyId("test-responsibility", "missing:responsibility"),
+  differentTarget: deterministicCompanyId("test-responsibility", "different:target"),
+  unknownPeriod: deterministicCompanyId("test-responsibility", "period:unknown"),
+}
 
 function resourceProps(resource: CompanyResourceEntity): CompanyResourceProps {
   return {
@@ -101,7 +116,7 @@ async function fixture(
   expect(await define(definitions)).toMatchObject({ kind: "applied" })
   const original = [
     {
-      id: "responsibility:legacy-one",
+      id: fixtureIds.legacyOne,
       revision: 1,
       type: "MANAGER",
       startsOn: "2030-01-01",
@@ -109,7 +124,7 @@ async function fixture(
       isVoid: 0,
     },
     {
-      id: "responsibility:legacy-one",
+      id: fixtureIds.legacyOne,
       revision: 2,
       type: "MANAGER",
       startsOn: "2030-02-01",
@@ -117,7 +132,7 @@ async function fixture(
       isVoid: 0,
     },
     {
-      id: "responsibility:legacy-two",
+      id: fixtureIds.legacyTwo,
       revision: 1,
       type: "MANAGER",
       startsOn: "2030-06-01",
@@ -125,7 +140,7 @@ async function fixture(
       isVoid: 0,
     },
     {
-      id: "responsibility:legacy-people",
+      id: fixtureIds.legacyPeople,
       revision: 1,
       type: "PEOPLE_OPERATIONS",
       startsOn: "2030-03-01",
@@ -133,7 +148,7 @@ async function fixture(
       isVoid: 0,
     },
     {
-      id: "responsibility:legacy-cancelled",
+      id: fixtureIds.legacyCancelled,
       revision: 1,
       type: "MANAGER",
       startsOn: "2030-10-01",
@@ -148,13 +163,13 @@ async function fixture(
     base.database
       .prepare(`INSERT INTO company_organization_change_operations
       (id, expected_revision, change_count, applied_count, resulting_revision, status, recorded_at, actor_account_id, reason)
-      VALUES ('legacy:responsibility-adoption', ?1, 5, 0, ?1 + 5, 'PENDING', 0, ?2, 'Record original responsibility history')`)
+      VALUES ('87dc7df9-5a3e-4d81-9c8a-3ed616c8b120', ?1, 5, 0, ?1 + 5, 'PENDING', 0, ?2, 'Record original responsibility history')`)
       .bind(revision, base.creator.accountId),
     ...original.map((period) =>
       base.database
         .prepare(`INSERT INTO company_organization_responsibility_period_versions
       (period_id, revision, employee_id, employment_id, organization_unit_id, responsibility_type, starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
-      VALUES (?1, ?2, ?3, ?4, '0190005f-0000-7000-8000-3e026079e0b5', ?5, ?6, ?7, ?8, 'legacy:responsibility-adoption', 0)`)
+      VALUES (?1, ?2, ?3, ?4, '0190005f-0000-7000-8000-3e026079e0b5', ?5, ?6, ?7, ?8, '87dc7df9-5a3e-4d81-9c8a-3ed616c8b120', 0)`)
         .bind(
           period.id,
           period.revision,
@@ -167,7 +182,7 @@ async function fixture(
         ),
     ),
     base.database.prepare(
-      "UPDATE company_organization_change_operations SET status = 'COMPLETED' WHERE id = 'legacy:responsibility-adoption'",
+      "UPDATE company_organization_change_operations SET status = 'COMPLETED' WHERE id = '87dc7df9-5a3e-4d81-9c8a-3ed616c8b120'",
     ),
   ])
   let actor: CompanyActorValue | undefined = CompanyActorValue.restore({
@@ -293,7 +308,7 @@ test("移行の確認対象に既存公開責務の全版と来歴を含め、�
   const existing: CompanyResourceProps = {
     organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
     type: "responsibility-assignment",
-    id: "existing:responsibility",
+    id: fixtureIds.existingResponsibility,
     revision: 1,
     state: "active",
     effectiveFrom: restoreCalendarDate("2030-02-01"),
@@ -346,7 +361,7 @@ test.each([false, true])(
     const existing: CompanyResourceProps = {
       organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
       type: "responsibility-assignment",
-      id: "existing:manager",
+      id: fixtureIds.existingManager,
       revision: 1,
       state: "active",
       effectiveFrom: restoreCalendarDate("2030-02-01"),
@@ -380,7 +395,7 @@ test.each([false, true])(
       snapshotDigest: preview.snapshotDigest,
       mappings: f.body.mappings.map((mapping) => ({
         ...mapping,
-        ...(["responsibility:legacy-one", "responsibility:legacy-two"].includes(mapping.periodId)
+        ...([fixtureIds.legacyOne, fixtureIds.legacyTwo].includes(mapping.periodId)
           ? { existingResourceId: existing.id }
           : {}),
       })),
@@ -397,12 +412,11 @@ test.each([false, true])(
     for (const mappings of [
       input.mappings.map((mapping) => ({
         ...mapping,
-        existingResourceId: "missing:responsibility",
+        existingResourceId: fixtureIds.missingResponsibility,
       })),
       input.mappings.map((mapping) => ({
         ...mapping,
-        existingResourceId:
-          mapping.periodId === "responsibility:legacy-one" ? existing.id : undefined,
+        existingResourceId: mapping.periodId === fixtureIds.legacyOne ? existing.id : undefined,
       })),
       input.mappings.map((mapping) => ({ ...mapping, authorityScopeId: "scope:root" })),
     ]) {
@@ -412,7 +426,7 @@ test.each([false, true])(
     for (const replacement of [
       {
         placeholder: "?12",
-        expression: "json_set(?12, '$[0].existingResourceId', 'different:target')",
+        expression: `json_set(?12, '$[0].existingResourceId', '${fixtureIds.differentTarget}')`,
       },
       { placeholder: "?12", expression: "json_remove(?12, '$[0].existingResourceId')" },
       { placeholder: "?11", expression: "json_remove(?11, '$.publicResponsibilities')" },
@@ -470,10 +484,12 @@ test.each([false, true])(
           .bind(existing.id)
           .all()
       ).results,
-    ).toEqual([
-      { period_id: "responsibility:legacy-one", source_revision: 3 },
-      { period_id: "responsibility:legacy-two", source_revision: 3 },
-    ])
+    ).toEqual(
+      [
+        { period_id: fixtureIds.legacyOne, source_revision: 3 },
+        { period_id: fixtureIds.legacyTwo, source_revision: 3 },
+      ].sort((left, right) => (left.period_id < right.period_id ? -1 : 1)),
+    )
     expect(
       (await f.publicOn("2030-03-15")).filter((resource) => resource.id === existing.id),
     ).toHaveLength(1)
@@ -561,7 +577,7 @@ describe("確認済みの既存責務を公開履歴へ接続する", () => {
     expect(
       saved.responsibility
         .slice()
-        .filter((row) => row.recorded_by_action_id === "legacy:responsibility-adoption"),
+        .filter((row) => row.recorded_by_action_id === "87dc7df9-5a3e-4d81-9c8a-3ed616c8b120"),
     ).toEqual(before.responsibility)
     expect(saved.sources).toHaveLength(4)
     expect(Number((await f.adopt()).status)).toBe(200)
@@ -607,7 +623,7 @@ describe("確認済みの既存責務を公開履歴へ接続する", () => {
     })
     expect(
       (await f.state()).responsibility
-        .filter((row) => row.period_id === "responsibility:legacy-one")
+        .filter((row) => row.period_id === fixtureIds.legacyOne)
         .at(-1),
     ).toMatchObject({ ends_on: "2030-03-15" })
     const retired = await f.personnel(
@@ -796,7 +812,7 @@ test.each([
   if (first === undefined) throw new Error("mapping missing")
   if (kind === "missing-period") mappings.pop()
   if (kind === "duplicate-period") mappings[1] = { ...first }
-  if (kind === "unknown-period") first.periodId = "period:unknown"
+  if (kind === "unknown-period") first.periodId = fixtureIds.unknownPeriod
   if (kind === "wrong-code") first.responsibilityId = "responsibility:people"
   if (kind === "wrong-scope") first.authorityScopeId = "scope:root"
   if (kind === "unknown-definition") first.responsibilityId = "responsibility:missing"
@@ -853,7 +869,7 @@ test("確認日の違いと不正な時計を拒否し、履歴の欠落を補�
   )
   await f.database
     .prepare(
-      "DELETE FROM company_organization_responsibility_period_versions WHERE period_id = 'responsibility:legacy-one' AND revision = 1",
+      `DELETE FROM company_organization_responsibility_period_versions WHERE period_id = '${fixtureIds.legacyOne}' AND revision = 1`,
     )
     .run()
   const broken = await f.preview()
@@ -889,7 +905,7 @@ test("最新状態が取消でも過去の責務との重複を拒否し、隣�
   const before = await f.state()
   const next = {
     ...resourceProps(original),
-    id: "responsibility:independent",
+    id: fixtureIds.independent,
     revision: 1,
     effectiveFrom: restoreCalendarDate("2030-02-15"),
     effectiveTo: restoreCalendarDate("2030-03-15"),
@@ -1033,7 +1049,7 @@ test("百件を超える責務を一括で接続し、後半の失敗でも先�
     .prepare("SELECT revision FROM company_organization_lifecycle_states WHERE id = 1")
     .first<number>("revision")
   const periods = Array.from({ length: 101 }, (_, index) => ({
-    id: `responsibility:bulk-${String(index).padStart(3, "0")}`,
+    id: deterministicCompanyId("test-responsibility", `bulk-${String(index).padStart(3, "0")}`),
     startsOn: new Date(Date.UTC(2031, 0, 1 + index * 2)).toISOString().slice(0, 10),
     endsOn: new Date(Date.UTC(2031, 0, 2 + index * 2)).toISOString().slice(0, 10),
   }))
@@ -1041,13 +1057,13 @@ test("百件を超える責務を一括で接続し、後半の失敗でも先�
     f.database
       .prepare(`INSERT INTO company_organization_change_operations
       (id, expected_revision, change_count, applied_count, resulting_revision, status, recorded_at, actor_account_id, reason)
-      VALUES ('legacy:bulk-responsibility', ?1, 101, 0, ?1 + 101, 'PENDING', 0, ?2, 'Record separate appointment periods')`)
+      VALUES ('842191ae-a0cd-4b53-a8a0-570d75957b3e', ?1, 101, 0, ?1 + 101, 'PENDING', 0, ?2, 'Record separate appointment periods')`)
       .bind(revision, f.creator.accountId),
     ...periods.map((period) =>
       f.database
         .prepare(`INSERT INTO company_organization_responsibility_period_versions
       (period_id, revision, employee_id, employment_id, organization_unit_id, responsibility_type, starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
-      VALUES (?1, 1, ?2, ?3, '0190005f-0000-7000-8000-3e026079e0b5', 'MANAGER', ?4, ?5, 0, 'legacy:bulk-responsibility', 0)`)
+      VALUES (?1, 1, ?2, ?3, '0190005f-0000-7000-8000-3e026079e0b5', 'MANAGER', ?4, ?5, 0, '842191ae-a0cd-4b53-a8a0-570d75957b3e', 0)`)
         .bind(
           period.id,
           f.creator.employeeId,
@@ -1057,7 +1073,7 @@ test("百件を超える責務を一括で接続し、後半の失敗でも先�
         ),
     ),
     f.database.prepare(
-      "UPDATE company_organization_change_operations SET status = 'COMPLETED' WHERE id = 'legacy:bulk-responsibility'",
+      "UPDATE company_organization_change_operations SET status = 'COMPLETED' WHERE id = '842191ae-a0cd-4b53-a8a0-570d75957b3e'",
     ),
   ])
   const preview = await f.preview()

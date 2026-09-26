@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -130,9 +131,11 @@ describe("GET /shift-assignments/me", () => {
     if (parsed.success) {
       // id=2 は publishedAt が null（下書き）なので除外され、公開済みの 1 件のみ返る
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data.every((row) => row.employee_id === toWorkforceEmployeeId(5))).toBe(
-        true,
-      )
+      expect(
+        parsed.data.data.every(
+          (row) => row.employee_id === toWorkforceEmployeeId(testEmployeeId(5)),
+        ),
+      ).toBe(true)
       expect(parsed.data.data.every((row) => row.published_at !== null)).toBe(true)
       // member はパターン一覧を閲覧できないため、割当にパターン名・時間帯を埋めて返す（patternId=1 = Early）
       expect(parsed.data.data[0]?.pattern_name).toBe("早番")

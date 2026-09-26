@@ -28,17 +28,19 @@ describe("canonical System authorization", () => {
   test("active Accountのglobalと完全一致resource bindingだけをlive解決する", async () => {
     const database = createSystemD1TestDatabase(schema)
     await database.exec(`
-      INSERT INTO system_accounts VALUES ('account-1', 'active', 0, NULL, 1000, 1000);
+      INSERT INTO system_accounts VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'active', 0, NULL, 1000, 1000);
       INSERT INTO system_iam_roles VALUES ('f1cc5a29-2cdd-4294-8233-37aed4312992', 'system:operator', 'managed', NULL, 'Operator', 1000, 1000);
       INSERT INTO system_iam_roles VALUES ('d0632d53-fa2d-4749-8436-96bd3cb5aef6', 'example:manager', 'custom', 'example:organization', 'Manager', 1000, 1000);
       INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('f1cc5a29-2cdd-4294-8233-37aed4312992', 'iam:read');
       INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('d0632d53-fa2d-4749-8436-96bd3cb5aef6', 'example:write');
-      INSERT INTO system_role_bindings VALUES ('852cc16d-b48a-4126-85cd-75f7ba82c433', 'account-1', 'f1cc5a29-2cdd-4294-8233-37aed4312992', NULL, NULL, 1000, NULL);
-      INSERT INTO system_role_bindings VALUES ('707b116e-f378-438a-8961-d7548f7597ce', 'account-1', 'd0632d53-fa2d-4749-8436-96bd3cb5aef6', 'example:organization', 'org-1', 1000, NULL);
+      INSERT INTO system_role_bindings VALUES ('852cc16d-b48a-4126-85cd-75f7ba82c433', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'f1cc5a29-2cdd-4294-8233-37aed4312992', NULL, NULL, 1000, NULL);
+      INSERT INTO system_role_bindings VALUES ('707b116e-f378-438a-8961-d7548f7597ce', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'd0632d53-fa2d-4749-8436-96bd3cb5aef6', 'example:organization', 'org-1', 1000, NULL);
     `)
     const repository = new SystemD1AuthorizationAdapter({ env: { DB: database } })
 
-    const graph = await repository.loadForAccount(zAccountId.parse("account-1"))
+    const graph = await repository.loadForAccount(
+      zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e"),
+    )
     expect(graph).not.toBeInstanceOf(Error)
     if (graph === null || graph instanceof Error) throw graph
     expect(
@@ -49,7 +51,7 @@ describe("canonical System authorization", () => {
     ).toBe("example:organization")
 
     const global = await repository.resolveForAccount({
-      accountId: zAccountId.parse("account-1"),
+      accountId: zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e"),
       resource: null,
       at: new Date(2000),
     })
@@ -64,7 +66,7 @@ describe("canonical System authorization", () => {
     ]).toEqual(["example:write"])
 
     const scoped = await repository.resolveForAccount({
-      accountId: zAccountId.parse("account-1"),
+      accountId: zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e"),
       resource: { type: "example:organization", id: "org-1" },
       at: new Date(2000),
     })
@@ -75,21 +77,23 @@ describe("canonical System authorization", () => {
     await database.exec(`
       INSERT INTO system_iam_roles VALUES ('role-broken', 'example:broken', 'custom', 'example:site', 'Broken', 1000, 1000);
       INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('role-broken', 'example:write');
-      INSERT INTO system_role_bindings VALUES ('binding-broken', 'account-1', 'role-broken', 'example:organization', 'org-1', 1000, NULL);
+      INSERT INTO system_role_bindings VALUES ('binding-broken', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'role-broken', 'example:organization', 'org-1', 1000, NULL);
     `)
-    expect(await repository.loadForAccount(zAccountId.parse("account-1"))).toBeInstanceOf(Error)
+    expect(
+      await repository.loadForAccount(zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e")),
+    ).toBeInstanceOf(Error)
   })
 
   test("inactiveまたは欠損Accountを同じnullへ畳み、DB障害はErrorにする", async () => {
     const database = createSystemD1TestDatabase(schema)
     await database.exec(
-      "INSERT INTO system_accounts VALUES ('account-1', 'suspended', 1, NULL, 1000, 1000)",
+      "INSERT INTO system_accounts VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'suspended', 1, NULL, 1000, 1000)",
     )
     const repository = new SystemD1AuthorizationAdapter({ env: { DB: database } })
 
     expect(
       await repository.resolveForAccount({
-        accountId: zAccountId.parse("account-1"),
+        accountId: zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e"),
         resource: null,
         at: new Date(2000),
       }),
@@ -97,7 +101,7 @@ describe("canonical System authorization", () => {
     await database.exec("DROP TABLE system_accounts")
     expect(
       await repository.resolveForAccount({
-        accountId: zAccountId.parse("account-1"),
+        accountId: zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e"),
         resource: null,
         at: new Date(2000),
       }),

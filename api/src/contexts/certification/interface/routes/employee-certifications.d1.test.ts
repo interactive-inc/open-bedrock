@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { createTestToken } from "@tests/api/support/create-test-token"
@@ -51,7 +52,7 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "employee_certifications", [
     {
       id: "01900021-0000-7000-8000-000000000001",
-      employee_id: "5",
+      employee_id: testEmployeeId(5),
       certification_id: "01900019-0000-7000-8000-000000000001",
       acquired_on: "2024-04-01",
       expires_on: null,
@@ -100,13 +101,13 @@ describe("GET /employee-certifications", () => {
 
     if (parsed.success) {
       expect(parsed.data.total).toBe(1)
-      expect(parsed.data.data[0].employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(parsed.data.data[0].employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
     }
   })
 
   test("member can read their own records with own employee_id", async () => {
     const response = await request({
-      path: "/certification/employee-certifications?employee_id=5",
+      path: `/certification/employee-certifications?employee_id=${testEmployeeId(5)}`,
       token: await tokenFor(5),
     })
 
@@ -115,7 +116,7 @@ describe("GET /employee-certifications", () => {
 
   test("member is 403 when requesting another employee's records", async () => {
     const response = await request({
-      path: "/certification/employee-certifications?employee_id=5",
+      path: `/certification/employee-certifications?employee_id=${testEmployeeId(5)}`,
       token: await tokenFor(6),
     })
 
@@ -124,7 +125,7 @@ describe("GET /employee-certifications", () => {
 
   test("admin (certification:read:all) can read another employee's records", async () => {
     const response = await request({
-      path: "/certification/employee-certifications?employee_id=5",
+      path: `/certification/employee-certifications?employee_id=${testEmployeeId(5)}`,
       token: await tokenFor(1),
     })
 
@@ -153,7 +154,7 @@ describe("POST /employee-certifications", () => {
       token: await tokenFor(1),
       method: "POST",
       body: {
-        employee_id: "6",
+        employee_id: testEmployeeId(6),
         certification_id: "01900019-0000-7000-8000-000000000001",
         acquired_on: "2025-04-01",
       },
@@ -168,7 +169,7 @@ describe("POST /employee-certifications", () => {
       token: await tokenFor(5),
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         certification_id: "01900019-0000-7000-8000-000000000001",
         acquired_on: "2025-04-01",
       },
@@ -183,7 +184,7 @@ describe("POST /employee-certifications", () => {
       token: await tokenFor(1),
       method: "POST",
       body: {
-        employee_id: "5",
+        employee_id: testEmployeeId(5),
         certification_id: "01900019-0000-7000-8000-000000000001",
         acquired_on: "2024-04-01",
       },
@@ -198,7 +199,7 @@ describe("POST /employee-certifications", () => {
       token: await tokenFor(1),
       method: "POST",
       body: {
-        employee_id: "6",
+        employee_id: testEmployeeId(6),
         certification_id: "01900019-0000-7000-8000-0000000003e7",
         acquired_on: "2025-04-01",
       },

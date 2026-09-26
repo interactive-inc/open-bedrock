@@ -23,7 +23,7 @@ function freezeEntity() {
     id: crypto.randomUUID(),
     sourceNamespace: "example-source",
     ownerContext: "attendance",
-    actorAccountId: "account:recorder",
+    actorAccountId: "cc97e08f-b4a0-4e2a-9a79-31e6d95f9208",
     reason: "Preserve the full source before retirement",
     createdAt: new Date().toISOString(),
     auditEventId: crypto.randomUUID(),
@@ -94,7 +94,7 @@ test("停止前に準備した打刻更新もDBで拒否し、取得・照合は
       "DELETE FROM attendance_records WHERE id='01900016-0000-7000-8000-000000000001'",
     ),
     f.database.prepare(`INSERT INTO attendance_records (id,employee_id,work_date,clock_in_at,status)
-      VALUES ('01900016-0000-7000-8000-000000000003','employee:worker','2026-09-03','2026-09-03T00:00:00Z','closed')`),
+      VALUES ('01900016-0000-7000-8000-000000000003','aea9e258-3d37-4735-a897-5d1eb8aa7c29','2026-09-03','2026-09-03T00:00:00Z','closed')`),
   ])
     expect(await statement.run().catch((error: unknown) => error)).toBeInstanceOf(Error)
   expect(
@@ -146,7 +146,7 @@ test("解除は監査と原子的に確定し、再停止は別世代となり�
       .first<number>("n"),
   ).toBe(0)
   const released = freeze.release({
-    actorAccountId: "account:recorder",
+    actorAccountId: "cc97e08f-b4a0-4e2a-9a79-31e6d95f9208",
     reason: "Resume source writes",
     at: new Date().toISOString(),
     auditEventId: crypto.randomUUID(),

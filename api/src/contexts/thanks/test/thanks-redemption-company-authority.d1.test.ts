@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, spyOn, test } from "bun:test"
 import { z } from "zod"
@@ -50,8 +51,8 @@ async function createTestDb(name: string, cycle = false): Promise<D1Database> {
   await seedD1(db, "thanks_messages", [
     {
       id: "01900028-0000-7000-8000-000000000001",
-      sender_employee_id: "3",
-      recipient_employee_id: "2",
+      sender_employee_id: testEmployeeId(3),
+      recipient_employee_id: testEmployeeId(2),
       message: "Thank you",
       points: 100,
       created_at: "2025-12-01T00:00:00.000Z",
@@ -70,7 +71,7 @@ async function createTestDb(name: string, cycle = false): Promise<D1Database> {
   await seedD1(db, "thanks_redemptions", [
     {
       id: redemptionId,
-      employee_id: "2",
+      employee_id: testEmployeeId(2),
       reward_id: rewardId,
       point_cost: 50,
       status: "pending",
@@ -126,8 +127,8 @@ describe("thanks redemption decisions compose technical permission with Company 
       expect(response.status).toBe(200)
       expect(await persisted(db)).toEqual(
         action === "approve"
-          ? { redemption: { status: "fulfilled", decider_id: "1" }, stock: 2 }
-          : { redemption: { status: "rejected", decider_id: "1" }, stock: 3 },
+          ? { redemption: { status: "fulfilled", decider_id: testEmployeeId(1) }, stock: 2 }
+          : { redemption: { status: "rejected", decider_id: testEmployeeId(1) }, stock: 3 },
       )
     })
 

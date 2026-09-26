@@ -25,8 +25,8 @@ import { seedSystemStepUpGrant } from "@system/test/seed-system-step-up-grant.te
 import { describe, expect, test } from "bun:test"
 import { hc } from "hono/client"
 
-const accountId = zAccountId.parse("integration-writer")
-const scopedAccountId = zAccountId.parse("scoped-integration-writer")
+const accountId = zAccountId.parse("0f6cc3a9-017b-4583-bd3c-b5d9c9957a67")
+const scopedAccountId = zAccountId.parse("ddb2961e-afa3-4c3b-b707-060e04ee69c5")
 const digestA = "a".repeat(64)
 const digestB = "b".repeat(64)
 
@@ -229,7 +229,7 @@ function seedAuthorization(fixture: SystemSessionTestContext, now: Date): void {
      VALUES ('64965518-94f7-440b-87d6-5f01de16a196', 'integration:read'), ('64965518-94f7-440b-87d6-5f01de16a196', 'integration:write');
      INSERT INTO system_role_bindings
        (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-     VALUES ('e8756177-3dce-4eae-8c24-31bd4fff3dca', 'integration-writer', '64965518-94f7-440b-87d6-5f01de16a196', NULL, NULL, 1, NULL);
+     VALUES ('e8756177-3dce-4eae-8c24-31bd4fff3dca', '0f6cc3a9-017b-4583-bd3c-b5d9c9957a67', '64965518-94f7-440b-87d6-5f01de16a196', NULL, NULL, 1, NULL);
      INSERT INTO system_iam_roles
        (id, key, kind, resource_type, name, created_at, updated_at)
      VALUES ('1d6b0d20-37d4-4ff5-8a67-96df56cb1a57', 'system:scoped-integration', 'custom',
@@ -239,7 +239,7 @@ function seedAuthorization(fixture: SystemSessionTestContext, now: Date): void {
             ('1d6b0d20-37d4-4ff5-8a67-96df56cb1a57', 'integration:write');
      INSERT INTO system_role_bindings
        (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-     VALUES ('0613ddf2-ccf9-4eee-8a22-f81759d2043a', 'scoped-integration-writer',
+     VALUES ('0613ddf2-ccf9-4eee-8a22-f81759d2043a', 'ddb2961e-afa3-4c3b-b707-060e04ee69c5',
              '1d6b0d20-37d4-4ff5-8a67-96df56cb1a57', 'system:connector', 'connector:1', 1, NULL);`,
   )
 }
@@ -292,10 +292,10 @@ async function seedConnectorMachine(
   if (secretHash instanceof Error) throw secretHash
   fixture.sqlite.exec(
     `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-     VALUES ('connector-machine-account', 'active', 0, ${now.getTime()}, ${now.getTime()});
+     VALUES ('273f37ff-0810-4afe-ac1e-fb6dfeae40c7', 'active', 0, ${now.getTime()}, ${now.getTime()});
      INSERT INTO system_principals
        (id, account_id, kind, name, connector_id, revision, created_at, updated_at)
-     VALUES ('principal:connector', 'connector-machine-account', 'connector',
+     VALUES ('94f3adc1-5bf4-40c9-8b24-dd3bbc3ff8e9', '273f37ff-0810-4afe-ac1e-fb6dfeae40c7', 'connector',
              'Connector machine', 'connector:1', 1, ${now.getTime()}, ${now.getTime()});`,
   )
   fixture.sqlite
@@ -303,9 +303,9 @@ async function seedConnectorMachine(
       `INSERT INTO system_machine_credentials
          (id, principal_id, name, secret_hash, status, created_at, updated_at,
           expires_at, last_used_at, revoked_at)
-       VALUES ('credential:connector', 'principal:connector', 'Primary', ?1, 'active',
+       VALUES ('d186abc8-6d6e-4835-aaa8-55bbc51dcd41', '94f3adc1-5bf4-40c9-8b24-dd3bbc3ff8e9', 'Primary', ?1, 'active',
                ?2, ?2, NULL, NULL, NULL)`,
     )
     .run(secretHash, now.getTime())
-  return { credential_id: "credential:connector", secret }
+  return { credential_id: "d186abc8-6d6e-4835-aaa8-55bbc51dcd41", secret }
 }

@@ -26,13 +26,17 @@ test.each(["grade", "position"] as const)(
   async (type) => {
     const db = await pool.next()
     await initializeStandardCompanyTestState(db)
-    await db.prepare("DELETE FROM system_role_bindings WHERE account_id = '1'").run()
+    await db
+      .prepare(
+        "DELETE FROM system_role_bindings WHERE account_id = '01900061-0000-7000-8000-000000000001'",
+      )
+      .run()
     await execSql(
       db,
       `INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at)
       VALUES ('2361a5f0-b0e2-4c85-8029-2476ac5c16f1', 'custom:definition-only', 'custom', 'Definition manager', 0, 0);
       INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-      VALUES ('2361a5f0-b0e2-4c85-8029-2476ac5c16f1', '1', '2361a5f0-b0e2-4c85-8029-2476ac5c16f1', NULL, NULL, 0, NULL);`,
+      VALUES ('2361a5f0-b0e2-4c85-8029-2476ac5c16f1', '01900061-0000-7000-8000-000000000001', '2361a5f0-b0e2-4c85-8029-2476ac5c16f1', NULL, NULL, 0, NULL);`,
     )
     await db
       .prepare(

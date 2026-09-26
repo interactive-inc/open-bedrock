@@ -1,3 +1,4 @@
+import { testDerivedId } from "@tests/api/support/test-identity-id"
 import { drizzle } from "drizzle-orm/d1"
 import { employments } from "@/contexts/company/infrastructure/schema/employment"
 import { alias } from "drizzle-orm/sqlite-core"
@@ -406,7 +407,7 @@ describe("Company directoryの在籍時点", () => {
     )
     try {
       const ids = Array.from({ length: 100 }, (_, index) =>
-        restoreWorkforceId("employee", `employee:${index}`),
+        restoreWorkforceId("employee", testDerivedId("employee", index)),
       )
       expect(
         await directory(database, "2026-09-01T00:00:00Z").findForEmployeeIds(ids),
@@ -419,13 +420,13 @@ describe("Company directoryの在籍時点", () => {
   test("Accountの解決も同じ在籍と所属の終了境界を使う", async () => {
     const database = createEmployeeEmploymentTestDatabase(`
       ${publicAccountLinkSchema}
-      ${publicAccountLink("account:1", "employee:1")}
+      ${publicAccountLink("c0975461-26d2-43a1-86d2-124bd000d9c9", "employee:1")}
       INSERT INTO company_organization_unit_period_versions VALUES
         ('unit-period:1', 1, '0190005f-0000-7000-8000-2fcb85764fe2', 'UNIT', 'Example Unit', '2026-01-01', '2026-10-01', 0);
       INSERT INTO company_organization_assignment_period_versions VALUES
         ('assignment:1', 1, 'employee:1', '0190005f-0000-7000-8000-2fcb85764fe2', 'PRIMARY', NULL, 'employment:1', '2026-01-01', '2026-10-01', 0);
     `)
-    const accountId = zAccountId.parse("account:1")
+    const accountId = zAccountId.parse("c0975461-26d2-43a1-86d2-124bd000d9c9")
     const before = await directory(database, "2026-09-30T14:59:59Z").findForAccountIds([
       accountId,
       accountId,
@@ -460,12 +461,12 @@ describe("Company directoryの在籍時点", () => {
       INSERT INTO company_resource_revisions VALUES
         ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'person', 'person:2', 1, 'active', '2026-01-01', NULL, '{"officialName":"Another Person"}'),
         ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'employee', 'employee:2', 1, 'active', '2026-01-01', NULL, '{"personId":"person:2","employeeCode":"E002"}');
-      ${publicAccountLink("account:1", "employee:1", "link:1")}
-      ${publicAccountLink("account:1", "employee:2", "link:2")}
+      ${publicAccountLink("c0975461-26d2-43a1-86d2-124bd000d9c9", "employee:1", "link:1")}
+      ${publicAccountLink("c0975461-26d2-43a1-86d2-124bd000d9c9", "employee:2", "link:2")}
     `)
     expect(
       await directory(database, "2026-09-01T00:00:00Z").findForAccountIds([
-        zAccountId.parse("account:1"),
+        zAccountId.parse("c0975461-26d2-43a1-86d2-124bd000d9c9"),
       ]),
     ).toBeInstanceOf(Error)
   })
@@ -473,14 +474,19 @@ describe("Company directoryの在籍時点", () => {
   test("100件を超えるAccountも分割し、未紐付けは候補に含めない", async () => {
     const database = createEmployeeEmploymentTestDatabase(`
       ${publicAccountLinkSchema}
-      ${publicAccountLink("account:200", "employee:1")}
+      ${publicAccountLink("6d819592-afad-4669-a64e-5ce92ac9809b", "employee:1")}
     `)
     const accountIds = Array.from({ length: 201 }, (_, index) =>
-      zAccountId.parse(`account:${index}`),
+      zAccountId.parse(testDerivedId("account", index)),
     )
     expect(
       await directory(database, "2026-09-01T00:00:00Z").findForAccountIds(accountIds),
-    ).toMatchObject([{ accountId: "account:200", employee: { employment: { status: "ACTIVE" } } }])
+    ).toMatchObject([
+      {
+        accountId: "6d819592-afad-4669-a64e-5ce92ac9809b",
+        employee: { employment: { status: "ACTIVE" } },
+      },
+    ])
   })
 
   test("旧対応表だけのAccountは従業員として解決しない", async () => {

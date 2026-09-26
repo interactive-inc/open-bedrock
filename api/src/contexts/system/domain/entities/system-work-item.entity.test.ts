@@ -6,17 +6,17 @@ import type { SystemWorkActor } from "@system/domain/schemas/work/system-work-it
 
 const owner = {
   accountId: zAccountId.parse("owner"),
-  principalId: "principal:owner",
+  principalId: "22dc64f8-e30e-4634-8e10-25b9e4fa1f75",
   kind: "human",
 } as const
 const receiver = {
-  accountId: zAccountId.parse("receiver"),
-  principalId: "principal:receiver",
+  accountId: zAccountId.parse("7b0593a0-2ab1-4988-8e40-e56305231514"),
+  principalId: "61064c30-9351-425c-a562-c004ac792a59",
   kind: "human",
 } as const
 const worker = {
   accountId: zAccountId.parse("worker"),
-  principalId: "principal:worker",
+  principalId: "ef083a4f-dd0a-42a8-8007-57ab6f2df095",
   kind: "agent",
 } as const
 const now = new Date("2026-09-08T01:00:00.000Z")

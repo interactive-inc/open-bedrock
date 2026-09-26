@@ -26,14 +26,14 @@ async function fixture() {
     base.database
       .prepare(`INSERT INTO company_organization_change_operations
       (id, expected_revision, change_count, applied_count, resulting_revision, status, recorded_at)
-      VALUES ('legacy:manager-retirement', ?1, 1, 0, ?1 + 1, 'PENDING', 0)`)
+      VALUES ('58d585a9-e426-485a-82a9-51843a004ecf', ?1, 1, 0, ?1 + 1, 'PENDING', 0)`)
       .bind(revision),
     base.database
       .prepare(`INSERT INTO company_organization_assignment_period_versions
       (period_id, revision, employment_id, employee_id, organization_unit_id, assignment_type,
         position_title, manager_employee_id, starts_on, ends_on, is_void, recorded_by_action_id, recorded_at)
       VALUES ('assignment:legacy-manager-retirement', 1, ?1, ?2, ?3, 'PRIMARY', 'Coordinator', ?4,
-        '2030-01-01', NULL, 0, 'legacy:manager-retirement', 0)`)
+        '2030-01-01', NULL, 0, '58d585a9-e426-485a-82a9-51843a004ecf', 0)`)
       .bind(
         base.assignment.attributes.employmentId,
         base.people[0]!.employeeId,
@@ -41,7 +41,7 @@ async function fixture() {
         managerId,
       ),
     base.database.prepare(
-      "UPDATE company_organization_change_operations SET status = 'COMPLETED' WHERE id = 'legacy:manager-retirement'",
+      "UPDATE company_organization_change_operations SET status = 'COMPLETED' WHERE id = '58d585a9-e426-485a-82a9-51843a004ecf'",
     ),
   ])
   const lifecycle = new EmployeeLifecycleAdapter(base.context)

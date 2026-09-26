@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -112,8 +113,10 @@ describe("GET /shift-swap-requests/me", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0]?.requester_employee_id).toBe(toWorkforceEmployeeId(5))
-      expect(parsed.data.data[0]?.target_employee_id).toBe(toWorkforceEmployeeId(4))
+      expect(parsed.data.data[0]?.requester_employee_id).toBe(
+        toWorkforceEmployeeId(testEmployeeId(5)),
+      )
+      expect(parsed.data.data[0]?.target_employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(4)))
       // member は社員 ID から氏名を引けないため、交代相手の氏名を埋めて返す
       expect(parsed.data.data[0]?.target_employee_name).toBe("Drew Sato")
     }

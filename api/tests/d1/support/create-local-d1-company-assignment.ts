@@ -75,7 +75,8 @@ export async function createLocalD1CompanyAssignment(database: D1Database) {
       },
     },
   })
-  if (Number(adopted.status) !== 201) throw new Error(`adoption failed: ${adopted.status}`)
+  if (Number(adopted.status) !== 201)
+    throw new Error(`adoption failed: ${adopted.status} ${await adopted.text()}`)
   const employeeId = base.people[0]?.employeeId
   if (employeeId === undefined) throw new Error("employee missing")
   const employment = await base.database

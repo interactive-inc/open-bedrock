@@ -1,3 +1,4 @@
+import { deterministicCompanyId } from "@/contexts/company/domain/definitions/deterministic-company-id.definition"
 import type { CompanyResourceProps } from "@/contexts/company/domain/entities/company-resource.entity"
 import type { CalendarDate } from "@/contexts/company/domain/definitions/calendar-date.definition"
 import type { EmploymentType } from "@/contexts/company/domain/definitions/employment-type.definition"
@@ -22,7 +23,7 @@ export function initialWorkforceResources(
   input: InitialWorkforceDeclaration,
 ): ReadonlyArray<CompanyResourceProps> {
   const organizationId = COMPANY_DEFAULT_ORGANIZATION_ID
-  const personId = `person:${input.employeeId}`
+  const personId = deterministicCompanyId("person", input.employeeId)
   const base = {
     organizationId,
     revision: 1,
@@ -69,7 +70,7 @@ export function initialWorkforceResources(
           {
             ...base,
             type: "account-employee-link",
-            id: `account-link:${input.employeeId}`,
+            id: deterministicCompanyId("account-link", input.employeeId),
             state: "active",
             effectiveFrom: input.accountLink.effectiveOn,
             attributes: {

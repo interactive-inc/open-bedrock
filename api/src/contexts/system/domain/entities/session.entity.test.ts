@@ -15,7 +15,7 @@ const SUCCESSOR_TOKEN_HASH = "b".repeat(64)
 function sessionProps(overrides: Readonly<Record<string, unknown>> = {}) {
   return {
     id: "session-1",
-    accountId: "account-1",
+    accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
     familyId: "family-1",
     tokenHash: TOKEN_HASH,
     tokenVersion: 3,
@@ -41,7 +41,7 @@ describe("SessionEntity", () => {
 
     expect(session).toMatchObject({
       id: "session-1",
-      accountId: "account-1",
+      accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
       familyId: "family-1",
       tokenHash: TOKEN_HASH,
       tokenVersion: 3,
@@ -158,7 +158,7 @@ describe("SessionRotationValue", () => {
   })
 
   test.each([
-    { accountId: "account-2" },
+    { accountId: "4b0518fd-9017-4afc-addd-bb50998b0273" },
     { familyId: "family-2" },
     { tokenVersion: 4 },
     { id: "session-1" },

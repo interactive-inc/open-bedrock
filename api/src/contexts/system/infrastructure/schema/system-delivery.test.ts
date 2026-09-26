@@ -14,7 +14,7 @@ function createDatabase(): Database {
   database.exec(deliverySql)
   database.exec(
     `INSERT INTO system_accounts (id, status, token_version, created_at, updated_at)
-     VALUES ('account:1', 'active', 0, 1, 1);`,
+     VALUES ('c0975461-26d2-43a1-86d2-124bd000d9c9', 'active', 0, 1, 1);`,
   )
   return database
 }
@@ -48,7 +48,7 @@ describe("System delivery schema", () => {
          (id, operation_key, payload_digest, idempotency_key, created_by_account_id,
           status, attempt, max_attempts, available_at, lease_account_id, lease_token_hash,
           lease_expires_at, last_error_code, created_at, updated_at, completed_at)
-       VALUES ('job:1', 'record.process', '${"a".repeat(64)}', 'command:1', 'account:1',
+       VALUES ('job:1', 'record.process', '${"a".repeat(64)}', 'command:1', 'c0975461-26d2-43a1-86d2-124bd000d9c9',
          'queued', 0, 1, 1, NULL, NULL, NULL, NULL, 1, 1, NULL);
        INSERT INTO system_inbox_messages
          (id, source_key, external_message_id, payload_digest, status, received_at,
@@ -76,7 +76,7 @@ describe("System delivery schema", () => {
     ).toThrow()
     database.exec(
       `UPDATE system_jobs
-       SET status = 'leased', attempt = 1, lease_account_id = 'account:1',
+       SET status = 'leased', attempt = 1, lease_account_id = 'c0975461-26d2-43a1-86d2-124bd000d9c9',
            lease_token_hash = '${"c".repeat(64)}', lease_expires_at = 10, updated_at = 2
        WHERE id = 'job:1';
        UPDATE system_jobs

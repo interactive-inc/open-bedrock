@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -176,7 +177,7 @@ describe("POST /antisocial-checks", () => {
 
     if (parsed.success) {
       expect(parsed.data.status).toBe("requested")
-      expect(parsed.data.requester_id).toBe(toWorkforceEmployeeId(4))
+      expect(parsed.data.requester_id).toBe(toWorkforceEmployeeId(testEmployeeId(4)))
       expect(parsed.data.result).toBe(null)
     }
   })
@@ -234,7 +235,7 @@ describe("GET /antisocial-checks/me", () => {
 
     if (parsed.success) {
       expect(parsed.data.data.length).toBe(1)
-      expect(parsed.data.data[0].requester_id).toBe(toWorkforceEmployeeId(4))
+      expect(parsed.data.data[0].requester_id).toBe(toWorkforceEmployeeId(testEmployeeId(4)))
     }
   })
 
@@ -266,7 +267,9 @@ describe("GET /antisocial-checks/admin", () => {
     if (parsed.success) {
       expect(parsed.data.total).toBe(2)
       expect(
-        parsed.data.data.some((check) => check.requester_id === toWorkforceEmployeeId(4)),
+        parsed.data.data.some(
+          (check) => check.requester_id === toWorkforceEmployeeId(testEmployeeId(4)),
+        ),
       ).toBe(false)
     }
   })

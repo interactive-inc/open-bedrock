@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -111,15 +112,17 @@ describe("GET /health-checkups", () => {
 
     if (parsed.success) {
       expect(parsed.data.total).toBe(2)
-      expect(parsed.data.data.every((item) => item.employee_id === toWorkforceEmployeeId(5))).toBe(
-        true,
-      )
+      expect(
+        parsed.data.data.every(
+          (item) => item.employee_id === toWorkforceEmployeeId(testEmployeeId(5)),
+        ),
+      ).toBe(true)
     }
   })
 
   test("member is 403 when requesting another employee's records", async () => {
     const response = await request({
-      path: "/health-checkup/health-checkups?employee_id=5",
+      path: `/health-checkup/health-checkups?employee_id=${testEmployeeId(5)}`,
       token: await tokenFor(6),
     })
 
@@ -128,7 +131,7 @@ describe("GET /health-checkups", () => {
 
   test("admin (health_checkup:read:all) can read another employee's records", async () => {
     const response = await request({
-      path: "/health-checkup/health-checkups?employee_id=5",
+      path: `/health-checkup/health-checkups?employee_id=${testEmployeeId(5)}`,
       token: await tokenFor(1),
     })
 
@@ -154,7 +157,7 @@ describe("GET /health-checkups", () => {
 
   test("filters by fiscal_year", async () => {
     const response = await request({
-      path: "/health-checkup/health-checkups?employee_id=5&fiscal_year=2026",
+      path: `/health-checkup/health-checkups?employee_id=${testEmployeeId(5)}&fiscal_year=2026`,
       token: await tokenFor(1),
     })
 
@@ -211,7 +214,7 @@ describe("POST /health-checkups", () => {
       path: "/health-checkup/health-checkups",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: "6", fiscal_year: 2026, checkup_kind: "regular" },
+      body: { employee_id: testEmployeeId(6), fiscal_year: 2026, checkup_kind: "regular" },
     })
 
     expect(response.status).toBe(201)
@@ -230,7 +233,7 @@ describe("POST /health-checkups", () => {
       path: "/health-checkup/health-checkups",
       token: await tokenFor(5),
       method: "POST",
-      body: { employee_id: "5", fiscal_year: 2026, checkup_kind: "regular" },
+      body: { employee_id: testEmployeeId(5), fiscal_year: 2026, checkup_kind: "regular" },
     })
 
     expect(response.status).toBe(403)
@@ -251,7 +254,7 @@ describe("POST /health-checkups", () => {
     expect(parsed.success).toBe(true)
 
     if (parsed.success) {
-      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(6))
+      expect(parsed.data.employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(6)))
     }
   })
 
@@ -271,7 +274,12 @@ describe("POST /health-checkups", () => {
       path: "/health-checkup/health-checkups",
       token: await tokenFor(1),
       method: "POST",
-      body: { employee_id: "6", employee_code: "E006", fiscal_year: 2026, checkup_kind: "regular" },
+      body: {
+        employee_id: testEmployeeId(6),
+        employee_code: "E006",
+        fiscal_year: 2026,
+        checkup_kind: "regular",
+      },
     })
 
     expect(response.status).toBe(400)

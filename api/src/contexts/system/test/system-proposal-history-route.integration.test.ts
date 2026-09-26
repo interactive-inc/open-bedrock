@@ -28,7 +28,7 @@ async function fixture() {
   f.sqlite.exec(`
     INSERT INTO system_procedure_definitions(key,current_revision,status,created_at,updated_at) VALUES ('change',1,'active',100,100);
     INSERT INTO system_procedure_definition_revisions(procedure_key,revision,title,category,input_schema_json,decision_policy_json,created_by_account_id,created_at)
-      VALUES ('change',1,'Change','operation','{}','{}','owner',100);
+      VALUES ('change',1,'Change','operation','{}','{}','45712a13-6a79-4dff-b2b0-d518052d6101',100);
     INSERT INTO system_procedure_numbers(procedure_key) VALUES ('change');
     INSERT INTO system_iam_role_permissions (role_id, permission_key)
       SELECT id, 'system:procedure:read' FROM system_iam_roles WHERE key IN ('role:owner','role:other','role:recipient');
@@ -45,7 +45,7 @@ async function fixture() {
     dueAt: null,
     candidates: [
       {
-        accountId: zAccountId.parse("recipient"),
+        accountId: zAccountId.parse("86bb9cb9-9f16-4b64-865d-2e7954cf484d"),
         source: "primary" as const,
         evidenceContext: "authority",
         evidenceKind: "qualification",
@@ -64,7 +64,7 @@ async function fixture() {
     procedureKey: "change",
     procedureRevision: 1,
     body: { original: "retained" },
-    createdByAccountId: zAccountId.parse("owner"),
+    createdByAccountId: zAccountId.parse("45712a13-6a79-4dff-b2b0-d518052d6101"),
     supersedesProposalId: null,
     createdAt: f.clock.now,
     firstTask,
@@ -76,7 +76,7 @@ async function fixture() {
     procedureKey: "change",
     procedureRevision: 1,
     body: { revised: "retained" },
-    createdByAccountId: zAccountId.parse("owner"),
+    createdByAccountId: zAccountId.parse("45712a13-6a79-4dff-b2b0-d518052d6101"),
     supersedesProposalId: first.proposal.id,
     createdAt: new Date(f.clock.now.getTime() + 1),
     firstTask: { ...firstTask, openedAt: new Date(f.clock.now.getTime() + 1) },
@@ -98,7 +98,12 @@ async function fixture() {
     )
     .get("/system/proposals/:number/versions/:version", ...GET)
   const headers = new Map<string, Record<string, string>>()
-  for (const account of ["owner", "other", "recipient", "admin"]) {
+  for (const account of [
+    "45712a13-6a79-4dff-b2b0-d518052d6101",
+    "28689052-c77f-42e5-8f85-1b461d9f5514",
+    "86bb9cb9-9f16-4b64-865d-2e7954cf484d",
+    "282b84eb-787d-4655-a88b-c072960fc970",
+  ]) {
     const token = await new AccessTokenService({ profile: SYSTEM_ACCESS_TOKEN_PROFILE }).create(
       { accountId: account, tokenVersion: 0 },
       secret,
@@ -118,7 +123,7 @@ async function fixture() {
 
 test("Company・業務コードなしで取消済み原版と再提出版を読み、退職相当の停止主体も履歴に残す", async () => {
   const f = await fixture()
-  const original = await f.request("owner")
+  const original = await f.request("45712a13-6a79-4dff-b2b0-d518052d6101")
   expect(original.status).toBe(200)
   expect(await original.json()).toMatchObject({
     version: 1,
@@ -127,18 +132,18 @@ test("Company・業務コードなしで取消済み原版と再提出版を読�
     supersedes_proposal_id: null,
     case: { status: "cancelled" },
   })
-  const revised = await f.request("owner", 2)
+  const revised = await f.request("45712a13-6a79-4dff-b2b0-d518052d6101", 2)
   expect(revised.status).toBe(200)
   expect(await revised.json()).toMatchObject({
     version: 2,
     supersedes_proposal_id: f.first.proposal.id,
   })
-  expect((await f.request("owner", 3)).status).toBe(404)
-  expect((await f.request("owner", 0)).status).toBe(400)
+  expect((await f.request("45712a13-6a79-4dff-b2b0-d518052d6101", 3)).status).toBe(404)
+  expect((await f.request("45712a13-6a79-4dff-b2b0-d518052d6101", 0)).status).toBe(400)
   f.sqlite.exec(
-    "UPDATE system_accounts SET status='suspended', token_version=token_version+1, updated_at=updated_at+1 WHERE id='owner'",
+    "UPDATE system_accounts SET status='suspended', token_version=token_version+1, updated_at=updated_at+1 WHERE id='45712a13-6a79-4dff-b2b0-d518052d6101'",
   )
-  expect((await f.request("recipient")).status).toBe(200)
+  expect((await f.request("86bb9cb9-9f16-4b64-865d-2e7954cf484d")).status).toBe(200)
 })
 
 test("手続きの現行版を変更しても提案時の定義原文を返す", async () => {
@@ -146,10 +151,10 @@ test("手続きの現行版を変更しても提案時の定義原文を返す",
   f.sqlite.exec(`
     INSERT INTO system_procedure_definition_revisions
       (procedure_key,revision,title,category,input_schema_json,decision_policy_json,created_by_account_id,created_at)
-      VALUES ('change',2,'Changed definition','revised','{"type":"object"}','{"revised":true}','owner',101);
+      VALUES ('change',2,'Changed definition','revised','{"type":"object"}','{"revised":true}','45712a13-6a79-4dff-b2b0-d518052d6101',101);
     UPDATE system_procedure_definitions SET current_revision=2,updated_at=101 WHERE key='change';
   `)
-  const response = await f.request("owner")
+  const response = await f.request("45712a13-6a79-4dff-b2b0-d518052d6101")
   expect(response.status).toBe(200)
   expect(await response.json()).toMatchObject({
     procedure_key: "change",
@@ -169,8 +174,8 @@ test("手続きの現行版を変更しても提案時の定義原文を返す",
 
 test("関係のない主体と管理者だけの権限を拒否し、関係による拒否を監査する", async () => {
   const f = await fixture()
-  expect((await f.request("other")).status).toBe(403)
-  expect((await f.request("admin")).status).toBe(403)
+  expect((await f.request("28689052-c77f-42e5-8f85-1b461d9f5514")).status).toBe(403)
+  expect((await f.request("282b84eb-787d-4655-a88b-c072960fc970")).status).toBe(403)
   expect((await f.request("anonymous")).status).toBe(401)
   expect(
     f.sqlite
@@ -189,12 +194,14 @@ test("参照中の権限取消は本文の開示と成功監査を拒否する",
   const spy = spyOn(SystemD1ProposalAdapter.prototype, "listTasks").mockImplementationOnce(
     async (caseId) => {
       const tasks = await original(caseId)
-      f.sqlite.exec("UPDATE system_role_bindings SET revoked_at=1000 WHERE account_id='owner'")
+      f.sqlite.exec(
+        "UPDATE system_role_bindings SET revoked_at=1000 WHERE account_id='45712a13-6a79-4dff-b2b0-d518052d6101'",
+      )
       return tasks
     },
   )
   try {
-    expect((await f.request("owner")).status).toBe(503)
+    expect((await f.request("45712a13-6a79-4dff-b2b0-d518052d6101")).status).toBe(503)
   } finally {
     spy.mockRestore()
   }
@@ -212,9 +219,9 @@ test("開示監査の保存失敗では本文を返さない", async () => {
   f.sqlite.exec(
     "CREATE TRIGGER fail_disclosure BEFORE INSERT ON system_audit_events BEGIN SELECT RAISE(ABORT,'audit unavailable'); END",
   )
-  expect((await f.request("owner")).status).toBe(503)
+  expect((await f.request("45712a13-6a79-4dff-b2b0-d518052d6101")).status).toBe(503)
   f.sqlite.exec("DROP TRIGGER fail_disclosure")
-  expect((await f.request("owner")).status).toBe(200)
+  expect((await f.request("45712a13-6a79-4dff-b2b0-d518052d6101")).status).toBe(200)
 })
 
 test("保存済み本文とdigestが一致しない場合は履歴を開示しない", async () => {
@@ -223,7 +230,7 @@ test("保存済み本文とdigestが一致しない場合は履歴を開示し�
   f.sqlite
     .query("UPDATE system_proposals SET body_json=?1 WHERE id=?2")
     .run('{"original":"corrupt"}', f.first.proposal.id)
-  expect((await f.request("owner")).status).toBe(503)
+  expect((await f.request("45712a13-6a79-4dff-b2b0-d518052d6101")).status).toBe(503)
   expect(
     f.sqlite
       .query(
@@ -244,7 +251,7 @@ test("参照中の案件変更は開示を拒否し、再試行で新しい状�
       expect(
         await new CancelSystemProcedure(new SystemD1WorkflowAdapter({ env: { DB: f.db } })).run({
           number: f.second.number,
-          createdByAccountId: zAccountId.parse("owner"),
+          createdByAccountId: zAccountId.parse("45712a13-6a79-4dff-b2b0-d518052d6101"),
           cancelledAt: f.clock.now,
         }),
       ).toBe(true)
@@ -252,10 +259,10 @@ test("参照中の案件変更は開示を拒否し、再試行で新しい状�
     },
   )
   try {
-    const response = await f.request("owner", 2)
+    const response = await f.request("45712a13-6a79-4dff-b2b0-d518052d6101", 2)
     expect({ status: response.status, body: await response.json() }).toMatchObject({ status: 503 })
   } finally {
     spy.mockRestore()
   }
-  expect((await f.request("owner", 2)).status).toBe(200)
+  expect((await f.request("45712a13-6a79-4dff-b2b0-d518052d6101", 2)).status).toBe(200)
 })

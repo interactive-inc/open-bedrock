@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { describe, expect, test } from "bun:test"
 import { CreateAntisocialCheck } from "@/contexts/antisocial-check/application/create-antisocial-check"
@@ -30,7 +31,7 @@ type FakeContext = ReturnType<typeof createRepository>["context"]
 
 async function seedCheck(context: FakeContext, requesterId: number): Promise<string> {
   const created = await new CreateAntisocialCheck(context).run({
-    requesterId: toWorkforceEmployeeId(requesterId),
+    requesterId: toWorkforceEmployeeId(testEmployeeId(requesterId)),
     partnerName: "Example Trading Co.",
     partnerAddress: "1-2-3 Sample, Example City",
     representativeName: "Pat Example",
@@ -49,7 +50,7 @@ describe("CreateAntisocialCheck", () => {
     const { context, stored } = createRepository()
 
     const created = await new CreateAntisocialCheck(context).run({
-      requesterId: toWorkforceEmployeeId(2),
+      requesterId: toWorkforceEmployeeId(testEmployeeId(2)),
       partnerName: "Sample Logistics Inc.",
       partnerAddress: null,
       representativeName: null,

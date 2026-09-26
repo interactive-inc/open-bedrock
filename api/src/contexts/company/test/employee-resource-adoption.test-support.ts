@@ -38,10 +38,13 @@ export type AdoptionResource = {
   effectiveTo: string | null
   attributes: Record<string, string | null>
 }
-export const adoptionEmployeeId = restoreWorkforceId("employee", "employee:adoption")
-const employmentId = restoreWorkforceId("employment", "employment:adoption")
+export const adoptionEmployeeId = restoreWorkforceId(
+  "employee",
+  "50737555-5956-4b7d-8755-4e3b9660f143",
+)
+const employmentId = restoreWorkforceId("employment", "decda03c-f38d-4899-9a9d-30a36ca6fc5e")
 const actor = CompanyActorValue.restore({
-  accountId: "account:adoption",
+  accountId: "7a0b75ec-d7b9-4f49-b023-432c8f109a40",
   employeeId: adoptionEmployeeId,
   organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
   capabilities: ["company:admin"],
@@ -64,13 +67,13 @@ export async function createEmployeeAdoptionFixture(
   await database.exec(`INSERT INTO company_organizations (id, revision, name, representative_name, created_at, updated_at)
     VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 0, 'Example', 'Example', 0, 0);
     INSERT INTO company_employees (id, official_name, employee_code, email, phone, created_at, updated_at)
-    VALUES ('employee:adoption', 'Current Person', 'ADOPT-001', 'you@example.com', NULL, 0, 0);
+    VALUES ('50737555-5956-4b7d-8755-4e3b9660f143', 'Current Person', 'ADOPT-001', 'you@example.com', NULL, 0, 0);
     INSERT INTO company_employments (id, employee_id, contract_name, employment_type, hire_date, termination_date, status, created_at, updated_at)
-    VALUES ('employment:adoption', 'employee:adoption', 'Confirmed Contract', 'PART_TIME', '2020-01-01', NULL, 'ACTIVE', 0, 0);
-    INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('account:adoption', 'active', 0, 0, 0);
-    INSERT INTO company_account_employee_links (account_id, employee_id) VALUES ('account:adoption', 'employee:adoption');
+    VALUES ('decda03c-f38d-4899-9a9d-30a36ca6fc5e', '50737555-5956-4b7d-8755-4e3b9660f143', 'Confirmed Contract', 'PART_TIME', '2020-01-01', NULL, 'ACTIVE', 0, 0);
+    INSERT INTO system_accounts (id, status, token_version, created_at, updated_at) VALUES ('7a0b75ec-d7b9-4f49-b023-432c8f109a40', 'active', 0, 0, 0);
+    INSERT INTO company_account_employee_links (account_id, employee_id) VALUES ('7a0b75ec-d7b9-4f49-b023-432c8f109a40', '50737555-5956-4b7d-8755-4e3b9660f143');
     INSERT INTO company_account_profiles (organization_id, account_id, display_name, created_at, updated_at)
-    VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', 'account:adoption', 'Current Person', 0, 0);`)
+    VALUES ('${COMPANY_DEFAULT_ORGANIZATION_ID}', '7a0b75ec-d7b9-4f49-b023-432c8f109a40', 'Current Person', 0, 0);`)
   const initial = await prepareUnpublishedEmployment(database, {
     employeeId: adoptionEmployeeId,
     employmentId,
@@ -78,7 +81,7 @@ export async function createEmployeeAdoptionFixture(
     status: "active",
     occurredAt: new Date("2020-01-01T00:00:00Z"),
     actorAccountId: actor.accountId,
-    operationId: "legacy-initial",
+    operationId: "4c785844-a4e4-451c-a3c3-b4ef5d8b5cee",
     reason: "Confirmed historical registration",
   })
   await database.batch([...initial])
@@ -181,7 +184,7 @@ export async function createEmployeeAdoptionFixture(
   app.route("/company", companyAuthenticatedRoutes).route("/company", companyAuditedRoutes)
   const read = () =>
     app.request(
-      "/company/employee-resource-adoptions?employee_id=employee:adoption",
+      `/company/employee-resource-adoptions?employee_id=${adoptionEmployeeId}`,
       {},
       environment,
     )

@@ -30,11 +30,11 @@ function createFixture(
   fixture.sqlite.exec(`
     INSERT INTO system_accounts
       (id, status, token_version, created_at, updated_at)
-    VALUES ('cli-account', 'active', 0, ${now.getTime()}, ${now.getTime()});
+    VALUES ('e2a3e4ae-fe80-499d-9ed8-6831832ad0ce', 'active', 0, ${now.getTime()}, ${now.getTime()});
     INSERT INTO system_identity_bindings
       (id, account_id, provider, subject, created_at, activated_at, revoked_at)
     VALUES (
-      'cli-identity', 'cli-account', 'oidc', 'cli-subject',
+      '9e94e459-6cba-42d3-bc51-9f9315184f1f', 'e2a3e4ae-fe80-499d-9ed8-6831832ad0ce', 'oidc', 'cli-subject',
       ${now.getTime()}, ${now.getTime()}, NULL
     );
   `)
@@ -111,7 +111,7 @@ describe("GET /system/cli-authorization-callback", () => {
       .get()
     expect(persisted).toEqual({
       code_hash: expect.stringMatching(/^[0-9a-f]{64}$/),
-      account_id: "cli-account",
+      account_id: "e2a3e4ae-fe80-499d-9ed8-6831832ad0ce",
     })
     expect(JSON.stringify(persisted)).not.toContain(rawCode)
     expect(fixture.sqlite.query("SELECT id FROM system_sessions").all()).toEqual([])
@@ -138,7 +138,7 @@ describe("GET /system/cli-authorization-callback", () => {
     if (location === null) throw new Error("missing Location header")
     expect(new URL(location).searchParams.get("error")).toBe("identity_login_denied")
     expect(fixture.sqlite.query("SELECT id FROM system_accounts ORDER BY id").all()).toEqual([
-      { id: "cli-account" },
+      { id: "e2a3e4ae-fe80-499d-9ed8-6831832ad0ce" },
     ])
     expect(fixture.sqlite.query("SELECT code_hash FROM system_cli_login_codes").all()).toEqual([])
     expect(

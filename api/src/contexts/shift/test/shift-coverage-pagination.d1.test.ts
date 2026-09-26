@@ -65,7 +65,7 @@ test("勤務パターン11件と割当・交代申請を分割照合し撤去確
   await database
     .prepare(`INSERT INTO system_step_up_grants
       (id,account_id,token_hash,method,issued_at,expires_at)
-      VALUES ('shift-coverage-step-up',?1,?2,'external_identity',?3,?4)`)
+      VALUES ('6c79bf0e-0d21-435a-94d3-b64bf90202f9',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const post = (path: string, body: unknown) =>

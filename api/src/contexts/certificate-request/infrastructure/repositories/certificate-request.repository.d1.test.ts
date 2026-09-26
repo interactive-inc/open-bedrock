@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { CertificateRequest } from "@/contexts/certificate-request/domain/entities/certificate-request.entity"
@@ -26,7 +27,7 @@ describe("CertificateRequestRepository on local D1", () => {
 
     const created = await repository.create(
       CertificateRequest.create({
-        requesterId: toWorkforceEmployeeId(5),
+        requesterId: toWorkforceEmployeeId(testEmployeeId(5)),
         certificateType: "employment",
         submitTo: "City Hall",
         neededBy: "2026-06-20",

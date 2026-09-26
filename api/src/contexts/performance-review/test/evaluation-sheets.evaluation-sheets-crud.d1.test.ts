@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -97,9 +98,9 @@ async function createSheet(
 ): Promise<{ id: number; revision: number }> {
   const token = await adminToken()
   const body = {
-    employee_id: "5",
+    employee_id: testEmployeeId(5),
     period: "2026-H1",
-    primary_evaluator_id: "1",
+    primary_evaluator_id: testEmployeeId(1),
     ...overrides,
   }
 
@@ -193,7 +194,7 @@ describe("GET /evaluation-sheets/me", () => {
 
     if (body.success) {
       expect(body.data.total).toBe(1)
-      expect(body.data.data[0].employee_id).toBe(toWorkforceEmployeeId(5))
+      expect(body.data.data[0].employee_id).toBe(toWorkforceEmployeeId(testEmployeeId(5)))
       expect(body.data.data[0].revision).toBeGreaterThanOrEqual(1)
     }
   })
@@ -389,7 +390,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
       token,
       method: "PUT",
       body: {
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
         expected_revision: sheet.revision,
       },
     })
@@ -401,7 +402,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
     expect(body.success).toBe(true)
 
     if (body.success) {
-      expect(body.data.primary_evaluator_id).toBe(toWorkforceEmployeeId(4))
+      expect(body.data.primary_evaluator_id).toBe(toWorkforceEmployeeId(testEmployeeId(4)))
       expect(body.data.revision).toBe(sheet.revision + 1)
     }
   })
@@ -419,7 +420,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
       token,
       method: "PUT",
       body: {
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
         expected_revision: sheet.revision + 999,
       },
     })
@@ -441,7 +442,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
       token,
       method: "PUT",
       body: {
-        primary_evaluator_id: "5",
+        primary_evaluator_id: testEmployeeId(5),
         expected_revision: sheet.revision,
       },
     })
@@ -462,8 +463,8 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
       token,
       method: "PUT",
       body: {
-        primary_evaluator_id: "4",
-        secondary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
+        secondary_evaluator_id: testEmployeeId(4),
         expected_revision: sheet.revision,
       },
     })
@@ -484,7 +485,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
       token,
       method: "PUT",
       body: {
-        primary_evaluator_id: "9999",
+        primary_evaluator_id: testEmployeeId(9999),
         expected_revision: sheet.revision,
       },
     })
@@ -505,7 +506,7 @@ describe("PUT /evaluation-sheets/:sheetId/evaluators", () => {
       token,
       method: "PUT",
       body: {
-        primary_evaluator_id: "4",
+        primary_evaluator_id: testEmployeeId(4),
         expected_revision: sheet.revision,
       },
     })

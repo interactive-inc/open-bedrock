@@ -10,7 +10,9 @@ describe("createOidcAuthorizationCode", () => {
   test("平文codeを保存せずcanonical Accountへ束縛する", async () => {
     const fixture = new SystemSessionTestContext()
     const now = new Date("2026-01-01T00:00:00.000Z")
-    fixture.sqlite.exec("INSERT INTO system_accounts VALUES ('account-1', 'active', 0, NULL, 0, 0)")
+    fixture.sqlite.exec(
+      "INSERT INTO system_accounts (id, status, token_version, closed_at, created_at, updated_at) VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', 'active', 0, NULL, 0, 0)",
+    )
     const result = await new CreateOidcAuthorizationCodeAdapter({
       var: {
         database: drizzle(fixture.context.env.DB, { schema: systemCoreSchema }),
@@ -20,7 +22,7 @@ describe("createOidcAuthorizationCode", () => {
       issuer: "https://identity.example.test",
       clientId: "system-console",
       redirectUri: "https://console.example.test/callback",
-      accountId: zAccountId.parse("account-1"),
+      accountId: zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e"),
       codeChallenge: "a".repeat(43),
       nonce: "nonce-with-enough-entropy",
       scope: ["openid"],
@@ -33,9 +35,12 @@ describe("createOidcAuthorizationCode", () => {
 
     expect(stored).toEqual({
       code_hash: await hashOidcSecret(result.code),
-      account_id: "account-1",
+      account_id: "d5858208-e680-4db8-a05d-8bf4f900c24e",
     })
-    expect(stored).not.toEqual({ code_hash: result.code, account_id: "account-1" })
+    expect(stored).not.toEqual({
+      code_hash: result.code,
+      account_id: "d5858208-e680-4db8-a05d-8bf4f900c24e",
+    })
     fixture.sqlite.close()
   })
 })

@@ -47,7 +47,7 @@ test("規程2台帳を停止中に人の承認で保全し、業務コードを�
   await database
     .prepare(`INSERT INTO system_step_up_grants
       (id,account_id,token_hash,method,issued_at,expires_at)
-      VALUES ('regulation-test-step-up',?1,?2,'external_identity',?3,?4)`)
+      VALUES ('b5c4e6ee-3738-4dbd-8f9f-6cdc61667210',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const frozen = await app.request(

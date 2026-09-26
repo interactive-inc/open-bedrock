@@ -13,6 +13,7 @@ import { AUDIT_CSV_MAX_BYTES } from "@/contexts/company/domain/definitions/to-au
 import { initializeStandardCompanyTestState } from "@tests/api/support/initialize-standard-company-test-state"
 import { type LocalD1Pool, startLocalD1Pool } from "@tests/d1/support/start-local-d1-pool"
 import { execSql } from "@tests/d1/support/exec-sql"
+import { testAccountId } from "@tests/api/support/test-identity-id"
 
 let pool: LocalD1Pool
 
@@ -87,7 +88,7 @@ async function grantPermission(
            (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
          VALUES (?1, ?2, ?3, NULL, NULL, 0, NULL)`,
       )
-      .bind(crypto.randomUUID(), String(accountId), roleId),
+      .bind(crypto.randomUUID(), testAccountId(accountId), roleId),
   ])
 }
 

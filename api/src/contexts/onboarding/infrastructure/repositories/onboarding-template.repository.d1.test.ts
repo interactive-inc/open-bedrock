@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { OnboardingAssignment } from "@/contexts/onboarding/domain/entities/onboarding-assignment.entity"
@@ -86,7 +87,7 @@ describe("OnboardingTemplateRepository on local D1", () => {
 
     const assignment = await assignments.create(
       OnboardingAssignment.create({
-        employeeId: toWorkforceEmployeeId(1),
+        employeeId: toWorkforceEmployeeId(testEmployeeId(1)),
         template: created,
         assignedAt: "2026-01-01T00:00:00.000Z",
       }),

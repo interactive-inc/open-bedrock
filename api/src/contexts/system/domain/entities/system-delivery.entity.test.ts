@@ -4,7 +4,7 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import { describe, expect, test } from "bun:test"
 
 const start = new Date("2026-01-01T00:00:00.000Z")
-const accountId = zAccountId.parse("worker:1")
+const accountId = zAccountId.parse("75effc00-0878-4178-8d76-277086315849")
 
 describe("SystemDeliveryEntity", () => {
   test("lease・heartbeat・成功をtokenと期限へ束縛する", () => {

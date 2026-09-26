@@ -28,7 +28,7 @@ test("公開組織snapshotは指定会社版と有効日を維持し、未来版
     const command = CompanyResourceChangeEntity.create({
       commandId: `snapshot:${revision}`,
       expectedRevision: revision - 1,
-      actorAccountId: "account:operator",
+      actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
       reason: "Confirmed organization",
       recordedAt: revision,
       resources: [
@@ -59,7 +59,7 @@ test("公開組織snapshotは指定会社版と有効日を維持し、未来版
     context.set(
       "companyActor",
       CompanyActorValue.restore({
-        accountId: "account:reader",
+        accountId: "1227c813-1159-4405-9f5b-5e54df944b9a",
         employeeId: null,
         organizationIds: [
           state.authorized
@@ -118,7 +118,7 @@ test("組織閲覧だけのsnapshotは従業員の等級割当を含まない", 
       context.set(
         "companyActor",
         CompanyActorValue.restore({
-          accountId: "account:reader",
+          accountId: "1227c813-1159-4405-9f5b-5e54df944b9a",
           employeeId: null,
           organizationIds: [COMPANY_DEFAULT_ORGANIZATION_ID],
           capabilities: ["company:read"],

@@ -1,3 +1,4 @@
+import { testDerivedId } from "@tests/api/support/test-identity-id"
 import { expect, test } from "bun:test"
 import { CompanyGovernanceAuthorityResolutionAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-governance-authority-resolution.adapter"
 import {
@@ -28,23 +29,23 @@ function fixture() {
     resource("responsibility-assignment", "responsibility-assignment:review", {
       responsibilityId: "responsibility:review",
       holderType: "employee",
-      holderId: "employee:0",
+      holderId: "d129cf6a-1452-4b63-be62-59c8ce4e2580",
       authorityScopeId: null,
       delegationAllowed: false,
     }),
     ...Array.from({ length: 1001 }, (_, index) => [
-      resource("employee", `employee:${index}`, {
+      resource("employee", testDerivedId("employee", index), {
         personId: `person:${index}`,
         employeeCode: `E${index}`,
       }),
-      resource("employment", `employment:${index}`, {
-        employeeId: `employee:${index}`,
+      resource("employment", testDerivedId("employment", index), {
+        employeeId: testDerivedId("employee", index),
         status: "ACTIVE",
         employmentType: "FULL_TIME",
       }),
       resource("account-employee-link", `link:${index}`, {
-        employeeId: `employee:${index}`,
-        accountId: `account:${index}`,
+        employeeId: testDerivedId("employee", index),
+        accountId: testDerivedId("account", index),
       }),
     ]).flat(),
   ]
@@ -75,7 +76,14 @@ test("千人を超えるAccountの現在状態を一度に確認し、責務を�
   }).resolve(f.input)
   expect(result).toMatchObject({
     kind: "resolved",
-    resolution: { candidates: [{ employeeId: "employee:0", accountId: "account:0" }] },
+    resolution: {
+      candidates: [
+        {
+          employeeId: "d129cf6a-1452-4b63-be62-59c8ce4e2580",
+          accountId: "b33d54c7-457c-4d51-9623-9298350e0e56",
+        },
+      ],
+    },
   })
   expect(calls).toBe(1)
 })
@@ -89,7 +97,7 @@ test.each(["unavailable", "unexpected", "inactive"])(
       readActiveAccountIds: async (ids) => {
         if (kind === "unavailable") return new Error("Account read failed")
         if (kind === "unexpected") return new Set([...ids, "account:unexpected"])
-        return new Set(ids.filter((id) => id !== "account:0"))
+        return new Set(ids.filter((id) => id !== "b33d54c7-457c-4d51-9623-9298350e0e56"))
       },
     }).resolve(f.input)
     if (kind === "inactive")

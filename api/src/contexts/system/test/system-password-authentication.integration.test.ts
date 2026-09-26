@@ -10,7 +10,7 @@ import { describe, expect, test } from "bun:test"
 
 const schema = `
   CREATE TABLE system_accounts (
-    id TEXT PRIMARY KEY, status TEXT NOT NULL, token_version INTEGER NOT NULL,
+    id TEXT PRIMARY KEY, legacy_id TEXT UNIQUE, status TEXT NOT NULL, token_version INTEGER NOT NULL,
     closed_at INTEGER,
     created_at INTEGER NOT NULL, updated_at INTEGER NOT NULL
   );
@@ -52,14 +52,14 @@ async function insertCredential(
     .prepare(
       `INSERT INTO system_accounts
          (id, status, token_version, closed_at, created_at, updated_at)
-       VALUES ('account-1', ?1, 3, NULL, ?2, ?2)`,
+       VALUES ('d5858208-e680-4db8-a05d-8bf4f900c24e', ?1, 3, NULL, ?2, ?2)`,
     )
     .bind(status, now.getTime() - 1_000)
     .run()
   await database
     .prepare(
       `INSERT INTO system_identity_bindings
-       VALUES ('identity-1', 'account-1', 'password', ?1, ?2, ?3, NULL)`,
+       VALUES ('identity-1', 'd5858208-e680-4db8-a05d-8bf4f900c24e', 'password', ?1, ?2, ?3, NULL)`,
     )
     .bind(subject, now.getTime() - 1_000, activatedAt)
     .run()
@@ -82,7 +82,7 @@ describe("System password authentication", () => {
       await createService(database, verifiedHashes).execute({ subject, password: "secret", now }),
     ).toEqual({
       kind: "authenticated",
-      accountId: zAccountId.parse("account-1"),
+      accountId: zAccountId.parse("d5858208-e680-4db8-a05d-8bf4f900c24e"),
       identityId: zIdentityId.parse("identity-1"),
       requiresPasswordRehash: false,
       tokenVersion: 3,

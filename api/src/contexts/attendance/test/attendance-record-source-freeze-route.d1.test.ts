@@ -38,7 +38,7 @@ test("停止と解除のHTTP操作は再認証を要求し、同じ世代の再�
   await f.database
     .prepare(`INSERT INTO system_step_up_grants
     (id,account_id,token_hash,method,issued_at,expires_at)
-    VALUES ('route-grant','account:recorder',?1,'external_identity',?2,?3)`)
+    VALUES ('a78c76b3-6a70-4d0d-b4a8-cb06a4755a10','cc97e08f-b4a0-4e2a-9a79-31e6d95f9208',?1,'external_identity',?2,?3)`)
     .bind(hash, f.clock.now.getTime(), f.clock.now.getTime() + 60_000)
     .run()
   const app = new Hono()
@@ -158,7 +158,7 @@ test("生成APIの署名検証から停止・参照・解除まで通し、失�
   await f.database
     .prepare(`INSERT INTO system_step_up_grants
     (id,account_id,token_hash,method,issued_at,expires_at)
-    VALUES ('generated-route-grant','account:recorder',?1,'external_identity',?2,?3)`)
+    VALUES ('24a25139-e8bf-4049-9c2c-9303a0394d51','cc97e08f-b4a0-4e2a-9a79-31e6d95f9208',?1,'external_identity',?2,?3)`)
     .bind(hash, f.clock.now.getTime(), f.clock.now.getTime() + 60_000)
     .run()
   const bindings = {
@@ -233,7 +233,7 @@ test("生成APIの署名検証から停止・参照・解除まで通し、失�
   expect(await (await read()).json()).toMatchObject({ freeze: { id, revision: 2 } })
   await execSql(
     f.database,
-    "UPDATE system_accounts SET token_version=1 WHERE id='account:recorder'",
+    "UPDATE system_accounts SET token_version=1 WHERE id='cc97e08f-b4a0-4e2a-9a79-31e6d95f9208'",
   )
   expect((await read()).status).toBe(401)
   expect((await request(`/${id}/release`, token, true)).status).toBe(401)

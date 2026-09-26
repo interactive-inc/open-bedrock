@@ -145,7 +145,7 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
   await f.database
     .prepare(`INSERT INTO system_step_up_grants
     (id,account_id,token_hash,method,issued_at,expires_at)
-    VALUES ('coverage-pagination-grant',?1,?2,'external_identity',?3,?4)`)
+    VALUES ('26306322-245a-428a-b54c-fbeba807b6ca',?1,?2,'external_identity',?3,?4)`)
     .bind(f.governance.creator.accountId, hash, at, at + 60000)
     .run()
   const freezeId = crypto.randomUUID()
@@ -1291,7 +1291,7 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
     {
       grants: originalPolicy.snapshot.grants.map((grant) => ({
         ...grant,
-        accountId: "account:other",
+        accountId: "d2c82c1d-214f-4a0e-8162-09c1f6704ea5",
       })),
     },
     {
@@ -1419,7 +1419,9 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
   ).not.toBeInstanceOf(Error)
   disclosureClock.offsetMs = 0
   await f.database
-    .prepare("UPDATE system_step_up_grants SET revoked_at=?1 WHERE id='coverage-pagination-grant'")
+    .prepare(
+      "UPDATE system_step_up_grants SET revoked_at=?1 WHERE id='26306322-245a-428a-b54c-fbeba807b6ca'",
+    )
     .bind(Date.now())
     .run()
   expect((await f.request(path, second)).status).toBe(403)

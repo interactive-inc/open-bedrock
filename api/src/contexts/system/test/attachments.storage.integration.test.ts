@@ -1,3 +1,4 @@
+import { testAccountId, testDerivedId } from "@tests/api/support/test-identity-id"
 import { z } from "zod"
 import { CaptureLinkedAttachmentRecordAdapter } from "@system/infrastructure/adapters/records/capture-linked-attachment-record.adapter"
 import { AttachmentRecordContentValue } from "@system/domain/values/records/attachment-record-content.value"
@@ -40,7 +41,7 @@ import { createSystemAttachmentTestDatabase } from "@system/test/create-system-a
 import { createSystemAttachmentTestKekEnvironment } from "@system/test/create-system-attachment-test-kek-environment.test-support"
 import { SystemAttachmentTestBucket } from "@system/test/system-attachment-test-bucket.test-support"
 
-const ownerAccountId = "acc_owner"
+const ownerAccountId = testAccountId("acc_owner")
 
 const now = new Date("2026-08-20T09:00:00.000Z")
 
@@ -231,7 +232,7 @@ test("原記録の本文と不足する来歴を暗号化保存し、空の元�
     if (verified instanceof Error) throw verified
     expect(new TextDecoder().decode(verified.payload.content.toBytes())).toBe(fixture.text)
     for (const mismatch of [
-      { ...recordInput, actorAccountId: "other-owner" },
+      { ...recordInput, actorAccountId: "5a1002aa-114b-4590-b6a2-708821897ee7" },
       { ...recordInput, attachmentDigest: "f".repeat(64) },
       { ...recordInput, source: { ...source, sourceNamespace: "other-source" } },
       { ...recordInput, source: { ...source, sourceRevision: "invented-revision" } },
@@ -382,21 +383,21 @@ test("encrypted original is verified before atomic finalization and failed sourc
       auditEventId: crypto.randomUUID(),
       grants: [
         ...["agent", "service", "connector"].map((kind) => ({
-          accountId: `reader-${kind}`,
+          accountId: testAccountId(`reader-${kind}`),
           actions: ["read"],
           purposes: ["review"],
           validFrom: now.toISOString(),
           validUntil: null,
         })),
         {
-          accountId: "viewer",
+          accountId: "eb2aaac2-352f-4196-8e01-adea61c54466",
           actions: ["read"],
           purposes: ["review"],
           validFrom: now.toISOString(),
           validUntil: new Date(now.getTime() + 3600000).toISOString(),
         },
         {
-          accountId: "exporter",
+          accountId: "8c7435a1-1641-435b-90f2-a437ade56f20",
           actions: ["export"],
           purposes: ["archive"],
           validFrom: now.toISOString(),
@@ -427,7 +428,7 @@ test("encrypted original is verified before atomic finalization and failed sourc
       await context.env.DB.exec(
         readFileSync(new URL(`../infrastructure/schema/${schema}.sql`, import.meta.url), "utf8"),
       )
-    for (const accountId of [ownerAccountId, "archive-reviewer"]) {
+    for (const accountId of [ownerAccountId, "95968d87-d176-408a-95b6-f974400b253b"]) {
       await context.env.DB.prepare(
         "INSERT INTO system_accounts(id,status,created_at,updated_at) VALUES (?1,'active',0,0)",
       )
@@ -436,7 +437,7 @@ test("encrypted original is verified before atomic finalization and failed sourc
       await context.env.DB.prepare(
         "INSERT INTO system_principals(id,account_id,kind,name,revision,created_at,updated_at) VALUES (?1,?2,'human',?2,1,0,0)",
       )
-        .bind(`principal:${accountId}`, accountId)
+        .bind(testDerivedId("principal", accountId), accountId)
         .run()
     }
     await context.env.DB
@@ -519,7 +520,7 @@ test("encrypted original is verified before atomic finalization and failed sourc
         excludedAccountIds: [zAccountId.parse(ownerAccountId)],
         candidates: [
           {
-            accountId: zAccountId.parse("archive-reviewer"),
+            accountId: zAccountId.parse("95968d87-d176-408a-95b6-f974400b253b"),
             source: "primary",
             evidenceContext: "sample-source",
             evidenceKind: "qualification",
@@ -563,8 +564,8 @@ test("encrypted original is verified before atomic finalization and failed sourc
       caseId: started.workflowCase.id,
       taskKey: "review",
       round: 1,
-      actorAccountId: zAccountId.parse("archive-reviewer"),
-      representedAccountId: zAccountId.parse("archive-reviewer"),
+      actorAccountId: zAccountId.parse("95968d87-d176-408a-95b6-f974400b253b"),
+      representedAccountId: zAccountId.parse("95968d87-d176-408a-95b6-f974400b253b"),
       delegationId: null,
       proposalDigest: started.proposal.digest,
       comment: "Preserve original evidence",
@@ -638,7 +639,7 @@ test("encrypted original is verified before atomic finalization and failed sourc
         )
       if (scenario === "reviewer-suspended-during-read")
         await context.env.DB.prepare(
-          "UPDATE system_accounts SET status = 'suspended', token_version = token_version + 1, updated_at = ?1 WHERE id = 'archive-reviewer' AND status = 'active'",
+          "UPDATE system_accounts SET status = 'suspended', token_version = token_version + 1, updated_at = ?1 WHERE id = '95968d87-d176-408a-95b6-f974400b253b' AND status = 'active'",
         )
           .bind(now.getTime())
           .run()
@@ -682,7 +683,7 @@ test("encrypted original is verified before atomic finalization and failed sourc
       const clock = { at: now }
       const reader = new DisclosePreservedRecordContent({
         ...context,
-        accountId: "viewer",
+        accountId: "eb2aaac2-352f-4196-8e01-adea61c54466",
         now: () => clock.at,
         persistence: new DisclosePreservedRecordPersistenceAdapter({
           ...context,
@@ -702,7 +703,7 @@ test("encrypted original is verified before atomic finalization and failed sourc
       expect(original.source.sourceRecordedAt).toBeNull()
       const exporter = new DisclosePreservedRecordContent({
         ...context,
-        accountId: "exporter",
+        accountId: "8c7435a1-1641-435b-90f2-a437ade56f20",
         now: () => clock.at,
         persistence: new DisclosePreservedRecordPersistenceAdapter({
           ...context,
@@ -722,11 +723,11 @@ test("encrypted original is verified before atomic finalization and failed sourc
       if (exported instanceof Error) throw exported
       expect(exported.content).toEqual(captureBytes)
       await context.env.DB.exec(
-        "INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('viewer','active',0,100,100); INSERT INTO system_principals(id,account_id,kind,name,revision,created_at,updated_at) VALUES ('viewer-principal','viewer','human','Viewer',1,100,100); INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('6d947d9f-a028-4025-8113-1d4d9d300ea2','record:reader','custom','Reader',100,100); INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('6d947d9f-a028-4025-8113-1d4d9d300ea2','system:record:read'); INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('dfd5bbdb-f9ff-47b9-8287-6e97e4e2486a','viewer','6d947d9f-a028-4025-8113-1d4d9d300ea2',100)",
+        "INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('eb2aaac2-352f-4196-8e01-adea61c54466','active',0,100,100); INSERT INTO system_principals(id,account_id,kind,name,revision,created_at,updated_at) VALUES ('61c03c32-b3c6-41c8-861f-f84868b70c5c','eb2aaac2-352f-4196-8e01-adea61c54466','human','Viewer',1,100,100); INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('6d947d9f-a028-4025-8113-1d4d9d300ea2','record:reader','custom','Reader',100,100); INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('6d947d9f-a028-4025-8113-1d4d9d300ea2','system:record:read'); INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('dfd5bbdb-f9ff-47b9-8287-6e97e4e2486a','eb2aaac2-352f-4196-8e01-adea61c54466','6d947d9f-a028-4025-8113-1d4d9d300ea2',100)",
       )
       const secret = "record-http-test-secret-only"
       const token = await new SystemAccessTokenIssuer(secret).issue({
-        accountId: zAccountId.parse("viewer"),
+        accountId: zAccountId.parse("eb2aaac2-352f-4196-8e01-adea61c54466"),
         tokenVersion: 0,
         now,
       })
@@ -814,8 +815,8 @@ test("encrypted original is verified before atomic finalization and failed sourc
         expect(file.status).toBe(400)
       }
       for (const kind of ["agent", "service", "connector"]) {
-        const accountId = `reader-${kind}`
-        const credentialId = `credential-${kind}`
+        const accountId = testAccountId(`reader-${kind}`)
+        const credentialId = testDerivedId("credential", kind)
         if (kind === "connector")
           await context.env.DB.exec(
             "INSERT INTO system_connectors(id,key,name,direction,transport,status,revision,created_at,updated_at) VALUES ('record-connector','record-connector','Record connector','bidirectional','api','active',1,100,100)",
@@ -875,10 +876,10 @@ test("encrypted original is verified before atomic finalization and failed sourc
       )
       expect((await http.request(endpoint, { headers }, environment)).status).toBe(403)
       await context.env.DB.exec(
-        "INSERT INTO system_accounts(id,status,token_version,created_at,updated_at) VALUES ('exporter','active',0,100,100); INSERT INTO system_principals(id,account_id,kind,name,revision,created_at,updated_at) VALUES ('export-principal','exporter','human','Exporter',1,100,100); INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('a13faa42-3cc9-47ac-8400-e3d87f81a68d','record:exporter','custom','Exporter',100,100); INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('a13faa42-3cc9-47ac-8400-e3d87f81a68d','system:record:export'); INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('6367ff23-452a-4ff1-80db-73892719479a','exporter','a13faa42-3cc9-47ac-8400-e3d87f81a68d',100)",
+        "INSERT INTO system_accounts(id,status,token_version,created_at,updated_at) VALUES ('8c7435a1-1641-435b-90f2-a437ade56f20','active',0,100,100); INSERT INTO system_principals(id,account_id,kind,name,revision,created_at,updated_at) VALUES ('88abcca4-7319-49cd-bcf3-468b4f6a5838','8c7435a1-1641-435b-90f2-a437ade56f20','human','Exporter',1,100,100); INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('a13faa42-3cc9-47ac-8400-e3d87f81a68d','record:exporter','custom','Exporter',100,100); INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('a13faa42-3cc9-47ac-8400-e3d87f81a68d','system:record:export'); INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('6367ff23-452a-4ff1-80db-73892719479a','8c7435a1-1641-435b-90f2-a437ade56f20','a13faa42-3cc9-47ac-8400-e3d87f81a68d',100)",
       )
       const exportToken = await new SystemAccessTokenIssuer(secret).issue({
-        accountId: zAccountId.parse("exporter"),
+        accountId: zAccountId.parse("8c7435a1-1641-435b-90f2-a437ade56f20"),
         tokenVersion: 0,
         now,
       })

@@ -26,8 +26,8 @@ describe("ExternalIdentityImportEntity", () => {
       ExternalIdentityImportEntity.create({
         ...input,
         identities: [
-          { ...identity, accountId: "account-1" },
-          { ...identity, subject: "person-2", accountId: "account-1" },
+          { ...identity, accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e" },
+          { ...identity, subject: "person-2", accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e" },
         ],
       }),
     ).toBeInstanceOf(Error)

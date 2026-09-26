@@ -25,7 +25,7 @@ export async function createRecordRetirementTestFixture() {
     id: crypto.randomUUID(),
     sourceNamespace: "example-source",
     ownerContext: "example",
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     reason: "Archive",
     createdAt: "2026-09-14T00:00:00.000Z",
     auditEventId: crypto.randomUUID(),
@@ -52,7 +52,7 @@ export async function createRecordRetirementTestFixture() {
         nextCursor: null,
         purpose: "archive",
         checkedAt: "2026-09-14T00:00:01.000Z",
-        actorAccountId: "account:operator",
+        actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
         records: [],
       },
       null,
@@ -60,7 +60,7 @@ export async function createRecordRetirementTestFixture() {
     if (page instanceof Error) throw page
     const audit = SystemAuditEventEntity.restore({
       eventId: crypto.randomUUID(),
-      actorAccountId: "account:operator",
+      actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
       action: "system.record.coverage.page.verified",
       targetType: "system:record-coverage-page",
       targetId: page.snapshot.id,
@@ -91,7 +91,7 @@ export async function createRecordRetirementTestFixture() {
       pageCount: 1,
       recordCount: 0,
     })),
-    actorAccountId: "account:operator",
+    actorAccountId: "5b3d7ccc-33e7-4afb-935e-d89535c31674",
     createdAt: "2026-09-14T00:00:02.000Z",
     auditEventId: crypto.randomUUID(),
   })

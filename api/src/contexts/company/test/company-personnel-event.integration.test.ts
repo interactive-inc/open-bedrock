@@ -123,7 +123,7 @@ test("発効日の欠けた過去の訂正を、訂正記録日から推測し�
   const event = CompanyPersonnelEventEntity.create({
     sequence: 1,
     id: "action:correction",
-    employeeId: "employee:1",
+    employeeId: "b4b9edaa-1e08-46d5-b0bc-1798cc369fd1",
     kind: "corrected",
     eventOn: restoreCalendarDate("2030-06-01"),
     recordedAt: 1,

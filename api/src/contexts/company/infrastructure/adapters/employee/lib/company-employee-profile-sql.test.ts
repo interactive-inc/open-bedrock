@@ -29,11 +29,11 @@ test("未接続の従業員は、接続までの原記録である表の値を�
   await f.database
     .prepare(
       `INSERT INTO company_employees (id, official_name, employee_code, email, phone, created_at, updated_at)
-       VALUES ('employee:unconnected', 'Unconnected Person', 'LEGACY-9', 'you@example.com', NULL, 0, 0)`,
+       VALUES ('31cf526f-0921-48a3-be38-c1458aaf2671', 'Unconnected Person', 'LEGACY-9', 'you@example.com', NULL, 0, 0)`,
     )
     .run()
 
-  expect(await profile(f.database, "employee:unconnected")).toEqual({
+  expect(await profile(f.database, "31cf526f-0921-48a3-be38-c1458aaf2671")).toEqual({
     official_name: "Unconnected Person",
     employee_code: "LEGACY-9",
     email: "you@example.com",

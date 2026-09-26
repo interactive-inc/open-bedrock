@@ -1,5 +1,6 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
+import { testAccountId, testDerivedId, testEmployeeId } from "@tests/api/support/test-identity-id"
 import { createTestToken } from "@tests/api/support/create-test-token"
 import { requestWithContext } from "@tests/api/support/request-with-context"
 import { seedD1 } from "@tests/api/support/seed-d1"
@@ -141,7 +142,7 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "company_personnel_annotations", [
     {
       id: "0190005c-0000-7000-8000-000000000001",
-      employee_id: "2",
+      employee_id: testEmployeeId(2),
       kind: "join",
       effective_date: "2026-06-01",
       from_department_code: null,
@@ -151,7 +152,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: "0190005c-0000-7000-8000-000000000002",
-      employee_id: "3",
+      employee_id: testEmployeeId(3),
       kind: "join",
       effective_date: "2026-05-20",
       from_department_code: null,
@@ -161,7 +162,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: "0190005c-0000-7000-8000-000000000003",
-      employee_id: "4",
+      employee_id: testEmployeeId(4),
       kind: "retire",
       effective_date: "2026-06-10",
       from_department_code: "D002",
@@ -171,7 +172,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: "0190005c-0000-7000-8000-000000000004",
-      employee_id: "1",
+      employee_id: testEmployeeId(1),
       kind: "join",
       effective_date: "2026-04-01",
       from_department_code: null,
@@ -183,10 +184,10 @@ async function createTestDb(): Promise<D1Database> {
 
   // 集計の正本となる公開雇用履歴。旧注記は参照元として使用しない。
   for (const employee of managementEmployees) {
-    const employeeId = String(employee.id)
+    const employeeId = testEmployeeId(employee.id)
     await publishTestEmployeeResources(db, {
       employeeId,
-      employmentId: `test:${employeeId}:employment`,
+      employmentId: testDerivedId("employment", employeeId),
       officialName: employee.name,
       employeeCode: employee.code,
       email: employee.email,
@@ -203,19 +204,19 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "attendance_records", [
     {
       id: "01900016-0000-7000-8000-000000000001",
-      employee_id: "2",
+      employee_id: testEmployeeId(2),
       work_date: "2026-06-02",
       status: "closed",
     },
     {
       id: "01900016-0000-7000-8000-000000000002",
-      employee_id: "2",
+      employee_id: testEmployeeId(2),
       work_date: "2026-06-03",
       status: "closed",
     },
     {
       id: "01900016-0000-7000-8000-000000000003",
-      employee_id: "2",
+      employee_id: testEmployeeId(2),
       work_date: "2026-05-30",
       status: "closed",
     },
@@ -225,7 +226,7 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "leave_requests", [
     {
       id: "01900049-0000-7000-8000-000000000001",
-      employee_id: "2",
+      employee_id: testEmployeeId(2),
       leave_type: "annual",
       start_date: "2026-06-20",
       end_date: "2026-06-21",
@@ -238,20 +239,20 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: "01900049-0000-7000-8000-000000000002",
-      employee_id: "3",
+      employee_id: testEmployeeId(3),
       leave_type: "annual",
       start_date: "2026-06-22",
       end_date: "2026-06-22",
       days: 1,
       reason: null,
       status: "approved",
-      approver_id: "1",
+      approver_id: testEmployeeId(1),
       decided_comment: null,
       created_at: "2026-06-06T00:00:00.000Z",
     },
     {
       id: "01900049-0000-7000-8000-000000000003",
-      employee_id: "3",
+      employee_id: testEmployeeId(3),
       leave_type: "annual",
       start_date: "2026-05-10",
       end_date: "2026-05-10",
@@ -268,7 +269,7 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "expenses", [
     {
       id: "0190004e-0000-7000-8000-000000000001",
-      employee_id: "2",
+      employee_id: testEmployeeId(2),
       organization_unit_id: "0190005e-0000-7000-8000-000044303032",
       category: "transport",
       amount: 1000,
@@ -279,7 +280,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: "0190004e-0000-7000-8000-000000000002",
-      employee_id: "3",
+      employee_id: testEmployeeId(3),
       organization_unit_id: "0190005e-0000-7000-8000-000044303032",
       category: "supplies",
       amount: 2000,
@@ -290,7 +291,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: "0190004e-0000-7000-8000-000000000003",
-      employee_id: "3",
+      employee_id: testEmployeeId(3),
       organization_unit_id: "0190005e-0000-7000-8000-000044303032",
       category: "books",
       amount: 500,
@@ -330,7 +331,7 @@ async function createTestDb(): Promise<D1Database> {
   await seedD1(db, "performance_goals", [
     {
       id: "01900030-0000-7000-8000-000000000001",
-      employee_id: "2",
+      employee_id: testEmployeeId(2),
       period: "2026-H1",
       title: "g1",
       kpi: null,
@@ -339,7 +340,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: "01900030-0000-7000-8000-000000000002",
-      employee_id: "2",
+      employee_id: testEmployeeId(2),
       period: "2026-H1",
       title: "g2",
       kpi: null,
@@ -348,7 +349,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: "01900030-0000-7000-8000-000000000003",
-      employee_id: "3",
+      employee_id: testEmployeeId(3),
       period: "2026-H1",
       title: "g3",
       kpi: null,
@@ -357,7 +358,7 @@ async function createTestDb(): Promise<D1Database> {
     },
     {
       id: "01900030-0000-7000-8000-000000000004",
-      employee_id: "3",
+      employee_id: testEmployeeId(3),
       period: "2025-H2",
       title: "g4",
       kpi: null,
@@ -377,7 +378,7 @@ async function createTestDb(): Promise<D1Database> {
       subject_id: String(index + 1),
       subject_version: "1",
       proposal_digest: "a".repeat(64),
-      created_by_account_id: "1",
+      created_by_account_id: testAccountId(1),
       status,
       created_at: Date.parse(`2026-06-0${index + 1}T00:00:00Z`),
       updated_at: Date.parse(`2026-06-0${index + 1}T00:00:00Z`),

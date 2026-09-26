@@ -13,6 +13,8 @@ export const employees = sqliteTable(
   "company_employees",
   {
     id: text("id").primaryKey().$type<EmployeeId>(),
+    /** 主キーを UUID へ移す前の値。移行前の記録を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
     officialName: text("official_name").notNull(),
     employeeCode: text("employee_code"),
     email: text("email"),

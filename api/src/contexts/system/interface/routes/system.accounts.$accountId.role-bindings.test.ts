@@ -10,7 +10,7 @@ import { hc } from "hono/client"
 
 const now = new Date("2026-01-01T00:00:00.000Z")
 const rootAccountId = zAccountId.parse("system-binding-root")
-const targetAccountId = zAccountId.parse("system-binding-target")
+const targetAccountId = zAccountId.parse("3ae2c1d9-f704-4381-a719-3333265bb9e4")
 
 describe("System Role Binding HTTP", () => {
   test("付与・一覧・失効・自己付与拒否・自己失効拒否をSystemだけで完結する", async () => {
@@ -27,7 +27,7 @@ describe("System Role Binding HTTP", () => {
       .query(
         `INSERT INTO system_identity_bindings
            (id, account_id, provider, subject, created_at, activated_at, revoked_at)
-         VALUES ('root-identity', ?1, 'password', 'root@example.com', ?2, ?2, NULL)`,
+         VALUES ('ac7f571e-ae97-4159-85e1-ba9cf4928de8', ?1, 'password', 'root@example.com', ?2, ?2, NULL)`,
       )
       .run(rootAccountId, now.getTime())
     fixture.sqlite

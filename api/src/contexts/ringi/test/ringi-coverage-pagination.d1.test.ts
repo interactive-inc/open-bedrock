@@ -55,7 +55,7 @@ test("稟議起案11件と実System案件対応を分割照合し撤去確定す
   await database
     .prepare(`INSERT INTO system_step_up_grants
       (id,account_id,token_hash,method,issued_at,expires_at)
-      VALUES ('ringi-coverage-step-up',?1,?2,'external_identity',?3,?4)`)
+      VALUES ('9a3475ce-8de5-472d-bf19-2707b97286f0',?1,?2,'external_identity',?3,?4)`)
     .bind(creator.accountId, hash, now.getTime(), now.getTime() + 60_000)
     .run()
   const post = (path: string, body: unknown) =>

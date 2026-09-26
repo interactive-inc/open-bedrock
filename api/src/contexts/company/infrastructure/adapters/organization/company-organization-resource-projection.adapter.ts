@@ -1,3 +1,4 @@
+import { companyOperationId } from "@/contexts/company/domain/definitions/company-operation-id.definition"
 import { CompanyResponsibilityResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-responsibility-resource-projection.adapter"
 import { CompanyAssignmentResourceProjectionAdapter } from "@/contexts/company/infrastructure/adapters/organization/company-assignment-resource-projection.adapter"
 import type { CompanyResourceChangeEntity } from "@/contexts/company/domain/entities/company-resource-change.entity"
@@ -47,7 +48,8 @@ export class CompanyOrganizationResourceProjectionAdapter {
           resource.type === "assignment" || resource.type === "responsibility-assignment",
       )
     if (first === undefined) return new CompanyResourceValidationError("invalid_organization")
-    const operationId = restoreWorkforceId("personnel_action", `org-resource:${fingerprint}`)
+    const operationKey = `org-resource:${fingerprint}`
+    const operationId = restoreWorkforceId("personnel_action", companyOperationId(operationKey))
     const assignmentProjection = await new CompanyAssignmentResourceProjectionAdapter(
       this.c,
     ).prepare(change, operationId)
@@ -111,6 +113,7 @@ export class CompanyOrganizationResourceProjectionAdapter {
       return new CompanyResourceValidationError("invalid_organization")
     const typed = OrganizationWorkforceChangeEntity.restore({
       operationId,
+      operationKey,
       expectedRevision: snapshot.snapshot.revision,
       asOf: first.effectiveFrom,
       recordedAt: change.recordedAt,

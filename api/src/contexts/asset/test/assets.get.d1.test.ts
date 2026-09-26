@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { seedAssetLendings } from "@/contexts/asset/test/seed/seed-asset-lendings.test-support"
@@ -132,7 +133,7 @@ describe("GET /assets", () => {
       expect(parsed.data.data.find((asset) => asset.code === "A0002")).toMatchObject({
         serial: "CN-D27-0002",
         purchased_on: "2024-04-01",
-        holder_employee_id: "9",
+        holder_employee_id: testEmployeeId(9),
       })
     }
   })
@@ -149,7 +150,7 @@ describe("GET /assets", () => {
     expect(parsed.data.find((asset) => asset.code === "A0001")).toMatchObject({
       serial: "PF-X1-0001",
       purchased_on: "2024-04-01",
-      holder_employee_id: "5",
+      holder_employee_id: testEmployeeId(5),
     })
     expect(parsed.data.find((asset) => asset.code === "A0002")).toMatchObject({
       serial: null,

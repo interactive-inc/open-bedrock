@@ -61,8 +61,8 @@ function requireGraph(
 describe("IamGraphPolicy permission evaluation", () => {
   test("global bindingと完全一致resource bindingをliveに評価する", () => {
     const reader = requireRole("reader", ["example:read"])
-    const global = requireBinding("global", "account-1", reader.id)
-    const scoped = requireBinding("scoped", "account-2", reader.id, {
+    const global = requireBinding("global", "d5858208-e680-4db8-a05d-8bf4f900c24e", reader.id)
+    const scoped = requireBinding("scoped", "4b0518fd-9017-4afc-addd-bb50998b0273", reader.id, {
       type: "example:resource",
       id: "facility-1",
     })
@@ -70,7 +70,7 @@ describe("IamGraphPolicy permission evaluation", () => {
 
     expect(
       graph.getPermissionDecision({
-        accountId: "account-1",
+        accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
         permissionKey: "example:read",
         resource: { type: "example:resource", id: "facility-2" },
         at: NOW,
@@ -78,7 +78,7 @@ describe("IamGraphPolicy permission evaluation", () => {
     ).toBe("allowed")
     expect(
       graph.getPermissionDecision({
-        accountId: "account-2",
+        accountId: "4b0518fd-9017-4afc-addd-bb50998b0273",
         permissionKey: "example:read",
         resource: { type: "example:resource", id: "facility-1" },
         at: NOW,
@@ -86,7 +86,7 @@ describe("IamGraphPolicy permission evaluation", () => {
     ).toBe("allowed")
     expect(
       graph.getPermissionDecision({
-        accountId: "account-2",
+        accountId: "4b0518fd-9017-4afc-addd-bb50998b0273",
         permissionKey: "example:read",
         resource: { type: "example:resource", id: "facility-2" },
         at: NOW,
@@ -96,8 +96,12 @@ describe("IamGraphPolicy permission evaluation", () => {
 
   test("global system:adminだけが全permissionを短絡する", () => {
     const root = requireRole("root", ["system:admin"])
-    const global = requireBinding("f16b950f-c6db-4760-8994-95cc8065169d", "account-1", root.id)
-    const scoped = requireBinding("scoped-root", "account-2", root.id, {
+    const global = requireBinding(
+      "f16b950f-c6db-4760-8994-95cc8065169d",
+      "d5858208-e680-4db8-a05d-8bf4f900c24e",
+      root.id,
+    )
+    const scoped = requireBinding("scoped-root", "4b0518fd-9017-4afc-addd-bb50998b0273", root.id, {
       type: "example:resource",
       id: "facility-1",
     })
@@ -105,7 +109,7 @@ describe("IamGraphPolicy permission evaluation", () => {
 
     expect(
       graph.getPermissionDecision({
-        accountId: "account-1",
+        accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
         permissionKey: "future:operate",
         resource: { type: "future:resource", id: "resource-1" },
         at: NOW,
@@ -113,7 +117,7 @@ describe("IamGraphPolicy permission evaluation", () => {
     ).toBe("allowed")
     expect(
       graph.getPermissionDecision({
-        accountId: "account-2",
+        accountId: "4b0518fd-9017-4afc-addd-bb50998b0273",
         permissionKey: "future:operate",
         resource: { type: "example:resource", id: "facility-1" },
         at: NOW,
@@ -121,7 +125,7 @@ describe("IamGraphPolicy permission evaluation", () => {
     ).toBe("denied")
     expect(
       graph.getPermissionDecision({
-        accountId: "account-2",
+        accountId: "4b0518fd-9017-4afc-addd-bb50998b0273",
         permissionKey: "system:admin",
         resource: { type: "example:resource", id: "facility-1" },
         at: NOW,
@@ -134,15 +138,30 @@ describe("IamGraphPolicy permission evaluation", () => {
 
     for (const props of [
       { accountId: "", permissionKey: "iam:read", resource: null, at: NOW },
-      { accountId: "account-1", permissionKey: "invalid", resource: null, at: NOW },
-      { accountId: "account-1", permissionKey: "iam:read", resource: {}, at: NOW },
       {
-        accountId: "account-1",
+        accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
+        permissionKey: "invalid",
+        resource: null,
+        at: NOW,
+      },
+      {
+        accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
+        permissionKey: "iam:read",
+        resource: {},
+        at: NOW,
+      },
+      {
+        accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
         permissionKey: "iam:read",
         resource: null,
         at: new Date(Number.NaN),
       },
-      { accountId: "account-1", permissionKey: "iam:read", resource: null, at: "now" },
+      {
+        accountId: "d5858208-e680-4db8-a05d-8bf4f900c24e",
+        permissionKey: "iam:read",
+        resource: null,
+        at: "now",
+      },
     ]) {
       expect(graph.getPermissionDecision(props)).toBe("invalid")
     }
@@ -154,13 +173,23 @@ describe("IamGraphPolicy integrity and last-root", () => {
     "破損graphをfail closedで拒否する: %s",
     (reason) => {
       const role = requireRole("root", ["system:admin"])
-      const binding = requireBinding("ae18ee9b-62ff-4396-8971-165b0ac77248", "account-1", role.id)
+      const binding = requireBinding(
+        "ae18ee9b-62ff-4396-8971-165b0ac77248",
+        "d5858208-e680-4db8-a05d-8bf4f900c24e",
+        role.id,
+      )
       const roles = reason === "duplicate_role_id" ? [role, role] : [role]
       const bindings =
         reason === "duplicate_binding_id"
           ? [binding, binding]
           : reason === "unknown_binding_role"
-            ? [requireBinding("unknown", "account-1", idOf("role:missing"))]
+            ? [
+                requireBinding(
+                  "unknown",
+                  "d5858208-e680-4db8-a05d-8bf4f900c24e",
+                  idOf("role:missing"),
+                ),
+              ]
             : [binding]
       const graph = IamGraphPolicy.create(roles, bindings)
 
@@ -172,10 +201,14 @@ describe("IamGraphPolicy integrity and last-root", () => {
   test("最後のactive global root bindingだけを削除拒否する", () => {
     const root = requireRole("root", ["system:admin"])
     const reader = requireRole("reader", ["iam:read"])
-    const rootBinding = requireBinding("root-1", "account-1", root.id)
-    const readerBinding = requireBinding("reader-1", "account-1", reader.id)
+    const rootBinding = requireBinding("root-1", "d5858208-e680-4db8-a05d-8bf4f900c24e", root.id)
+    const readerBinding = requireBinding(
+      "reader-1",
+      "d5858208-e680-4db8-a05d-8bf4f900c24e",
+      reader.id,
+    )
     const graph = requireGraph([reader, root], [readerBinding, rootBinding])
-    const activeAccountIds = new Set(["account-1"])
+    const activeAccountIds = new Set(["d5858208-e680-4db8-a05d-8bf4f900c24e"])
 
     expect(
       graph.getBindingRevocationRejection({
@@ -195,8 +228,8 @@ describe("IamGraphPolicy integrity and last-root", () => {
 
   test("別のactive global rootが残れば削除でき、resource rootとinactive Accountは数えない", () => {
     const root = requireRole("root", ["system:admin"])
-    const first = requireBinding("root-1", "account-1", root.id)
-    const second = requireBinding("root-2", "account-2", root.id)
+    const first = requireBinding("root-1", "d5858208-e680-4db8-a05d-8bf4f900c24e", root.id)
+    const second = requireBinding("root-2", "4b0518fd-9017-4afc-addd-bb50998b0273", root.id)
     const scoped = requireBinding("root-scoped", "account-3", root.id, {
       type: "example:resource",
       id: "facility-1",
@@ -206,14 +239,17 @@ describe("IamGraphPolicy integrity and last-root", () => {
     expect(
       graph.getBindingRevocationRejection({
         bindingId: first.id,
-        activeAccountIds: new Set(["account-1", "account-2"]),
+        activeAccountIds: new Set([
+          "d5858208-e680-4db8-a05d-8bf4f900c24e",
+          "4b0518fd-9017-4afc-addd-bb50998b0273",
+        ]),
         at: NOW,
       }),
     ).toBeNull()
     expect(
       graph.getBindingRevocationRejection({
         bindingId: first.id,
-        activeAccountIds: new Set(["account-1"]),
+        activeAccountIds: new Set(["d5858208-e680-4db8-a05d-8bf4f900c24e"]),
         at: NOW,
       }),
     ).toBe("last_root_binding")

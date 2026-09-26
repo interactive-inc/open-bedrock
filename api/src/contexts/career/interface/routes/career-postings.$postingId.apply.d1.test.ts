@@ -1,4 +1,5 @@
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
 import { seedCareerApplications } from "@/contexts/career/test/seed/seed-career-applications.test-support"
@@ -122,7 +123,7 @@ describe("POST /career-postings/:postingId/apply", () => {
 
     if (parsed.success) {
       expect(parsed.data.posting_id).toBe("01900017-0000-7000-8000-000000000001")
-      expect(parsed.data.applicant_id).toBe(toWorkforceEmployeeId(2))
+      expect(parsed.data.applicant_id).toBe(toWorkforceEmployeeId(testEmployeeId(2)))
       expect(parsed.data.message).toBe("I would like to apply")
       expect(parsed.data.status).toBe("applied")
     }

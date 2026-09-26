@@ -63,7 +63,7 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
     await readCompanyEmploymentsByAccount({
       database: fixture.database,
       organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
-      accountId: "account:missing",
+      accountId: "edc7ed60-7891-449f-a5fe-4f9e49b81a2a",
       effectiveOn,
       organizationRevision: found.organizationRevision,
     }),
@@ -77,7 +77,7 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
     await readCompanyEmploymentsByAccounts({
       database: fixture.database,
       organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
-      accountIds: [person.accountId, "account:missing"],
+      accountIds: [person.accountId, "edc7ed60-7891-449f-a5fe-4f9e49b81a2a"],
       effectiveOn,
       organizationRevision: found.organizationRevision,
     }),
@@ -86,7 +86,7 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
     employeeIdsByAccount: new Map([[person.accountId, person.employeeId]]),
     employmentIdsByAccount: new Map([
       [person.accountId, [employmentId]],
-      ["account:missing", []],
+      ["edc7ed60-7891-449f-a5fe-4f9e49b81a2a", []],
     ]),
     employmentStatusesById: new Map([[employmentId, "ACTIVE"]]),
   })
@@ -116,7 +116,7 @@ test("雇用と Account 対応を同じ Company 版で読み、存在しない�
   const missing = await readCompanyEmploymentAccount({
     database: fixture.database,
     organizationId: COMPANY_DEFAULT_ORGANIZATION_ID,
-    employmentId: "employment:missing",
+    employmentId: "8a156d98-3a3a-4e8e-a0cf-ca53b913fd4a",
     effectiveOn,
     organizationRevision: found.organizationRevision,
   })

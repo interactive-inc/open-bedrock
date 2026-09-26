@@ -1,3 +1,4 @@
+import { testEmployeeId } from "@tests/api/support/test-identity-id"
 import { toWorkforceEmployeeId } from "@/contexts/company/domain/definitions/to-workforce-employee-id.definition"
 import { zEmployeeId } from "@/contexts/company/domain/definitions/workforce-id-validation.definition"
 import { afterAll, beforeAll, describe, expect, setDefaultTimeout, test } from "bun:test"
@@ -91,7 +92,7 @@ const attendanceListResponseSchema = z.object({
 describe("GET /attendance-records/me", () => {
   test("returns own records and ignores employee_id", async () => {
     const response = await getRequest(
-      "/attendance/attendance-records/me?employee_id=9",
+      `/attendance/attendance-records/me?employee_id=${testEmployeeId(9)}`,
       await tokenFor(5),
     )
 
@@ -105,7 +106,9 @@ describe("GET /attendance-records/me", () => {
       expect(parsed.data.data.length).toBe(2)
       expect(parsed.data.total).toBe(2)
       expect(
-        parsed.data.data.every((record) => record.employee_id === toWorkforceEmployeeId(5)),
+        parsed.data.data.every(
+          (record) => record.employee_id === toWorkforceEmployeeId(testEmployeeId(5)),
+        ),
       ).toBe(true)
     }
   })
