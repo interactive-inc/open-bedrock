@@ -1,4 +1,5 @@
 import { prepareCompanyApprovedEvidenceRevalidation } from "@/contexts/company/interface/operations/prepare-company-approved-evidence-revalidation"
+import { createExecutionAuthorizationId } from "@system/domain/schemas/workflow/execution-authorization-id.schema"
 import { z } from "zod"
 import { PrepareCompanyCalendarDayRetirementCurrentStateAdapter } from "@/contexts/company-calendar/infrastructure/adapters/prepare-company-calendar-retirement-current-state.adapter"
 import { openSystemProposals } from "@system/interface/operations/open-system-proposals"
@@ -117,7 +118,7 @@ export class ExecuteCompanyCalendarDayRetirementAdapter {
     })
     if (qualification instanceof Error) return qualification
     const authorization = ExecutionAuthorizationEntity.create({
-      id: `record-retirement:${proposal.caseId}`,
+      id: await createExecutionAuthorizationId("record-retirement", proposal.caseId),
       caseId: proposal.caseId,
       operationKey: "system.record.retire",
       proposalDigest: proposal.digest,

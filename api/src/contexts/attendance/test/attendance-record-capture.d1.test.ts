@@ -23,7 +23,7 @@ const authorizationMutations = [
   "UPDATE system_role_bindings SET revoked_at=1",
   `UPDATE system_role_bindings SET revoked_at=1;
       INSERT INTO system_role_bindings (id,account_id,role_id,resource_type,resource_id,created_at)
-      VALUES ('binding:scoped','account:recorder','role:recorder','employee','employee:worker',1)`,
+      VALUES ('9980a578-84f0-4eda-8679-144756c99e1d','account:recorder','0a05519b-05c9-4925-8b15-fcb647569867','employee','employee:worker',1)`,
 ]
 
 let local: LocalD1

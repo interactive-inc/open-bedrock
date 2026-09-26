@@ -150,7 +150,7 @@ describe("System workflow application", () => {
           await fixture.database.exec(guards)
           const at = new Date(200)
           const started = await new StartSystemProcedure({ writer: fixture.writer }).run({
-            seriesId: "direct-human-check",
+            seriesId: "5b49a918-fe43-42be-8ba1-9e2b66fbf9e7",
             version: 1,
             procedureKey: "change",
             procedureRevision: 1,
@@ -171,7 +171,7 @@ describe("System workflow application", () => {
           if (phase === "represented")
             await fixture.database.exec(`INSERT INTO system_delegations
           (id, delegator_account_id, delegate_account_id, starts_at, ends_at, created_at)
-          VALUES ('direct-delegation', 'reviewer-1', 'reviewer-2', 100, 300, 100)`)
+          VALUES ('45957f75-2fc1-4f5d-8b9f-c17706538f58', 'reviewer-1', 'reviewer-2', 100, 300, 100)`)
           const accountId = phase === "candidate" ? "reviewer-2" : "reviewer-1"
           if (kind === "missing")
             await fixture.database
@@ -202,11 +202,11 @@ describe("System workflow application", () => {
               : fixture.database
                   .prepare(`INSERT INTO system_human_attestations
           (id, case_id, task_key, round, actor_account_id, represented_account_id, delegation_id, action, proposal_digest, comment, decided_at)
-          VALUES ('direct-attestation', ?1, 'review', 1, ?2, 'reviewer-1', ?3, 'approve', ?4, NULL, 210)`)
+          VALUES ('3bdf36d5-3d86-4a41-870f-dd6685aecee4', ?1, 'review', 1, ?2, 'reviewer-1', ?3, 'approve', ?4, NULL, 210)`)
                   .bind(
                     started.workflowCase.id,
                     phase === "represented" ? "reviewer-2" : "reviewer-1",
-                    phase === "represented" ? "direct-delegation" : null,
+                    phase === "represented" ? "45957f75-2fc1-4f5d-8b9f-c17706538f58" : null,
                     started.proposal.digest,
                   )
           const result = await operation.run().then(
@@ -237,7 +237,7 @@ describe("System workflow application", () => {
   ])("実行時の証言再検査は失効と確認後の競合を検出する: %s", async (change) => {
     const fixture = await createFixture()
     const started = await new StartSystemProcedure({ writer: fixture.writer }).run({
-      seriesId: "execution-series",
+      seriesId: "5ba4da70-02d6-43b5-83a8-7699d4e432fa",
       version: 1,
       procedureKey: "change",
       procedureRevision: 1,
@@ -259,7 +259,7 @@ describe("System workflow application", () => {
       .prepare(`INSERT INTO system_delegations
         (id, delegator_account_id, delegate_account_id, scope_context, scope_kind, scope_id, scope_version,
          starts_at, ends_at, created_at, revoked_at)
-        VALUES ('execution-delegation', 'reviewer-1', 'reviewer-2', NULL, NULL, NULL, NULL, 100, 500, 100, NULL)`)
+        VALUES ('31d1558e-cfb2-420b-8201-a3ba4e6b1f45', 'reviewer-1', 'reviewer-2', NULL, NULL, NULL, NULL, 100, 500, 100, NULL)`)
       .run()
     const approved = await new ApproveSystemTask(fixture.writer).execute({
       caseId: started.workflowCase.id,
@@ -267,7 +267,7 @@ describe("System workflow application", () => {
       round: 1,
       actorAccountId: zAccountId.parse("reviewer-2"),
       representedAccountId: zAccountId.parse("reviewer-1"),
-      delegationId: "execution-delegation",
+      delegationId: "31d1558e-cfb2-420b-8201-a3ba4e6b1f45",
       proposalDigest: started.proposal.digest,
       comment: null,
       decidedAt: new Date(210),
@@ -288,12 +288,12 @@ describe("System workflow application", () => {
     expect(expired.attestations).toHaveLength(0)
     if (change === "delegation") {
       await fixture.database.exec(
-        "UPDATE system_delegations SET revoked_at = 250 WHERE id = 'execution-delegation'",
+        "UPDATE system_delegations SET revoked_at = 250 WHERE id = '31d1558e-cfb2-420b-8201-a3ba4e6b1f45'",
       )
       await fixture.database.exec(`INSERT INTO system_delegations
           (id, delegator_account_id, delegate_account_id, scope_context, scope_kind, scope_id, scope_version,
            starts_at, ends_at, created_at, revoked_at)
-          VALUES ('replacement-delegation', 'reviewer-1', 'reviewer-2', NULL, NULL, NULL, NULL, 260, 500, 260, NULL)`)
+          VALUES ('c888a1ba-ed0d-4b34-8db1-200238b076a0', 'reviewer-1', 'reviewer-2', NULL, NULL, NULL, NULL, 260, 500, 260, NULL)`)
     } else if (change === "account") {
       await fixture.database.exec(
         "UPDATE system_accounts SET status = 'suspended', token_version = token_version + 1 WHERE id = 'reviewer-1'",
@@ -342,7 +342,7 @@ describe("System workflow application", () => {
     if (phase === "candidate") await machine()
     const at = new Date(200)
     const started = await new StartSystemProcedure({ writer: fixture.writer }).run({
-      seriesId: "machine-series",
+      seriesId: "5522f939-6bea-4125-8ea4-2aa99f492b93",
       version: 1,
       procedureKey: "change",
       procedureRevision: 1,
@@ -397,7 +397,7 @@ describe("System workflow application", () => {
       const fixture = await createFixture()
       const at = new Date(200)
       const started = await new StartSystemProcedure({ writer: fixture.writer }).run({
-        seriesId: "next-human-review",
+        seriesId: "e84941ec-012d-40ed-8363-5fef80241dfc",
         version: 1,
         procedureKey: "change",
         procedureRevision: 1,
@@ -460,7 +460,7 @@ describe("System workflow application", () => {
     const fixture = await createFixture()
     const at = new Date(200)
     const started = await new StartSystemProcedure({ writer: fixture.writer }).run({
-      seriesId: "guarded-series",
+      seriesId: "febcd2f3-79bb-462d-8fea-ef96f5b6f000",
       version: 1,
       procedureKey: "change",
       procedureRevision: 1,
@@ -517,8 +517,8 @@ describe("System workflow application", () => {
   test("提案、Case、Taskを同時作成し、quorumと次TaskをSystemだけで進める", async () => {
     const fixture = await createFixture()
     const at = new Date(200)
-    const proposalId = proposalIdSchema.parse("proposal-1")
-    const systemCaseId = systemCaseIdSchema.parse("case-1")
+    const proposalId = proposalIdSchema.parse("e42be528-73db-4ad0-86f3-1083e6a413f2")
+    const systemCaseId = systemCaseIdSchema.parse("9055d4a0-416c-40c4-814b-0c6df2d0f691")
     const started = await new StartSystemProcedure({
       writer: fixture.writer,
       deps: {
@@ -526,7 +526,7 @@ describe("System workflow application", () => {
         createSystemCaseId: () => systemCaseId,
       },
     }).run({
-      seriesId: "series-1",
+      seriesId: "27ea4b6a-6e22-49b1-8303-ea9e8c5416a9",
       version: 1,
       procedureKey: "change",
       procedureRevision: 1,
@@ -617,7 +617,7 @@ describe("System workflow application", () => {
     const fixture = await createFixture()
     const at = new Date(200)
     const invalidStart = await new StartSystemProcedure({ writer: fixture.writer }).run({
-      seriesId: "series-inactive",
+      seriesId: "9e0a9532-67eb-43c8-88eb-4548510a022c",
       version: 1,
       procedureKey: "change",
       procedureRevision: 1,
@@ -647,7 +647,7 @@ describe("System workflow application", () => {
     const fixture = await createFixture()
     const start = new StartSystemProcedure({ writer: fixture.writer })
     const first = await start.run({
-      seriesId: "series-revision",
+      seriesId: "c3414ee2-d07f-4548-8139-61c82a56019d",
       version: 1,
       procedureKey: "change",
       procedureRevision: 1,
@@ -729,7 +729,7 @@ describe("System workflow application", () => {
   test("取下げは提案を削除せず未完了TaskとCaseを閉じる", async () => {
     const fixture = await createFixture()
     const started = await new StartSystemProcedure({ writer: fixture.writer }).run({
-      seriesId: "series-cancel",
+      seriesId: "a249668e-00e4-41ad-88ba-8fc708fedc80",
       version: 1,
       procedureKey: "change",
       procedureRevision: 1,
@@ -772,7 +772,7 @@ describe("System workflow application", () => {
     const fixture = await createFixture()
     const at = new Date(200)
     const started = await new StartSystemProcedure({ writer: fixture.writer }).run({
-      seriesId: "series-reject",
+      seriesId: "c8ef6f51-fc76-49a0-86ce-5ae4bca6f4d7",
       version: 1,
       procedureKey: "change",
       procedureRevision: 1,

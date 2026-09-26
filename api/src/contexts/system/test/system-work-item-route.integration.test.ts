@@ -291,7 +291,7 @@ test("両当事者が失権した引き継ぎを管理者が復旧し、新し�
     (await f.post(path, f.operation(2, { toAccountId: "other", recovery: true }))).status,
   ).toBe(400)
   f.sqlite.exec(
-    "DELETE FROM system_iam_role_permissions WHERE role_id IN ('role:owner','role:recipient')",
+    "DELETE FROM system_iam_role_permissions WHERE role_id IN (SELECT id FROM system_iam_roles WHERE key IN ('role:owner','role:recipient'))",
   )
   const replacement = await f.post(path, f.operation(2, { toAccountId: "other" }), "admin")
   expect(replacement.status).toBe(201)
@@ -411,7 +411,9 @@ test("復号中に責任・権限・添付が変わった場合は証拠を返�
     f.bucket.get = async (key) => {
       const object = await get(key)
       if (changed === "permission")
-        f.sqlite.exec("DELETE FROM system_iam_role_permissions WHERE role_id='role:owner'")
+        f.sqlite.exec(
+          "DELETE FROM system_iam_role_permissions WHERE role_id=(SELECT id FROM system_iam_roles WHERE key='role:owner')",
+        )
       if (changed === "attachment")
         f.sqlite.exec("UPDATE system_attachments SET file_name='changed.pdf'")
       if (changed === "work")

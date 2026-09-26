@@ -69,15 +69,15 @@ export async function createDisciplinaryActionPreservationFixture(database: D1Da
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('disciplinary-action-test-manager','disciplinary-action:test-manager','custom','DisciplinaryAction manager',0,0);
+    VALUES ('c5e1fefb-5d63-4cfa-8b79-4afeb33f1bcb','disciplinary-action:test-manager','custom','DisciplinaryAction manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('disciplinary-action-test-manager','disciplinary_action:manage'),
-      ('disciplinary-action-test-manager','system:admin'),
-      ('disciplinary-action-test-manager','system:record:preserve'),
-      ('disciplinary-action-test-manager','system:record:read'),
-      ('disciplinary-action-test-manager','system:procedure:read');
+      ('c5e1fefb-5d63-4cfa-8b79-4afeb33f1bcb','disciplinary_action:manage'),
+      ('c5e1fefb-5d63-4cfa-8b79-4afeb33f1bcb','system:admin'),
+      ('c5e1fefb-5d63-4cfa-8b79-4afeb33f1bcb','system:record:preserve'),
+      ('c5e1fefb-5d63-4cfa-8b79-4afeb33f1bcb','system:record:read'),
+      ('c5e1fefb-5d63-4cfa-8b79-4afeb33f1bcb','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('disciplinary-action-test-binding','${creator.accountId}','disciplinary-action-test-manager',0);`,
+    VALUES ('b9cc6a34-734e-43fd-8a1d-be2c36841145','${creator.accountId}','c5e1fefb-5d63-4cfa-8b79-4afeb33f1bcb',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

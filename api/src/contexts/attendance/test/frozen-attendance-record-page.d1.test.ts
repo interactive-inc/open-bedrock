@@ -119,7 +119,10 @@ test("空の停止対象は空ページを返すが、取得後の権限取消�
   if (page instanceof Error) throw page
   expect(page.recordIds).toEqual([])
   expect(page.nextAfterId).toBeNull()
-  await execSql(f.database, "DELETE FROM system_iam_role_permissions WHERE role_id='role:recorder'")
+  await execSql(
+    f.database,
+    "DELETE FROM system_iam_role_permissions WHERE role_id='0a05519b-05c9-4925-8b15-fcb647569867'",
+  )
   expect(await adapter.prepare(input)).toBeInstanceOf(Error)
   expect(
     await f.database.batch([...page.assertions]).catch((error: unknown) => error),

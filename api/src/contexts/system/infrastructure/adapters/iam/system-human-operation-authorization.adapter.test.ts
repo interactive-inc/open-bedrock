@@ -13,10 +13,10 @@ function fixture() {
     INSERT INTO system_principals (id, account_id, kind, name, revision, created_at, updated_at)
     VALUES ('principal:1', 'actor:1', 'human', 'Operator', 1, 100, 100);
     INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at)
-    VALUES ('role:1', 'operator', 'custom', 'Operator', 100, 100);
-    INSERT INTO system_iam_role_permissions VALUES ('role:1', 'records:write'), ('role:1', 'records:read');
+    VALUES ('4e74c1bb-6f90-452e-852b-b723b635cc75', 'operator', 'custom', 'Operator', 100, 100);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('4e74c1bb-6f90-452e-852b-b723b635cc75', 'records:write'), ('4e74c1bb-6f90-452e-852b-b723b635cc75', 'records:read');
     INSERT INTO system_role_bindings (id, account_id, role_id, created_at)
-    VALUES ('binding:1', 'actor:1', 'role:1', 100);
+    VALUES ('d50d88aa-2e8e-4e9b-8d15-2a1fb3ed6a4c', 'actor:1', '4e74c1bb-6f90-452e-852b-b723b635cc75', 100);
     CREATE TABLE test_records (id TEXT PRIMARY KEY);`)
   const database = wrapSystemD1TestDatabase(sqlite)
   const adapter = new SystemHumanOperationAuthorizationAdapter({ env: { DB: database } })
@@ -34,7 +34,7 @@ test("現在の人の権限を合成し、global管理者も同じ保存条件�
   for (const admin of [false, true]) {
     if (admin)
       sqlite.exec(
-        "DELETE FROM system_iam_role_permissions; INSERT INTO system_iam_role_permissions VALUES ('role:1', 'system:admin')",
+        "DELETE FROM system_iam_role_permissions; INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('4e74c1bb-6f90-452e-852b-b723b635cc75', 'system:admin')",
       )
     const proof = await adapter.prepare(input)
     if (proof === "forbidden" || proof instanceof Error)
@@ -52,11 +52,11 @@ test("現在の人の権限を合成し、global管理者も同じ保存条件�
 test("明示権限モードでは技術管理者だけの付与を代用しない", async () => {
   const { sqlite, database, adapter, input } = fixture()
   sqlite.exec(
-    "DELETE FROM system_iam_role_permissions; INSERT INTO system_iam_role_permissions VALUES ('role:1', 'system:admin')",
+    "DELETE FROM system_iam_role_permissions; INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('4e74c1bb-6f90-452e-852b-b723b635cc75', 'system:admin')",
   )
   expect(await adapter.prepare({ ...input, requireExplicitPermissions: true })).toBe("forbidden")
   sqlite.exec(
-    "INSERT INTO system_iam_role_permissions VALUES ('role:1', 'records:read'), ('role:1', 'records:write')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('4e74c1bb-6f90-452e-852b-b723b635cc75', 'records:read'), ('4e74c1bb-6f90-452e-852b-b723b635cc75', 'records:write')",
   )
   const explicit = await adapter.prepare({ ...input, requireExplicitPermissions: true })
   if (explicit === "forbidden" || explicit instanceof Error) throw explicit
@@ -70,7 +70,7 @@ test("明示権限モードでは技術管理者だけの付与を代用しな�
 test("期限・対象scope・Principalの種別・token版を検査する", async () => {
   for (const mutation of [
     "UPDATE system_role_bindings SET revoked_at = 1000",
-    "DELETE FROM system_role_bindings; INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('scope:1', 'actor:1', 'role:1', 'records', 'record:1', 100)",
+    "DELETE FROM system_role_bindings; INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('83f6f682-d347-44f5-8ab9-56d0627d83f6', 'actor:1', '4e74c1bb-6f90-452e-852b-b723b635cc75', 'records', 'record:1', 100)",
     "UPDATE system_principals SET kind = 'agent', revision = 2",
     "UPDATE system_accounts SET token_version = 1",
     "DELETE FROM system_iam_role_permissions WHERE permission_key = 'records:write'",

@@ -214,18 +214,20 @@ test.each(["before-prepare", "download", "audit"])(
     if (reader === undefined) throw new Error("reader missing")
     await execSql(
       c.database,
-      "INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('receipt-reader','receipt:reader','custom','Receipt reader',0,0); INSERT INTO system_iam_role_permissions VALUES ('receipt-reader','expense:read:all');",
+      "INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('bd8c38fa-e740-4976-89f4-c70491fb3e20','receipt:reader','custom','Receipt reader',0,0); INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('bd8c38fa-e740-4976-89f4-c70491fb3e20','expense:read:all');",
     )
     await c.database
       .prepare(
-        "INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('receipt-reader',?1,'receipt-reader',0)",
+        "INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('bd8c38fa-e740-4976-89f4-c70491fb3e20',?1,'bd8c38fa-e740-4976-89f4-c70491fb3e20',0)",
       )
       .bind(reader.accountId)
       .run()
     expect((await c.request(reader, c.path)).status).toBe(200)
     const revoke = () =>
       c.database
-        .prepare("DELETE FROM system_iam_role_permissions WHERE role_id='receipt-reader'")
+        .prepare(
+          "DELETE FROM system_iam_role_permissions WHERE role_id='bd8c38fa-e740-4976-89f4-c70491fb3e20'",
+        )
         .run()
     const get = c.bucket.get.bind(c.bucket)
     const append = SystemAuditEventRepository.prototype.append
@@ -1055,10 +1057,10 @@ test("経費の全6種別を実認証で保全し、業務全テーブル撤去�
   expect(await openSystemProcedures(c.context).publish(definition, 0)).toBe(true)
   await execSql(
     c.database,
-    `INSERT INTO system_iam_role_permissions VALUES
-    ('expense-test-role','expense:read:all'),('expense-test-role','budget:manage'),
-    ('expense-test-role','system:record:preserve'),('expense-test-role','system:procedure:read'),
-    ('expense-test-role','system:record:export'),('expense-test-role','system:record:read')`,
+    `INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES
+    ('bdf8c152-9f77-4cf5-85cf-a3495ca3645d','expense:read:all'),('bdf8c152-9f77-4cf5-85cf-a3495ca3645d','budget:manage'),
+    ('bdf8c152-9f77-4cf5-85cf-a3495ca3645d','system:record:preserve'),('bdf8c152-9f77-4cf5-85cf-a3495ca3645d','system:procedure:read'),
+    ('bdf8c152-9f77-4cf5-85cf-a3495ca3645d','system:record:export'),('bdf8c152-9f77-4cf5-85cf-a3495ca3645d','system:record:read')`,
   )
   await c.database
     .prepare(`INSERT INTO expense_approvals (id,expense_id,approver_id,action,comment,created_at)
@@ -1176,7 +1178,7 @@ test("経費の全6種別を実認証で保全し、業務全テーブル撤去�
   }
   await execSql(
     c.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('expense-test-role','system:admin')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('bdf8c152-9f77-4cf5-85cf-a3495ca3645d','system:admin')",
   )
   const stepUpToken = "f".repeat(64)
   const hash = await new SystemPrincipalSecretService().hashRawSecret(stepUpToken)
@@ -1239,7 +1241,7 @@ test("経費の全6種別を実認証で保全し、業務全テーブル撤去�
       async function (this: RecordCoveragePageRepository, page, audit) {
         await c.database
           .prepare(
-            "DELETE FROM system_iam_role_permissions WHERE role_id='expense-test-role' AND permission_key=?1",
+            "DELETE FROM system_iam_role_permissions WHERE role_id='bdf8c152-9f77-4cf5-85cf-a3495ca3645d' AND permission_key=?1",
           )
           .bind(permission)
           .run()
@@ -1267,7 +1269,7 @@ test("経費の全6種別を実認証で保全し、業務全テーブル撤去�
       revoked.mockRestore()
       await c.database
         .prepare(
-          "INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES ('expense-test-role',?1)",
+          "INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES ('bdf8c152-9f77-4cf5-85cf-a3495ca3645d',?1)",
         )
         .bind(permission)
         .run()

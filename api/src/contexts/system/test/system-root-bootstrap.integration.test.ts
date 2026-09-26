@@ -265,9 +265,9 @@ describe("System root bootstrap", () => {
     const first = createFixture()
     first.database.exec(`
       INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at)
-      VALUES ('example-root-role', 'example:root', 'managed', 'Example root', 0, 0);
+      VALUES ('b1c505c7-e6eb-4456-8ac2-4454a2fd5763', 'example:root', 'managed', 'Example root', 0, 0);
       INSERT INTO system_iam_role_permissions (role_id, permission_key)
-      VALUES ('example-root-role', 'system:admin');
+      VALUES ('b1c505c7-e6eb-4456-8ac2-4454a2fd5763', 'system:admin');
     `)
     const reused = await first.application.execute({
       email: "root@example.com",
@@ -282,16 +282,16 @@ describe("System root bootstrap", () => {
            WHERE id = (SELECT root_binding_id FROM system_bootstrap_state)`,
         )
         .get(),
-    ).toEqual({ role_id: "example-root-role" })
+    ).toEqual({ role_id: "b1c505c7-e6eb-4456-8ac2-4454a2fd5763" })
 
     const second = createFixture()
     second.database.exec(`
       INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at) VALUES
-        ('root-a', 'system:root-a', 'managed', 'Root A', 0, 0),
-        ('root-b', 'system:root-b', 'managed', 'Root B', 0, 0);
+        ('9d26e745-c224-44d6-827b-2c18965b203a', 'system:root-a', 'managed', 'Root A', 0, 0),
+        ('b71d0533-2fa3-474e-8541-f33fa06193d9', 'system:root-b', 'managed', 'Root B', 0, 0);
       INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES
-        ('root-a', 'system:admin'),
-        ('root-b', 'system:admin');
+        ('9d26e745-c224-44d6-827b-2c18965b203a', 'system:admin'),
+        ('b71d0533-2fa3-474e-8541-f33fa06193d9', 'system:admin');
     `)
     expect(
       await second.application.execute({

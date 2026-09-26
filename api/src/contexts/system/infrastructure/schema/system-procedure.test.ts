@@ -4,6 +4,7 @@ import { readFileSync } from "node:fs"
 import { getTableConfig } from "drizzle-orm/sqlite-core"
 import { systemProcedureSchema } from "@system/infrastructure/schema/system-procedure"
 import { readReleasedSystemMigration } from "@system/test/read-released-system-migration.test-support"
+import { expectReleasedSystemSchema } from "@system/test/expect-released-system-schema.test-support"
 
 const coreSchemaSql = readFileSync(new URL("./system-core.sql", import.meta.url), "utf8")
 const workflowSchemaSql = readFileSync(new URL("./system-workflow.sql", import.meta.url), "utf8")
@@ -48,33 +49,27 @@ function insertProposal(database: Database): void {
   database.run(
     `INSERT INTO system_proposal_series
        (id, procedure_key, created_by_account_id, created_at)
-     VALUES ('series-1', 'change', 'creator', 100)`,
+     VALUES ('27ea4b6a-6e22-49b1-8303-ea9e8c5416a9', 'change', 'creator', 100)`,
   )
   database.run(
     `INSERT INTO system_proposals
        (id, series_id, version, procedure_key, procedure_revision, body_json,
         digest, created_by_account_id, created_at)
-     VALUES ('proposal-1', 'series-1', 1, 'change', 1, '{"reason":"safe"}', ?, 'creator', 100)`,
+     VALUES ('e42be528-73db-4ad0-86f3-1083e6a413f2', '27ea4b6a-6e22-49b1-8303-ea9e8c5416a9', 1, 'change', 1, '{"reason":"safe"}', ?, 'creator', 100)`,
     [digest],
   )
 }
 
 describe("System procedure schema", () => {
-  test("released migrationをcanonical DDLと完全一致させる", () => {
-    const releasedMigrationSql = readReleasedSystemMigration("system_procedure")
-
-    const released = new Database(":memory:")
-    const canonical = new Database(":memory:")
-    try {
-      released.exec(releasedMigrationSql)
-      released.exec(readReleasedSystemMigration("allow_system_record_preservation_proposals"))
-      canonical.exec(procedureSchemaSql)
-      const query = "SELECT type, name, tbl_name, sql FROM sqlite_master ORDER BY type, name"
-      expect(released.query(query).all()).toEqual(canonical.query(query).all())
-    } finally {
-      released.close()
-      canonical.close()
-    }
+  test("released migrationとcanonical DDLはUUIDの主キーへの作り直しだけが異なる", () => {
+    expectReleasedSystemSchema({
+      released: [
+        readReleasedSystemMigration("system_procedure"),
+        readReleasedSystemMigration("allow_system_record_preservation_proposals"),
+      ],
+      canonical: [procedureSchemaSql],
+      rebuiltTables: ["system_procedure_definitions", "system_procedure_definition_revisions"],
+    })
   })
 
   test("Drizzle宣言とDDLのtable・column・indexを一致させ、System外FKを持たない", () => {
@@ -168,28 +163,30 @@ describe("System procedure schema", () => {
       `INSERT INTO system_cases
          (id, subject_context, subject_kind, subject_id, subject_version,
           proposal_digest, created_by_account_id, status, created_at, updated_at)
-       VALUES ('case-1', 'system', 'proposal', 'series-1', '1', ?, 'creator', 'pending', 100, 100)`,
+       VALUES ('9055d4a0-416c-40c4-814b-0c6df2d0f691', 'system', 'proposal', '27ea4b6a-6e22-49b1-8303-ea9e8c5416a9', '1', ?, 'creator', 'pending', 100, 100)`,
       [digest],
     )
     database.run(
-      "INSERT INTO system_proposal_cases (proposal_id, case_id, linked_at) VALUES ('proposal-1', 'case-1', 100)",
+      "INSERT INTO system_proposal_cases (proposal_id, case_id, linked_at) VALUES ('e42be528-73db-4ad0-86f3-1083e6a413f2', '9055d4a0-416c-40c4-814b-0c6df2d0f691', 100)",
     )
 
     expect(() =>
-      database.run("UPDATE system_proposals SET body_json = '{}' WHERE id = 'proposal-1'"),
+      database.run(
+        "UPDATE system_proposals SET body_json = '{}' WHERE id = 'e42be528-73db-4ad0-86f3-1083e6a413f2'",
+      ),
     ).toThrow()
     expect(() =>
       database.run(
         `INSERT INTO system_proposals
            (id, series_id, version, procedure_key, procedure_revision, body_json,
             digest, created_by_account_id, supersedes_proposal_id, created_at)
-         VALUES ('proposal-3', 'series-1', 3, 'change', 1, '{}', ?, 'creator', 'proposal-1', 120)`,
+         VALUES ('5507637c-810c-4cf0-865f-2c2433bf6b06', '27ea4b6a-6e22-49b1-8303-ea9e8c5416a9', 3, 'change', 1, '{}', ?, 'creator', 'e42be528-73db-4ad0-86f3-1083e6a413f2', 120)`,
         [digest],
       ),
     ).toThrow()
     expect(() =>
       database.run(
-        "UPDATE system_proposal_cases SET linked_at = 101 WHERE proposal_id = 'proposal-1'",
+        "UPDATE system_proposal_cases SET linked_at = 101 WHERE proposal_id = 'e42be528-73db-4ad0-86f3-1083e6a413f2'",
       ),
     ).toThrow()
 
@@ -205,13 +202,13 @@ describe("System procedure schema", () => {
       `INSERT INTO system_cases
          (id, subject_context, subject_kind, subject_id, subject_version,
           proposal_digest, created_by_account_id, status, created_at, updated_at)
-       VALUES ('case-1', 'system', 'proposal', 'wrong-series', '1', ?, 'creator', 'pending', 100, 100)`,
+       VALUES ('9055d4a0-416c-40c4-814b-0c6df2d0f691', 'system', 'proposal', 'wrong-series', '1', ?, 'creator', 'pending', 100, 100)`,
       [digest],
     )
 
     expect(() =>
       database.run(
-        "INSERT INTO system_proposal_cases (proposal_id, case_id, linked_at) VALUES ('proposal-1', 'case-1', 100)",
+        "INSERT INTO system_proposal_cases (proposal_id, case_id, linked_at) VALUES ('e42be528-73db-4ad0-86f3-1083e6a413f2', '9055d4a0-416c-40c4-814b-0c6df2d0f691', 100)",
       ),
     ).toThrow()
     database.close()
@@ -224,7 +221,7 @@ test("record preservation Case requires the exact operation, subject and body ve
     try {
       insertDefinition(database)
       database.run(
-        "INSERT INTO system_proposal_series(id,procedure_key,created_by_account_id,created_at) VALUES ('series-1','change','creator',100)",
+        "INSERT INTO system_proposal_series(id,procedure_key,created_by_account_id,created_at) VALUES ('27ea4b6a-6e22-49b1-8303-ea9e8c5416a9','change','creator',100)",
       )
       const body =
         scenario === "missing"
@@ -235,16 +232,16 @@ test("record preservation Case requires the exact operation, subject and body ve
               recordId: scenario === "record" ? "other" : "record-1",
             }
       database.run(
-        `INSERT INTO system_proposals(id,series_id,version,procedure_key,procedure_revision,body_json,digest,created_by_account_id,created_at) VALUES ('proposal-1','series-1',1,'change',1,?1,?2,'creator',100)`,
+        `INSERT INTO system_proposals(id,series_id,version,procedure_key,procedure_revision,body_json,digest,created_by_account_id,created_at) VALUES ('e42be528-73db-4ad0-86f3-1083e6a413f2','27ea4b6a-6e22-49b1-8303-ea9e8c5416a9',1,'change',1,?1,?2,'creator',100)`,
         [JSON.stringify(body), digest],
       )
       database.run(
-        `INSERT INTO system_cases(id,subject_context,subject_kind,subject_id,subject_version,proposal_digest,created_by_account_id,status,created_at,updated_at) VALUES ('case-1','system',?1,'record-1','1',?2,'creator','pending',100,100)`,
+        `INSERT INTO system_cases(id,subject_context,subject_kind,subject_id,subject_version,proposal_digest,created_by_account_id,status,created_at,updated_at) VALUES ('9055d4a0-416c-40c4-814b-0c6df2d0f691','system',?1,'record-1','1',?2,'creator','pending',100,100)`,
         [scenario === "kind" ? "other" : "record-preservation", digest],
       )
       const link = () =>
         database.run(
-          "INSERT INTO system_proposal_cases(proposal_id,case_id,linked_at) VALUES ('proposal-1','case-1',100)",
+          "INSERT INTO system_proposal_cases(proposal_id,case_id,linked_at) VALUES ('e42be528-73db-4ad0-86f3-1083e6a413f2','9055d4a0-416c-40c4-814b-0c6df2d0f691',100)",
         )
       if (scenario === "allowed") expect(link).not.toThrow()
       else expect(link).toThrow()

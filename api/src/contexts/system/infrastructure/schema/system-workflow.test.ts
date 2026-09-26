@@ -4,6 +4,7 @@ import { Database } from "bun:sqlite"
 import { readFileSync } from "node:fs"
 import { getTableConfig } from "drizzle-orm/sqlite-core"
 import { readReleasedSystemMigration } from "@system/test/read-released-system-migration.test-support"
+import { expectReleasedSystemSchema } from "@system/test/expect-released-system-schema.test-support"
 
 const coreSchemaSql = readFileSync(new URL("./system-core.sql", import.meta.url), "utf8")
 const workflowSchemaSql = readFileSync(new URL("./system-workflow.sql", import.meta.url), "utf8")
@@ -33,7 +34,7 @@ function insertAccount(database: Database, id: string): void {
   )
 }
 
-function insertCase(database: Database, id: string = "case-1"): void {
+function insertCase(database: Database, id: string = "9055d4a0-416c-40c4-814b-0c6df2d0f691"): void {
   database.run(
     `INSERT INTO system_cases
        (id, subject_context, subject_kind, subject_id, subject_version,
@@ -61,7 +62,7 @@ function insertTask(
         negative_decision_rule, delegation_policy, return_policy, proposal_digest, opened_at)
      VALUES (?, ?, 1, ?, ?, ?, ?, ?, ?, 100)`,
     [
-      props.caseId ?? "case-1",
+      props.caseId ?? "9055d4a0-416c-40c4-814b-0c6df2d0f691",
       props.taskKey ?? "review",
       props.requiredApprovals ?? 1,
       props.requiredParticipants ?? props.requiredApprovals ?? 1,
@@ -90,7 +91,7 @@ function insertCandidate(
         eligibility_digest, eligible_from, resolved_at)
      VALUES (?, ?, 1, ?, ?, 'authority', 'qualification', ?, '1', ?, ?, 100)`,
     [
-      props.caseId ?? "case-1",
+      props.caseId ?? "9055d4a0-416c-40c4-814b-0c6df2d0f691",
       props.taskKey ?? "review",
       props.accountId,
       props.source ?? "primary",
@@ -121,7 +122,7 @@ function insertAttestation(
      VALUES (?, ?, ?, 1, ?, ?, ?, ?, ?, NULL, ?)`,
     [
       props.id,
-      props.caseId ?? "case-1",
+      props.caseId ?? "9055d4a0-416c-40c4-814b-0c6df2d0f691",
       props.taskKey ?? "review",
       props.actorAccountId,
       props.representedAccountId ?? props.actorAccountId,
@@ -134,11 +135,17 @@ function insertAttestation(
 }
 
 describe("System workflow schema", () => {
-  test("released migrationをcanonical DDLと完全一致させる", () => {
-    const releasedMigrationSql = readReleasedSystemMigration("system_workflow")
-
-    expect(releasedMigrationSql).toBe(workflowSchemaSql)
+  test("released migrationとcanonical DDLはUUIDの主キーへの作り直しだけが異なる", () => {
     expect(readReleasedSystemMigration("system_decision_policy")).toBe(decisionPolicySchemaSql)
+    expectReleasedSystemSchema({
+      released: [readReleasedSystemMigration("system_workflow"), decisionPolicySchemaSql],
+      canonical: [workflowSchemaSql, decisionPolicySchemaSql],
+      rebuiltTables: [
+        "system_decision_tasks",
+        "system_decision_task_candidates",
+        "system_decision_task_exclusions",
+      ],
+    })
   })
 
   test("Drizzle宣言とDDLのtable・column・indexを一致させ、System外FKを持たない", () => {
@@ -199,43 +206,58 @@ describe("System workflow schema", () => {
     database.run(
       `INSERT INTO system_decision_task_exclusions
          (case_id, task_key, round, excluded_account_id, reason)
-       VALUES ('case-1', 'review', 1, 'creator', 'creator')`,
+       VALUES ('9055d4a0-416c-40c4-814b-0c6df2d0f691', 'review', 1, 'creator', 'creator')`,
     )
 
     expect(() => insertCandidate(database, { accountId: "creator" })).toThrow()
     insertCandidate(database, { accountId: "approver-1" })
     insertCandidate(database, { accountId: "approver-2" })
     expect(() =>
-      insertAttestation(database, { id: "creator-decision", actorAccountId: "creator" }),
+      insertAttestation(database, {
+        id: "e8a2de88-6993-4b2c-8a16-f5c965fdaf9a",
+        actorAccountId: "creator",
+      }),
     ).toThrow()
 
-    insertAttestation(database, { id: "decision-1", actorAccountId: "approver-1" })
+    insertAttestation(database, {
+      id: "179f4e84-128d-4195-8079-ad07689d8214",
+      actorAccountId: "approver-1",
+    })
     expect(() =>
       database.run(
         `UPDATE system_decision_tasks
          SET outcome = 'approved', closed_at = 120
-         WHERE case_id = 'case-1' AND task_key = 'review' AND round = 1`,
+         WHERE case_id = '9055d4a0-416c-40c4-814b-0c6df2d0f691' AND task_key = 'review' AND round = 1`,
       ),
     ).toThrow()
-    insertAttestation(database, { id: "decision-2", actorAccountId: "approver-2" })
+    insertAttestation(database, {
+      id: "d7d7270f-1273-4385-8785-7416603f95ab",
+      actorAccountId: "approver-2",
+    })
     database.run(
       `UPDATE system_decision_tasks
        SET outcome = 'approved', closed_at = 120
-       WHERE case_id = 'case-1' AND task_key = 'review' AND round = 1`,
+       WHERE case_id = '9055d4a0-416c-40c4-814b-0c6df2d0f691' AND task_key = 'review' AND round = 1`,
     )
     database.run(
-      "UPDATE system_cases SET status = 'approved', updated_at = 120 WHERE id = 'case-1'",
+      "UPDATE system_cases SET status = 'approved', updated_at = 120 WHERE id = '9055d4a0-416c-40c4-814b-0c6df2d0f691'",
     )
 
     expect(() =>
       database.run(
-        "UPDATE system_human_attestations SET comment = 'changed' WHERE id = 'decision-1'",
+        "UPDATE system_human_attestations SET comment = 'changed' WHERE id = '179f4e84-128d-4195-8079-ad07689d8214'",
       ),
     ).toThrow()
     expect(() =>
-      database.run("DELETE FROM system_human_attestations WHERE id = 'decision-1'"),
+      database.run(
+        "DELETE FROM system_human_attestations WHERE id = '179f4e84-128d-4195-8079-ad07689d8214'",
+      ),
     ).toThrow()
-    expect(database.query("SELECT status FROM system_cases WHERE id = 'case-1'").get()).toEqual({
+    expect(
+      database
+        .query("SELECT status FROM system_cases WHERE id = '9055d4a0-416c-40c4-814b-0c6df2d0f691'")
+        .get(),
+    ).toEqual({
       status: "approved",
     })
     database.close()
@@ -256,28 +278,38 @@ describe("System workflow schema", () => {
       insertCandidate(database, { accountId })
     }
 
-    insertAttestation(database, { id: "approve-1", actorAccountId: "member-1" })
-    insertAttestation(database, { id: "approve-2", actorAccountId: "member-2" })
+    insertAttestation(database, {
+      id: "f017996c-9c91-427a-8d8f-c17cd881a98d",
+      actorAccountId: "member-1",
+    })
+    insertAttestation(database, {
+      id: "410fdfab-e815-4702-8e92-782d7ddd57eb",
+      actorAccountId: "member-2",
+    })
     expect(() =>
       database.run(
         `UPDATE system_decision_tasks
          SET outcome = 'approved', closed_at = 120
-         WHERE case_id = 'case-1' AND task_key = 'review' AND round = 1`,
+         WHERE case_id = '9055d4a0-416c-40c4-814b-0c6df2d0f691' AND task_key = 'review' AND round = 1`,
       ),
     ).toThrow()
     insertAttestation(database, {
-      id: "reject-1",
+      id: "be3b3f5f-8db1-403e-8afc-5fbb589162ef",
       actorAccountId: "member-3",
       action: "reject",
     })
     database.run(
       `UPDATE system_decision_tasks
        SET outcome = 'approved', closed_at = 120
-       WHERE case_id = 'case-1' AND task_key = 'review' AND round = 1`,
+       WHERE case_id = '9055d4a0-416c-40c4-814b-0c6df2d0f691' AND task_key = 'review' AND round = 1`,
     )
 
     expect(
-      database.query("SELECT outcome FROM system_decision_tasks WHERE case_id = 'case-1'").get(),
+      database
+        .query(
+          "SELECT outcome FROM system_decision_tasks WHERE case_id = '9055d4a0-416c-40c4-814b-0c6df2d0f691'",
+        )
+        .get(),
     ).toEqual({ outcome: "approved" })
     database.close()
   })
@@ -294,20 +326,20 @@ describe("System workflow schema", () => {
       `INSERT INTO system_delegations
          (id, delegator_account_id, delegate_account_id, scope_context, scope_kind,
           scope_id, scope_version, starts_at, ends_at, created_at)
-       VALUES ('delegation:1', 'represented', 'delegate', NULL, NULL, NULL, NULL, 100, 200, 100)`,
+       VALUES ('60155d0b-2209-4fc6-84ce-574b18b3669d', 'represented', 'delegate', NULL, NULL, NULL, NULL, 100, 200, 100)`,
     )
 
     expect(() =>
       insertAttestation(database, {
-        id: "delegated",
+        id: "79ea95b1-db7c-4cbd-85c5-71d4dd0f3962",
         actorAccountId: "delegate",
         representedAccountId: "represented",
-        delegationId: "delegation:1",
+        delegationId: "60155d0b-2209-4fc6-84ce-574b18b3669d",
       }),
     ).toThrow()
     expect(() =>
       insertAttestation(database, {
-        id: "returned",
+        id: "ff4b5b01-1013-48e9-8dcf-527f45fd5dc6",
         actorAccountId: "represented",
         action: "return",
       }),
@@ -328,31 +360,35 @@ describe("System workflow schema", () => {
          (id, delegator_account_id, delegate_account_id, scope_context, scope_kind,
           scope_id, scope_version, starts_at, ends_at, created_at)
        VALUES
-         ('wrong-scope', 'represented', 'delegate', 'request', 'change',
-          'other-resource', '1', 100, 200, 100),
-         ('valid-scope', 'represented', 'delegate', 'request', 'change',
+         ('fbf75845-6da4-4232-83a1-1bf2eb7bee85', 'represented', 'delegate', 'request', 'change',
+          'dbcd34b4-9c95-419a-8fc3-d992cd5566d7', '1', 100, 200, 100),
+         ('6478384b-2355-44fc-841b-44e5033523c0', 'represented', 'delegate', 'request', 'change',
           'resource-1', '1', 100, 200, 100)`,
     )
 
     expect(() =>
       insertAttestation(database, {
-        id: "wrong",
+        id: "913d3abc-038c-41b3-8547-da800c90904d",
         actorAccountId: "delegate",
         representedAccountId: "represented",
-        delegationId: "wrong-scope",
+        delegationId: "fbf75845-6da4-4232-83a1-1bf2eb7bee85",
       }),
     ).toThrow()
     insertAttestation(database, {
-      id: "delegated-decision",
+      id: "450f0cfe-4197-4a3c-8b71-6837136cb370",
       actorAccountId: "delegate",
       representedAccountId: "represented",
-      delegationId: "valid-scope",
+      delegationId: "6478384b-2355-44fc-841b-44e5033523c0",
     })
     expect(() =>
-      database.run("UPDATE system_delegations SET revoked_at = 150 WHERE id = 'valid-scope'"),
+      database.run(
+        "UPDATE system_delegations SET revoked_at = 150 WHERE id = '6478384b-2355-44fc-841b-44e5033523c0'",
+      ),
     ).not.toThrow()
     expect(() =>
-      database.run("UPDATE system_delegations SET revoked_at = 160 WHERE id = 'valid-scope'"),
+      database.run(
+        "UPDATE system_delegations SET revoked_at = 160 WHERE id = '6478384b-2355-44fc-841b-44e5033523c0'",
+      ),
     ).toThrow()
     database.close()
   })
@@ -372,7 +408,7 @@ describe("System workflow schema", () => {
 
     expect(() =>
       insertAttestation(database, {
-        id: "too-early",
+        id: "af839528-bb2d-482b-8a17-fcc3fe68b8a6",
         actorAccountId: "approver",
         decidedAt: 149,
       }),
@@ -381,7 +417,7 @@ describe("System workflow schema", () => {
       database.run(
         `UPDATE system_decision_tasks
          SET outcome = 'returned', closed_at = 150
-         WHERE case_id = 'case-1' AND task_key = 'review' AND round = 1`,
+         WHERE case_id = '9055d4a0-416c-40c4-814b-0c6df2d0f691' AND task_key = 'review' AND round = 1`,
       ),
     ).toThrow()
     expect(() =>
@@ -389,13 +425,13 @@ describe("System workflow schema", () => {
         `INSERT INTO system_execution_authorizations
            (id, case_id, operation_key, proposal_digest, granted_to_account_id,
             granted_at, expires_at)
-         VALUES ('authorization-1', 'case-1', 'execute', ?, 'executor', 150, 200)`,
+         VALUES ('9d6bb95e-846d-46cd-8c1c-93e17a72d6d2', '9055d4a0-416c-40c4-814b-0c6df2d0f691', 'execute', ?, 'executor', 150, 200)`,
         [digest],
       ),
     ).toThrow()
 
     insertAttestation(database, {
-      id: "return-decision",
+      id: "b03592be-4cc7-4cfd-8152-81c8d6a94c6a",
       actorAccountId: "approver",
       action: "return",
       decidedAt: 150,
@@ -403,14 +439,14 @@ describe("System workflow schema", () => {
     database.run(
       `UPDATE system_decision_tasks
        SET outcome = 'returned', closed_at = 150
-       WHERE case_id = 'case-1' AND task_key = 'review' AND round = 1`,
+       WHERE case_id = '9055d4a0-416c-40c4-814b-0c6df2d0f691' AND task_key = 'review' AND round = 1`,
     )
     database.run(
-      "UPDATE system_cases SET status = 'returned', updated_at = 150 WHERE id = 'case-1'",
+      "UPDATE system_cases SET status = 'returned', updated_at = 150 WHERE id = '9055d4a0-416c-40c4-814b-0c6df2d0f691'",
     )
     expect(() =>
       database.run(
-        "UPDATE system_cases SET status = 'approved', updated_at = 151 WHERE id = 'case-1'",
+        "UPDATE system_cases SET status = 'approved', updated_at = 151 WHERE id = '9055d4a0-416c-40c4-814b-0c6df2d0f691'",
       ),
     ).toThrow()
     database.close()
@@ -427,13 +463,13 @@ describe("System workflow schema", () => {
     insertCandidate(database, { accountId: "rejector", taskKey: "risk-review" })
     insertCandidate(database, { accountId: "returner", taskKey: "content-review" })
     insertAttestation(database, {
-      id: "rejection",
+      id: "f728b04b-0762-4f58-8416-0949e5d69662",
       actorAccountId: "rejector",
       taskKey: "risk-review",
       action: "reject",
     })
     insertAttestation(database, {
-      id: "return",
+      id: "ec974926-f447-4645-8f52-7d29a1787a92",
       actorAccountId: "returner",
       taskKey: "content-review",
       action: "return",
@@ -441,24 +477,28 @@ describe("System workflow schema", () => {
     database.run(
       `UPDATE system_decision_tasks
        SET outcome = 'rejected', closed_at = 120
-       WHERE case_id = 'case-1' AND task_key = 'risk-review' AND round = 1`,
+       WHERE case_id = '9055d4a0-416c-40c4-814b-0c6df2d0f691' AND task_key = 'risk-review' AND round = 1`,
     )
     database.run(
       `UPDATE system_decision_tasks
        SET outcome = 'returned', closed_at = 120
-       WHERE case_id = 'case-1' AND task_key = 'content-review' AND round = 1`,
+       WHERE case_id = '9055d4a0-416c-40c4-814b-0c6df2d0f691' AND task_key = 'content-review' AND round = 1`,
     )
 
     expect(() =>
       database.run(
-        "UPDATE system_cases SET status = 'returned', updated_at = 120 WHERE id = 'case-1'",
+        "UPDATE system_cases SET status = 'returned', updated_at = 120 WHERE id = '9055d4a0-416c-40c4-814b-0c6df2d0f691'",
       ),
     ).toThrow()
     database.run(
-      "UPDATE system_cases SET status = 'rejected', updated_at = 120 WHERE id = 'case-1'",
+      "UPDATE system_cases SET status = 'rejected', updated_at = 120 WHERE id = '9055d4a0-416c-40c4-814b-0c6df2d0f691'",
     )
 
-    expect(database.query("SELECT status FROM system_cases WHERE id = 'case-1'").get()).toEqual({
+    expect(
+      database
+        .query("SELECT status FROM system_cases WHERE id = '9055d4a0-416c-40c4-814b-0c6df2d0f691'")
+        .get(),
+    ).toEqual({
       status: "rejected",
     })
     database.close()
@@ -472,7 +512,7 @@ describe("System workflow schema", () => {
 
     expect(() =>
       database.run(
-        "UPDATE system_cases SET status = 'cancelled', updated_at = 110 WHERE id = 'case-1'",
+        "UPDATE system_cases SET status = 'cancelled', updated_at = 110 WHERE id = '9055d4a0-416c-40c4-814b-0c6df2d0f691'",
       ),
     ).toThrow()
     expect(() =>
@@ -480,7 +520,7 @@ describe("System workflow schema", () => {
         `INSERT INTO system_decision_tasks
            (case_id, task_key, round, required_approvals, required_participants,
             negative_decision_rule, proposal_digest, opened_at)
-         VALUES ('case-1', 'review', 2, 1, 1, 'any-reject', ?, 110)`,
+         VALUES ('9055d4a0-416c-40c4-814b-0c6df2d0f691', 'review', 2, 1, 1, 'any-reject', ?, 110)`,
         [digest],
       ),
     ).toThrow()
@@ -488,25 +528,29 @@ describe("System workflow schema", () => {
     database.run(
       `UPDATE system_decision_tasks
        SET outcome = 'cancelled', closed_at = 110
-       WHERE case_id = 'case-1' AND task_key = 'review' AND round = 1`,
+       WHERE case_id = '9055d4a0-416c-40c4-814b-0c6df2d0f691' AND task_key = 'review' AND round = 1`,
     )
     database.run(
       `INSERT INTO system_decision_tasks
          (case_id, task_key, round, required_approvals, required_participants,
           negative_decision_rule, proposal_digest, opened_at)
-       VALUES ('case-1', 'review', 2, 1, 1, 'any-reject', ?, 110)`,
+       VALUES ('9055d4a0-416c-40c4-814b-0c6df2d0f691', 'review', 2, 1, 1, 'any-reject', ?, 110)`,
       [digest],
     )
     database.run(
       `UPDATE system_decision_tasks
        SET outcome = 'cancelled', closed_at = 120
-       WHERE case_id = 'case-1' AND task_key = 'review' AND round = 2`,
+       WHERE case_id = '9055d4a0-416c-40c4-814b-0c6df2d0f691' AND task_key = 'review' AND round = 2`,
     )
     database.run(
-      "UPDATE system_cases SET status = 'cancelled', updated_at = 120 WHERE id = 'case-1'",
+      "UPDATE system_cases SET status = 'cancelled', updated_at = 120 WHERE id = '9055d4a0-416c-40c4-814b-0c6df2d0f691'",
     )
 
-    expect(database.query("SELECT status FROM system_cases WHERE id = 'case-1'").get()).toEqual({
+    expect(
+      database
+        .query("SELECT status FROM system_cases WHERE id = '9055d4a0-416c-40c4-814b-0c6df2d0f691'")
+        .get(),
+    ).toEqual({
       status: "cancelled",
     })
     database.close()
@@ -520,46 +564,53 @@ describe("System workflow schema", () => {
     insertCase(database)
     insertTask(database)
     insertCandidate(database, { accountId: "approver" })
-    insertAttestation(database, { id: "decision", actorAccountId: "approver" })
+    insertAttestation(database, {
+      id: "065b73d6-94bb-424f-8c91-d5e7b2289ec3",
+      actorAccountId: "approver",
+    })
     database.run(
       `UPDATE system_decision_tasks
        SET outcome = 'approved', closed_at = 120
-       WHERE case_id = 'case-1' AND task_key = 'review' AND round = 1`,
+       WHERE case_id = '9055d4a0-416c-40c4-814b-0c6df2d0f691' AND task_key = 'review' AND round = 1`,
     )
     database.run(
-      "UPDATE system_cases SET status = 'approved', updated_at = 120 WHERE id = 'case-1'",
+      "UPDATE system_cases SET status = 'approved', updated_at = 120 WHERE id = '9055d4a0-416c-40c4-814b-0c6df2d0f691'",
     )
     database.run(
       `INSERT INTO system_execution_authorizations
          (id, case_id, operation_key, proposal_digest, granted_to_account_id,
           granted_at, expires_at)
-       VALUES ('authorization-1', 'case-1', 'execute', ?, 'executor', 120, 200)`,
+       VALUES ('9d6bb95e-846d-46cd-8c1c-93e17a72d6d2', '9055d4a0-416c-40c4-814b-0c6df2d0f691', 'execute', ?, 'executor', 120, 200)`,
       [digest],
     )
 
     expect(() =>
       database.run(
-        "UPDATE system_execution_authorizations SET used_at = 200 WHERE id = 'authorization-1'",
+        "UPDATE system_execution_authorizations SET used_at = 200 WHERE id = '9d6bb95e-846d-46cd-8c1c-93e17a72d6d2'",
       ),
     ).toThrow()
     expect(() =>
       database.run(
-        "UPDATE system_cases SET status = 'executed', updated_at = 130 WHERE id = 'case-1'",
+        "UPDATE system_cases SET status = 'executed', updated_at = 130 WHERE id = '9055d4a0-416c-40c4-814b-0c6df2d0f691'",
       ),
     ).toThrow()
     database.run(
-      "UPDATE system_execution_authorizations SET used_at = 130 WHERE id = 'authorization-1'",
+      "UPDATE system_execution_authorizations SET used_at = 130 WHERE id = '9d6bb95e-846d-46cd-8c1c-93e17a72d6d2'",
     )
     expect(() =>
       database.run(
-        "UPDATE system_execution_authorizations SET used_at = 140 WHERE id = 'authorization-1'",
+        "UPDATE system_execution_authorizations SET used_at = 140 WHERE id = '9d6bb95e-846d-46cd-8c1c-93e17a72d6d2'",
       ),
     ).toThrow()
     database.run(
-      "UPDATE system_cases SET status = 'executed', updated_at = 130 WHERE id = 'case-1'",
+      "UPDATE system_cases SET status = 'executed', updated_at = 130 WHERE id = '9055d4a0-416c-40c4-814b-0c6df2d0f691'",
     )
 
-    expect(database.query("SELECT status FROM system_cases WHERE id = 'case-1'").get()).toEqual({
+    expect(
+      database
+        .query("SELECT status FROM system_cases WHERE id = '9055d4a0-416c-40c4-814b-0c6df2d0f691'")
+        .get(),
+    ).toEqual({
       status: "executed",
     })
     database.close()

@@ -69,14 +69,14 @@ export async function createLeavePreservationFixture(database: D1Database) {
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('leave-test-manager','leave:test-manager','custom','Leave manager',0,0);
+    VALUES ('e8f97a27-aed2-4276-8b2e-8a173fe503c4','leave:test-manager','custom','Leave manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('leave-test-manager','system:admin'),
-      ('leave-test-manager','system:record:preserve'),
-      ('leave-test-manager','system:record:read'),
-      ('leave-test-manager','system:procedure:read');
+      ('e8f97a27-aed2-4276-8b2e-8a173fe503c4','system:admin'),
+      ('e8f97a27-aed2-4276-8b2e-8a173fe503c4','system:record:preserve'),
+      ('e8f97a27-aed2-4276-8b2e-8a173fe503c4','system:record:read'),
+      ('e8f97a27-aed2-4276-8b2e-8a173fe503c4','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('leave-test-binding','${creator.accountId}','leave-test-manager',0);`,
+    VALUES ('f873db89-cfff-4861-8f03-f80fc28b35dd','${creator.accountId}','e8f97a27-aed2-4276-8b2e-8a173fe503c4',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

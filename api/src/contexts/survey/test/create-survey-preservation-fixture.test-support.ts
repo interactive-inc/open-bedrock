@@ -69,15 +69,15 @@ export async function createSurveyPreservationFixture(database: D1Database) {
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('survey-test-manager','survey:test-manager','custom','Survey manager',0,0);
+    VALUES ('066fe97a-a8a2-48fe-8779-38d87db67977','survey:test-manager','custom','Survey manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('survey-test-manager','survey:manage'),
-      ('survey-test-manager','system:admin'),
-      ('survey-test-manager','system:record:preserve'),
-      ('survey-test-manager','system:record:read'),
-      ('survey-test-manager','system:procedure:read');
+      ('066fe97a-a8a2-48fe-8779-38d87db67977','survey:manage'),
+      ('066fe97a-a8a2-48fe-8779-38d87db67977','system:admin'),
+      ('066fe97a-a8a2-48fe-8779-38d87db67977','system:record:preserve'),
+      ('066fe97a-a8a2-48fe-8779-38d87db67977','system:record:read'),
+      ('066fe97a-a8a2-48fe-8779-38d87db67977','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('survey-test-binding','${creator.accountId}','survey-test-manager',0);`,
+    VALUES ('5a7befec-1715-499e-8283-48d6a7a71734','${creator.accountId}','066fe97a-a8a2-48fe-8779-38d87db67977',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

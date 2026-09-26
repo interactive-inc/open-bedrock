@@ -178,7 +178,7 @@ test("停止APIは人の管理権限と外部再認証を要求し、同じ世�
   const f = await createLicenseFixture(await pool.next())
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('license-test-manager','system:admin')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('7a047d56-30bc-4028-888d-2294d2d80c99','system:admin')",
   )
   const now = new Date()
   const authentication = {

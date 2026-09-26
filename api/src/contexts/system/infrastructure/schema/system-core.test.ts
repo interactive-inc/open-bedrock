@@ -26,7 +26,7 @@ function insertRole(database: Database): void {
   database.run(
     `INSERT INTO system_iam_roles
        (id, key, kind, name, created_at, updated_at)
-     VALUES ('role-root', 'system:admin', 'managed', 'System root', 100, 100)`,
+     VALUES ('92ab97b6-273c-42c6-8b7e-895d366202c0', 'system:admin', 'managed', 'System root', 100, 100)`,
   )
 }
 
@@ -262,45 +262,45 @@ describe("canonical System core schema", () => {
     database.run(
       `INSERT INTO system_role_bindings
          (id, account_id, role_id, resource_type, resource_id, created_at)
-       VALUES ('binding-root', 'account-1', 'role-root', NULL, NULL, 100)`,
+       VALUES ('8d9a49af-964f-426a-88d1-d3de8279d573', 'account-1', '92ab97b6-273c-42c6-8b7e-895d366202c0', NULL, NULL, 100)`,
     )
     expect(() =>
       database.run(
         `INSERT INTO system_bootstrap_state
            (singleton, completed_by_account_id, root_binding_id, completed_at)
-         VALUES (1, 'account-1', 'binding-root', 100)`,
+         VALUES (1, 'account-1', '8d9a49af-964f-426a-88d1-d3de8279d573', 100)`,
       ),
     ).toThrow()
     database.run(
       `INSERT INTO system_iam_role_permissions (role_id, permission_key)
-       VALUES ('role-root', 'system:admin')`,
+       VALUES ('92ab97b6-273c-42c6-8b7e-895d366202c0', 'system:admin')`,
     )
 
     expect(() =>
       database.run(
         `INSERT INTO system_role_bindings
            (id, account_id, role_id, resource_type, resource_id, created_at)
-         VALUES ('binding-duplicate', 'account-1', 'role-root', NULL, NULL, 101)`,
+         VALUES ('afc3f7d5-b1e6-45b0-8986-c40d535bc11a', 'account-1', '92ab97b6-273c-42c6-8b7e-895d366202c0', NULL, NULL, 101)`,
       ),
     ).toThrow()
     expect(() =>
       database.run(
         `INSERT INTO system_role_bindings
            (id, account_id, role_id, resource_type, resource_id, created_at)
-         VALUES ('binding-half-resource', 'account-1', 'role-root', 'facility:read', NULL, 100)`,
+         VALUES ('d781afbf-83b1-41ba-8f9e-686711a87ec9', 'account-1', '92ab97b6-273c-42c6-8b7e-895d366202c0', 'facility:read', NULL, 100)`,
       ),
     ).toThrow()
     expect(() =>
       database.run(
         `INSERT INTO system_bootstrap_state
            (singleton, completed_by_account_id, root_binding_id, completed_at)
-         VALUES (2, 'account-1', 'binding-root', 100)`,
+         VALUES (2, 'account-1', '8d9a49af-964f-426a-88d1-d3de8279d573', 100)`,
       ),
     ).toThrow()
     database.run(
       `INSERT INTO system_bootstrap_state
          (singleton, completed_by_account_id, root_binding_id, completed_at)
-       VALUES (1, 'account-1', 'binding-root', 100)`,
+       VALUES (1, 'account-1', '8d9a49af-964f-426a-88d1-d3de8279d573', 100)`,
     )
 
     expect(
@@ -311,11 +311,17 @@ describe("canonical System core schema", () => {
     ).toThrow()
     expect(() => database.run("DELETE FROM system_bootstrap_state WHERE singleton = 1")).toThrow()
     expect(() =>
-      database.run("UPDATE system_role_bindings SET created_at = 101 WHERE id = 'binding-root'"),
+      database.run(
+        "UPDATE system_role_bindings SET created_at = 101 WHERE id = '8d9a49af-964f-426a-88d1-d3de8279d573'",
+      ),
     ).toThrow()
-    database.run("UPDATE system_role_bindings SET revoked_at = 110 WHERE id = 'binding-root'")
+    database.run(
+      "UPDATE system_role_bindings SET revoked_at = 110 WHERE id = '8d9a49af-964f-426a-88d1-d3de8279d573'",
+    )
     expect(() =>
-      database.run("UPDATE system_role_bindings SET revoked_at = 120 WHERE id = 'binding-root'"),
+      database.run(
+        "UPDATE system_role_bindings SET revoked_at = 120 WHERE id = '8d9a49af-964f-426a-88d1-d3de8279d573'",
+      ),
     ).toThrow()
     database.close()
   })

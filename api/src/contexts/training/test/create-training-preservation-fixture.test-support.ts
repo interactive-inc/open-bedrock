@@ -69,15 +69,15 @@ export async function createTrainingPreservationFixture(database: D1Database) {
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('training-test-manager','training:test-manager','custom','Training manager',0,0);
+    VALUES ('895d68b7-c132-441c-8dc9-419ea6d39165','training:test-manager','custom','Training manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('training-test-manager','training:manage'),
-      ('training-test-manager','system:admin'),
-      ('training-test-manager','system:record:preserve'),
-      ('training-test-manager','system:record:read'),
-      ('training-test-manager','system:procedure:read');
+      ('895d68b7-c132-441c-8dc9-419ea6d39165','training:manage'),
+      ('895d68b7-c132-441c-8dc9-419ea6d39165','system:admin'),
+      ('895d68b7-c132-441c-8dc9-419ea6d39165','system:record:preserve'),
+      ('895d68b7-c132-441c-8dc9-419ea6d39165','system:record:read'),
+      ('895d68b7-c132-441c-8dc9-419ea6d39165','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('training-test-binding','${creator.accountId}','training-test-manager',0);`,
+    VALUES ('91ab2efc-01ff-482a-8005-1cf60b61710e','${creator.accountId}','895d68b7-c132-441c-8dc9-419ea6d39165',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

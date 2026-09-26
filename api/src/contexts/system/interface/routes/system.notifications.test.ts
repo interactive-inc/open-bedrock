@@ -33,21 +33,21 @@ describe("System Notification HTTP", () => {
       .query(
         `INSERT INTO system_iam_roles
            (id, key, kind, name, created_at, updated_at)
-         VALUES ('notification-sender', 'system:notification-sender', 'managed',
+         VALUES ('319464a5-fe67-4a38-8e7f-07a8d64591d8', 'system:notification-sender', 'managed',
                  'Notification sender', ?1, ?1)`,
       )
       .run(now.getTime())
     fixture.sqlite
       .query(
         `INSERT INTO system_iam_role_permissions (role_id, permission_key)
-         VALUES ('notification-sender', 'notification:send')`,
+         VALUES ('319464a5-fe67-4a38-8e7f-07a8d64591d8', 'notification:send')`,
       )
       .run()
     fixture.sqlite
       .query(
         `INSERT INTO system_role_bindings
            (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-         VALUES ('notification-binding', ?1, 'notification-sender', NULL, NULL, ?2, NULL)`,
+         VALUES ('01fed7f6-b372-4c2b-83ba-c5e22f432953', ?1, '319464a5-fe67-4a38-8e7f-07a8d64591d8', NULL, NULL, ?2, NULL)`,
       )
       .run(accountId, now.getTime())
 

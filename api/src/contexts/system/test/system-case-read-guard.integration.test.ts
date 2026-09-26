@@ -24,19 +24,19 @@ async function fixture() {
   )
   await db
     .prepare(
-      "INSERT INTO system_cases(id,subject_context,subject_kind,subject_id,subject_version,proposal_digest,created_by_account_id,status,created_at,updated_at) VALUES ('case','records','entry','record','1',?1,'creator','pending',100,100)",
+      "INSERT INTO system_cases(id,subject_context,subject_kind,subject_id,subject_version,proposal_digest,created_by_account_id,status,created_at,updated_at) VALUES ('4f1c2d3e-5a6b-4c7d-8e9f-0a1b2c3d4e5f','records','entry','record','1',?1,'creator','pending',100,100)",
     )
     .bind("a".repeat(64))
     .run()
   await db
     .prepare(
-      "INSERT INTO system_decision_tasks(case_id,task_key,round,required_approvals,proposal_digest,opened_at) VALUES ('case','review',1,1,?1,100)",
+      "INSERT INTO system_decision_tasks(case_id,task_key,round,required_approvals,proposal_digest,opened_at) VALUES ('4f1c2d3e-5a6b-4c7d-8e9f-0a1b2c3d4e5f','review',1,1,?1,100)",
     )
     .bind("a".repeat(64))
     .run()
   await db
     .prepare(
-      "INSERT INTO system_decision_task_candidates(case_id,task_key,round,candidate_account_id,source,evidence_context,evidence_kind,evidence_id,evidence_version,eligibility_digest,resolved_at) VALUES ('case','review',1,'candidate','primary','records','authority','authority','1',?1,100)",
+      "INSERT INTO system_decision_task_candidates(case_id,task_key,round,candidate_account_id,source,evidence_context,evidence_kind,evidence_id,evidence_version,eligibility_digest,resolved_at) VALUES ('4f1c2d3e-5a6b-4c7d-8e9f-0a1b2c3d4e5f','review',1,'candidate','primary','records','authority','authority','1',?1,100)",
     )
     .bind("a".repeat(64))
     .run()
@@ -44,7 +44,8 @@ async function fixture() {
   return {
     db,
     adapter,
-    prepare: () => adapter.prepare({ caseId: "case", accountId: "reader", at }),
+    prepare: () =>
+      adapter.prepare({ caseId: "4f1c2d3e-5a6b-4c7d-8e9f-0a1b2c3d4e5f", accountId: "reader", at }),
   }
 }
 
@@ -54,7 +55,7 @@ test.each(["case", "task", "candidate-account", "candidate-principal", "delegati
     const f = await fixture()
     await f.db
       .prepare(
-        "INSERT INTO system_delegations(id,delegator_account_id,delegate_account_id,starts_at,ends_at,created_at) VALUES ('delegation','candidate','reader',100,?1,100)",
+        "INSERT INTO system_delegations(id,delegator_account_id,delegate_account_id,starts_at,ends_at,created_at) VALUES ('5a2b3c4d-6e7f-4a8b-9c0d-1e2f3a4b5c6d','candidate','reader',100,?1,100)",
       )
       .bind(at.getTime() + 1000)
       .run()
@@ -63,14 +64,14 @@ test.each(["case", "task", "candidate-account", "candidate-principal", "delegati
     expect((await f.db.batch([guard(at)])).every((row) => row.success)).toBe(true)
     const sql =
       kind === "case"
-        ? "UPDATE system_decision_tasks SET outcome='cancelled',closed_at=101 WHERE case_id='case'; UPDATE system_cases SET status='cancelled',updated_at=101 WHERE id='case'"
+        ? "UPDATE system_decision_tasks SET outcome='cancelled',closed_at=101 WHERE case_id='4f1c2d3e-5a6b-4c7d-8e9f-0a1b2c3d4e5f'; UPDATE system_cases SET status='cancelled',updated_at=101 WHERE id='4f1c2d3e-5a6b-4c7d-8e9f-0a1b2c3d4e5f'"
         : kind === "task"
-          ? "UPDATE system_decision_tasks SET outcome='cancelled',closed_at=101 WHERE case_id='case'"
+          ? "UPDATE system_decision_tasks SET outcome='cancelled',closed_at=101 WHERE case_id='4f1c2d3e-5a6b-4c7d-8e9f-0a1b2c3d4e5f'"
           : kind === "candidate-account"
             ? "UPDATE system_accounts SET token_version=1 WHERE id='candidate'"
             : kind === "candidate-principal"
               ? "UPDATE system_principals SET revision=2,updated_at=101 WHERE id='candidate'"
-              : "UPDATE system_delegations SET revoked_at=101 WHERE id='delegation'"
+              : "UPDATE system_delegations SET revoked_at=101 WHERE id='5a2b3c4d-6e7f-4a8b-9c0d-1e2f3a4b5c6d'"
     await f.db.exec(sql)
     expect(await f.db.batch([guard(at)]).catch((error: unknown) => error)).toBeInstanceOf(Error)
   },
@@ -80,7 +81,7 @@ test("委任の期限とエスカレーション開始を、記録が変わら�
   const f = await fixture()
   await f.db
     .prepare(
-      "INSERT INTO system_delegations(id,delegator_account_id,delegate_account_id,starts_at,ends_at,created_at) VALUES ('delegation','candidate','reader',100,?1,100)",
+      "INSERT INTO system_delegations(id,delegator_account_id,delegate_account_id,starts_at,ends_at,created_at) VALUES ('5a2b3c4d-6e7f-4a8b-9c0d-1e2f3a4b5c6d','candidate','reader',100,?1,100)",
     )
     .bind(at.getTime() + 1000)
     .run()
@@ -92,7 +93,7 @@ test("委任の期限とエスカレーション開始を、記録が変わら�
   const next = await fixture()
   await next.db
     .prepare(
-      "INSERT INTO system_decision_task_candidates(case_id,task_key,round,candidate_account_id,source,evidence_context,evidence_kind,evidence_id,evidence_version,eligibility_digest,eligible_from,resolved_at) VALUES ('case','review',1,'reader','escalation','records','authority','authority','1',?1,?2,100)",
+      "INSERT INTO system_decision_task_candidates(case_id,task_key,round,candidate_account_id,source,evidence_context,evidence_kind,evidence_id,evidence_version,eligibility_digest,eligible_from,resolved_at) VALUES ('4f1c2d3e-5a6b-4c7d-8e9f-0a1b2c3d4e5f','review',1,'reader','escalation','records','authority','authority','1',?1,?2,100)",
     )
     .bind("b".repeat(64), at.getTime() + 1000)
     .run()

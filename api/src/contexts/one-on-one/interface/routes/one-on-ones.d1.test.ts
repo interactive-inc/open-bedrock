@@ -332,14 +332,14 @@ async function grantDepartmentReader(db: D1Database, accountId: number): Promise
     .prepare(
       `INSERT INTO system_iam_roles
          (id, key, kind, name, description, created_at, updated_at)
-       VALUES ('900', 'company:dept_reader', 'custom', 'dept reader', NULL, 0, 0)`,
+       VALUES ('5e0f7c3a-1d2b-4c5d-8e6f-000000000900', 'company:dept_reader', 'custom', 'dept reader', NULL, 0, 0)`,
     )
     .run()
 
   await db
     .prepare(
       `INSERT INTO system_iam_role_permissions (role_id, permission_key)
-       VALUES ('900', 'oneonone:read:department')`,
+       VALUES ('5e0f7c3a-1d2b-4c5d-8e6f-000000000900', 'oneonone:read:department')`,
     )
     .run()
 
@@ -347,9 +347,9 @@ async function grantDepartmentReader(db: D1Database, accountId: number): Promise
     .prepare(
       `INSERT INTO system_role_bindings
          (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-       VALUES ('test:department-reader:' || ?1, ?1, '900', NULL, NULL, 0, NULL)`,
+       VALUES (?2, ?1, '5e0f7c3a-1d2b-4c5d-8e6f-000000000900', NULL, NULL, 0, NULL)`,
     )
-    .bind(String(accountId))
+    .bind(String(accountId), crypto.randomUUID())
     .run()
 }
 

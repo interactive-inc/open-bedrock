@@ -144,7 +144,7 @@ test("会議3台帳を停止中に人の承認で保全し、業務コードを�
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('meeting-test-manager','system:record:export');
+    VALUES ('379192cc-a09d-4970-832c-9ce5f203eb03','system:record:export');
     DROP TABLE meeting_minutes_records;
     DROP TABLE decision_records;
     DROP TABLE meetings;`,

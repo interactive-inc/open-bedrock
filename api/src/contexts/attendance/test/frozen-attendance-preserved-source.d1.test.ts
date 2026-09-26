@@ -43,7 +43,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
   const f = await createAttendancePreservationFixture(await pool.next())
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('role:attendance-archive','system:record:preserve'),('role:attendance-archive','system:record:read')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('7cc94037-9f57-4c5b-8211-7c6c0e372ca5','system:record:preserve'),('7cc94037-9f57-4c5b-8211-7c6c0e372ca5','system:record:read')",
   )
   const now = new Date()
   const creator = f.governance.creator.accountId
@@ -381,7 +381,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
   )
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('role:attendance-archive','system:record:read'),('role:attendance-archive','system:admin')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('7cc94037-9f57-4c5b-8211-7c6c0e372ca5','system:record:read'),('7cc94037-9f57-4c5b-8211-7c6c0e372ca5','system:admin')",
   )
   const stepUpToken = "d".repeat(64)
   const hash = await new SystemPrincipalSecretService().hashRawSecret(stepUpToken)
@@ -542,7 +542,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
     f.database,
     `CREATE TRIGGER revoke_attendance_plan_authority AFTER INSERT
     ON system_audit_events WHEN NEW.action='system.record.retirement.plan.created' BEGIN
-    DELETE FROM system_iam_role_permissions WHERE role_id='role:attendance-archive'
+    DELETE FROM system_iam_role_permissions WHERE role_id='7cc94037-9f57-4c5b-8211-7c6c0e372ca5'
       AND permission_key='system:admin'; END`,
   )
   expect((await requestPlan(planCommand)).status).toBe(503)
@@ -554,7 +554,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
   expect(
     await f.database
       .prepare(
-        "SELECT count(*) AS n FROM system_iam_role_permissions WHERE role_id='role:attendance-archive' AND permission_key='system:admin'",
+        "SELECT count(*) AS n FROM system_iam_role_permissions WHERE role_id='7cc94037-9f57-4c5b-8211-7c6c0e372ca5' AND permission_key='system:admin'",
       )
       .first<number>("n"),
   ).toBe(1)
@@ -609,7 +609,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
     f.database,
     `CREATE TRIGGER revoke_attendance_verification_authority AFTER INSERT
     ON system_audit_events WHEN NEW.action='system.record.retirement.page.verified' BEGIN
-    DELETE FROM system_iam_role_permissions WHERE role_id='role:attendance-archive'
+    DELETE FROM system_iam_role_permissions WHERE role_id='7cc94037-9f57-4c5b-8211-7c6c0e372ca5'
       AND permission_key='system:record:read'; END`,
   )
   expect((await requestVerification(verificationCommand)).status).toBe(503)
@@ -654,13 +654,13 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
   expect((await requestPlan({ ...planCommand, recordKinds: [] })).status).toBe(400)
   await execSql(
     f.database,
-    "DELETE FROM system_iam_role_permissions WHERE role_id='role:attendance-archive' AND permission_key='system:admin'",
+    "DELETE FROM system_iam_role_permissions WHERE role_id='7cc94037-9f57-4c5b-8211-7c6c0e372ca5' AND permission_key='system:admin'",
   )
   expect((await requestPlan(planCommand)).status).toBe(403)
   expect((await requestVerification(verificationCommand)).status).toBe(403)
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('role:attendance-archive','system:admin')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('7cc94037-9f57-4c5b-8211-7c6c0e372ca5','system:admin')",
   )
   expect(
     await f.database
@@ -748,7 +748,7 @@ test("人が承認した保全本文を復号・開示監査して停止中の�
   ).toBe(0)
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('role:attendance-archive','system:record:read')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('7cc94037-9f57-4c5b-8211-7c6c0e372ca5','system:record:read')",
   )
   const activePlanId = crypto.randomUUID()
   const activeCoverageId = crypto.randomUUID()

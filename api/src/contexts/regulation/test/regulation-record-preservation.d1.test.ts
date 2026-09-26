@@ -135,7 +135,7 @@ test("規程2台帳を停止中に人の承認で保全し、業務コードを�
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('regulation-test-manager','system:record:export');
+    VALUES ('1bd9a9cd-7dc3-48c9-8f7e-227df225004f','system:record:export');
     DROP TABLE regulation_versions;
     DROP TABLE regulations;`,
   )

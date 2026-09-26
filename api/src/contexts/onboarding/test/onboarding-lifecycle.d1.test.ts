@@ -42,9 +42,9 @@ async function fixture() {
     f.database,
     `INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('worker:lifecycle','active',0,0,0);
     INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at) VALUES ('principal:lifecycle','worker:lifecycle','service','Worker',1,0,0);
-    INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES ('role:lifecycle','onboarding:worker','custom','Worker',0,0);
-    INSERT INTO system_iam_role_permissions VALUES ('role:lifecycle','batch:execute'),('role:lifecycle','employee:read'),('role:lifecycle','onboarding:manage');
-    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('binding:lifecycle','worker:lifecycle','role:lifecycle',0);
+    INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES ('f3199ee8-3001-41b1-8cbb-acb2b91f7209','onboarding:worker','custom','Worker',0,0);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('f3199ee8-3001-41b1-8cbb-acb2b91f7209','batch:execute'),('f3199ee8-3001-41b1-8cbb-acb2b91f7209','employee:read'),('f3199ee8-3001-41b1-8cbb-acb2b91f7209','onboarding:manage');
+    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('aa91674e-8345-4820-86f8-daffd9b981a3','worker:lifecycle','f3199ee8-3001-41b1-8cbb-acb2b91f7209',0);
     INSERT INTO onboarding_templates (id,code,name,kind) VALUES ('0190003c-0000-7000-8000-000000015f91','auto-join','Join','join'),('0190003c-0000-7000-8000-000000015f92','auto-leave','Leave','leave');
     INSERT INTO onboarding_template_tasks (id,template_code,code,title,sort_order) VALUES ('01900038-0000-7000-8000-000000000101','auto-join','join-task','Prepare access',1),('01900038-0000-7000-8000-000000000102','auto-leave','leave-task','Confirm return',1);
     INSERT INTO onboarding_lifecycle_template_bindings (id,effect_type,template_code,updated_at) VALUES ('01900040-0000-7000-8000-000000000001','hire','auto-join',0),('01900040-0000-7000-8000-000000000002','retired','auto-leave',0);`,
@@ -481,9 +481,9 @@ test("dead letterを人のstep-upと管理権限で一度だけ再投入し、�
     f.database,
     `INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('operator:retry','active',0,0,0);
     INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at) VALUES ('principal:retry','operator:retry','human','Operator',1,0,0);
-    INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES ('role:retry','onboarding:retry','custom','Operator',0,0);
-    INSERT INTO system_iam_role_permissions VALUES ('role:retry','system:admin');
-    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('binding:retry','operator:retry','role:retry',0);`,
+    INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES ('e956d921-2edc-4105-8eec-a5c5c1cc13d3','onboarding:retry','custom','Operator',0,0);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('e956d921-2edc-4105-8eec-a5c5c1cc13d3','system:admin');
+    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('15631ade-b548-40b8-82e9-dc71591ad471','operator:retry','e956d921-2edc-4105-8eec-a5c5c1cc13d3',0);`,
   )
   const secret = "lifecycle-test-jwt-secret"
   const accessToken = await new SystemAccessTokenIssuer(secret).issue({
@@ -545,7 +545,10 @@ test("dead letterを人のstep-upと管理権限で一度だけ再投入し、�
       .prepare("SELECT count(*) AS total FROM onboarding_lifecycle_deliveries")
       .first<number>("total"),
   ).toBe(2)
-  await execSql(f.database, "DELETE FROM system_iam_role_permissions WHERE role_id = 'role:retry'")
+  await execSql(
+    f.database,
+    "DELETE FROM system_iam_role_permissions WHERE role_id = 'e956d921-2edc-4105-8eec-a5c5c1cc13d3'",
+  )
   expect((await request(true)).status).toBe(403)
   expect((await list()).status).toBe(403)
   await execSql(

@@ -15,10 +15,10 @@ function fixture() {
     INSERT INTO system_principals (id, account_id, kind, name, revision, created_at, updated_at)
     VALUES ('principal:1', 'actor:1', 'human', 'Operator', 1, 100, 100);
     INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at)
-    VALUES ('role:1', 'operator', 'custom', 'Operator', 100, 100);
-    INSERT INTO system_iam_role_permissions VALUES ('role:1', 'records:write');
+    VALUES ('4e74c1bb-6f90-452e-852b-b723b635cc75', 'operator', 'custom', 'Operator', 100, 100);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('4e74c1bb-6f90-452e-852b-b723b635cc75', 'records:write');
     INSERT INTO system_role_bindings (id, account_id, role_id, created_at)
-    VALUES ('binding:1', 'actor:1', 'role:1', 100);`)
+    VALUES ('d50d88aa-2e8e-4e9b-8d15-2a1fb3ed6a4c', 'actor:1', '4e74c1bb-6f90-452e-852b-b723b635cc75', 100);`)
   return { sqlite, database: wrapSystemD1TestDatabase(sqlite) }
 }
 

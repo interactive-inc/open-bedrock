@@ -47,18 +47,18 @@ async function fixture() {
   }
   await db
     .prepare(
-      "INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at) VALUES ('admin-role', 'system:root', 'managed', 'Root', ?1, ?1)",
+      "INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at) VALUES ('be72ba18-7abe-47f1-8371-b41cff620297', 'system:root', 'managed', 'Root', ?1, ?1)",
     )
     .bind(old.getTime())
     .run()
   await db
     .prepare(
-      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('admin-role', 'system:admin')",
+      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('be72ba18-7abe-47f1-8371-b41cff620297', 'system:admin')",
     )
     .run()
   await db
     .prepare(
-      "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('admin-binding', 'admin', 'admin-role', NULL, NULL, ?1)",
+      "INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at) VALUES ('09ef108e-50f8-4909-8969-532bd57c6cc9', 'admin', 'be72ba18-7abe-47f1-8371-b41cff620297', NULL, NULL, ?1)",
     )
     .bind(old.getTime())
     .run()

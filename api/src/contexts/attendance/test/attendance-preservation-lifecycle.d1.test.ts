@@ -39,16 +39,16 @@ test("打刻の取下げ・否決・再提出・承認・確定後、業務テ�
   const f = await createAttendancePreservationFixture(await pool.next())
   await execSql(
     f.database,
-    `INSERT INTO system_iam_role_permissions VALUES
-    ('role:attendance-archive','system:record:preserve'),
-    ('role:attendance-archive','system:procedure:read');
+    `INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES
+    ('7cc94037-9f57-4c5b-8211-7c6c0e372ca5','system:record:preserve'),
+    ('7cc94037-9f57-4c5b-8211-7c6c0e372ca5','system:procedure:read');
     INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:archive-review','archive:review','custom','Review reader',0,0);
-    INSERT INTO system_iam_role_permissions VALUES ('role:archive-review','system:procedure:read');`,
+    VALUES ('d68b878d-f713-43d2-8c8d-c6f2eadca9bf','archive:review','custom','Review reader',0,0);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('d68b878d-f713-43d2-8c8d-c6f2eadca9bf','system:procedure:read');`,
   )
   await f.database
     .prepare(
-      "INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('binding:archive-review',?1,'role:archive-review',0)",
+      "INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('cd991c9b-0980-42d7-8225-07b78a0995aa',?1,'d68b878d-f713-43d2-8c8d-c6f2eadca9bf',0)",
     )
     .bind(f.reviewer.accountId)
     .run()
@@ -168,7 +168,7 @@ test("打刻の取下げ・否決・再提出・承認・確定後、業務テ�
   ).toBe(200)
   await execSql(
     f.database,
-    "DROP TABLE attendance_records; INSERT INTO system_iam_role_permissions VALUES ('role:attendance-archive','system:record:export')",
+    "DROP TABLE attendance_records; INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('7cc94037-9f57-4c5b-8211-7c6c0e372ca5','system:record:export')",
   )
   const core = systemFactory
     .createApp()
@@ -229,7 +229,7 @@ test("打刻の取下げ・否決・再提出・承認・確定後、業務テ�
   expect((await core.request(dossierPath, { headers }, env)).status).toBe(403)
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('role:attendance-archive','system:admin')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('7cc94037-9f57-4c5b-8211-7c6c0e372ca5','system:admin')",
   )
   const dossier = await core.request(dossierPath, { headers }, env)
   if (dossier.status !== 200)

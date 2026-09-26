@@ -15,11 +15,11 @@ const schema = `
     accepted_by_account_id TEXT, expires_at INTEGER NOT NULL, revoked_at INTEGER,
     updated_at INTEGER NOT NULL
   );
-  INSERT INTO system_iam_roles VALUES ('role-1', NULL, 100);
+  INSERT INTO system_iam_roles VALUES ('a290ac92-bf4b-434b-8443-8b6ceeb1cb85', NULL, 100);
   INSERT INTO system_accounts VALUES ('account-1', 'active', 0, NULL, 100);
   INSERT INTO system_account_invitations VALUES
-    ('invite-1', 'digest-1', 'person@example.com', 'role-1', NULL, 1000, NULL, 100),
-    ('invite-2', 'digest-2', 'person@example.com', 'role-1', NULL, 1000, NULL, 100);
+    ('invite-1', 'digest-1', 'person@example.com', 'a290ac92-bf4b-434b-8443-8b6ceeb1cb85', NULL, 1000, NULL, 100),
+    ('invite-2', 'digest-2', 'person@example.com', 'a290ac92-bf4b-434b-8443-8b6ceeb1cb85', NULL, 1000, NULL, 100);
 `
 
 test("System招待受諾はsnapshotと追加条件が一致するときだけ更新する", async () => {
@@ -34,7 +34,7 @@ test("System招待受諾はsnapshotと追加条件が一致するときだけ更
       id,
       storedToken,
       expectedEmail: "person@example.com",
-      roleId: "role-1",
+      roleId: "a290ac92-bf4b-434b-8443-8b6ceeb1cb85",
       expectedUpdatedAt: new Date(100),
       expectedExpiresAt: new Date(1000),
       expectedRoleUpdatedAt: new Date(100),
@@ -87,7 +87,11 @@ test("System招待受諾はsnapshotと追加条件が一致するときだけ更
       .first<{ accepted_by_account_id: string | null }>(),
   ).toEqual({ accepted_by_account_id: null })
 
-  await database.prepare("UPDATE system_iam_roles SET updated_at = 201 WHERE id = 'role-1'").run()
+  await database
+    .prepare(
+      "UPDATE system_iam_roles SET updated_at = 201 WHERE id = 'a290ac92-bf4b-434b-8443-8b6ceeb1cb85'",
+    )
+    .run()
   const stale = prepare("invite-2", "digest-2")
   if (stale instanceof Error) throw stale
   await stale.run()

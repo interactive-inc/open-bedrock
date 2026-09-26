@@ -69,15 +69,15 @@ export async function createLifeEventPreservationFixture(database: D1Database) {
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('life-event-test-manager','life-event:test-manager','custom','LifeEvent manager',0,0);
+    VALUES ('faeb314d-0ae4-49be-8ffa-ea57504bdc1e','life-event:test-manager','custom','LifeEvent manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('life-event-test-manager','life_event:manage'),
-      ('life-event-test-manager','system:admin'),
-      ('life-event-test-manager','system:record:preserve'),
-      ('life-event-test-manager','system:record:read'),
-      ('life-event-test-manager','system:procedure:read');
+      ('faeb314d-0ae4-49be-8ffa-ea57504bdc1e','life_event:manage'),
+      ('faeb314d-0ae4-49be-8ffa-ea57504bdc1e','system:admin'),
+      ('faeb314d-0ae4-49be-8ffa-ea57504bdc1e','system:record:preserve'),
+      ('faeb314d-0ae4-49be-8ffa-ea57504bdc1e','system:record:read'),
+      ('faeb314d-0ae4-49be-8ffa-ea57504bdc1e','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('life-event-test-binding','${creator.accountId}','life-event-test-manager',0);`,
+    VALUES ('4ded4442-0af4-4046-8eab-654c8c2d31fb','${creator.accountId}','faeb314d-0ae4-49be-8ffa-ea57504bdc1e',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

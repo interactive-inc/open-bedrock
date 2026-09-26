@@ -69,14 +69,14 @@ export async function createPartnerPreservationFixture(database: D1Database) {
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('partner-test-manager','partner:test-manager','custom','Partner manager',0,0);
+    VALUES ('6f34dffd-597f-49b3-8a9f-a074548a7ab6','partner:test-manager','custom','Partner manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('partner-test-manager','system:admin'),
-      ('partner-test-manager','system:record:preserve'),
-      ('partner-test-manager','system:record:read'),
-      ('partner-test-manager','system:procedure:read');
+      ('6f34dffd-597f-49b3-8a9f-a074548a7ab6','system:admin'),
+      ('6f34dffd-597f-49b3-8a9f-a074548a7ab6','system:record:preserve'),
+      ('6f34dffd-597f-49b3-8a9f-a074548a7ab6','system:record:read'),
+      ('6f34dffd-597f-49b3-8a9f-a074548a7ab6','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('partner-test-binding','${creator.accountId}','partner-test-manager',0);`,
+    VALUES ('cc8ebb69-3562-4461-8e3e-bd844d14eae1','${creator.accountId}','6f34dffd-597f-49b3-8a9f-a074548a7ab6',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

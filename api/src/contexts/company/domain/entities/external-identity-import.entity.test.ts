@@ -7,7 +7,7 @@ const identity = {
   email: "person@example.com",
   name: "Example Person",
   accountId: null,
-  initialRoleId: "import-member",
+  initialRoleId: "1f178fc9-9b4d-4247-8dc8-8f1344bf445d",
   newEmployee: { hireDate: "2026-01-01", employmentType: "PART_TIME" },
 }
 const input = {

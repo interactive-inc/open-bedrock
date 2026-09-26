@@ -1,4 +1,5 @@
 import { prepareCompanyRecordProcedureTask } from "@/contexts/company/interface/operations/prepare-company-record-procedure-task"
+import { createProposalSeriesIdFromDigest } from "@system/domain/schemas/workflow/proposal-series-id.schema"
 import { companyCalendarDayRetirementSubmissionCommandSchema } from "@/contexts/company-calendar/domain/schemas/company-calendar-retirement-submission-command.schema"
 import { PrepareCompanyCalendarDayRetirementCurrentStateAdapter } from "@/contexts/company-calendar/infrastructure/adapters/prepare-company-calendar-retirement-current-state.adapter"
 import { openSystemRecordRetirementVerificationReceipts } from "@system/interface/operations/open-system-record-retirement-verification-receipts"
@@ -70,7 +71,7 @@ export class SubmitCompanyCalendarDayRetirementRequestAdapter {
         const digest = await ProposalDigestValue.create(identity)
         if (digest instanceof Error) return digest
         return {
-          seriesId: `record-retirement:${digest.toString()}`,
+          seriesId: createProposalSeriesIdFromDigest(digest.toString()),
           version: 1,
           supersedesProposalId: null,
         }

@@ -21,6 +21,15 @@ import {
 
 const at = new Date("2026-08-21T09:00:00.000Z")
 const eventId = "00000000-0000-4000-8000-000000000010"
+/** role と割当の主キーは UUID のため、操作者ごとに決まった値を使う。 */
+const roleIds: Record<string, string> = {}
+const bindingIds: Record<string, string> = {}
+function roleIdOf(id: string): string {
+  return (roleIds[id] ??= crypto.randomUUID())
+}
+function bindingIdOf(id: string): string {
+  return (bindingIds[id] ??= crypto.randomUUID())
+}
 
 async function fixture() {
   const db = createSystemAttachmentTestDatabase()
@@ -41,19 +50,19 @@ async function fixture() {
       .run()
     await db
       .prepare(
-        "INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at) VALUES (?1, ?1, 'custom', 'Test role', 100, 100)",
+        "INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at) VALUES (?1, ?2, 'custom', 'Test role', 100, 100)",
       )
-      .bind(`role:${id}`)
+      .bind(roleIdOf(id), `role:${id}`)
       .run()
     await db
-      .prepare("INSERT INTO system_iam_role_permissions VALUES (?1, ?2)")
-      .bind(`role:${id}`, id === "admin" ? "system:admin" : "audit:read")
+      .prepare("INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES (?1, ?2)")
+      .bind(roleIdOf(id), id === "admin" ? "system:admin" : "audit:read")
       .run()
     await db
       .prepare(
         "INSERT INTO system_role_bindings (id, account_id, role_id, created_at) VALUES (?1, ?2, ?3, 100)",
       )
-      .bind(`binding:${id}`, id, `role:${id}`)
+      .bind(bindingIdOf(id), id, roleIdOf(id))
       .run()
   }
   await db
@@ -200,8 +209,8 @@ test("人の管理資格・再認証と期待版を検査し、再送は一つ�
       .first<{ count: number }>(),
   ).toEqual({ count: 2 })
   await f.db
-    .prepare("UPDATE system_role_bindings SET revoked_at = ?1 WHERE id = 'binding:admin'")
-    .bind(at.getTime())
+    .prepare("UPDATE system_role_bindings SET revoked_at = ?1 WHERE id = ?2")
+    .bind(at.getTime(), bindingIdOf("admin"))
     .run()
   expect((await f.publish()).status).toBe(403)
 })
@@ -314,7 +323,10 @@ test("読取資格のsnapshotは付与元・Account変更をtransactionで再検
     now: at,
   })
   if (proof instanceof Error) throw proof
-  await f.db.prepare("DELETE FROM system_iam_role_permissions WHERE role_id = 'role:reader'").run()
+  await f.db
+    .prepare("DELETE FROM system_iam_role_permissions WHERE role_id = ?1")
+    .bind(roleIdOf("reader"))
+    .run()
   const page = await new SystemAuditEventQueryAdapter({ env: { DB: f.db } }).findById(
     eventId,
     proof,

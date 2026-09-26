@@ -191,7 +191,7 @@ export class D1SystemRootBootstrapAdapter {
 
       const existing = result.results.at(0)
       return existing === undefined
-        ? { id: `system-root:${crypto.randomUUID()}`, create: true }
+        ? { id: crypto.randomUUID(), create: true }
         : { id: existing.id, create: false }
     } catch (caught) {
       return caught instanceof Error ? caught : new Error("failed to resolve System root role")

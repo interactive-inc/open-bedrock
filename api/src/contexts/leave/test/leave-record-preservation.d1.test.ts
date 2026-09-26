@@ -143,7 +143,7 @@ test("休暇の停止中に申請と残数の原文を人の承認後にSystem�
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('leave-test-manager','system:record:export');
+    VALUES ('e8f97a27-aed2-4276-8b2e-8a173fe503c4','system:record:export');
     DROP TABLE leave_decision_notifications;
     DROP TABLE leave_procedure_bindings;
     DROP TABLE leave_balances;

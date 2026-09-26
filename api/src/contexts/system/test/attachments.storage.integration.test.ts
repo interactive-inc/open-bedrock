@@ -589,10 +589,10 @@ test("encrypted original is verified before atomic finalization and failed sourc
     })
     if (authorization instanceof Error) throw authorization
     await context.env.DB.exec(
-      "INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('preserver-role','record:preserver','custom','Preserver',0,0); INSERT INTO system_iam_role_permissions VALUES ('preserver-role','system:record:preserve')",
+      "INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('2c36a869-fdde-4a95-833c-90b9186dc1ab','record:preserver','custom','Preserver',0,0); INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('2c36a869-fdde-4a95-833c-90b9186dc1ab','system:record:preserve')",
     )
     await context.env.DB.prepare(
-      "INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('preserver-binding',?1,'preserver-role',0)",
+      "INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('e1e36e78-8919-432e-8884-16b1257ecdc1',?1,'2c36a869-fdde-4a95-833c-90b9186dc1ab',0)",
     )
       .bind(ownerAccountId)
       .run()
@@ -634,7 +634,7 @@ test("encrypted original is verified before atomic finalization and failed sourc
         await context.env.DB.exec("UPDATE test_source_authority SET allowed = 0")
       if (scenario === "permission-revoked-during-read")
         await context.env.DB.exec(
-          "DELETE FROM system_iam_role_permissions WHERE role_id = 'preserver-role'",
+          "DELETE FROM system_iam_role_permissions WHERE role_id = '2c36a869-fdde-4a95-833c-90b9186dc1ab'",
         )
       if (scenario === "reviewer-suspended-during-read")
         await context.env.DB.prepare(
@@ -722,7 +722,7 @@ test("encrypted original is verified before atomic finalization and failed sourc
       if (exported instanceof Error) throw exported
       expect(exported.content).toEqual(captureBytes)
       await context.env.DB.exec(
-        "INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('viewer','active',0,100,100); INSERT INTO system_principals(id,account_id,kind,name,revision,created_at,updated_at) VALUES ('viewer-principal','viewer','human','Viewer',1,100,100); INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('record-reader','record:reader','custom','Reader',100,100); INSERT INTO system_iam_role_permissions VALUES ('record-reader','system:record:read'); INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('record-binding','viewer','record-reader',100)",
+        "INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('viewer','active',0,100,100); INSERT INTO system_principals(id,account_id,kind,name,revision,created_at,updated_at) VALUES ('viewer-principal','viewer','human','Viewer',1,100,100); INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('6d947d9f-a028-4025-8113-1d4d9d300ea2','record:reader','custom','Reader',100,100); INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('6d947d9f-a028-4025-8113-1d4d9d300ea2','system:record:read'); INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('dfd5bbdb-f9ff-47b9-8287-6e97e4e2486a','viewer','6d947d9f-a028-4025-8113-1d4d9d300ea2',100)",
       )
       const secret = "record-http-test-secret-only"
       const token = await new SystemAccessTokenIssuer(secret).issue({
@@ -789,7 +789,7 @@ test("encrypted original is verified before atomic finalization and failed sourc
           async (bytes) => {
             const decoded = await restoreAttachment(bytes)
             await context.env.DB.exec(
-              "DELETE FROM system_iam_role_permissions WHERE role_id='record-reader' AND permission_key='system:record:read'",
+              "DELETE FROM system_iam_role_permissions WHERE role_id='6d947d9f-a028-4025-8113-1d4d9d300ea2' AND permission_key='system:record:read'",
             )
             return decoded
           },
@@ -807,7 +807,7 @@ test("encrypted original is verified before atomic finalization and failed sourc
         } finally {
           revoke.mockRestore()
           await context.env.DB.exec(
-            "INSERT INTO system_iam_role_permissions VALUES ('record-reader','system:record:read')",
+            "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('6d947d9f-a028-4025-8113-1d4d9d300ea2','system:record:read')",
           )
         }
       } else {
@@ -842,9 +842,9 @@ test("encrypted original is verified before atomic finalization and failed sourc
           )
           .run()
         await context.env.DB.prepare(
-          "INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES (?1,?1,'record-reader',100)",
+          "INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES (?2,?1,'6d947d9f-a028-4025-8113-1d4d9d300ea2',100)",
         )
-          .bind(accountId)
+          .bind(accountId, crypto.randomUUID())
           .run()
         const machineToken = await new SystemAccessTokenIssuer(secret).issue({
           accountId: zAccountId.parse(accountId),
@@ -871,11 +871,11 @@ test("encrypted original is verified before atomic finalization and failed sourc
         ).toBe(401)
       }
       await context.env.DB.exec(
-        "DELETE FROM system_iam_role_permissions WHERE role_id = 'record-reader'",
+        "DELETE FROM system_iam_role_permissions WHERE role_id = '6d947d9f-a028-4025-8113-1d4d9d300ea2'",
       )
       expect((await http.request(endpoint, { headers }, environment)).status).toBe(403)
       await context.env.DB.exec(
-        "INSERT INTO system_accounts(id,status,token_version,created_at,updated_at) VALUES ('exporter','active',0,100,100); INSERT INTO system_principals(id,account_id,kind,name,revision,created_at,updated_at) VALUES ('export-principal','exporter','human','Exporter',1,100,100); INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('export-role','record:exporter','custom','Exporter',100,100); INSERT INTO system_iam_role_permissions VALUES ('export-role','system:record:export'); INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('export-binding','exporter','export-role',100)",
+        "INSERT INTO system_accounts(id,status,token_version,created_at,updated_at) VALUES ('exporter','active',0,100,100); INSERT INTO system_principals(id,account_id,kind,name,revision,created_at,updated_at) VALUES ('export-principal','exporter','human','Exporter',1,100,100); INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('a13faa42-3cc9-47ac-8400-e3d87f81a68d','record:exporter','custom','Exporter',100,100); INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('a13faa42-3cc9-47ac-8400-e3d87f81a68d','system:record:export'); INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('6367ff23-452a-4ff1-80db-73892719479a','exporter','a13faa42-3cc9-47ac-8400-e3d87f81a68d',100)",
       )
       const exportToken = await new SystemAccessTokenIssuer(secret).issue({
         accountId: zAccountId.parse("exporter"),

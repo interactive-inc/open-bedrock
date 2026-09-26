@@ -11,7 +11,7 @@ const at = new Date("2035-01-01T00:00:00Z")
 async function fixture(kind: "human" | "agent" | "service" | "connector" | "legacy" = "human") {
   const db = createSystemAttachmentTestDatabase()
   await db.exec(
-    "INSERT INTO system_accounts(id,status,token_version,created_at,updated_at) VALUES ('reader','active',0,100,100),('other','active',0,100,100); INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('reader-role','reader:role','custom','Reader',100,100); INSERT INTO system_iam_role_permissions VALUES ('reader-role','records:read'); INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('reader-binding','reader','reader-role',100);",
+    "INSERT INTO system_accounts(id,status,token_version,created_at,updated_at) VALUES ('reader','active',0,100,100),('other','active',0,100,100); INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES ('04635707-bd54-47ea-81d4-38426e3ce8a2','reader:role','custom','Reader',100,100); INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('04635707-bd54-47ea-81d4-38426e3ce8a2','records:read'); INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES ('72da13a4-abc7-476f-8499-074d4f8a8854','reader','04635707-bd54-47ea-81d4-38426e3ce8a2',100);",
   )
   if (kind === "connector")
     await db.exec(
@@ -77,9 +77,9 @@ test.each(["account", "grant", "role", "principal"])(
       kind === "account"
         ? "UPDATE system_accounts SET token_version=1 WHERE id='reader'"
         : kind === "grant"
-          ? "DELETE FROM system_iam_role_permissions WHERE role_id='reader-role'"
+          ? "DELETE FROM system_iam_role_permissions WHERE role_id='04635707-bd54-47ea-81d4-38426e3ce8a2'"
           : kind === "role"
-            ? "UPDATE system_iam_roles SET updated_at=101 WHERE id='reader-role'"
+            ? "UPDATE system_iam_roles SET updated_at=101 WHERE id='04635707-bd54-47ea-81d4-38426e3ce8a2'"
             : "UPDATE system_principals SET revision=2,updated_at=101 WHERE id='principal'"
     await f.db.exec(sql)
     const assertions = prepared.assertions(at)
@@ -123,7 +123,9 @@ test("connectorの停止と将来の権限失効を、時計を進めた開示�
   expect(await f.db.batch([...assertions]).catch((error: unknown) => error)).toBeInstanceOf(Error)
   const human = await fixture()
   await human.db
-    .prepare("UPDATE system_role_bindings SET revoked_at=?1 WHERE id='reader-binding'")
+    .prepare(
+      "UPDATE system_role_bindings SET revoked_at=?1 WHERE id='72da13a4-abc7-476f-8499-074d4f8a8854'",
+    )
     .bind(at.getTime() + 1000)
     .run()
   const active = await human.prepare()
@@ -163,7 +165,7 @@ test.each(["human", "agent", "service", "connector"] as const)(
     const input = { authentication: f.authentication, action: "read" as const, at }
     expect(await preparePreservedRecordReadAuthorization({ env: { DB: f.db } }, input)).toBeNull()
     await f.db.exec(
-      "DELETE FROM system_iam_role_permissions; INSERT INTO system_iam_role_permissions VALUES ('reader-role', 'system:record:read')",
+      "DELETE FROM system_iam_role_permissions; INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('04635707-bd54-47ea-81d4-38426e3ce8a2', 'system:record:read')",
     )
     const proof = await preparePreservedRecordReadAuthorization({ env: { DB: f.db } }, input)
     if (proof === null || proof instanceof Error)
@@ -188,11 +190,11 @@ test.each(["human", "agent", "service", "connector"] as const)(
     const input = { authentication: f.authentication, at }
     const context = { env: { DB: f.db } }
     await f.db.exec(
-      "DELETE FROM system_iam_role_permissions; INSERT INTO system_iam_role_permissions VALUES ('reader-role','system:record:read'),('reader-role','system:record:export')",
+      "DELETE FROM system_iam_role_permissions; INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('04635707-bd54-47ea-81d4-38426e3ce8a2','system:record:read'),('04635707-bd54-47ea-81d4-38426e3ce8a2','system:record:export')",
     )
     expect(await preparePreservedRecordWriteAuthorization(context, input)).toBeNull()
     await f.db.exec(
-      "DELETE FROM system_iam_role_permissions; INSERT INTO system_iam_role_permissions VALUES ('reader-role','system:record:preserve')",
+      "DELETE FROM system_iam_role_permissions; INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('04635707-bd54-47ea-81d4-38426e3ce8a2','system:record:preserve')",
     )
     const proof = await preparePreservedRecordWriteAuthorization(context, input)
     if (proof === null || proof instanceof Error) throw new Error("missing preservation permission")

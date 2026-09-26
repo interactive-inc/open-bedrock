@@ -55,9 +55,9 @@ describe("外部identityとCompany正本の同期", () => {
     expect(await reader.findMany({ asOf: restoreCalendarDate("2030-07-01") })).toEqual(active)
   })
   test.each([
-    "UPDATE system_role_bindings SET revoked_at = 1 WHERE id = 'import-provider-binding'",
+    "UPDATE system_role_bindings SET revoked_at = 1 WHERE id = '721e4694-365f-47cd-8983-0743ec63c76d'",
     "UPDATE system_machine_credentials SET status = 'revoked', revoked_at = updated_at",
-    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('import-member', 'system:admin')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('1f178fc9-9b4d-4247-8dc8-8f1344bf445d', 'system:admin')",
   ])("準備後の許可変更でも同期全体を拒否する: %s", async (sql) => {
     const c = await createExternalIdentityImportTestContext()
     const batch = c.database.batch.bind(c.database)
@@ -188,7 +188,7 @@ describe("外部identityとCompany正本の同期", () => {
   test("操作主体が持たない権限を新規Accountへ付与しない", async () => {
     const c = await createExternalIdentityImportTestContext()
     await c.database.exec(
-      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('import-member', 'system:admin')",
+      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('1f178fc9-9b4d-4247-8dc8-8f1344bf445d', 'system:admin')",
     )
     expect((await c.application.execute(c.input)).kind).toBe("forbidden")
     expect(
@@ -407,18 +407,20 @@ describe("外部identityとCompany正本の同期", () => {
       c.database
         .prepare(`INSERT INTO system_role_bindings
           (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-          VALUES (?1, 'external-import-service', 'import-provider', 'system:identity_provider', ?2, 0, NULL)`)
+          VALUES (?1, 'external-import-service', '8ca6d30f-174b-40e1-870b-df888721f554', 'system:identity_provider', ?2, 0, NULL)`)
         .bind(id, provider)
         .run()
     await c.database.exec(
-      "UPDATE system_role_bindings SET revoked_at = 1 WHERE id = 'import-provider-binding'",
+      "UPDATE system_role_bindings SET revoked_at = 1 WHERE id = '721e4694-365f-47cd-8983-0743ec63c76d'",
     )
-    await grant("import-other-provider-binding", "other-provider")
+    const otherProviderBinding = crypto.randomUUID()
+    await grant(otherProviderBinding, "other-provider")
     expect((await c.application.execute(c.input)).kind).toBe("forbidden")
-    await c.database.exec(
-      "UPDATE system_role_bindings SET revoked_at = 1 WHERE id = 'import-other-provider-binding'",
-    )
-    await grant("import-restored-provider-binding", "oidc")
+    await c.database
+      .prepare("UPDATE system_role_bindings SET revoked_at = 1 WHERE id = ?1")
+      .bind(otherProviderBinding)
+      .run()
+    await grant(crypto.randomUUID(), "oidc")
     await c.database.exec(
       "UPDATE system_machine_credentials SET status = 'revoked', revoked_at = updated_at",
     )

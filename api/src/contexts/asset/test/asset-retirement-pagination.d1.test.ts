@@ -53,12 +53,12 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:retirement-review','retirement:review','custom','Record reviewer',0,0);
-    INSERT INTO system_iam_role_permissions VALUES ('role:retirement-review','system:procedure:read')`,
+    VALUES ('34736f76-bafd-432f-82c8-5910781358ff','retirement:review','custom','Record reviewer',0,0);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('34736f76-bafd-432f-82c8-5910781358ff','system:procedure:read')`,
   )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('binding:retirement-review',?1,'role:retirement-review',0)`)
+    VALUES ('765a5b2a-4515-48b7-8e45-6f0284f1d313',?1,'34736f76-bafd-432f-82c8-5910781358ff',0)`)
     .bind(reviewer.accountId)
     .run()
   for (let id = 1; id <= 11; id++) {
@@ -541,7 +541,7 @@ test("資産・貸与・棚卸し・棚卸し明細を全件保全し、人の�
   })
   await execSql(
     database,
-    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('asset-test-manager','system:record:export'); DROP TABLE stocktake_items; DROP TABLE stocktakes; DROP TABLE asset_lendings; DROP TABLE assets;",
+    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('30b90267-2ba8-4559-8165-e5e664e8ce93','system:record:export'); DROP TABLE stocktake_items; DROP TABLE stocktakes; DROP TABLE asset_lendings; DROP TABLE assets;",
   )
   const core = systemFactory
     .createApp()

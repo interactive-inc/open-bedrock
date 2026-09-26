@@ -135,7 +135,7 @@ test("会議室2台帳を停止中に人の承認で保全し、業務コード�
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('room-test-manager','system:record:export');
+    VALUES ('3897f8c0-d867-4418-8c56-11215140f6f9','system:record:export');
     DROP TABLE room_reservations;
     DROP TABLE rooms;`,
   )

@@ -85,17 +85,17 @@ async function createFixture() {
   }
   await db.exec(`
     INSERT INTO system_iam_roles(id,key,kind,name,created_at,updated_at) VALUES
-      ('privacy-role','test:privacy_officer','custom','Privacy officer',0,0),
-      ('root-role','test:root','custom','Root',0,0),
-      ('member-role','test:member','custom','Member',0,0);
-    INSERT INTO system_iam_role_permissions VALUES
-      ('privacy-role','personal_data:erase'),
-      ('root-role','system:admin'),
-      ('member-role','audit:read');
+      ('00a29165-13b2-4723-8bb5-8aaeb1096d2d','test:privacy_officer','custom','Privacy officer',0,0),
+      ('af285551-000d-4320-8ea0-bbfbc6c96a81','test:root','custom','Root',0,0),
+      ('6df06337-edc8-475b-81f5-9e32869ed52f','test:member','custom','Member',0,0);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES
+      ('00a29165-13b2-4723-8bb5-8aaeb1096d2d','personal_data:erase'),
+      ('af285551-000d-4320-8ea0-bbfbc6c96a81','system:admin'),
+      ('6df06337-edc8-475b-81f5-9e32869ed52f','audit:read');
     INSERT INTO system_role_bindings(id,account_id,role_id,created_at) VALUES
-      ('privacy-binding','${officerAccountId}','privacy-role',0),
-      ('root-binding','${rootAccountId}','root-role',0),
-      ('member-binding','${memberAccountId}','member-role',0);
+      ('085ed3fb-b610-4ab9-8c00-8e5966aa81b3','${officerAccountId}','00a29165-13b2-4723-8bb5-8aaeb1096d2d',0),
+      ('f16b950f-c6db-4760-8994-95cc8065169d','${rootAccountId}','af285551-000d-4320-8ea0-bbfbc6c96a81',0),
+      ('fb62108d-f4b6-4fdb-8b11-43ab1ca26adb','${memberAccountId}','6df06337-edc8-475b-81f5-9e32869ed52f',0);
     INSERT INTO system_procedure_definitions(key,current_revision,status,created_at,updated_at)
       VALUES ('personal-data-erasure',1,'active',0,0);
     INSERT INTO system_procedure_numbers(procedure_key) VALUES ('personal-data-erasure');

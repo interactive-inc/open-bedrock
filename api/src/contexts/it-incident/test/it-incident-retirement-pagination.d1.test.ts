@@ -52,12 +52,12 @@ test("11件のITインシデント記録を全件保全し、人の承認・取�
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:retirement-review','retirement:review','custom','Record reviewer',0,0);
-    INSERT INTO system_iam_role_permissions VALUES ('role:retirement-review','system:procedure:read')`,
+    VALUES ('34736f76-bafd-432f-82c8-5910781358ff','retirement:review','custom','Record reviewer',0,0);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('34736f76-bafd-432f-82c8-5910781358ff','system:procedure:read')`,
   )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('binding:retirement-review',?1,'role:retirement-review',0)`)
+    VALUES ('765a5b2a-4515-48b7-8e45-6f0284f1d313',?1,'34736f76-bafd-432f-82c8-5910781358ff',0)`)
     .bind(reviewer.accountId)
     .run()
   for (const id of [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11]) {
@@ -442,7 +442,7 @@ test("11件のITインシデント記録を全件保全し、人の承認・取�
   ).toBe(409)
   await execSql(
     database,
-    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('it-incident-test-manager','system:record:export'); DROP TABLE it_incidents;",
+    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('6f693fd4-39e2-41e3-84a2-854c2a4bd022','system:record:export'); DROP TABLE it_incidents;",
   )
   const core = systemFactory
     .createApp()

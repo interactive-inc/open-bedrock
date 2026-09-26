@@ -3,23 +3,22 @@
     "tables": 206,
     "primaryKeyKinds": {
       "allocator-singleton-secret": 11,
-      "composite": 21,
+      "composite": 16,
       "integer": 2,
-      "text-business-code": 1,
       "text-prefixed": 13,
-      "text-uuid": 125,
-      "text-uuid-candidate": 33
+      "text-uuid": 141,
+      "text-uuid-candidate": 23
     },
     "declaredForeignKeys": 272,
     "softReferences": {
       "cross-context": 17,
       "external": 32,
       "historical": 10,
-      "not-reference": 91,
+      "not-reference": 93,
       "polymorphic": 18,
       "same-context": 79
     },
-    "triggers": 752,
+    "triggers": 762,
     "views": 25,
     "indexes": 290
   },
@@ -7417,8 +7416,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -7641,28 +7640,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "case_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "task_key",
-            "type": "TEXT"
-          },
-          {
-            "name": "round",
-            "type": "INTEGER"
-          },
-          {
-            "name": "candidate_account_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "source",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -7689,6 +7672,7 @@
       ],
       "triggers": [
         "system_decision_candidate_requires_human",
+        "system_decision_task_candidates_identity_update",
         "system_decision_task_candidates_prevent_delete",
         "system_decision_task_candidates_prevent_update",
         "system_decision_task_candidates_valid_insert",
@@ -7707,24 +7691,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "case_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "task_key",
-            "type": "TEXT"
-          },
-          {
-            "name": "round",
-            "type": "INTEGER"
-          },
-          {
-            "name": "excluded_account_id",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -7746,6 +7718,7 @@
       "softReferences": [],
       "triggers": [
         "system_decision_task_candidates_valid_insert",
+        "system_decision_task_exclusions_identity_update",
         "system_decision_task_exclusions_prevent_delete",
         "system_decision_task_exclusions_prevent_update",
         "system_decision_task_exclusions_valid_insert",
@@ -7759,20 +7732,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "case_id",
+            "name": "id",
             "type": "TEXT"
-          },
-          {
-            "name": "task_key",
-            "type": "TEXT"
-          },
-          {
-            "name": "round",
-            "type": "INTEGER"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -7817,6 +7782,7 @@
         "system_decision_task_candidates_valid_insert",
         "system_decision_task_exclusions_valid_insert",
         "system_decision_tasks_approved_quorum",
+        "system_decision_tasks_identity_update",
         "system_decision_tasks_monotonic_lifecycle",
         "system_decision_tasks_negative_evidence",
         "system_decision_tasks_prevent_delete",
@@ -7867,8 +7833,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false,
+        "kind": "text-uuid",
+        "uuidEnforced": true,
         "inheritsFrom": "system_delegations"
       },
       "foreignKeys": {
@@ -7907,8 +7873,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -7970,8 +7936,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -8077,8 +8043,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -8134,16 +8100,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "role_id",
-            "type": "TEXT"
-          },
-          {
-            "name": "permission_key",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -8162,7 +8124,11 @@
           "classification": "not-reference"
         }
       ],
-      "triggers": ["system_bootstrap_state_validate_root", "system_work_revision_insert"],
+      "triggers": [
+        "system_bootstrap_state_validate_root",
+        "system_iam_role_permissions_identity_update",
+        "system_work_revision_insert"
+      ],
       "views": [],
       "indexes": []
     },
@@ -8175,8 +8141,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -8201,8 +8167,18 @@
           }
         ]
       },
-      "softReferences": [],
-      "triggers": ["system_iam_roles_immutable_identity", "system_work_revision_insert"],
+      "softReferences": [
+        {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        }
+      ],
+      "triggers": [
+        "system_iam_roles_identity_update",
+        "system_iam_roles_immutable_identity",
+        "system_iam_roles_legacy_id_insert",
+        "system_work_revision_insert"
+      ],
       "views": [],
       "indexes": ["system_iam_roles_key_uniq"]
     },
@@ -9048,16 +9024,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "procedure_key",
+            "name": "id",
             "type": "TEXT"
-          },
-          {
-            "name": "revision",
-            "type": "INTEGER"
           }
         ],
-        "kind": "composite",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -9093,6 +9065,7 @@
         "expense_procedure_binding_matches_proposal",
         "leave_procedure_binding_matches_proposal",
         "ringi_procedure_binding_matches_proposal",
+        "system_procedure_definition_revisions_identity_update",
         "system_procedure_definition_revisions_prevent_delete",
         "system_procedure_definition_revisions_prevent_update",
         "system_procedure_definition_revisions_valid_insert",
@@ -9106,12 +9079,12 @@
       "primaryKey": {
         "columns": [
           {
-            "name": "key",
+            "name": "id",
             "type": "TEXT"
           }
         ],
-        "kind": "text-business-code",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [],
@@ -9145,6 +9118,7 @@
       "softReferences": [],
       "triggers": [
         "system_procedure_definition_revisions_valid_insert",
+        "system_procedure_definitions_identity_update",
         "system_procedure_definitions_monotonic_lifecycle",
         "system_procedure_definitions_prevent_delete",
         "system_proposals_valid_insert"
@@ -9192,8 +9166,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false,
+        "kind": "text-uuid",
+        "uuidEnforced": true,
         "inheritsFrom": "system_proposals"
       },
       "foreignKeys": {
@@ -9290,8 +9264,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -9360,8 +9334,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -10268,8 +10242,8 @@
             "type": "TEXT"
           }
         ],
-        "kind": "text-uuid-candidate",
-        "uuidEnforced": false
+        "kind": "text-uuid",
+        "uuidEnforced": true
       },
       "foreignKeys": {
         "outgoing": [
@@ -10297,6 +10271,10 @@
       },
       "softReferences": [
         {
+          "column": "legacy_id",
+          "classification": "not-reference"
+        },
+        {
           "column": "resource_id",
           "classification": "polymorphic"
         }
@@ -10304,6 +10282,8 @@
       "triggers": [
         "system_bootstrap_state_validate_root",
         "system_role_bindings_closed_account_guard",
+        "system_role_bindings_identity_update",
+        "system_role_bindings_legacy_id_insert",
         "system_role_bindings_monotonic_lifecycle",
         "system_work_revision_insert"
       ],

@@ -69,15 +69,15 @@ export async function createAssetPreservationFixture(database: D1Database) {
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('asset-test-manager','asset:test-manager','custom','Asset manager',0,0);
+    VALUES ('30b90267-2ba8-4559-8165-e5e664e8ce93','asset:test-manager','custom','Asset manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('asset-test-manager','asset:manage'),
-      ('asset-test-manager','system:admin'),
-      ('asset-test-manager','system:record:preserve'),
-      ('asset-test-manager','system:record:read'),
-      ('asset-test-manager','system:procedure:read');
+      ('30b90267-2ba8-4559-8165-e5e664e8ce93','asset:manage'),
+      ('30b90267-2ba8-4559-8165-e5e664e8ce93','system:admin'),
+      ('30b90267-2ba8-4559-8165-e5e664e8ce93','system:record:preserve'),
+      ('30b90267-2ba8-4559-8165-e5e664e8ce93','system:record:read'),
+      ('30b90267-2ba8-4559-8165-e5e664e8ce93','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('asset-test-binding','${creator.accountId}','asset-test-manager',0);`,
+    VALUES ('f8bea3c1-f643-4e67-84cb-1125bd91b8b3','${creator.accountId}','30b90267-2ba8-4559-8165-e5e664e8ce93',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

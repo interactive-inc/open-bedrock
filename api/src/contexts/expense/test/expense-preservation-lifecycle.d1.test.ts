@@ -41,16 +41,16 @@ test("経費予算の取下げ・否決・再提出・承認・確定後、業�
   const f = await createExpensePreservationFixture(await pool.next())
   await execSql(
     f.database,
-    `INSERT INTO system_iam_role_permissions VALUES
-    ('role:expense-archive','system:record:preserve'),
-    ('role:expense-archive','system:procedure:read');
+    `INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES
+    ('6138765d-db53-4944-8523-0f6525050651','system:record:preserve'),
+    ('6138765d-db53-4944-8523-0f6525050651','system:procedure:read');
     INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:archive-review','archive:review','custom','Review reader',0,0);
-    INSERT INTO system_iam_role_permissions VALUES ('role:archive-review','system:procedure:read');`,
+    VALUES ('d68b878d-f713-43d2-8c8d-c6f2eadca9bf','archive:review','custom','Review reader',0,0);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('d68b878d-f713-43d2-8c8d-c6f2eadca9bf','system:procedure:read');`,
   )
   await f.database
     .prepare(
-      "INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('binding:archive-review',?1,'role:archive-review',0)",
+      "INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('cd991c9b-0980-42d7-8225-07b78a0995aa',?1,'d68b878d-f713-43d2-8c8d-c6f2eadca9bf',0)",
     )
     .bind(f.reviewer.accountId)
     .run()
@@ -166,7 +166,7 @@ test("経費予算の取下げ・否決・再提出・承認・確定後、業�
   ).toBe(200)
   await execSql(
     f.database,
-    "DROP TABLE expense_budgets; INSERT INTO system_iam_role_permissions VALUES ('role:expense-archive','system:record:export')",
+    "DROP TABLE expense_budgets; INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('6138765d-db53-4944-8523-0f6525050651','system:record:export')",
   )
   const core = systemFactory
     .createApp()
@@ -227,7 +227,7 @@ test("経費予算の取下げ・否決・再提出・承認・確定後、業�
   expect((await core.request(dossierPath, { headers }, env)).status).toBe(403)
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('role:expense-archive','system:admin')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('6138765d-db53-4944-8523-0f6525050651','system:admin')",
   )
   const dossier = await core.request(dossierPath, { headers }, env)
   if (dossier.status !== 200)
@@ -257,15 +257,15 @@ test("経費保全は再送で原記録を差し替えず、承認後の変更�
   const f = await createExpensePreservationFixture(await pool.next())
   await execSql(
     f.database,
-    `INSERT INTO system_iam_role_permissions VALUES
-    ('role:expense-archive','system:record:preserve');
+    `INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES
+    ('6138765d-db53-4944-8523-0f6525050651','system:record:preserve');
     INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:archive-review','archive:review','custom','Review reader',0,0);
-    INSERT INTO system_iam_role_permissions VALUES ('role:archive-review','system:procedure:read');`,
+    VALUES ('d68b878d-f713-43d2-8c8d-c6f2eadca9bf','archive:review','custom','Review reader',0,0);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('d68b878d-f713-43d2-8c8d-c6f2eadca9bf','system:procedure:read');`,
   )
   await f.database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('binding:archive-review',?1,'role:archive-review',0)`)
+    VALUES ('cd991c9b-0980-42d7-8225-07b78a0995aa',?1,'d68b878d-f713-43d2-8c8d-c6f2eadca9bf',0)`)
     .bind(f.reviewer.accountId)
     .run()
   const submitted = await f.request(f.path, f.command)
@@ -316,13 +316,13 @@ test("経費保全は再送で原記録を差し替えず、承認後の変更�
   )
   await execSql(
     f.database,
-    "DELETE FROM system_iam_role_permissions WHERE role_id='role:expense-archive' AND permission_key='budget:manage'",
+    "DELETE FROM system_iam_role_permissions WHERE role_id='6138765d-db53-4944-8523-0f6525050651' AND permission_key='budget:manage'",
   )
   expect((await f.request(`${path}/execute`, execute)).status).toBe(403)
   expect((await f.request(f.path, f.command)).status).toBe(403)
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('role:expense-archive','budget:manage')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('6138765d-db53-4944-8523-0f6525050651','budget:manage')",
   )
   expect((await f.request(`${path}/execute`, execute)).status).toBe(200)
   expect((await f.request(`${path}/execute`, execute)).status).toBe(200)

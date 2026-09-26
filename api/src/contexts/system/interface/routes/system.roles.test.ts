@@ -33,22 +33,22 @@ describe("System Role HTTP", () => {
       .query(
         `INSERT INTO system_iam_roles
            (id, key, kind, name, description, created_at, updated_at)
-         VALUES ('root-role', 'system:root', 'managed', 'System root', NULL, ?1, ?1)`,
+         VALUES ('af285551-000d-4320-8ea0-bbfbc6c96a81', 'system:root', 'managed', 'System root', NULL, ?1, ?1)`,
       )
       .run(now.getTime())
     fixture.sqlite
       .query(
         `INSERT INTO system_iam_role_permissions (role_id, permission_key)
-         VALUES ('root-role', 'iam:read'),
-                ('root-role', 'iam:write'),
-                ('root-role', 'system:admin')`,
+         VALUES ('af285551-000d-4320-8ea0-bbfbc6c96a81', 'iam:read'),
+                ('af285551-000d-4320-8ea0-bbfbc6c96a81', 'iam:write'),
+                ('af285551-000d-4320-8ea0-bbfbc6c96a81', 'system:admin')`,
       )
       .run()
     fixture.sqlite
       .query(
         `INSERT INTO system_role_bindings
            (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-         VALUES ('root-binding', ?1, 'root-role', NULL, NULL, ?2, NULL)`,
+         VALUES ('f16b950f-c6db-4760-8994-95cc8065169d', ?1, 'af285551-000d-4320-8ea0-bbfbc6c96a81', NULL, NULL, ?2, NULL)`,
       )
       .run(rootAccountId, now.getTime())
 
@@ -137,7 +137,7 @@ describe("System Role HTTP", () => {
     })
 
     const managedDeletion = await client.system.roles[":roleId"].$delete({
-      param: { roleId: "root-role" },
+      param: { roleId: "af285551-000d-4320-8ea0-bbfbc6c96a81" },
     })
     expect(Number(managedDeletion.status)).toBe(409)
 

@@ -1,4 +1,5 @@
 import { z } from "zod"
+import { createProposalSeriesIdFromDigest } from "@system/domain/schemas/workflow/proposal-series-id.schema"
 import type { RecordPreservationSubmissionContext } from "@system/configuration/record-preservation-submission-context"
 import type { SystemReadAuthentication } from "@system/domain/definitions/system-read-authentication.definition"
 import type { ProcedureKey } from "@system/domain/schemas/workflow/procedure-key.schema"
@@ -93,7 +94,7 @@ export class SubmitRecordPreservationAdapter {
         const digest = await ProposalDigestValue.create(identity)
         if (digest instanceof Error) return new RecordPreservationSubmissionError("invalid")
         return {
-          seriesId: `record-preservation:${digest.toString()}`,
+          seriesId: createProposalSeriesIdFromDigest(digest.toString()),
           version: 1,
           supersedesProposalId: null,
         }

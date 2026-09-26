@@ -16,9 +16,9 @@ import {
   foreignKey,
   index,
   integer,
-  primaryKey,
   sqliteTable,
   text,
+  unique,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core"
 
@@ -26,7 +26,11 @@ import {
 export const systemProcedureDefinitions = sqliteTable(
   "system_procedure_definitions",
   {
-    key: text("key").primaryKey().$type<ProcedureKey>(),
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => crypto.randomUUID()),
+    key: text("key").notNull().unique().$type<ProcedureKey>(),
     currentRevision: integer("current_revision").notNull(),
     status: text("status", { enum: ["active", "retired"] }).notNull(),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
@@ -67,6 +71,10 @@ export type SystemProcedureNumberRow = InferSelectModel<typeof systemProcedureNu
 export const systemProcedureDefinitionRevisions = sqliteTable(
   "system_procedure_definition_revisions",
   {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => crypto.randomUUID()),
     procedureKey: text("procedure_key")
       .notNull()
       .$type<ProcedureKey>()
@@ -87,7 +95,10 @@ export const systemProcedureDefinitionRevisions = sqliteTable(
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.procedureKey, table.revision] }),
+    unique("system_procedure_definition_revisions_revision_uniq").on(
+      table.procedureKey,
+      table.revision,
+    ),
     index("system_procedure_definition_revisions_creator_idx").on(
       table.createdByAccountId,
       table.createdAt,

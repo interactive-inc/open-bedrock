@@ -6,9 +6,9 @@ import {
   foreignKey,
   index,
   integer,
-  primaryKey,
   sqliteTable,
   text,
+  unique,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core"
 
@@ -64,6 +64,10 @@ export type SystemCaseRow = InferSelectModel<typeof systemCases>
 export const systemDecisionTasks = sqliteTable(
   "system_decision_tasks",
   {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => crypto.randomUUID()),
     caseId: text("case_id")
       .notNull()
       .references(() => systemCases.id, { onDelete: "restrict" }),
@@ -85,7 +89,7 @@ export const systemDecisionTasks = sqliteTable(
     returnPolicy: text("return_policy", { enum: ["allowed", "forbidden"] }).notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.caseId, table.taskKey, table.round] }),
+    unique("system_decision_tasks_round_uniq").on(table.caseId, table.taskKey, table.round),
     index("system_decision_tasks_open_idx")
       .on(table.dueAt, table.openedAt)
       .where(sql`${table.closedAt} IS NULL`),
@@ -136,6 +140,10 @@ export type SystemDecisionTaskRow = InferSelectModel<typeof systemDecisionTasks>
 export const systemDecisionTaskCandidates = sqliteTable(
   "system_decision_task_candidates",
   {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => crypto.randomUUID()),
     caseId: text("case_id").notNull(),
     taskKey: text("task_key").notNull(),
     round: integer("round").notNull(),
@@ -152,9 +160,13 @@ export const systemDecisionTaskCandidates = sqliteTable(
     resolvedAt: integer("resolved_at", { mode: "timestamp_ms" }).notNull(),
   },
   (table) => [
-    primaryKey({
-      columns: [table.caseId, table.taskKey, table.round, table.candidateAccountId, table.source],
-    }),
+    unique("system_decision_task_candidates_source_uniq").on(
+      table.caseId,
+      table.taskKey,
+      table.round,
+      table.candidateAccountId,
+      table.source,
+    ),
     uniqueIndex("system_decision_task_candidates_account_uniq").on(
       table.caseId,
       table.taskKey,
@@ -207,6 +219,10 @@ export type SystemDecisionTaskCandidateRow = InferSelectModel<typeof systemDecis
 export const systemDecisionTaskExclusions = sqliteTable(
   "system_decision_task_exclusions",
   {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => crypto.randomUUID()),
     caseId: text("case_id").notNull(),
     taskKey: text("task_key").notNull(),
     round: integer("round").notNull(),
@@ -216,9 +232,12 @@ export const systemDecisionTaskExclusions = sqliteTable(
     reason: text("reason", { enum: ["creator", "subject", "policy"] }).notNull(),
   },
   (table) => [
-    primaryKey({
-      columns: [table.caseId, table.taskKey, table.round, table.excludedAccountId],
-    }),
+    unique("system_decision_task_exclusions_account_uniq").on(
+      table.caseId,
+      table.taskKey,
+      table.round,
+      table.excludedAccountId,
+    ),
     foreignKey({
       columns: [table.caseId, table.taskKey, table.round],
       foreignColumns: [

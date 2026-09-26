@@ -23,7 +23,7 @@ test("次段階へ進んだ後も同じ承認を再送でき、次段階の票�
   const fixture = await createLicensePreservationFixture(await pool.next(), "reject", true)
   await execSql(
     fixture.f.database,
-    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('license-test-manager','system:record:preserve')",
+    "INSERT INTO system_iam_role_permissions(role_id,permission_key) VALUES ('7a047d56-30bc-4028-888d-2294d2d80c99','system:record:preserve')",
   )
   const submitted = await fixture.f.request(fixture.path, fixture.command)
   expect(submitted.status).toBe(201)

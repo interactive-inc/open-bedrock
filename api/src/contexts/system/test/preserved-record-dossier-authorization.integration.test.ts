@@ -10,10 +10,10 @@ test("監査出力資格は期限の1ms前まで有効で、期限ちょうど�
   const db = createSystemAttachmentTestDatabase()
   await db.exec(`INSERT INTO system_accounts (id,status,token_version,created_at,updated_at) VALUES ('operator','active',0,100,100);
     INSERT INTO system_principals (id,account_id,kind,name,revision,created_at,updated_at) VALUES ('principal:operator','operator','human','Test operator',1,100,100);
-    INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES ('role:operator','role:operator','custom','Test role',100,100);
-    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('binding:operator','operator','role:operator',100);
+    INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at) VALUES ('44ac46b5-401f-4901-8c48-f29310b8c981','role:operator','custom','Test role',100,100);
+    INSERT INTO system_role_bindings (id,account_id,role_id,created_at) VALUES ('3b967b89-82b6-4e5d-8f67-ad4f2fb3a7ae','operator','44ac46b5-401f-4901-8c48-f29310b8c981',100);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('role:operator','system:admin'),('role:operator','system:record:export'),('role:operator','system:procedure:read');`)
+      ('44ac46b5-401f-4901-8c48-f29310b8c981','system:admin'),('44ac46b5-401f-4901-8c48-f29310b8c981','system:record:export'),('44ac46b5-401f-4901-8c48-f29310b8c981','system:procedure:read');`)
   const at = new Date()
   const expiresAt = new Date(Math.floor(at.getTime() / 1000) * 1000 + 60007)
   const policy = SystemAuditDisclosurePolicyEntity.create({
@@ -60,7 +60,7 @@ test("監査出力資格は期限の1ms前まで有効で、期限ちょうど�
     expect(await reader.prepare(new Date(expiresAt.getTime() + offset))).toBeInstanceOf(Error)
   }
   await db.exec(
-    "DELETE FROM system_iam_role_permissions WHERE role_id = 'role:operator' AND permission_key = 'system:admin'",
+    "DELETE FROM system_iam_role_permissions WHERE role_id = '44ac46b5-401f-4901-8c48-f29310b8c981' AND permission_key = 'system:admin'",
   )
   const revoked = proof.assertions(at)
   if (revoked instanceof Error) throw revoked

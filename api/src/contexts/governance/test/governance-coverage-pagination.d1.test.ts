@@ -234,13 +234,13 @@ test("規程・ガバナンス8台帳を分割照合し撤去確定する", asyn
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:governance-retirement-review','governance:retirement-review','custom','Record reviewer',0,0);
+    VALUES ('90ea2b1a-d081-4bb3-8317-26fde1023c7a','governance:retirement-review','custom','Record reviewer',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key)
-    VALUES ('role:governance-retirement-review','system:procedure:read')`,
+    VALUES ('90ea2b1a-d081-4bb3-8317-26fde1023c7a','system:procedure:read')`,
   )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-      VALUES ('binding:governance-retirement-review',?1,'role:governance-retirement-review',0)`)
+      VALUES ('1d45c0a5-1be2-493c-87ed-500b84da9ebe',?1,'90ea2b1a-d081-4bb3-8317-26fde1023c7a',0)`)
     .bind(reviewer.accountId)
     .run()
   const retirementPath = `/governance/retirement-plans/${plan.id}/requests`
@@ -308,7 +308,7 @@ test("規程・ガバナンス8台帳を分割照合し撤去確定する", asyn
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('governance-test-manager','system:record:export');
+    VALUES ('29c09cfa-b882-46dd-8d44-fc3fe2fcd2dd','system:record:export');
     DROP TABLE governance_acknowledgements;
     DROP TABLE governance_capabilities;
     DROP TABLE governance_document_references;

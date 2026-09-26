@@ -23,7 +23,8 @@ CREATE TABLE system_cases (
     CHECK (status IN ('pending', 'approved', 'rejected', 'returned', 'cancelled', 'executed')),
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
-    CHECK (updated_at >= created_at)
+    CHECK (updated_at >= created_at),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE INDEX system_cases_subject_idx
@@ -135,6 +136,8 @@ BEGIN
 END;
 
 CREATE TABLE system_decision_tasks (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   case_id TEXT NOT NULL
     REFERENCES system_cases(id) ON DELETE RESTRICT,
   task_key TEXT NOT NULL
@@ -159,8 +162,14 @@ CREATE TABLE system_decision_tasks (
     (outcome IS NULL AND closed_at IS NULL)
     OR (outcome IS NOT NULL AND closed_at IS NOT NULL)
   ),
-  PRIMARY KEY (case_id, task_key, round)
+  UNIQUE (case_id, task_key, round),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+
+CREATE TRIGGER system_decision_tasks_identity_update
+BEFORE UPDATE OF id ON system_decision_tasks
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE INDEX system_decision_tasks_open_idx
   ON system_decision_tasks (due_at, opened_at)
@@ -269,6 +278,8 @@ BEGIN
 END;
 
 CREATE TABLE system_decision_task_candidates (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   case_id TEXT NOT NULL,
   task_key TEXT NOT NULL,
   round INTEGER NOT NULL,
@@ -296,10 +307,16 @@ CREATE TABLE system_decision_task_candidates (
     (source = 'primary' AND eligible_from IS NULL)
     OR (source = 'escalation' AND eligible_from IS NOT NULL)
   ),
-  PRIMARY KEY (case_id, task_key, round, candidate_account_id, source),
+  UNIQUE (case_id, task_key, round, candidate_account_id, source),
   FOREIGN KEY (case_id, task_key, round)
-    REFERENCES system_decision_tasks(case_id, task_key, round) ON DELETE RESTRICT
+    REFERENCES system_decision_tasks(case_id, task_key, round) ON DELETE RESTRICT,
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+
+CREATE TRIGGER system_decision_task_candidates_identity_update
+BEFORE UPDATE OF id ON system_decision_task_candidates
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE UNIQUE INDEX system_decision_task_candidates_account_uniq
   ON system_decision_task_candidates (case_id, task_key, round, candidate_account_id);
@@ -356,6 +373,8 @@ BEGIN
 END;
 
 CREATE TABLE system_decision_task_exclusions (
+  -- 旧来の主キーで行を足す書込みが残るため、主キーは列の既定値でも採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   case_id TEXT NOT NULL,
   task_key TEXT NOT NULL,
   round INTEGER NOT NULL,
@@ -363,10 +382,16 @@ CREATE TABLE system_decision_task_exclusions (
     REFERENCES system_accounts(id) ON DELETE RESTRICT,
   reason TEXT NOT NULL
     CHECK (reason IN ('creator', 'subject', 'policy')),
-  PRIMARY KEY (case_id, task_key, round, excluded_account_id),
+  UNIQUE (case_id, task_key, round, excluded_account_id),
   FOREIGN KEY (case_id, task_key, round)
-    REFERENCES system_decision_tasks(case_id, task_key, round) ON DELETE RESTRICT
+    REFERENCES system_decision_tasks(case_id, task_key, round) ON DELETE RESTRICT,
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+
+CREATE TRIGGER system_decision_task_exclusions_identity_update
+BEFORE UPDATE OF id ON system_decision_task_exclusions
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 CREATE INDEX system_decision_task_exclusions_account_idx
   ON system_decision_task_exclusions (excluded_account_id);
@@ -460,7 +485,8 @@ CREATE TABLE system_delegations (
       revoked_at IS NULL
       OR (revoked_at >= created_at AND revoked_at <= ends_at)
     )
-  )
+  ),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE INDEX system_delegations_delegator_idx
@@ -522,7 +548,8 @@ CREATE TABLE system_human_attestations (
     OR (actor_account_id <> represented_account_id AND delegation_id IS NOT NULL)
   ),
   FOREIGN KEY (case_id, task_key, round)
-    REFERENCES system_decision_tasks(case_id, task_key, round) ON DELETE RESTRICT
+    REFERENCES system_decision_tasks(case_id, task_key, round) ON DELETE RESTRICT,
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE UNIQUE INDEX system_human_attestations_actor_uniq
@@ -632,7 +659,8 @@ CREATE TABLE system_execution_authorizations (
       used_at IS NULL
       OR (used_at >= granted_at AND used_at < expires_at)
     )
-  )
+  ),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
 
 CREATE UNIQUE INDEX system_execution_authorizations_case_operation_uniq

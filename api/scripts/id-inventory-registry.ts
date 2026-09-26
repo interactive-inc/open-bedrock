@@ -165,6 +165,8 @@ const PROCEDURE_REQUEST_KEY = external(
 
 export const SOFT_REFERENCES: Readonly<Record<string, SoftReference>> = {
   "system_batch_jobs.legacy_id": LEGACY_PRIMARY_KEY,
+  "system_iam_roles.legacy_id": LEGACY_PRIMARY_KEY,
+  "system_role_bindings.legacy_id": LEGACY_PRIMARY_KEY,
   "system_record_disclosure_policies.revision_id": notReference(
     "開示方針の版ごとの行の主キー。方針自体は id と revision の組で指す",
   ),

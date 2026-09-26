@@ -69,15 +69,15 @@ export async function createDocumentPreservationFixture(database: D1Database) {
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('document-test-manager','document:test-manager','custom','Document manager',0,0);
+    VALUES ('3bdd65fa-727a-4318-87ba-d1bc9b2d9539','document:test-manager','custom','Document manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('document-test-manager','document:manage'),
-      ('document-test-manager','system:admin'),
-      ('document-test-manager','system:record:preserve'),
-      ('document-test-manager','system:record:read'),
-      ('document-test-manager','system:procedure:read');
+      ('3bdd65fa-727a-4318-87ba-d1bc9b2d9539','document:manage'),
+      ('3bdd65fa-727a-4318-87ba-d1bc9b2d9539','system:admin'),
+      ('3bdd65fa-727a-4318-87ba-d1bc9b2d9539','system:record:preserve'),
+      ('3bdd65fa-727a-4318-87ba-d1bc9b2d9539','system:record:read'),
+      ('3bdd65fa-727a-4318-87ba-d1bc9b2d9539','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('document-test-binding','${creator.accountId}','document-test-manager',0);`,
+    VALUES ('5bd452d9-a67d-468b-8991-f78fd9fc8a90','${creator.accountId}','3bdd65fa-727a-4318-87ba-d1bc9b2d9539',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

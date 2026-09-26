@@ -126,7 +126,7 @@ test("稟議起案を停止中に人の承認で保全し、業務コードを�
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('ringi-test-manager','system:record:export');
+    VALUES ('1cd463e6-9cac-4ab8-8030-324e1cde582b','system:record:export');
     DROP TABLE ringi_procedure_bindings;
     DROP TABLE ringi_requests;`,
   )

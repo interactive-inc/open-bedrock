@@ -195,7 +195,7 @@ test("証拠のclaimと添付linkが成果と同時に保存され、部分成�
 test("現在のpermission、credential、step-upを失った主体を拒否する", async () => {
   const f = await fixture()
   f.sqlite.exec(
-    "DELETE FROM system_iam_role_permissions WHERE role_id='role:worker' AND permission_key='system:work:perform'",
+    "DELETE FROM system_iam_role_permissions WHERE role_id=(SELECT id FROM system_iam_roles WHERE key='role:worker') AND permission_key='system:work:perform'",
   )
   expect(
     await f.adapter("worker").prepare({ permission: "system:work:perform", stepUpToken: null }),

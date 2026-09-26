@@ -224,23 +224,23 @@ function seedAuthorization(fixture: SystemSessionTestContext, now: Date): void {
   fixture.sqlite.exec(
     `INSERT INTO system_iam_roles
        (id, key, kind, name, created_at, updated_at)
-     VALUES ('integration-role', 'system:integration', 'managed', 'Integration', 1, 1);
+     VALUES ('64965518-94f7-440b-87d6-5f01de16a196', 'system:integration', 'managed', 'Integration', 1, 1);
      INSERT INTO system_iam_role_permissions (role_id, permission_key)
-     VALUES ('integration-role', 'integration:read'), ('integration-role', 'integration:write');
+     VALUES ('64965518-94f7-440b-87d6-5f01de16a196', 'integration:read'), ('64965518-94f7-440b-87d6-5f01de16a196', 'integration:write');
      INSERT INTO system_role_bindings
        (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-     VALUES ('integration-binding', 'integration-writer', 'integration-role', NULL, NULL, 1, NULL);
+     VALUES ('e8756177-3dce-4eae-8c24-31bd4fff3dca', 'integration-writer', '64965518-94f7-440b-87d6-5f01de16a196', NULL, NULL, 1, NULL);
      INSERT INTO system_iam_roles
        (id, key, kind, resource_type, name, created_at, updated_at)
-     VALUES ('scoped-integration-role', 'system:scoped-integration', 'custom',
+     VALUES ('1d6b0d20-37d4-4ff5-8a67-96df56cb1a57', 'system:scoped-integration', 'custom',
              'system:connector', 'Scoped integration', 1, 1);
      INSERT INTO system_iam_role_permissions (role_id, permission_key)
-     VALUES ('scoped-integration-role', 'integration:read'),
-            ('scoped-integration-role', 'integration:write');
+     VALUES ('1d6b0d20-37d4-4ff5-8a67-96df56cb1a57', 'integration:read'),
+            ('1d6b0d20-37d4-4ff5-8a67-96df56cb1a57', 'integration:write');
      INSERT INTO system_role_bindings
        (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-     VALUES ('scoped-integration-binding', 'scoped-integration-writer',
-             'scoped-integration-role', 'system:connector', 'connector:1', 1, NULL);`,
+     VALUES ('0613ddf2-ccf9-4eee-8a22-f81759d2043a', 'scoped-integration-writer',
+             '1d6b0d20-37d4-4ff5-8a67-96df56cb1a57', 'system:connector', 'connector:1', 1, NULL);`,
   )
 }
 

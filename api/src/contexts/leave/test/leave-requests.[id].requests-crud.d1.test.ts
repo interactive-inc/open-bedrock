@@ -208,9 +208,10 @@ describe("GET /leave-requests/:id", () => {
       .prepare(
         `INSERT OR IGNORE INTO system_role_bindings
            (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-         SELECT 'test:4:' || role.id, '4', role.id, NULL, NULL, 0, NULL
+         SELECT ?1, '4', role.id, NULL, NULL, 0, NULL
          FROM system_iam_roles AS role WHERE role.key = 'company:manager'`,
       )
+      .bind(crypto.randomUUID())
       .run()
 
     const bindings: Bindings = {
@@ -261,9 +262,10 @@ describe("GET /leave-requests/:id", () => {
       .prepare(
         `INSERT OR IGNORE INTO system_role_bindings
            (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-         SELECT 'test:2:' || role.id, '2', role.id, NULL, NULL, 0, NULL
+         SELECT ?1, '2', role.id, NULL, NULL, 0, NULL
          FROM system_iam_roles AS role WHERE role.key = 'company:hr'`,
       )
+      .bind(crypto.randomUUID())
       .run()
 
     const bindings: Bindings = {

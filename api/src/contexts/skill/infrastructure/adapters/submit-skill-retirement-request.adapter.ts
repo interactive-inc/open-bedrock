@@ -1,4 +1,5 @@
 import { prepareCompanyRecordProcedureTask } from "@/contexts/company/interface/operations/prepare-company-record-procedure-task"
+import { createProposalSeriesIdFromDigest } from "@system/domain/schemas/workflow/proposal-series-id.schema"
 import { skillRetirementSubmissionCommandSchema } from "@/contexts/skill/domain/schemas/skill-retirement-submission-command.schema"
 import { PrepareSkillRetirementCurrentStateAdapter } from "@/contexts/skill/infrastructure/adapters/prepare-skill-retirement-current-state.adapter"
 import { openSystemRecordRetirementVerificationReceipts } from "@system/interface/operations/open-system-record-retirement-verification-receipts"
@@ -66,7 +67,7 @@ export class SubmitSkillRetirementRequestAdapter {
         const digest = await ProposalDigestValue.create(identity)
         if (digest instanceof Error) return digest
         return {
-          seriesId: `record-retirement:${digest.toString()}`,
+          seriesId: createProposalSeriesIdFromDigest(digest.toString()),
           version: 1,
           supersedesProposalId: null,
         }

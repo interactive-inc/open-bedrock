@@ -136,7 +136,7 @@ async function createFixture(delegated = false) {
       .prepare(`INSERT INTO system_delegations
       (id, delegator_account_id, delegate_account_id, scope_context, scope_kind, scope_id, scope_version,
        starts_at, ends_at, created_at, revoked_at)
-      VALUES ('execution-delegation', ?1, ?2, NULL, NULL, NULL, NULL, ?3, ?4, ?3, NULL)`)
+      VALUES ('31d1558e-cfb2-420b-8201-a3ba4e6b1f45', ?1, ?2, NULL, NULL, NULL, NULL, ?3, ?4, ?3, NULL)`)
       .bind(first.accountId, last.accountId, c.at.getTime(), c.at.getTime() + 60_000)
       .run()
   }
@@ -148,7 +148,8 @@ async function createFixture(delegated = false) {
       round: 1,
       actorAccountId: delegated ? last.accountId : represented.accountId,
       representedAccountId: represented.accountId,
-      delegationId: delegated && represented === first ? "execution-delegation" : null,
+      delegationId:
+        delegated && represented === first ? "31d1558e-cfb2-420b-8201-a3ba4e6b1f45" : null,
       proposalDigest: started.proposal.digest,
       comment: null,
       decidedAt: c.at,
@@ -223,7 +224,7 @@ describe("人事発令の全段階の実行資格", () => {
       if (delegated)
         await c.database
           .prepare(
-            "UPDATE system_delegations SET revoked_at = ?1 WHERE id = 'execution-delegation'",
+            "UPDATE system_delegations SET revoked_at = ?1 WHERE id = '31d1558e-cfb2-420b-8201-a3ba4e6b1f45'",
           )
           .bind(c.at.getTime())
           .run()

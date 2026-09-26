@@ -166,7 +166,7 @@ test("取消と一覧の状態が一致し、失効した権限で再送でき�
   ).toMatchObject({ data: [{ id: c.id, status: "cancelled" }], total: 1 })
   await execSql(
     c.database,
-    "DELETE FROM system_iam_role_permissions WHERE role_id = 'expense-test-role'",
+    "DELETE FROM system_iam_role_permissions WHERE role_id = 'bdf8c152-9f77-4cf5-85cf-a3495ca3645d'",
   )
   expect(
     (
@@ -297,7 +297,7 @@ test("機械Principalと規程の別編集入口は人の判断・App規程を�
   ).toBe(401)
   await execSql(
     c.database,
-    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('expense-test-role', 'application_template:manage')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('bdf8c152-9f77-4cf5-85cf-a3495ca3645d', 'application_template:manage')",
   )
   const workflow = await c.request(
     c.requester,
@@ -433,7 +433,7 @@ test("失効した判断資格・未設定規程・無効Appを受信箱と件�
   ).toBe(404)
   await execSql(
     c.database,
-    "DELETE FROM system_iam_role_permissions WHERE role_id='expense-test-role' AND permission_key='expense:submit'",
+    "DELETE FROM system_iam_role_permissions WHERE role_id='bdf8c152-9f77-4cf5-85cf-a3495ca3645d' AND permission_key='expense:submit'",
   )
   expect(
     (
@@ -464,7 +464,7 @@ test("経費専用の規程公開は表示版と設定権限を要求し、提�
   ).toMatchObject({ required_approvals: 2, can_decide: true })
   await execSql(
     c.database,
-    "DELETE FROM system_iam_role_permissions WHERE role_id = 'expense-test-role' AND permission_key = 'expense:procedure:manage'",
+    "DELETE FROM system_iam_role_permissions WHERE role_id = 'bdf8c152-9f77-4cf5-85cf-a3495ca3645d' AND permission_key = 'expense:procedure:manage'",
   )
   expect(
     (await c.request(c.requester, path, "PUT", { ...body, expected_revision: 2 })).status,

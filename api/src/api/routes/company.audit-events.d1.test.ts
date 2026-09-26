@@ -45,7 +45,7 @@ async function createTestDb(): Promise<TestDb> {
     { id: 3, email: "you+e003@example.com", passwordHash: "hash", role: "member" },
     { id: 4, email: "you+e004@example.com", passwordHash: "hash", role: "member" },
   ])
-  await grantPermission(db, 2, "audit-reader", "audit:read")
+  await grantPermission(db, 2, "560a353d-f414-4b02-88dd-2517d0e3a1fe", "audit:read")
   await grantPermission(db, 3, "audit-exporter", "audit:export")
   await seedAuditEvent(db, {
     eventId: "12345678-1234-4abc-8def-1234567890ab",
@@ -82,7 +82,7 @@ async function grantPermission(
   roleKey: string,
   permission: "audit:read" | "audit:export",
 ): Promise<void> {
-  const roleId = `test:${roleKey}`
+  const roleId = crypto.randomUUID()
   await db.batch([
     db
       .prepare(
@@ -103,7 +103,7 @@ async function grantPermission(
            (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
          VALUES (?1, ?2, ?3, NULL, NULL, 0, NULL)`,
       )
-      .bind(`test:${accountId}:${roleKey}`, String(accountId), roleId),
+      .bind(crypto.randomUUID(), String(accountId), roleId),
   ])
 }
 

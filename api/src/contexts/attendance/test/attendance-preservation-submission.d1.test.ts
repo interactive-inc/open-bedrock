@@ -32,7 +32,7 @@ test("attendance submission requires both source and preservation permission and
   expect(f.bucket.size()).toBe(0)
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('role:attendance-archive','system:record:preserve')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('7cc94037-9f57-4c5b-8211-7c6c0e372ca5','system:record:preserve')",
   )
   const submitted = await f.request(f.path, f.command)
   if (submitted.status !== 201)
@@ -90,7 +90,7 @@ test("a source update during encrypted upload cannot leave an accepted preservat
   const f = await createAttendancePreservationFixture(await pool.next())
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('role:attendance-archive','system:record:preserve')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('7cc94037-9f57-4c5b-8211-7c6c0e372ca5','system:record:preserve')",
   )
   const originalPut = f.bucket.put.bind(f.bucket)
   f.bucket.put = async (key, value, options) => {
@@ -115,7 +115,7 @@ test("missing namespace, missing idempotency key and a pending resubmission are 
   const f = await createAttendancePreservationFixture(await pool.next())
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('role:attendance-archive','system:record:preserve')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('7cc94037-9f57-4c5b-8211-7c6c0e372ca5','system:record:preserve')",
   )
   f.settings.sourceNamespace = ""
   expect((await f.request(f.path, f.command)).status).toBe(503)

@@ -69,14 +69,14 @@ export async function createOnboardingPreservationFixture(database: D1Database) 
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('onboarding-test-manager','onboarding:test-manager','custom','Onboarding manager',0,0);
+    VALUES ('424962a0-2f17-4779-8f89-688b21730d9f','onboarding:test-manager','custom','Onboarding manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('onboarding-test-manager','system:admin'),
-      ('onboarding-test-manager','system:record:preserve'),
-      ('onboarding-test-manager','system:record:read'),
-      ('onboarding-test-manager','system:procedure:read');
+      ('424962a0-2f17-4779-8f89-688b21730d9f','system:admin'),
+      ('424962a0-2f17-4779-8f89-688b21730d9f','system:record:preserve'),
+      ('424962a0-2f17-4779-8f89-688b21730d9f','system:record:read'),
+      ('424962a0-2f17-4779-8f89-688b21730d9f','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('onboarding-test-binding','${creator.accountId}','onboarding-test-manager',0);`,
+    VALUES ('cd19facb-094f-471e-82fe-15a96ca36a71','${creator.accountId}','424962a0-2f17-4779-8f89-688b21730d9f',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

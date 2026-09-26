@@ -10,9 +10,9 @@ import {
   check,
   index,
   integer,
-  primaryKey,
   sqliteTable,
   text,
+  unique,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core"
 
@@ -404,18 +404,19 @@ export const systemIamRoles = sqliteTable(
   "system_iam_roles",
   {
     id: text("id").primaryKey(),
+    /** UUID の主キーへ移す前の主キー。移行前の記録を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
     key: text("key").notNull(),
     kind: text("kind", { enum: ["managed", "custom"] }).notNull(),
-    /** null はglobal、値ありはそのresource typeへだけ割当可能。 */
-    resourceType: text("resource_type"),
     name: text("name").notNull(),
     description: text("description"),
     createdAt: integer("created_at", { mode: "timestamp_ms" }).notNull(),
     updatedAt: integer("updated_at", { mode: "timestamp_ms" }).notNull(),
+    /** null はglobal、値ありはそのresource typeへだけ割当可能。 */
+    resourceType: text("resource_type"),
   },
   (table) => [
     uniqueIndex("system_iam_roles_key_uniq").on(table.key),
-    check("system_iam_roles_id_length", sql`length(${table.id}) BETWEEN 1 AND 255`),
     check("system_iam_roles_key_length", sql`length(${table.key}) BETWEEN 3 AND 100`),
     check("system_iam_roles_kind", sql`${table.kind} IN ('managed', 'custom')`),
     check(
@@ -436,13 +437,20 @@ export type SystemIamRoleRow = InferSelectModel<typeof systemIamRoles>
 export const systemIamRolePermissions = sqliteTable(
   "system_iam_role_permissions",
   {
+    id: text("id")
+      .primaryKey()
+      .notNull()
+      .$defaultFn(() => crypto.randomUUID()),
     roleId: text("role_id")
       .notNull()
       .references(() => systemIamRoles.id, { onDelete: "cascade" }),
     permissionKey: text("permission_key").notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.roleId, table.permissionKey] }),
+    unique("system_iam_role_permissions_role_permission_uniq").on(
+      table.roleId,
+      table.permissionKey,
+    ),
     check(
       "system_iam_role_permissions_key_length",
       sql`length(${table.permissionKey}) BETWEEN 3 AND 100`,
@@ -457,6 +465,8 @@ export const systemRoleBindings = sqliteTable(
   "system_role_bindings",
   {
     id: text("id").primaryKey(),
+    /** UUID の主キーへ移す前の主キー。移行前の記録を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
     accountId: text("account_id")
       .notNull()
       .references(() => systemAccounts.id, { onDelete: "restrict" }),
@@ -480,7 +490,6 @@ export const systemRoleBindings = sqliteTable(
     index("system_role_bindings_account_idx").on(table.accountId, table.createdAt),
     index("system_role_bindings_role_idx").on(table.roleId, table.createdAt),
     index("system_role_bindings_resource_idx").on(table.resourceType, table.resourceId),
-    check("system_role_bindings_id_length", sql`length(${table.id}) BETWEEN 1 AND 255`),
     check(
       "system_role_bindings_resource_pair",
       sql`(${table.resourceType} IS NULL AND ${table.resourceId} IS NULL) OR (

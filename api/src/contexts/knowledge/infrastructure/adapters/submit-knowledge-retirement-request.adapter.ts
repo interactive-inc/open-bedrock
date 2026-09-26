@@ -1,4 +1,5 @@
 import { prepareCompanyRecordProcedureTask } from "@/contexts/company/interface/operations/prepare-company-record-procedure-task"
+import { createProposalSeriesIdFromDigest } from "@system/domain/schemas/workflow/proposal-series-id.schema"
 import { knowledgeRetirementSubmissionCommandSchema } from "@/contexts/knowledge/domain/schemas/knowledge-retirement-submission-command.schema"
 import { PrepareKnowledgeRetirementCurrentStateAdapter } from "@/contexts/knowledge/infrastructure/adapters/prepare-knowledge-retirement-current-state.adapter"
 import { openSystemRecordRetirementVerificationReceipts } from "@system/interface/operations/open-system-record-retirement-verification-receipts"
@@ -66,7 +67,7 @@ export class SubmitKnowledgeRetirementRequestAdapter {
         const digest = await ProposalDigestValue.create(identity)
         if (digest instanceof Error) return digest
         return {
-          seriesId: `record-retirement:${digest.toString()}`,
+          seriesId: createProposalSeriesIdFromDigest(digest.toString()),
           version: 1,
           supersedesProposalId: null,
         }

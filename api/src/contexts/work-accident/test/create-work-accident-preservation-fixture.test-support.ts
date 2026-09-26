@@ -69,15 +69,15 @@ export async function createWorkAccidentPreservationFixture(database: D1Database
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('work-accident-test-manager','work-accident:test-manager','custom','WorkAccident manager',0,0);
+    VALUES ('99a55876-2960-4ad8-8c53-03cfc4cd142e','work-accident:test-manager','custom','WorkAccident manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('work-accident-test-manager','work_accident:manage'),
-      ('work-accident-test-manager','system:admin'),
-      ('work-accident-test-manager','system:record:preserve'),
-      ('work-accident-test-manager','system:record:read'),
-      ('work-accident-test-manager','system:procedure:read');
+      ('99a55876-2960-4ad8-8c53-03cfc4cd142e','work_accident:manage'),
+      ('99a55876-2960-4ad8-8c53-03cfc4cd142e','system:admin'),
+      ('99a55876-2960-4ad8-8c53-03cfc4cd142e','system:record:preserve'),
+      ('99a55876-2960-4ad8-8c53-03cfc4cd142e','system:record:read'),
+      ('99a55876-2960-4ad8-8c53-03cfc4cd142e','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('work-accident-test-binding','${creator.accountId}','work-accident-test-manager',0);`,
+    VALUES ('2ba95ffd-d2b8-41ab-8246-5d441681aa5a','${creator.accountId}','99a55876-2960-4ad8-8c53-03cfc4cd142e',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

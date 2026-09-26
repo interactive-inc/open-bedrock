@@ -78,7 +78,7 @@ async function createTestDb(): Promise<D1Database> {
     db,
     "system_cases",
     ["pending", "pending", "approved", "rejected", "pending"].map((status, index) => ({
-      id: `dashboard-case-${index + 1}`,
+      id: `5e0f7c3a-1d2b-4c5d-8e6f-${String(index + 1).padStart(12, "0")}`,
       subject_context: "system",
       subject_kind: "dashboard-example",
       subject_id: String(index + 1),

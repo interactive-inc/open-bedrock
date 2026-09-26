@@ -69,15 +69,15 @@ export async function createOneOnOnePreservationFixture(database: D1Database) {
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('one-on-one-test-manager','one-on-one:test-manager','custom','OneOnOne manager',0,0);
+    VALUES ('97095975-7e77-44b8-8da9-625e6bcbdc01','one-on-one:test-manager','custom','OneOnOne manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('one-on-one-test-manager','oneonone:create'),
-      ('one-on-one-test-manager','system:admin'),
-      ('one-on-one-test-manager','system:record:preserve'),
-      ('one-on-one-test-manager','system:record:read'),
-      ('one-on-one-test-manager','system:procedure:read');
+      ('97095975-7e77-44b8-8da9-625e6bcbdc01','oneonone:create'),
+      ('97095975-7e77-44b8-8da9-625e6bcbdc01','system:admin'),
+      ('97095975-7e77-44b8-8da9-625e6bcbdc01','system:record:preserve'),
+      ('97095975-7e77-44b8-8da9-625e6bcbdc01','system:record:read'),
+      ('97095975-7e77-44b8-8da9-625e6bcbdc01','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('one-on-one-test-binding','${creator.accountId}','one-on-one-test-manager',0);`,
+    VALUES ('6344b7b3-5d73-4d53-8402-d8b6a235c483','${creator.accountId}','97095975-7e77-44b8-8da9-625e6bcbdc01',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

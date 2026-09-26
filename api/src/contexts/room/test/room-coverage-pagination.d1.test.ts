@@ -197,13 +197,13 @@ test("会議室11件と予約を分割照合し撤去確定する", async () => 
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:room-retirement-review','room:retirement-review','custom','Record reviewer',0,0);
+    VALUES ('4883f382-2630-48f6-8b3f-8e7408f9e7ec','room:retirement-review','custom','Record reviewer',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key)
-    VALUES ('role:room-retirement-review','system:procedure:read')`,
+    VALUES ('4883f382-2630-48f6-8b3f-8e7408f9e7ec','system:procedure:read')`,
   )
   await database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-      VALUES ('binding:room-retirement-review',?1,'role:room-retirement-review',0)`)
+      VALUES ('d6e2d787-8e4b-4550-85bd-1a958ebda919',?1,'4883f382-2630-48f6-8b3f-8e7408f9e7ec',0)`)
     .bind(reviewer.accountId)
     .run()
   const retirementPath = `/room/retirement-plans/${plan.id}/requests`
@@ -271,7 +271,7 @@ test("会議室11件と予約を分割照合し撤去確定する", async () => 
   await execSql(
     database,
     `INSERT INTO system_iam_role_permissions(role_id,permission_key)
-    VALUES ('room-test-manager','system:record:export');
+    VALUES ('3897f8c0-d867-4418-8c56-11215140f6f9','system:record:export');
     DROP TABLE room_reservations;
     DROP TABLE rooms;`,
   )

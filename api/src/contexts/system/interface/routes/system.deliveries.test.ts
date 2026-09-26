@@ -259,15 +259,15 @@ function seedWorker(fixture: SystemSessionTestContext): void {
   fixture.sqlite.exec(
     `INSERT INTO system_iam_roles
        (id, key, kind, name, created_at, updated_at)
-     VALUES ('delivery-role', 'system:delivery', 'managed', 'Delivery', 1, 1);
+     VALUES ('fcc965d5-8be4-4a24-86fe-4453fb422bde', 'system:delivery', 'managed', 'Delivery', 1, 1);
      INSERT INTO system_iam_role_permissions (role_id, permission_key)
-     VALUES ('delivery-role', 'batch:view'),
-            ('delivery-role', 'batch:write'),
-            ('delivery-role', 'batch:execute'),
-            ('delivery-role', 'system:admin');
+     VALUES ('fcc965d5-8be4-4a24-86fe-4453fb422bde', 'batch:view'),
+            ('fcc965d5-8be4-4a24-86fe-4453fb422bde', 'batch:write'),
+            ('fcc965d5-8be4-4a24-86fe-4453fb422bde', 'batch:execute'),
+            ('fcc965d5-8be4-4a24-86fe-4453fb422bde', 'system:admin');
      INSERT INTO system_role_bindings
        (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-     VALUES ('delivery-binding', 'delivery-worker-account', 'delivery-role', NULL, NULL, 1, NULL);`,
+     VALUES ('5e19b6cc-dac5-433f-87a3-baa7ca288d35', 'delivery-worker-account', 'fcc965d5-8be4-4a24-86fe-4453fb422bde', NULL, NULL, 1, NULL);`,
   )
 }
 

@@ -56,21 +56,21 @@ async function createFixture(options: { storageConfigured?: boolean } = {}): Pro
   await db
     .prepare(
       `INSERT INTO system_iam_roles (id, key, kind, name, created_at, updated_at)
-       VALUES ('admin-role', 'system:root', 'managed', 'System root', ?1, ?1)`,
+       VALUES ('be72ba18-7abe-47f1-8371-b41cff620297', 'system:root', 'managed', 'System root', ?1, ?1)`,
     )
     .bind(uploadedAt.getTime())
     .run()
 
   await db
     .prepare(
-      `INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('admin-role', 'system:admin')`,
+      `INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('be72ba18-7abe-47f1-8371-b41cff620297', 'system:admin')`,
     )
     .run()
 
   await db
     .prepare(
       `INSERT INTO system_role_bindings (id, account_id, role_id, resource_type, resource_id, created_at, revoked_at)
-       VALUES ('admin-binding', 'account-admin', 'admin-role', NULL, NULL, ?1, NULL)`,
+       VALUES ('09ef108e-50f8-4909-8969-532bd57c6cc9', 'account-admin', 'be72ba18-7abe-47f1-8371-b41cff620297', NULL, NULL, ?1, NULL)`,
     )
     .bind(uploadedAt.getTime())
     .run()

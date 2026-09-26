@@ -37,22 +37,12 @@ const NOT_YET_CONVERTED: ReadonlySet<string> = new Set([
   "system_account_invitations",
   "system_accounts",
   "system_authentication_attempts",
-  "system_cases",
-  "system_delegation_procedure_scopes",
-  "system_delegations",
-  "system_execution_authorizations",
-  "system_human_attestations",
-  "system_iam_roles",
   "system_identity_bindings",
   "system_identity_profiles",
   "system_machine_credentials",
   "system_password_credentials",
   "system_password_reset_challenges",
   "system_principals",
-  "system_proposal_cases",
-  "system_proposal_series",
-  "system_proposals",
-  "system_role_bindings",
   "system_sessions",
   "system_step_up_grants",
   // text-prefixed
@@ -69,8 +59,6 @@ const NOT_YET_CONVERTED: ReadonlySet<string> = new Set([
   "company_responsibility_period_bindings",
   "company_responsibility_resource_bindings",
   "company_workforce_connection_completions",
-  // text-business-code
-  "system_procedure_definitions",
   // composite
   "company_account_profiles",
   "company_command_receipts",
@@ -88,11 +76,6 @@ const NOT_YET_CONVERTED: ReadonlySet<string> = new Set([
   "company_responsibility_source_adoptions",
   "company_responsibility_source_cutovers",
   "company_workforce_resource_bindings",
-  "system_decision_task_candidates",
-  "system_decision_task_exclusions",
-  "system_decision_tasks",
-  "system_iam_role_permissions",
-  "system_procedure_definition_revisions",
 ])
 
 const { inventory } = buildIdInventory()

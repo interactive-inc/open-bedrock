@@ -69,14 +69,14 @@ export async function createSkillPreservationFixture(database: D1Database) {
   await execSql(
     database,
     `INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('skill-test-manager','skill:test-manager','custom','Skill manager',0,0);
+    VALUES ('7c49772f-6388-4dc9-8d8f-34664a93f04a','skill:test-manager','custom','Skill manager',0,0);
     INSERT INTO system_iam_role_permissions (role_id,permission_key) VALUES
-      ('skill-test-manager','system:admin'),
-      ('skill-test-manager','system:record:preserve'),
-      ('skill-test-manager','system:record:read'),
-      ('skill-test-manager','system:procedure:read');
+      ('7c49772f-6388-4dc9-8d8f-34664a93f04a','system:admin'),
+      ('7c49772f-6388-4dc9-8d8f-34664a93f04a','system:record:preserve'),
+      ('7c49772f-6388-4dc9-8d8f-34664a93f04a','system:record:read'),
+      ('7c49772f-6388-4dc9-8d8f-34664a93f04a','system:procedure:read');
     INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('skill-test-binding','${creator.accountId}','skill-test-manager',0);`,
+    VALUES ('5ea1c011-06c5-41bc-8b73-856109a9aac5','${creator.accountId}','7c49772f-6388-4dc9-8d8f-34664a93f04a',0);`,
   )
   const bucket = new SystemAttachmentTestBucket()
   const settings = {

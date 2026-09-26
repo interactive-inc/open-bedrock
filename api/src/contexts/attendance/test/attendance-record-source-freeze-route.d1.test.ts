@@ -30,7 +30,7 @@ test("停止と解除のHTTP操作は再認証を要求し、同じ世代の再�
   const f = await createAttendanceRecordSourceFixture(await local.database("http-reauthentication"))
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('role:recorder','system:admin')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('0a05519b-05c9-4925-8b15-fcb647569867','system:admin')",
   )
   const raw = "c".repeat(64)
   const hash = await new SystemPrincipalSecretService().hashRawSecret(raw)
@@ -143,7 +143,7 @@ test("生成APIの署名検証から停止・参照・解除まで通し、失�
   )
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('role:recorder','system:admin')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('0a05519b-05c9-4925-8b15-fcb647569867','system:admin')",
   )
   const secret = "attendance-freeze-generated-app-test-secret"
   const token = await new SystemAccessTokenIssuer(secret).issue({

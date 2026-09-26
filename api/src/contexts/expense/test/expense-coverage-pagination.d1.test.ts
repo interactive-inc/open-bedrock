@@ -47,16 +47,16 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
   const f = await createExpensePreservationFixture(await pool.next())
   await execSql(
     f.database,
-    `INSERT INTO system_iam_role_permissions VALUES
-    ('role:expense-archive','system:record:preserve'),('role:expense-archive','system:record:read'),
-    ('role:expense-archive','system:admin'),('role:expense-archive','expense:read:all');
+    `INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES
+    ('6138765d-db53-4944-8523-0f6525050651','system:record:preserve'),('6138765d-db53-4944-8523-0f6525050651','system:record:read'),
+    ('6138765d-db53-4944-8523-0f6525050651','system:admin'),('6138765d-db53-4944-8523-0f6525050651','expense:read:all');
     INSERT INTO system_iam_roles (id,key,kind,name,created_at,updated_at)
-    VALUES ('role:archive-review','archive:review','custom','Review reader',0,0);
-    INSERT INTO system_iam_role_permissions VALUES ('role:archive-review','system:procedure:read')`,
+    VALUES ('d68b878d-f713-43d2-8c8d-c6f2eadca9bf','archive:review','custom','Review reader',0,0);
+    INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('d68b878d-f713-43d2-8c8d-c6f2eadca9bf','system:procedure:read')`,
   )
   await f.database
     .prepare(`INSERT INTO system_role_bindings (id,account_id,role_id,created_at)
-    VALUES ('binding:archive-review',?1,'role:archive-review',0)`)
+    VALUES ('cd991c9b-0980-42d7-8225-07b78a0995aa',?1,'d68b878d-f713-43d2-8c8d-c6f2eadca9bf',0)`)
     .bind(f.reviewer.accountId)
     .run()
   const budgetId = (serial: number) =>
@@ -287,7 +287,7 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
     async function (this: RecordRetirementVerificationReceiptRepository, receipt) {
       await f.database
         .prepare(
-          "DELETE FROM system_iam_role_permissions WHERE role_id='role:expense-archive' AND permission_key='expense:read:all'",
+          "DELETE FROM system_iam_role_permissions WHERE role_id='6138765d-db53-4944-8523-0f6525050651' AND permission_key='expense:read:all'",
         )
         .run()
       return originalAppend.call(this, receipt)
@@ -323,7 +323,7 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
   ).toBe(0)
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('role:expense-archive','expense:read:all')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('6138765d-db53-4944-8523-0f6525050651','expense:read:all')",
   )
   const publicReceipts = []
   for (const ordinal of [1, 2, 3, 4, 5, 6, 7]) {
@@ -403,7 +403,7 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
   ).toBeInstanceOf(Error)
   await f.database
     .prepare(
-      "DELETE FROM system_iam_role_permissions WHERE role_id='role:expense-archive' AND permission_key='system:record:read'",
+      "DELETE FROM system_iam_role_permissions WHERE role_id='6138765d-db53-4944-8523-0f6525050651' AND permission_key='system:record:read'",
     )
     .run()
   expect(
@@ -418,7 +418,7 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
   ).toBeInstanceOf(Error)
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('role:expense-archive','system:record:read')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('6138765d-db53-4944-8523-0f6525050651','system:record:read')",
   )
   expect(
     await prepareSystemRecordRetirementDisclosure(
@@ -657,7 +657,7 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
   f.settings.sourceNamespace = "example-source"
   await f.database
     .prepare(
-      "INSERT INTO system_iam_role_permissions VALUES ('role:expense-archive','system:procedure:read')",
+      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('6138765d-db53-4944-8523-0f6525050651','system:procedure:read')",
     )
     .run()
   expect((await f.request(reviewPath, {})).status).toBe(403)
@@ -675,13 +675,13 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
   expect(await readAuditCount()).toBe(1)
   await f.database
     .prepare(
-      "DELETE FROM system_iam_role_permissions WHERE role_id='role:archive-review' AND permission_key='system:procedure:read'",
+      "DELETE FROM system_iam_role_permissions WHERE role_id='d68b878d-f713-43d2-8c8d-c6f2eadca9bf' AND permission_key='system:procedure:read'",
     )
     .run()
   expect((await f.request(reviewPath, reviewOptions)).status).toBe(403)
   await f.database
     .prepare(
-      "INSERT INTO system_iam_role_permissions VALUES ('role:archive-review','system:procedure:read')",
+      "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('d68b878d-f713-43d2-8c8d-c6f2eadca9bf','system:procedure:read')",
     )
     .run()
   // oxlint-disable-next-line typescript/unbound-method -- 保存したメソッドは同じreceiverで呼び出す。
@@ -1137,7 +1137,7 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
   for (const permission of ["budget:manage", "expense:read:all", "system:record:read"]) {
     await f.database
       .prepare(
-        "DELETE FROM system_iam_role_permissions WHERE role_id='role:expense-archive' AND permission_key=?1",
+        "DELETE FROM system_iam_role_permissions WHERE role_id='6138765d-db53-4944-8523-0f6525050651' AND permission_key=?1",
       )
       .bind(permission)
       .run()
@@ -1147,7 +1147,9 @@ test("経費照合は保存済みの続きから12件を照合し、飛越しと
       await f.database.batch([...verified.assertions]).catch((cause: unknown) => cause),
     ).toBeInstanceOf(Error)
     await f.database
-      .prepare("INSERT INTO system_iam_role_permissions VALUES ('role:expense-archive',?1)")
+      .prepare(
+        "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('6138765d-db53-4944-8523-0f6525050651',?1)",
+      )
       .bind(permission)
       .run()
     expect(await verifyRetirement()).not.toBeInstanceOf(Error)

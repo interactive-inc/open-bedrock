@@ -20,7 +20,7 @@ test("System招待一覧は未受諾の招待を新しい順に限定する", as
       .prepare(
         `INSERT INTO system_account_invitations
          (id, token, role_id, accepted_by_account_id, expires_at, created_at, updated_at)
-         VALUES (?1, ?1, 'role-1', ?2, 1000, ?3, ?3)`,
+         VALUES (?1, ?1, 'a290ac92-bf4b-434b-8443-8b6ceeb1cb85', ?2, 1000, ?3, ?3)`,
       )
       .bind(id, usedBy, createdAt)
       .run()

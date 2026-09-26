@@ -24,7 +24,7 @@ test("保持期限ちょうどから拒否し、準備済みの検査も実時�
   const f = await createAttendancePreservationFixture(await pool.next())
   await execSql(
     f.database,
-    "INSERT INTO system_iam_role_permissions VALUES ('role:attendance-archive','system:record:preserve')",
+    "INSERT INTO system_iam_role_permissions (role_id, permission_key) VALUES ('7cc94037-9f57-4c5b-8211-7c6c0e372ca5','system:record:preserve')",
   )
   const until = Date.now() + 5000
   const submitted = await f.request(f.path, {

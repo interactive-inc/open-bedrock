@@ -1,4 +1,6 @@
 import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
+import { iamRoleIdSchema } from "@system/domain/schemas/iam/iam-role.schema"
+import { roleBindingIdSchema } from "@system/domain/schemas/iam/role-binding.schema"
 import {
   systemAccounts,
   systemIdentityBindings,
@@ -29,10 +31,8 @@ export function prepareSystemPasswordAccountRegistration(
     !accountId.success ||
     input.identityId.length < 1 ||
     input.identityId.length > 255 ||
-    input.roleBindingId.length < 1 ||
-    input.roleBindingId.length > 255 ||
-    input.roleId.length < 1 ||
-    input.roleId.length > 255 ||
+    !roleBindingIdSchema.safeParse(input.roleBindingId).success ||
+    !iamRoleIdSchema.safeParse(input.roleId).success ||
     input.email.length < 3 ||
     input.email.length > 320 ||
     input.passwordHash.length < 1 ||
