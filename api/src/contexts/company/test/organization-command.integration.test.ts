@@ -16,6 +16,9 @@ import { createCompanyD1TestDatabase } from "@/contexts/company/test/d1-test-dat
 import { createEmployeeAdoptionFixture } from "@/contexts/company/test/employee-resource-adoption.test-support"
 import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
+/** 組織の変更要求の ID。 */
+const ORGANIZATION_REQUEST_ID = "a5c0e2d4-7b1f-4c3e-9a8d-2f6b1e0c9d7a"
+
 const schema =
   readFileSync(
     new URL("../../system/infrastructure/schema/system-core.sql", import.meta.url),
@@ -374,7 +377,7 @@ describe("legacy organization routes stay inside their Company scope", () => {
           method,
           headers: {
             "content-type": "application/json",
-            "idempotency-key": "a5c0e2d4-7b1f-4c3e-9a8d-2f6b1e0c9d7a",
+            "idempotency-key": ORGANIZATION_REQUEST_ID,
           },
           ...(body === undefined ? {} : { body: JSON.stringify(body) }),
         },

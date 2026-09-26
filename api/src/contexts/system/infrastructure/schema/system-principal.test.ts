@@ -4,6 +4,8 @@ import { Database } from "bun:sqlite"
 import { readFileSync } from "node:fs"
 import { getTableConfig } from "drizzle-orm/sqlite-core"
 
+const RETAINED_MACHINE_ID = "a85ac8ae-2706-49ec-b35c-d3718a77bc20"
+
 const coreSql = readFileSync(new URL("./system-core.sql", import.meta.url), "utf8")
 const integrationSql = readFileSync(new URL("./system-integration.sql", import.meta.url), "utf8")
 const principalSql = readFileSync(new URL("./system-principal.sql", import.meta.url), "utf8")
@@ -72,9 +74,7 @@ describe("System principal schema", () => {
       ),
     ).toThrow("system_machine_credential_principal_invalid")
     expect(() =>
-      database.exec(
-        "DELETE FROM system_machine_credentials WHERE id = 'a85ac8ae-2706-49ec-b35c-d3718a77bc20'",
-      ),
+      database.exec(`DELETE FROM system_machine_credentials WHERE id = '${RETAINED_MACHINE_ID}'`),
     ).toThrow("system_machine_credentials_are_retained")
     expect(() =>
       database.exec(

@@ -40,6 +40,9 @@ import { zAccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { CompanyContext } from "@/contexts/company/configuration/company-context"
 import { COMPANY_DEFAULT_ORGANIZATION_ID } from "@/contexts/company/domain/definitions/company-organization-identity.definition"
 
+/** 組織単位の作成要求の ID。 */
+const UNIT_REQUEST_ID = "6f0d3c2a-1b4e-4a7d-9c8e-5d2f1a0b3c41"
+
 const schemaSql = readdirSync(COMPANY_TEST_MIGRATIONS_DIR)
   .filter((file) => file.endsWith(".sql"))
   .sort()
@@ -181,7 +184,7 @@ async function fixture() {
   const createUnit = () =>
     client.company["organization-units"].$post(
       { json: { name: "Department", code: "DEPT", parent_code: null } },
-      { headers: { ...headers, "idempotency-key": "6f0d3c2a-1b4e-4a7d-9c8e-5d2f1a0b3c41" } },
+      { headers: { ...headers, "idempotency-key": UNIT_REQUEST_ID } },
     )
   const state = () =>
     database
