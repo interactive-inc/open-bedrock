@@ -127,7 +127,8 @@ describe("所属移行の上長対応を追加するmigration", () => {
       f.people[2]!.employeeId,
     )
     expect((await database.prepare("PRAGMA foreign_key_check").all()).results).toEqual([])
-  })
+    // 以降の migration（識別子の UUID 化を含む）を当てて再生するため、既定の 5 秒では足りない。
+  }, 20_000)
 })
 
 test("既存の移行証跡へ接続先を推測して補わず、新しい列と制約の追加後も原文を保全する", async () => {

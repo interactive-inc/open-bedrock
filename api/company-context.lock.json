@@ -626,7 +626,7 @@
     "src/contexts/company/test/account-employee-link-migration.contract.test.ts": "9c63de0d338e9ed3fef07154c7508e6f85f6ec4dee37e53f34a851bd50238ed5",
     "src/contexts/company/test/account-employee-link-projection.integration.test.ts": "69f20a245dcc05b115fd83be05b8d8d5bb9ace5484e5d0ec02cb436a22182230",
     "src/contexts/company/test/align-historical-organization-identity.test-support.ts": "71e6472d50b266f2f1ae5085988142308af71efcc5ffd1b8779de53de7e6be14",
-    "src/contexts/company/test/assignment-resource-adoption-migration.contract.test.ts": "bc9635fcbe65ed377530d35658f160d8367397633dad6e7d788c6902ba430b8e",
+    "src/contexts/company/test/assignment-resource-adoption-migration.contract.test.ts": "a9f8850ec05085647906c595cb7f50ed98c3cac3fa4ff55d99ff674a7d390731",
     "src/contexts/company/test/assignment-resource-adoption.integration.test.ts": "21678d067b3b1ce145f076efbc906aece067afe070ac191f0b65b77a005d8a49",
     "src/contexts/company/test/company-account-profile-operations.integration.test.ts": "b0a193eda85335191d29b60b78e3439cd32b8c064bce9717051087fb99542c11",
     "src/contexts/company/test/company-account-profile.integration.test.ts": "899b0ed7ce1b14cb87caea7238eb9ca21609a17caf63f4c67b24992a57b45a7f",
