@@ -11,7 +11,7 @@ CREATE TABLE system_work_items (
 );
 
 CREATE TABLE system_work_item_revisions (
-  sequence INTEGER PRIMARY KEY AUTOINCREMENT,
+  id TEXT PRIMARY KEY NOT NULL,
   work_item_id TEXT NOT NULL REFERENCES system_work_items(id) ON DELETE RESTRICT,
   revision INTEGER NOT NULL CHECK (revision BETWEEN 1 AND 9007199254740991),
   command_id TEXT NOT NULL UNIQUE,

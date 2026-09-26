@@ -20,7 +20,7 @@ import { zValidator } from "@hono/zod-validator"
 import { z } from "zod"
 
 const deliveryBase = {
-  id: z.string().regex(/^\S{1,255}$/),
+  id: z.uuid(),
   payload_digest: z.string().regex(/^[0-9a-f]{64}$/),
   idempotency_key: z.string().regex(/^\S{1,255}$/),
 }

@@ -19,19 +19,27 @@ CREATE TABLE system_record_coverage_pages (
   CHECK(json_extract(snapshot_json,'$.afterCursor') IS after_cursor),
   CHECK(json_extract(snapshot_json,'$.nextCursor') IS next_cursor),
   CHECK(json_type(snapshot_json,'$.records') IS 'array' AND json_array_length(snapshot_json,'$.records') <= 100),
-  CHECK(next_cursor IS NULL OR (length(next_cursor)>0 AND next_cursor IS NOT after_cursor AND json_array_length(snapshot_json,'$.records')>0))
+  CHECK(next_cursor IS NULL OR (length(next_cursor)>0 AND next_cursor IS NOT after_cursor AND json_array_length(snapshot_json,'$.records')>0)),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
 CREATE UNIQUE INDEX system_record_coverage_pages_cursor_idx
   ON system_record_coverage_pages(freeze_id,record_kind,after_cursor) WHERE after_cursor IS NOT NULL;
 CREATE TABLE system_record_coverage_entries (
+  -- 照合の trigger が行を足すため、主キーは列の既定値で採番する。
+  id TEXT PRIMARY KEY NOT NULL DEFAULT (lower(hex(randomblob(4))) || '-' || lower(hex(randomblob(2))) || '-4' || substr(lower(hex(randomblob(2))), 2) || '-' || substr('89ab', 1 + (random() & 3), 1) || substr(lower(hex(randomblob(2))), 2) || '-' || lower(hex(randomblob(6)))),
   page_id TEXT NOT NULL REFERENCES system_record_coverage_pages(id),
   freeze_id TEXT NOT NULL REFERENCES system_record_source_freezes(id),
   record_kind TEXT NOT NULL,
   source_record_id TEXT NOT NULL,
   preserved_record_id TEXT NOT NULL REFERENCES system_preserved_records(id),
-  PRIMARY KEY(freeze_id,record_kind,source_record_id),
-  UNIQUE(freeze_id,preserved_record_id)
+  UNIQUE(freeze_id,record_kind,source_record_id),
+  UNIQUE(freeze_id,preserved_record_id),
+  CHECK (length(id) = 36 AND id NOT GLOB '*[^0-9a-f-]*' AND substr(id, 9, 1) = '-' AND substr(id, 14, 1) = '-' AND substr(id, 19, 1) = '-' AND substr(id, 24, 1) = '-' AND length(replace(id, '-', '')) = 32 AND substr(id, 15, 1) GLOB '[1-8]' AND substr(id, 20, 1) GLOB '[89ab]')
 );
+CREATE TRIGGER system_record_coverage_entries_identity_update
+BEFORE UPDATE OF id ON system_record_coverage_entries
+WHEN NEW.id IS NOT OLD.id
+BEGIN SELECT RAISE(ABORT, 'record_identity_immutable'); END;
 
 DROP TRIGGER IF EXISTS system_record_coverage_pages_insert;
 CREATE TRIGGER system_record_coverage_pages_insert BEFORE INSERT ON system_record_coverage_pages

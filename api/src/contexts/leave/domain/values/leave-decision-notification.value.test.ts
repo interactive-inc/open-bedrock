@@ -2,7 +2,7 @@ import { expect, test } from "bun:test"
 import { LeaveDecisionNotificationValue } from "@/contexts/leave/domain/values/leave-decision-notification.value"
 
 const input = {
-  decisionAuditId: "decision-1",
+  decisionAuditId: "01900054-0000-7000-8000-000000000001",
   leaveRequestId: "01900049-0000-7000-8000-00000000000c",
   recipientEmployeeId: "employee-1",
   outcome: "approved",
@@ -46,11 +46,12 @@ test("未確定の判断と休暇理由などの余分な内容を配送用デ�
 test("別の判断には別の配送IDを割り当てる", () => {
   const notification = LeaveDecisionNotificationValue.create({
     ...input,
-    decisionAuditId: "decision-2",
+    decisionAuditId: "01900054-0000-7000-8000-000000000002",
     outcome: "rejected",
   })
   expect(notification).toBeInstanceOf(LeaveDecisionNotificationValue)
   if (notification instanceof Error) return
-  expect(notification.deliveryId).toBe("leave-decision:decision-2")
+  expect(notification.deliveryId).toBe("01900054-0000-7000-8000-000000000002")
+  expect(notification.idempotencyKey).toBe("leave-decision:01900054-0000-7000-8000-000000000002")
   expect(notification.title).toBe("休暇申請が却下されました")
 })

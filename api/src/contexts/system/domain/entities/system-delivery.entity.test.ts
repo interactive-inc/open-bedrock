@@ -58,7 +58,7 @@ describe("SystemDeliveryEntity", () => {
 
 function createDelivery(maxAttempts: number): SystemDeliveryEntity {
   const delivery = SystemDeliveryEntity.create({
-    id: "job:1",
+    id: "01900054-0000-7000-8000-000000000001",
     kind: "job",
     operationKey: "record.process",
     payloadDigest: "1".repeat(64),

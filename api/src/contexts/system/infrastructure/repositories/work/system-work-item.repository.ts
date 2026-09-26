@@ -153,9 +153,10 @@ export class SystemWorkItemRepository {
         )
       statements.push(
         this.c.env.DB.prepare(`INSERT INTO system_work_item_revisions
-        (work_item_id,revision,command_id,action,state,actor_account_id,actor_principal_id,accountable_account_id,accountable_principal_id,
+        (id,work_item_id,revision,command_id,action,state,actor_account_id,actor_principal_id,accountable_account_id,accountable_principal_id,
           assignee_account_id,assignee_principal_id,recorded_at,snapshot_json,audit_event_id)
-        VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14)`).bind(
+        VALUES (?1,?2,?3,?4,?5,?6,?7,?8,?9,?10,?11,?12,?13,?14,?15)`).bind(
+          crypto.randomUUID(),
           value.id,
           value.revision,
           value.commandId,

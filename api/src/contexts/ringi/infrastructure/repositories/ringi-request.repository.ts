@@ -384,8 +384,7 @@ export class RingiRequestRepository {
         .bind(binding.ringiId, binding.caseId, binding.proposalDigest)
         .first<string>("created_by_account_id")
       if (recipient === null) return new Error("ringi notification recipient is missing")
-      const words = crypto.getRandomValues(new Uint32Array(2))
-      const id = String(((words[0] ?? 0) & 0x000f_ffff) * 0x1_0000_0000 + (words[1] ?? 0) || 1)
+      const id = crypto.randomUUID()
       return prepareSystemNotificationPublicationBatch({
         database: this.c.env.DB,
         publications: [

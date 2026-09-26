@@ -4,7 +4,7 @@ import { z } from "zod"
 
 const propsSchema = z
   .object({
-    id: z.string().regex(/^\S{1,255}$/),
+    id: z.uuid(),
     kind: z.enum(["job", "outbox"]),
     operationKey: z.string().regex(/^[a-z][a-z0-9_.:-]{0,199}$/),
     handlerKey: z

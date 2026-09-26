@@ -110,10 +110,10 @@ function itemInsert(
   return database
     .prepare(
       `INSERT INTO system_reconciliation_items
-         (run_id, item_key, local_digest, external_digest, status)
-       VALUES (?1, ?2, ?3, ?4, ?5)`,
+         (id, run_id, item_key, local_digest, external_digest, status)
+       VALUES (?1, ?2, ?3, ?4, ?5, ?6)`,
     )
-    .bind(runId, item.key, item.localDigest, item.externalDigest, item.status)
+    .bind(crypto.randomUUID(), runId, item.key, item.localDigest, item.externalDigest, item.status)
 }
 
 function isConstraintConflict(cause: unknown): boolean {

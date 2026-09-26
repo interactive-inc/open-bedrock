@@ -18,7 +18,7 @@ export type EmployeeNotification = Readonly<{
 }>
 
 export type PublishedEmployeeNotification = Readonly<{
-  id: number
+  id: string
   recipientAccountId: AccountId
   sourceDomain: string
   sourceId: string | number | null
@@ -57,15 +57,14 @@ export class EmployeeNotificationAdapter {
       return new Error("notification creation time is invalid")
     }
 
-    const words = crypto.getRandomValues(new Uint32Array(2))
-    const notificationId = ((words[0] ?? 0) & 0x000f_ffff) * 0x1_0000_0000 + (words[1] ?? 0) || 1
-    const canonicalId = String(notificationId)
+    // 通知と配送は一件ずつ対応するため、同じ UUID を両方の主キーに使う。
+    const notificationId = crypto.randomUUID()
     const statements = prepareSystemNotificationPublicationBatch({
       database: this.c.env.DB,
       publications: [
         {
           message: {
-            id: canonicalId,
+            id: notificationId,
             kind: `company:${props.kind}`,
             title: props.title,
             body: props.body,
@@ -81,7 +80,7 @@ export class EmployeeNotificationAdapter {
           },
           deliveries: [
             {
-              id: canonicalId,
+              id: notificationId,
               recipientAccountId: recipientAccountId.data,
               deliveredAt: createdAt,
             },

@@ -57,7 +57,7 @@ async function fixture(name: string) {
     }).run(10)
   const count = () =>
     f.context.env.DB.prepare(
-      "SELECT count(*) AS count FROM system_notification_messages WHERE id LIKE 'leave-decision:%'",
+      "SELECT count(*) AS count FROM system_notification_messages WHERE id IN (SELECT job_id FROM leave_decision_notifications)",
     ).first<number>("count")
   return { ...f, clock, run, count }
 }
@@ -72,7 +72,7 @@ test("並行配送と再実行でも通知を一度だけ保存する", async ()
   expect(await f.run()).toEqual([])
   expect(
     await f.context.env.DB.prepare(
-      "SELECT recipient_account_id FROM system_notification_deliveries WHERE id LIKE 'leave-decision:%'",
+      "SELECT recipient_account_id FROM system_notification_deliveries WHERE id IN (SELECT job_id FROM leave_decision_notifications)",
     ).first<string>("recipient_account_id"),
   ).toBe(f.creator.accountId)
 })
@@ -139,7 +139,7 @@ test("通知保存に失敗しても承認済みの判断を保持し、復旧�
   const f = await fixture("delivery-failure")
   await execSql(
     f.db,
-    `CREATE TRIGGER fail_leave_delivery BEFORE INSERT ON system_notification_messages WHEN NEW.id LIKE 'leave-decision:%' BEGIN SELECT RAISE(ABORT,'delivery unavailable'); END`,
+    `CREATE TRIGGER fail_leave_delivery BEFORE INSERT ON system_notification_messages WHEN NEW.id IN (SELECT job_id FROM leave_decision_notifications) BEGIN SELECT RAISE(ABORT,'delivery unavailable'); END`,
   )
   expect(await f.run()).toEqual([expect.objectContaining({ status: "queued" })])
   expect(await f.count()).toBe(0)

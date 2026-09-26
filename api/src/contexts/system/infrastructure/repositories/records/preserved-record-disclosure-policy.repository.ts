@@ -21,7 +21,8 @@ export class PreservedRecordDisclosurePolicyRepository {
       ...this.c.assertions,
       ...new SystemAuditEventRepository(this.c).prepareAppend(audit),
       this.c.env.DB.prepare(`INSERT INTO system_record_disclosure_policies
-        (id, revision, record_id, audit_event_id, snapshot_json) VALUES (?1, ?2, ?3, ?4, ?5)`).bind(
+        (revision_id, id, revision, record_id, audit_event_id, snapshot_json) VALUES (?1, ?2, ?3, ?4, ?5, ?6)`).bind(
+        crypto.randomUUID(),
         value.id,
         value.revision,
         value.recordId,

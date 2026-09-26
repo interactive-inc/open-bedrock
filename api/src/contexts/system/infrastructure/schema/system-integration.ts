@@ -4,9 +4,9 @@ import {
   check,
   index,
   integer,
-  primaryKey,
   sqliteTable,
   text,
+  unique,
   uniqueIndex,
 } from "drizzle-orm/sqlite-core"
 
@@ -133,6 +133,7 @@ export type SystemReconciliationRunRow = InferSelectModel<typeof systemReconcili
 export const systemReconciliationItems = sqliteTable(
   "system_reconciliation_items",
   {
+    id: text("id").primaryKey().notNull(),
     runId: text("run_id")
       .notNull()
       .references(() => systemReconciliationRuns.id, { onDelete: "restrict" }),
@@ -144,7 +145,7 @@ export const systemReconciliationItems = sqliteTable(
     }).notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.runId, table.itemKey] }),
+    unique("system_reconciliation_items_run_item_uniq").on(table.runId, table.itemKey),
     check(
       "system_reconciliation_items_local_digest",
       sql`${table.localDigest} IS NULL OR length(${table.localDigest}) = 64`,

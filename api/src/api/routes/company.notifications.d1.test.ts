@@ -26,7 +26,7 @@ afterAll(async () => {
 })
 
 const notificationResponseSchema = z.object({
-  id: z.number(),
+  id: z.uuid(),
   recipient_employee_id: zEmployeeId,
   source_domain: z.string(),
   source_id: z.number().nullable(),

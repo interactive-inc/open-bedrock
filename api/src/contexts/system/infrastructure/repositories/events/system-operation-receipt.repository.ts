@@ -71,9 +71,10 @@ export class SystemOperationReceiptRepository {
   prepare(receipt: SystemOperationReceiptEntity): D1PreparedStatement {
     const props = receipt.props
     return this.c.env.DB.prepare(`INSERT INTO system_operation_receipts
-      (operation_key, scope_key, command_id, actor_account_id, actor_principal_id,
+      (id, operation_key, scope_key, command_id, actor_account_id, actor_principal_id,
        request_digest, result_json, result_digest, recorded_at)
-      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9)`).bind(
+      VALUES (?1, ?2, ?3, ?4, ?5, ?6, ?7, ?8, ?9, ?10)`).bind(
+      crypto.randomUUID(),
       props.operationKey,
       props.scopeKey,
       props.commandId,

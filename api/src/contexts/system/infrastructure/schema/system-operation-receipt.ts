@@ -1,10 +1,11 @@
 import { sql } from "drizzle-orm"
-import { check, index, integer, primaryKey, sqliteTable, text } from "drizzle-orm/sqlite-core"
+import { check, index, integer, sqliteTable, text, unique } from "drizzle-orm/sqlite-core"
 
 /** 業務変更と原子的に保存する汎用の完了記録。主体を削除しても履歴の識別子は保全する。 */
 export const systemOperationReceipts = sqliteTable(
   "system_operation_receipts",
   {
+    id: text("id").primaryKey().notNull(),
     operationKey: text("operation_key").notNull(),
     scopeKey: text("scope_key").notNull(),
     commandId: text("command_id").notNull(),
@@ -16,7 +17,11 @@ export const systemOperationReceipts = sqliteTable(
     recordedAt: integer("recorded_at", { mode: "timestamp_ms" }).notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.operationKey, table.scopeKey, table.commandId] }),
+    unique("system_operation_receipts_command_uniq").on(
+      table.operationKey,
+      table.scopeKey,
+      table.commandId,
+    ),
     index("system_operation_receipts_actor_idx").on(table.actorAccountId, table.recordedAt),
     ...[
       table.operationKey,

@@ -2,7 +2,7 @@ import type { SystemBatchJobStatus } from "@system/domain/schemas/batch/system-b
 import type { SystemD1Context } from "@system/configuration/system-context"
 
 export type SystemBatchJobView = Readonly<{
-  id: number
+  id: string
   name: string
   status: SystemBatchJobStatus
   startedAt: Date | null
@@ -33,12 +33,12 @@ export class ReadSystemBatchJobsAdapter {
         this.c.env.DB.prepare(
           `SELECT id, name, status, started_at, finished_at, message
          FROM system_batch_jobs
-         ORDER BY id DESC
+         ORDER BY rowid DESC
          LIMIT ?1 OFFSET ?2`,
         )
           .bind(input.limit, input.offset)
           .all<{
-            id: number
+            id: string
             name: string
             status: SystemBatchJobStatus
             started_at: number | null

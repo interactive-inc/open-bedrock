@@ -25,7 +25,7 @@ export class PrepareLeaveDecisionNotificationAdapter {
       handlerKey: "leave.decision-notification",
       operationKey: "leave.decision-notification",
       payloadDigest: await toSha256Hex(payload),
-      idempotencyKey: notification.deliveryId,
+      idempotencyKey: notification.idempotencyKey,
       status: "queued",
       attempt: 0,
       maxAttempts: 10,

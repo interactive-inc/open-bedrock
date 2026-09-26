@@ -76,6 +76,7 @@ const LEGACY_INTEGER_SEED_PREFIXES: Readonly<Record<string, string>> = {
   "0190004b": "software_licenses",
   "0190004d": "expense_budgets",
   "0190004e": "expenses",
+  "01900051": "system_batch_jobs",
 }
 
 /**

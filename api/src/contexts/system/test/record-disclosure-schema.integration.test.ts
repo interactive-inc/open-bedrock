@@ -45,8 +45,15 @@ function publish(
       Date.parse(snapshot.publishedAt),
     )
     db.query(
-      "INSERT INTO system_record_disclosure_policies (id, revision, record_id, audit_event_id, snapshot_json) VALUES (?, ?, ?, ?, ?)",
-    ).run(snapshot.id, snapshot.revision, snapshot.recordId, snapshot.auditEventId, json)
+      "INSERT INTO system_record_disclosure_policies (revision_id, id, revision, record_id, audit_event_id, snapshot_json) VALUES (?, ?, ?, ?, ?, ?)",
+    ).run(
+      crypto.randomUUID(),
+      snapshot.id,
+      snapshot.revision,
+      snapshot.recordId,
+      snapshot.auditEventId,
+      json,
+    )
   })()
 }
 

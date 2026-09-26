@@ -689,7 +689,9 @@ export type SystemNotificationDeliveryRow = InferSelectModel<typeof systemNotifi
 export const systemBatchJobs = sqliteTable(
   "system_batch_jobs",
   {
-    id: integer("id").primaryKey(),
+    id: text("id").primaryKey().notNull(),
+    /** 主キーを UUID へ移す前の整数の主キー。移行前の記録を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
     name: text("name").notNull(),
     status: text("status").notNull().$type<SystemBatchJobStatus>(),
     startedAt: integer("started_at", { mode: "timestamp_ms" }),
