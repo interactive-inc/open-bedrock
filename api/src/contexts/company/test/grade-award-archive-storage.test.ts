@@ -27,7 +27,9 @@ test("保全記録の所属・参照先と不変性をDBで強制し、元台帳
   })
   const insert = () =>
     db
-      .prepare(`INSERT INTO company_grade_award_archives VALUES
+      .prepare(`INSERT INTO company_grade_award_archives
+    (organization_id, command_id, employee_id, fingerprint, actor_account_id, reason, observed_on,
+     observed_company_revision, snapshot_digest, source_json, recorded_at) VALUES
     ('organization:default', 'archive:one', 'employee:one', ?1, 'account:reviewer', 'Preserve original records',
     '2030-01-01', 8, ?1, ?2, 1)`)
       .bind("a".repeat(64), sourceJson)

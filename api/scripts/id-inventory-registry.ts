@@ -165,6 +165,8 @@ const PROCEDURE_REQUEST_KEY = external(
 
 export const SOFT_REFERENCES: Readonly<Record<string, SoftReference>> = {
   "system_batch_jobs.legacy_id": LEGACY_PRIMARY_KEY,
+  "company_personnel_annotations.legacy_id": LEGACY_PRIMARY_KEY,
+  "company_lifecycle_outbox_entries.legacy_id": LEGACY_PRIMARY_KEY,
   "system_iam_roles.legacy_id": LEGACY_PRIMARY_KEY,
   "system_role_bindings.legacy_id": LEGACY_PRIMARY_KEY,
   "system_record_disclosure_policies.revision_id": notReference(

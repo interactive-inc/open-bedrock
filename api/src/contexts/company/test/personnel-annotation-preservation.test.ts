@@ -27,9 +27,9 @@ test("注記の全列と大きなID・不明日付・孤立した対象を保全
     .prepare(`SELECT ${columns} FROM company_employee_events ORDER BY id`)
     .all()
   for (const file of files.slice(cutover)) await database.exec(read(file))
-  const after = await database
-    .prepare(`SELECT ${columns} FROM company_personnel_annotations ORDER BY id`)
-    .all()
+  // 主キーを UUID へ移した後は、移行元の整数の ID を legacy_id に残す。
+  const afterColumns = `${columns.replace("CAST(id AS TEXT) AS id", "legacy_id AS id")} FROM company_personnel_annotations ORDER BY CAST(legacy_id AS INTEGER)`
+  const after = await database.prepare(`SELECT ${afterColumns}`).all()
   expect(after.results).toEqual(before.results)
   expect(
     await database
@@ -49,11 +49,5 @@ test("注記の全列と大きなID・不明日付・孤立した対象を保全
         .run()
         .catch((cause: unknown) => cause),
     ).toBeInstanceOf(Error)
-  expect(
-    (
-      await database
-        .prepare(`SELECT ${columns} FROM company_personnel_annotations ORDER BY id`)
-        .all()
-    ).results,
-  ).toEqual(before.results)
+  expect((await database.prepare(`SELECT ${afterColumns}`).all()).results).toEqual(before.results)
 })

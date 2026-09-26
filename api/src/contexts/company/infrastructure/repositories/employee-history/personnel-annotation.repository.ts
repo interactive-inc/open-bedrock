@@ -20,7 +20,7 @@ export class PersonnelAnnotationRepository {
     try {
       const rows = await this.c.var.database
         .select({
-          id: sql<string>`CAST(${personnelAnnotations.id} AS TEXT)`,
+          id: personnelAnnotations.id,
           employeeId: personnelAnnotations.employeeId,
           kind: personnelAnnotations.kind,
           effectiveDate: personnelAnnotations.effectiveDate,
@@ -31,7 +31,11 @@ export class PersonnelAnnotationRepository {
         })
         .from(personnelAnnotations)
         .where(this.conditions(input.employeeId, input.kind))
-        .orderBy(desc(personnelAnnotations.effectiveDate), desc(personnelAnnotations.id))
+        .orderBy(
+          desc(personnelAnnotations.effectiveDate),
+          desc(personnelAnnotations.createdAt),
+          desc(sql`${personnelAnnotations}.rowid`),
+        )
         .limit(input.limit)
         .offset(input.offset)
       return rows.map((row) => PersonnelAnnotationEntity.restore(row))

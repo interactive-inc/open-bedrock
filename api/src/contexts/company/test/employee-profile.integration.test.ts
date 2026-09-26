@@ -250,7 +250,7 @@ test("Account表示名の参照範囲と複数会社の優先順を守り、大�
   await context.database.exec(`INSERT INTO company_organizations
     (id, revision, name, representative_name, created_at, updated_at)
     VALUES ('organization:aaa', 0, 'Other', 'Other', 0, 0);
-    INSERT INTO company_account_profiles VALUES ('organization:aaa', 'account:profile', 'Other organization name', 0, 0)`)
+    INSERT INTO company_account_profiles (organization_id, account_id, display_name, created_at, updated_at) VALUES ('organization:aaa', 'account:profile', 'Other organization name', 0, 0)`)
   const accountIds = Array.from({ length: 150 }, (_, index) => `account:bulk:${index}`)
   for (const id of accountIds) {
     await context.database.batch([
@@ -261,7 +261,7 @@ test("Account表示名の参照範囲と複数会社の優先順を守り、大�
         .bind(id),
       context.database
         .prepare(
-          "INSERT INTO company_account_profiles VALUES ('organization:default', ?1, ?1, 0, 0)",
+          "INSERT INTO company_account_profiles (organization_id, account_id, display_name, created_at, updated_at) VALUES ('organization:default', ?1, ?1, 0, 0)",
         )
         .bind(id),
     ])

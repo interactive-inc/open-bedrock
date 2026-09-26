@@ -23,8 +23,8 @@ test("旧人事注記は管理者も追加できず、記録日と適用日が�
   await initializeStandardCompanyTestState(db)
   await db
     .prepare(`INSERT INTO company_personnel_annotations
-    (employee_id, kind, effective_date, from_department_code, to_department_code, note, created_at)
-    VALUES (?, 'retire', '2020-01-01', ' OLD ', NULL, '  Original note  ', '2021-02-03T04:05:06Z')`)
+    (id, employee_id, kind, effective_date, from_department_code, to_department_code, note, created_at)
+    VALUES ('0190005c-0000-7000-8000-000000000011', ?, 'retire', '2020-01-01', ' OLD ', NULL, '  Original note  ', '2021-02-03T04:05:06Z')`)
     .bind(toWorkforceEmployeeId(1))
     .run()
   const before = await db.prepare("SELECT * FROM company_personnel_annotations ORDER BY id").all()
@@ -62,12 +62,13 @@ test("旧人事注記は管理者も追加できず、記録日と適用日が�
   })
 })
 
-test("台帳にない対象の原記録も権限で参照でき、IDの精度と空文字を失わない", async () => {
+test("台帳にない対象の原記録も権限で参照でき、IDと空文字を失わない", async () => {
   const db = await pool.next()
   await initializeStandardCompanyTestState(db)
   await db
-    .prepare(`INSERT INTO company_personnel_annotations VALUES
-    (9223372036854775807, 'orphan:source', 'unknown-kind', '', ' OLD ', NULL, '', 'unknown timestamp')`)
+    .prepare(`INSERT INTO company_personnel_annotations
+    (id, employee_id, kind, effective_date, from_department_code, to_department_code, note, created_at) VALUES
+    ('0190005c-0000-7000-8000-000000000012', 'orphan:source', 'unknown-kind', '', ' OLD ', NULL, '', 'unknown timestamp')`)
     .run()
   const jwtSecret = "annotation-read-test-secret"
   const token = await createTestToken(jwtSecret, { employeeId: toWorkforceEmployeeId(1) })
@@ -80,7 +81,7 @@ test("台帳にない対象の原記録も権限で参照でき、IDの精度と
   expect(await response.json()).toMatchObject({
     data: [
       {
-        id: "9223372036854775807",
+        id: "0190005c-0000-7000-8000-000000000012",
         employee_id: "orphan:source",
         kind: "unknown-kind",
         effective_date: "",

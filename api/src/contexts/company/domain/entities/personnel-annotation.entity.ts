@@ -1,7 +1,7 @@
 import { z } from "zod"
 
 const personnelAnnotationPropsSchema = z.object({
-  id: z.string().regex(/^-?\d+$/),
+  id: z.uuid(),
   employeeId: z.string(),
   kind: z.string(),
   effectiveDate: z.string(),

@@ -140,7 +140,7 @@ async function createTestDb(): Promise<D1Database> {
   // 入社 2 件(直近 30 日以内)、退職 1 件(直近)、入社 1 件(30 日より前=数えない)。
   await seedD1(db, "company_personnel_annotations", [
     {
-      id: 1,
+      id: "0190005c-0000-7000-8000-000000000001",
       employee_id: "2",
       kind: "join",
       effective_date: "2026-06-01",
@@ -150,7 +150,7 @@ async function createTestDb(): Promise<D1Database> {
       created_at: "2026-06-01T00:00:00.000Z",
     },
     {
-      id: 2,
+      id: "0190005c-0000-7000-8000-000000000002",
       employee_id: "3",
       kind: "join",
       effective_date: "2026-05-20",
@@ -160,7 +160,7 @@ async function createTestDb(): Promise<D1Database> {
       created_at: "2026-05-20T00:00:00.000Z",
     },
     {
-      id: 3,
+      id: "0190005c-0000-7000-8000-000000000003",
       employee_id: "4",
       kind: "retire",
       effective_date: "2026-06-10",
@@ -170,7 +170,7 @@ async function createTestDb(): Promise<D1Database> {
       created_at: "2026-06-10T00:00:00.000Z",
     },
     {
-      id: 4,
+      id: "0190005c-0000-7000-8000-000000000004",
       employee_id: "1",
       kind: "join",
       effective_date: "2026-04-01",

@@ -7,7 +7,7 @@ import type {
 import type { AccountId } from "@system/domain/schemas/iam/account-id.schema"
 import type { InferSelectModel } from "drizzle-orm"
 import { sql } from "drizzle-orm"
-import { check, integer, primaryKey, sqliteTable, text, uniqueIndex } from "drizzle-orm/sqlite-core"
+import { check, integer, sqliteTable, text, uniqueIndex, unique } from "drizzle-orm/sqlite-core"
 
 /** 人事アクション台帳。事実は追記のみで、訂正も corrected アクションとして記録する。 */
 export const personnelActions = sqliteTable(
@@ -68,6 +68,9 @@ export type PersonnelActionRow = InferSelectModel<typeof personnelActions>
 export const employmentPeriodVersions = sqliteTable(
   "company_employment_period_versions",
   {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     periodId: text("period_id").notNull(),
     revision: integer("revision").notNull(),
     employeeId: text("employee_id").notNull().$type<EmployeeId>(),
@@ -78,7 +81,7 @@ export const employmentPeriodVersions = sqliteTable(
     recordedAt: integer("recorded_at").notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.periodId, table.revision] }),
+    unique().on(table.periodId, table.revision),
     check("company_employment_period_versions_revision", sql`${table.revision} > 0`),
     check(
       "company_employment_period_versions_range",
@@ -93,6 +96,9 @@ export type EmploymentPeriodVersionRow = InferSelectModel<typeof employmentPerio
 export const employeeStatusPeriodVersions = sqliteTable(
   "company_employee_status_period_versions",
   {
+    id: text("id")
+      .primaryKey()
+      .$defaultFn(() => crypto.randomUUID()),
     periodId: text("period_id").notNull(),
     revision: integer("revision").notNull(),
     employmentPeriodId: text("employment_period_id").notNull().$type<EmploymentId>(),
@@ -105,7 +111,7 @@ export const employeeStatusPeriodVersions = sqliteTable(
     recordedAt: integer("recorded_at").notNull(),
   },
   (table) => [
-    primaryKey({ columns: [table.periodId, table.revision] }),
+    unique().on(table.periodId, table.revision),
     check("company_employee_status_period_versions_revision", sql`${table.revision} > 0`),
     check(
       "company_employee_status_period_versions_status",
@@ -178,7 +184,10 @@ export type PersonnelActionRequestRow = InferSelectModel<typeof personnelActionR
 export const lifecycleOutbox = sqliteTable(
   "company_lifecycle_outbox_entries",
   {
-    id: integer("id").primaryKey({ autoIncrement: true }),
+    /** 人事の発令と同じ batch で足す行の主キー。列の既定値で UUID を採番する。 */
+    id: text("id").primaryKey(),
+    /** 主キーを UUID へ移す前の整数の主キー。移行前の記録を現在の行へ辿るために残す。 */
+    legacyId: text("legacy_id").unique(),
     personnelActionId: text("personnel_action_id").notNull(),
     effectType: text("effect_type").notNull().$type<"hire" | "retired">(),
     payloadJson: text("payload_json").notNull(),
